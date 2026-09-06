@@ -1,0 +1,303 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Jobs
+description: Background job ledger entries, statuses, lanes, task types, and cancellation.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The job ledger is Fluxer's record of the background work an instance runs. An entry reports lifecycle state, progress, attempt accounting, payload, and terminal failure text. Nothing here creates a job. The operation that needs the work queues it, such as [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job), [Create system DM broadcast](/admin-api/system-dms/#create-system-dm-broadcast), [Refresh search index](/admin-api/search-indexes/#refresh-search-index), or an [archive](/admin-api/archives/) request.
+
+Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket.
+
+:::caution[Not every task gets a ledger row]
+A large share of Fluxer's background work never gets a ledger row, and that work cannot be listed, read by ID, or cancelled here.
+:::
+
+:::note[Fan-out, embeds, and most sweeps have no ledger row]
+Mention fan-out (`handleMentions` and `handleMentionChunk`), embed extraction (`extractEmbeds`), and every periodic sweep other than the three blocklist feed syncs run this way.
+:::
+
+## Admin job object
+
+One object is one row of the ledger. No operation on this page changes any field except `cancel_requested`. A row has a 90 day time to live, after which the job is unknown to every operation here.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id | snowflake | The ID of the job |
+| task_type | string | The [background job task type](#background-job-task-types) the job runs |
+| status | string | The [job status](#job-statuses) the row currently holds |
+| progress_current<sup>1</sup> | ?integer | The units of work completed, or null when the task has reported none |
+| progress_total<sup>1</sup> | ?integer | The units of work expected, or null when the task has reported none or reported no total |
+| progress_message<sup>1</sup> | ?string | The step the task last reported, or null when it has reported none |
+| error_message<sup>2</sup> | ?string | The failure text recorded when the job was dead-lettered, or null otherwise |
+| created_at | ISO8601 timestamp | The time the job was written to the ledger |
+| started_at<sup>3</sup> | ?ISO8601 timestamp | The time the most recent execution began, or null before the first attempt |
+| completed_at | ?ISO8601 timestamp | The time the job reached a terminal state, or null while it is not terminal |
+| requested_by_user_id<sup>4</sup> | ?snowflake | The ID of the account recorded as the requester, or null when the queueing operation recorded none |
+| audit_log_reason<sup>5</sup> | ?string | The reason recorded when the job was queued, or null when none was supplied |
+| jet_stream_lane<sup>6</sup> | ?string | The [processing lane](#processing-lanes) the job runs on, or null when no lane claims the task type |
+| jet_stream_seq | ?string | The stream sequence assigned when the job was published, as a decimal string |
+| attempts<sup>7</sup> | integer | The number of failed executions recorded so far |
+| max_attempts<sup>8</sup> | integer | The attempt budget captured when the job was queued |
+| run_at | ?ISO8601 timestamp | The earliest permitted run time, or null for an immediate job |
+| cancel_requested<sup>9</sup> | boolean | Whether cooperative cancellation has been requested |
+| context_link<sup>10</sup> | ?string | The Admin console path for the entities the job acts on, or null when the task set none |
+| payload<sup>11</sup> | ?string | The JSON rendering of the job input |
+| result | ?string | Always null |
+
+<sup>1</sup> The task reports progress at its own cadence, and a task that never reports leaves all three null for its whole run. A bulk task reports once before it starts, again after every 25 entities, and once when it finishes, except for `schedule_user_deletion`, which reports after every 10 accounts, and the file SHA bulk ban, which reports after every 50 hashes
+
+<sup>2</sup> Written only when the job is dead-lettered. A single failed delivery that is redelivered leaves it null
+
+<sup>3</sup> Rewritten on every delivery, so a redelivered job reports the start of its latest attempt
+
+<sup>4</sup> Only [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job) and the file SHA bulk ban record one, so a system DM broadcast, an archive, and a search index rebuild all report null
+
+<sup>5</sup> The reason the queueing operation resolved from `X-Audit-Log-Reason`. A blank or over-length header resolves to null there, and the queueing operation still succeeds
+
+<sup>6</sup> Present as soon as the job is queued
+
+<sup>7</sup> Incremented only when an attempt fails without exhausting the lane's redelivery ceiling. A job that succeeds on its first delivery reports 0, and a dead-lettered job never counts its final failure
+
+<sup>8</sup> Defaults to 5 and is recorded for reporting only. The [processing lane](#processing-lanes) bounds redelivery
+
+<sup>9</sup> Set by [Cancel job](#cancel-job) while the job is queued or running, and kept on the terminal row as the record of the request. `status` reports whether the task honoured it
+
+<sup>10</sup> An Admin console path such as `/guilds/{guild_id}`, not a Fluxer API route. A bulk task acting on many entities links only the first 50 identifiers
+
+<sup>11</sup> Stored verbatim as JSON, so it can contain identifiers and message content. It is returned by every operation here, including the listings
+
+### Example
+
+```json
+{
+  "job_id": "1501314428688998182",
+  "task_type": "bulkUpdateUserFlags",
+  "status": "running",
+  "progress_current": 25,
+  "progress_total": 400,
+  "progress_message": "Updating flags",
+  "created_at": "2026-08-31T09:00:00.000Z",
+  "started_at": "2026-08-31T09:00:01.000Z",
+  "requested_by_user_id": "1478812292088791040",
+  "jet_stream_lane": "lifecycle",
+  "attempts": 0,
+  "max_attempts": 5,
+  "cancel_requested": false,
+  "payload": "{\"user_ids\":[\"1478812292088791040\"]}",
+  "result": null
+}
+```
+
+## Job cursor object
+
+The resume point [List jobs](#list-jobs) returns, split into the three cursor query parameters a caller sends back.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| bucket_day | string | The UTC day bucket the next page resumes in, as `YYYY-MM-DD` |
+| created_at | ISO8601 timestamp | The creation time the next page resumes before |
+| job_id | snowflake | The job the next page resumes from |
+
+### Example
+
+```json
+{
+  "bucket_day": "2026-08-30",
+  "created_at": "2026-08-30T22:41:07.512Z",
+  "job_id": "1500901337221828608"
+}
+```
+
+## Job statuses
+
+| Value | Description |
+| --- | --- |
+| queued | The job is written and available for processing |
+| running | The job is being processed |
+| succeeded | The task returned without throwing |
+| cancelled<sup>1</sup> | The task reached a cancellation checkpoint and aborted |
+| deadletter | The job exhausted its lane's redelivery ceiling without succeeding |
+
+<sup>1</sup> Only a task that aborts at the checkpoint settles here, as [Cancel job](#cancel-job) describes
+
+`queued` and `running` are the active statuses and the other three are terminal. [List active jobs](#list-active-jobs) returns exactly the two active statuses. Cancellation is recorded only while a job holds one of them.
+
+A job whose queue publish fails after its ledger row is written also settles as `deadletter`. That row reports `attempts` 0, `started_at` null, and `error_message` from the publish failure.
+
+## Processing lanes
+
+A lane is a consumer group with its own concurrency, acknowledgement deadline, and redelivery ceiling. Each task type belongs to exactly one lane, recorded on the job when it is queued.
+
+| Value | Description |
+| --- | --- |
+| realtime<sup>1</sup> | Mention fan-out. Concurrency 10, 15 second deadline, 3 deliveries |
+| unfurl<sup>1</sup> | Link preview extraction. Concurrency 20, 30 second deadline, 3 deliveries |
+| lifecycle<sup>1</sup> | Account, guild, billing, moderation, archive, and bulk work. Concurrency 8, 60 second deadline, 25 deliveries |
+| batch<sup>1</sup> | Periodic sweeps, index rebuilds, and queue drains. Concurrency 12, 120 second deadline, 25 deliveries |
+
+<sup>1</sup> Concurrency is per worker process and an operator can override it per lane. The delivery count bounds retries and is the ceiling after which a failing job is dead-lettered
+
+## Background job task types
+
+`task_type` is the registered worker task name. Every registered task is listed here with its lane, and a task that is not listed is not registered.
+
+- `realtime` runs `handleMentions` and `handleMentionChunk`.
+- `unfurl` runs `extractEmbeds`.
+- `lifecycle` runs `applicationProcessDeletion`, `batchGuildAuditLogMessageDeletes`, `bulkAddGuildMembers`, `bulkBanFileShas`, `bulkDeleteSelfMessagesImmediate`, `bulkDeleteUserMessages`, `bulkDeleteUserMessagesScoped`, `bulkScheduleUserDeletion`, `bulkUpdateGuildFeatures`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateUserFlags`, `deleteUserMessagesInGuildByTime`, `finalizeNcmecAttachmentReport`, `harvestGuildData`, `harvestUserData`, `messageShred`, `processStripeWebhook`, `reconcileUserPayments`, `revalidateUserConnections`, `sendSystemDm`, `userProcessPendingDeletion`, and `userProcessPendingDeletions`.
+- `batch` runs `expireAttachments`, `flushUserActivityBuffer`, `indexChannelMessages`, `indexGuildMembers`, `processAssetDeletionQueue`, `processBunnyPurgeQueue`, `processExpiredPremiumSweep`, `processInactivityDeletions`, `processPendingBulkMessageDeletions`, `processPremiumStateReconciliationQueue`, `prunePostgresKvTtl`, `refreshSearchIndex`, `syncDiscoveryIndex`, `syncDisposableEmailDomains`, `syncFileShaBlocklists`, and `syncUrlBlocklists`.
+
+The five tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/).
+
+## List jobs
+
+<RouteHeader method="GET" path="/v1/admin/jobs" />
+
+Returns a page of [Admin job](#admin-job-object) objects from the ledger's day buckets, newest first. Requires `jobs:view`.
+
+The ledger is bucketed by UTC day and each bucket is ordered by creation time descending. A request reads the current bucket, then each earlier bucket, until the page is full or the lookback window is exhausted.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit? | integer | The maximum number of jobs to return (1-200, default 50) |
+| cursor_bucket_day?<sup>1</sup> | string | The UTC day bucket to resume from as a `YYYY-MM-DD` date, taken from `next_cursor.bucket_day` |
+| cursor_created_at?<sup>1</sup> | string | The creation time to resume before as an ISO 8601 timestamp (1-64 characters), taken from `next_cursor.created_at` |
+| cursor_job_id?<sup>1</sup> | snowflake | The job to resume from, taken from `next_cursor.job_id` |
+| max_lookback_days?<sup>2</sup> | integer | The number of earlier day buckets to scan (1-60, default 14) |
+| status? | string | The [job status](#job-statuses) a returned job must currently hold |
+| task_type?<sup>3</sup> | string | The [background job task type](#background-job-task-types) a returned job must run (1-128 characters) |
+| requested_by_user_id? | snowflake | The ID of the account a returned job must record as its requester |
+
+<sup>1</sup> The three cursor parameters are one value split into parts and are supplied together. A strict subset, a `cursor_bucket_day` that is not a calendar date, or a `cursor_created_at` that is not an ISO 8601 timestamp returns 400 `INVALID_FORM_BODY`, and each rejected part is named by the `path` of an element in `errors`
+
+<sup>2</sup> The scan covers the starting bucket plus this many earlier buckets, so the default reads 15. The starting bucket is the current UTC day, or the cursor's bucket when one is supplied
+
+<sup>3</sup> A value naming no registered task returns an empty page with 200
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| jobs | array[[Admin job](#admin-job-object) object] | The jobs in this page |
+| next_cursor | ?[job cursor](#job-cursor-object) object | The cursor for the next page, or null when the page did not fill |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The job page was returned |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the cursor is a strict subset of its three parts or one part is malformed |
+
+### Rate limit
+
+600 requests per minute for each authenticated user, on the `admin:jobs:view` bucket.
+
+## List active jobs
+
+<RouteHeader method="GET" path="/v1/admin/jobs/active" />
+
+Returns every queued or running job as [Admin job](#admin-job-object) objects. Requires `jobs:view`.
+
+:::note[Poll this operation for active work]
+This listing takes no filters, takes no cursor, and is not paginated. A job leaves it when it reaches a terminal state.
+:::
+
+A job still active after its ledger row has passed the 90 day time to live is omitted from the response.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| jobs | array[[Admin job](#admin-job-object) object] | Every queued or running job the index holds |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The active jobs were returned |
+
+### Rate limit
+
+600 requests per minute for each authenticated user, on the `admin:jobs:view` bucket.
+
+## Get job
+
+<RouteHeader method="GET" path="/v1/admin/jobs/{job_id}" />
+
+Returns one [Admin job](#admin-job-object) object. Requires `jobs:view`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id | snowflake | The ID of the job |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job | [Admin job](#admin-job-object) object | The job |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The job was returned |
+| 404<sup>1</sup> <sup>2</sup> | `{"error": "job_not_found"}` | No ledger entry has this identifier |
+
+<sup>1</sup> This operation answers a missing job with its own single-field body, so it has no `code` and no `errors`
+
+<sup>2</sup> A job queued with the ledger suppressed and a job whose row has passed its 90 day time to live are both reported this way, so 404 does not mean the work never ran
+
+### Rate limit
+
+600 requests per minute for each authenticated user, on the `admin:jobs:view` bucket.
+
+## Cancel job
+
+<RouteHeader method="PUT" path="/v1/admin/jobs/{job_id}/cancellation" />
+
+Requests cooperative cancellation of a job and reports whether the request was recorded. Requires `jobs:cancel`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id | snowflake | The ID of the job |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| cancelled<sup>1</sup> | boolean | Whether a cancellation request was recorded |
+
+<sup>1</sup> False when the job is already terminal and also when no ledger entry has the identifier, so a false value does not distinguish the two. Cancelling a job that is already cancel-requested returns true again
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The request was evaluated, whether or not the flag changed |
+
+:::caution[Cancellation is cooperative and never retroactive]
+The job stops only at its next checkpoint, which for a bulk task is between two entities. Every effect already applied stays in place. Most registered tasks never check for cancellation and run to completion with the flag set.
+:::
+
+:::note[`status` reports whether the task honoured the request]
+A [bulk job](/admin-api/bulk-jobs/) task and a [system DM broadcast](/admin-api/system-dms/) both abort at the checkpoint and settle as `cancelled`. A task that never checks the flag settles as it otherwise would.
+:::
+
+### Side effects
+
+An active job records `cancel_requested` as true and stops at its next checkpoint. Fluxer leaves a terminal job unchanged. Nothing reverses the Gateway Dispatches the job already produced.
+
+### Rate limit
+
+600 requests per minute for each authenticated user, on the `admin:jobs:view` bucket.

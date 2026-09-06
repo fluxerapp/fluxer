@@ -1,0 +1,98 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Gift inventory
+description: Premium gift codes the current account created, and their redemption state.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The gift inventory lists the premium gift codes the current account created, with the redemption state of each. The [Gifts resource](/http-api/gifts/) has public gift lookup and redemption, and the [Billing resource](/http-api/billing/) has gift purchase.
+
+A self-hosted deployment answers this route with 404 `NOT_FOUND`, as [deployment availability](/http-api/deployment-availability/) describes.
+
+A code enters this inventory only through a completed gift checkout with the payment provider. The Admin API records a code it issues against the system account, so that code never appears in any account's inventory.
+
+:::note[A received gift never appears in the inventory]
+Only the account that created a code sees it here.
+:::
+
+:::note[Listing gifts does not clear the unread marker]
+A newly issued code raises `has_unread_gift_inventory` on the [user object](/http-api/users/#user-object). A client clears it by sending `has_unread_gift_inventory` as `false` to [Modify current user](/http-api/users/current-user/#modify-current-user).
+:::
+
+## Gift inventory object
+
+One gift code created by the current account, with its redemption state. A completed checkout yields at most one code even when the payment provider retries its notification.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | The code a recipient presents to [Redeem gift](/http-api/gifts/#redeem-gift) |
+| duration_type<sup>2</sup> | string | The [gift duration unit](/http-api/gifts/#gift-duration-units) that `duration_quantity` is measured in |
+| duration_quantity<sup>3</sup> | integer | The number of `duration_type` units the code grants |
+| created_at<sup>4</sup> | ISO8601 timestamp | The time the code was created |
+| created_by<sup>5</sup> | [partial user](/http-api/users/#partial-user-object) object | The account that created the code |
+| redeemed_at?<sup>6</sup> | ?ISO8601 timestamp | The time the code was redeemed, or null while it is unredeemed |
+| redeemed_by?<sup>6</sup> <sup>7</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The account that redeemed the code, or null while it is unredeemed |
+
+<sup>1</sup> Exactly 32 characters drawn from the uppercase letters, the lowercase letters, and the digits, and unique across every code ever issued
+
+<sup>2</sup> One of `days`, `weeks`, `months`, or `years`. A purchased code has only `months` or `years`, because a term dividing evenly into years is normalised to years
+
+<sup>3</sup> A purchased code always has `1`, because the only gift products are one month and one year. The value `0` denotes a lifetime grant, and no current operation issues one
+
+<sup>4</sup> A code issued while repairing a lost checkout notification has the checkout time, so the value can predate the moment the code appeared
+
+<sup>5</sup> Always the current account
+
+<sup>6</sup> Declared optional by the response schema and always emitted, so an unredeemed code has an explicit null in each
+
+<sup>7</sup> Fluxer substitutes a placeholder partial named `DeletedUser` for a redeemer whose account no longer resolves, so null here always means the code is unredeemed
+
+The object adds the creation time and the redemption identity to what the public [gift object](/http-api/gifts/#gift-object) reports, and has no `redeemed` boolean.
+
+Redeeming a lifetime-quantity code converts the account to lifetime premium and cancels any active recurring subscription.
+
+:::danger[A code is a bearer credential]
+Fluxer records no recipient at issue time, so [redemption](/http-api/gifts/#redeem-gift) binds a code to whichever eligible account presents it first. The inventory returns the full code, and no operation unredeems it. Treat every unredeemed code as a secret.
+:::
+
+### Example
+
+```json
+{
+  "code": "aB3xQ7kR2mW9tL5vN8pY1cD4fH6jS0zE",
+  "duration_type": "months",
+  "duration_quantity": 1,
+  "created_at": "2026-02-11T12:04:33.000Z",
+  "created_by": {"id": "1501314428688998182", "username": "aria", "discriminator": "0042"},
+  "redeemed_at": null,
+  "redeemed_by": null
+}
+```
+
+## List current user gifts
+
+<RouteHeader method="GET" path="/v1/users/@me/gifts" />
+
+Lists the gift codes the current account created, newest first. Returns an array of [gift inventory](#gift-inventory-object) objects on success.
+
+The listing is not paginated, so it accepts no query parameter and returns no cursor.
+
+An unredeemed code is listed indefinitely. A redeemed code is listed only while its redemption is less than seven days old, so an account whose codes were all redeemed longer ago receives an empty array.
+
+A revoked code is omitted at every age. Fluxer revokes a code when a dispute or refund reaches the purchase while the code is still unredeemed, and no route reports the reversal to the buyer. A code already redeemed when the reversal arrived is not revoked, so it stays listed under the seven-day rule while Fluxer recomputes the redeemer's entitlement from their remaining redeemed gifts.
+
+A redeemed code that has dropped out of the listing still exists, still resolves through the [Gifts resource](/http-api/gifts/), and is still permanently spent. A revoked code stops resolving through that resource with 404 `UNKNOWN_GIFT_CODE`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[gift inventory](#gift-inventory-object) object] | The inventory was returned |
+| 404 | [error response](/http-api/#error-response) | The deployment is self-hosted and the request returns `NOT_FOUND` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `gifts:list` bucket.

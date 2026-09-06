@@ -1,0 +1,787 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Channels
+description: Channel objects, settings, recipients, permission overwrites, slowmode, and RTC regions.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A channel is where a conversation happens, in text or in voice. A [guild](/http-api/guilds/) owns text, voice, category and link channels. Outside a guild, a channel is a direct message, a group direct message, or the personal notes channel.
+
+[Messages](/http-api/messages/) defines message content, and [Guild channels](/http-api/guild-channels/) defines guild-scoped listing, creation and reordering. [Calls](/http-api/calls/) defines ringing, the region of a private call, and ending a call. [Streams](/http-api/streams/) defines the stream keys and previews of a Go Live screen share.
+
+## Channel object
+
+A channel object always has its identity and type. Every other field is present only for the [channel types](#channel-types) that own it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the channel |
+| type | integer | The [type of the channel](#channel-types) |
+| guild_id? | snowflake | The ID of the guild, present only for a guild text, voice, category, or link channel |
+| name?<sup>1</sup> | string | The name of the channel, present for a guild channel and for a group direct message |
+| topic? | ?string | The topic of the channel, present only for a guild text or voice channel |
+| url? | ?string | The destination URL, present only for a guild link channel |
+| icon? | ?string | The icon hash, present only for a group direct message |
+| owner_id? | ?snowflake | The ID of the owner, present only for a group direct message |
+| position?<sup>2</sup> | integer | The sort position, present only for a guild channel |
+| parent_id? | ?snowflake | The ID of the parent category, null when the channel sits at the top level |
+| bitrate?<sup>3</sup> | ?integer | The voice bitrate in bits per second, present only for a guild voice channel |
+| user_limit?<sup>4</sup> | ?integer | The configured member occupancy limit, present only for a guild voice channel |
+| voice_connection_limit?<sup>5</sup> | ?integer | The number of simultaneous voice connections one user may hold, present only for a guild voice channel |
+| rtc_region?<sup>6</sup> | ?string | The ID of the selected RTC region, present only for a guild voice channel |
+| last_message_id? | ?snowflake | The ID of the most recent message, null when the channel has none |
+| last_pin_timestamp? | ?ISO8601 timestamp | The time a message was most recently pinned, or null when nothing has ever been pinned |
+| permission_overwrites?<sup>7</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The overwrites applied to this channel, present only for a guild channel |
+| recipients?<sup>8</sup> | array[[partial user](/http-api/users/#partial-user-object) object] | The other recipients of a direct message or group direct message (max 49) |
+| nsfw?<sup>9</sup> | boolean | Whether the channel has its own age restriction, present only for a guild channel |
+| nsfw_override?<sup>9</sup> | ?boolean | Whether this channel overrides the inherited age restriction, or null when it inherits |
+| content_warning_level?<sup>10</sup> | integer | The [content warning level](#content-warning-levels) stored on this channel, present only for a guild channel |
+| content_warning_text?<sup>10</sup> | ?string | The content warning text stored on this channel, or null when the channel inherits |
+| rate_limit_per_user?<sup>11</sup> | integer | The slowmode interval in seconds, present only for a guild text or voice channel |
+| nicks?<sup>12</sup> | map[snowflake, string] | The group direct message nicknames keyed by the decimal user ID (each 1-32 characters) |
+
+<sup>1</sup> Omitted when a group direct message stores no name, and never present on a direct message or on the personal notes channel
+
+<sup>2</sup> A channel that stores no position reports `0`
+
+<sup>3</sup> A guild voice channel that stores no bitrate reports `0`
+
+<sup>4</sup> The value `0` means no occupancy limit
+
+<sup>5</sup> A guild voice channel that stores no per-user connection limit reports the default `5`
+
+<sup>6</sup> Null selects automatic routing. [List RTC regions](#list-rtc-regions) returns the available identifiers
+
+<sup>7</sup> Always present for a guild channel, and empty when the channel stores no overwrite
+
+<sup>8</sup> Excludes the authenticated user, omitted entirely when no other recipient remains, and never present on the personal notes channel
+
+<sup>9</sup> A channel with no explicit override reports `nsfw` false and `nsfw_override` null
+
+<sup>10</sup> A channel that inherits reports `content_warning_level` `0` and `content_warning_text` null
+
+<sup>11</sup> A channel that configures no slowmode reports `0`
+
+<sup>12</sup> Omitted when the group stores no nickname. Clearing a nickname removes its key from the map
+
+:::note[Omission and null are distinct]
+An absent field is one this channel type does not own. A field present with `null` is one the type owns and that has no value.
+:::
+
+A category owns no `parent_id`. A client that reads the absent key as `null` sees a channel whose parent was cleared.
+
+:::caution[Age and warning fields report this channel alone]
+The API enforces the resolved state, so a client must apply the inherited category state before it shows an age restriction or a content warning.
+:::
+
+An age restriction and a content warning both resolve through this channel first, then the parent category, and finally the guild. A category has no parent category and resolves through itself and then the guild.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "type": 0,
+  "guild_id": "1501314428688990000",
+  "name": "general",
+  "topic": "Anything goes",
+  "position": 3,
+  "parent_id": "1501314428688991111",
+  "permission_overwrites": [],
+  "nsfw": false,
+  "nsfw_override": null,
+  "content_warning_level": 0,
+  "content_warning_text": null,
+  "rate_limit_per_user": 0,
+  "last_message_id": "1501320000000000000",
+  "last_pin_timestamp": null
+}
+```
+
+## Channel types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | GUILD_TEXT | Guild text channel |
+| 1 | DM | Direct message channel between exactly two accounts |
+| 2 | GUILD_VOICE | Guild voice channel, which also has messages, pins, and slowmode |
+| 3 | GROUP_DM | Group direct message channel |
+| 4 | GUILD_CATEGORY | Guild category, which owns no parent and no messages |
+| 998 | GUILD_LINK | Guild link channel, which has a destination URL and no messages |
+| 999 | DM_PERSONAL_NOTES<sup>1</sup> | Personal notes channel |
+
+<sup>1</sup> Its channel ID is exactly the owning user ID, and it has no recipient and no name. Fluxer creates it on first authenticated access
+
+## Permission overwrite object
+
+A permission overwrite changes the effective guild permissions for one role or one member in one channel. `allow` and `deny` are decimal strings because a permission mask exceeds the range a JSON number preserves. [Permissions](/http-api/permissions/) defines the individual flags.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | snowflake | The ID of the role or member |
+| type | integer | The [permission overwrite type](#permission-overwrite-types) of the identifier in `id` |
+| allow<sup>2</sup> | decimal string | The bitfield of permissions this overwrite allows |
+| deny<sup>2</sup> | decimal string | The bitfield of permissions this overwrite denies |
+
+<sup>1</sup> One identifier addresses one overwrite, so storing an overwrite for an identifier that already has one replaces it, even when the two name different types
+
+<sup>2</sup> Every bit outside the defined permission set is discarded on write, and both fields are `0` when the overwrite grants and denies nothing
+
+No route bounds the number of overwrites a channel stores. [Modify channel](#modify-channel) and [Create guild channel](/http-api/guild-channels/#create-guild-channel) accept a `permission_overwrites` array of any length, and no [limit key](/http-api/instance/#limit-keys) caps it.
+
+### Example
+
+```json
+{
+  "id": "1501314428688990000",
+  "type": 0,
+  "allow": "3072",
+  "deny": "0"
+}
+```
+
+## Permission overwrite types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ROLE | Overwrite applies to a guild role |
+| 1 | MEMBER | Overwrite applies to a guild member |
+
+## Content warning levels
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | INHERIT | Inherit the content warning of the parent category and then of the guild |
+| 1 | CONTENT_WARNING | Apply the content warning stored on this channel |
+
+## Channel slowmode state object
+
+The slowmode state combines the channel's configured interval with the authenticated user's next permitted send time.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| rate_limit_per_user | integer | The configured slowmode interval in seconds, or `0` when slowmode is disabled |
+| retry_after_ms<sup>1</sup> | integer | The remaining delay in milliseconds before the user can send |
+| next_send_allowed_at<sup>1</sup> | ?ISO8601 timestamp | The next permitted send time, or null when no delay applies |
+| can_bypass<sup>2</sup> | boolean | Whether the user bypasses slowmode through [BYPASS_SLOWMODE](/http-api/permissions/) |
+
+<sup>1</sup> Both report no delay in a private channel, for an interval of `0`, for a bot caller, and for a caller holding `BYPASS_SLOWMODE`
+
+<sup>2</sup> False whenever the delay is not accounted, so a bot caller and a private channel both report `false` even though neither is delayed
+
+### Example
+
+```json
+{
+  "rate_limit_per_user": 10,
+  "retry_after_ms": 4200,
+  "next_send_allowed_at": "2026-08-31T09:14:02.000Z",
+  "can_bypass": false
+}
+```
+
+## RTC region object
+
+An RTC region names one voice routing target the deployment operates. Its identifier is the value a guild voice channel stores in `rtc_region`, and the name and emoji exist only for presentation.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The ID of the RTC region |
+| name | string | The name shown for the region in a client |
+| emoji | string | The emoji the operator configured for the region |
+
+### Example
+
+```json
+{
+  "id": "eu-central",
+  "name": "Frankfurt",
+  "emoji": "🇩🇪"
+}
+```
+
+## Get channel
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}" bot />
+
+Returns the [channel object](#channel-object) visible to the authenticated user.
+
+### Limitations
+
+- A guild channel requires [VIEW_CHANNEL](/http-api/permissions/).
+- A guild channel that resolves to an age restriction also requires a satisfied age verification.
+- A private channel requires current recipient access.
+- The personal notes channel requires ownership.
+
+Fluxer enforces age verification only for a guild text, voice, or link channel. A guild category is never gated on it, even when it has the override its children inherit.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel to return |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](#channel-object) object | Channel was returned |
+| 403 | [error response](/http-api/#error-response) | Caller is not a guild member or lacks `VIEW_CHANNEL`, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+:::note[The guild resolves after the channel]
+A channel whose guild is gone fails with `UNKNOWN_GUILD` rather than `UNKNOWN_CHANNEL`.
+:::
+
+### Side effects
+
+Requesting the personal notes channel of the authenticated user creates that channel when it does not already exist, and returns it directly without a [Channel Create](/gateway/events/#channel-create) Dispatch.
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and channel ID, on the `channel:read::channel_id` bucket.
+
+## Get channel slowmode state
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/slowmode" bot />
+
+Returns the authenticated user's [channel slowmode state object](#channel-slowmode-state-object). The caller needs the same access as [Get channel](#get-channel).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel whose slowmode state is returned |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel slowmode state](#channel-slowmode-state-object) object | State was returned |
+| 403 | [error response](/http-api/#error-response) | Caller is not a guild member or lacks `VIEW_CHANNEL`, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The read does not advance the caller's slowmode countdown. Requesting the personal notes channel of the authenticated user creates that channel when it does not already exist, with no [Channel Create](/gateway/events/#channel-create) Dispatch.
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and channel ID, on the `channel:read::channel_id` bucket.
+
+## List RTC regions
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/rtc-regions" />
+
+Returns the [RTC region objects](#rtc-region-object) the authenticated user can select for a guild voice channel, in ascending display name order. User-only.
+
+### Limitations
+
+- The caller needs the same access as [Get channel](#get-channel).
+- The channel must be a guild voice channel.
+
+Fluxer returns a region only when the caller passes every restriction configured for it and at least one active voice server in that region is also accessible to the caller. The array can be empty. [Placement eligibility](/admin-api/voice/#placement-eligibility) states the four stored fields those restrictions come from.
+
+:::note[An unconfigured deployment skips the channel check]
+On a deployment that configures no voice topology, a missing channel, an invisible channel, and a non-voice channel all return 200 with `[]`.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild voice channel |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[RTC region](#rtc-region-object) object] | Available regions were returned |
+| 400 | [error response](/http-api/#error-response) | Channel is not a guild voice channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or uses an OAuth2 bearer credential, or the guild exists but the caller's membership state cannot be resolved, each returning `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The caller is not a guild member or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and channel ID, on the `channel:read::channel_id` bucket.
+
+## Modify channel
+
+<RouteHeader method="PATCH" path="/v1/channels/{channel_id}" bot />
+
+Modifies a guild channel or a group direct message and returns the updated [channel object](#channel-object). Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+### Limitations
+
+- A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [MANAGE_CHANNELS](/http-api/permissions/) in that channel.
+- Supplying `permission_overwrites` also requires [MANAGE_ROLES](/http-api/permissions/) in that channel.
+- Supplying `rtc_region` on a guild voice channel also requires [UPDATE_RTC_REGION](/http-api/permissions/).
+- A caller who is not the guild owner cannot allow a permission bit outside their own effective permissions in that channel, and cannot remove a denied bit outside them either.
+- A group direct message requires the caller to be a current recipient.
+- Ownership transfer requires the caller to be the current owner, and so does setting another recipient's nickname or clearing every nickname.
+
+`MANAGE_CHANNELS` and `MANAGE_ROLES` are [elevated permissions](/http-api/permissions/#elevated-permissions). Each also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner. A caller who holds the permission without that authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/).
+
+:::caution[Supplying `permission_overwrites` deletes the absent overwrites]
+The submitted array becomes the complete overwrite collection of the channel.
+:::
+
+[Set channel permission overwrite](#set-channel-permission-overwrite) and [Delete channel permission overwrite](#delete-channel-permission-overwrite) each mutate one overwrite and leave the rest untouched.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel to modify |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Features?<sup>1</sup> | string | A comma-separated [feature declaration](/http-api/permissions/#feature-gated-permission-bits) |
+
+<sup>1</sup> Read only when `permission_overwrites` is supplied. A [feature-gated bit](/http-api/permissions/#feature-gated-permission-bits) the declaration does not name is copied from the stored overwrite
+
+### JSON body
+
+The stored channel type selects the body variant, and a `type` field in the request is ignored. A direct message and the personal notes channel match no variant, and Fluxer rejects both with 400 `INVALID_FORM_BODY`.
+
+#### Guild channel body
+
+Every field is optional, and an omitted field preserves its current value. The four guild variants share one field set, and a field the stored type does not own is accepted and discarded.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name?<sup>1</sup> | ?string | The name of the channel (1-100 characters after normalisation) |
+| topic?<sup>2</sup> | ?string | The topic of the channel (1-1,024 characters), or null to clear it |
+| url?<sup>3</sup> | ?string | The destination of a guild link channel (1-2,048 characters, `http` or `https`), or null to clear it |
+| parent_id?<sup>4</sup> | ?snowflake | The ID of the parent category, where null or the snowflake `0` moves the channel to the top level |
+| bitrate?<sup>5</sup> | ?integer | The voice bitrate in bits per second (8,000-320,000) |
+| user_limit?<sup>5</sup> | ?integer | The voice occupancy limit (0-99, where `0` configures no limit) |
+| voice_connection_limit?<sup>5</sup> | ?integer | The number of simultaneous voice connections one user may hold (1-100) |
+| permission_overwrites?<sup>6</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The complete overwrite collection that replaces the stored one |
+| nsfw_override?<sup>7</sup> | ?boolean | Whether this channel overrides the inherited age restriction |
+| nsfw?<sup>8</sup> | ?boolean | Whether the channel is age restricted, a legacy switch superseded by `nsfw_override` |
+| content_warning_level?<sup>9</sup> | integer | The [content warning level](#content-warning-levels) to store on this channel |
+| content_warning_text?<sup>10</sup> | ?string | The content warning text (max 200 characters) |
+| rate_limit_per_user?<sup>11</sup> | ?integer | The slowmode interval in seconds (0-21,600) for a guild text or voice channel |
+| rtc_region?<sup>12</sup> | ?string | The ID of the RTC region (1-64 characters) for a guild voice channel, where null selects automatic routing |
+
+<sup>1</sup> An explicit null preserves the current name. In a guild without flexible channel names, Fluxer lowercases a guild text channel name, replaces its whitespace with hyphens, and removes disallowed punctuation
+
+<sup>2</sup> An explicit null clears the stored topic
+
+<sup>3</sup> Applied only to a guild link channel. An explicit null clears the destination
+
+<sup>4</sup> A category rejects any parent with `CATEGORIES_CANNOT_HAVE_PARENTS`
+
+<sup>5</sup> Applied only to a guild voice channel, and an explicit null clears the stored value
+
+<sup>6</sup> Each entry has `id`, `type`, and the optional `allow` and `deny` masks, each defaulting to `0`
+
+<sup>7</sup> An explicit null returns the channel to inheriting from its parent category and then its guild
+
+<sup>8</sup> `nsfw_override` wins when both are supplied. Alone, `true` maps to `nsfw_override` `true` and `false` maps to null
+
+<sup>9</sup> Only `0` and `1` are accepted, and `0` returns the channel to inheriting
+
+<sup>10</sup> Trimmed. A value empty after trimming, or an explicit null, clears the stored text
+
+<sup>11</sup> Applied only to a guild text or voice channel. An explicit null preserves the current interval
+
+<sup>12</sup> Applied only to a guild voice channel. Supplying the field at all, including as null, requires [UPDATE_RTC_REGION](/http-api/permissions/)
+
+A `url` that is not an absolute `http` or `https` URL with a host returns 400 `INVALID_FORM_BODY` with the code `INVALID_URL_FORMAT` on the path `url`.
+
+Three failures apply to `parent_id`. A parent that does not exist in the same guild returns 400 `INVALID_FORM_BODY` with the code `INVALID_PARENT_CHANNEL` on the path `parent_id`. A parent that is not a category returns `PARENT_MUST_BE_CATEGORY` the same way.
+
+Naming a category other than the current parent also checks capacity. A full category returns 400 `MAX_CATEGORY_CHANNELS` with the ceiling it reached, which is the deployment's [`max_channels_per_category`](/http-api/instance/#limit-keys) limit and defaults to 50.
+
+Fluxer accepts an overwrite mask in two encodings. A decimal string holds at most 9223372036854775807, and a larger one returns 400 `INVALID_FORM_BODY` with the code `INTEGER_OUT_OF_INT64_RANGE`. A JSON integer holds at most 9007199254740991, and a number outside the safe integer range returns `INVALID_INTEGER_FORMAT`.
+
+Every bit outside the defined permission set is discarded. A [feature-gated bit](/http-api/permissions/#feature-gated-permission-bits) the `X-Fluxer-Features` declaration does not name is copied from the stored overwrite.
+
+A non-null `rtc_region` names a region [List RTC regions](#list-rtc-regions) returns for this guild. Any other value returns 400 `INVALID_FORM_BODY` with the code `INVALID_OR_RESTRICTED_RTC_REGION` on the path `rtc_region`. A deployment that configures no voice topology validates no region and stores any accepted string.
+
+#### Group direct message body
+
+Every field is optional, and an omitted field preserves its current value.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | ?string | The name of the group (1-100 characters after normalisation), or null to clear it |
+| icon?<sup>1</sup> | ?base64 string | The base64-encoded icon image (at most 13,981,014 encoded characters), or null to clear it |
+| owner_id?<sup>2</sup> | ?snowflake | The ID of the new owner |
+| nicks?<sup>3</sup> | ?map[snowflake, ?string] | The nicknames keyed by the decimal user ID (each 0-32 characters, or null) |
+
+<sup>1</sup> Raw base64 or a data URL, with 1 through 13,981,014 characters after the prefix
+
+<sup>2</sup> An explicit null requests no transfer. The caller must be the current owner and the target a current recipient
+
+<sup>3</sup> An explicit null clears every nickname and requires ownership. A non-owner may address only their own key
+
+Decoded icon bytes are at most the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), which defaults to the 10 MiB ceiling of 10485760 bytes. A larger image is rejected on the path `icon` with the code `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted, and an animated AVIF is rejected on the same path with `INVALID_IMAGE_FORMAT`.
+
+An `owner_id` naming an account that is not a current recipient returns 404 `UNKNOWN_USER`. A bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
+
+Fluxer trims a stored nickname, and a value that is null or empty after trimming clears that one nickname. A `nicks` key that is neither a current recipient nor the caller returns 404 `UNKNOWN_USER`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](#channel-object) object | Channel was modified, or the submitted values already matched the stored state |
+| 403 | [error response](/http-api/#error-response) | A required permission, ownership, or permission bit authority is absent and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | A concurrent change removed the caller from the group direct message and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the group direct message, each returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | A referenced owner or nickname target is not a current recipient and the request returns `UNKNOWN_USER` |
+
+### Side effects
+
+A guild channel change emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild. Replacing a category's permission overwrites also replaces them on each child whose overwrites still exactly match the category's previous values, with one Dispatch per changed child. A child whose overwrites had diverged is left unchanged.
+
+Changing `rate_limit_per_user` clears the channel's current slowmode state so the new interval applies immediately. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
+
+A request that changes at least one field creates a channel update audit log entry with no reason. Supplying `permission_overwrites` also creates the overwrite audit log entries the change implies.
+
+A group direct message change emits [Channel Update](/gateway/events/#channel-update) to every current recipient. A name or successful icon change creates a system message delivered with [Message Create](/gateway/events/#message-create), and replacing the icon permanently deletes the previous one. Ownership and nickname changes create no system message and no audit entry.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:update::channel_id` bucket.
+
+## Delete or leave channel
+
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}" bot />
+
+Deletes a guild channel, closes a direct message, or removes the caller from a group direct message, and returns 204 with an empty body. Emits a [Channel Delete](/gateway/events/#channel-delete) Gateway event.
+
+### Limitations
+
+- Deleting a guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [MANAGE_CHANNELS](/http-api/permissions/).
+- Closing a direct message or leaving a group direct message requires current recipient access.
+- The personal notes channel cannot be deleted, and the request returns 400 `CANNOT_EXECUTE_ON_DM`.
+- Setting `delete_messages` also requires [sudo mode](/http-api/users/mfa/#sudo-mode) for a user session, satisfied by a valid sudo proof or by the verification fields in the body. A bot token always satisfies it.
+
+`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions). It also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner. A caller who holds the permission without that authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/). The sudo requirement on `delete_messages` applies at every guild MFA level.
+
+:::danger[A guild channel deletion is immediate and permanent]
+Deleting a guild channel destroys the channel record, every message in it, every stored attachment of those messages, its invites, and its webhooks. There is no pending state, no grace period, and no restore.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel to delete, close, or leave |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| silent?<sup>1</sup> | boolean | Whether to suppress the leave system message of a group direct message (default false) |
+| delete_messages?<sup>1</sup> | boolean | Whether to delete the caller's own messages in this channel first (default false) |
+
+<sup>1</sup> Only the exact trimmed values `true`, `True`, and `1` are true. An absent parameter and every other value, including `TRUE` and `yes`, are false
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT?<sup>1</sup> | string | An existing sudo mode proof, read when `delete_messages` is set |
+
+<sup>1</sup> An accepted proof is echoed back in the same response header, and completing the MFA path issues a fresh one
+
+### JSON body
+
+The body is optional. Fluxer reads it only when `delete_messages` is set and no existing sudo proof satisfies the requirement.
+
+<a id="sudo-verification-fields"></a>
+
+| Field | Type | Description |
+| --- | --- | --- |
+| password?<sup>1</sup> | string | The account password, offered as the sudo proof |
+| mfa_method?<sup>2</sup> | string | The verification method, either `totp` or `webauthn` |
+| mfa_code? | string | The authenticator code (1-32 characters), supplied with the `totp` method |
+| webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | The WebAuthn assertion for sudo verification |
+| webauthn_challenge? | string | The challenge (1-256 characters) bound to the sudo mode assertion |
+
+<sup>1</sup> Accepted only for an account with no configured second factor. A rejected password returns 400 `INVALID_FORM_BODY` with the code `INVALID_PASSWORD` on the path `password`
+
+<sup>2</sup> Accepted only for an account with a configured second factor. A rejected code or assertion returns 400 `INVALID_FORM_BODY` with the code `INVALID_MFA_CODE` on the path `mfa_code`
+
+An account that stores neither a password nor a second factor is verified without any proof.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Channel was deleted, closed, or left |
+| 400 | [error response](/http-api/#error-response) | Target is the personal notes channel and the request returns `CANNOT_EXECUTE_ON_DM` |
+| 403 | [error response](/http-api/#error-response) | Caller is not a guild member or lacks `VIEW_CHANNEL` or `MANAGE_CHANNELS`, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Sudo verification is required and the request returns `SUDO_MODE_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | A concurrent change removed the caller from the group direct message and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+Deleting a guild category first clears the `parent_id` of every child channel and emits [Channel Update](/gateway/events/#channel-update) for each one. The category itself is then deleted like any other guild channel.
+
+Deleting a guild channel deletes its invites and webhooks, purges the stored attachments of its messages, deletes its messages, and removes those messages from search. Fluxer then emits [Channel Delete](/gateway/events/#channel-delete) to every session subscribed to the guild, records a channel delete audit log entry with the previous channel state and no reason, and removes the channel record. A guild that named the channel as its system, rules, or AFK channel has that reference cleared and emits [Guild Update](/gateway/events/#guild-update).
+
+Closing a direct message marks the channel closed for the caller alone and emits [Channel Delete](/gateway/events/#channel-delete) to that caller. The channel, its messages, and the other recipient's view are untouched.
+
+Leaving a group direct message removes the caller from the recipient set, removes the caller's nickname, and closes the channel for the caller. If the caller owned the group, ownership transfers to one of the remaining recipients chosen at random.
+
+Remaining recipients receive [Channel Recipient Remove](/gateway/events/#channel-recipient-remove), and unless `silent` is true also a removal system message through [Message Create](/gateway/events/#message-create). The leaving caller receives [Channel Delete](/gateway/events/#channel-delete). No [Channel Update](/gateway/events/#channel-update) reports the ownership transfer or the removed nickname, so a client tracking `owner_id` or `nicks` must refetch the channel.
+
+Leaving as the final recipient permanently deletes the channel's messages and the channel record, with no system message.
+
+Setting `delete_messages` deletes the caller's authored messages in this channel after sudo verification and before the channel operation runs, and the response waits for that deletion to finish.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:delete::channel_id` bucket.
+
+## Add group direct message recipient
+
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/recipients/{user_id}" bot />
+
+Adds a user to a group direct message and returns 204 with an empty body. Emits a [Channel Recipient Add](/gateway/events/#channel-recipient-add) Gateway event.
+
+### Limitations
+
+- The caller must be a current recipient of the group.
+- The caller and the target must be friends, including when the caller is a bot.
+- The target's group direct message admission policy must allow the caller.
+- An instance with CAPTCHA enabled also requires a CAPTCHA proof.
+
+Fluxer evaluates the target's admission policy in this order.
+
+1. A target that has never stored settings admits every caller.
+2. A nobody setting rejects every caller. An everyone setting admits every caller.
+3. A friends-only setting admits only a caller the target has as a friend.
+4. Otherwise Fluxer admits the caller through an existing friendship, then through a mutual friend when the friends-of-friends setting is enabled, and then through a mutual guild when the guild-members setting is enabled.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the group direct message channel |
+| user_id | snowflake | The ID of the user to add |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | A CAPTCHA proof |
+| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, as does a proof for a provider the instance holds no secret key for. [CAPTCHA](/topics/captcha/) states when an instance skips verification
+
+<sup>2</sup> `hcaptcha` or `turnstile` selects that provider whether or not the instance configured it. The instance's configured provider is used when the header is absent or has any other value
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Recipient was added, or was already a recipient |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA proof is missing or rejected, the caller and target are not friends and the request returns `NOT_FRIENDS_WITH_USER` |
+| 400 | [error response](/http-api/#error-response) | The group is already full and the request returns `MAX_GROUP_DM_RECIPIENTS` |
+| 400 | [error response](/http-api/#error-response) | The channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller is not a recipient, or the target's admission policy rejects the caller, each returning `MISSING_ACCESS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+
+The `MAX_GROUP_DM_RECIPIENTS` body has `max_recipients` reporting the exact ceiling that was reached. That ceiling is the deployment's [`max_group_dm_recipients`](/http-api/instance/#limit-keys) limit resolved for the caller, and it defaults to 50.
+
+### Side effects
+
+A successful addition stores the new recipient set and opens the channel for the added user. The added user receives [Channel Create](/gateway/events/#channel-create), existing recipients receive [Channel Recipient Add](/gateway/events/#channel-recipient-add), and every recipient receives the addition system message through [Message Create](/gateway/events/#message-create). Adding a user who is already a recipient changes nothing, consumes no capacity, and emits no Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:update::channel_id` bucket. The `user:group_dm:recipient:add` protection bucket adds 10 requests per hour for each authenticated user, and does not consume the global limit.
+
+## Remove group direct message recipient
+
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/recipients/{user_id}" bot />
+
+Removes a user from a group direct message and returns 204 with an empty body. Emits a [Channel Recipient Remove](/gateway/events/#channel-recipient-remove) Gateway event.
+
+### Limitations
+
+- The caller must be a current recipient.
+- A caller may remove themself regardless of ownership.
+- Removing another recipient requires ownership of the group.
+- Setting `delete_messages` takes effect only when `user_id` is the caller, and it then requires sudo verification on the same terms as [Delete or leave channel](#delete-or-leave-channel).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the group direct message channel |
+| user_id | snowflake | The ID of the recipient to remove |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| silent?<sup>1</sup> | boolean | Whether to suppress the recipient removal system message (default false) |
+| delete_messages?<sup>1</sup> | boolean | Whether to delete the caller's own messages in this channel before self-removal (default false) |
+
+<sup>1</sup> Only the exact trimmed values `true`, `True`, and `1` are true. An absent parameter and every other value, including `TRUE` and `yes`, are false
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT?<sup>1</sup> | string | An existing sudo mode proof, read when `delete_messages` is set for self-removal |
+
+<sup>1</sup> An accepted proof is echoed back in the same response header, and completing the MFA path issues a fresh one
+
+### JSON body
+
+The optional body has the same [sudo verification fields](#sudo-verification-fields) as [Delete or leave channel](#delete-or-leave-channel). Fluxer reads it only when a self-removal sets `delete_messages` and the request has no existing sudo proof.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Recipient was removed |
+| 400 | [error response](/http-api/#error-response) | Channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE`, or the target is not a recipient and the request returns `INVALID_FORM_BODY` with the code `USER_NOT_IN_CHANNEL` |
+| 403 | [error response](/http-api/#error-response) | Caller is not a recipient and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The caller is not the owner while removing another recipient and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Sudo verification is required and the request returns `SUDO_MODE_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+The removal has the same state and Dispatch effects as leaving through [Delete or leave channel](#delete-or-leave-channel). It stores the reduced recipient set, removes the recipient's nickname, and closes the channel for the recipient. When the removed recipient owned the group, ownership transfers to one of the remaining recipients chosen at random.
+
+The removed recipient receives [Channel Delete](/gateway/events/#channel-delete). Remaining recipients receive [Channel Recipient Remove](/gateway/events/#channel-recipient-remove), and the removal system message through [Message Create](/gateway/events/#message-create) unless `silent` is true. No [Channel Update](/gateway/events/#channel-update) reports the ownership transfer or the removed nickname.
+
+Removing the final recipient permanently deletes the channel's messages, removes them from search, and deletes the channel record, with no system message. Setting `delete_messages` on a self-removal deletes the caller's messages in this channel before the removal runs.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:update::channel_id` bucket.
+
+## Set channel permission overwrite
+
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/permissions/{overwrite_id}" bot />
+
+Creates or replaces one permission overwrite on a guild channel and returns 204 with an empty body. Requires [MANAGE_ROLES](/http-api/permissions/) in that channel. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+### Limitations
+
+- A caller without [ADMINISTRATOR](/http-api/permissions/) cannot allow a permission bit outside their own effective permissions in that channel, and cannot remove a denied bit outside them either.
+
+The operation does not require `VIEW_CHANNEL` and never returns `TWO_FACTOR_REQUIRED` or `NSFW_CONTENT_AGE_RESTRICTED`.
+
+:::note[The identifier alone keys the overwrite]
+`type` records whether the identifier names a role or a member, and does not change which entry is written. An overwrite can be stored for an identifier that names nothing, and [Delete channel permission overwrite](#delete-channel-permission-overwrite) removes it.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild channel |
+| overwrite_id | snowflake | The ID of the role or member the overwrite represents |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Features?<sup>1</sup> | string | A comma-separated [feature declaration](/http-api/permissions/#feature-gated-permission-bits) |
+
+<sup>1</sup> A [feature-gated bit](/http-api/permissions/#feature-gated-permission-bits) the declaration does not name is copied from the stored overwrite, so the request can neither set nor clear it
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type<sup>1</sup> | integer | The [permission overwrite type](#permission-overwrite-types) of `overwrite_id` |
+| allow?<sup>2</sup> | ?decimal string | The bitfield of permissions to allow (default `0`) |
+| deny?<sup>2</sup> | ?decimal string | The bitfield of permissions to deny (default `0`) |
+
+<sup>1</sup> Only `0` and `1` are accepted
+
+<sup>2</sup> A decimal string of at most 9223372036854775807, or a JSON integer of at most 9007199254740991. An omitted or null value is treated as `0`
+
+A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_OUT_OF_INT64_RANGE`. A JSON number outside the safe integer range returns `INVALID_INTEGER_FORMAT`, and so does a string that is not all digits. Every bit outside the defined permission set is discarded before the authority check and before the change is applied.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Overwrite was created or replaced |
+| 403 | [error response](/http-api/#error-response) | `MANAGE_ROLES` in the channel or permission bit authority is absent, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, or is not a guild channel, each returning `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the submitted overwrite exactly matches the stored one. When the channel is a category, every child whose overwrites exactly matched the category's previous values receives the same replacement and its own Channel Update.
+
+The operation records an overwrite create or update audit entry with no reason. An unchanged overwrite records no audit entry.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:update::channel_id` bucket.
+
+## Delete channel permission overwrite
+
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/permissions/{overwrite_id}" bot />
+
+Deletes one permission overwrite from a guild channel and returns 204 with an empty body. Requires [MANAGE_ROLES](/http-api/permissions/) in that channel. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
+
+### Limitations
+
+- A caller without [ADMINISTRATOR](/http-api/permissions/) must already hold every permission bit the removed overwrite denied.
+
+The operation is idempotent. It does not require `VIEW_CHANNEL` and never returns `TWO_FACTOR_REQUIRED` or `NSFW_CONTENT_AGE_RESTRICTED`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild channel |
+| overwrite_id<sup>1</sup> | snowflake | The ID of the role or member the overwrite represents |
+
+<sup>1</sup> The identifier alone selects the overwrite. The request has no overwrite type
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Overwrite was deleted, or no overwrite existed for the identifier |
+| 403 | [error response](/http-api/#error-response) | `MANAGE_ROLES` in the channel or permission bit authority is absent, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, or is not a guild channel, each returning `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the identifier names no existing overwrite. Removing an overwrite that exists also records an overwrite delete audit entry with the previous overwrite state and no reason. An identifier that names no existing overwrite records no audit entry. When the target channel is a category, propagation follows the same exact-match rule as overwrite replacement.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:update::channel_id` bucket.

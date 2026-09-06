@@ -67,6 +67,11 @@
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
 			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
 		},
+		"fluxer_docs": {
+			"entry": ["scripts/*.ts", "src/**/*.astro"],
+			"project": ["src/**/*.{ts,astro}", "scripts/**/*.ts"],
+			"ignoreDependencies": ["sharp"]
+		},
 		"packages/openapi": {
 			"entry": ["src/GenerateOpenAPISpec.ts"],
 			"project": ["src/**/*.ts"]

@@ -1,0 +1,705 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Blocklists
+description: The nine safety blocklists, their value forms, and the operations that manage them.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A blocklist is a stored set of values Fluxer checks account access and user content against. Nine lists exist. Each has one canonical value form, one matching rule, and its own stored fields, and Fluxer canonicalises every value before storage and before every check.
+
+Each list has its own three [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission, so an account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
+
+A list's three values are `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
+
+:::note[The Admin API exposes no other blocklist]
+Fluxer synchronises disposable email domains from external feeds every six hours. No operation on this page reads or writes them.
+:::
+
+## Blocklist types
+
+`ip`, `email`, and `email-domain-suspicious` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` and `email-domain-suspicious` store nothing but the value, while an `ip` row also stores a ban kind, a reason, an expiry, and its creation time.
+
+| Value | Description |
+| --- | --- |
+| ip<sup>1</sup> | IPv4 addresses, IPv6 addresses, and CIDR ranges denied service |
+| email<sup>2</sup> | Exact email addresses barred from registration and from being set on an account |
+| email-domain-suspicious<sup>2</sup> <sup>3</sup> | Email domains that allow registration and require the new account to verify a phone number first |
+| phrase<sup>4</sup> | Phrases barred from content |
+| url<sup>5</sup> | Absolute `http` and `https` URLs barred from being posted |
+| url-domain<sup>6</sup> | Domains barred from being linked |
+| file-sha<sup>7</sup> | SHA-256 hashes barred from being uploaded |
+| avatar-hash<sup>8</sup> | Avatar hashes barred from being set |
+| profile-substring<sup>4</sup> <sup>9</sup> | Substrings barred from one named profile field |
+
+<sup>1</sup> Two guards refuse an address with 400 `IP_BAN_DECLINED`: the instance exemption list, and the high blast-radius carrier network check. Fluxer records both refusals in the Admin audit log
+
+<sup>2</sup> Stored lowercased, so a mixed-case value does not create a second row
+
+<sup>3</sup> Fluxer never shows the list to the account holder, who sees only the verified-phone gate. A domain must match `^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$`
+
+<sup>4</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. Match time also normalises inserted whitespace, punctuation, and compatibility glyphs
+
+<sup>5</sup> Canonicalised before storage. A value Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url`
+
+<sup>6</sup> Stored lowercased and matched against the lowercased hostname of a submitted URL. `match_subdomains` is stored on the row and defaults to true, and the hostname match is exact whatever its value
+
+<sup>7</sup> Stored as lowercase hexadecimal
+
+<sup>8</sup> Stored as the 8-character hash with any `a_` animation prefix stripped and the remainder lowercased, so the animated and static forms of one avatar are the same row
+
+<sup>9</sup> The only scoped list. Scope and substring together identify a row, so the same substring can be stored once per [scope](#profile-substring-scopes)
+
+The fields a list accepts differ from list to list, and so does the operation set. Read the `fields` array and the three `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
+
+## Content blocklist categories
+
+Every `url`, `url-domain`, `file-sha`, and `avatar-hash` row has a category naming where it came from. A row created through this resource without an explicit category is stored as `manual`.
+
+| Value | Description |
+| --- | --- |
+| manual | Added by an Admin through this resource |
+| urlhaus | Imported from URLhaus |
+| phishtank | Imported from PhishTank |
+| google_safe_browsing | Imported from Google Safe Browsing |
+| malware_bazaar | Imported from MalwareBazaar |
+| ncmec | Imported from an NCMEC hash set |
+| gifct | Imported from a GIFCT hash set |
+| stop_ncii | Imported from a StopNCII hash set |
+
+The request field is a free string of 1 through 64 characters, so a value outside this registry is accepted and stored verbatim. Tolerate a stored category outside these eight.
+
+## Content blocklist severities
+
+Every `url`, `url-domain`, `file-sha`, and `avatar-hash` row has a severity. A row created without an explicit severity is stored as `2`.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ALLOW | Record the match and take no action |
+| 1 | WARN | Record the match, warn, and allow the content |
+| 2 | BLOCK | Refuse the content |
+| 3 | BLOCK_AND_REPORT | Refuse the content and raise a report |
+
+## Profile substring scopes
+
+| Value | Description |
+| --- | --- |
+| username | Match the substring against the account username |
+| global_name | Match the substring against the account display name |
+| nickname | Match the substring against a guild nickname |
+| bio | Match the substring against the profile biography |
+| pronouns | Match the substring against the profile pronouns |
+
+## Blocklist object
+
+One entry of the blocklist catalogue returned by [List blocklists](#list-blocklists). The catalogue is a constant of the release and reports no counts.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) this entry describes |
+| description | string | The human-readable summary of what the blocklist matches and how it matches |
+| value_field<sup>1</sup> | string | The request body field that has the value when adding |
+| fields<sup>2</sup> | array[string] | The field names rows of this blocklist accept beyond the value (at most 8) |
+| scoped<sup>3</sup> | boolean | Whether rows are scoped to a profile field and every operation has a scope |
+| supports_bulk_create<sup>4</sup> | boolean | Whether [Bulk add blocklist entries](#bulk-add-blocklist-entries) is accepted |
+| supports_bulk_delete<sup>5</sup> | boolean | Whether [Bulk remove blocklist entries](#bulk-remove-blocklist-entries) is accepted |
+| supports_update<sup>6</sup> | boolean | Whether [Update blocklist entry](#update-blocklist-entry) is accepted |
+
+<sup>1</sup> `ip` names `ip`, `email` names `email`, `email-domain-suspicious` and `url-domain` name `domain`, `phrase` names `phrase`, `url` names `url`, `file-sha` names `sha256_hex`, `avatar-hash` names `hashes`, and `profile-substring` names `substrings`
+
+<sup>2</sup> Empty for `ip`, `email`, `email-domain-suspicious`, and `phrase`. `url` names `category`, `severity`, `source_url`, and `notes`. `url-domain` adds `match_subdomains`, `file-sha` adds `content_type`, and `avatar-hash` adds `reason`. `profile-substring` names `scope`, `reason`, and `notes`
+
+<sup>3</sup> True only for `profile-substring`
+
+<sup>4</sup> True only for `file-sha`
+
+<sup>5</sup> True only for `avatar-hash` and `profile-substring`
+
+<sup>6</sup> True for `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`, which is exactly the set whose `fields` array is non-empty
+
+### Example
+
+```json
+{
+  "list_type": "url-domain",
+  "description": "Domains blocked from being linked, optionally covering every subdomain rooted at the domain.",
+  "value_field": "domain",
+  "fields": ["match_subdomains", "category", "severity", "source_url", "notes"],
+  "scoped": false,
+  "supports_bulk_create": false,
+  "supports_bulk_delete": false,
+  "supports_update": true
+}
+```
+
+## Blocklist entry object
+
+One stored row of one blocklist. Every field is present on every entry, and a field the row's blocklist does not store is null.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) the row belongs to |
+| value<sup>1</sup> | string | The canonical stored value (1-2048 characters) |
+| scope<sup>2</sup> | ?string | The [profile substring scope](#profile-substring-scopes) the row is stored under |
+| category<sup>3</sup> | ?string | The [content blocklist category](#content-blocklist-categories) the row was recorded under |
+| severity<sup>3</sup> | ?integer | The [content blocklist severity](#content-blocklist-severities) applied when the row matches |
+| source_url<sup>3</sup> | ?string | The feed or evidence URL the row was recorded from |
+| notes<sup>4</sup> | ?string | The internal note stored alongside the row |
+| content_type<sup>5</sup> | ?string | The media type hint recorded alongside a `file-sha` row |
+| match_subdomains<sup>6</sup> | ?boolean | Whether a `url-domain` row is flagged as covering subdomains |
+| reason<sup>7</sup> | ?string | The reason stored on the row |
+| expires_at<sup>7</sup> | ?ISO8601 timestamp | When the row expires |
+| created_at<sup>8</sup> | ?ISO8601 timestamp | When the row was added |
+| created_by_user_id<sup>8</sup> | ?snowflake | The Admin account that added the row, or null when unknown |
+
+<sup>1</sup> The exact string the single-entry operations and the `after` cursor accept for that row
+
+<sup>2</sup> Non-null only on `profile-substring`
+
+<sup>3</sup> Non-null only on `url`, `url-domain`, `file-sha`, and `avatar-hash`, where `category` and `severity` are always populated
+
+<sup>4</sup> Non-null only on `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
+
+<sup>5</sup> Non-null only on `file-sha`
+
+<sup>6</sup> Non-null only on `url-domain`
+
+<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) is written as a permanent ban, so it reads back with the reason `platform_admin_enforcement` and a null `expires_at`
+
+<sup>8</sup> Both null on `email`, `email-domain-suspicious`, and `phrase`, which store nothing but the value. `created_by_user_id` is additionally null on `ip`
+
+:::note[The audit entry records the accepted reason]
+An `avatar-hash` or `profile-substring` write accepts `reason`, and both lists then report `reason` as null in this object.
+:::
+
+### Example
+
+```json
+{
+  "list_type": "url-domain",
+  "value": "malicious.example.com",
+  "scope": null,
+  "category": "urlhaus",
+  "severity": 2,
+  "source_url": "https://urlhaus.example.com/entry/912",
+  "notes": null,
+  "content_type": null,
+  "match_subdomains": true,
+  "reason": null,
+  "expires_at": null,
+  "created_at": "2026-01-22T07:41:19.003Z",
+  "created_by_user_id": "1483920011884392448"
+}
+```
+
+## Blocklist check object
+
+The decision [Check blocklist entry](#check-blocklist-entry) returns for one value.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| banned<sup>1</sup> | boolean | Whether the value is currently blocked by the named blocklist |
+
+<sup>1</sup> Reports the decision the enforcement path would make for this value
+
+:::note[A block and a row are different things]
+A value can be blocked with no row of its own, as a single address covered by a stored CIDR range is. A row can exist while the value reads as not blocked, as an exempt address or an exempt email domain does.
+:::
+
+## Blocklist entry creation object
+
+The body of [Add blocklist entry](#add-blocklist-entry) is a union resolved by the `list_type` path segment. The field that has the value differs per blocklist, and two of the nine take an array, so one request can add up to 1000 avatar hashes or profile substrings. Supplying a field the selected blocklist does not accept is not an error. Fluxer strips the unrecognised key.
+
+### Value field
+
+| Blocklist | Field | Accepted value |
+| --- | --- | --- |
+| ip | ip | IPv4 address, IPv6 address, or CIDR range of 1 through 45 characters |
+| email | email | Email address of 1 through 254 characters |
+| email-domain-suspicious | domain | Domain of 1 through 253 characters matching `^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$` |
+| phrase | phrase | Phrase of 1 through 500 characters |
+| url | url | Absolute `http` or `https` URL of 1 through 2048 characters |
+| url-domain | domain | Domain of 1 through 253 characters |
+| file-sha | sha256_hex | Exactly 64 hexadecimal characters |
+| avatar-hash<sup>1</sup> | hashes | 1 through 1000 hashes, each 8 through 10 characters matching `^(a_)?[0-9a-fA-F]{8}$` |
+| profile-substring<sup>1</sup> <sup>2</sup> | substrings | 1 through 1000 substrings, each 1 through 500 characters |
+
+<sup>1</sup> Each value is canonicalised and written as its own row with its own Admin audit entry
+
+<sup>2</sup> `scope` is required in the same body
+
+Each field is a string, except `hashes` and `substrings`, which are `array[string]`.
+
+`avatar-hash` deduplicates the array after canonicalisation. `profile-substring` does not, so a substring repeated in one request is written once and audited once per occurrence, and a value that canonicalises to an empty string is skipped.
+
+### Additional fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope<sup>3</sup> | string | The [profile substring scope](#profile-substring-scopes) to store the rows under |
+| category?<sup>4</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
+| severity?<sup>4</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
+| match_subdomains?<sup>5</sup> | boolean | Whether the row is flagged as covering subdomains (default true) |
+| content_type?<sup>6</sup> | string | The media type hint (1-128 characters) |
+| source_url?<sup>4</sup> | string | The feed or evidence URL (1-2048 characters) |
+| reason?<sup>7</sup> | string | The reason (1-1024 characters) |
+| notes?<sup>8</sup> | string | The internal note (1-1024 characters) |
+
+<sup>3</sup> Required by `profile-substring`. Every other blocklist strips `scope`
+
+<sup>4</sup> Accepted only by `url`, `url-domain`, `file-sha`, and `avatar-hash`
+
+<sup>5</sup> Accepted only by `url-domain`
+
+<sup>6</sup> Accepted only by `file-sha`
+
+<sup>7</sup> Accepted only by `avatar-hash` and `profile-substring`, and recorded in the audit entry metadata
+
+<sup>8</sup> Accepted only by `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
+
+## List blocklists
+
+<RouteHeader method="GET" path="/v1/admin/blocklists" />
+
+Returns one [blocklist](#blocklist-object) object for every blocklist this instance maintains. Requires any one of the nine `check` permissions.
+
+The response is identical for every Admin and does not change when entries are added or removed.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| items<sup>1</sup> | array[[blocklist](#blocklist-object) object] | Every blocklist exposed by this instance |
+
+<sup>1</sup> Always the complete catalogue in one response. There is no cursor, no `has_more`, and no `next_after`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Catalogue was returned |
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## List blocklist entries
+
+<RouteHeader method="GET" path="/v1/admin/blocklists/{list_type}/entries" />
+
+Returns a value-ordered cursor page of [blocklist entry](#blocklist-entry-object) objects. Requires the selected list's `check` permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit? | integer | Maximum entries to return (1-200, default 50) |
+| after?<sup>1</sup> | string | Return entries ordered strictly after this value (1-2048 characters) |
+| scope?<sup>2</sup> | string | The [profile substring scope](#profile-substring-scopes) to list |
+
+<sup>1</sup> Compared as a string against the canonical stored value. Fluxer does not validate it against the selected blocklist, so an impossible cursor returns no entries
+
+<sup>2</sup> Required by `profile-substring` and rejected by every other blocklist
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| items | array[[blocklist entry](#blocklist-entry-object) object] | Entries in this page, ordered by value ascending |
+| has_more | boolean | Whether another page can be fetched with `next_after` |
+| next_after<sup>3</sup> | ?string | The stored entry value to send as `after`, or null on the last page |
+
+<sup>3</sup> A value cursor, so it is sent back verbatim as `after`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Entry page was returned |
+| 400 | [error response](/admin-api/#error-response) | `scope` is supplied on an unscoped blocklist or omitted on `profile-substring`, and the request returns `INVALID_FORM_BODY` |
+
+The cost of a page does not fall as the cursor advances, so walk a large list with the largest `limit` the operation accepts.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Add blocklist entry
+
+<RouteHeader method="POST" path="/v1/admin/blocklists/{list_type}/entries" auditReason />
+
+Canonicalises the submitted value or values and writes them to the selected blocklist. Returns 204 with an empty body. Requires the selected list's `add` permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) |
+
+### JSON body
+
+The body is one [blocklist entry creation object](#blocklist-entry-creation-object). `list_type` selects the shape, so a body valid for one blocklist fails validation on another.
+
+:::caution[Adding a row overwrites the existing row]
+Every write is an upsert on the canonical value. An omitted optional field is written as its default, so re-adding a `url` without a `category` resets that row to `manual`. The previous values are not recoverable.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Values were written |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the value is not valid for the list, or a field the blocklist does not accept was supplied |
+
+A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+
+Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list, and when a single address is classified as a high blast-radius mobile or carrier network. It skips the blast-radius guard for a CIDR range, and a lookup failure counts as no risk, so the address is written.
+
+The response has no body, so it does not report the canonical form that was stored. Read it back with [List blocklist entries](#list-blocklist-entries).
+
+### Side effects
+
+The written rows take effect for subsequent blocklist decisions. For every list except `email` and `email-domain-suspicious`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded per written value, with that value in its metadata. Fluxer records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt` or `ban_ip_skipped_cgnat`, before it returns the 400.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Bulk add blocklist entries
+
+<RouteHeader method="PUT" path="/v1/admin/blocklists/{list_type}/entries" auditReason />
+
+Enqueues a background job that adds up to 10000 SHA-256 hashes to the `file-sha` blocklist and returns the job ID immediately. Requires `ban:file_sha:add`.
+
+Only `file-sha` accepts this operation, reported as `supports_bulk_create` by [List blocklists](#list-blocklists). Every other list type returns 400 `INVALID_FORM_BODY`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types), which is `file-sha` here |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sha256_list<sup>1</sup> | array[string] | The SHA-256 hashes to add (1-10000 items of exactly 64 characters) |
+
+<sup>1</sup> The body enforces the length of each item. The job checks the alphabet and records a non-hexadecimal item as an `invalid_sha256` failure
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id | snowflake | The background job applying the hashes |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Job was queued |
+| 400 | [error response](/admin-api/#error-response) | The list type is not `file-sha` and the request returns `INVALID_FORM_BODY` |
+
+The operation returns before any hash is written. Read progress and the final counts from [Get job](/admin-api/jobs/#get-job), and stop the job with [Cancel job](/admin-api/jobs/#cancel-job). The job reports progress every 50 hashes and finishes with a summary naming how many were written and how many failed.
+
+Every hash is written with the category `manual`, the severity `2`, and a null content type, source URL, and note. The bulk path accepts no metadata, so a hash that needs any of those goes through [Add blocklist entry](#add-blocklist-entry) or takes a later [Update blocklist entry](#update-blocklist-entry).
+
+### Side effects
+
+The job lowercases each hash and writes it as an upsert. It publishes one refresh notice after the last hash, so a job cancelled part way leaves the hashes it wrote invisible to other nodes until a later write or the twelve-hourly feed sync publishes one. No Gateway Dispatch is emitted.
+
+The job records one aggregate [Admin audit entry](/admin-api/#admin-audit-entry-object) under the action `bulk_ban_file_shas`, with the submitted, successful, and failed counts. A cancelled job records none.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Bulk remove blocklist entries
+
+<RouteHeader method="DELETE" path="/v1/admin/blocklists/{list_type}/entries" auditReason />
+
+Canonicalises up to 1000 values and removes their rows from the selected blocklist. Returns 204 with an empty body. Requires the selected list's `remove` permission.
+
+Only `avatar-hash` and `profile-substring` accept this operation, reported as `supports_bulk_delete` by [List blocklists](#list-blocklists). Every other list type returns 400 `INVALID_FORM_BODY`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types), which is `avatar-hash` or `profile-substring` here |
+
+### JSON body
+
+The body is selected by `list_type`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| hashes<sup>1</sup> | array[string] | Avatar hashes to remove (1-1000 items of 8 through 10 characters matching `^(a_)?[0-9a-fA-F]{8}$`) |
+| scope<sup>2</sup> | string | The [profile substring scope](#profile-substring-scopes) the substrings are stored under |
+| substrings<sup>2</sup> | array[string] | Substrings to remove (1-1000 items of 1 through 500 characters) |
+
+<sup>1</sup> `avatar-hash` only, where it is the whole body
+
+<sup>2</sup> `profile-substring` only, where both are required. The body reuses the creation shape, so `reason` and `notes` parse and are then ignored
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Values were processed |
+| 400 | [error response](/admin-api/#error-response) | The list accepts no bulk removal, or the body fails validation, and the request returns `INVALID_FORM_BODY` |
+
+The operation is idempotent and reports no counts. A value with no stored row still returns 204. Read the list before and after to tell a removal from a no-op.
+
+`avatar-hash` deduplicates the array after canonicalisation. `profile-substring` does not, so a substring repeated in one request is removed once and audited once per occurrence, and a value that canonicalises to an empty string is skipped.
+
+### Side effects
+
+Every removed row stops affecting subsequent blocklist decisions, and one refresh notice follows the last value. A value can remain blocked by another matching row. No Gateway Dispatch is emitted.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per canonical value processed.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Check blocklist entry
+
+<RouteHeader method="GET" path="/v1/admin/blocklists/{list_type}/entries/{entry_value}" />
+
+Reports whether one value is currently blocked by the selected blocklist and returns a [blocklist check](#blocklist-check-object) object. Requires the selected list's `check` permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) |
+| entry_value<sup>1</sup> | string | The percent-encoded value to check (1-2048 characters) |
+
+<sup>1</sup> Percent encoding is required because a canonical value can contain a slash. Fluxer checks the value for length alone, so a value in the wrong form returns 200 with `banned` false
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope?<sup>2</sup> | string | The [profile substring scope](#profile-substring-scopes) to check the value against |
+
+<sup>2</sup> Required by `profile-substring` and rejected by every other blocklist
+
+### Matching rule by blocklist
+
+| Blocklist | Rule |
+| --- | --- |
+| ip<sup>3</sup> <sup>4</sup> | The address itself, any stored CIDR range containing it, and any stored address the instance treats as the same origin |
+| email | Exact match on the lowercased address |
+| email-domain-suspicious<sup>5</sup> | Exact match on the lowercased domain |
+| phrase | Normalised phrase matching, so an obfuscated form of a stored phrase still reads as blocked |
+| url<sup>6</sup> | Exact match on the canonicalised URL |
+| url-domain | Exact match on the lowercased hostname |
+| file-sha | Exact match on the lowercased hexadecimal digest |
+| avatar-hash | Exact match after the `a_` prefix is stripped and the hash is lowercased |
+| profile-substring | Normalised substring matching within the named scope |
+
+<sup>3</sup> Any value that is not a single address, including a CIDR range, always reads as not blocked. An address on the instance exemption list reads as not blocked even while a row exists
+
+<sup>4</sup> Two addresses are the same origin when they share a decision key, which is the exact address for IPv4 and the `/64` prefix for IPv6
+
+<sup>5</sup> A domain the account policy exempts from contact-domain reputation reads as not blocked even while a row exists
+
+<sup>6</sup> This check does not consult the `url-domain` list, so a URL blocked in practice by a stored domain reads as not blocked. Check the hostname separately
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [blocklist check](#blocklist-check-object) object | Value was checked |
+| 400 | [error response](/admin-api/#error-response) | `scope` is supplied on an unscoped blocklist or omitted on `profile-substring`, and the request returns `INVALID_FORM_BODY` |
+
+A value with no row and no covering match returns 200 with `banned` false, so this operation never reports whether a specific row exists. Use [List blocklist entries](#list-blocklist-entries) for that.
+
+For every list except `email` and `email-domain-suspicious`, a row written on another node becomes visible here after a short propagation delay.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Update blocklist entry
+
+<RouteHeader method="PATCH" path="/v1/admin/blocklists/{list_type}/entries/{entry_value}" auditReason />
+
+Rewrites the stored fields of one row without removing and re-adding it. Returns 204 with an empty body. Requires the selected list's `add` permission.
+
+Only `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` accept this operation, reported as `supports_update` by [List blocklists](#list-blocklists). A list with no stored fields has nothing to update and returns 400 `INVALID_FORM_BODY`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) |
+| entry_value | string | The percent-encoded canonical value of the row to write (1-2048 characters) |
+
+### JSON body
+
+The body is the creation shape of the selected blocklist with the value field removed, so the same field list and the same bounds apply.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to write the row under |
+| category?<sup>2</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
+| severity?<sup>2</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
+| match_subdomains?<sup>3</sup> | boolean | Whether the row is flagged as covering subdomains (default true) |
+| content_type?<sup>4</sup> | string | The media type hint (1-128 characters) |
+| source_url?<sup>2</sup> | string | The feed or evidence URL (1-2048 characters) |
+| reason?<sup>5</sup> | string | The reason (1-1024 characters) |
+| notes?<sup>6</sup> | string | The internal note (1-1024 characters) |
+
+<sup>1</sup> Required by `profile-substring`. This operation takes no query parameters, so the scope travels in the body, and every other blocklist ignores it there
+
+<sup>2</sup> Accepted only by `url`, `url-domain`, `file-sha`, and `avatar-hash`
+
+<sup>3</sup> Accepted only by `url-domain`
+
+<sup>4</sup> Accepted only by `file-sha`
+
+<sup>5</sup> Accepted only by `avatar-hash` and `profile-substring`, and recorded in the audit entry metadata
+
+<sup>6</sup> Accepted only by `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
+
+:::caution[An omitted field is written as its default]
+Sending `{"severity": 3}` on a `url` row also resets its category to `manual` and clears its source URL and notes. Resend every field the row is meant to keep.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Row was written |
+| 400 | [error response](/admin-api/#error-response) | The list accepts no update, or the body fails validation, and the request returns `INVALID_FORM_BODY` |
+
+On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+
+The write is an upsert on the canonical value, so a value with no existing row is created. This operation never returns 404. A `url` blocked only by a stored `url-domain` row has no row of its own, and updating it through the URL silently creates a new exact-URL row.
+
+Changing the `scope` of a `profile-substring` row writes a second row under the new scope and leaves the original in place. Removing the original takes [Remove blocklist entry](#remove-blocklist-entry).
+
+### Side effects
+
+The written fields take effect for subsequent matches, and the write publishes a refresh notice. No Gateway Dispatch is emitted.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded under the same action an add records, with the canonical value. The audit entry has no previous values of the changed fields.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Remove blocklist entry
+
+<RouteHeader method="DELETE" path="/v1/admin/blocklists/{list_type}/entries/{entry_value}" auditReason />
+
+Removes one row from the selected blocklist. Returns 204 with an empty body. Requires the selected list's `remove` permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| list_type | string | The [blocklist type](#blocklist-types) |
+| entry_value<sup>1</sup> | string | The percent-encoded canonical value of the row to remove (1-2048 characters) |
+
+<sup>1</sup> Canonicalised the same way it was on the add path and matched exactly, so a `url` blocked only by a broader `url-domain` row cannot be removed through the URL
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope?<sup>2</sup> | string | The [profile substring scope](#profile-substring-scopes) the row is stored under |
+
+<sup>2</sup> Required by `profile-substring` and rejected by every other blocklist
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Value was processed |
+| 400 | [error response](/admin-api/#error-response) | `scope` is supplied on an unscoped blocklist or omitted on `profile-substring`, and the request returns `INVALID_FORM_BODY` |
+
+On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+
+The operation is idempotent. A value with no stored row returns 204 and still records an Admin audit entry, so this operation never returns 404 and never reports whether anything was removed.
+
+### Side effects
+
+The removed row stops affecting subsequent blocklist decisions, and other nodes stop applying it after a short propagation delay for every list except `email` and `email-domain-suspicious`. A value can remain blocked by another matching row, such as a single address covered by a stored CIDR range. No Gateway Dispatch is emitted.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the canonical value in its metadata.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
+
+## Block a user's current avatar
+
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/avatar-block" auditReason />
+
+Adds the account's current avatar hash to the `avatar-hash` blocklist and returns the stored hash. Requires `ban:avatar_hash:add`.
+
+This is a shortcut over [Add blocklist entry](#add-blocklist-entry) for blocking an avatar an Admin is looking at. The operation reads the current avatar hash and strips any `a_` animation prefix, so the stored value is the 8-character form. It writes the same row an add writes, with the category `manual`, the severity `2`, and a null source URL. It does not ban, suspend, or otherwise act on the account.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The account whose current avatar is blocked |
+
+### JSON body
+
+Both fields are optional. An empty body and `{}` are both valid requests.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reason?<sup>1</sup> | string | The reason (1-1024 characters) |
+| notes?<sup>2</sup> | string | The internal note (1-1024 characters) |
+
+<sup>1</sup> Recorded in the metadata of the Admin audit entry, so no read of the row returns it
+
+<sup>2</sup> Stored on the row. Omitting it stores the generated note `banned via user shortcut user_id=<user_id>`
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| hash_short | string | The stored 8-character avatar hash |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Avatar hash was written |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER` when the account does not exist, or `NOT_FOUND` when the account has no avatar |
+
+The account keeps the blocked avatar until it next sets one. Clearing it is a separate request naming `avatar` in the `fields` array of [Clear user profile fields](/admin-api/users/#clear-user-profile-fields).
+
+Every account using that image shares the same truncated prefix, so blocking the hash blocks the image for every account.
+
+### Side effects
+
+The hash takes effect for subsequent avatar uploads, and the write publishes a refresh notice. No Gateway Dispatch is emitted.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded under the action `ban_avatar_hash`, with the stored hash and the supplied reason.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.

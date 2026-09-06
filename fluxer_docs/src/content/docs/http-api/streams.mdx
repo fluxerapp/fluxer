@@ -1,0 +1,324 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Streams
+description: Go Live stream keys, stream region selection, and the stream preview image lifecycle.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A Go Live stream is a screen share on a member's existing voice connection. A stream key names one stream. The operations here record a region preference and manage the stream's JPEG preview image.
+
+Every route on this page is user-only. Bot and OAuth2 credentials are rejected.
+
+## Stream lifecycle
+
+Starting and stopping a stream is a main Gateway operation. Going live publishes a screen share track on the LiveKit participant the member already holds, and the publisher advertises it by setting `self_stream` on that connection with [Voice State Update](/gateway/commands/#voice-state-update). Fluxer opens no second connection and issues no new grant. The [Voice overview](/voice/) states the full model.
+
+## Stream key
+
+A stream key travels as one path segment of 1 through 256 characters. It has exactly three colon-separated segments. The form is `{guild_id}:{channel_id}:{connection_id}` for a guild voice stream and `dm:{channel_id}:{connection_id}` for a private call stream.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope<sup>1</sup> | string | The literal `dm` for a private call, or the decimal guild ID for a guild voice channel |
+| channel_id<sup>2</sup> | string | The decimal ID of the voice channel or private channel the stream runs in |
+| connection_id<sup>3</sup> | string | The `connection_id` of the publisher's existing voice connection |
+
+<sup>1</sup> Any other value fails the format check, including an empty segment
+
+<sup>2</sup> The segment is canonical decimal digits, `[0-9]+` with no leading zero. A non-canonical form never matches
+
+<sup>3</sup> The publisher's ordinary voice connection, which is also the one in its voice state and in its media participant identity
+
+A key with a different segment count, a non-numeric channel segment, an empty connection segment, or a scope segment that is neither `dm` nor a decimal ID returns 400 `INVALID_STREAM_KEY_FORMAT`.
+
+[Modify stream region](#modify-stream-region), [Get stream preview](#get-stream-preview), and [Delete stream preview](#delete-stream-preview) resolve the channel from the channel segment of the key. [Upload stream preview](#upload-stream-preview) and [Create stream preview upload URL](#create-stream-preview-upload-url) instead resolve it from the `channel_id` in their request body and compare that value against the key afterwards.
+
+The scope segment is checked against the resolved channel. A guild-scoped key whose channel turns out to be private, a `dm` key whose channel turns out to belong to a guild, and a guild-scoped key whose guild segment is not the resolved channel's guild each return 400 `STREAM_KEY_SCOPE_MISMATCH`.
+
+The route then compares the channel segment against the resolved channel ID, and a mismatch returns 400 `STREAM_KEY_CHANNEL_MISMATCH`. On the two routes that have a body `channel_id`, a caller MUST send the same value in the body and in the key.
+
+That comparison is the last check of the read boundary. Channel lookup, the scope check, the channel type check, and the `CONNECT` check all run first, so a body `channel_id` naming a channel the caller cannot see answers 404 `UNKNOWN_CHANNEL` or 403.
+
+## Access rules
+
+Two boundaries apply across this page.
+
+Read access matches [Get channel](/http-api/channels/#get-channel) for the [resolved channel](#stream-key). A guild channel additionally requires the [CONNECT](/http-api/permissions/) permission. The caller does not have to own the stream, so any member who can join the channel can read its preview.
+
+Mutation access adds two requirements to read access. A guild channel also requires the [STREAM](/http-api/permissions/) permission. The caller must hold a voice state in exactly the resolved channel and the connection identifier the key names. Fluxer rejects a caller that holds no such voice state with 403 `ACCESS_DENIED`, even when it owns the channel.
+
+:::caution[A preview can exist with no live stream]
+A caller can record a region and upload a preview for any voice connection it holds, whether or not it is streaming.
+:::
+
+A guild channel resolves before its guild does. A channel row that outlives its guild returns 404 `UNKNOWN_GUILD`. A guild record that exists but whose membership state cannot be resolved returns 403 `ACCESS_DENIED`, and a caller that is not a member or that lacks [VIEW_CHANNEL](/http-api/permissions/) returns 403 `MISSING_PERMISSIONS`. An unsatisfied age restriction on a guild text, voice, or link channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
+
+A private channel whose recipient set does not contain the caller returns 404 `UNKNOWN_CHANNEL`. An absent channel returns the same code, so recipient membership is never distinguishable from private channel existence.
+
+Every route checks the channel type after the scope check. A guild key names a guild voice channel and a `dm` key names a direct message or a group direct message. Any other resolved channel returns 400 `INVALID_CHANNEL_TYPE`.
+
+## Stream preview upload object
+
+A short-lived URL that accepts one stream's preview image. [Create stream preview upload URL](#create-stream-preview-upload-url) returns it, and the client uploads the image with a single `PUT` against `upload_url`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| upload_url<sup>1</sup> | string | The capability URL that accepts the preview bytes with one `PUT` request |
+| method | string | Always `PUT` |
+| content_type<sup>2</sup> | string | The media type of the upload request |
+| expires_at<sup>3</sup> | ISO8601 timestamp | The time the capability expires |
+| expires_in<sup>3</sup> | integer | The lifetime of the capability in seconds |
+| max_bytes | integer | The maximum accepted byte count, always `1000000` |
+
+<sup>1</sup> Either a presigned object storage URL or an [upload relay](/media-proxy/upload-relay/) URL with the signed capability in its `t` query parameter
+
+<sup>2</sup> The request's `content_type` is returned verbatim, original casing included, and an absent field yields `image/jpeg`
+
+<sup>3</sup> A presigned object storage URL lasts one day. A relay URL lasts the relay token lifetime the instance is configured with
+
+A client MUST send the URL exactly as returned and MUST NOT rebuild or reorder it. Rebuilding drops the signed capability in `t`, and a relay URL that arrives without `t` returns 401.
+
+The capability keeps accepting `PUT` requests until it expires. Nothing records that it has been redeemed, and each request overwrites the object the previous one wrote.
+
+### Example
+
+```json
+{
+  "upload_url": "https://cdn.example.com/stream-previews/1501314428688998182?t=fabricated-token",
+  "method": "PUT",
+  "content_type": "image/jpeg",
+  "expires_at": "2026-08-31T12:00:00.000Z",
+  "expires_in": 86400,
+  "max_bytes": 1000000
+}
+```
+
+## Modify stream region
+
+<RouteHeader method="PATCH" path="/v1/streams/{stream_key}/stream" />
+
+Records the preferred media region for a stream and returns 204 with an empty body. The caller must satisfy the [mutation access](#access-rules) boundary.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| stream_key | string | [Stream key](#stream-key) whose region is set, of 1 through 256 characters |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region?<sup>1</sup> | string | The RTC region ID of 1 through 64 characters |
+
+<sup>1</sup> An omitted field stores no region for this stream
+
+A region identifier is the `id` of an [RTC region object](/http-api/channels/#rtc-region-object), as returned by [List RTC regions](/http-api/channels/#list-rtc-regions).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Preference was recorded |
+| 400 | [error response](/http-api/#error-response) | Stream key is malformed and the request returns `INVALID_STREAM_KEY_FORMAT` |
+| 400 | [error response](/http-api/#error-response) | Its scope disagrees with the resolved channel and the request returns `STREAM_KEY_SCOPE_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | Its channel segment is not the canonical form of the resolved channel ID and the request returns `STREAM_KEY_CHANNEL_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | The resolved channel is not a guild voice channel or a private channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller holds no matching voice state or has an unresolvable guild membership state, each returning `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks `VIEW_CHANNEL`, `CONNECT`, or `STREAM` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction of a guild channel is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel named by the stream key does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The call has no effect on where the stream is placed. Fluxer does not validate the region against the caller's accessible region list. The operation emits no Gateway Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and stream key, on the `channel:stream:update::stream_key` bucket.
+
+## Get stream preview
+
+<RouteHeader method="GET" path="/v1/streams/{stream_key}/preview" />
+
+Returns the stored preview bytes for a stream. The caller must satisfy the [read access](#access-rules) boundary.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| stream_key | string | [Stream key](#stream-key) whose preview is returned, of 1 through 256 characters |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | preview bytes | A stored preview exists |
+| 400 | [error response](/http-api/#error-response) | Stream key is malformed and the request returns `INVALID_STREAM_KEY_FORMAT`, its scope disagrees with the resolved channel and the request returns `STREAM_KEY_SCOPE_MISMATCH`, the resolved channel is not a guild voice channel or a private channel and the request returns `INVALID_CHANNEL_TYPE`, or its channel segment is not the canonical form of the resolved channel ID and the request returns `STREAM_KEY_CHANNEL_MISMATCH` |
+| 403 | [error response](/http-api/#error-response) | Caller has an unresolvable guild membership state and the request returns `ACCESS_DENIED`, the caller lacks `VIEW_CHANNEL` or `CONNECT` and the request returns `MISSING_PERMISSIONS`, or the resolved age restriction of a guild channel is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | empty | No preview is stored for this stream key |
+| 404 | [error response](/http-api/#error-response) | Channel named by the stream key does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+The 200 also has `Cache-Control: no-store, private` and `Pragma: no-cache`.
+
+A stored preview expires one day after it was written, and a read after that point answers an empty 404. A stored object that is missing, temporarily unreadable, or larger than 1000000 bytes answers an empty 404 too.
+
+:::note[A missing preview answers 404 with no body]
+Every other 404 on this route has an [error response](/http-api/#error-response) body, so a client MUST read an empty 404 as "no preview yet".
+:::
+
+The response `Content-Type` is the media type recorded when the preview was written, and it defaults to `image/jpeg` when none was recorded. [Upload stream preview](#upload-stream-preview) accepts a declared media type naming JPEG without inspecting the bytes, and the capability path of [Create stream preview upload URL](#create-stream-preview-upload-url) inspects nothing. A client therefore MUST NOT treat this header as proof of the payload format and MUST decode defensively.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user and stream key, on the `channel:stream:preview:get::stream_key` bucket.
+
+## Upload stream preview
+
+<RouteHeader method="POST" path="/v1/streams/{stream_key}/preview" />
+
+Replaces the stream's preview with a JPEG sent inline as base64 and returns 204 with an empty body. The caller must satisfy the [mutation access](#access-rules) boundary.
+
+When the image should travel out of band, use [Create stream preview upload URL](#create-stream-preview-upload-url).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| stream_key | string | [Stream key](#stream-key) that receives the preview, of 1 through 256 characters |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the channel the stream is active in |
+| thumbnail<sup>2</sup> | base64 string | The base64-encoded JPEG of 1 through 2000000 characters |
+| content_type?<sup>3</sup> | string | The declared media type of 1 through 64 characters |
+
+<sup>1</sup> The channel the route resolves and permission-checks. A value that is not the channel segment of the [stream key](#stream-key) returns 400 `STREAM_KEY_CHANNEL_MISMATCH`
+
+<sup>2</sup> Decoded bytes are at most 1000000. Fluxer trims the value before checking its length
+
+<sup>3</sup> A value containing `jpeg` or `jpg` in any case is accepted without inspecting the bytes. Any other value, and an absent field, is accepted only when the decoded bytes begin with `FF D8` and end with `FF D9`
+
+Fluxer stores the accepted `content_type` verbatim and returns it from [Get stream preview](#get-stream-preview). An absent field stores the preview as `image/jpeg`.
+
+A `thumbnail` that is not canonical base64 returns 400 `INVALID_STREAM_THUMBNAIL_PAYLOAD`. Fluxer re-encodes the decoded bytes and rejects the value when the result is not what the client sent. The 2000000 character ceiling admits 1500000 decoded bytes, so an oversized JPEG reaches the byte check and returns `FILE_SIZE_TOO_LARGE`. The format check runs before the size check. An oversized payload that is not a JPEG returns `PREVIEW_MUST_BE_JPEG`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Preview was accepted |
+| 400 | [error response](/http-api/#error-response) | Stream key is malformed and the request returns `INVALID_STREAM_KEY_FORMAT` |
+| 400 | [error response](/http-api/#error-response) | The key scope disagrees with the resolved channel and the request returns `STREAM_KEY_SCOPE_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | The body channel disagrees with the key and the request returns `STREAM_KEY_CHANNEL_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | The resolved channel is not a guild voice channel or a private channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | The payload is not canonical base64 and the request returns `INVALID_STREAM_THUMBNAIL_PAYLOAD` |
+| 400 | [error response](/http-api/#error-response) | The payload is not a JPEG and the request returns `PREVIEW_MUST_BE_JPEG` |
+| 400 | [error response](/http-api/#error-response) | It exceeds 1000000 bytes and the request returns `FILE_SIZE_TOO_LARGE` |
+| 403 | [error response](/http-api/#error-response) | Caller holds no matching voice state or has an unresolvable guild membership state, each returning `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks `VIEW_CHANNEL`, `CONNECT`, or `STREAM` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction of a guild channel is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel named by the body `channel_id` does not exist, or the caller is not a recipient of that private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The decoded bytes replace whatever preview the stream key already had, and the preview metadata expires one day after the write. Fluxer emits no Gateway Dispatch, so a viewer observes the new image on its next [Get stream preview](#get-stream-preview) read.
+
+Fluxer absorbs a transient object storage failure. The request still answers 204 and the previous preview remains readable, so a publisher that needs the image present re-uploads on its normal interval.
+
+A transient failure of the metadata write also answers 204. The next read returns the new bytes under the `Content-Type` and the expiry recorded by the previous write. When no metadata existed at all, the object is stored and no read finds it.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and stream key, on the `channel:stream:preview:post::stream_key` bucket.
+
+## Create stream preview upload URL
+
+<RouteHeader method="POST" path="/v1/streams/{stream_key}/preview/upload-url" />
+
+Returns a [stream preview upload object](#stream-preview-upload-object) granting a bounded `PUT` upload of the JPEG preview. The caller must satisfy the [mutation access](#access-rules) boundary.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| stream_key | string | [Stream key](#stream-key) that receives the preview, of 1 through 256 characters |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the channel the stream is active in |
+| content_type?<sup>2</sup> | string | The declared media type of 1 through 64 characters |
+
+<sup>1</sup> The channel the route resolves and permission-checks. A value that is not the channel segment of the [stream key](#stream-key) returns 400 `STREAM_KEY_CHANNEL_MISMATCH`
+
+<sup>2</sup> Only a value containing `jpeg` or `jpg` in any case is accepted, an absent field means `image/jpeg`, and any other value returns 400 `PREVIEW_MUST_BE_JPEG`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [stream preview upload](#stream-preview-upload-object) object | Upload capability was issued |
+| 400 | [error response](/http-api/#error-response) | Stream key is malformed and the request returns `INVALID_STREAM_KEY_FORMAT` |
+| 400 | [error response](/http-api/#error-response) | The key scope disagrees with the resolved channel and the request returns `STREAM_KEY_SCOPE_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | The body channel disagrees with the key and the request returns `STREAM_KEY_CHANNEL_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | The resolved channel is not a guild voice channel or a private channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 400 | [error response](/http-api/#error-response) | The declared media type is not JPEG and the request returns `PREVIEW_MUST_BE_JPEG` |
+| 403 | [error response](/http-api/#error-response) | Caller holds no matching voice state or has an unresolvable guild membership state, each returning `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks `VIEW_CHANNEL`, `CONNECT`, or `STREAM` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction of a guild channel is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel named by the body `channel_id` does not exist, or the caller is not a recipient of that private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The operation issues one bounded upload capability and immediately points the stream key's preview metadata at the object that capability writes to. There is no separate completion call. The preview becomes readable as soon as the `PUT` lands, and until then a [Get stream preview](#get-stream-preview) read answers an empty 404 or still returns the previous image.
+
+A client MUST send the returned `content_type` with the `PUT` and MUST NOT exceed `max_bytes`. The preview metadata expires one day after this call, so a capability used later than that writes an object no read can find. Fluxer emits no Gateway Dispatch.
+
+:::note[Neither URL shape inspects the bytes]
+A relay URL refuses a declared length above `max_bytes` with 413, and a presigned object storage URL enforces nothing beyond the signed media type. An object above `max_bytes` still stores, and [Get stream preview](#get-stream-preview) then answers an empty 404.
+:::
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and stream key, on the `channel:stream:preview:upload_url::stream_key` bucket.
+
+## Delete stream preview
+
+<RouteHeader method="DELETE" path="/v1/streams/{stream_key}/preview" />
+
+Deletes the stored preview for a stream and returns 204 with an empty body. Deleting an absent preview also returns 204. The caller must satisfy the [mutation access](#access-rules) boundary.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| stream_key | string | [Stream key](#stream-key) whose preview is deleted, of 1 through 256 characters |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Preview was deleted, or none was stored |
+| 400 | [error response](/http-api/#error-response) | Stream key is malformed and the request returns `INVALID_STREAM_KEY_FORMAT` |
+| 400 | [error response](/http-api/#error-response) | Its scope disagrees with the resolved channel and the request returns `STREAM_KEY_SCOPE_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | Its channel segment is not the canonical form of the resolved channel ID and the request returns `STREAM_KEY_CHANNEL_MISMATCH` |
+| 400 | [error response](/http-api/#error-response) | The resolved channel is not a guild voice channel or a private channel and the request returns `INVALID_CHANNEL_TYPE` |
+| 403 | [error response](/http-api/#error-response) | Caller holds no matching voice state or has an unresolvable guild membership state, each returning `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks `VIEW_CHANNEL`, `CONNECT`, or `STREAM` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction of a guild channel is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel named by the stream key does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+Fluxer drops the preview metadata first and removes the stored object second, so the preview stops being readable even when a transient storage failure leaves the object in place. Fluxer emits no Gateway Dispatch, and a viewer observes the removal on its next [Get stream preview](#get-stream-preview) read.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and stream key, on the `channel:stream:preview:delete::stream_key` bucket.

@@ -1,0 +1,288 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Calls
+description: Call eligibility, region selection, ringing, and call session end.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A call is the live voice session of a direct message or a group direct message. [Channels](/http-api/channels/) defines the channel itself, its recipient set, and the region list a caller can select.
+
+Joining and leaving a call is a main Gateway operation. [Voice State Update](/gateway/commands/#voice-state-update) requests the placement, and [Call Create](/gateway/events/#call-create), [Call Update](/gateway/events/#call-update), and [Call Delete](/gateway/events/#call-delete) publish the resulting call state.
+
+Every route on this page is user-only. Bot and OAuth2 credentials are rejected.
+
+## Access rules
+
+Four routes share one boundary. [Get call eligibility](#get-call-eligibility), [Modify call region](#modify-call-region), [Ring call recipients](#ring-call-recipients), and [Stop ringing call recipients](#stop-ringing-call-recipients) each resolve the channel named by the path parameter first, then apply the same three checks in order.
+
+Fluxer answers 404 `UNKNOWN_CHANNEL` for a channel ID that names no channel. A channel that exists but is neither a direct message nor a group direct message returns 400 `INVALID_CHANNEL_TYPE_FOR_CALL`. That type check runs before the membership check, so any authenticated account can learn that an arbitrary channel exists whenever that channel is not a private channel.
+
+A private channel whose recipient set does not contain the caller returns 404 `UNKNOWN_CHANNEL`. An absent channel returns the same code, so a caller cannot tell the two apart.
+
+[End call session](#end-call-session) applies none of these checks.
+
+## Voice moderation in a private call
+
+A private call has no moderator and no permission overwrites. No account other than the participant itself can change that participant's voice state, and the owner of a group direct message is no exception. The `mute`, `deaf`, and `suppress` fields of a [voice state](/gateway/events/#voice-state-object) that belongs to a call are therefore always false. Only the participant's own [Voice State Update](/gateway/commands/#voice-state-update) changes `self_mute`, `self_deaf`, `self_video`, or `self_stream`.
+
+[Modify guild member](/http-api/guild-members/#modify-guild-member) is the only operation that applies a moderator mute, applies a moderator deafen, or forces a disconnect. It is addressed by guild ID, so it can never reach a call. No route on this page and no Gateway command disconnects another participant from a call. A participant leaves a call at its own request, when its Gateway session ends, or when Fluxer reconciles against the media server and finds its media connection gone.
+
+Silencing another participant happens in the client. A client MAY mute a participant or change per-participant volume. The client MUST keep each setting local to the listening device, so neither reaches the Gateway or any other participant.
+
+Two operations on this page name another recipient. [Ring call recipients](#ring-call-recipients) adds named recipients to the ringing set of a call and [Stop ringing call recipients](#stop-ringing-call-recipients) removes them from it. Any current recipient MAY call either one. Neither changes anything for a recipient who has already connected, and neither writes a voice state.
+
+## Call eligibility object
+
+Fluxer computes eligibility for one caller against one private channel at the moment of the read. No Gateway event has the result, and neither field reports whether a call is already running in the channel.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ringable<sup>1</sup> | boolean | Whether the authenticated user can initiate an audible ring in this channel |
+| silent<sup>2</sup> | boolean | Whether a newly initiated call notifies the other recipient without audible ringing |
+
+<sup>1</sup> False when the caller is already connected to the channel's call, when a direct message caller has never claimed its credentials, and when the other recipient's incoming call policy excludes the caller
+
+<sup>2</sup> The field is only meaningful for a direct message, and it is `false` for a group direct message and whenever `ringable` is `false`
+
+### Example
+
+```json
+{
+  "ringable": true,
+  "silent": false
+}
+```
+
+## Get call eligibility
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/call" />
+
+Returns the [call eligibility object](#call-eligibility-object) for a direct message or group direct message. The caller must satisfy the [access rules](#access-rules).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the direct message or group direct message channel |
+
+<sup>1</sup> A guild channel ID is rejected with 400 `INVALID_CHANNEL_TYPE_FOR_CALL`
+
+A direct message reports `ringable` as false when the other recipient's incoming call policy excludes the caller. That policy is the `incoming_call_flags` bitfield of the recipient's [user settings](/http-api/users/settings/). Fluxer reads the nobody flag, the friends-only flag, an existing friendship, a mutual friend, a mutual guild, and finally the everyone flag, in that order. The silent-everyone flag reports `silent` as true for a caller admitted by the mutual friend, mutual guild, or everyone branch.
+
+A recipient who has never stored settings reports `ringable` as true and `silent` as false, and a direct message that has lost its other recipient reports the same pair. A group direct message reports `ringable` as true unless the caller is already connected to its call, and it always reports `silent` as false.
+
+Fluxer evaluates the same policy again on a later [Ring call recipients](#ring-call-recipients) request.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [call eligibility](#call-eligibility-object) object | Eligibility was returned |
+| 400 | [error response](/http-api/#error-response) | Channel is not a direct message or group direct message and the request returns `INVALID_CHANNEL_TYPE_FOR_CALL` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL` |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user and channel ID, on the `channel:call:get::channel_id` bucket.
+
+## Modify call region
+
+<RouteHeader method="PATCH" path="/v1/channels/{channel_id}/call" />
+
+Changes the RTC region of an active direct message or group direct message call. Returns 204 with an empty body. Emits a [Call Update](/gateway/events/#call-update) Gateway event.
+
+### Limitations
+
+- The caller must satisfy the [access rules](#access-rules).
+- An active call must exist in the channel.
+- A named region must be accessible to the caller.
+
+The caller does not have to be connected to the call.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the direct message or group direct message channel |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region?<sup>1</sup> | ?string | The ID of the [RTC region](/http-api/channels/#rtc-region-object) to select (1 through 64 characters) |
+| latitude?<sup>2</sup> | string | The latitude the client reports (1 through 32 characters) |
+| longitude?<sup>2</sup> | string | The longitude the client reports (1 through 32 characters) |
+
+<sup>1</sup> An omitted field requests no change, and an explicit null and the exact value `automatic` both select automatic routing and skip the accessibility check
+
+<sup>2</sup> Validated for length and then discarded, so it never affects the selected region
+
+Any other unknown or inaccessible `region` returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_OR_RESTRICTED_RTC_REGION` on the `region` field. The body can be omitted. Fluxer treats a missing, empty, or whitespace-only body as an empty object, which requests no change. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
+
+A region identifier is the `id` of an [RTC region object](/http-api/channels/#rtc-region-object). No route enumerates the regions a call accepts, and [List RTC regions](/http-api/channels/#list-rtc-regions) answers only for a guild voice channel.
+
+A region or voice server restricted to named guilds, to a guild feature, or to VIP voice is never selectable for a call. A region or voice server whose user allowlist excludes the caller is unselectable, and so is a region whose servers are all inactive or all closed to the caller. An instance with voice disabled accepts any region string.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Region was updated, or no change was requested |
+| 400 | [error response](/http-api/#error-response) | Channel is not a direct message or group direct message and the request returns `INVALID_CHANNEL_TYPE_FOR_CALL`, or the region is unknown or restricted and the request returns `INVALID_FORM_BODY` with the validation code `INVALID_OR_RESTRICTED_RTC_REGION` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL`, or no active call exists and the request returns `NO_ACTIVE_CALL` |
+
+### Side effects
+
+Supplying `region` records the new region. When the published call state changes, Fluxer emits [Call Update](/gateway/events/#call-update) to every recipient the call was created with, then issues each connected participant a fresh [Voice Server Update](/gateway/events/#voice-server-update) for the newly selected region. Selecting the region the call already holds emits neither. Omitting `region` changes nothing and emits no Dispatch.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:call:update::channel_id` bucket.
+
+## Ring call recipients
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/call/ring" />
+
+Starts a direct message or group direct message call, or adds ringing recipients to an existing call. Returns 204 with an empty body. Emits [Message Create](/gateway/events/#message-create), [Call Create](/gateway/events/#call-create), [Channel Create](/gateway/events/#channel-create), and [Call Update](/gateway/events/#call-update) Gateway events.
+
+### Limitations
+
+- The caller must satisfy the [access rules](#access-rules).
+- Every explicitly named recipient must be a current recipient other than the caller.
+- A direct message also requires the caller to satisfy the direct message send policy against the other recipient.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the direct message or group direct message channel |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| recipients?<sup>1</sup> | array[snowflake] | The IDs of the recipients to ring |
+| latitude?<sup>2</sup> | string | The latitude the client reports (1 through 32 characters) |
+| longitude?<sup>2</sup> | string | The longitude the client reports (1 through 32 characters) |
+
+<sup>1</sup> Omitting the field targets every other current recipient, and an explicit empty array creates the call and reopens the channel for every other recipient while ringing nobody
+
+<sup>2</sup> Validated for length and then discarded, so a new call is always created with automatic routing
+
+The body can be omitted. Fluxer treats a missing, empty, or whitespace-only body as an empty object, which is the same as omitting `recipients`. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
+
+An identifier that names a non-recipient or the caller itself returns 400 `INVALID_FORM_BODY` with the validation code `USER_NOT_IN_CHANNEL`. A repeated identifier is accepted and rings that recipient once.
+
+A named recipient is only rung when the incoming call policy described by [Get call eligibility](#get-call-eligibility) admits the caller audibly, so a recipient admitted only under the silent-everyone flag is notified without being rung. A direct message ignores the named set when choosing whom to ring and always evaluates the policy against the other recipient.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Ring operation completed |
+| 400 | [error response](/http-api/#error-response) | Channel is not a direct message or group direct message and the request returns `INVALID_CHANNEL_TYPE_FOR_CALL` |
+| 400 | [error response](/http-api/#error-response) | A named identifier is not a current recipient and the request returns `INVALID_FORM_BODY` with the validation code `USER_NOT_IN_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | The direct message send policy rejects the caller and the request returns `CANNOT_SEND_MESSAGES_TO_USER` |
+| 400 | [error response](/http-api/#error-response) | That same policy rejects a caller who has never claimed its credentials with `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES` |
+| 400 | [error response](/http-api/#error-response) | A concurrent request already created the call and the request returns `CALL_ALREADY_EXISTS` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+Fluxer first reopens the private channel for the caller and for every notified recipient, and each account for which the channel was closed receives [Channel Create](/gateway/events/#channel-create).
+
+When no call exists, Fluxer then stores a call system message with the initial participant set and creates the call with [Call Create](/gateway/events/#call-create) that has the initial ringing set and the automatically selected region. It raises the unread mention count of every other recipient that is not a bot and has not blocked the caller. It acknowledges the message for the initiating user without a Dispatch, and only then delivers the stored message with [Message Create](/gateway/events/#message-create). Fluxer sends [Call Create](/gateway/events/#call-create) before [Message Create](/gateway/events/#message-create).
+
+When a call already exists, Fluxer instead extends the ringing set and emits [Call Update](/gateway/events/#call-update) when the set grows. A recipient who is already connected to the call is never added to the ringing set.
+
+Each rung recipient holds a ringing entry for 30 seconds. Fluxer then drops the entry and emits [Call Update](/gateway/events/#call-update) again. When that expiry leaves the call with no connected participant and no other ringing recipient, Fluxer removes the call in the same step, which emits [Call Delete](/gateway/events/#call-delete) and stamps the call system message with its ended timestamp. A call that rang at least one recipient and that nobody joined therefore ends 30 seconds after the ring. A call created with an empty ringing set arms no ring timer, so it ends on the 120 second idle timer instead. An explicit empty `recipients` array produces such a call, and so does a ring that admits no candidate audibly.
+
+Whenever Fluxer removes a call, it rewrites that call's system message with the ended timestamp and with every account that ever connected, and publishes the rewritten message to every recipient of the private channel as [Message Update](/gateway/events/#message-update).
+
+The call's recipient list is fixed when the call is created. Changing the recipient set of a group direct message afterwards neither ends the call nor updates that list. [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient), [Remove group direct message recipient](/http-api/channels/#remove-group-direct-message-recipient), and [Delete or leave channel](/http-api/channels/#delete-or-leave-channel) leave a running call in place. A recipient added later receives no Dispatch for it.
+
+### Rate limit
+
+5 requests per 10 seconds for each authenticated user and channel ID, on the `channel:call:ring::channel_id` bucket.
+
+## Stop ringing call recipients
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/call/stop-ringing" />
+
+Removes recipients from the ringing set of an active direct message or group direct message call. Returns 204 with an empty body. Emits a [Call Update](/gateway/events/#call-update) Gateway event.
+
+### Limitations
+
+- The caller must satisfy the [access rules](#access-rules).
+- An active call must exist in the channel.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the direct message or group direct message channel |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| recipients?<sup>1</sup> | array[snowflake] | The IDs of the recipients to stop ringing |
+| latitude?<sup>2</sup> | string | The latitude the client reports (1 through 32 characters) |
+| longitude?<sup>2</sup> | string | The longitude the client reports (1 through 32 characters) |
+
+<sup>1</sup> Omitting the field targets the caller alone, which is how a client declines its own incoming call, and an explicit empty array removes nobody
+
+<sup>2</sup> Validated for length and then discarded by this operation
+
+The body can be omitted. Fluxer treats a missing, empty, or whitespace-only body as an empty object, which stops ringing the caller alone. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path. An identifier that is not currently ringing is accepted and changes nothing.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Stop-ringing operation completed |
+| 400 | [error response](/http-api/#error-response) | Channel is not a direct message or group direct message and the request returns `INVALID_CHANNEL_TYPE_FOR_CALL` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL`, or no active call exists and the request returns `NO_ACTIVE_CALL` |
+
+### Side effects
+
+Each named recipient loses its ringing entry and its 30 second ring timer. When the ringing set changes, Fluxer emits [Call Update](/gateway/events/#call-update) to every recipient the call was created with. This operation never removes the call itself.
+
+The 120 second idle timer removes a call left with no connected participant and no ringing recipient, which emits [Call Delete](/gateway/events/#call-delete). This operation does not restart that timer. The timer starts when the call is created and restarts on each join and on each expiry that still finds a connected participant or a ringing recipient, so removal can follow within a fraction of that window.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:call:stop_ringing::channel_id` bucket.
+
+## End call session
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/call/end" />
+
+Answers 204 for any well-formed channel ID and takes no body. The route resolves no channel, performs no call operation, and emits no Gateway Dispatch.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the direct message or group direct message channel |
+
+<sup>1</sup> The value is only checked for snowflake form, so any well-formed ID is accepted whether or not it names a channel the caller can reach
+
+:::caution[Leaving a call is a Gateway operation]
+A participant leaves by sending [Voice State Update](/gateway/commands/#voice-state-update) with a null channel and the `connection_id` to drop.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Request was accepted |
+
+A call ends the moment its last connected participant leaves, whether or not a recipient is still ringing. Fluxer publishes [Call Delete](/gateway/events/#call-delete) at that moment. A call that no participant ever joined ends instead when its last ringing entry expires, and a call whose ringing set was emptied by [Stop ringing call recipients](#stop-ringing-call-recipients) ends on the Gateway's 120 second idle timer.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:call:update::channel_id` bucket, shared with [Modify call region](#modify-call-region).

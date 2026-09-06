@@ -1,0 +1,158 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Expressions
+description: Cross-guild lookup of a custom emoji or sticker by its own ID.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An expression is a custom emoji or a sticker that one guild owns. The two routes here resolve an expression from its own identifier, without membership of the owning guild.
+
+| Object | Route | Owning resource |
+| --- | --- | --- |
+| [Emoji metadata](#emoji-metadata-object) | [Get emoji metadata](#get-emoji-metadata) | [Guild emojis](/http-api/guild-emojis/) |
+| [Sticker metadata](#sticker-metadata-object) | [Get sticker metadata](#get-sticker-metadata) | [Guild stickers](/http-api/guild-stickers/) |
+
+Both routes are read-only, and neither writes an audit entry or emits a [Gateway Dispatch](/gateway/events/).
+
+An identifier that names no stored expression returns 404 `UNKNOWN_EMOJI` or 404 `UNKNOWN_STICKER`. A stored expression whose guild no longer exists returns 404 `UNKNOWN_GUILD`.
+
+Both routes return the metadata even when the owning guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features).
+
+:::note[Tags and the uploader need a guild-scoped operation]
+Tags, the uploader, and the adult content classification come from the guild-scoped operations, which require membership of the owning guild.
+:::
+
+## Emoji metadata object
+
+One custom emoji, readable from outside its guild. It adds the owning guild to the [guild emoji object](/http-api/guild-emojis/#guild-emoji-object) and drops the adult content classification and the uploader.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | snowflake | The ID of the emoji |
+| guild_id<sup>2</sup> | snowflake | The ID of the guild that owns the emoji |
+| name<sup>3</sup> | string | The name of the emoji (2-32 characters) |
+| animated<sup>4</sup> | boolean | Whether the stored image is animated |
+| allow_cloning<sup>5</sup> | boolean | Whether the owning guild permits the emoji to be copied |
+
+<sup>1</sup> Unique across every guild, so the emoji is addressable without its guild
+
+<sup>2</sup> This resource has no guild name and no guild icon
+
+<sup>3</sup> [Create guild emoji](/http-api/guild-emojis/#create-guild-emoji) restricts the value to ASCII letters, digits, and underscore, and cloning copies it unchanged
+
+<sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
+
+<sup>5</sup> False exactly when the owning guild has [CLONE_EMOJI_DISABLED](/http-api/guilds/#guild-features)
+
+Every member is always present, and no member is nullable.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "guild_id": "1489002177550843904",
+  "name": "party_parrot",
+  "animated": true,
+  "allow_cloning": true
+}
+```
+
+## Sticker metadata object
+
+One sticker, readable from outside its guild. It adds the owning guild to the [guild sticker object](/http-api/guild-stickers/#guild-sticker-object) and drops the description, the tags, the adult content classification, and the uploader.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | snowflake | The ID of the sticker |
+| guild_id<sup>2</sup> | snowflake | The ID of the guild that owns the sticker |
+| name<sup>3</sup> | string | The name of the sticker (2-30 characters) |
+| animated<sup>4</sup> | boolean | Whether the stored image is animated |
+| allow_cloning<sup>5</sup> | boolean | Whether the owning guild permits the sticker to be copied |
+
+<sup>1</sup> Unique across every guild, so the sticker is addressable without its guild
+
+<sup>2</sup> This resource has no guild name and no guild icon
+
+<sup>3</sup> The value accepts any character
+
+<sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
+
+<sup>5</sup> False exactly when the owning guild has [CLONE_STICKER_DISABLED](/http-api/guilds/#guild-features)
+
+Every member is always present, and no member is nullable.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998183",
+  "guild_id": "1489002177550843904",
+  "name": "shipit",
+  "animated": false,
+  "allow_cloning": false
+}
+```
+
+## Get emoji metadata
+
+<RouteHeader method="GET" path="/v1/emojis/{emoji_id}/metadata" bot />
+
+Returns the [emoji metadata object](#emoji-metadata-object) of any guild emoji. The route requires no membership of the owning guild and evaluates no permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id | snowflake | The ID of the emoji |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [emoji metadata](#emoji-metadata-object) object | Metadata was returned |
+| 404<sup>1</sup> | [error response](/http-api/#error-response) | Emoji does not exist, or its owning guild no longer exists |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for a missing emoji and `UNKNOWN_GUILD` when the emoji record survives but its guild does not
+
+:::caution[The emoji's guild is read again at clone time]
+[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) resolves the source emoji and the source guild again. When the source guild disables cloning between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+:::
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `guild:emoji:metadata::user_id` bucket, and every emoji the account looks up draws on that one budget.
+
+## Get sticker metadata
+
+<RouteHeader method="GET" path="/v1/stickers/{sticker_id}/metadata" bot />
+
+Returns the [sticker metadata object](#sticker-metadata-object) of any guild sticker. The route requires no membership of the owning guild and evaluates no permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sticker_id | snowflake | The ID of the sticker |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [sticker metadata](#sticker-metadata-object) object | Metadata was returned |
+| 404<sup>1</sup> | [error response](/http-api/#error-response) | Sticker does not exist, or its owning guild no longer exists |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_STICKER` for a missing sticker and `UNKNOWN_GUILD` when the sticker record survives but its guild does not
+
+:::caution[The sticker's guild is read again at clone time]
+[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) resolves the source sticker and the source guild again. When the source guild disables cloning between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+:::
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `guild:sticker:metadata::user_id` bucket, and every sticker the account looks up draws on that one budget.

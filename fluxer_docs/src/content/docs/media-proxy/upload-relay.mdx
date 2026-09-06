@@ -1,0 +1,167 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Upload relay
+description: Capability-authorised uploads and the relay streaming limits.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The upload relay is where a client sends the bytes of a file. Each upload URL has a signed capability, and the relay stores the one object it authorises. [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) and [Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issue them. [Attachment uploads](/topics/uploads/) states the flow the relay takes part in.
+
+## Base URL and authorisation
+
+Both paths here are relative to the relay base in the issued upload URL. That base is a deployment setting.
+
+The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` mode. Every path below `/v1/relay/` is exempt from the [media access policy](/media-proxy/overview/#access-restrictions).
+
+:::note[Some upload URLs address object storage directly]
+The HTTP API decides per request whether to relay, from the caller's country. A caller on the instance's direct-upload list receives a presigned object storage URL, and this contract does not describe it.
+:::
+
+:::caution[The complete URL is authenticated]
+The path key and the `t` capability are bound together by the signature. A client MUST use the URL exactly as issued and MUST NOT rebuild, decode, reorder, or re-encode it. The URL is a bearer capability.
+:::
+
+## Relay capability object
+
+A relay capability is a JSON payload signed with HMAC-SHA256 under the deployment relay secret. The signed value is the encoded payload text, and the capability is that text, a `.`, and the signature. Both halves use unpadded base64url.
+
+The payload is opaque to a client.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| b<sup>1</sup> | string | The destination bucket |
+| k<sup>2</sup> | string | The destination object key |
+| m<sup>3</sup> | string | The authorised method, always `put` |
+| u?<sup>4</sup> | string | The multipart upload identifier |
+| p?<sup>4</sup> | integer | The multipart part number |
+| ct?<sup>5</sup> | string | The media type stored with the object |
+| mb<sup>6</sup> | integer | The maximum body length in bytes |
+| e<sup>7</sup> | integer | The expiry as a Unix timestamp in seconds |
+
+<sup>1</sup> The uploads bucket configured on the endpoint. Any other value returns 403
+
+<sup>2</sup> Equal to the decoded request key. Any other value returns 403
+
+<sup>3</sup> A payload naming another method returns 401
+
+<sup>4</sup> Present together on a multipart part capability and absent together on a single-object capability. The relay checks the query string values against these fields and then forwards both to the object store
+
+<sup>5</sup> Takes precedence over the request `Content-Type`. When neither declares one, an S3 backend stores the object as `application/octet-stream`
+
+<sup>6</sup> The HTTP API sets it to the exact length of the object or part for an attachment, and to 1,000,000 for a stream preview
+
+<sup>7</sup> The bound is exclusive, so the relay rejects the capability once the clock reaches it. The HTTP API issues a 900 second lifetime by default
+
+### Example
+
+```json
+{
+  "b": "fluxer-uploads",
+  "k": "a3f1c8de-4b21-4f0e-9c77-2d5b6e1a0f43",
+  "m": "put",
+  "ct": "image/png",
+  "mb": 184320,
+  "e": 1780000000
+}
+```
+
+The relay answers 401 to a malformed capability, a signature that is not 32 bytes, an incorrect signature, a payload that is not valid unpadded base64url, a payload that is not valid JSON, and an expired capability.
+
+## Put relay object
+
+<RouteHeader method="PUT" path="/v1/relay/{key}" />
+
+Stores the exact object the [relay capability](#relay-capability-object) authorises and returns 200 with an empty body. An `ETag` accompanies it when the object store supplied one. An S3 backend supplies one and a local filesystem backend does not.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key<sup>1</sup> | string | The object key of the issued URL |
+
+<sup>1</sup> The key can contain `/` separators and the issuer percent-encodes each segment. The relay compares the decoded key against the capability `k` field, and any other value returns 403
+
+Fluxer issues a UUID for an attachment and `stream_previews/{name}-{digest}.jpg` for a stream preview.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| t<sup>1</sup> | string | The capability, as the unpadded base64url payload, a `.`, and the unpadded base64url signature |
+| uploadId?<sup>2</sup> | string | The multipart upload identifier, present only when the capability has one |
+| partNumber?<sup>3</sup> | integer | The multipart part number, present only when the capability has one |
+
+<sup>1</sup> A missing `t` returns 401
+
+<sup>2</sup> When the capability has `u`, the relay rejects an absent or differing value with 403. When it has no `u`, the relay rejects a non-empty value with 403 and accepts an absent or empty one
+
+<sup>3</sup> An empty or unparsable value returns 400. When the capability has `p`, the relay rejects an absent or differing value with 403, and when it has no `p`, the relay rejects any value with 403
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Content-Length?<sup>1</sup> | integer | The declared length of the request body |
+| Content-Type?<sup>2</sup> | string | The media type to store, read only when the capability declares none |
+
+<sup>1</sup> A declared length above the capability `mb` field or above the endpoint body limit returns 413
+
+<sup>2</sup> The capability `ct` field takes precedence over it
+
+The relay ignores every other request header.
+
+### Request body
+
+The body is arbitrary bytes.
+
+With `Content-Length`, the relay streams the body to the object store as it arrives. A body longer than the declared length returns 413 and a body shorter than it returns 400.
+
+Without `Content-Length`, the relay spools the body to a temporary file first, bounded by the smaller of the capability `mb` field and the endpoint body limit. Exceeding that bound returns 413. A client transfer that fails part way returns 400. The relay returns 503 when the endpoint spool budget cannot cover the request.
+
+### Response
+
+The relay forwards no object storage response body and no arbitrary response headers.
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | empty | The object or part was stored |
+| 400 | `Bad Request` | The `partNumber` value is unparsable or the client body ended early |
+| 401 | `Unauthorized` | The capability is missing, malformed, incorrectly signed, or expired |
+| 403 | `Forbidden` | The bucket, key, `uploadId`, or `partNumber` disagrees with the capability |
+| 404 | `Not Found` | The endpoint does not serve the upload relay |
+| 405<sup>1</sup> | empty | The method is not `PUT` |
+| 413 | `Payload Too Large` | The declared or delivered body exceeds the capability `mb` field or the endpoint body limit |
+| 500 | `Internal Server Error` | A spool write to the relay's own disk failed |
+| 502 | `Bad Gateway` | The object store refused the write or could not be written to |
+| 503 | `Service Unavailable` | The endpoint spool budget cannot cover the request |
+
+<sup>1</sup> It has no relay CORS headers and no cache policy
+
+:::caution[A message naming the key creates the attachment]
+A successful relay response stores bytes only. [Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the requests that can name the key.
+:::
+
+[Complete attachment upload](/http-api/messages/#complete-attachment-upload) assembles a multipart upload once every part is stored, and a singlepart upload needs no completion step. A stream preview becomes readable as soon as the stored object is in place, and the [Streams resource](/http-api/streams/) defines that flow.
+
+The relay has no replay tracking. Repeating a request with the same capability writes the object again, and the last successful write wins. Retrying a multipart part after a 502 or 503 is safe, because a part is addressed by its number and the repeated write replaces it.
+
+### Response headers
+
+The 200, 400, 401, 403, 413, 500, 502, and 503 have the relay CORS headers. The 404 and the 405 have none of them.
+
+Relay CORS means `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Headers: Content-Type, Content-Length, Authorization, X-Fluxer-Features, X-Client-Context`, and `Access-Control-Expose-Headers: ETag, X-Fluxer-Version`.
+
+### Side effects
+
+A successful request writes the object the capability selects to the uploads bucket. It creates no attachment record and no message.
+
+## Streaming limits
+
+The endpoint body limit defaults to 500 MiB and an operator can configure it from 1 byte through 5 GiB. The effective limit for one request is the smaller of that value and the capability `mb` field.
+
+A spooled body is written through a 1 MiB buffer by default, configurable from 64 KiB through 64 MiB. Spooled bodies share an 8 GiB endpoint budget by default, configurable up to 256 GiB. A request that arrives with no `Content-Length` reserves the complete effective limit from that budget before the relay reads a byte. The endpoint refuses to start when its body limit exceeds that budget, so one reservation always fits an idle endpoint.
+
+The object storage write has a 900,000 ms deadline by default, configurable from 1,000 through 3,600,000 ms. For a streamed body the relay extends the deadline by one second for every 16 KiB of declared length.

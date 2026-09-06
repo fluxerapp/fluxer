@@ -29,7 +29,8 @@
 **/node_modules/
 **/target/
 **/test-results.json
-/fluxer_docs/site/
+/fluxer_docs/dist/
+/fluxer_docs/.astro/
 /fluxer_app/.devserver-cache.json
 /fluxer_app/pkgs/libfluxcore/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs

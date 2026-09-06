@@ -1,0 +1,1519 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Authentication resource
+description: Registration, login, credentials, sessions, recovery, SSO, IP authorisation, and desktop handoff.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The Authentication resource covers signing up, signing in, recovering an account, and moving a session to a new device. Every route on this page is below `/v1/auth`.
+
+## Shared behaviour
+
+[Authentication](/authentication/) and [HTTP authentication](/http-api/#authentication) define credential syntax and the credential namespaces. Changing the credentials of an account that is already signed in is covered by [Email and password changes](/http-api/users/email-and-password/), [Multi-factor authentication](/http-api/users/mfa/), and [Phone verification](/http-api/users/phone-verification/).
+
+:::caution[Authentication material is confidential and opaque]
+A client MUST treat every session token, one-use token, ticket, SSO state, and handoff code as confidential. It MUST NOT parse one, expose it to untrusted code, or write it to logs, analytics, or a URL the operation did not assign.
+:::
+
+Most operations need no `Authorization` credential, because the request has a one-use token, MFA ticket, WebAuthn assertion, or account credential of its own. [List authentication sessions](#list-authentication-sessions), [terminate authentication sessions](#terminate-authentication-sessions), [resend email verification](#resend-email-verification), [log out](#log-out), and [complete desktop handoff](#complete-desktop-handoff) are the only operations on this page that read an `Authorization` credential. Complete desktop handoff reads the header only when its body omits the `token` field. The first three require an ordinary user session, and each rejects a bot token and an OAuth2 bearer token with 403 `ACCESS_DENIED`. All three still admit a session whose account is flagged for suspicious activity.
+
+Every route has a route bucket and is also subject to the [global HTTP limit](/topics/rate-limits/). A route bucket is keyed by the authenticated user when the request has a resolvable credential and by the client IP address otherwise. Bucket or global denial returns 429 `RATE_LIMITED`.
+
+An invalid JSON shape returns 400 `INVALID_FORM_BODY` with [validation error object](/http-api/#validation-error-object) entries in `errors`. An unexpected failure returns 500 `INTERNAL_SERVER_ERROR`. Every enumerated code on this page is registered in the [error registry](/http-api/errors/), and every snowflake field is the decimal string form defined by [Snowflakes](/snowflakes/).
+
+When SSO is both enabled and enforced, every local authentication operation returns 403 `SSO_REQUIRED`. The SSO status route, SSO start and completion, logout, both session routes, and every handoff route stay available under enforcement.
+
+:::caution[SSO enforcement precedes every other check]
+The enforcement check runs before CAPTCHA verification, before the route rate limit, before authentication, and before body validation. An enforced instance therefore answers a malformed or unauthenticated local authentication request with 403 `SSO_REQUIRED`.
+:::
+
+A successful sign-in creates one authentication session and issues its token. Fluxer sets no ceiling on live sessions and evicts none when a further session starts, so an account accumulates one session per sign-in until it revokes them through [terminate authentication sessions](#terminate-authentication-sessions).
+
+Revoking a session, whether the account revoked it or an administrator terminated it, stops its token authenticating requests. Its main Gateway connection receives [Invalid Session](/gateway/overview/#invalid-session) with `d: false` and stays open, unauthenticated. No Gateway Dispatch is emitted for the revocation itself, so a client learns of it from that frame or from the next request that fails to authenticate.
+
+<a id="authentication-token-response"></a>
+
+## Authentication token response object
+
+A newly issued session token and the account it belongs to. Password login without a second factor, MFA completion, discoverable WebAuthn authentication, immediate registration, password reset, email reversion, SSO completion, IP authorisation polling, and handoff polling all return these fields.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token<sup>1</sup> | string | The newly issued user session token |
+| user_id | snowflake | The authenticated user ID |
+| user | [partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
+
+<sup>1</sup> The token is the literal prefix `flx_` followed by exactly 36 base62 characters, and this response is the only way to read it
+
+:::caution[A session token is returned once]
+A lost session token cannot be recovered through any operation. The account MUST authenticate again to obtain a new session.
+:::
+
+:::note[The successful result has no discriminator]
+Password login, registration, and password reset each return either this object or an alternative shape. The successful shape has no `mfa` or `registration_pending_approval` member of its own, so a client MUST branch on the presence of `token`.
+:::
+
+## SSO status object
+
+The public single sign-on state. The same object is embedded by the [instance discovery document](/http-api/instance/#instance-discovery-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled<sup>1</sup> | boolean | Whether SSO can currently be started on this instance |
+| enforced<sup>2</sup> | boolean | Whether SSO is required for every user |
+| display_name | ?string | The configured provider display name, or null when none is set |
+| redirect_uri | string | The default OAuth2 redirect URI used for the provider callback |
+
+<sup>1</sup> The value is true only when the operator has enabled SSO and the resolved provider configuration is complete, so a partially configured provider reports false
+
+<sup>2</sup> The value is true only when `enabled` is also true, and every local authentication operation then returns 403 `SSO_REQUIRED`
+
+## SSO start object
+
+The parameters for sending the user to the identity provider, bound to one new SSO state.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| authorization_url | string | The provider authorisation URL with the state, nonce, and PKCE challenge |
+| state<sup>1</sup> | string | The one-use CSRF state |
+| redirect_uri | string | The callback URI bound to this state |
+
+<sup>1</sup> The state is consumed by the first [complete SSO](#complete-sso) attempt that resolves it
+
+A client MUST return the state unchanged and MUST NOT interpret its contents.
+
+## SSO completion response object
+
+SSO completion always issues a session. It extends the [authentication token response](#authentication-token-response) with the redirect bound to the consumed state.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The newly issued user session token |
+| user_id | snowflake | The authenticated user ID |
+| user | [partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
+| redirect_to<sup>1</sup> | string | The sanitised redirect that was bound to the consumed SSO state |
+
+<sup>1</sup> The value is the empty string when [start SSO](#start-sso) received no `redirect_to` or when the supplied value did not survive sanitisation
+
+:::note[SSO completion never issues an MFA challenge]
+Completion does not consult the account's second factor and cannot return an [MFA challenge response](#mfa-challenge-response). A client MUST NOT branch on an `mfa` member here.
+:::
+
+## Registration pending approval response object
+
+The ID of a registration that an administrator has yet to approve. Registration returns this object when the account enters approval.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| registration_pending_approval | boolean | Always `true` |
+| user_id | snowflake | The registered account ID awaiting approval |
+
+## Partial user object
+
+Every authenticated result on this page embeds the public account representation. The [partial user object](/http-api/users/#partial-user-object) on the Users resource defines it, together with its [reply mention preferences](/http-api/users/#reply-mention-preferences).
+
+<a id="mfa-challenge-response"></a>
+
+## MFA challenge response object
+
+The ticket and the method list a client needs to finish a login with a second factor. Password login returns this object when the account has one.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mfa | boolean | Always `true` |
+| ticket<sup>1</sup> | string | The ticket consumed by a TOTP or WebAuthn MFA completion |
+| allowed_methods<sup>2</sup> | array[string] | The methods available to this account, drawn from `totp` and `webauthn` (max 10 items) |
+| totp | boolean | Whether the account holds the time-based one-time password authenticator type |
+| webauthn | boolean | Whether at least one WebAuthn credential is registered |
+
+<sup>1</sup> The ticket is retained for five minutes, is destroyed after five failed code attempts, and is consumed by the completion that issues the session
+
+<sup>2</sup> The array lists the account's authenticators in the fixed order `totp` then `webauthn`, and it omits either value the account does not hold
+
+:::note[TOTP completion accepts an unconsumed backup code]
+There is no backup code completion route and `backup_code` never appears in `allowed_methods`. [Complete login with TOTP](#complete-login-with-totp) reads it from `code`, and only while the account holds the TOTP authenticator type. Fluxer never reports whether one remains.
+:::
+
+<a id="webauthn-authentication-options"></a>
+
+## WebAuthn authentication options object
+
+Both WebAuthn option operations return a PublicKeyCredential request options object that a browser passes straight to its credential request. The [WebAuthn authentication options object](/http-api/users/mfa/#webauthn-authentication-options-object) on the Multi-factor authentication resource defines its fields, together with its [WebAuthn credential descriptor](/http-api/users/mfa/#webauthn-credential-descriptor-object) and [WebAuthn client extension inputs](/http-api/users/mfa/#webauthn-client-extension-inputs-object) objects.
+
+A challenge issued for MFA completion is additionally bound to its ticket and account, so it cannot be replayed against discoverable login. The MFA route lists every registered credential for the resolved account in `allowCredentials`, while the discoverable route omits the member because discovery happens at the authenticator.
+
+<a id="webauthn-assertion"></a>
+
+## WebAuthn assertion object
+
+A WebAuthn authentication request has the browser credential result as `response` and the original server challenge as `challenge`. Fluxer accepts additional WebAuthn fields. The [WebAuthn assertion object](/http-api/users/mfa/#webauthn-assertion-object) on the Multi-factor authentication resource defines the fields, together with its [WebAuthn assertion response](/http-api/users/mfa/#webauthn-assertion-response-object) and [WebAuthn client extension results](/http-api/users/mfa/#webauthn-client-extension-results-object) objects.
+
+## Authentication session object
+
+One live session belonging to the authenticated account. The listing is ordered by approximate last activity, newest first.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id_hash<sup>1</sup> | string | The base64url SHA-256 digest of the session token |
+| client_info? | ?[client info](#client-info-object) object | The parsed client metadata recorded when the session was created |
+| masked_ip | ?string | The semi-redacted IP address recorded for the session |
+| approx_last_used_at? | ?ISO8601 timestamp | The approximate time of the last request that used this session |
+| current<sup>2</sup> | boolean | Whether this session supplied the credential for the current request |
+
+<sup>1</sup> This digest is the only session identifier the API exposes, and it is the exact value accepted by [terminate authentication sessions](#terminate-authentication-sessions)
+
+<sup>2</sup> The field is false on every entry
+
+A client that needs to identify its own session MUST compare the base64url SHA-256 digest of its own token against `id_hash`.
+
+## Client info object
+
+The parsed device metadata recorded for a session or a pending handoff.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| platform? | ?string | The recorded client platform, resolved from the `User-Agent` |
+| os? | ?string | The recorded operating system |
+| browser?<sup>1</sup> | ?string | The recorded browser |
+| device | string | The device class, either `mobile` or `desktop` |
+| location? | ?[client location](#client-location-object) object | The approximate geolocation derived from the recorded IP address |
+
+<sup>1</sup> A native or Electron client reports null, and a session created by an unparseable request reports null. A handoff omits the member entirely
+
+Fluxer recognises a native Fluxer client from a `User-Agent` beginning `Fluxer Android`, `Fluxer iOS`, `Fluxer Linux`, `Fluxer Desktop`, or `Fluxer Client`. Its `platform` is the instance product name followed by the resolved operating system, with `Lite` inserted before the operating system for a non-mobile one. A native client that resolves no operating system reports the product name followed by `Lite`, so `platform` is never null for a native client. An Electron client reports the product name followed by the resolved operating system, and the product name alone when no operating system resolves. Fluxer parses every other client from the recorded `User-Agent`, and that client's platform is the browser name, or the operating system name when no browser resolves, and null when neither resolves.
+
+Fluxer resolves `device` from the recorded `User-Agent` and, for a native client, from the operating system reported through `X-Fluxer-Client-Properties`. A native or Electron client is `mobile` only when the resolved operating system is iOS or Android. Every other client is `mobile` when the parsed platform type is mobile or tablet, and `desktop` otherwise.
+
+A session reports a null `location` when the recorded IP address resolves to no location. A handoff always reports the object, and each of its three members is null when that component is unavailable. For a session, an address with a known region and country but no known city reports the region as `city`, the country as `region`, and null as `country`.
+
+## Client location object
+
+The approximate geolocation Fluxer derives from the IP address recorded for a session or a handoff.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| city? | ?string | The approximate city |
+| region? | ?string | The approximate region |
+| country? | ?string | The approximate country |
+
+## Password reset validity object
+
+The result of checking a password reset token without consuming it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| valid<sup>1</sup> | boolean | Whether the token is currently valid and unexpired |
+
+<sup>1</sup> A password reset token expires one hour after it is issued
+
+## IP authorisation poll object
+
+The state of one IP authorisation ticket, as observed by the device whose sign-in was held.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| completed | boolean | Whether the authorisation link has been used and a session has been issued |
+| token?<sup>1</sup> | ?string | The newly issued user session token |
+| user_id?<sup>1</sup> | ?snowflake | The authenticated user ID |
+| user?<sup>1</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
+
+<sup>1</sup> The three fields are present together only when `completed` is true, and a still-pending ticket returns `completed` alone
+
+## Username suggestions object
+
+The username candidates derived from a display name.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| suggestions<sup>1</sup> | array[string] | The generated username candidates (max 20 items) |
+
+<sup>1</sup> The array has at most one candidate. It is empty when the supplied display name derives no permitted username
+
+## Handoff initiation object
+
+The code that identifies one pending desktop handoff.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | The handoff code to present to the approving device |
+| expires_at | ISO8601 timestamp | The time at which the handoff expires, five minutes after creation |
+| poll_secret? | string | The secret the initiating device presents to read the issued token |
+
+<sup>1</sup> The code is 12 characters drawn from the alphabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, rendered as two groups of six separated by a hyphen
+
+:::caution[The code alone cancels a handoff]
+Anyone who learns the code reads the pending device metadata and cancels the handoff. The token needs `poll_secret` as well. A client MUST show the code only to the person performing the handoff.
+:::
+
+## Handoff information object
+
+The device metadata shown to the approving device before it transfers a session.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | The state, either `pending` or `expired` |
+| client_info?<sup>1</sup> | ?[client info](#client-info-object) object | The initiating device metadata |
+
+<sup>1</sup> The value is null whenever the status is `expired`
+
+## Handoff status object
+
+The state of one desktop handoff as observed by the device that initiated it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status<sup>1</sup> | string | The state, one of `pending`, `expired`, or `completed` |
+| token?<sup>2</sup> | ?string | The newly issued user session token |
+| user_id?<sup>2</sup> | ?snowflake | The authenticated user ID |
+| user?<sup>2</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
+
+<sup>1</sup> An unknown code and an expired code both report `expired`
+
+<sup>2</sup> The three fields are present together only when the status is `completed`
+
+## Get SSO status
+
+<RouteHeader method="GET" path="/v1/auth/sso/status" unauthenticated />
+
+Reads the public single sign-on state of the instance. Authentication is not required. Returns an [SSO status](#sso-status-object) object.
+
+The operation stays available while SSO is enforced. It shares the `auth:sso:start` bucket, which permits 10 requests per 10 seconds.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [SSO status](#sso-status-object) object | The public SSO state was read |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+## Start SSO
+
+<RouteHeader method="POST" path="/v1/auth/sso/start" unauthenticated />
+
+Creates one SSO state with PKCE and nonce material. Authentication is not required. Returns an [SSO start](#sso-start-object) object.
+
+The returned `authorization_url` is the configured provider authorisation endpoint with `response_type` set to `code`, the configured `client_id` and `scope`, the resolved `redirect_uri`, the returned `state`, and a freshly generated `nonce`. It also has a `code_challenge` computed as the base64url SHA-256 digest of the state's code verifier, with `code_challenge_method` set to `S256`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| redirect_to?<sup>1</sup> | ?string | The post-authentication redirect to bind to the state |
+| redirect_uri?<sup>2</sup> | ?string | The provider callback URI to use instead of the configured default |
+
+<sup>1</sup> Fluxer sanitises the value before binding it to the state and discards a value that does not survive, which the eventual [SSO completion response](#sso-completion-response-object) reports as the empty string. Sanitisation keeps the trimmed value only when it begins with a single `/`, is at most 2,048 characters, and contains no carriage return or line feed
+
+<sup>2</sup> The two accepted values are the instance default reported as `redirect_uri` by [get SSO status](#get-sso-status) and the mobile callback `fluxer://auth/sso/callback`, and any other value returns the field code `INVALID_URL_FORMAT`. The accepted value is bound to the state and reused at the token exchange
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [SSO start](#sso-start-object) object | The state was created |
+| 400 | [error response](/http-api/#error-response) | The body is malformed or the callback URI is not an accepted value |
+| 403 | [error response](/http-api/#error-response) | SSO is disabled or its resolved configuration is incomplete, returning `FEATURE_TEMPORARILY_DISABLED` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The returned state can be completed once and lives for ten minutes. It binds the PKCE verifier, nonce, redirect, and callback URI to the flow. No account state changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per 10 seconds, on the `auth:sso:start` bucket.
+
+## Complete SSO
+
+<RouteHeader method="POST" path="/v1/auth/sso/complete" unauthenticated />
+
+Consumes the SSO state, exchanges the authorisation code, verifies the identity token against the provider key set and the bound nonce, resolves or provisions the account, and creates a user session. Authentication is not required. Returns an [SSO completion response](#sso-completion-response-object).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The authorisation code returned by the provider (1-4096 characters) |
+| state<sup>1</sup> | string | The state returned by [start SSO](#start-sso) (1-4096 characters) |
+
+<sup>1</sup> The state is consumed on the first call that resolves it, so a repeated request with the same state returns the field code `INVALID_OR_EXPIRED_SSO_STATE`
+
+:::note[Identity binding is one-to-one]
+A provider subject is bound to exactly one Fluxer account, and an account accepts exactly one provider subject. Presenting a subject that is already linked to a different account, or presenting a new subject for an account that already holds a different linked subject, returns the field code `SSO_IDENTITY_MISMATCH`.
+:::
+
+:::caution[A verified provider email adopts a local account]
+When the subject is not yet linked, Fluxer resolves the account by the verified email address in the provider claim. It adopts any existing account holding that address and binds the subject to it, whether or not that account has a password or an enrolled authenticator. An operator therefore MUST enable SSO only for a provider that controls the addresses it asserts, because a provider asserting an arbitrary verified address takes over the matching local account.
+:::
+
+Fluxer refuses the adoption only when the account already holds a different provider subject.
+
+The provider exchange and claim resolution can return the field codes `INVALID_SSO_AUTHORIZATION_CODE`, `INVALID_SSO_TOKEN`, `FAILED_TO_FETCH_SSO_USER_INFO`, `FAILED_TO_PARSE_SSO_USER_INFO`, `SSO_PROVIDER_DID_NOT_RETURN_EMAIL`, `SSO_IDENTITY_MISMATCH`, `SSO_MISCONFIGURED`, `INVALID_EMAIL_ADDRESS`, `EMAIL_DOMAIN_NOT_ALLOWED_FOR_SSO`, or `SSO_UNABLE_TO_ALLOCATE_DISCRIMINATOR`. An unverified provider email uses the field code `INVALID_SSO_TOKEN`.
+
+Closed registration returns 403 `REGISTRATION_CLOSED`, an unknown account on an instance with automatic provisioning disabled returns 403 `SSO_REQUIRED`, an account awaiting approval returns 403 `REGISTRATION_PENDING_APPROVAL`, and account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A provisioned username or display name containing a blocked substring returns 403 `CONTENT_BLOCKED`.
+
+A verified provider email that adopts a bot account returns 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED`, and one that adopts a rejected registration returns 403 `REGISTRATION_REJECTED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [SSO completion response](#sso-completion-response-object) | SSO completed and a session was issued |
+| 400 | [error response](/http-api/#error-response) | The body, state, provider exchange, claims, or resolved email is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO, registration policy, a bot account, or account suspension rejects completion |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | The identity provider exchange could not be completed |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Fluxer consumes the SSO state exactly once, before it attempts the provider exchange. A failed exchange still burns the state. A client MUST then start a fresh flow. On first sign-in, the provider identity becomes exclusive to the new account. The account starts with a verified email, no password, no authenticator, and its default settings. Provisioning joins no guild and accepts no invite, so no [Guild Member Add](/gateway/events/#guild-member-add) is emitted.
+
+Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` and creates no session. Otherwise the operation creates one authentication session and clears an expired temporary suspension.
+
+### Rate limit
+
+15 requests per 10 seconds, on the `auth:sso:complete` bucket.
+
+## Register an account
+
+<RouteHeader method="POST" path="/v1/auth/register" unauthenticated />
+
+Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event when an invite or instance community admission takes effect.
+
+This is a local authentication operation and it verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. Registration additionally permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those three allowances are separate from the route bucket, and only a deployment that relaxes registration rate limits disables them.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
+| X-Captcha-Type?<sup>2</sup> | string | The provider that issued the proof, either `hcaptcha` or `turnstile` |
+| Accept-Language?<sup>3</sup> | string | The language tag that selects the locale stored on the new account |
+
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, and verification is skipped entirely when CAPTCHA is disabled for the instance
+
+<sup>2</sup> Omitting the header selects the instance's configured provider
+
+<sup>3</sup> The parsed locale becomes the account locale and selects the language of the verification email
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email?<sup>1</sup> | string | The account email address |
+| username?<sup>2</sup> | string | The account username (1-32 characters, letters, digits, and underscores) |
+| global_name? | string | The display name after normalisation (1-32 characters) |
+| password?<sup>3</sup> | string | The account password (8-256 characters) |
+| date_of_birth?<sup>4</sup> | string | The date of birth in exact `YYYY-MM-DD` form |
+| consent?<sup>5</sup> | boolean | Whether the terms of service and privacy policy are accepted (default false) |
+| invite_code? | ?string | The invite accepted immediately after registration (0-256 characters) |
+| registration_url_code?<sup>6</sup> | ?string | The administrator-issued registration URL code (1-256 characters) |
+| theme? | string | The initial theme preference, one of `dark`, `dark_legacy`, `coal`, `light`, or `system` |
+
+<sup>1</sup> Omitting the email address creates an unclaimed account, which has no recovery path until it is claimed. An address whose domain has no usable DNS records, or whose top-level domain is blocked by account policy, returns the field code `INVALID_EMAIL_ADDRESS`, and an address already in use returns `EMAIL_ALREADY_IN_USE`
+
+<sup>2</sup> Omitting the username derives one from `global_name` when that value produces a permitted username, and otherwise allocates a generated username, in both cases with a server-allocated discriminator
+
+<sup>3</sup> The password is checked against the public breached-password corpus described under [reset a password](#reset-a-password), and a match returns the field code `PASSWORD_IS_TOO_COMMON`
+
+<sup>4</sup> The field is required when the instance [collects date of birth](/http-api/instance/#public-registration-fields-object). An absent or blank value, and a value in `YYYY-MM-DD` shape that is not a real calendar date, return the field code `INVALID_DATE_OF_BIRTH_FORMAT`. A value that is not ten characters in `YYYY-MM-DD` shape fails schema validation with the field code `STRING_LENGTH_EXACT` or `INVALID_FORMAT`
+
+<sup>5</sup> A false or absent value returns the field code `MUST_AGREE_TO_TOS_AND_PRIVACY_POLICY` on the official instance and on any instance that publishes a terms or privacy document
+
+<sup>6</sup> A code supplied on an instance with administrator registration URLs disabled, and a code that does not resolve, both return 400 `REGISTRATION_URL_INVALID`. A valid code overrides the closed registration mode and supplies its own approval setting in place of the instance approval mode
+
+Fluxer resolves the region from the client IP address, and an age below the minimum for that region returns the field code `MUST_BE_MINIMUM_AGE`. That minimum is 13 years unless account policy sets a different minimum for the region, and the applied minimum appears only in the localised message.
+
+Registration returns 403 `REGISTRATION_CLOSED` when the instance is closed and no valid registration URL was supplied. A username whose discriminator space is exhausted returns the field code `TOO_MANY_USERS_WITH_THIS_USERNAME`. A username or display name containing a blocked substring returns 403 `CONTENT_BLOCKED`.
+
+:::caution[Registration reports an address already in use]
+[Log in with a password](#log-in-with-a-password) and [request password recovery](#request-password-recovery) are enumeration-safe and registration is not. An address that already holds an account returns the field code `EMAIL_ALREADY_IN_USE`, so an unauthenticated caller learns from the response whether that address is registered.
+:::
+
+:::caution[Registration is not idempotent]
+There is no retry key. A repeated request with the same values creates a second account, or fails on the duplicate email address when one was supplied. A client that loses the response MUST resolve the outcome by attempting a login.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) \| [registration pending approval response](#registration-pending-approval-response-object) | Registration completed or entered the approval state |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, account fields, or registration URL code is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement, registration policy, or content moderation rejects the registration |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, IP, or subnet bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation applies the instance's registration, email-domain, breached-password, and regional policies before creating the account, and its risk policy can set suspicious activity flags on the created account. It records the accepted terms and privacy policy, authorises the registering client IP address, and sends an email verification message when the instance sends email. An instance that sends no email marks the address verified at creation instead.
+
+Registration can accept a supplied or instance-configured invite, and the account can join the instance community. Each join emits [Guild Member Add](/gateway/events/#guild-member-add) to the affected guild's sessions. Registration policy can suppress invite admission.
+
+Approval mode registration creates no guild membership and no authentication session, and the account cannot sign in until an administrator approves it. Every other successful registration creates one session and returns its token.
+
+### Rate limit
+
+10 requests per 10 seconds, on the `auth:register` bucket.
+
+## Log in with a password
+
+<RouteHeader method="POST" path="/v1/auth/login" unauthenticated />
+
+Validates local email and password credentials. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when no second factor and no IP approval are outstanding, and an [MFA challenge response](#mfa-challenge-response) when the account has a second factor.
+
+This is a local authentication operation and it verifies CAPTCHA when CAPTCHA is enabled. Login additionally permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per email address in 15 minutes. Every admitted attempt consumes both allowances, whether or not the credentials turn out to be correct, and a successful login clears neither.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
+| X-Captcha-Type?<sup>2</sup> | string | The provider that issued the proof, either `hcaptcha` or `turnstile` |
+| X-Fluxer-Client-Properties?<sup>3</sup> | string | The base64-encoded JSON with the reporting client's `os` |
+| User-Agent?<sup>3</sup> | string | The client string recorded on the created session and shown by [list authentication sessions](#list-authentication-sessions) |
+
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, and verification is skipped entirely when CAPTCHA is disabled for the instance
+
+<sup>2</sup> Omitting the header selects the instance's configured provider
+
+<sup>3</sup> Both values feed the [client info](#client-info-object) object recorded on the session, and `X-Fluxer-Client-Properties` is read only for a native Fluxer `User-Agent`
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email | string | The account email address |
+| password | string | The account password (8-256 characters) |
+| invite_code?<sup>1</sup> | ?string | The invite accepted immediately after a successful login (0-256 characters) |
+
+<sup>1</sup> The invite is accepted only on a login that completes without a second factor, and a failure to accept it does not fail the login. A login held for IP authorisation discards the invite
+
+:::note[Unknown accounts and unknown passwords are indistinguishable]
+An unknown email address and an incorrect password both return the same paired field codes `INVALID_EMAIL_OR_PASSWORD` on `email` and `password`.
+:::
+
+A new client IP address on an account that has neither a second factor nor the app store reviewer flag returns 403 `IP_AUTHORIZATION_REQUIRED`. That error body has `ip_authorization_required` set to true, the `ticket` used by the three IP authorisation operations, the account `email`, and `resend_available_in` set to 30 seconds.
+
+When the instance has disabled new-IP authorisation or sends no email, Fluxer authorises the client IP address silently and the login proceeds. An account that already has a second factor never enters IP authorisation.
+
+Account policy can return 403 `REGISTRATION_PENDING_APPROVAL`, 403 `REGISTRATION_REJECTED`, 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+
+:::note[A verified password reactivates the account]
+A correct password on an account the user had disabled clears the disabled state. A correct password on an account with a pending self-scheduled deletion cancels that deletion. Both happen during the login, before any second factor is requested, with no confirmation step and no reactivation ticket.
+:::
+
+The login clears an expired temporary suspension the same way. It does not clear a live temporary or permanent administrator suspension, and returns that suspension's 403 instead.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) \| [MFA challenge response](#mfa-challenge-response) | The credentials are accepted |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, email, or password is invalid |
+| 403 | [error response](/http-api/#error-response) | Account policy, SSO enforcement, or IP authorisation prevents the login |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, or IP bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+A successful login on an account with a second factor returns an MFA ticket valid for five minutes and issues no session. When IP approval is required, the authorisation ticket remains valid for 15 minutes and the account receives an authorisation message.
+
+A successful login with no outstanding MFA or IP approval creates one authentication session. It accepts the supplied invite first, which emits [Guild Member Add](/gateway/events/#guild-member-add) to the guild's sessions.
+
+### Rate limit
+
+10 requests per 10 seconds, on the `auth:login` bucket.
+
+## Complete login with TOTP
+
+<RouteHeader method="POST" path="/v1/auth/login/mfa/totp" unauthenticated />
+
+Consumes an MFA ticket and validates a time-based one-time password or an unconsumed backup code, then creates the session. Authentication is not required. Returns an [authentication token response](#authentication-token-response).
+
+This is a local authentication operation. MFA verification additionally permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts.
+
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | The authenticator code or an unconsumed backup code |
+| ticket | string | The ticket returned by [password login](#log-in-with-a-password) |
+
+<sup>1</sup> A validated authenticator code is claimed for 30 seconds, so the same code cannot be presented twice. A backup code is consumed permanently on the attempt that accepts it
+
+An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment returns the field code `TOTP_NOT_ENABLED` on `code`. An incorrect code, and any code presented after the per-account or per-ticket attempt allowance is exhausted, returns the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) | The ticket and code are accepted |
+| 400 | [error response](/http-api/#error-response) | The body, ticket, or code is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation or the ticket resolves to a bot account |
+| 404 | [error response](/http-api/#error-response) | The ticket resolves to an account that no longer exists |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Success consumes the ticket, clears the per-account and per-ticket failed-attempt counters, and creates one authentication session. A failure consumes one attempt from each counter. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+5 requests per minute, on the shared `auth:login:mfa` bucket.
+
+## Get WebAuthn MFA options
+
+<RouteHeader method="POST" path="/v1/auth/login/mfa/webauthn/authentication-options" unauthenticated />
+
+Resolves the account from an MFA ticket and creates a challenge restricted to that account's registered credentials. Authentication is not required. Returns a [WebAuthn authentication options](#webauthn-authentication-options) object.
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket<sup>1</sup> | string | The ticket returned by [password login](#log-in-with-a-password) (1-256 characters) |
+
+<sup>1</sup> The ticket is read but not consumed
+
+A client MUST still complete the returned challenge through [complete login with WebAuthn MFA](#complete-login-with-webauthn-mfa) before the ticket expires. An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no registered credential returns 400 `NO_PASSKEYS_REGISTERED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [WebAuthn authentication options](#webauthn-authentication-options) object | The ticket resolves to an account with at least one credential |
+| 400 | [error response](/http-api/#error-response) | The body or ticket is invalid, or the account has no registered credential |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation issues a one-use WebAuthn challenge valid for five minutes and bound to this MFA flow, account, and ticket. It changes no account state and emits no Gateway Dispatch.
+
+### Rate limit
+
+5 requests per minute, on the shared `auth:login:mfa` bucket.
+
+## Complete login with WebAuthn MFA
+
+<RouteHeader method="POST" path="/v1/auth/login/mfa/webauthn" unauthenticated />
+
+Consumes the MFA ticket, verifies the WebAuthn assertion against the challenge, and creates the session. Authentication is not required. Returns an [authentication token response](#authentication-token-response).
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response | [WebAuthn assertion](#webauthn-assertion) object | The browser credential assertion |
+| challenge<sup>1</sup> | string | The challenge returned by [get WebAuthn MFA options](#get-webauthn-mfa-options) |
+| ticket | string | The ticket returned by [password login](#log-in-with-a-password) |
+
+<sup>1</sup> The challenge is consumed before verification and is accepted only when its bound context, account, and ticket all match this request
+
+An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A challenge mismatch, an unknown credential, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
+
+This operation shares the MFA attempt allowances of [complete login with TOTP](#complete-login-with-totp). It permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts, and an exhausted allowance returns the field code `INVALID_CODE` on `ticket`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) | The ticket and assertion are accepted |
+| 400 | [error response](/http-api/#error-response) | The body or ticket is invalid |
+| 401 | [error response](/http-api/#error-response) | Challenge or assertion verification fails |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation or the ticket resolves to a bot account |
+| 404 | [error response](/http-api/#error-response) | The ticket resolves to an account that no longer exists |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | The verified assertion reported no readable signature counter, or the request could not be completed |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Success consumes the challenge and the ticket, records the credential's new signature counter and last use, and creates one authentication session. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+5 requests per minute, on the shared `auth:login:mfa` bucket.
+
+## Get discoverable WebAuthn options
+
+<RouteHeader method="POST" path="/v1/auth/webauthn/authentication-options" unauthenticated />
+
+Creates a challenge for passwordless authentication with a discoverable credential. Authentication is not required. Returns a [WebAuthn authentication options](#webauthn-authentication-options) object.
+
+This is a local authentication operation.
+
+The request has no body. The response omits `allowCredentials` and requests `required` user verification.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [WebAuthn authentication options](#webauthn-authentication-options) object | A discoverable challenge was created |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation issues a one-use discoverable WebAuthn challenge valid for five minutes and bound to the discoverable context alone. It changes no account state and emits no Gateway Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds, on the `auth:webauthn:options` bucket.
+
+## Authenticate with WebAuthn
+
+<RouteHeader method="POST" path="/v1/auth/webauthn/authenticate" unauthenticated />
+
+Resolves the account from the presented credential ID, verifies the assertion with user verification required, applies account suspension policy, and creates the session. Authentication is not required. Returns an [authentication token response](#authentication-token-response).
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response | [WebAuthn assertion](#webauthn-assertion) object | The browser credential assertion |
+| challenge<sup>1</sup> | string | The challenge returned by [get discoverable WebAuthn options](#get-discoverable-webauthn-options) |
+
+<sup>1</sup> The challenge is consumed before verification and is accepted only when it was issued for the discoverable context, so a challenge issued for MFA or for sudo mode cannot be used here
+
+An unknown credential ID, a challenge mismatch, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`. Account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`.
+
+A bot account returns 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED`. An account that has not been admitted returns 403 `REGISTRATION_PENDING_APPROVAL` or 403 `REGISTRATION_REJECTED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) | The assertion and account policy are accepted |
+| 400 | [error response](/http-api/#error-response) | The body is malformed |
+| 401 | [error response](/http-api/#error-response) | Challenge or assertion verification fails |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement, account suspension, a bot account, or an unadmitted registration rejects the login |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | The verified assertion reported no readable signature counter, or the request could not be completed |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Success consumes the challenge, records the credential's new signature counter and last use, clears an expired temporary suspension, and creates one authentication session. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per 10 seconds, on the `auth:webauthn:authenticate` bucket.
+
+## Log out
+
+<RouteHeader method="POST" path="/v1/auth/logout" bot />
+
+Revokes the session identified by the user session token in the `Authorization` header. Returns 204 with no body.
+
+The request has no body. The operation requires a credential that resolves to an account, and it admits one flagged for suspicious activity. An absent, malformed, or unknown token returns 401 `UNAUTHORIZED`. An OAuth2 bearer token returns 403 `ACCESS_DENIED`. A bot token is accepted and revokes nothing, because a bot holds no session.
+
+:::note[Logging out revokes exactly the calling session]
+The account's other sessions, its OAuth2 grants, and any outstanding MFA ticket, IP authorisation ticket, or desktop handoff all survive. Use [terminate authentication sessions](#terminate-authentication-sessions) to revoke other sessions.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The session was revoked, or the credential is a bot token |
+| 401 | [error response](/http-api/#error-response) | The token is absent, malformed, or names no live session |
+| 403 | [error response](/http-api/#error-response) | The credential is an OAuth2 bearer token |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Session revocation fails unexpectedly |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Revoking a live session ends its Gateway session. The connection receives Invalid Session with `d: false` and stays open, unauthenticated. No Gateway Dispatch is emitted for the revocation.
+
+### Rate limit
+
+20 requests per 10 seconds, on the `auth:logout` bucket.
+
+## Verify an email address
+
+<RouteHeader method="POST" path="/v1/auth/verify" unauthenticated />
+
+Consumes an email verification token and marks the account's current address verified. Authentication is not required. Returns 204 with no body.
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The token delivered by email, exactly 64 characters |
+
+An unknown, already consumed, or deleted-account token returns the field code `INVALID_OR_EXPIRED_VERIFICATION_TOKEN`.
+
+:::caution[Verification marks the account's current address]
+Fluxer never compares the account's address against the one the token was issued for. An account that changes its address while a verification token is outstanding can therefore verify the new address with the old token.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The address was verified |
+| 400 | [error response](/http-api/#error-response) | The body or token is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation, or the token resolves to a bot account |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation marks the current address verified, clears its bounced state, and clears every suspicious activity flag that verifying or reverifying an email address satisfies. It emits a [User Update](/gateway/events/#user-update) Gateway Dispatch to the account's own sessions.
+
+### Rate limit
+
+10 requests per minute, on the `auth:verify` bucket.
+
+## Resend email verification
+
+<RouteHeader method="POST" path="/v1/auth/verify/resend" />
+
+Issues and sends a new email verification token for the authenticated account. Requires a user session token for an ordinary user. Returns 204 with no body.
+
+An account locked by suspicious activity is still permitted. This is a local authentication operation.
+
+The request has no body. When the current address is already verified and no reverification suspicious activity flag is set, the operation returns 204 and sends nothing.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | A message was sent or verification was already complete |
+| 401 | [error response](/http-api/#error-response) | The user session credential is missing or invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation, or the credential is a bot token or an OAuth2 bearer token |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, or per-address bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation creates one 64-character verification token bound to the account and its current address, valid for 24 hours, and sends the verification message. Previously issued verification tokens remain valid. It emits no Gateway Dispatch.
+
+### Rate limit
+
+10 requests per minute, on the `auth:verify:resend` bucket, and the target address additionally permits 3 messages in 15 minutes.
+
+## Request password recovery
+
+<RouteHeader method="POST" path="/v1/auth/forgot" unauthenticated />
+
+Accepts a password recovery request for an email address. Authentication is not required. Returns 204 with no body.
+
+This is a local authentication operation and it verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both extra allowances before it validates the address, and exhausting either returns 429.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
+| X-Captcha-Type?<sup>2</sup> | string | The provider that issued the proof, either `hcaptcha` or `turnstile` |
+
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, and verification is skipped entirely when CAPTCHA is disabled for the instance
+
+<sup>2</sup> Omitting the header selects the instance's configured provider
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email<sup>1</sup> | string | The address that receives the reset link |
+
+<sup>1</sup> An address whose domain has no usable DNS records returns the field code `INVALID_EMAIL_ADDRESS`, while an address that passes DNS validation but belongs to no account returns the ordinary success response
+
+:::note[Account existence is not disclosed]
+An address that resolves to no account produces the same 204 response as an address that resolves to an ordinary account. Only DNS validation failure, the route bucket, the two extra allowances, and an address belonging to a bot account can produce a different outcome.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The request was accepted regardless of whether the account exists |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, or email address is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation, or the address belongs to a bot account |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, or client IP bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Fluxer sends one 64-character reset token by email to an address that resolves to an account. The token is bound to that account and its current address, and it is valid for one hour. Nothing else changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+5 requests per minute, on the `auth:forgot` bucket, and recovery additionally permits 20 attempts per client IP address and 5 attempts per email address in each 30-minute window.
+
+## Validate a password reset token
+
+<RouteHeader method="GET" path="/v1/auth/reset/{token}" unauthenticated />
+
+Checks a reset token without consuming it. Authentication is not required. Returns a [password reset validity](#password-reset-validity-object) object.
+
+This is a local authentication operation.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The password reset token, exactly 64 characters |
+
+A well-formed token that is unknown, already consumed, or bound to a deleted account returns the same object with `valid` set to false.
+
+:::caution[Validity does not promise the reset succeeds]
+The check resolves the token and confirms that its account exists and is not deleted. A token this operation reports as valid is still refused there for a bot account, for an account under a live temporary suspension, or for a replacement password in the breached-password corpus.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [password reset validity](#password-reset-validity-object) object | The well-formed token was checked |
+| 400 | [error response](/http-api/#error-response) | The token path parameter fails validation |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+This read does not consume the token, mutate account state, or emit a Gateway Dispatch.
+
+:::caution[The token travels in the path]
+A token in the path reaches proxy logs, browser history, and referrer headers. A client SHOULD read the token from the recovery link and send it in this one request, and SHOULD NOT route the user's browser to the API path directly.
+:::
+
+### Rate limit
+
+20 requests per minute, on the `auth:reset:validate` bucket.
+
+## Reset a password
+
+<RouteHeader method="POST" path="/v1/auth/reset" unauthenticated />
+
+Consumes a valid reset token and replaces the account password, then issues a new session or an MFA challenge. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when the account has no second factor, and an [MFA challenge response](#mfa-challenge-response) when it has one.
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The password reset token, exactly 64 characters |
+| password<sup>1</sup> | string | The replacement password (8-256 characters) |
+
+<sup>1</sup> The password is checked against the public breached-password corpus before the token is spent, and a match returns the field code `PASSWORD_IS_TOO_COMMON`
+
+An unknown or already consumed token, and a token bound to a deleted account, return the field code `INVALID_OR_EXPIRED_RESET_TOKEN`. A live temporary suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. A permanent suspension returns the field code `INVALID_OR_EXPIRED_RESET_TOKEN` and never 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+
+:::note[The breached-password check is an outbound request]
+The corpus is the public Pwned Passwords range service at `https://api.pwnedpasswords.com`, which is not configurable. Fluxer sends only the first five hexadecimal characters of the candidate password's SHA-1 digest to that service. The check fails open.
+:::
+
+Fluxer treats the password as unbreached when the service returns a non-success status, returns a malformed body, or does not answer inside five seconds. The same check runs during [registration](#register-an-account) and [email reversion](#revert-an-email-change).
+
+:::caution[Resetting a password revokes every existing session]
+A successful reset terminates every authentication session on the account, including the one that any other device is holding. The reset then issues one fresh session of its own, unless the account has a second factor, in which case it issues an MFA ticket and the session follows the factor.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) \| [MFA challenge response](#mfa-challenge-response) | The password was replaced |
+| 400 | [error response](/http-api/#error-response) | The body, token, or replacement password is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement, a bot account, or a live temporary suspension rejects the mutation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token. Every terminated session's Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. Other outstanding reset tokens are not invalidated, so a second recovery link issued earlier still works.
+
+An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the session is created by the MFA completion.
+
+### Rate limit
+
+10 requests per minute, on the `auth:reset` bucket.
+
+## Revert an email change
+
+<RouteHeader method="POST" path="/v1/auth/email-revert" unauthenticated />
+
+Consumes the token delivered to the previous email address, restores that address, replaces the password, and rebuilds the account's credential state. Returns an [authentication token response](#authentication-token-response). Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+The token is valid for 24 hours after the address change that issued it. This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The email reversion token, exactly 64 characters |
+| password<sup>1</sup> | string | The replacement password (8-256 characters) |
+
+<sup>1</sup> The value becomes the account's new password, and Fluxer checks it against the public breached-password corpus, returning the field code `PASSWORD_IS_TOO_COMMON` on a match
+
+:::danger[Reversion destroys every other credential]
+Completing a reversion terminates every authentication session, clears the account's entire second-factor enrolment, and replaces the authorised IP address set with the single IP address that made the request. Any other device, passkey, or backup code held by whoever performed the original email change stops working immediately, and none of it can be restored.
+:::
+
+An unknown or already consumed token, and a token bound to an account that no longer exists, return the field code `INVALID_OR_EXPIRED_REVERT_TOKEN`. Account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`, and a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+
+The replacement password is checked against the same breached-password corpus described under [reset a password](#reset-a-password) before the token is spent.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [authentication token response](#authentication-token-response) | The address and credential recovery completed |
+| 400 | [error response](/http-api/#error-response) | The body, token, or replacement password is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement, a bot account, or account suspension rejects the mutation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation restores the previous email address and marks it verified, sets the replacement password, clears the TOTP secret and every authenticator type, deletes every MFA backup code and every registered WebAuthn credential, and terminates every authentication session. It clears the authorised IP address set and then authorises the requesting client IP address alone.
+
+Every terminated session's Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. [User Update](/gateway/events/#user-update) is emitted for the account, and Fluxer records the contact change.
+
+The operation then creates one new authentication session and returns it.
+
+### Rate limit
+
+10 requests per minute, on the `auth:email_revert` bucket.
+
+## List authentication sessions
+
+<RouteHeader method="GET" path="/v1/auth/sessions" />
+
+Lists every live authentication session belonging to the authenticated account, newest activity first. Requires a user session token for an ordinary user. Returns an array of [authentication session](#authentication-session-object) objects.
+
+An account locked by suspicious activity is still permitted.
+
+The request has no body and takes no parameters.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[authentication session](#authentication-session-object) object] | The live sessions were read |
+| 401 | [error response](/http-api/#error-response) | The user session credential is missing or invalid |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or an OAuth2 bearer token |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+This read does not mutate session state and emits no Gateway Dispatch.
+
+### Rate limit
+
+40 requests per 10 seconds, on the `auth:sessions` bucket.
+
+## Terminate authentication sessions
+
+<RouteHeader method="POST" path="/v1/auth/sessions/logout" mfa />
+
+Deletes the named authentication sessions. Requires a user session token for an ordinary user, and [sudo mode](/http-api/users/mfa/#sudo-mode). Returns 204 with no body.
+
+An account locked by suspicious activity is still permitted. The caller MUST send a valid sudo token in the `X-Fluxer-Sudo-Mode-JWT` header, or supply a password or MFA proof in the body.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| session_id_hashes<sup>1</sup> | array[string] | The session digests to delete (max 100 entries) |
+| password?<sup>2</sup> | string | The password proof for an account with no second factor (8-256 characters) |
+| mfa_method?<sup>3</sup> | string | The proof method, either `totp` or `webauthn` |
+| mfa_code? | string | The authenticator code or an unconsumed backup code when the method is `totp` (1-32 characters) |
+| webauthn_response? | [WebAuthn assertion](#webauthn-assertion) object | The assertion when the method is `webauthn` |
+| webauthn_challenge? | string | The challenge bound to the sudo mode assertion |
+
+<sup>1</sup> Each value is the base64url `id_hash` from [list authentication sessions](#list-authentication-sessions). Fluxer ignores an unknown identifier, and an empty array deletes nothing and still returns 204
+
+<sup>2</sup> The password is accepted only when the account has no second factor, and a value that does not match returns the field code `INVALID_PASSWORD`
+
+<sup>3</sup> The MFA proof is accepted only when the account has a second factor. Any failure returns the field code `INVALID_MFA_CODE` on `mfa_code`, and a successful proof issues a fresh sudo token
+
+A `totp` method reads `mfa_code` as an authenticator code and accepts an unconsumed backup code in its place. A `webauthn` method reads `webauthn_response` and `webauthn_challenge` together, and it accepts only a challenge that was issued for the sudo context.
+
+:::caution[The caller can delete its own session]
+The operation deletes exactly the sessions identified by the supplied `id_hash` values. Because `current` is false on every entry, a client that wants to keep its own session MUST compare the base64url SHA-256 digest of its own token against `id_hash` and omit that identifier. Revoking the calling credential still returns 204.
+:::
+
+Missing or unusable proof returns 403 `SUDO_MODE_REQUIRED`, whose error body has top-level `has_mfa` and `methods` members, and `methods` reports whether `totp` and `webauthn` are available.
+
+:::note[An unclaimed account needs no proof]
+An account that has neither a password nor a second factor satisfies sudo mode with no body proof and no sudo token, and Fluxer issues none. Every other account MUST present a valid sudo token, a password, or an MFA proof.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Every named session was absent or deleted |
+| 400 | [error response](/http-api/#error-response) | The body or the supplied proof is invalid |
+| 401 | [error response](/http-api/#error-response) | The user session credential is missing or invalid |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or an OAuth2 bearer token, or sudo mode is required |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Each named session is deleted, and its Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. A fresh MFA proof mints a new sudo token, while an accepted incoming token is echoed unchanged. Fluxer sets whichever token results in the `X-Fluxer-Sudo-Mode-JWT` response header. A password proof on an account with no second factor mints no token, so the header is not set unless the request already had one. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+20 requests per 10 seconds, on the `auth:sessions:logout` bucket.
+
+## Authorise an IP address
+
+<RouteHeader method="POST" path="/v1/auth/authorize-ip" unauthenticated />
+
+Consumes the authorisation token delivered by email, authorises the pending client IP address, and completes the waiting login. Authentication is not required. Returns 204 with no body.
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The authorisation token delivered by email |
+
+An unknown, expired, already consumed, or account-mismatched token returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TOKEN`. A token that resolves to an account that no longer exists returns 404 `UNKNOWN_USER`, and one that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`. Session creation additionally rejects an account that has not been admitted or is suspended, with the codes listed under [log in with a password](#log-in-with-a-password).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The IP address was authorised and the login result was published |
+| 400 | [error response](/http-api/#error-response) | The body or authorisation token is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation or the token resolves to a bot account |
+| 404 | [error response](/http-api/#error-response) | The token resolves to an account that no longer exists |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation adds the pending client IP address to the account's authorised set and creates one authentication session using the IP address, user agent, and reported operating system captured when the login was attempted. It consumes the authorisation token and the ticket for the pending login.
+
+The session token is then published against the ticket and remains readable by [poll IP authorisation](#poll-ip-authorisation) for 60 seconds. The caller of this operation receives 204 and no token of its own. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+5 requests per minute, on the `auth:authorize_ip` bucket.
+
+## Resend IP authorisation
+
+<RouteHeader method="POST" path="/v1/auth/ip-authorization/resend" unauthenticated />
+
+Sends the authorisation message for an outstanding IP authorisation ticket again. Authentication is not required. Returns 204 with no body.
+
+This is a local authentication operation.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket<sup>1</sup> | string | The ticket returned by the `IP_AUTHORIZATION_REQUIRED` login error |
+
+<sup>1</sup> The resend reuses the authorisation token already bound to the ticket, so a message delivered by an earlier send remains valid
+
+An unknown or expired ticket returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TICKET`. A resend before the delay elapses returns 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` with a `Retry-After` header and a top-level `resend_available_in` in seconds. A second resend returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`.
+
+:::caution[A lost response still spends the resend]
+There is no retry key. A client that loses the response cannot tell whether the message was delivered, and a retry returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED` once the first request marked the resend used.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The message was sent again |
+| 400 | [error response](/http-api/#error-response) | The body or ticket is invalid, or the ticket's single resend is already used |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route or global bucket denies the request, or the resend delay has not elapsed |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Fluxer sends the authorisation message to the address associated with the login attempt and marks the ticket's single resend used whether or not delivery succeeds. No account state changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+5 requests per minute, on the `auth:ip_authorization_resend` bucket, and each ticket additionally permits exactly one resend, no earlier than 30 seconds after the ticket was issued.
+
+## Poll IP authorisation
+
+<RouteHeader method="GET" path="/v1/auth/ip-authorization/poll" unauthenticated />
+
+Reads the login result associated with an IP authorisation ticket. Authentication is not required. Returns an [IP authorisation poll](#ip-authorisation-poll-object) object.
+
+This is a local authentication operation.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket | string | The ticket returned by the `IP_AUTHORIZATION_REQUIRED` login error |
+
+An unknown or expired ticket returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TICKET`, which is also the outcome once the 60-second result retention has elapsed.
+
+:::note[Reading the completed result does not consume it]
+Repeated polling returns the same token, so anyone holding the ticket within the 60-second retention window can read it. A completed token is a live session credential from the moment it first appears.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [IP authorisation poll](#ip-authorisation-poll-object) object | The ticket was read |
+| 400 | [error response](/http-api/#error-response) | The query is malformed or the ticket is unknown or expired |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 404 | [error response](/http-api/#error-response) | The completed result names an account that no longer exists, returning `UNKNOWN_USER` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Rate limit
+
+60 requests per minute, on the `auth:ip_authorization_poll` bucket.
+
+## Get username suggestions
+
+<RouteHeader method="POST" path="/v1/auth/username-suggestions" unauthenticated />
+
+Derives username candidates from a display name. Authentication is not required. Returns a [username suggestions](#username-suggestions-object) object.
+
+This is a local authentication operation. It shares the `auth:register` bucket, which permits 10 requests per 10 seconds.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| global_name | string | The display name after normalisation (1-32 characters) |
+
+:::note[A returned candidate can be taken before use]
+The operation performs no availability check and holds nothing. Registration allocates its own discriminator regardless of the suggestion.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [username suggestions](#username-suggestions-object) object | Candidates were generated |
+| 400 | [error response](/http-api/#error-response) | The body or display name is invalid |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+This read does not reserve a username, mutate account state, or emit a Gateway Dispatch.
+
+## Initiate desktop handoff
+
+<RouteHeader method="POST" path="/v1/auth/handoff/initiate" unauthenticated />
+
+Creates a pending handoff and returns the code the initiating device shows to an already signed-in device. Authentication is not required. Returns a [handoff initiation](#handoff-initiation-object) object.
+
+The request has no body. Fluxer derives the device metadata shown to the approving device from the request itself.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| User-Agent? | string | The client string presented to the approving device and recorded on the session the handoff creates |
+| X-Fluxer-Client-Properties? | string | The base64-encoded JSON with the reporting client's `os`, read only for a native Fluxer `User-Agent` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [handoff initiation](#handoff-initiation-object) object | A handoff request was created |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The handoff remains pending for five minutes and records the initiating device's client IP address, user agent, and reported operating system. Initiation creates no session and emits no Gateway Dispatch.
+
+### Rate limit
+
+10 requests per minute, on the `auth:handoff:initiate` bucket.
+
+## Get desktop handoff information
+
+<RouteHeader method="GET" path="/v1/auth/handoff/{code}/info" unauthenticated />
+
+Describes the device that initiated a pending handoff so that the approving device can show it before approving, and marks the code approvable. Authentication is not required. Returns a [handoff information](#handoff-information-object) object.
+
+Fluxer counts failed code attempts against the client IP address and blocks it after 5 failures in 15 minutes. A pending result records no failure, while an unknown or expired code records one.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | The handoff code |
+
+<sup>1</sup> Fluxer normalises the value by removing hyphens and whitespace and upper-casing the remainder, and the normalised result is exactly 12 characters from the handoff alphabet
+
+:::caution[A successful lookup makes the code completable]
+Reading the handoff information marks the code as inspected but does not approve the transfer. [Complete desktop handoff](#complete-desktop-handoff) rejects a code that has never been inspected. An approving client MUST show the initiating device information and obtain explicit user confirmation before it calls the completion operation.
+:::
+
+Anyone who can reach the API and knows the code can mark it inspected. Declining the request in a client discards only what that client is showing, and the inspected state remains until the handoff is completed or the code expires.
+
+A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. A code whose three lookups are already spent, and a request from a client IP address that has exhausted its failed-attempt allowance, return the same error code. An unknown or expired code returns 200 with the `expired` status and records one failed attempt.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [handoff information](#handoff-information-object) object | The pending or expired state was read |
+| 400 | [error response](/http-api/#error-response) | The code is malformed, its lookup budget is spent, or the client IP attempt allowance is exhausted |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+A successful lookup consumes one of the code's three lookups and records the code as inspected, which is the state [complete desktop handoff](#complete-desktop-handoff) requires. That record lasts for the remaining life of the code, and only completion and cancellation remove it. An expired result records one failed attempt against the client IP address. No account state changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute, on the `auth:handoff:info` bucket, and each code permits at most three successful lookups in total, counted on the code itself.
+
+## Complete desktop handoff
+
+<RouteHeader method="POST" path="/v1/auth/handoff/complete" />
+
+Approves a pending handoff by issuing a new session to the initiating device on the authority of a live one. Requires the approving device's own user session token. Returns 204 with no body.
+
+Fluxer reads that token from the `Authorization` header, or from the body `token` field when the body supplies one.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | The handoff code shown by the initiating device |
+| token?<sup>2</sup> | string | The approving device's own user session token |
+| user_id<sup>3</sup> | snowflake | The account the approving session belongs to |
+
+<sup>1</sup> The code uses the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information), and only a code that operation has already inspected is accepted
+
+<sup>2</sup> The body token takes precedence over the `Authorization` header, and a request that supplies neither returns 401 `UNAUTHORIZED`
+
+<sup>3</sup> A supplied token that resolves to a different account returns `SESSION_TOKEN_MISMATCH`
+
+:::caution[The approving token may travel in the body]
+Sending the token in `token` puts a live credential into a JSON payload. A client SHOULD use the `Authorization` header and omit `token`.
+:::
+
+A token that resolves to no live session returns 401 `INVALID_TOKEN`. A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. A code that has never been inspected through [get desktop handoff information](#get-desktop-handoff-information), an unknown or already completed code, and a request from a client IP address that has exhausted its failed-attempt allowance all return the same error code. A code whose five minutes have elapsed is discarded with its handoff and returns `INVALID_HANDOFF_CODE`. `HANDOFF_CODE_EXPIRED` is returned only when the stored handoff is still present after its five minutes.
+
+Session creation can additionally return 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED` for a bot account, 403 `REGISTRATION_PENDING_APPROVAL` or 403 `REGISTRATION_REJECTED` for an account that has not been admitted, and the suspension codes listed under [log in with a password](#log-in-with-a-password) for a suspended account.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The handoff was completed |
+| 400 | [error response](/http-api/#error-response) | The body, code, expiry state, or session ownership is invalid |
+| 401 | [error response](/http-api/#error-response) | The approving credential is missing, invalid, or revoked |
+| 403 | [error response](/http-api/#error-response) | The approving session belongs to a bot or to an account awaiting approval or rejected |
+| 404 | [error response](/http-api/#error-response) | The approving session resolves to an account that no longer exists |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Completion creates one new authentication session for the initiating device and publishes its token against the code. The token stays readable through [get desktop handoff status](#get-desktop-handoff-status) for whatever remains of the handoff's five minutes. Completion also discards the pending handoff, so the code cannot be completed a second time and a later [get desktop handoff information](#get-desktop-handoff-information) reports `expired`.
+
+The approving session remains valid. The new session takes the initiating device's client IP address, user agent, and reported operating system from the handoff record. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute, on the `auth:handoff:complete` bucket, and a client IP address is blocked after 5 failed code attempts in 15 minutes.
+
+## Get desktop handoff status
+
+<RouteHeader method="GET" path="/v1/auth/handoff/{code}/status" unauthenticated />
+
+Reports the state of a handoff to the device that initiated it. Authentication is not required. Returns a [handoff status](#handoff-status-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
+
+:::note[This route never returns the token]
+A completed handoff reports `pending` here, because the token needs `poll_secret`. Read it with [get desktop handoff status with the poll secret](#get-desktop-handoff-status-with-the-poll-secret).
+:::
+
+The code is the only credential this route checks. The initiating device MUST poll for the completion itself.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [handoff status](#handoff-status-object) object | The state was read, or an unknown code was reported as expired |
+| 400 | [error response](/http-api/#error-response) | The code is malformed, returning `INVALID_HANDOFF_CODE` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+A poll leaves the handoff unchanged. A poll against a completed handoff records a failed attempt for the polling IP address, because this route presents no `poll_secret`. No account state changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+60 requests per minute, on the `auth:handoff:status` bucket.
+
+## Get desktop handoff status with the poll secret
+
+<RouteHeader method="POST" path="/v1/auth/handoff/{code}/status" unauthenticated />
+
+Reports the state of a handoff and delivers the new session token once, to a caller that presents the poll secret issued at initiation. Authentication is not required. Returns a [handoff status](#handoff-status-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
+
+### Request body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| poll_secret | string | The secret returned by [initiate desktop handoff](#initiate-desktop-handoff) |
+
+:::caution[The completed status is delivered exactly once]
+Reading a completed handoff deletes the stored token as it returns it. The very next poll with the same code reports `expired`, so the initiating device MUST retain the token when it is first received.
+:::
+
+A secret that does not match reports `pending` and records a failed attempt for the polling IP address. The route reports no distinct error for a wrong secret, so a caller cannot tell a wrong secret from a handoff the approving device has not finished.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [handoff status](#handoff-status-object) object | The state was read, or an unknown code was reported as expired |
+| 400 | [error response](/http-api/#error-response) | The code is malformed, returning `INVALID_HANDOFF_CODE` |
+| 404 | [error response](/http-api/#error-response) | The completed handoff names an account that no longer exists, returning `UNKNOWN_USER` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+A poll that matches the secret deletes the stored token as it delivers it, so later polls report `expired`. Every other poll leaves the handoff unchanged. No account state changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+60 requests per minute, on the `auth:handoff:status` bucket.
+
+## Cancel a desktop handoff
+
+<RouteHeader method="DELETE" path="/v1/auth/handoff/{code}" unauthenticated />
+
+Discards a handoff and everything stored against its code. Authentication is not required. Returns 204 with no body.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
+
+An unknown or already expired code is an idempotent success.
+
+:::caution[Anyone holding the code can cancel]
+The route checks no credential and the code is its only input, so a party that learns the code can cancel a handoff the initiating device is still waiting on. The initiating device observes this as the `expired` status.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The handoff was discarded, or no handoff existed for that code |
+| 400 | [error response](/http-api/#error-response) | The code is malformed, returning `INVALID_HANDOFF_CODE` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The pending handoff, its inspected record, and any completed token that has not yet been read are all deleted. Cancelling does not revoke a session that a completion already created. When the initiating device never polled that completion, the cancellation leaves a live session no device holds a token for. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute, on the `auth:handoff:cancel` bucket.
+

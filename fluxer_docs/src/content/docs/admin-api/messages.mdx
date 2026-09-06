@@ -1,0 +1,446 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin messages
+description: Message browsing and search, permanent deletion, shred jobs, and NCMEC submission.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Admin message routes read, search, and permanently delete the messages of one channel. Others report the progress of a shred job and submit one attachment to NCMEC, the National Center for Missing and Exploited Children.
+
+Shredding and bulk deletion for a whole account live under [Admin users](/admin-api/users/).
+
+## Admin message object
+
+A flattened moderation view of one message. It has the author identity, the content and timestamp, the attachments with their NCMEC submission state, and the NSFW context of the channel and guild.
+
+Every operation that returns Admin message objects also returns the matching public message objects in a parallel `message_responses` array, so a client that needs the full wire shape joins on `id`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the message |
+| channel_id | snowflake | The channel the message was sent in |
+| channel_name<sup>1</sup> | ?string | The channel name, or null for a channel that has no name |
+| channel_nsfw<sup>1</sup> | ?boolean | Whether the channel is marked NSFW |
+| channel_content_warning_level?<sup>2</sup> | ?integer | The channel [content warning level](/http-api/channels/#content-warning-levels) |
+| channel_content_warning_text?<sup>2</sup> | ?string | The channel content warning text (0-200 characters) |
+| guild_id<sup>1</sup> | ?snowflake | The guild containing the channel, or null for a private channel |
+| guild_name<sup>1</sup> | ?string | The guild name, or null for a private channel |
+| guild_nsfw_level<sup>1</sup> | ?integer | The guild [NSFW level](/http-api/guilds/#nsfw-levels), or null for a private channel |
+| guild_nsfw?<sup>2</sup> | ?boolean | Whether the guild is marked NSFW |
+| guild_content_warning_level?<sup>2</sup> | ?integer | The guild [content warning level](/http-api/guilds/#guild-content-warning-levels) |
+| guild_content_warning_text?<sup>2</sup> | ?string | The guild content warning text (0-200 characters) |
+| author_id | snowflake | The ID of the author |
+| author_username | string | The author username (1-100 characters) |
+| author_global_name | ?string | The author display name, or null when unset |
+| author_discriminator | string | The author discriminator tag (1-10 characters) |
+| author_avatar | ?string | The author avatar hash, or null when unset |
+| content | string | The message content (0-4,000 characters) |
+| timestamp | ISO8601 timestamp | When the message was sent |
+| attachments | array[[Admin message attachment](#admin-message-attachment-object) object] | The attachments of the message (at most 10) |
+| user_prior_ncmec_report_ids?<sup>3</sup> | array[string] | The NCMEC report IDs previously filed against the author, ascending (at most 100) |
+
+<sup>1</sup> Every object in one response has the same values, taken from the channel named in the request path or query. All five are null when the channel no longer exists
+
+<sup>2</sup> Always absent from the objects these operations return. The same member is populated on the [report message context object](/admin-api/reports/#report-message-context-object)
+
+<sup>3</sup> Written on every object these operations return, and empty when no NCMEC report has been filed against the author
+
+### Example
+
+```json
+{
+  "id": "1502771119476146176",
+  "channel_id": "1471002884199612420",
+  "channel_name": "general",
+  "channel_nsfw": false,
+  "guild_id": "1471002884199612416",
+  "guild_name": "Tidepool",
+  "guild_nsfw_level": 0,
+  "author_id": "1490118377238528000",
+  "author_username": "kestrel",
+  "author_global_name": null,
+  "author_discriminator": "0117",
+  "author_avatar": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "content": "read the pinned message",
+  "timestamp": "2026-03-04T18:19:07.220Z",
+  "attachments": [],
+  "user_prior_ncmec_report_ids": []
+}
+```
+
+### Admin message attachment object
+
+An attachment entry has the ordinary attachment metadata together with the NCMEC submission state Fluxer holds for it.
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the attachment |
+| filename | string | The attachment filename (1-256 characters) |
+| url | string | The CDN URL of the attachment (1-2,048 characters) |
+| nsfw | ?boolean | Whether the attachment is marked NSFW, or null when it has no marking |
+| content_type | ?string | The recorded MIME type, or null when none was recorded |
+| width | ?integer | The pixel width, or null when no dimensions were recorded |
+| height | ?integer | The pixel height, or null when no dimensions were recorded |
+| size?<sup>4</sup> | ?integer | The attachment size in bytes, or null when no size was recorded |
+| ncmec_status | string | The [NCMEC submission status](#ncmec-submission-status) of this attachment |
+| ncmec_report_id<sup>5</sup> | ?string | The report ID NCMEC assigned (1-256 characters), or null when none has been assigned |
+| ncmec_failure_reason<sup>6</sup> | ?string | The recorded reason the last submission failed (1-4,000 characters), or null |
+
+<sup>4</sup> Always emitted, so it is null and never absent when no size was recorded
+
+<sup>5</sup> Assigned only once NCMEC accepts the report, so it is null while `ncmec_status` is `not_submitted` and after a failed submission
+
+<sup>6</sup> Populated only when `ncmec_status` is `failed`, and it stores the raw upstream error. The sanitised wording appears in the failing response body instead
+
+#### NCMEC submission status
+
+| Value | Description |
+| --- | --- |
+| not_submitted | The attachment has never been submitted to NCMEC |
+| submitted | The attachment was submitted to NCMEC and NCMEC accepted the report |
+| failed | The submission failed, the opened report was retracted, and the attachment can be submitted again |
+
+A submission that is still running is stored as `submitting` and returned unchanged, so tolerate a status outside this table. An attachment in that state is refused a second submission by [Create NCMEC report](#create-ncmec-report).
+
+## Message shred status object
+
+The state of one message shred job. The state expires one hour after it was last written, and an expired job is reported by `status` alone.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | not_found \| in_progress \| completed \| failed | The job state |
+| requested<sup>1</sup> | integer | The number of message references the job was queued with |
+| total<sup>1</sup> | integer | The number of those references the job resolved as shreddable |
+| processed<sup>1</sup> | integer | The number of messages the job has shredded so far |
+| skipped<sup>1</sup> <sup>2</sup> | integer | The number of references the job did not shred |
+| started_at?<sup>1</sup> <sup>3</sup> | ISO8601 timestamp | When the job started |
+| completed_at?<sup>1</sup> | ISO8601 timestamp | When the job completed |
+| failed_at?<sup>1</sup> | ISO8601 timestamp | When the job failed |
+| error?<sup>1</sup> <sup>4</sup> | string | Why the job failed (1-4,000 characters) |
+
+<sup>1</sup> Absent when `status` is `not_found`, a shape that has `status` alone
+
+<sup>2</sup> Counts a reference that repeats an earlier entry, one whose IDs are not valid snowflakes, one whose message no longer exists, and one no longer authored by the target user
+
+<sup>3</sup> Present whenever the counters are
+
+<sup>4</sup> Present only when `status` is `failed`
+
+:::note[An expired job reports `not_found`]
+A job identifier that never existed reports `not_found` too, so the two are indistinguishable.
+:::
+
+## List channel messages
+
+<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages" />
+
+Returns one page of [Admin message](#admin-message-object) objects for one channel. Requires `message:lookup`.
+
+The read ignores message history permissions, channel membership, and the age cutoff applied to ordinary members, so it returns every message the channel still holds.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit? | integer | Maximum messages to return (1-100, default 50) |
+| before?<sup>1</sup> | snowflake | Return messages with a lower ID than this cursor |
+| after?<sup>1</sup> <sup>2</sup> | snowflake | Return messages with a higher ID than this cursor |
+
+<sup>1</sup> Supplying neither selects the newest messages in the channel. Supplying both selects the newest messages below `before` and discards any at or below `after`
+
+<sup>2</sup> Supplying `after` also flips the order of the returned array
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| messages<sup>1</sup> | array[[Admin message](#admin-message-object) object] | Messages in this page (at most 100) |
+| message_responses?<sup>2</sup> | array[[message](/http-api/messages/#message-object) object] | The same messages in the public wire shape, same order (at most 100) |
+| has_more<sup>3</sup> | boolean | Whether the page was filled to `limit` |
+
+<sup>1</sup> Ordered oldest first, except when `after` was supplied, in which case it is ordered newest first
+
+<sup>2</sup> Written by every response this operation produces
+
+<sup>3</sup> True when the page holds exactly `limit` entries, so a page that ends on the last message reports true and the next request returns an empty page
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Message page was returned |
+
+The response has no cursor member. Page further by sending the ID of the oldest returned message as `before`, or the ID of the newest returned message as `after`.
+
+A channel that does not exist returns an empty `messages` array with `has_more` false, so this operation never answers 404.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
+
+## Get message
+
+<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages/{message_id}" />
+
+Returns the requested message together with the messages surrounding it, as one array of [Admin message](#admin-message-object) objects, oldest first. Requires `message:lookup`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel |
+| message_id | snowflake | The ID of the message |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| context_limit?<sup>1</sup> | integer | Size of the whole returned window, counting the requested message (1-100, default 50) |
+
+<sup>1</sup> At most `context_limit` divided by two, rounded down, are newer than the requested message and the rest are older, so the default returns at most 25 newer and 24 older
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| messages<sup>1</sup> | array[[Admin message](#admin-message-object) object] | The requested message and its surrounding window (at most 100) |
+| message_responses? | array[[message](/http-api/messages/#message-object) object] | The same messages in the public wire shape, same order (at most 100) |
+| message_id<sup>2</sup> | ?snowflake | The requested message ID |
+
+<sup>1</sup> The requested message is one entry of this array, and it is absent when it no longer exists
+
+<sup>2</sup> Echoes the path parameter and is never null here
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Window was returned |
+
+An unknown message returns 200 with the window surrounding the position the missing ID would have occupied, so this operation never returns `UNKNOWN_MESSAGE`. An unknown channel returns 200 with an empty `messages` array.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
+
+## Delete message
+
+<RouteHeader method="DELETE" path="/v1/admin/channels/{channel_id}/messages/{message_id}" auditReason />
+
+Permanently deletes one message and purges the attachments it owned. Requires `message:delete`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel |
+| message_id | snowflake | The ID of the message |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always true |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Request completed and the audit entry was written |
+
+An unknown channel or message returns 200 with `success` true and still records an audit entry.
+
+:::danger[Deletion purges the message and its attachments]
+There is no grace period and no restore operation.
+:::
+
+### Side effects
+
+The attachments the message owned are purged from storage and from the CDN, the message row is deleted, and its search index document is removed.
+
+[Message Delete](/gateway/events/#message-delete) is sent to the guild when the channel belongs to one, and to each recipient when the channel is private. No other Dispatch is emitted, and deleting a pinned message here emits no [Channel Pins Update](/gateway/events/#channel-pins-update).
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `delete_message` and the target type `message`, targeting the message ID. Its metadata is `channel_id` and `message_id`. The entry is written whether or not a message was found.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
+
+## Search messages
+
+<RouteHeader method="GET" path="/v1/admin/messages" />
+
+Searches the message index of one channel, or resolves one message in that channel by message ID or by attachment identity. Requires `message:lookup`.
+
+The three modes return two different response bodies, and the query decides which one arrives.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The channel every returned message was sent in |
+| q?<sup>1</sup> | string | Free-text query matched against message content (1-200 characters) |
+| message_id?<sup>2</sup> | snowflake | Resolve the message with this ID together with its surrounding window |
+| attachment_id?<sup>2</sup> <sup>3</sup> | snowflake | Resolve the message with this attachment together with its surrounding window |
+| filename?<sup>3</sup> | string | The exact filename of the attachment named by `attachment_id` (1-255 characters) |
+| context_limit?<sup>2</sup> | integer | Size of the window returned by a lookup, counting the resolved message (1-100, default 50) |
+| limit?<sup>1</sup> | integer | Maximum messages to return when searching (1-100, default 25) |
+
+<sup>1</sup> Applies to the search mode only. Omitting `q` searches for the empty string
+
+<sup>2</sup> `message_id` takes precedence over every other member, and `attachment_id` over `q`. A lookup ignores `limit` and a search ignores `context_limit`
+
+<sup>3</sup> Supply both together. Sending `attachment_id` without `filename` returns 400 `INVALID_FORM_BODY` against `filename`
+
+### Search response body
+
+Returned when neither `message_id` nor `attachment_id` was supplied.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| messages<sup>4</sup> | array[[Admin message](#admin-message-object) object] | Matching messages (at most 100) |
+| message_responses? | array[[message](/http-api/messages/#message-object) object] | The same messages in the public wire shape, same order (at most 100) |
+| total<sup>5</sup> | integer | The number of matches that still exist |
+
+<sup>4</sup> Holds at most `limit` entries. There is no cursor and no offset member, so this operation returns the first page of matches only
+
+<sup>5</sup> Counts every surviving match, so it can exceed the length of `messages`
+
+### Lookup response body
+
+Returned when `message_id` or `attachment_id` was supplied. It is the same body [Get message](#get-message) returns.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| messages | array[[Admin message](#admin-message-object) object] | The resolved message and its surrounding window, oldest first (at most 100) |
+| message_responses? | array[[message](/http-api/messages/#message-object) object] | The same messages in the public wire shape, same order (at most 100) |
+| message_id<sup>6</sup> | ?snowflake | The ID of the resolved message |
+
+<sup>6</sup> Null only for an attachment lookup that matched no attachment, in which case `messages` is empty too. A `message_id` lookup echoes the supplied ID even when no such message exists
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | search or lookup response body | Search or lookup completed |
+
+An unknown channel, a message that does not exist, and an attachment whose filename does not match all return an empty result. This operation never answers 404.
+
+With no message search service configured the search mode returns an empty `messages` array and `total` zero. The two lookup modes are unaffected.
+
+:::note[A deleted message never appears in a result]
+A hit whose message no longer exists is dropped from the page and excluded from `total`.
+:::
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
+
+## Get message shred job
+
+<RouteHeader method="GET" path="/v1/admin/messages/shreds/{job_id}" />
+
+Returns one [message shred status](#message-shred-status-object) object. Requires `message:shred`.
+
+Shred jobs are created by [Shred user messages](/admin-api/users/#shred-user-messages) and by the non-dry-run form of [Delete all user messages](/admin-api/users/#delete-all-user-messages). Both return the identifier this operation reads.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id<sup>1</sup> | snowflake | The message shred job ID, taken from the queueing response |
+
+<sup>1</sup> A snowflake issued when the job was queued, so a value that is not a decimal integer fails path validation rather than reporting `not_found`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [message shred status](#message-shred-status-object) object | Job state was returned, including `not_found` for an unknown or expired job |
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
+
+## Create NCMEC report
+
+<RouteHeader method="POST" path="/v1/admin/messages/ncmec-reports" />
+
+Submits one image or video attachment to NCMEC and starts the account enforcement workflow for its author. Requires `csam:submit_ncmec`, `message:delete`, `user:delete`, and `archive:trigger:user`.
+
+A caller missing more than one of the four is refused with 403 `MISSING_ACL` naming the first it does not hold, in the order listed. The wildcard satisfies all four.
+
+This operation ignores `X-Audit-Log-Reason`. The reason on every audit entry the workflow produces is synthesised from the assigned NCMEC report ID and the channel and attachment IDs, and it is returned as `audit_log_reason`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The channel the attachment was sent in |
+| message_id | snowflake | The message the attachment belongs to |
+| attachment_id | snowflake | The attachment to submit |
+| filename | string | The exact filename of the attachment (1-255 characters) |
+| source_report_id?<sup>1</sup> | snowflake | The report whose frozen evidence has the attachment |
+| reporter_full_name | string | The full legal name of the submitting Admin (1-200 characters) |
+| confirmed_viewed<sup>2</sup> | boolean | Confirmation that the submitting Admin has viewed the attachment |
+
+<sup>1</sup> Required when the live message no longer exists or has no author, in which case the attachment is read from that report's frozen evidence. Supplying it otherwise only records the report ID
+
+<sup>2</sup> The literal value `true` is the only accepted value. Any other value fails body validation
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always true |
+| ncmec_report_id | string | The report ID NCMEC assigned to this submission (1-256 characters) |
+| audit_log_reason<sup>3</sup> | string | The synthesised reason recorded on every audit entry the workflow produced (1-4,000 characters) |
+
+<sup>3</sup> The NCMEC report ID followed by the channel ID and attachment ID, so one string identifies the submission in the audit log and at NCMEC
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Attachment was submitted and the workflow advanced |
+| 400 | [error response](/admin-api/#error-response) | The resolved attachment is neither an image nor a video and the request returns `INVALID_FORM_BODY` against `attachment_id` |
+| 404<sup>1</sup> | [error response](/admin-api/#error-response) | `UNKNOWN_MESSAGE` when nothing resolves the attachment, or `UNKNOWN_REPORT` when `source_report_id` names no report |
+| 409 | [error response](/admin-api/#error-response) | `NCMEC_ALREADY_SUBMITTED` when a submission for the attachment is already running or has already succeeded |
+| 500 | [error response](/admin-api/#error-response) | Submission fails and the request returns `NCMEC_SUBMISSION_FAILED` |
+
+<sup>1</sup> The attachment resolves from a live message with an author, or from frozen report evidence
+
+:::danger[A successful request files a real NCMEC report]
+The request disables the author's account and schedules that account for deletion. Nothing withdraws a completed submission. Fluxer retracts the report only when a step after it was opened fails.
+:::
+
+### Side effects
+
+Fluxer resolves the attachment from the live message when that message still exists and has an author, and from the frozen evidence named by `source_report_id` otherwise. Fluxer accepts the attachment only when its resolved content type begins with `image/` or `video/`.
+
+Fluxer marks the attachment `submitting`, opens an NCMEC report, uploads the attachment bytes, submits its file details with the viewed flag set, and finishes the report. On success the attachment is marked `submitted` with the assigned report ID. On failure the opened report is retracted, the attachment is marked `failed` with the raw reason, and the request returns `NCMEC_SUBMISSION_FAILED`. A retraction that itself fails is logged and does not change the recorded state.
+
+When the resolved attachment has an author who has not already been enforced against, Fluxer sets the account's deleted and disabled flags, clears any temporary ban, and records the deletion reason for child sexual content. It then schedules deletion 60 days ahead, deletes every authentication session, propagates the resulting user update, and triggers a user archive for that account.
+
+Message content is deleted only after that archive completes. The archive is re-checked every 15 seconds by default, for at most 240 attempts. Once the archive is complete the reported message is deleted, its attachments are purged, and [Message Delete](/gateway/events/#message-delete) is sent.
+
+A successful submission records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `NCMEC Report`. It targets the reported user, or targets the source report when the attachment resolved to no author. Triggering the archive records a second entry with the action `trigger_user_archive` targeting the same user, skipped when the account already has an archive taken after the enforcement. Both entries have the synthesised reason returned as `audit_log_reason`.
+
+An attachment that resolved to no author is submitted to NCMEC and audited. No account is disabled, no archive is triggered, and no message content is deleted.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.

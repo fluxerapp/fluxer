@@ -1,0 +1,104 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Themes
+description: Theme identifiers, custom CSS storage, document bounds, and content screening.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A theme is a custom CSS stylesheet stored under a short code, and anyone holding the code can fetch it. The HTTP API exposes one operation, which stores a theme. The [Media Proxy](/media-proxy/overview/) serves the stored stylesheet back through [Get theme CSS](/media-proxy/routes/#get-theme-css).
+
+The single route here is user-only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`.
+
+## Theme identifier
+
+A theme identifier is 16 lowercase hexadecimal characters matching `^[a-f0-9]{16}$`. Fluxer draws eight cryptographically random bytes for each request and renders them as hex, so storing identical CSS twice produces two independent themes under two independent identifiers.
+
+### Example
+
+```json
+{
+  "id": "3f0a91c7d2b84e65"
+}
+```
+
+## Document bounds
+
+The UTF-8 encoding of a submitted document cannot exceed 8388608 bytes, and the document is at least one character long. Both bounds are fixed constants of the instance.
+
+| Bound | Value |
+| --- | --- |
+| Encoded CSS<sup>1</sup> <sup>2</sup> | 8388608 bytes |
+| Submitted CSS<sup>3</sup> | at least 1 character |
+
+<sup>1</sup> The 8 MiB ceiling is inclusive, so a document whose UTF-8 encoding is exactly 8388608 bytes is stored and one byte more is rejected with 400 `FILE_SIZE_TOO_LARGE`
+
+<sup>2</sup> Measured over the UTF-8 encoding, so a document of multi-byte characters can be shorter than 8388608 characters and still be rejected
+
+<sup>3</sup> Measured in characters of the submitted string
+
+An account holds no theme quota. The route bucket is the only bound on how many themes an account creates, and no route here consults an [instance limit key](/http-api/instance/#limit-keys).
+
+## Content screening
+
+The instance-wide content filter screens the submitted document before the route runs. It checks a `css` value of at least 3 characters against the instance phrase blocklist and the instance URL blocklist. A match on either returns 403 `CONTENT_BLOCKED`. A shorter value is never screened.
+
+Fluxer scans a body under every content type except `multipart/form-data` and `application/x-www-form-urlencoded`. A body that does not parse as JSON is skipped as well. The route parses the body from the raw request text and reads no content type, so a JSON document sent under either form content type is stored without passing the blocklists.
+
+The screen precedes the rate limit bucket, the credential check, and the request schema, so a blocked document returns `CONTENT_BLOCKED` even when the request has no credential.
+
+The screen is the only inspection the document receives. Fluxer stores the CSS verbatim and never parses, validates, minifies, or rewrites it.
+
+## Create theme
+
+<RouteHeader method="POST" path="/v1/users/@me/themes" />
+
+Stores a custom CSS document and returns 201 with the created [theme identifier](#theme-identifier). User-only, and no permission is required.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| css<sup>1</sup> <sup>2</sup> | string | The CSS text to store and share (at least 1 character) |
+
+<sup>1</sup> Stored verbatim, bounded by the 8388608-byte UTF-8 ceiling described in [Document bounds](#document-bounds)
+
+<sup>2</sup> An empty string is rejected with the validation code `INVALID_FORMAT`
+
+:::note[Malformed and unusable bodies fail at different paths]
+An absent body, a whitespace-only body, and a present but empty, null, or non-string `css` all return 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `css` path. A body that does not parse as JSON returns the same status and code at the `body` path.
+:::
+
+A body that parses as JSON but is not an object, such as a string, a number, an array, or `null`, returns the same code at the path `root`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The [theme identifier](#theme-identifier) |
+
+The object has the identifier and nothing else.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | response body | Document was stored |
+| 400 | [error response](/http-api/#error-response) | The encoded document exceeds the size ceiling and the request returns `FILE_SIZE_TOO_LARGE` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The document is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
+
+### Side effects
+
+Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. The identifier addresses the document by the time the caller receives it.
+
+Nothing Fluxer stores links a theme to the account that created it. The [Media Proxy](/media-proxy/overview/) then serves the stored document from `/themes/{id}.css`, and that route accepts no credential.
+
+:::danger[Theme CSS is public and permanent]
+The identifier is the only thing guarding a stored document, and the read route is unauthenticated. The HTTP API replaces or deletes no stored theme. A caller MUST NOT put a credential, a token, or any other secret in a submitted document.
+:::
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `theme:share:create` bucket.

@@ -1,0 +1,281 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Get started
+description: Bring up a Fluxer instance with Docker Compose, from a fresh host to first login.
+---
+
+import InstallerChecksum from '@/components/InstallerChecksum.astro';
+
+:::tip[Plutonium and donations fund Fluxer]
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
+:::
+
+By the end you have a Fluxer instance on a hostname you own, with the web app, HTTP API, Gateway, admin dashboard, uploads, search and voice signalling behind it. All of it runs in Docker containers on one machine. Allow about 30 minutes, most of it spent downloading images.
+
+## What you need
+
+| Requirement | Value |
+| --- | --- |
+| Host | Any machine that runs Docker with Linux containers. A Linux server, or a Mac or Windows PC with Docker Desktop |
+| Runtime | Docker Engine 24 or newer with the Compose plugin v2.20.2 or newer. Docker Desktop ships both |
+| Processor | Intel, AMD and Apple Silicon all work. Every image ships for `amd64` and `arm64`, and Docker pulls the matching one |
+| CPU | 2 vCPU minimum, 4 vCPU for a small active community. No service sets a CPU limit, so every container sees all of them |
+| RAM | 8 GB minimum with the shipped defaults, 16 GB for a small active community. 4 GB needs the [low-memory overrides](/operator/configuration/#resources) |
+| Disk | 20 GB minimum, more for uploads |
+| Inbound ports | 80/tcp, 443/tcp and 443/udp for the web tier, plus 7881/tcp and 7882/udp for voice media |
+| DNS | An `A` record for the hostname pointing at this machine, optionally an `AAAA` record |
+| Outbound | Working DNS resolution from inside the containers |
+| Host tools | `curl` and `openssl` on Linux. macOS ships both. The Windows installer needs neither |
+
+The per-container memory limits are ceilings and reserve nothing, so the host does not need their total free. On a 4 GB host, lower the `api` and `worker` limits first, because those two size their JavaScript heap from the limit they are given.
+
+Docker Desktop runs the containers inside a Linux virtual machine, so the RAM figure above is the RAM its settings give that machine, which starts well below what the hardware has.
+
+The stack is one Compose project. The edge and LiveKit are the only services that publish ports.
+
+The steps below use the bundled Caddy, which obtains and renews a TLS certificate for the hostname and needs no configuration.
+
+To put your own proxy in front, add the `docker-compose.proxy.yml` overlay. The stack then leaves 80 and 443 alone and publishes one plain HTTP port, and your proxy forwards everything to that port. [Behind your own reverse proxy](/operator/reverse-proxy/) has the overlay, the requirements, and worked configuration for nginx, Caddy, Traefik, HAProxy, Apache, a Cloudflare Tunnel and Nginx Proxy Manager.
+
+## Step 1: Install Docker
+
+Check what you have:
+
+```bash
+docker --version
+docker compose version
+```
+
+On Debian and Ubuntu, use Docker's apt repository from [Install Docker Engine](https://docs.docker.com/engine/install/). The distribution's `docker.io` package ships no Compose plugin. Add your user to the `docker` group with the [post-installation steps](https://docs.docker.com/engine/install/linux-postinstall/), then log out and back in so the commands below run without `sudo`.
+
+On a Mac or a Windows PC, install [Docker Desktop](https://docs.docker.com/desktop/) and leave it on Linux containers. It has both commands above.
+
+On Linux, install the two host tools the steps below use. On Debian and Ubuntu:
+
+```bash
+sudo apt-get install -y curl openssl
+```
+
+Other distributions use `dnf`, `zypper`, `pacman` or `apk` with the same two package names. `curl --version` and `openssl version` both answer once the install finishes.
+
+## Step 2: Point DNS at the host
+
+Choose the hostname the instance answers on. Step 4 writes it into `.env` as `FLUXER_DOMAIN`, and every example below uses `chat.example.com` in its place.
+
+Create an `A` record for that hostname pointing at the machine's public address, and an `AAAA` record when the machine has a public IPv6 address. A hosting provider shows that address in its console. On a home connection the address belongs to the router, and the router's status page shows it.
+
+:::caution[Finish setup before anyone else reaches the hostname]
+An unconfigured instance takes registrations from anyone, and lets any account that registers read and change the instance configuration. Registration defaults to `open`. The window opens the moment DNS and the ports are live, so finish the wizard in [Step 6](#first-run) in the same sitting that brings the stack up.
+:::
+
+## Step 3: Open the ports
+
+Open six ports on the host:
+
+| Port | Protocol | Used by |
+| --- | --- | --- |
+| 22 | tcp | SSH, on a host you reach remotely |
+| 80 | tcp | ACME HTTP validation and the redirect to HTTPS |
+| 443 | tcp | The web app, HTTP API, Gateway and admin dashboard |
+| 443 | udp | HTTP/3 for the same traffic |
+| 7881 | tcp | LiveKit media, published by the LiveKit container |
+| 7882 | udp | LiveKit media, published by the LiveKit container |
+
+A machine behind a home router needs ports 80, 443 and the two LiveKit ports forwarded to it, because the certificate is issued from the public internet and voice media arrives on the LiveKit ports directly.
+
+Behind your own reverse proxy the proxy holds 80 and 443 and the stack binds a plain HTTP port on the loopback. 7881 and 7882 still have to reach the host, because voice media never goes through a proxy.
+
+On a cloud VM, open them in the provider's firewall or security group. On a Linux host running firewalld:
+
+```bash
+sudo firewall-cmd --permanent --add-service=ssh
+sudo firewall-cmd --permanent --add-port=80/tcp --add-port=443/tcp --add-port=443/udp \
+  --add-port=7881/tcp --add-port=7882/udp
+sudo firewall-cmd --reload
+```
+
+## Step 4: Bring up the instance
+
+The installer downloads the stack files, writes `.env`, generates every secret, and starts the instance. Download it, check the published SHA-256, read it, then run it.
+
+On Linux:
+
+```bash
+curl -fsSLO https://fluxer.dev/install.sh
+curl -fsSLO https://fluxer.dev/install.sh.sha256
+sha256sum -c install.sh.sha256
+```
+
+On macOS, the same two downloads and:
+
+```bash
+shasum -a 256 -c install.sh.sha256
+```
+
+On Windows:
+
+```powershell
+Invoke-WebRequest https://fluxer.dev/install.ps1 -OutFile install.ps1
+Invoke-WebRequest https://fluxer.dev/install.ps1.sha256 -OutFile install.ps1.sha256
+(Get-FileHash .\install.ps1 -Algorithm SHA256).Hash -eq (Get-Content .\install.ps1.sha256).Split()[0]
+```
+
+`install.sh: OK` on Linux and macOS, and `True` on Windows, mean the file arrived whole. The digest of the copy this site serves is <InstallerChecksum script="install.sh" /> for `install.sh` and <InstallerChecksum script="install.ps1" /> for `install.ps1`.
+
+Read the script before you run it. It writes `.env`, which holds every secret the instance has.
+
+The run below uses the bundled TLS. Add `--tls proxy` when something else terminates TLS, and read [Behind your own reverse proxy](/operator/reverse-proxy/) first.
+
+Then run it. The hostname is the one from Step 2, and `--email` becomes the contact address on outgoing web push:
+
+```bash
+sh install.sh --domain chat.example.com --email you@example.com
+```
+
+On Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Domain chat.example.com -Email you@example.com
+```
+
+The run prints one line per phase and ends with the URL to open. It takes several minutes, most of it spent pulling eighteen images.
+
+`~/fluxer` then holds `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `Caddyfile` and `.env.example`, plus a `.env` of 20 lines readable only by you. Every value that ships as `CHANGE_ME` in `.env.example` is a fresh random value. Every command from here on runs in that directory.
+
+### Installer flags
+
+| Flag | Meaning |
+| --- | --- |
+| `--domain <host>` | Hostname the instance answers on. Prompted when absent |
+| `--email <address>` | Contact address written as `FLUXER_VAPID_EMAIL`. Prompted when absent |
+| `--dir <path>` | Working directory. Default `~/fluxer` |
+| `--ref <git ref>` | Ref the stack files come from. Defaults to the image tag, and to `main` when that tag is `v1` or `latest` |
+| `--image-tag <tag>` | Image tag the stack runs. Default `v1` |
+| `--tls <mode>` | `bundled` or `proxy`. Default `bundled` |
+| `--edge-bind <addr:port>` | Plain HTTP bind under `--tls proxy`. Default `127.0.0.1:8080` |
+| `--non-interactive` | Never prompt. A missing required value is an error |
+| `--dry-run` | Print the plan. Write nothing and start nothing |
+| `--no-start` | Write everything and skip `docker compose up -d` |
+| `--update` | Upgrade: record, back up, refresh, pull, recreate, verify |
+| `--rollback` | Put back the images and stack files of the newest record |
+| `--allow-root` | Permit running as root |
+
+Run `--dry-run` first to see what a set of flags does. The PowerShell script takes the same flags as `-Domain`, `-Email` and so on, and has no `-AllowRoot`. [Upgrading](/operator/upgrading/#run-the-upgrade) has the flags that only `--update` and `--rollback` read, and the exit codes.
+
+### The script is the reference
+
+Each step in the script has a comment beside the code. The comment holds the command that does that step alone, and the reason the step exists: the download URL for every stack file, how `.env` is built from `.env.example`, what each `CHANGE_ME` takes, and how the VAPID pair is derived. Read it at [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or the Windows script at [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1).
+
+## Step 5: Check that it works
+
+Watch the stack settle:
+
+```bash
+cd ~/fluxer
+docker compose ps
+docker compose logs -f api
+```
+
+Every service reads `running` or `healthy` except `seaweedfs-init`, which creates the five upload buckets and then reads `exited (0)`.
+
+Then the public probes. Replace the hostname with your own:
+
+```bash
+base=https://chat.example.com
+for p in /_health /api/_health /gateway/_health /media/_health /.well-known/fluxer /; do
+  printf '%s %s\n' "$(curl -sS -o /dev/null -w '%{http_code}' "$base$p")" "$p"
+done
+```
+
+On Windows:
+
+```powershell
+$base = 'https://chat.example.com'
+foreach ($p in '/_health', '/api/_health', '/gateway/_health', '/media/_health', '/.well-known/fluxer', '/') {
+  '{0} {1}' -f (Invoke-WebRequest "$base$p" -UseBasicParsing).StatusCode, $p
+}
+```
+
+All six return 200. `/.well-known/fluxer` lists the endpoints clients use, with your own hostname in them.
+
+<a id="first-run"></a>
+
+## Step 6: Create the first admin
+
+Open the hostname in a browser. A fresh instance is unconfigured, so it serves the setup wizard.
+
+The wizard runs in two halves. Before you are signed in it walks a welcome step, a theme choice, an admin introduction, and an account form. After that account exists it walks branding, registration mode, community policy and media expiry, then the GIF, YouTube, captcha, email and Bluesky integrations, then the service toggles, the premium model and a finish step. Finishing marks the instance configured and takes the wizard down.
+
+Create the owner account with an email address at a domain you control. On a self-hosted instance the first registration that supplies an email address receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard also grants the wildcard ACL to the account that completes it when that account holds no admin ACL yet.
+
+`.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. Nothing goes out by mail, so a forgotten owner password has no email reset. Record it, and register a passkey or a second admin account before you open registration.
+
+Then sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
+
+The desktop client opens the hosted web app for its release channel, so reach your instance through the web app. [Issue #1088](https://github.com/fluxerapp/fluxer/issues/1088) tracks progress.
+
+[Configuration](/operator/configuration/) lists every runtime setting and the environment variable each one overrides. [Deployment availability](/http-api/deployment-availability/) lists the routes that exist only on the hosted deployment.
+
+## Backups
+
+An instance comes back from two artifacts and its `.env`: a dump of the database, which covers `postgres-data`, and a tarball of `seaweedfs-data`, which holds every upload, avatar, report and harvest. [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists all seven volumes with what each one holds.
+
+The dump costs no downtime, so run it on a schedule while the stack serves:
+
+```bash
+cd ~/fluxer
+mkdir -p backups
+docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom \
+  > "backups/fluxer-$(date -u +%Y%m%dT%H%M%SZ).dump"
+```
+
+PowerShell writes UTF-16 through `>`, which corrupts a binary dump. On Windows, write the dump inside the container and copy it out:
+
+```powershell
+mkdir -Force backups
+docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom -f /tmp/fluxer.dump
+docker compose cp postgres:/tmp/fluxer.dump backups/fluxer.dump
+docker compose exec -T postgres rm /tmp/fluxer.dump
+```
+
+The uploads copy stops the stack, because a live copy can catch a file mid-write. Compose prefixes volume names with the project name, which the stack sets to `fluxer`:
+
+```bash
+docker compose stop
+docker run --rm -v fluxer_seaweedfs-data:/data -v "$PWD/backups:/backup" alpine:3.22 \
+  tar czf /backup/seaweedfs-data.tgz -C /data .
+docker compose up -d
+```
+
+In PowerShell write `${PWD}` in place of `$PWD`.
+
+A dump and a tarball in `backups`, and every service back to `running`, is the success signal.
+
+`sh install.sh --update` takes both before every upgrade. [What the backup covers](/operator/upgrading/#what-the-backup-covers) puts the dump on a nightly timer, and [Restore a backup](/operator/upgrading/#restore-a-backup) puts either artifact back.
+
+### Remove the instance
+
+Take the instance down and delete its data:
+
+```bash
+docker compose down -v
+```
+
+`-v` deletes all seven named volumes, so every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings them back. Take the copies above first.
+
+## Upgrading
+
+The default tag `v1` tracks the latest compatible release. The same script upgrades the instance:
+
+```bash
+cd ~/fluxer
+sh install.sh --update
+```
+
+`--update` records the running images, backs up the database and the uploads, refreshes the four stack files, pulls, recreates, and verifies. It leaves every secret in `.env` untouched. On Windows it is `.\install.ps1 -Update`. Run `sh install.sh --update --dry-run` first to see the plan.
+
+[Upgrading](/operator/upgrading/) covers what the backup holds, rolling back, pinning a release and reclaiming disk.
+
+## Getting help
+
+File issues and follow development on [GitHub](https://github.com/fluxerapp/fluxer).

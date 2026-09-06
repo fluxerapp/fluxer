@@ -1,0 +1,589 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin API overview
+description: Admin credentials, ACL evaluation, audit entries, and the shared error contract.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The Admin API is the privileged surface for administering an instance: its accounts, guilds, messages, and configuration. Every route sits below `/v1/admin` and shares the JSON framing and error envelope of the [HTTP API](/http-api/). It applies its own credential policy, [ACL evaluation](#acl-evaluation), and rate limit buckets.
+
+## Authentication
+
+Every Admin operation accepts a user session token as a bare `Authorization` value, an access token issued by Fluxer's built-in Admin OAuth2 application as `Bearer <token>`, or an Admin API key as `Admin <token>`. Fluxer resolves a value in the user session token form as a session token even under the `Bearer` prefix. [HTTP authentication](/authentication/) defines the credential syntax.
+
+Fluxer evaluates the credential in a fixed order. A request that resolves no account is refused with 401 `UNAUTHORIZED`, as is a credential presented with the `Bot` scheme. An access token issued to any OAuth2 application other than the built-in Admin application is refused with 403 `ACCESS_DENIED`. An account holding neither `admin:authenticate` nor the wildcard `*` is refused with 403 `MISSING_PERMISSIONS`. An account that clears both gates but satisfies none of the [ACLs](#acl-evaluation) the operation names is refused with 403 `MISSING_ACL`.
+
+:::caution[A denial names no requirement]
+The `MISSING_ACL` body is a fixed sentence that has no ACL name and no requirement list, so a response never discloses which requirement failed.
+:::
+
+No Admin operation declares an OAuth2 scope, an MFA requirement, or a sudo requirement, so none consumes the `X-Fluxer-Sudo-Mode-JWT` header. An accepted credential together with the required ACLs is the complete authorisation boundary.
+
+An Admin API key authenticates as the account that created it, and Fluxer reads it only on a path below `/v1/admin`. A request presenting a key on any other path continues with no credential resolved. Fluxer authorises a key-authenticated request twice. The key's own ACL set must satisfy the operation, and unless the owning account holds `*` that account must itself hold one of the ACLs the operation names. Removing an ACL from either side narrows every existing key at once, with no rotation.
+
+Initial setup is the single exception. While the instance reports its setup as unconfigured, a session credential reaches the [instance configuration](/admin-api/instance/) operations without holding any ACL. The session that switches setup to configured is granted `*` immediately. Once setup is configured those operations apply the boundary above.
+
+Admin authorisation runs before request validation on every operation except [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job), whose body is validated first because its ACL is selected from that body. An account lacking the required ACL is therefore refused with 403 even when its query string or body is also malformed.
+
+## ACL evaluation
+
+An operation names one or more ACLs and admits the request when the caller holds at least one of them. The wildcard `*` satisfies every requirement on its own.
+
+An operation can stack several requirements, each evaluated separately, and the caller must satisfy all of them. [Create NCMEC report](/admin-api/messages/#create-ncmec-report) is the widest example and stacks `csam:submit_ncmec`, `message:delete`, `user:delete`, and `archive:trigger:user` as four independent requirements.
+
+The effective ACL set of a session or an Admin OAuth2 bearer credential is the set stored on the account. The effective set of an Admin API key is the set stored on the key, subject to the owner check above. [Set user ACLs](/admin-api/users/#set-user-acls) writes an account's set. Holding `admin:authenticate` or `*` is the whole definition of an account that can reach the Admin API.
+
+Two operations derive their required ACLs from the validated request body.
+
+[Update guild](/admin-api/guilds/#update-guild) maps each present body field to one ACL and requires every ACL in that set. `name` maps to `guild:update:name`, `vanity_url_code` maps to `guild:update:vanity`, `new_owner_id` maps to `guild:transfer_ownership`, `add_features` and `remove_features` map to `guild:update:features`, and `fields` together with every remaining setting maps to `guild:update:settings`. A body with none of those fields resolves to `*`, so only a wildcard holder is admitted. The route also names those five ACLs as an ordinary any-of requirement, evaluated before the body is read.
+
+[Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job) maps its `task` discriminator to one ACL and requires that one. `update_user_flags` maps to `bulk:update:user_flags`, `update_suspicious_activity_flags` maps to `bulk:update:suspicious_activity`, `update_guild_features` maps to `bulk:update:guild_features`, `add_guild_members` maps to `bulk:add:guild_members`, and `schedule_user_deletion` maps to `bulk:delete:users`.
+
+Fluxer bounds every grant separately. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs additionally refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it resolves the target before the bound is evaluated, so an unknown ID fails first with 404 `UNKNOWN_USER`.
+
+[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 111 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
+
+:::caution[`*` satisfies every present and future ACL]
+It admits the wildcard-only shapes such as an empty [Update guild](/admin-api/guilds/#update-guild) body, lifts the per-key owner check, and lifts the escalation bound on every grant its holder makes.
+:::
+
+The [ACL registry](#acl-registry) below lists every value the instance recognises.
+
+## Admin audit entry object
+
+An Admin audit entry records one Admin action against one target.
+
+Not every Admin operation records an entry. Each Admin resource page states, per operation, whether it records one and what that entry stores.
+
+A request refused by authentication, ACL evaluation, rate limiting, or body validation records nothing.
+
+Fluxer can record more than one entry for one request. [Update guild](/admin-api/guilds/#update-guild) records one entry for each mapped field group it applies. A queued bulk job records one summary entry when it finishes, with the creating Admin and that request's audit reason. The `update_user_flags`, `update_guild_features`, and `schedule_user_deletion` tasks also record one ordinary entry for each account or guild the worker changes, with `audit_log_reason` null.
+
+An entry stores an acting Admin, a target type, a target ID, an action name, an optional audit reason, and a string metadata map. Fluxer resolves every other member at read time.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| log_id | snowflake | The ID of the audit entry |
+| admin_user_id | snowflake | The ID of the account that performed the action |
+| admin_user<sup>1</sup> | ?[Admin user summary](#admin-user-summary-object) object | The resolved acting Admin, or null when the account no longer resolves |
+| target_type | string | The [audit target type](#audit-target-types) the entry was recorded against (1-256 characters) |
+| target_id<sup>2</sup> | string | The target ID in decimal, which is the literal `0` for a target that has no snowflake |
+| target_user<sup>3</sup> | ?[Admin user summary](#admin-user-summary-object) object | The resolved target account, or null when the entry names no account target |
+| target_guild<sup>4</sup> | ?[Admin guild summary](#admin-guild-summary-object) object | The resolved target guild, or null when the entry names no guild target |
+| target_channel<sup>5</sup> | ?[Admin channel summary](#admin-channel-summary-object) object | The resolved target channel, or null when the entry names no channel target |
+| related_users<sup>6</sup> | map[snowflake, [Admin user summary](#admin-user-summary-object) object] | The accounts the entry references, keyed by ID |
+| related_guilds<sup>6</sup> | map[snowflake, [Admin guild summary](#admin-guild-summary-object) object] | The guilds the entry references, keyed by ID |
+| related_channels<sup>6</sup> | map[snowflake, [Admin channel summary](#admin-channel-summary-object) object] | The channels the entry references, keyed by ID |
+| action | string | The [audit action](#audit-actions) the service recorded (1-256 characters) |
+| audit_log_reason | ?string | The normalised [audit reason](#audit-reasons) (1-4,000 characters), or null when the request supplied none |
+| metadata<sup>7</sup> | map[string, string] | The additional values the operation recorded |
+| created_at | ISO8601 timestamp | The time the entry was recorded |
+
+<sup>1</sup> Resolved from `admin_user_id` at read time, so an account deleted after the entry was written reports null while `admin_user_id` still has the ID
+
+<sup>2</sup> Serialised as a decimal string, like a [snowflake](/snowflakes/). A blocklist entry, a voice region, and a voice server record `0` here and their textual identity in `metadata`
+
+<sup>3</sup> Resolved only when `target_type` is `user`, `guild_member`, `message_deletion`, or `message_shred`
+
+<sup>4</sup> Resolved only when `target_type` is `guild`
+
+<sup>5</sup> Resolved when `target_type` is `channel`, and otherwise from a `channel_id` metadata key
+
+<sup>6</sup> Resolved once for the whole page and then repeated identically on every entry in it
+
+<sup>7</sup> Keys are 1 to 256 characters and values are 0 to 4,000 characters. The keys an operation records are stated by that operation
+
+Fluxer populates the three `related_` maps from the acting Admin, from the resolved target, and from the metadata. A metadata key contributes when its value is a decimal integer and its name is `user_id`, `guild_id`, `channel_id`, `target_user_id`, or `admin_user_id`, or ends in `_user_id`, `_guild_id`, or `_channel_id`. An identifier that no longer resolves is omitted from the map.
+
+An entry has no request method, request path, status, duration, IP address, or field change list. An entry is never redacted on read, so a caller holding `audit_log:view` reads `audit_log_reason` and every metadata value in full.
+
+### Example
+
+```json
+{
+  "log_id": "1501314428688998182",
+  "admin_user_id": "1489200013322551296",
+  "admin_user": {
+    "id": "1489200013322551296",
+    "username": "operator",
+    "discriminator": "0042",
+    "global_name": "Operator"
+  },
+  "target_type": "user",
+  "target_id": "1493004551122763776",
+  "target_user": {
+    "id": "1493004551122763776",
+    "username": "subject",
+    "discriminator": "0007",
+    "global_name": null
+  },
+  "target_guild": null,
+  "target_channel": null,
+  "related_users": {},
+  "related_guilds": {},
+  "related_channels": {},
+  "action": "change_username",
+  "audit_log_reason": "Impersonation report 4821",
+  "metadata": {
+    "old_username": "subj3ct",
+    "new_username": "subject",
+    "discriminator": "7"
+  },
+  "created_at": "2026-05-14T09:12:44.183000+00:00"
+}
+```
+
+### Admin user summary object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the account |
+| username | string | The username of the account |
+| discriminator<sup>1</sup> | string | The four-digit discriminator of the account |
+| global_name | ?string | The display name of the account, or null when none is set |
+
+<sup>1</sup> Left-padded with zeroes to four digits, unlike the unpadded integer `discriminator` of the [Admin user object](/admin-api/users/#admin-user-object)
+
+### Admin guild summary object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name of the guild |
+
+### Admin channel summary object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the channel |
+| name | ?string | The name of the channel, or null for a direct message channel |
+| type | integer | The [channel type](/http-api/channels/#channel-types) |
+| guild_id | ?snowflake | The ID of the owning guild, or null for a direct message channel |
+
+### Audit target types
+
+| Value | Description |
+| --- | --- |
+| user | User account |
+| guild | Guild |
+| guild_member | Guild membership |
+| guild_emoji | Guild emoji asset |
+| guild_sticker | Guild sticker asset |
+| message | Message |
+| message_deletion<sup>1</sup> | Bulk deletion of every message one account sent |
+| message_shred<sup>1</sup> | Message shred job for one account |
+| asset | Stored media asset |
+| application | OAuth2 application |
+| report | User report |
+| search_index | Search index |
+| system_dm | System DM broadcast |
+| voice_region<sup>2</sup> | Voice region |
+| voice_server<sup>2</sup> | Voice server registration |
+| ip<sup>2</sup> | IP blocklist entry or suspicious IP marker |
+| email<sup>2</sup> | Exact email blocklist entry |
+| email_domain<sup>2</sup> | Suspicious email domain entry |
+| phrase<sup>2</sup> | Phrase blocklist entry |
+| url<sup>2</sup> | Exact URL blocklist entry |
+| url_domain<sup>2</sup> | URL domain blocklist entry |
+| file_sha<sup>2</sup> | File SHA-256 blocklist entry |
+| avatar_hash<sup>2</sup> | Avatar hash blocklist entry |
+| profile_substring<sup>2</sup> | Profile substring blocklist entry |
+
+<sup>1</sup> The target ID is the account the job acts on, and the entry resolves that account into `target_user`
+
+<sup>2</sup> The target has no snowflake, so `target_id` is `0` and the entry's textual identity is in `metadata`
+
+The field is a free-form string, so a client MUST tolerate a value outside this table.
+
+### Audit actions
+
+An operation records one of the following actions. The field is a free-form string of 1 to 256 characters, so a client MUST tolerate a value outside this table.
+
+| Value | Description |
+| --- | --- |
+| NCMEC Report | An attachment was submitted through the NCMEC reporting integration |
+| add_suspicious_email_domain | A domain was added to the suspicious email domain list |
+| approve_registration | A pending registration was approved |
+| auto_resolve_reports_on_deletion | Reports against an account were resolved automatically as part of its deletion |
+| ban_avatar_hash | An avatar hash was added to the avatar blocklist |
+| ban_email | An address was added to the email blocklist |
+| ban_file_sha | A file hash was added to the attachment blocklist |
+| ban_ip | An address was added to the IP blocklist |
+| ban_ip_skipped_exempt | An IP blocklist entry was declined by the instance exemption list |
+| ban_ip_skipped_cgnat | An IP blocklist entry was declined by the carrier-grade NAT blast-radius guard |
+| ban_member | An account was banned from a guild |
+| ban_phrase | A phrase was added to the message phrase blocklist |
+| ban_profile_substring | A substring was added to the profile substring blocklist |
+| ban_url | A URL was added to the URL blocklist |
+| ban_url_domain | A domain was added to the URL domain blocklist |
+| bulk_add_guild_members | A bulk guild member addition was queued or applied |
+| bulk_ban_file_shas | A queued bulk file hash blocklist job was applied |
+| bulk_schedule_deletion | A bulk account deletion schedule was queued or applied |
+| bulk_update_guild_features | A bulk guild feature change was queued or applied |
+| bulk_update_suspicious_activity_flags | A bulk suspicious activity flag change was queued or applied |
+| bulk_update_user_flags | A bulk account flag change was queued or applied |
+| cancel_bulk_message_deletion | A bulk message deletion an account scheduled for itself was cancelled |
+| cancel_deletion | A scheduled account deletion was cancelled |
+| change_dob | A date of birth was changed |
+| change_email | An email address was changed |
+| change_username | A username or discriminator was changed |
+| clear_fields<sup>1</sup> | Profile fields of an account, or fields of a guild, were cleared |
+| create_voice_region | A voice region was created |
+| create_voice_server | A voice server was registered |
+| delete_all_user_messages | Deletion of every message an account sent was queued |
+| delete_all_user_messages_dry_run | The same operation was run with `dry_run` set, so no message was deleted |
+| delete_guild | A guild was deleted |
+| delete_message | One message was deleted |
+| delete_voice_region | A voice region was deleted |
+| delete_voice_server | A registered voice server was deleted |
+| delete_webauthn_credential | A WebAuthn credential was removed from an account |
+| disable_mfa | Multi-factor authentication was disabled on an account |
+| disable_suspicious_activity | An account flagged for suspicious activity was disabled |
+| force_add_to_guild | An account was added to a guild while bypassing the ban check |
+| kick_member | A member was removed from a guild |
+| list_user_sessions | An account's login sessions were read |
+| list_webauthn_credentials | An account's WebAuthn credentials were read |
+| mark_suspicious_ip | An IP address was marked as suspicious |
+| mark_suspicious_ip_skipped_invalid | The address could not be parsed, so no marker was written |
+| mark_suspicious_ip_skipped_ipinfo_unavailable | IP intelligence was unavailable, so no marker was written |
+| mark_suspicious_ip_skipped_trusted_commercial_privacy_provider | The address belongs to a trusted commercial privacy provider, so no marker was written |
+| mark_suspicious_ip_skipped_high_blast_radius | The address failed the blast-radius guard, so no marker was written |
+| purge_asset | A stored media asset was purged |
+| purge_guild_emoji_asset | A guild emoji asset was purged |
+| purge_guild_sticker_asset | A guild sticker asset was purged |
+| queue_message_shred | A message shred job was queued |
+| queue_refresh_index | A search index rebuild was requested |
+| reject_registration | A pending registration was rejected |
+| reload_guild | One guild was reloaded on the main Gateway |
+| remove_relationship | One relationship was removed from an account |
+| remove_relationships_by_category | Every relationship in one category was removed from an account |
+| remove_suspicious_email_domain | A domain was removed from the suspicious email domain list |
+| resend_verification_email | An email verification message was requested again for an account |
+| resolve_report | A report was updated or resolved |
+| schedule_deletion | Account deletion was scheduled |
+| send_password_reset | A password reset message was requested for an account |
+| set_acls | The Admin ACL set of an account was replaced |
+| set_bot_status | The bot flag of an account was changed |
+| set_system_status | The system flag of an account was changed |
+| set_traits | Account traits were replaced |
+| shutdown_guild | One guild was stopped on the main Gateway |
+| system_dm.send | A system DM broadcast was created |
+| temp_ban | A temporary or permanent account ban was applied |
+| terminate_sessions | Every login session of an account was revoked |
+| transfer_ownership<sup>1</sup> | Guild ownership or OAuth2 application ownership was transferred |
+| trigger_user_archive | A user archive was created |
+| unban | An account ban was lifted |
+| unban_avatar_hash | An avatar hash was removed from the avatar blocklist |
+| unban_email | An address was removed from the email blocklist |
+| unban_file_sha | A file hash was removed from the attachment blocklist |
+| unban_ip | An address was removed from the IP blocklist |
+| unban_phrase | A phrase was removed from the message phrase blocklist |
+| unban_profile_substring | A substring was removed from the profile substring blocklist |
+| unban_url | A URL was removed from the URL blocklist |
+| unban_url_domain | A domain was removed from the URL domain blocklist |
+| update_features | Guild features were added or removed |
+| update_flags | Account flags were changed |
+| update_has_verified_phone | Verified phone state was changed |
+| update_name | A guild name was changed |
+| update_premium_flags | Premium flags were changed |
+| update_settings | General guild settings were changed |
+| update_suspicious_activity_flags | Suspicious activity flags were replaced |
+| update_vanity | A guild custom invite code was changed |
+| update_voice_region | A voice region was updated |
+| update_voice_server | A registered voice server was updated |
+| verify_email | An email address was marked verified |
+
+<sup>1</sup> The same action name is recorded for two different resources, so `target_type` disambiguates the entry
+
+<a id="audit-reasons-and-effects"></a>
+
+## Audit reasons
+
+Fluxer reads the `X-Audit-Log-Reason` header once at the boundary, on every request to the API, Admin or not. The header is read raw and never percent-decoded, so a client that URI-encodes the value has the encoded form stored.
+
+Fluxer normalises the value by stripping control and format characters and trimming surrounding whitespace. An absent header, a blank value, and a value whose normalised length exceeds 512 characters all resolve to null. Fluxer never fails a request during this normalisation, so an over-long reason is dropped silently.
+
+Fluxer writes the resolved value to `audit_log_reason` on every entry the request records. An operation that records no entry accepts the header and does nothing with it. An Admin resource page marks an operation with the audit reason capability only where an entry stores the value.
+
+## Errors and rate limits
+
+### Error response
+
+An Admin failure uses the same envelope as the [HTTP API error response](/http-api/#error-response). The HTTP status is in the status line, and the request identifier in the `X-Request-ID` response header.
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The stable machine-readable [API error code](/http-api/errors/#api-error-code-registry) |
+| message<sup>1</sup> | string | The human-readable description of this failure |
+| errors?<sup>2</sup> | array[[validation error](/http-api/#validation-error-object) object] | The request fields that failed validation |
+
+<sup>1</sup> The wording varies by locale and is not a stable value for programmatic matching
+
+<sup>2</sup> Present on an `INVALID_FORM_BODY` response, and on any other failure that has field detail
+
+Structured detail sits at the top level of the object. A client MUST treat a member it does not recognise as absent, and MUST NOT assume that two failures with the same `code` have the same extra members.
+
+### Standard response statuses
+
+Every Admin response follows the [shared response header contract](/http-api/#standard-response-headers). An HTTP 401 has no challenge header, as described under [failed authentication](/authentication/#failed-authentication). [Admin authentication](#authentication) lists the credential types each Admin operation accepts.
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 400 | [error response](#error-response) | Path, query, or body validation fails |
+| 401 | [error response](#error-response) | Admin credential is missing or unresolvable |
+| 403 | [error response](#error-response) | Credential type or ACL evaluation denies the request |
+| 404 | [error response](#error-response) | A referenced resource does not exist |
+| 429 | [error response](#error-response) | Route or global rate limit denies the request |
+| 500 | [error response](#error-response) | An unexpected server error occurs |
+| 503 | [error response](#error-response) | The in-flight request ceiling of the instance is exceeded |
+
+A 429 has `Retry-After`, `X-RateLimit-Scope`, and the route bucket headers described in [rate limit headers](/topics/rate-limits/#rate-limit-headers). A 503 has `Retry-After: 1`. Fluxer applies the concurrency ceiling before routing, so a 503 can answer any Admin path with `SERVICE_UNAVAILABLE` regardless of credentials.
+
+An Admin route bucket is keyed by the authenticated account and the credential type together, and no Admin bucket name has a path parameter. Every operation naming one bucket shares one allowance for each account, and an Admin API key draws on a separate allowance from its owner's session.
+
+Every Admin operation declares a route bucket, and each Admin resource page names the one its operations use.
+
+The global user bucket permits 50 requests per second, rising to 1,200 for an account that has the `HIGH_GLOBAL_RATE_LIMIT` flag. An account with the `RATE_LIMIT_BYPASS` flag is evaluated against no bucket at all. Instance configuration can change route and global limits as described in [rate limits](/topics/rate-limits/).
+
+Fluxer classifies a successful Admin request from an ordinary account as a user request, and the response has no informational rate limit headers.
+
+## List ACLs
+
+<RouteHeader method="GET" path="/v1/admin/acls" />
+
+Returns every Admin permission string the instance recognises, in [ACL registry](#acl-registry) order. Requires `admin:authenticate`.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 111 entries) |
+
+<sup>1</sup> The response is the registry itself and does not vary with the caller's own ACL set
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | ACL registry was returned |
+| 403 | [error response](#error-response) | Credential type is refused, or the account holds neither `admin:authenticate` nor `*` |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## ACL registry
+
+The registry is returned in this order by [List ACLs](#list-acls). A value outside it authorises nothing.
+
+| Value | Description |
+| --- | --- |
+| *<sup>1</sup> | Satisfies every Admin permission, including permissions introduced later |
+| acl:set:user | Replaces the Admin ACL set held by an account |
+| admin_api_key:manage | Creates, reads, renames, and revokes [Admin API keys](/admin-api/api-keys/) |
+| application:lookup | Reads [Admin application](/admin-api/applications/) resources, including the applications owned by one account |
+| application:list:by_owner<sup>2</sup> | Reads the two application listings |
+| application:transfer_ownership | Transfers OAuth2 application ownership |
+| archive:trigger:guild | Creates guild [archives](/admin-api/archives/) |
+| archive:trigger:user | Creates user archives |
+| archive:view_all<sup>3</sup> | Reads and downloads archives |
+| asset:purge | Reads a guild's emojis and stickers, and purges guild media assets |
+| audit_log:view | Reads the [Admin audit log](#admin-audit-entry-object) |
+| admin:authenticate | Permits the account to reach the Admin API at all, and admits [List ACLs](#list-acls) and [Get current Admin user](/admin-api/users/#get-current-admin-user) |
+| jobs:view | Reads background [job](/admin-api/jobs/) state |
+| jobs:cancel | Requests background job cancellation |
+| ban:email:add | Adds and updates `email` [blocklist](/admin-api/blocklists/) entries |
+| ban:email:check | Reads the `email` blocklist |
+| ban:email:remove | Removes `email` blocklist entries |
+| suspicious_email_domain:add | Adds and updates `email-domain-suspicious` blocklist entries |
+| suspicious_email_domain:check | Reads the `email-domain-suspicious` blocklist |
+| suspicious_email_domain:remove | Removes `email-domain-suspicious` blocklist entries |
+| ban:phrase:add | Adds and updates `phrase` blocklist entries |
+| ban:phrase:check | Reads the `phrase` blocklist |
+| ban:phrase:remove | Removes `phrase` blocklist entries |
+| ban:ip:add | Adds and updates `ip` blocklist entries |
+| ban:ip:check | Reads the `ip` blocklist |
+| ban:ip:remove | Removes `ip` blocklist entries |
+| ban:url:add | Adds and updates `url` blocklist entries |
+| ban:url:check | Reads the `url` blocklist |
+| ban:url:remove | Removes `url` blocklist entries |
+| ban:url_domain:add | Adds and updates `url-domain` blocklist entries |
+| ban:url_domain:check | Reads the `url-domain` blocklist |
+| ban:url_domain:remove | Removes `url-domain` blocklist entries |
+| ban:file_sha:add | Adds and updates `file-sha` blocklist entries |
+| ban:file_sha:check | Reads the `file-sha` blocklist |
+| ban:file_sha:remove | Removes `file-sha` blocklist entries |
+| ban:avatar_hash:add <sup>4</sup> | Adds and updates `avatar-hash` blocklist entries |
+| ban:avatar_hash:check | Reads the `avatar-hash` blocklist |
+| ban:avatar_hash:remove | Removes `avatar-hash` blocklist entries |
+| ban:profile_substring:add | Adds and updates `profile-substring` blocklist entries |
+| ban:profile_substring:check | Reads the `profile-substring` blocklist |
+| ban:profile_substring:remove | Removes `profile-substring` blocklist entries |
+| bulk:add:guild_members | Queues the bulk guild member addition task |
+| bulk:delete:users | Queues the bulk account deletion task |
+| bulk:update:guild_features | Queues the bulk guild feature task |
+| bulk:update:suspicious_activity | Queues the bulk suspicious activity flag task |
+| bulk:update:user_flags | Queues the bulk account flag task |
+| csam:submit_ncmec | Submits an attachment through the NCMEC reporting integration |
+| discovery:remove | Removes a guild from [discovery](/admin-api/discovery/) |
+| discovery:review | Reads, reviews, and edits discovery applications, categories, and listings |
+| gateway:memory_stats | Reads main [Gateway](/admin-api/gateway/) statistics, memory statistics, and voice state counts |
+| gateway:reload_all | Reloads guilds across the main Gateway |
+| gift_codes:generate | Generates [gift codes](/admin-api/gift-codes/) |
+| guild:audit_log:view | Reads a guild's ordinary audit log |
+| guild:ban_member | Bans a guild member |
+| guild:delete | Deletes a guild |
+| guild:force_add_member | Adds an account to a guild |
+| guild:kick_member | Removes a guild member |
+| guild:list:members | Reads guild member resources |
+| guild:lookup | Reads and searches Admin [guild](/admin-api/guilds/) resources, and queues and reads [search index](/admin-api/search-indexes/) rebuilds |
+| guild:reload | Reloads one guild on the main Gateway |
+| guild:shutdown | Stops one guild on the main Gateway |
+| guild:transfer_ownership<sup>5</sup> | Transfers guild ownership |
+| guild:update:features<sup>5</sup> | Adds and removes guild features |
+| guild:update:name<sup>5</sup> | Updates a guild name |
+| guild:update:settings<sup>5</sup> | Updates general guild settings and clears guild fields |
+| guild:update:vanity<sup>5</sup> | Updates a guild custom invite code |
+| instance:config:update | Updates [instance](/admin-api/instance/) configuration, branding assets, SMTP tests, registration URLs, and pending registrations |
+| instance:config:view | Reads instance configuration |
+| instance:limit_config:update | Replaces the instance-wide limit configuration |
+| instance:limit_config:view | Reads the instance-wide limit configuration |
+| message:delete_all | Queues deletion of every message one account sent |
+| message:delete | Deletes one message |
+| message:lookup | Reads, browses, and searches [messages](/admin-api/messages/) through the Admin API |
+| message:shred | Queues an explicit message shred job and reads its state |
+| report:resolve | Updates and resolves [reports](/admin-api/reports/) |
+| report:view | Reads and searches reports |
+| report:view:reporter_pii<sup>6</sup> | Unredacts the contact fields a reporter supplied |
+| system_dm:send | Sends an official direct message from the instance to one or many accounts |
+| system:heap_snapshot | Captures a heap snapshot of a running process |
+| user:cancel:bulk_message_deletion | Cancels the bulk message deletion an account scheduled for itself |
+| user:delete | Schedules or cancels account deletion |
+| user:disable:suspicious | Applies the suspicious account disable operation |
+| user:list:dm_channels | Reads a user's direct message and group direct message channels |
+| user:list:guilds | Reads a user's guild memberships |
+| user:list:relationships | Reads a user's relationships |
+| user:list:sessions | Reads a user's login sessions |
+| user:lookup | Reads and searches the base Admin [user](/admin-api/users/) resource |
+| user:remove:relationship | Removes one relationship or every relationship in one category |
+| user:view:contact_log | Reads a user's identity and contact change log |
+| user:view:dob<sup>6</sup> | Unredacts user dates of birth |
+| user:view:email<sup>6</sup> | Unredacts user email addresses and email verification state |
+| user:view:ip<sup>6</sup> | Unredacts the last active IP address and the location derived from it |
+| user:temp_ban | Applies and lifts an account ban |
+| user:update:bot_status | Updates bot and system account state |
+| user:update:dob | Updates dates of birth |
+| user:update:email | Updates the email address, marks the address verified, resends verification, and sends a password reset |
+| user:update:flags | Updates account flags and premium flags, and terminates every login session of an account |
+| user:update:mfa | Reads and removes a user's WebAuthn credentials, and removes MFA state |
+| user:update:phone | Updates verified phone state |
+| user:update:profile | Clears profile fields |
+| user:update:suspicious_activity | Replaces suspicious activity flags |
+| user:update:traits | Replaces account traits |
+| user:update:username | Updates usernames and discriminators |
+| voice:region:create | Creates [voice](/admin-api/voice/) regions |
+| voice:region:delete | Deletes voice regions |
+| voice:region:list | Reads voice regions |
+| voice:region:update | Updates voice regions |
+| voice:server:create | Registers a voice server in a region |
+| voice:server:delete | Deletes a registered voice server |
+| voice:server:list | Reads registered voice servers |
+| voice:server:update | Updates a registered voice server |
+
+<sup>1</sup> The first entry of the registry. An ACL set can contain it alongside named permissions
+
+<sup>2</sup> [List applications](/admin-api/applications/#list-applications) and [List user applications](/admin-api/users/#list-user-applications) accept it in place of `application:lookup`, and no other operation reads it
+
+<sup>3</sup> The three archive reads accept `archive:view_all`, `archive:trigger:user`, or `archive:trigger:guild`, so an Admin who can create archives can also read them
+
+<sup>4</sup> [Block a user's current avatar](/admin-api/blocklists/#block-a-users-current-avatar) requires it as well
+
+<sup>5</sup> [Update guild](/admin-api/guilds/#update-guild) names all five of these as one any-of requirement and then requires every one that the submitted body maps to
+
+<sup>6</sup> The permission admits no operation of its own. It only widens what an already admitted read returns
+
+[List ACLs](#list-acls) returns these permission strings alone, with no description attached.
+
+## List audit log entries
+
+<RouteHeader method="GET" path="/v1/admin/audit-logs" />
+
+Returns a page of [Admin audit entry](#admin-audit-entry-object) objects with their resolved user, guild, and channel summaries. Requires `audit_log:view`.
+
+Reading the log records no entry of its own.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| q?<sup>1</sup> | string | The free-text query (1-1,024 characters) |
+| admin_user_id? | snowflake | Return only entries recorded for this acting Admin |
+| target_type? | string | Return only entries recorded against this [audit target type](#audit-target-types) (1-64 characters) |
+| target_id? | string | Return only entries recorded against this target ID |
+| sort_by?<sup>2</sup> | string | `createdAt` or `relevance` (default `createdAt`) |
+| sort_order?<sup>2</sup> | string | `asc` or `desc` (default `desc`) |
+| limit? | integer | The maximum number of entries to return (1-200, default 50) |
+| offset? | integer | The number of entries to skip (minimum 0, default 0) |
+
+<sup>1</sup> Supplying it runs a full-text search over the indexed `action`, `target_type`, `target_id`, and `audit_log_reason` of each entry. Omitting it pages the log in order with the same filters applied
+
+<sup>2</sup> Honoured only when `q` is supplied, and without `q` the listing is ordered newest first. `relevance` orders by search score and ignores `sort_order`
+
+:::caution[The listing degrades without the search index]
+Without an index, `q` is ignored, and a filtered page holds only the matches among the first `limit` plus `offset` rows, so it can be far shorter than `limit` while more matches exist.
+:::
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| logs | array[[Admin audit entry](#admin-audit-entry-object) object] | The entries in this page |
+| total<sup>1</sup> | integer | The number of entries the query matched |
+
+<sup>1</sup> The index reports the full match count. The table fallback reports only the matches inside the rows it scanned
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Audit page was returned |
+| 403 | [error response](#error-response) | Credential type is refused, or the account holds neither `audit_log:view` nor `*` |
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:audit_log` bucket.
+
+## Get audit log entry
+
+<RouteHeader method="GET" path="/v1/admin/audit-logs/{log_id}" />
+
+Returns one [Admin audit entry](#admin-audit-entry-object) object with the same resolved summaries the listing returns. Requires `audit_log:view`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| log_id | snowflake | The ID of the audit entry |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin audit entry](#admin-audit-entry-object) object | Audit entry was returned |
+| 403 | [error response](#error-response) | Credential type is refused, or the account holds neither `audit_log:view` nor `*` |
+| 404 | [error response](#error-response) | No entry has that identifier and the request returns `NOT_FOUND` |
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the shared `admin:audit_log` bucket.

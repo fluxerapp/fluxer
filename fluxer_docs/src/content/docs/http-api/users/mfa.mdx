@@ -1,0 +1,902 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Multi-factor authentication
+description: TOTP, backup codes, WebAuthn credentials, and sudo mode.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Multi-factor authentication asks for a second proof of identity after the account password. Fluxer accepts a TOTP authenticator app and WebAuthn credentials such as a passkey. A one-use backup code stands in for a TOTP code, and [sudo mode](#sudo-mode) reuses these factors to guard every security-sensitive operation across the API.
+
+Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the two sudo routes.
+
+:::caution[A challenge is one-use and context-bound]
+Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the issuing user and operation context and expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
+:::
+
+## TOTP parameters
+
+Fluxer validates a TOTP code as a six-digit HMAC-SHA-1 one-time password over a 30-second time step counted from the Unix epoch. It accepts one time step of clock skew on either side. A submitted code is exactly six decimal digits, and Fluxer rejects any other value. The shared secret is Base32, and Fluxer ignores whitespace, hyphens, and trailing padding when it decodes one.
+
+The client generates the secret, presents it to the user, and submits it with a code derived from it when calling [Enable TOTP MFA](#enable-totp-mfa). Fluxer never generates or returns a TOTP secret.
+
+:::caution[A TOTP code can pass twice]
+Fluxer rejects a second presentation of an accepted code for 30 seconds. The skew keeps a code valid up to 90 seconds, so it passes again once those 30 seconds lapse. Wait for the next time step.
+:::
+
+## Backup code contract
+
+Regenerating backup codes deletes the stored set and then issues exactly 10 replacements, so any code the user had already saved stops working.
+
+Enabling TOTP issues 10 codes without deleting anything first. An account that already generated a set through [List MFA backup codes](#list-mfa-backup-codes) while holding no TOTP secret keeps those codes alongside the 10 the enable response returns. Every one stays redeemable. Disabling TOTP deletes every backup code without issuing replacements.
+
+[List MFA backup codes](#list-mfa-backup-codes) reads the current set back at any time and reports which codes are already consumed. Consuming a code is irreversible. An account that cannot prove [sudo mode](#sudo-mode) reads the same set through the [backup codes challenge](#backup-codes-challenge).
+
+A backup code has exactly three entry points: the `mfa_code` field of the [sudo verification object](#sudo-verification-object) with `mfa_method` set to `totp`, the `code` field of [Disable TOTP MFA](#disable-totp-mfa), and the `code` field of [complete login with TOTP](/http-api/authentication/#complete-login-with-totp). Every other code field rejects it. All three accept a current authenticator code or an unconsumed backup code. [Enable TOTP MFA](#enable-totp-mfa) validates only against the secret being enrolled.
+
+Every entry point requires the account to hold a TOTP secret. An account whose only authenticator is a WebAuthn credential can still regenerate backup codes, but holds no secret, so none of the three entry points accepts one.
+
+:::caution[An uppercase backup code with spaces still matches]
+Fluxer lowercases the submitted value and each stored code, then removes every character outside `a-z` and `0-9`. `abcdefgh` and `AbCd EfGh` both match the issued code `abcd-efgh`.
+:::
+
+:::danger[Authenticator secrets are credentials]
+Keep the TOTP secret and every backup code out of logs, analytics, URLs, and other surfaces visible to third parties. A regenerated set replaces the previous one immediately, so let the user store the new set before discarding the response.
+:::
+
+## Backup codes challenge
+
+An account that lost its saved backup codes reads the set back through an emailed challenge. [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) opens a ticket and emails a code. [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) exchanges that code for the current set and a proof. [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) then presents the ticket and the proof to replace the set. [Resend MFA backup codes challenge code](#resend-mfa-backup-codes-challenge-code) sends a fresh code at any point before verification.
+
+[Sudo mode](#sudo-mode) applies to none of the four, so a user who no longer has the authenticator app still reaches the codes through the email address. The account needs a verified email address and TOTP enabled. Only [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) checks the address, and [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) checks TOTP a second time.
+
+A ticket is a version 4 UUID and lives 30 minutes from its last write. Starting the challenge, resending the code, and verifying the code each write the ticket. Regeneration reads it and writes nothing, so the window runs from the verification that preceded it. A ticket Fluxer no longer holds, or one opened by another account, fails with `INVALID_OR_EXPIRED_TICKET`.
+
+A verification code is eight characters drawn from the uppercase Latin alphabet and the decimal digits, written as two four-character groups separated by a hyphen. A code lives 10 minutes from the moment it is sent, and each send replaces the code the previous send issued.
+
+:::note[A lowercase code with no hyphen still matches]
+Fluxer trims the submitted value, uppercases it, and removes every hyphen before it compares. A wrong value fails with `INVALID_VERIFICATION_CODE` on the path `code`.
+:::
+
+Verification issues a proof, a version 4 UUID, and clears the code from the ticket. Fluxer compares a submitted proof in constant time and rejects a mismatch with `INVALID_PROOF_TOKEN`. A ticket holding no proof at all fails with `INVALID_OR_EXPIRED_TICKET` on the path `verification_proof`.
+
+Every ticket, code, and proof failure named here arrives as HTTP 400 whose top-level code is `INVALID_FORM_BODY`. The named value is the `code` of one [validation error](/http-api/#validation-error-object) entry, and that entry's `path` is the field it belongs to.
+
+Each operation passes through its own route bucket and, separately, through one of the controls below. Exhausting either produces HTTP 429 even when the other has room.
+
+| Control | Allowance | Operation |
+| --- | --- | --- |
+| Challenge start | 3 sends per 15 minutes for each account | [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) |
+| Challenge resend | 3 sends per 15 minutes for each account | [Resend MFA backup codes challenge code](#resend-mfa-backup-codes-challenge-code) |
+| Code verification | 5 attempts per 15 minutes for each ticket | [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) |
+| Regeneration | 5 attempts per 15 minutes for each ticket | [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) |
+
+Fluxer refuses a resend for 30 seconds after the previous send on the same ticket, and that refusal is HTTP 429 with a `Retry-After` computed from the exact moment the next send becomes available. It is independent of the route bucket and of the two 15-minute send controls.
+
+## Sudo mode
+
+Sudo mode is a short-lived proof that the human in front of the session is still the account holder. An operation that requires it accepts a valid `X-Fluxer-Sudo-Mode-JWT` request header or the [sudo verification object](#sudo-verification-object) fields inside the JSON body.
+
+The sudo token is an HS256 JSON Web Token with a lifetime of exactly five minutes. Its subject is the account [snowflake](/snowflakes/), and verification rejects a token whose subject is any other account. The token is opaque, and it is not bound to the session that obtained it. Fluxer generates one only when the account has at least one MFA authenticator and the request proved identity with MFA.
+
+:::caution[The echoed header repeats the request value]
+When Fluxer generates no fresh token, it echoes the request's `X-Fluxer-Sudo-Mode-JWT` value back unchanged and never re-signs it, so the window never slides. Fluxer echoes the value even when it fails verification.
+:::
+
+The accepted proof depends on the authenticators the account has configured.
+
+| Account state | Accepted proof |
+| --- | --- |
+| No authenticator | `password` |
+| Any authenticator | `mfa_method` with its matching material, because `password` is no longer accepted |
+| Neither an authenticator nor a password credential | Nothing, and eligible sudo operations pass |
+
+The `totp` method reads `mfa_code` as a current authenticator code or an unconsumed backup code and requires the account to hold a TOTP secret. The `webauthn` method reads `webauthn_response` and `webauthn_challenge` together and requires a registered credential.
+
+A request that has no accepted proof fails with 403 `SUDO_MODE_REQUIRED`. Its body has the [sudo mode methods object](#sudo-mode-methods-object) members, and a client can present the correct challenge. A proof that is present but wrong fails instead with 400 `INVALID_FORM_BODY` and a [validation error](/http-api/#validation-error-object) entry. A mismatched password produces path `password` with code `INVALID_PASSWORD`. A rejected TOTP code, backup code, or WebAuthn assertion produces path `mfa_code` with code `INVALID_MFA_CODE`, so a client cannot tell which of the three was rejected.
+
+The `totp` method also consumes a per-account allowance of 10 multi-factor attempts in 15 minutes, shared by every sudo-gated operation on every resource. Fluxer charges the allowance before it checks the code, so a wrong code and a correct code both draw on it. A correct code resets the counter to zero. While it is exhausted, a correct code returns the same `INVALID_MFA_CODE` entry as a wrong one. The `webauthn` method draws on no allowance. The login MFA allowances on [HTTP authentication](/http-api/authentication/) are counted separately.
+
+Fluxer returns an issued or echoed token in the `X-Fluxer-Sudo-Mode-JWT` response header. A client retains it and presents it through the same header on every later sudo-gated operation.
+
+## Sudo mode methods object
+
+In a `SUDO_MODE_REQUIRED` error response, `has_mfa` and `methods` are at the top level of the [error response](/http-api/#error-response) object.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| has_mfa | boolean | Whether the account has the TOTP or the WebAuthn authenticator type |
+| methods | [sudo mode method availability](#sudo-mode-method-availability-object) object | Authenticators the account can present |
+
+## Sudo mode method availability object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| totp<sup>1</sup> | boolean | Whether the account has a TOTP secret and the TOTP authenticator type |
+| webauthn | boolean | Whether the account has the WebAuthn authenticator type |
+
+<sup>1</sup> Both conditions are required, so an account holding a stored secret without the [authenticator type](/http-api/users/#authenticator-types) reports `false`
+
+## Sudo verification object
+
+Operations that require sudo mode merge these fields into their own JSON body. Every field is optional at the boundary, because the accepted combination depends on the account state described in [sudo mode](#sudo-mode).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| password?<sup>1</sup> | string | Account password (8-256 characters) |
+| mfa_method?<sup>2</sup> | string | MFA method, either `totp` or `webauthn` |
+| mfa_code?<sup>3</sup> | string | Authenticator code or unconsumed backup code (1-32 characters) |
+| webauthn_response?<sup>4</sup> | [WebAuthn assertion](#webauthn-assertion-object) object | Assertion produced for the supplied challenge |
+| webauthn_challenge?<sup>4</sup> | string | Challenge returned by [create sudo WebAuthn authentication options](#create-sudo-webauthn-authentication-options) (1-256 characters) |
+
+<sup>1</sup> Considered only while the account has no MFA authenticator, and ignored once TOTP or a WebAuthn credential exists
+
+<sup>2</sup> Required when the account has any MFA authenticator, unless a valid sudo token is already present
+
+<sup>3</sup> Required when `mfa_method` is `totp`, with a current authenticator code or an unconsumed backup code
+
+<sup>4</sup> Both fields are required together when `mfa_method` is `webauthn`
+
+## MFA backup codes object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| backup_codes | array[[MFA backup code](#mfa-backup-code-object) object] | The account's current backup codes |
+
+### Example
+
+```json
+{
+  "backup_codes": [
+    {"code": "a3f2-9kd7", "consumed": false},
+    {"code": "b81c-4nq0", "consumed": true}
+  ]
+}
+```
+
+## MFA backup code object
+
+A backup code is two four-character groups separated by a hyphen. Each group is drawn from the lowercase Latin alphabet and the decimal digits.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | One-use backup code |
+| consumed | boolean | Whether the code has already been consumed |
+
+## MFA backup codes challenge object
+
+The state of a freshly created backup codes challenge ticket.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket | string | The identifier every later step of this flow sends |
+| code_expires_at | ISO8601 timestamp | The moment the emailed code expires, 10 minutes after it was sent |
+| resend_available_at | ISO8601 timestamp | The earliest moment the code can be resent, 30 seconds after the last send |
+
+## MFA backup codes verification object
+
+The backup codes and the proof a verified challenge hands back.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| backup_codes | array[[MFA backup code](#mfa-backup-code-object) object] | The account's current backup codes |
+| verification_proof<sup>1</sup> | string | The proof [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) consumes |
+
+<sup>1</sup> A resend clears the stored proof and the next verification issues a different value
+
+## WebAuthn credential object
+
+An account holds at most 10 WebAuthn credentials. Fluxer checks the limit twice, once before [create WebAuthn registration options](#create-webauthn-registration-options) issues a challenge and again before [Register WebAuthn credential](#register-webauthn-credential) stores the result. It refuses parallel enrolment flows at whichever step first sees the tenth credential.
+
+Fluxer verifies every assertion against the relying party identifier and the allowed origins configured for the instance. The credential's signature counter strictly increases, unless both the stored and reported counters are zero, which is how an authenticator without a counter appears.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Base64url credential ID |
+| name | string | User-assigned credential name (1-100 characters) |
+| created_at | ISO8601 timestamp | The time [Register WebAuthn credential](#register-webauthn-credential) stored the credential |
+| last_used_at<sup>1</sup> | ?ISO8601 timestamp | Most recent successful authentication |
+
+<sup>1</sup> Null until the credential completes a login, MFA, or sudo assertion for the first time
+
+The credential's public key, signature counter, and reported transports are never returned.
+
+## WebAuthn credential descriptor object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Base64url credential ID |
+| type | string | Credential type, always `public-key` |
+| transports?<sup>1</sup> | array[string] | Authenticator transports from the [WebAuthn authenticator transport values](#webauthn-authenticator-transports) |
+
+<sup>1</sup> Present only when the authenticator reported its transports during registration
+
+## WebAuthn authenticator transports
+
+| Value | Description |
+| --- | --- |
+| ble | Bluetooth Low Energy |
+| cable | Cloud-assisted Bluetooth Low Energy |
+| hybrid | Hybrid transport |
+| internal | Platform authenticator |
+| nfc | Near-field communication |
+| smart-card | Smart card |
+| usb | USB authenticator |
+
+## WebAuthn assertion object
+
+The browser WebAuthn `PublicKeyCredential` serialisation. Its field names are camelCase, because the boundary accepts the exact structure the WebAuthn client API produces.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Base64url credential ID |
+| rawId | string | Base64url raw credential ID |
+| response | [WebAuthn assertion response](#webauthn-assertion-response-object) object | Authenticator assertion response |
+| authenticatorAttachment? | string | Authenticator attachment, either `cross-platform` or `platform` |
+| clientExtensionResults | [WebAuthn client extension results](#webauthn-client-extension-results-object) object | Client extension outputs |
+| type | string | Credential type, always `public-key` |
+
+The boundary does not validate the shape of this object, so no validation entry is ever reported against `webauthn_response` itself. Fluxer forwards it to WebAuthn verification exactly as supplied, and a malformed assertion fails that verification and surfaces as the `mfa_code` entry described in [sudo mode](#sudo-mode).
+
+## WebAuthn assertion response object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| clientDataJSON | string | Base64url client data JSON |
+| authenticatorData | string | Base64url authenticator data |
+| signature | string | Base64url assertion signature |
+| userHandle?<sup>1</sup> | string | Base64url user handle |
+
+<sup>1</sup> Present only when the assertion came from a discoverable credential
+
+## WebAuthn registration response object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Base64url credential ID |
+| rawId | string | Base64url raw credential ID |
+| response | [WebAuthn attestation response](#webauthn-attestation-response-object) object | Authenticator attestation response |
+| authenticatorAttachment? | string | Authenticator attachment, either `cross-platform` or `platform` |
+| clientExtensionResults | [WebAuthn client extension results](#webauthn-client-extension-results-object) object | Client extension outputs |
+| type | string | Credential type, always `public-key` |
+
+The boundary does not validate this shape either. An unusable attestation returns `INVALID_WEBAUTHN_CREDENTIAL`, and no validation entry names a field of this object.
+
+## WebAuthn attestation response object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| clientDataJSON | string | Base64url client data JSON |
+| attestationObject | string | Base64url attestation object |
+| authenticatorData? | string | Base64url authenticator data |
+| transports?<sup>1</sup> | array[string] | Authenticator transports from the [WebAuthn authenticator transport values](#webauthn-authenticator-transports) |
+| publicKeyAlgorithm? | integer | COSE public key algorithm identifier |
+| publicKey? | string | Base64url credential public key |
+
+<sup>1</sup> Retained with the credential and returned later in `allowCredentials` and `excludeCredentials`
+
+## WebAuthn client extension results object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| appid? | boolean | Whether the AppID extension was used |
+| credProps? | [WebAuthn credential properties](#webauthn-credential-properties-object) object | Credential properties output |
+| hmacCreateSecret? | boolean | Whether the authenticator created an HMAC secret |
+
+Fluxer accepts additional extension result fields.
+
+## WebAuthn credential properties object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| rk? | boolean | Whether the created credential is discoverable |
+
+Fluxer accepts additional credential property fields.
+
+## WebAuthn authentication options object
+
+Fluxer returns this object from every operation that issues a WebAuthn authentication challenge: sudo verification here, and the two login option operations on [HTTP authentication](/http-api/authentication/).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| challenge<sup>1</sup> | string | Base64url one-use challenge |
+| timeout<sup>2</sup> | integer | Authenticator operation timeout in milliseconds |
+| rpId | string | Relying party identifier configured for the instance |
+| allowCredentials?<sup>3</sup> | array[[WebAuthn credential descriptor](#webauthn-credential-descriptor-object) object] | Credentials accepted for this operation |
+| userVerification<sup>4</sup> | string | User verification requirement, one of `discouraged`, `preferred`, or `required` |
+
+<sup>1</sup> Expires five minutes after issue and is bound to the exact context that issued it, so a sudo challenge cannot be redeemed as a login assertion
+
+<sup>2</sup> Every operation emits the fixed value `60000`, a standard PublicKeyCredential request option
+
+<sup>3</sup> Sudo options list every credential currently registered to the account. The field is absent only on the discoverable login route
+
+<sup>4</sup> Sudo options and MFA login completion request `discouraged`. Discoverable login requests and verifies `required`
+
+Fluxer emits no other PublicKeyCredential request options member, so `hints` and `extensions` never appear on this object.
+
+## WebAuthn registration options object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| rp | [WebAuthn relying party](#webauthn-relying-party-object) object | Relying party identity |
+| user | [WebAuthn registration user](#webauthn-registration-user-object) object | Account identity bound to the credential |
+| challenge | string | Base64url one-use challenge |
+| pubKeyCredParams<sup>1</sup> | array[[WebAuthn public key parameter](#webauthn-public-key-parameter-object) object] | Accepted public key algorithms |
+| timeout<sup>2</sup> | integer | Authenticator operation timeout in milliseconds |
+| excludeCredentials<sup>3</sup> | array[[WebAuthn credential descriptor](#webauthn-credential-descriptor-object) object] | Existing credentials that cannot be registered again |
+| authenticatorSelection<sup>4</sup> | [WebAuthn authenticator selection](#webauthn-authenticator-selection-object) object | Authenticator selection requirements |
+| attestation<sup>5</sup> | string | Attestation conveyance, always `none` |
+| extensions<sup>6</sup> | [WebAuthn client extension inputs](#webauthn-client-extension-inputs-object) object | Requested client extensions |
+| hints<sup>7</sup> | array[string] | Authenticator hints |
+
+<sup>1</sup> Always the three COSE identifiers `-8`, `-7`, and `-257`, in that order, standing for EdDSA, ECDSA with SHA-256, and RSASSA-PKCS1-v1_5 with SHA-256
+
+<sup>2</sup> Every registration emits the fixed value `60000`
+
+<sup>3</sup> Holds every credential already registered to the account, so an authenticator cannot enrol the same credential twice. It is an empty array when the account holds none
+
+<sup>4</sup> Fluxer requests a preferred discoverable credential and preferred user verification, and requires neither, so `requireResidentKey` is `false`
+
+<sup>5</sup> Fluxer requests `none`, so no attestation statement is retained
+
+<sup>6</sup> Always present with `credProps` set to `true`, the only extension Fluxer requests
+
+<sup>7</sup> Always an empty array
+
+## WebAuthn relying party object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | Relying party display name configured for the instance |
+| id | string | Relying party identifier configured for the instance |
+
+## WebAuthn registration user object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | WebAuthn user handle, the decimal account [snowflake](/snowflakes/) encoded as base64url |
+| name | string | Account username |
+| displayName<sup>1</sup> | string | Account display label |
+
+<sup>1</sup> Fluxer supplies the account username in both `name` and `displayName`
+
+## WebAuthn public key parameter object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| alg | integer | COSE algorithm identifier |
+| type | string | Credential type, always `public-key` |
+
+## WebAuthn authenticator selection object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| authenticatorAttachment? | string | Authenticator attachment, either `cross-platform` or `platform` |
+| requireResidentKey? | boolean | Whether a discoverable credential is required |
+| residentKey? | string | Discoverable credential preference, one of `discouraged`, `preferred`, or `required` |
+| userVerification? | string | User verification preference, one of `discouraged`, `preferred`, or `required` |
+
+## WebAuthn client extension inputs object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| appid? | string | AppID extension value |
+| credProps?<sup>1</sup> | boolean | Whether credential properties are requested |
+| hmacCreateSecret? | boolean | Whether HMAC secret creation is requested |
+| minPinLength? | boolean | Whether minimum PIN length is requested |
+
+<sup>1</sup> The only member Fluxer ever sets, always `true` on [WebAuthn registration options](#webauthn-registration-options-object)
+
+## Sudo MFA methods object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| totp | boolean | Whether the account has a TOTP secret and the TOTP authenticator type, as in the [sudo mode method availability](#sudo-mode-method-availability-object) object |
+| webauthn | boolean | Whether the account has the WebAuthn authenticator type |
+| has_mfa | boolean | Whether the account has the TOTP or the WebAuthn authenticator type, as in the [sudo mode methods](#sudo-mode-methods-object) object |
+
+## Enable TOTP MFA
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/totp/enable" mfa />
+
+Enables TOTP for the current account and returns an [MFA backup codes](#mfa-backup-codes-object) object holding 10 new codes. [Sudo mode](#sudo-mode) is required. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+Fluxer checks sudo mode first, so an account that already holds a WebAuthn credential proves it with that credential.
+
+### Limitations
+
+- The account needs a verified email address and is otherwise refused with 403 `MFA_EMAIL_VERIFICATION_REQUIRED`.
+- An account that already has TOTP enabled is refused with 400 `TWO_FA_NOT_ENABLED`.
+
+### JSON body
+
+The body extends the [sudo verification object](#sudo-verification-object) with the fields below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| secret<sup>1</sup> | string | Base32 TOTP secret (1-256 characters) |
+| code<sup>2</sup> | string | Current TOTP code generated from the submitted secret (1-32 characters) |
+
+<sup>1</sup> Generated by the client and stored verbatim on the account
+
+<sup>2</sup> A backup code is rejected here
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [MFA backup codes](#mfa-backup-codes-object) object | TOTP was enabled and 10 backup codes were issued |
+| 400 | [error response](/http-api/#error-response) | The TOTP code did not match the submitted secret, returning `INVALID_CODE` on the path `code`, or TOTP is already enabled and the request returns `TWO_FA_NOT_ENABLED` |
+| 403 | [error response](/http-api/#error-response) | The account email is unverified and the request returns `MFA_EMAIL_VERIFICATION_REQUIRED`, or sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+
+### Side effects
+
+TOTP is enabled and 10 backup codes are issued. Any backup code the account already held stays in place, so the response has only the 10 new codes. The resulting authenticator types are also applied to every bot account owned by the user. [User Update](/gateway/events/#user-update) reaches the user's sessions and each owned bot whose authenticator types changed.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `user:mfa:totp:enable` bucket.
+
+## Disable TOTP MFA
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/totp/disable" mfa />
+
+Disables TOTP for the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required in addition to this route's `code` field. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+The account needs TOTP already enabled and is otherwise refused with 400 `TWO_FACTOR_REQUIRED`. A verified email is not required, so an account whose address later became unverified can still remove its authenticator.
+
+### JSON body
+
+The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | Current TOTP code or an unconsumed backup code (1-32 characters) |
+
+<sup>1</sup> A wrong value returns `INVALID_CODE` on the path `code`
+
+:::caution[Backup codes do not survive TOTP removal]
+Disabling TOTP invalidates every backup code on the account, including the code that proved this request. An account that keeps a WebAuthn credential is left with none, and needs [List MFA backup codes](#list-mfa-backup-codes) with `regenerate` set to true to issue a new set.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | TOTP was disabled |
+| 400 | [error response](/http-api/#error-response) | The code did not match, or TOTP is not enabled and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+
+### Side effects
+
+TOTP is disabled and every backup code stops working. The TOTP authenticator type is removed, along with the unassigned legacy authenticator value `1` if the account still had it. The resulting authenticator types are also applied to every bot account owned by the user. [User Update](/gateway/events/#user-update) reaches the user's sessions and each owned bot whose authenticator types changed.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `user:mfa:totp:disable` bucket.
+
+## List MFA backup codes
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/backup-codes" mfa />
+
+Returns an [MFA backup codes](#mfa-backup-codes-object) object, replacing the set first when `regenerate` is true. [Sudo mode](#sudo-mode) is required.
+
+Neither a verified email nor an authenticator is required, so an account with no MFA at all can prove sudo mode with its password and use this operation.
+
+A backup code presented as `mfa_code` to satisfy sudo mode is consumed. With `regenerate` false it comes back with `consumed` set to true. With `regenerate` true it is deleted with the rest of the previous set and does not appear.
+
+:::caution[Regeneration replaces the previous set immediately]
+Every code from the previous set is invalid as soon as an operation with `regenerate` set to true returns. The deletion and the insertion are separate writes, so the account holds no backup code at all between them.
+:::
+
+### JSON body
+
+The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| regenerate<sup>1</sup> | boolean | Whether to discard the current set and issue 10 replacements |
+
+<sup>1</sup> The field is required. Passing `false` reads the current set without changing it
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [MFA backup codes](#mfa-backup-codes-object) object | The current or replacement codes were returned |
+| 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+
+### Rate limit
+
+6 requests per minute for each authenticated user, on the `user:mfa:backup_codes` bucket.
+
+## Start MFA backup codes challenge
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/backup-codes/challenge" />
+
+Creates a backup codes challenge ticket and sends a verification code to the account email address. Returns an [MFA backup codes challenge](#mfa-backup-codes-challenge-object) object on success.
+
+Sudo mode is not required, and the route reads no sudo verification field.
+
+The send consumes the challenge start control.
+
+### Limitations
+
+- The account needs a verified email address and is otherwise refused with 403 `MFA_EMAIL_VERIFICATION_REQUIRED`.
+- An account holding no email address is refused with 400 `INVALID_FORM_BODY` and the validation code `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS` on the path `email`.
+- The account needs TOTP enabled and is otherwise refused with 400 `TWO_FACTOR_REQUIRED`.
+
+### JSON body
+
+The body can be omitted, and any supplied body is an object with no fields. Fluxer strips unknown keys before it handles the request.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [MFA backup codes challenge](#mfa-backup-codes-challenge-object) object | The ticket was created and a code was sent |
+| 400 | [error response](/http-api/#error-response) | TOTP is not enabled and the request returns `TWO_FACTOR_REQUIRED`, or the account holds no address |
+| 403 | [error response](/http-api/#error-response) | The account email is unverified and the request returns `MFA_EMAIL_VERIFICATION_REQUIRED` |
+
+### Side effects
+
+Fluxer stores a ticket holding the code and its expiry, and one verification email goes to the account address. No account field changes and no backup code is issued.
+
+### Rate limit
+
+6 requests per minute for each authenticated user, on the `user:mfa:backup_codes_challenge:start` bucket.
+
+## Resend MFA backup codes challenge code
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/backup-codes/challenge/resend" />
+
+Sends a fresh verification code for an active backup codes challenge ticket. Returns 204 with an empty body.
+
+The route reads the ticket and the account address only. An account holding no email address is refused with 400 `INVALID_FORM_BODY` and the validation code `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS` on the path `email`.
+
+The send consumes the challenge resend control, and the ticket enforces its own 30-second cooldown.
+
+:::caution[A resend undoes a completed verification]
+Fluxer clears the ticket's stored proof on every resend. A client that already holds a proof needs [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) again before [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) accepts it.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket | string | The identifier returned by [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) (1-256 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | A replacement code was sent |
+| 400 | [error response](/http-api/#error-response) | The ticket is unknown and the request returns `INVALID_OR_EXPIRED_TICKET` |
+
+### Side effects
+
+Fluxer replaces the ticket's code, send time, and code expiry, which invalidates the previous code. The stored proof is cleared and one verification email goes to the account address.
+
+### Rate limit
+
+6 requests per minute for each authenticated user, on the `user:mfa:backup_codes_challenge:resend` bucket.
+
+## Verify MFA backup codes challenge code
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/backup-codes/challenge/verify" />
+
+Verifies the emailed code and returns an [MFA backup codes verification](#mfa-backup-codes-verification-object) object holding the current codes and a proof.
+
+Verification consumes the code. A ticket holding no code fails with `VERIFICATION_CODE_NOT_ISSUED`, which is what a second verification of the same ticket returns. A code past its 10-minute lifetime fails with `VERIFICATION_CODE_EXPIRED`. A mismatch fails with `INVALID_VERIFICATION_CODE`.
+
+Fluxer charges the per-ticket verification allowance before it reads the code, so a wrong code and a correct code both draw on it.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket | string | The identifier returned by [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) (1-256 characters) |
+| code | string | The code sent to the account address (1-256 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [MFA backup codes verification](#mfa-backup-codes-verification-object) object | The code was accepted |
+| 400 | [error response](/http-api/#error-response) | The ticket returns `INVALID_OR_EXPIRED_TICKET`, or the code was not issued, has expired, or did not match |
+
+### Side effects
+
+The ticket stores a fresh proof and its code is cleared. The response holds every backup code on the account, including the consumed ones. No backup code is issued, consumed, or deleted.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `user:mfa:backup_codes_challenge:verify` bucket.
+
+## Regenerate MFA backup codes
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/backup-codes/challenge/regenerate" />
+
+Replaces the account's backup codes with 10 new ones and returns an [MFA backup codes](#mfa-backup-codes-object) object. Sudo mode is not required.
+
+The ticket and its proof are the only authorisation. The account needs TOTP enabled and is otherwise refused with 400 `TWO_FACTOR_REQUIRED`.
+
+A ticket holding no proof returns `INVALID_OR_EXPIRED_TICKET` on the path `verification_proof`, and a proof that does not match returns `INVALID_PROOF_TOKEN`.
+
+:::caution[Regeneration leaves the ticket usable]
+The operation reads the proof and writes nothing back to the ticket. The same pair replaces the set again on every call until the ticket expires, 30 minutes after its verification.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket | string | The identifier returned by [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) (1-256 characters) |
+| verification_proof | string | The proof issued by [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) (1-256 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [MFA backup codes](#mfa-backup-codes-object) object | The previous set was deleted and 10 replacements were issued |
+| 400 | [error response](/http-api/#error-response) | TOTP is not enabled and the request returns `TWO_FACTOR_REQUIRED`, or the ticket or the proof was rejected |
+
+### Side effects
+
+Every code from the previous set is deleted and 10 replacements are written. The deletion and the insertion are separate writes, so the account holds no backup code at all between them. The authenticator types are unchanged and Fluxer emits no Gateway event.
+
+### Rate limit
+
+6 requests per minute for each authenticated user, on the `user:mfa:backup_codes_challenge:regenerate` bucket.
+
+## List WebAuthn credentials
+
+<RouteHeader method="GET" path="/v1/users/@me/mfa/webauthn/credentials" />
+
+Returns an array of [WebAuthn credential](#webauthn-credential-object) objects registered to the current account, or an empty array when none exist. Sudo mode is not required.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[WebAuthn credential](#webauthn-credential-object) object] | Credentials were returned |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `mfa:webauthn:list` bucket.
+
+## Create WebAuthn registration options
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/credentials/registration-options" mfa />
+
+Creates a one-use registration challenge and returns a [WebAuthn registration options](#webauthn-registration-options-object) object. [Sudo mode](#sudo-mode) is required.
+
+This operation sets no `X-Fluxer-Sudo-Mode-JWT` response header.
+
+### Limitations
+
+- The account needs a verified email address.
+- An account already holding 10 credentials receives 400 `WEBAUTHN_CREDENTIAL_LIMIT_REACHED` and no challenge.
+
+### JSON body
+
+The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [WebAuthn registration options](#webauthn-registration-options-object) object | Challenge and registration options were issued |
+| 400 | [error response](/http-api/#error-response) | 10 credentials are already registered and the request returns `WEBAUTHN_CREDENTIAL_LIMIT_REACHED` |
+| 403 | [error response](/http-api/#error-response) | The account email is unverified and the request returns `MFA_EMAIL_VERIFICATION_REQUIRED`, or sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+
+### Side effects
+
+Fluxer issues a registration challenge for the current user. It expires after five minutes and can be redeemed once.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `mfa:webauthn:registration_options` bucket.
+
+## Register WebAuthn credential
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/credentials" />
+
+Consumes a registration challenge, adds one WebAuthn credential to the current account, and returns 204 with an empty body. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event, and a [User Update](/gateway/events/#user-update) event when this is the account's first WebAuthn credential.
+
+The account needs a verified email and fewer than 10 registered credentials. This route accepts no sudo verification fields of its own. Fluxer verifies the attestation against the instance relying party identifier and its allowed origins, and does not require user verification.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response | [WebAuthn registration response](#webauthn-registration-response-object) object | Authenticator response for the registration challenge |
+| challenge | string | One-use registration challenge (1-1024 characters) |
+| name | string | User-assigned credential name (1-100 characters) |
+
+:::caution[A failed registration cannot reuse its challenge]
+Fluxer consumes the registration challenge before it re-checks the credential limit and before it verifies the attestation. Request fresh registration options after any failure.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Credential was registered |
+| 400 | [error response](/http-api/#error-response) | The challenge or attestation failed and the request returns `INVALID_WEBAUTHN_CREDENTIAL`, the public key returns `INVALID_WEBAUTHN_PUBLIC_KEY_FORMAT`, the signature counter returns `INVALID_WEBAUTHN_CREDENTIAL_COUNTER`, or the limit returns `WEBAUTHN_CREDENTIAL_LIMIT_REACHED` |
+| 403 | [error response](/http-api/#error-response) | The account email is unverified and the request returns `MFA_EMAIL_VERIFICATION_REQUIRED` |
+
+### Side effects
+
+The credential is added to the account. When it is the account's first WebAuthn credential, the WebAuthn authenticator type is also applied to every bot account owned by the user.
+
+[WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the complete current credential summaries. When the authenticator types changed, [User Update](/gateway/events/#user-update) also reaches the user and each affected owned bot.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `mfa:webauthn:register` bucket.
+
+## Rename WebAuthn credential
+
+<RouteHeader method="PATCH" path="/v1/users/@me/mfa/webauthn/credentials/{credential_id}" mfa />
+
+Changes the user-assigned name of one WebAuthn credential owned by the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event.
+
+A verified email is not required.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| credential_id | string | Base64url credential ID registered to the current account (1-2048 characters) |
+
+### JSON body
+
+The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | Replacement credential name (1-100 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Credential was renamed |
+| 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | The credential is not registered to the current account, returning `UNKNOWN_WEBAUTHN_CREDENTIAL` |
+
+### Side effects
+
+The credential name is replaced and no authenticator type changes. [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the current user's sessions with the complete current credential summaries.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `mfa:webauthn:update` bucket.
+
+## Delete WebAuthn credential
+
+<RouteHeader method="DELETE" path="/v1/users/@me/mfa/webauthn/credentials/{credential_id}" mfa />
+
+Deletes one WebAuthn credential owned by the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event, and a [User Update](/gateway/events/#user-update) event when this was the account's final WebAuthn credential.
+
+A verified email is not required.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| credential_id | string | Base64url credential ID registered to the current account (1-2048 characters) |
+
+### JSON body
+
+The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+:::caution[Removing the final credential removes an authenticator]
+Deleting the account's last WebAuthn credential removes the WebAuthn authenticator type. Without TOTP the account then has no MFA authenticator, and sudo mode falls back to the account password.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Credential was deleted |
+| 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | The credential is not registered to the current account, returning `UNKNOWN_WEBAUTHN_CREDENTIAL` |
+
+### Side effects
+
+The credential is deleted. When it was the final one, the WebAuthn authenticator type is also removed from every bot account owned by the user.
+
+[WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the remaining credential summaries. When the authenticator types changed, [User Update](/gateway/events/#user-update) also reaches the user and each affected owned bot.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `mfa:webauthn:delete` bucket.
+
+## Get sudo MFA methods
+
+<RouteHeader method="GET" path="/v1/users/@me/sudo/mfa-methods" />
+
+Returns a [sudo MFA methods](#sudo-mfa-methods-object) object describing which sudo challenges the current account can answer. Sudo mode is not required.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [sudo MFA methods](#sudo-mfa-methods-object) object | Available methods were returned |
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `sudo:mfa:methods` bucket.
+
+## Create sudo WebAuthn authentication options
+
+<RouteHeader method="POST" path="/v1/users/@me/sudo/webauthn/authentication-options" />
+
+Creates a one-use sudo challenge and returns a [WebAuthn authentication options](#webauthn-authentication-options-object) object listing every credential registered to the current account.
+
+The account needs at least one registered WebAuthn credential. Sudo mode is not required to obtain the challenge.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [WebAuthn authentication options](#webauthn-authentication-options-object) object | Challenge and options were issued |
+| 400 | [error response](/http-api/#error-response) | No WebAuthn credential is registered and the request returns `NO_PASSKEYS_REGISTERED` |
+
+### Side effects
+
+Fluxer issues a sudo challenge for the current user. It expires after five minutes and can be redeemed once by submitting it as `webauthn_challenge` alongside `webauthn_response` in a [sudo verification object](#sudo-verification-object).
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `sudo:webauthn:options` bucket.
+

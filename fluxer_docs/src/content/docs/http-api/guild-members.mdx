@@ -1,0 +1,548 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guild members
+description: Guild member objects, profiles, voice moderation, ownership, removal, and roles.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries live on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
+
+A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`. An existing guild that does not hold the caller as a member returns 403 `MISSING_PERMISSIONS`. Fluxer refuses a guild an operator has marked unavailable with 403 `MISSING_ACCESS` before the route runs. [Transfer guild ownership](#transfer-guild-ownership) is the one exception to the 404, and returns 403 `ACCESS_DENIED` for a guild whose record survives without a Gateway process.
+
+The two modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
+
+:::note[Fluxer reads the target before authorising the caller]
+This applies to the two modify operations, [Remove guild member](#remove-guild-member), [Add guild member role](#add-guild-member-role), and [Remove guild member role](#remove-guild-member-role). A request whose target is not a member returns 404 `UNKNOWN_MEMBER` whether or not the caller can see the guild.
+:::
+
+## Guild member object
+
+Every field except `user` describes state that belongs to the membership.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [partial user](/http-api/users/#partial-user-object) object | The account the membership belongs to |
+| nick | ?string | The nickname the account uses in this guild, or null when none is set |
+| avatar<sup>1</sup> | ?string | The image hash of the guild-specific avatar, or null when none is set |
+| banner<sup>1</sup> | ?string | The image hash of the guild-specific banner, or null when none is set |
+| accent_color | ?integer | The guild profile accent colour as packed 24-bit RGB, or null when none is set |
+| roles<sup>2</sup> | array[snowflake] | The IDs of the roles assigned to the membership (max 250) |
+| joined_at | ISO8601 timestamp | The time the account became a member of this guild |
+| mute<sup>3</sup> | boolean | Whether a moderator has muted the member in voice |
+| deaf<sup>4</sup> | boolean | Whether a moderator has deafened the member in voice |
+| communication_disabled_until<sup>5</sup> | ?ISO8601 timestamp | The time the communication timeout expires, or null when the member is not timed out |
+| profile_flags?<sup>6</sup> | integer | The [guild member profile flags](#guild-member-profile-flags) set on the membership |
+| mention_flags?<sup>6</sup> | integer | The [reply mention preference](/http-api/users/#reply-mention-preferences) that applies only inside this guild |
+
+<sup>1</sup> An animated hash has the `a_` prefix. Both are reported as null while the membership is marked premium sanitised
+
+<sup>2</sup> The everyone role is never present
+
+<sup>3</sup> True while a moderator mute is stored on the membership and also while a communication timeout is active
+
+<sup>4</sup> True while a moderator deafen is stored on the membership. A communication timeout does not affect it
+
+<sup>5</sup> A timestamp in the past is retained until a later update supplies `communication_disabled_until`
+
+<sup>6</sup> Omitted while the stored value is 0, so absence means no flag is set and, for `mention_flags`, that the account-level preference applies
+
+Premium sanitisation hides the stored avatar and banner hashes and keeps them on the membership. Fluxer applies it once the account has lost its premium entitlement, when the membership holds a guild avatar, banner, biography, or accent colour.
+
+A client compares `communication_disabled_until` against the current time, because a non-null value can name a moment that has already passed. A [communication timeout](/http-api/permissions/#communication-timeout) does not reduce the member's computed permission mask.
+
+### Example
+
+```json
+{
+  "user": {"id": "1489002177550843906", "username": "ada", "discriminator": "0042"},
+  "nick": "Ada L.",
+  "avatar": null,
+  "banner": null,
+  "accent_color": 3447003,
+  "roles": ["1489002177550843910"],
+  "joined_at": "2026-08-14T09:12:44.000Z",
+  "mute": false,
+  "deaf": false,
+  "communication_disabled_until": null
+}
+```
+
+:::note[List and direct reads can briefly differ]
+[Get current guild member](#get-current-guild-member), [Get guild member](#get-guild-member), and both modify operations recompute `mute` against the current time. In [List guild members](#list-guild-members) an expired timeout can leave `mute` true until that membership next changes.
+:::
+
+## Guild member profile flags
+
+A guild profile asset has three states. With no flag and no hash the membership inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below suppresses inheritance and renders the default.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | AVATAR_UNSET | The guild avatar is explicitly unset, so the account avatar is not inherited |
+| 1 &lt;&lt; 1 | BANNER_UNSET | The guild banner is explicitly unset, so the account banner is not inherited |
+
+The field is validated as an integer between 0 and 2147483647, so an undefined bit below bit 31 is stored and returned unchanged. Bit 31, and any value above 2147483647, are rejected.
+
+## Guild member update object
+
+The request body shared by [Modify current guild member](#modify-current-guild-member) and [Modify guild member](#modify-guild-member). An omitted field preserves its current value.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| nick?<sup>1</sup> | ?string | The nickname to set in this guild (1-32 characters) |
+| roles?<sup>2</sup> | array[snowflake] | The complete replacement role set (max 250) |
+| avatar?<sup>3</sup> | ?base64 string | The guild avatar image data, or null to clear it |
+| banner?<sup>3</sup> | ?base64 string | The guild banner image data, or null to clear it |
+| bio? | ?string | The guild profile biography (1-320 characters) |
+| pronouns? | ?string | The guild profile pronouns (1-40 characters) |
+| accent_color? | ?integer | The guild profile accent colour as packed 24-bit RGB (0-16777215) |
+| profile_flags? | ?integer | The [guild member profile flags](#guild-member-profile-flags) to store |
+| mention_flags?<sup>4</sup> | ?integer | The [reply mention preference](/http-api/users/#reply-mention-preferences) to apply in this guild |
+| mute?<sup>5</sup> | boolean | Whether the member is muted by a moderator in voice |
+| deaf?<sup>5</sup> | boolean | Whether the member is deafened by a moderator in voice |
+| communication_disabled_until?<sup>6</sup> | ?ISO8601 timestamp | The time at which the communication timeout expires |
+| timeout_reason?<sup>7</sup> | ?string | The reason recorded alongside the timeout (1-512 characters) |
+| channel_id?<sup>8</sup> | ?snowflake | The voice channel to move the member into, or null to disconnect them |
+| connection_id?<sup>8</sup> | ?string | The single voice connection to move, defaulting to every connection (1-32 characters) |
+
+<sup>1</sup> A blank string is normalised to null before the length bound runs, so an empty value clears the nickname
+
+<sup>2</sup> A role ID absent from the supplied array is removed from the member
+
+<sup>3</sup> Base64 image data with an optional data URL prefix, which is not counted
+
+<sup>4</sup> One of the three [reply mention preference](/http-api/users/#reply-mention-preferences) enum values, where 0 restores the account-level preference
+
+<sup>5</sup> Stored on the membership, so it applies whether or not the member holds a voice connection
+
+<sup>6</sup> An ISO 8601 date and time. A blank string is normalised to null
+
+<sup>7</sup> Trimmed, and never published in the audit log response
+
+<sup>8</sup> `channel_id` moves or disconnects, and `connection_id` selects one of the member's voice connections
+
+A `roles` entry that does not resolve to an existing role of the guild is dropped from the replacement, so a request naming only unknown roles clears the member's role set.
+
+An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. The decoded bytes are then checked against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760, and the same ceiling covers both fields. The decoded image must also pass the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
+
+Null and any `communication_disabled_until` that is not in the future both clear the timeout. A time more than 365.25 days ahead returns `TIMEOUT_CANNOT_EXCEED_365_DAYS`, and a value that passes the schema but is not a real instant returns `INVALID_TIMEOUT_VALUE`. `timeout_reason` has no effect unless `communication_disabled_until` is also supplied.
+
+Omitting `connection_id` applies the move or the disconnect to every voice connection the member holds in the guild. A `connection_id` that is not one of the member's own connections returns 400 `USER_NOT_IN_VOICE`.
+
+## List guild members
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/members" bot />
+
+Returns a page of [guild member objects](#guild-member-object) in ascending user ID order. Requires membership of the guild and no permission.
+
+This route consults no permission bit, including [VIEW_CHANNEL_MEMBERS](/http-api/permissions/).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit?<sup>1</sup> | integer | The maximum number of members to return (1-1000, default 1) |
+| after?<sup>2</sup> | snowflake | The lower bound on user ID, returning only members strictly greater than this value |
+
+<sup>1</sup> A caller that wants a batch states `limit` explicitly, because the default returns one member
+
+<sup>2</sup> The cursor is exclusive, and there is no descending or `before` form
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[guild member](#guild-member-object) object] | Members were returned |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, or the caller is not a member |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user and guild ID, on the `guild:members::guild_id` bucket.
+
+## Get current guild member
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/members/@me" bot />
+
+Returns the authenticated account's own [guild member object](#guild-member-object). Requires membership of the guild and no permission.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild member](#guild-member-object) object | Membership was returned |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, or the caller is not a member |
+| 404<sup>1</sup> | [error response](/http-api/#error-response) | Guild does not exist, or the membership record is absent |
+
+<sup>1</sup> A missing guild returns `UNKNOWN_GUILD` and a missing membership record returns `UNKNOWN_MEMBER`
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user and guild ID, on the shared `guild:members::guild_id` bucket.
+
+## Get guild member
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/members/{user_id}" bot />
+
+Returns one member's [guild member object](#guild-member-object). Requires membership of the guild and no permission.
+
+This route resolves the guild for the caller before it reads the target, so a non-member never learns whether the target is one.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the target member |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild member](#guild-member-object) object | Membership was returned |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, or the caller is not a member |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD`, or the target is not a member, returning `UNKNOWN_MEMBER` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user and guild ID, on the shared `guild:members::guild_id` bucket.
+
+## Modify current guild member
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/members/@me" bot auditReason />
+
+Modifies the authenticated account's own membership and returns the resulting [guild member object](#guild-member-object). Requires membership of the guild. Emits a [Guild Member Update](/gateway/events/#guild-member-update) Gateway event.
+
+### Limitations
+
+- Changing the nickname requires [CHANGE_NICKNAME](/http-api/permissions/).
+- Supplying `channel_id` requires [MOVE_MEMBERS](/http-api/permissions/), even for the caller's own membership.
+- Supplying `mute` requires [MUTE_MEMBERS](/http-api/permissions/) and supplying `deaf` requires [DEAFEN_MEMBERS](/http-api/permissions/).
+- Supplying `nick`, `avatar`, `banner`, `bio`, `pronouns`, `accent_color`, or `profile_flags` requires a verified email address, and a bot account is exempt. An unverified account is rejected with 403 `PROFILE_EMAIL_VERIFICATION_REQUIRED`.
+
+A caller without `CHANGE_NICKNAME` does not fail the request. Fluxer discards the nickname change and applies every other supplied field. A member who holds the permission but is currently timed out is rejected with 403 `COMMUNICATION_DISABLED`.
+
+A supplied `nick`, `bio`, or `pronouns` is scanned against the instance phrase, URL, and profile substring blocklists, and a match returns 403 `CONTENT_BLOCKED`.
+
+Guild avatar, banner, biography, and accent colour additionally require the instance-configured `feature_per_guild_profiles` [limit](/http-api/instance/#limit-keys) for the calling account. Fluxer discards any of those four fields supplied without that capability and applies every other field. Pronouns, `profile_flags`, and `mention_flags` are not gated that way.
+
+A `channel_id` destination must be a guild voice channel, and the caller must hold both [VIEW_CHANNEL](/http-api/permissions/) and [CONNECT](/http-api/permissions/) there. Supplying `channel_id` for a member with no live voice connection returns 400 `USER_NOT_IN_VOICE`. Supplying `mute` or `deaf` for such a member succeeds, stores the flags, and emits no voice Dispatch.
+
+Fluxer rejects a supplied `communication_disabled_until` with 403 `MISSING_PERMISSIONS` before any other timeout check. [Modify guild member](#modify-guild-member) addressed at the caller's own user ID is rejected the same way.
+
+:::caution[A profile change limit fails the whole request]
+Avatar, banner, biography, pronouns, and accent colour each have a limit of 25 changes per 30 minutes for each authenticated user and guild. Exhausting one returns 400 `INVALID_FORM_BODY` and applies no field at all.
+:::
+
+The avatar and banner limits are consumed whenever the field is present. The biography, pronouns, and accent colour limits are consumed only when the supplied value differs from the stored one. The field code is `AVATAR_CHANGED_TOO_MANY_TIMES`, `BANNER_CHANGED_TOO_MANY_TIMES`, `BIO_CHANGED_TOO_MANY_TIMES`, `PRONOUNS_CHANGED_TOO_MANY_TIMES`, or `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+The body is a [guild member update object](#guild-member-update-object) without `roles`. A supplied `roles` field is discarded without an error, so role assignment goes through [Modify guild member](#modify-guild-member).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild member](#guild-member-object) object | Membership was processed |
+| 400 | [error response](/http-api/#error-response) | Image data or a profile change limit rejects the request |
+| 400 | [error response](/http-api/#error-response) | `channel_id` was supplied for a member with no live voice connection |
+| 400 | [error response](/http-api/#error-response) | Destination channel does not exist or is not a voice channel |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not a member, or the email address is unverified |
+| 403 | [error response](/http-api/#error-response) | Blocked content was supplied, the caller is timed out, or a required voice permission is absent |
+| 403 | [error response](/http-api/#error-response) | `communication_disabled_until` was supplied |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, or the membership record or account is absent |
+
+### Side effects
+
+The operation updates the membership, replaces any supplied guild avatar or banner, updates member search results, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, and emits [Guild Member Update](/gateway/events/#guild-member-update).
+
+The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The audit entry and Dispatch are produced even when the resulting membership is unchanged, and an entry whose change list is empty is published without a `changes` member.
+
+Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, whatever the number of connections it touched, and emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
+
+Every audit entry also emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create). A request that fails after uploading a new avatar or banner leaves the previous asset in place.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:update::guild_id` bucket.
+
+## Modify guild member
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/members/{user_id}" bot auditReason />
+
+Modifies another member's guild state and returns the resulting [guild member object](#guild-member-object). Requires membership of the guild. Emits a [Guild Member Update](/gateway/events/#guild-member-update) Gateway event.
+
+### Limitations
+
+- Changing another member's nickname requires [MANAGE_NICKNAMES](/http-api/permissions/) and role hierarchy authority over the target.
+- Replacing `roles` requires [MANAGE_ROLES](/http-api/permissions/) and hierarchy authority over every role the replacement adds or removes, and the guild owner bypasses both checks.
+- Applying `communication_disabled_until` requires [MODERATE_MEMBERS](/http-api/permissions/) and hierarchy authority, and the target must not hold [ADMINISTRATOR](/http-api/permissions/).
+- Applying `mute` requires [MUTE_MEMBERS](/http-api/permissions/), applying `deaf` requires [DEAFEN_MEMBERS](/http-api/permissions/), and both require hierarchy authority over the target.
+- Moving the target requires [MOVE_MEMBERS](/http-api/permissions/) and hierarchy authority, plus [VIEW_CHANNEL](/http-api/permissions/) and [CONNECT](/http-api/permissions/) for the caller in the destination.
+
+A supplied `nick` is scanned against the instance phrase, URL, and profile substring blocklists, and a match returns 403 `CONTENT_BLOCKED`.
+
+Hierarchy authority over the target is not consulted for `roles`, so a caller who outranks every affected role can replace the role set of a member who outranks them. The everyone role in the array is rejected with the field code `INVALID_ROLE_ID`.
+
+The target's own permissions in the destination are never consulted, so a member can be moved into a channel they could not join themselves. Disconnecting sets `channel_id` to null and requires the same permission.
+
+Supplying `channel_id` for a target with no live voice connection, or a `connection_id` that is not one of the target's own, returns 400 `USER_NOT_IN_VOICE`. Supplying `mute` or `deaf` for such a target succeeds and stores the flags. A destination that does not exist returns the field code `CHANNEL_DOES_NOT_EXIST`, and one that is not a voice channel `CHANNEL_MUST_BE_VOICE`.
+
+`MANAGE_ROLES` and `MODERATE_MEMBERS` are [elevated permissions](/http-api/permissions/#elevated-permissions), so replacing `roles` or applying `communication_disabled_until` additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+
+A caller addressing their own user ID here falls under the self-targeted rules of [Modify current guild member](#modify-current-guild-member) for the guild profile fields, and the body remains the complete update object, so `roles` is accepted. Replacing their own role set still requires `MANAGE_ROLES` and hierarchy authority, and `communication_disabled_until` is still rejected with 403 `MISSING_PERMISSIONS`.
+
+:::note[Guild profile fields belong to their own account]
+`avatar`, `banner`, `bio`, `pronouns`, `accent_color`, `profile_flags`, and `mention_flags` describe the target's own profile, so a moderator cannot set them. Supplying one for another member leaves it unwritten, and the request still applies every field the caller may set.
+:::
+
+:::caution[A blocklisted `bio` or `pronouns` returns 403]
+The request fails with `CONTENT_BLOCKED` even though the field is never written.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the target member |
+
+### JSON body
+
+The body is a [guild member update object](#guild-member-update-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild member](#guild-member-object) object | Membership was processed |
+| 400 | [error response](/http-api/#error-response) | Role set or timeout value rejects the request |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller holds `MANAGE_ROLES` or `MODERATE_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 400 | [error response](/http-api/#error-response) | `channel_id` was supplied for a target with no live voice connection |
+| 400 | [error response](/http-api/#error-response) | Destination channel does not exist or is not a voice channel |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not a member, or a required permission is absent |
+| 403 | [error response](/http-api/#error-response) | Blocked content was supplied, hierarchy authority is absent, or the target holds `ADMINISTRATOR` |
+| 403 | [error response](/http-api/#error-response) | Target is the caller and `communication_disabled_until` was supplied |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD`, or the target membership or account is absent, returning `UNKNOWN_MEMBER` |
+
+<sup>1</sup> The missing-authenticator [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`, returned only after the permission itself has been confirmed, so a caller lacking the permission entirely receives 403 instead
+
+### Side effects
+
+The operation has the same membership, audit, search, [Guild Member Update](/gateway/events/#guild-member-update), and [Voice State Update](/gateway/events/#voice-state-update) effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty replacement role set to a temporary membership also makes the membership permanent. The target account always receives its own Guild Member Update, while every other guild session receives it subject to [event filtering](/gateway/event-filtering/).
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:update::guild_id` bucket.
+
+## Remove guild member
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/members/{user_id}" bot auditReason />
+
+Removes a member from the guild and returns 204 with an empty body. Requires membership, [KICK_MEMBERS](/http-api/permissions/), and role hierarchy authority over the target. Emits a [Guild Member Remove](/gateway/events/#guild-member-remove) Gateway event.
+
+`KICK_MEMBERS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+
+The caller and the guild owner cannot be removed through this operation, and both are reported as 404 `UNKNOWN_MEMBER`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the target member |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Member was removed |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller holds `KICK_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not a member, or `KICK_MEMBERS` is absent |
+| 403 | [error response](/http-api/#error-response) | Hierarchy authority over the target is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | Target is not a member, is the caller, or is the guild owner, each returning `UNKNOWN_MEMBER` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`, returned only after the permission itself has been confirmed
+
+### Side effects
+
+The operation retains the member's first join time, leave time, and any stored communication timeout for one year. Rejoining during that period resumes a timeout that is still in the future.
+
+It deletes the membership row and decreases the guild's member count, so the guild nickname, guild avatar hash, guild banner hash, biography, pronouns, accent colour, and role set are lost. The removed account's read states and guild settings are left untouched, and the guild is not removed from that account's guild folders.
+
+The operation records a [`MEMBER_KICK`](/http-api/guild-audit-logs/#audit-actions) audit entry with no change list and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create). Remaining guild sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove), subject to [event filtering](/gateway/event-filtering/). The removed account's sessions receive [Guild Delete](/gateway/events/#guild-delete).
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:remove::guild_id` bucket.
+
+## Transfer guild ownership
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/transfer-ownership" bot auditReason mfa />
+
+Transfers guild ownership to another current member and returns the updated [guild object](/http-api/guilds/#guild-object). Requires the caller to be the current owner. Emits a [Guild Update](/gateway/events/#guild-update) Gateway event.
+
+### Limitations
+
+- No permission bit substitutes for ownership.
+- The target must be a current member.
+- The target must not be a bot account, and a bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
+
+The operation requires sudo mode as described by the [sudo verification fields](/http-api/guilds/#sudo-verification-fields), which a bot credential satisfies without a proof. Fluxer verifies sudo mode before ownership, so a member who is not the owner still has to prove sudo mode before receiving 403 `MISSING_PERMISSIONS`. An account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names the second factors the account holds.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT? | string | The existing sudo mode proof |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| new_owner_id | snowflake | The ID of the member to make the new owner |
+| password? | string | The current owner password, as defined by the [sudo verification fields](/http-api/guilds/#sudo-verification-fields) |
+| mfa_method? | string | The second factor to verify, either `totp` or `webauthn` |
+| mfa_code? | string | The authenticator code, required when the method is `totp` (1-32 characters) |
+| webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | The assertion produced when the method is `webauthn` |
+| webauthn_challenge? | string | The challenge bound to the WebAuthn assertion |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild](/http-api/guilds/#guild-object) object | Ownership was transferred |
+| 400 | [error response](/http-api/#error-response) | Supplied password or authenticator code is wrong, or the target is a bot account |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, sudo mode is absent, or the caller is not the guild owner |
+| 403 | [error response](/http-api/#error-response) | Guild record exists while no Gateway process serves it, returning `ACCESS_DENIED` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD`, or the target is not a member, returning `UNKNOWN_MEMBER` |
+
+### Side effects
+
+The operation changes only the guild's `owner_id`. The outgoing owner keeps every role, permission overwrite, and membership they held.
+
+It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry naming the previous and new owner in its change list, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. The audit log response has no `options` member for this entry.
+
+An account with an enrolled second factor also receives a reissued sudo proof. A bot credential and an account whose only proof was a password receive `X-Fluxer-Sudo-Mode-JWT` only when the request itself has one.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the shared `guild:update::guild_id` bucket.
+
+## Add guild member role
+
+<RouteHeader method="PUT" path="/v1/guilds/{guild_id}/members/{user_id}/roles/{role_id}" bot auditReason />
+
+Adds one role to a member and returns 204 with an empty body. Requires membership, [MANAGE_ROLES](/http-api/permissions/), and hierarchy authority over the role. Emits a [Guild Member Update](/gateway/events/#guild-member-update) Gateway event.
+
+### Limitations
+
+- The guild owner bypasses the permission and the hierarchy check.
+- The everyone role cannot be assigned and is rejected with the field code `INVALID_ROLE_ID`.
+
+`MANAGE_ROLES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner. Every accepted request emits [Guild Member Update](/gateway/events/#guild-member-update), including one that changes nothing.
+
+The guild owner receives 404 `UNKNOWN_ROLE` for a role that does not exist in the guild. Any other caller receives 403 `MISSING_PERMISSIONS`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the target member |
+| role_id | snowflake | The ID of the role to add |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Role is present on the member |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Role is the everyone role, or the caller holds `MANAGE_ROLES` without an enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not a member, `MANAGE_ROLES` is absent, or hierarchy authority over the role is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | Target is not a member, returning `UNKNOWN_MEMBER` |
+| 404 | [error response](/http-api/#error-response) | Guild owner named a role that does not exist, returning `UNKNOWN_ROLE` |
+
+<sup>1</sup> The missing-authenticator [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`, returned only after the permission itself has been confirmed
+
+### Side effects
+
+When the member does not already hold the role, the operation adds it and makes a temporary membership permanent. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update), and it does all four whether or not the role set changed. A request naming a role the member already holds still writes an audit entry with an empty change list, published without a `changes` member.
+
+The audit log response names the role only through the change list.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:role:add::guild_id` bucket.
+
+## Remove guild member role
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/members/{user_id}/roles/{role_id}" bot auditReason />
+
+Removes one role from a member and returns 204 with an empty body. Requires membership, [MANAGE_ROLES](/http-api/permissions/), and hierarchy authority over the role. Emits a [Guild Member Update](/gateway/events/#guild-member-update) Gateway event.
+
+### Limitations
+
+- The guild owner bypasses the permission and the hierarchy check.
+- The everyone role cannot be removed and is rejected with the field code `INVALID_ROLE_ID`.
+
+`MANAGE_ROLES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner. Every accepted request emits [Guild Member Update](/gateway/events/#guild-member-update), including one that changes nothing. A role that does not exist is reported exactly as it is for [Add guild member role](#add-guild-member-role).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the target member |
+| role_id | snowflake | The ID of the role to remove |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Role is absent from the member |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Role is the everyone role, or the caller holds `MANAGE_ROLES` without an enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not a member, `MANAGE_ROLES` is absent, or hierarchy authority over the role is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | Target is not a member, returning `UNKNOWN_MEMBER` |
+| 404 | [error response](/http-api/#error-response) | Guild owner named a role that does not exist, returning `UNKNOWN_ROLE` |
+
+<sup>1</sup> The missing-authenticator [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`, returned only after the permission itself has been confirmed
+
+### Side effects
+
+When the member holds the role, the operation removes it. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update), and it does all four whether or not the role set changed. Removing a role does not change whether the membership is temporary.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:role:remove::guild_id` bucket.

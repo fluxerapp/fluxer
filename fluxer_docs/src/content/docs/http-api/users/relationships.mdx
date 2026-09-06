@@ -1,0 +1,385 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Relationships
+description: Friendships, blocks, and pending friend requests in both directions.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A relationship is the caller's stored record of one friendship, block, or pending friend request. Each account holds its own record, so one friendship is two records. The private note the caller keeps against another account lives on [User notes](/http-api/users/notes/).
+
+The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+
+:::note[Relationship records are directional]
+A friendship is a FRIEND record on both accounts. A pending request is `OUTGOING_REQUEST` on the sender and `INCOMING_REQUEST` on the recipient. A block exists only on the account that created it, so the blocked account observes nothing.
+:::
+
+A deleted account has the deleted flag with no pending deletion timestamp. An account inside a scheduled deletion window has a timestamp, so it stays a valid friend request target.
+
+## Relationship object
+
+A relationship record belongs to one account and names one other account. Every field describes the owning account's side. The caller reads its own record on every operation except the friendly bot auto-acceptance of [Send friend request by user ID](#send-friend-request-by-user-id), which returns the bot's record.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | snowflake | The ID of the related account |
+| type | integer | The [relationship type](#relationship-types) |
+| user | [partial user](/http-api/users/#partial-user-object) object | The related account |
+| since?<sup>2</sup> | ISO8601 timestamp | The time at which the record's current type was established |
+| nickname<sup>3</sup> | ?string | The caller-private nickname for the related account, or null when none is set |
+| share_voice_activity<sup>4</sup> | boolean | Whether the caller shares voice activity with the related account |
+| friend_shares_voice_activity<sup>5</sup> | boolean | Whether the related account shares voice activity with the caller |
+
+<sup>1</sup> A relationship has no identifier of its own, so this is always the related account's ID
+
+<sup>2</sup> Omitted when the stored record has no timestamp. A nickname write and a sharing rewrite both preserve it, so it does not track the last write
+
+<sup>3</sup> Only a FRIEND record has one, and [Modify relationship nickname](#modify-relationship-nickname) is its only writer. A type change rewrites the record, so a nickname does not survive one
+
+<sup>4</sup> A FRIEND record is written with the owning account's default when the friendship is created. Every non-FRIEND record is written with true
+
+<sup>5</sup> Only [List relationships](#list-relationships) resolves the reciprocal record. Every other operation reports true, and so does [List relationships](#list-relationships) for a record with no reciprocal of its type
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "type": 1,
+  "user": {"id": "1501314428688998182", "username": "aria", "discriminator": "0042"},
+  "since": "2026-01-14T09:31:00.000Z",
+  "nickname": "climbing partner",
+  "share_voice_activity": true,
+  "friend_shares_voice_activity": false
+}
+```
+
+## Relationship types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 | FRIEND | The two accounts are friends |
+| 2 | BLOCKED | The caller has blocked the related account |
+| 3 | INCOMING_REQUEST | The related account has sent the caller a friend request |
+| 4 | OUTGOING_REQUEST | The caller has sent the related account a friend request |
+
+## Bulk ignore result object
+
+A bulk ignore result reports how many incoming friend requests one call removed.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ignored_count | integer | The number of incoming friend requests that were removed |
+
+## Bulk ignore filters
+
+| Value | Name | Description |
+| --- | --- | --- |
+| all | All | Matches every incoming friend request |
+| new_accounts<sup>1</sup> | New accounts | Matches an incoming friend request whose sender account is younger than `max_account_age_seconds` |
+
+<sup>1</sup> The age comparison applies only when `max_account_age_seconds` is supplied, so this filter matches every incoming request when that member is absent
+
+## Relationship limit
+
+The `max_relationships` limit governs the combined number of friendship, block, and pending request records one account holds. Fluxer resolves it from the account's traits and premium state, so the value can be higher for a premium account. The fallback is 1000 when the deployment resolves no rule. The registry entry is listed under [limit keys](/http-api/instance/#limit-keys).
+
+Fluxer refuses the write once the stored record count reaches the resolved value. It checks the caller and the target independently, and a request fails when either has reached that value.
+
+A refusal returns 400 `MAX_FRIENDS` with the applied value in a top-level `max_relationships` member. Fluxer skips the limit for a bot account on either side, for a block, and under [staff forced acceptance](#send-friend-request-by-user-id).
+
+## List relationships
+
+<RouteHeader method="GET" path="/v1/users/@me/relationships" />
+
+Returns every [relationship](#relationship-object) object the caller holds, covering friendships, blocks, and pending requests in both directions.
+
+The operation is not paged, and the whole set comes back in one response. The order is not dependable. `friend_shares_voice_activity` is meaningful only in this response, and every other operation reports it as true.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[relationship](#relationship-object) object] | Relationships were returned |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:relationships:list` bucket.
+
+## Send friend request by tag
+
+<RouteHeader method="POST" path="/v1/users/@me/relationships" />
+
+Sends a friend request to the account identified by username and discriminator. Returns a [relationship](#relationship-object) object on success.
+
+### Limitations
+
+- An unresolved tag returns 400 `NO_USERS_WITH_FLUXERTAG_EXIST`.
+- A resolved deleted account returns 400 `FRIEND_REQUEST_BLOCKED`.
+- An existing friendship returns 400 `ALREADY_FRIENDS`.
+
+Fluxer resolves the tag to exactly one account before any relationship rule runs. Every remaining admission rule is the one described under [Send friend request by user ID](#send-friend-request-by-user-id).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| username<sup>1</sup> | string | The username of the target account |
+| discriminator<sup>2</sup> | string \| integer | The discriminator of the target account |
+
+<sup>1</sup> Trimmed before validation, then 1 to 32 characters of ASCII letters, digits, and underscores. It cannot be `everyone` or `here`, or contain `fluxer` or `system message`, in any casing
+
+<sup>2</sup> An integer and a decimal string of 1 to 4 digits are both accepted, and `0007` and `7` resolve the same account
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [relationship](#relationship-object) object | A pending request, an existing relationship, or an accepted friendship was returned |
+| 400 | [error response](/http-api/#error-response) | The tag is unresolved, the caller or target is ineligible, target or block policy rejects the request, deployment policy disables the operation, or the [relationship limit](#relationship-limit) is reached |
+| 403 | [error response](/http-api/#error-response) | The caller's email address is unverified and the request returns `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | The caller or resolved target no longer exists, or the pending request being accepted has been withdrawn |
+
+### Side effects
+
+The side effects are those of [Send friend request by user ID](#send-friend-request-by-user-id). Neither route opens a direct message channel.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `user:friend_request:send` bucket, shared with [Send friend request by user ID](#send-friend-request-by-user-id).
+
+## Send friend request by user ID
+
+<RouteHeader method="POST" path="/v1/users/@me/relationships/{user_id}" />
+
+Sends a friend request to the selected account. Returns a [relationship](#relationship-object) object on success.
+
+Admission is ordered. The deployment direct message policy runs first, so an ordinary caller receives 400 `DIRECT_MESSAGES_DISABLED` while that policy disables direct messages. A caller with the `STAFF` flag skips that first evaluation, whether or not it requests forced acceptance. When the target has already sent a request, a staff caller's send turns into an acceptance and still receives 400 `DIRECT_MESSAGES_DISABLED`. An unresolved caller then returns 404 `UNKNOWN_USER`.
+
+The caller's own ID returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_SELF`. An unresolved target returns 404 `UNKNOWN_USER`. A deleted target returns 400 `FRIEND_REQUEST_BLOCKED`.
+
+Fluxer consults the current relationship state next. A pending request from the target is accepted. An existing friendship or outgoing request is returned unchanged. The rules that follow apply to a genuinely new request alone, so they never refuse an existing friend.
+
+The remaining rules reject an unclaimed caller with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS` and an unverified email with 403 `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`. A bot target is rejected with 400 `FRIEND_REQUEST_BLOCKED` unless it has `FRIENDLY_BOT`. A target with the internal app store reviewer flag is rejected with the same code.
+
+A target the caller has blocked returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. A target that has blocked the caller returns 400 `FRIEND_REQUEST_BLOCKED`. Fluxer reads the target's [friend source flags](/http-api/users/#friend-source-flags) next<sup>1</sup>, and a target accepting requests only from mutual friends or mutual guild members rejects an unrelated caller with 400 `FRIEND_REQUEST_BLOCKED`. The [relationship limit](#relationship-limit) applies last, independently for both accounts.
+
+<sup>1</sup> The friend source evaluation is skipped when the target has no stored settings, which admits the request as though the target permitted requests from anyone
+
+:::caution[A flagged caller receives an indistinguishable success]
+A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags), or one whose send trips the deployment's direct contact spam policy, gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record, and [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
+:::
+
+That path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. The policy path can also set the `SPAMMER` flag on the caller, which makes every later send one-sided.
+
+:::note[The two suppression entries enter at different points]
+A caller that already has the flag enters before the pending request lookup, so it can hold both an `INCOMING_REQUEST` and an `OUTGOING_REQUEST` record for one account. A caller suppressed during the call enters after the lookup and accepts the pending request normally.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+The body can be omitted, in which case it is treated as an empty object.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| staff_force_accept?<sup>1</sup> | boolean | Whether the friendship is created immediately without a pending request |
+
+<sup>1</sup> Honoured only when the caller has the `STAFF` flag, and a caller without it is treated as though the member were absent. The stored flag governs, so hidden staff status still qualifies
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [relationship](#relationship-object) object | A pending request, an existing relationship, or an accepted friendship was returned |
+| 400 | [error response](/http-api/#error-response) | The caller or target is ineligible, target or block policy rejects the request, deployment policy disables the operation, or the [relationship limit](#relationship-limit) is reached |
+| 403 | [error response](/http-api/#error-response) | The caller's email address is unverified and the request returns `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | The caller, the target account, or the pending request being accepted does not exist |
+
+### Side effects
+
+A new request writes matching `OUTGOING_REQUEST` and `INCOMING_REQUEST` records and emits [Relationship Add](/gateway/events/#relationship-add) to both accounts. Both records are written with `share_voice_activity` set to true.
+
+When the target has already sent the caller a request, the operation accepts that request. Acceptance replaces both pending records with FRIEND records and emits [Relationship Update](/gateway/events/#relationship-update) to both accounts, each side taking its own sharing default. No acceptance path on this route opens a direct message channel, unlike [Accept request or block user](#accept-request-or-block-user).
+
+A bot target that has `FRIENDLY_BOT` without `FRIENDLY_BOT_MANUAL_APPROVAL` accepts in the same call, so the caller observes [Relationship Add](/gateway/events/#relationship-add) followed by [Relationship Update](/gateway/events/#relationship-update). Both flags are read only on a bot account. The response body of that call is the bot's own record, and its `id` and `user` name the caller and its `share_voice_activity` is the bot's default. The Dispatch the caller receives has the caller's record.
+
+Staff forced acceptance replaces every existing record between the two accounts, in either direction, with a friendship, and emits [Relationship Add](/gateway/events/#relationship-add) to both. A replaced record emits at most one [Relationship Remove](/gateway/events/#relationship-remove) to each account first. When the two accounts already hold a mutual friendship and nothing else, the existing record comes back unchanged. Forced acceptance still enforces the self rule, both unresolved account rules, the deleted account rule on both parties, the unclaimed account rule, and the email verification rule. It enforces no relationship rule, so it overrides a block in either direction, the target's [friend source flags](/http-api/users/#friend-source-flags), the bot target rule, and the [relationship limit](#relationship-limit).
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `user:friend_request:send` bucket, shared with [Send friend request by tag](#send-friend-request-by-tag).
+
+## Accept request or block user
+
+<RouteHeader method="PUT" path="/v1/users/@me/relationships/{user_id}" />
+
+Accepts a pending incoming friend request, or blocks the selected account when the body selects BLOCKED. Returns a [relationship](#relationship-object) object on success.
+
+Acceptance evaluates the deployment direct message policy first and returns 400 `DIRECT_MESSAGES_DISABLED` while that policy disables direct messages, with no staff exemption. An unresolved caller or requester returns 404 `UNKNOWN_USER`. A deleted account on either side returns 400 `FRIEND_REQUEST_BLOCKED`. An unclaimed caller returns 400 `UNCLAIMED_ACCOUNT_CANNOT_ACCEPT_FRIEND_REQUESTS`. A missing pending incoming request returns 404 `UNKNOWN_USER`, and the [relationship limit](#relationship-limit) then applies to both accounts. Acceptance has no email verification requirement.
+
+Blocking returns 404 `UNKNOWN_USER` for an unresolved target and 400 `CANNOT_BLOCK_SYSTEM_USER` for the Fluxer system account. Those are its only admission rules, so blocking runs regardless of the deployment direct message policy, the unclaimed account rule, the email verification rule, and the [relationship limit](#relationship-limit). It applies no self-target rule.
+
+:::caution[The type member selects the operation]
+Only the exact value BLOCKED selects blocking. Every other accepted [relationship type](#relationship-types), an omitted `type`, and an omitted body all select acceptance of a pending incoming request. Sending FRIEND does not force a friendship where no request exists.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+The body can be omitted, in which case it is treated as an empty object and acceptance is selected.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type?<sup>1</sup> | integer | The [relationship type](#relationship-types) selecting the operation |
+
+<sup>1</sup> One of the four enumerated types when present. Only BLOCKED selects blocking, and every other accepted value selects acceptance
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [relationship](#relationship-object) object | The friendship or the block was returned |
+| 400 | [error response](/http-api/#error-response) | An account is ineligible, the block target is the system account, deployment policy disables acceptance, or the [relationship limit](#relationship-limit) is reached |
+| 404 | [error response](/http-api/#error-response) | The target account does not exist, or no pending incoming request exists |
+
+### Side effects
+
+Acceptance replaces the pending records with FRIEND records on both accounts and emits [Relationship Update](/gateway/events/#relationship-update) to each. It then opens the pair's direct message channel for both accounts, creating the channel when none exists, and emits [Channel Create](/gateway/events/#channel-create) to each account whose open state changed. No other relationship operation opens one.
+
+Blocking replaces the caller's existing friendship or pending request with a BLOCKED record. Removing a friendship or an outgoing request also removes the target's reciprocal record and emits [Relationship Remove](/gateway/events/#relationship-remove) to the target. Removing an incoming request touches the caller's record alone. [Relationship Add](/gateway/events/#relationship-add) then reaches the caller for the block. Blocking an already blocked target changes nothing. Blocking never closes or deletes the pair's direct message channel.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `user:friend_request:accept` bucket.
+
+## Remove relationship
+
+<RouteHeader method="DELETE" path="/v1/users/@me/relationships/{user_id}" />
+
+Removes the caller's current friendship, pending friend request in either direction, or block involving the selected account. Returns 204 with an empty body on success.
+
+The route reads no request body. The caller's current record determines what is removed. A caller holding no record of any type receives 404 `UNKNOWN_USER`. Removal has no deployment policy, email verification, unclaimed account, or limit rule, so a relationship stays removable while every creation path is closed.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the related account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The relationship was removed |
+| 404 | [error response](/http-api/#error-response) | No relationship of any type exists with the target |
+
+### Side effects
+
+Removing a friendship or an outgoing request removes both accounts' records and emits [Relationship Remove](/gateway/events/#relationship-remove) to each account.
+
+A block is stored on one account only, so removing one deletes the caller's record and emits [Relationship Remove](/gateway/events/#relationship-remove) to the caller alone.
+
+:::caution[Rejecting an incoming request leaves the sender's record]
+Removing an `INCOMING_REQUEST` record deletes only the caller's record and notifies only the caller. The sender keeps its `OUTGOING_REQUEST` record and cannot tell the request was rejected. [Ignore pending requests in bulk](#ignore-pending-requests-in-bulk) removes both records instead.
+:::
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `user:relationship:delete` bucket.
+
+## Modify relationship nickname
+
+<RouteHeader method="PATCH" path="/v1/users/@me/relationships/{user_id}" />
+
+Sets or clears the caller's private nickname for a friend. Returns the updated [relationship](#relationship-object) object. Emits a [Relationship Update](/gateway/events/#relationship-update) Gateway event.
+
+Only a FRIEND record accepts a nickname, and every other relationship state returns 404 `UNKNOWN_USER`.
+
+:::note[The nickname is private to the caller]
+Fluxer writes it only to the caller's record. The friend never reads it in a response and never receives it in a Dispatch.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the friend |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| nickname<sup>1</sup> | ?string | The nickname to store, or null to clear it |
+
+<sup>1</sup> The member is required, so an empty body is rejected. The value is trimmed, stripped of the form feed and right-to-left override characters, and then at most 256 characters
+
+A literal empty string clears the nickname, the same as null. A value that is only whitespace normalises to an empty string and is stored as one.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [relationship](#relationship-object) object | The updated relationship was returned |
+| 404 | [error response](/http-api/#error-response) | No FRIEND record exists with the target |
+
+### Side effects
+
+The record changes only for the caller, and the sharing preference keeps its stored value. A stored `since` value is preserved, and a record that has none is stamped with the current time. [Relationship Update](/gateway/events/#relationship-update) reaches the caller for every accepted request, including one that submits the value already stored.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `user:relationship:update` bucket.
+
+## Ignore pending requests in bulk
+
+<RouteHeader method="POST" path="/v1/users/@me/relationships/bulk-ignore" />
+
+Removes matching incoming friend requests. Returns a [bulk ignore result](#bulk-ignore-result-object) object on success.
+
+Matching applies only to the caller's `INCOMING_REQUEST` records. Fluxer derives a sender's account age from the timestamp embedded in its [snowflake](/snowflakes/) and compares it against `max_account_age_seconds` as an exclusive upper bound, so a sender exactly that old is not matched. One call removes every matching request.
+
+:::caution[An unbounded new_accounts filter removes everything]
+The age comparison applies only when `max_account_age_seconds` is supplied. Selecting `new_accounts` without it removes every incoming friend request, exactly as `all` does.
+:::
+
+### JSON body
+
+The body can be omitted, in which case it is treated as an empty object and the `all` filter applies.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| filter? | string | The [bulk ignore filter](#bulk-ignore-filters) to apply (default `all`) |
+| max_account_age_seconds?<sup>1</sup> | integer | The exclusive maximum sender account age in seconds |
+
+<sup>1</sup> A positive integer, read only by the `new_accounts` filter
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [bulk ignore result](#bulk-ignore-result-object) object | Matching requests were removed |
+
+### Side effects
+
+Each matched request removes the caller's `INCOMING_REQUEST` record and the sender's `OUTGOING_REQUEST` record, and emits [Relationship Remove](/gateway/events/#relationship-remove) to the caller and to the sender. A call that matches nothing changes nothing.
+
+Fluxer processes senders one at a time, and the operation is not atomic across them. A failure part of the way through keeps the removals already made, and the call returns no count.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `user:friend_request:bulk_ignore` bucket.

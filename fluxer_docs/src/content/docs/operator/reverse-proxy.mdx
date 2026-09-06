@@ -1,0 +1,490 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Behind your own reverse proxy
+description: Serving a Fluxer instance from nginx, Caddy, Traefik, HAProxy, Apache, or a tunnel.
+---
+
+:::tip[Plutonium and donations fund Fluxer]
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
+:::
+
+A reverse proxy takes the HTTPS connection from a browser and passes each request on to Fluxer. Fluxer runs behind any proxy that terminates TLS and forwards WebSocket upgrades.
+
+The stack ships Caddy and runs it by default on `80` and `443`. One extra Compose file stops that and publishes a single plain HTTP port instead. That port already routes every path to the right internal service, so the proxy in front needs one routing rule: send everything to it.
+
+## Enable the overlay
+
+`docker-compose.proxy.yml` ships next to `docker-compose.yml` and layers on top of it. Pass both files on every command:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+```
+
+Or set `COMPOSE_FILE` in `.env` once and keep typing plain `docker compose` commands:
+
+```ini
+COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml
+```
+
+On a first install, `sh install.sh --tls proxy` writes that line and `FLUXER_EDGE_BIND` into `.env` for you, so there is nothing to add by hand. [Installer flags](/operator/get-started/#installer-flags) lists it with the rest.
+
+The port binds `127.0.0.1:8080` by default. `FLUXER_EDGE_BIND` sets both the interface and the host port. Move the port when something else on the host already holds `8080`:
+
+```ini
+FLUXER_EDGE_BIND=127.0.0.1:8081
+```
+
+The container side stays `8080` whatever you set. A proxy on the host then points at `127.0.0.1:8081`, and a proxy on the stack's own Docker network points at `edge:8080`. Bind a routable address only when the proxy runs on another machine, and firewall the port to that machine:
+
+```ini
+FLUXER_EDGE_BIND=0.0.0.0:8080
+```
+
+Confirm the port answers before you configure anything in front of it:
+
+```bash
+curl -i http://127.0.0.1:8080/_health
+```
+
+`/_health` returns `200 OK` from the edge itself without reaching an upstream, so it is the health check to give your proxy.
+
+:::note[There is nothing to configure inside the instance]
+The routing lives in a config file inside the stack. Point your proxy at the port and leave that file alone.
+:::
+
+## What every proxy must do
+
+#### Terminate TLS and serve the hostname over HTTPS
+
+With `FLUXER_PUBLIC_SCHEME=https` the admin CSRF cookie is `__Host-csrf_token`, which browsers accept only over HTTPS.
+
+#### Forward WebSocket upgrades
+
+The client connection is on `/gateway` and voice signalling is on `/livekit/*`. Both open as WebSocket upgrades. Check that the handshake completes through whatever is in front of the instance, with your own hostname in place of the one below:
+
+```bash
+curl -sS -i --http1.1 --max-time 5 \
+  -H 'Connection: Upgrade' \
+  -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' \
+  -H 'Sec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA==' \
+  'https://chat.example.com/gateway?v=1&encoding=json' | head -1
+```
+
+The answer is `HTTP/1.1 101 Switching Protocols`. Confirm a real client connects as well, which covers the whole path including the query string.
+
+#### Replace `X-Forwarded-For` with the real client address
+
+Set the header from the connection address and discard whatever the visitor sent. Rate limits, IP bans and abuse detection all apply to the address that arrives in it.
+
+#### Accept a request body above the attachment limit
+
+Uploads pass through the proxy. Raise any default body limit, such as nginx's 1 MB, above the instance attachment limit.
+
+#### Hold a connection open for an hour
+
+The Gateway socket stays open for the life of a client session, so give idle and read timeouts an hour.
+
+#### Pass `Sec-Fetch-Site` through untouched
+
+The browser sends it, and the admin dashboard refuses a mutating request with a cross-site value.
+
+#### Send no `Content-Security-Policy` of its own
+
+The instance sends its own policy, and its nonce is what lets the web app boot. Browsers enforce every policy they receive.
+
+Every worked configuration below answers all seven.
+
+## The public address
+
+Three variables tell the instance the address browsers use. Fluxer reads neither `X-Forwarded-Proto` nor `X-Forwarded-Host`, so you keep these correct by hand:
+
+```ini
+FLUXER_DOMAIN=chat.example.com
+FLUXER_PUBLIC_SCHEME=https
+FLUXER_PUBLIC_PORT=443
+```
+
+They stay `https` on `443` even though the instance itself speaks plain HTTP on `8080`. Clients read every base URL from the discovery document the API builds out of these values.
+
+Serving on a port other than `443` also needs `FLUXER_PUBLIC_ORIGIN`. Several endpoints are built from the scheme and the domain alone, and the port is lost without it:
+
+```ini
+FLUXER_PUBLIC_ORIGIN=https://chat.example.com:8443
+```
+
+## nginx
+
+The `map` block makes `Connection` follow `Upgrade`. The snippet raises the body limit and the read timeout above nginx's own 1 MB and 60 seconds.
+
+```nginx
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name chat.example.com;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name chat.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/chat.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/chat.example.com/privkey.pem;
+
+    client_max_body_size 512m;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host            $host;
+        proxy_set_header Upgrade         $http_upgrade;
+        proxy_set_header Connection      $connection_upgrade;
+        proxy_set_header X-Forwarded-For $remote_addr;
+
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+        proxy_request_buffering off;
+        proxy_buffering off;
+    }
+}
+```
+
+Set `X-Forwarded-For` from `$remote_addr`. `$proxy_add_x_forwarded_for` appends whatever the client sent, which puts an attacker-chosen address in front of the real one.
+
+## Caddy
+
+An external Caddy needs one site block. It forwards WebSocket upgrades natively, requests the certificate itself, and applies no request body limit and no read timeout of its own.
+
+```caddy
+chat.example.com {
+	reverse_proxy 127.0.0.1:8080 {
+		header_up X-Forwarded-For {client_ip}
+	}
+}
+```
+
+`{client_ip}` resolves to the peer address unless the peer is in this Caddy's own `trusted_proxies`. The `header_up` line replaces `X-Forwarded-For` with that one address.
+
+## Traefik
+
+Traefik forwards WebSocket upgrades natively, and by default it strips inbound `X-Forwarded-*` headers from untrusted clients and writes its own. Leave `forwardedHeaders` alone unless another proxy sits in front of Traefik.
+
+### File provider
+
+Static configuration:
+
+```yaml
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+  websecure:
+    address: ":443"
+    transport:
+      respondingTimeouts:
+        readTimeout: 0s
+        idleTimeout: 3600s
+
+providers:
+  file:
+    filename: /etc/traefik/dynamic.yml
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: admin@example.com
+      storage: /etc/traefik/acme.json
+      httpChallenge:
+        entryPoint: web
+```
+
+`readTimeout` defaults to 60 seconds and covers reading the whole request including the body, so `0s` removes the bound and lets a large upload finish. `idleTimeout` defaults to 180 seconds, so raise it to an hour to hold the Gateway socket open.
+
+Dynamic configuration in `/etc/traefik/dynamic.yml`:
+
+```yaml
+http:
+  routers:
+    fluxer:
+      rule: Host(`chat.example.com`)
+      entryPoints:
+        - websecure
+      service: fluxer
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    fluxer:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: http://127.0.0.1:8080
+```
+
+### Docker labels
+
+Traefik reaches the container over a shared Docker network, so the published port is not used. Keep the overlay applied anyway, or the instance takes `80` and `443` away from Traefik.
+
+Put this in `traefik.compose.yml` next to the stack:
+
+```yaml
+services:
+  edge:
+    networks:
+      - fluxer
+      - traefik
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: traefik
+      traefik.http.routers.fluxer.rule: Host(`chat.example.com`)
+      traefik.http.routers.fluxer.entrypoints: websecure
+      traefik.http.routers.fluxer.tls.certresolver: letsencrypt
+      traefik.http.services.fluxer.loadbalancer.server.port: "8080"
+
+networks:
+  traefik:
+    external: true
+```
+
+Then list all three files so every command picks them up:
+
+```ini
+COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:traefik.compose.yml
+```
+
+## HAProxy
+
+One frontend, one backend, and four timeouts:
+
+```haproxy
+defaults
+    mode http
+    log stdout format raw local0
+    option httplog
+    timeout connect 5s
+    timeout client  1h
+    timeout server  1h
+    timeout tunnel  1h
+
+frontend fluxer
+    bind :80
+    bind :443 ssl crt /etc/haproxy/certs/chat.example.com.pem alpn h2,http/1.1
+    http-request redirect scheme https unless { ssl_fc }
+    http-request set-header X-Forwarded-For %[src]
+    default_backend fluxer_edge
+
+backend fluxer_edge
+    server edge 127.0.0.1:8080
+```
+
+`timeout client` and `timeout server` stop applying once a connection is upgraded, so `timeout tunnel` is what keeps the Gateway socket and LiveKit signalling alive. `set-header` replaces any header the client sent. `option forwardfor` appends to it. Give the frontend and the backend different names. HAProxy warns on a shared name and drops support for it in 3.3.
+
+## Apache httpd
+
+This configuration needs three modules: `mod_proxy`, `mod_proxy_http`, and `mod_headers`. Since 2.4.47 `mod_proxy_http` handles the WebSocket upgrade itself, so `mod_proxy_wstunnel` is not needed.
+
+```apache
+<VirtualHost *:443>
+    ServerName chat.example.com
+
+    SSLEngine on
+    SSLCertificateFile    /etc/letsencrypt/live/chat.example.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/chat.example.com/privkey.pem
+
+    LimitRequestBody 536870912
+    ProxyPreserveHost On
+    ProxyTimeout 3600
+
+    RequestHeader set X-Forwarded-For "expr=%{REMOTE_ADDR}"
+
+    ProxyPass        / http://127.0.0.1:8080/ upgrade=websocket timeout=3600
+    ProxyPassReverse / http://127.0.0.1:8080/
+</VirtualHost>
+```
+
+`upgrade=websocket` is the whole WebSocket configuration on 2.4.47 and later.
+
+`RequestHeader set` replaces whatever the client sent, and the quotes around `"expr=%{REMOTE_ADDR}"` are required by the expression parser. `ProxyAddHeaders` is on by default and appends the connection address after that value. The edge reads the real address either way.
+
+`LimitRequestBody` is 0 by default, which means no limit, but distribution packages and `<Directory>` blocks often set it lower. The 536870912 above is 512 MiB. `ProxyTimeout` and the `timeout=3600` parameter both bound the upstream connection, and an hour covers the Gateway socket.
+
+## Cloudflare Tunnel
+
+One ingress rule for the hostname, with the catch-all `cloudflared` requires under it:
+
+```yaml
+tunnel: fluxer
+credentials-file: /etc/cloudflared/fluxer.json
+
+ingress:
+  - hostname: chat.example.com
+    service: http://127.0.0.1:8080
+    originRequest:
+      connectTimeout: 30s
+  - service: http_status:404
+```
+
+When `cloudflared` runs as a container on the stack's Docker network, point it at `http://edge:8080`. The published port is then never used. Compose prefixes the network name with the project name, which the stack sets to `fluxer`, so the network is `fluxer_fluxer` and an external declaration names it in full:
+
+```yaml
+networks:
+  fluxer:
+    external: true
+    name: fluxer_fluxer
+```
+
+Cloudflare appends the visitor address to any `X-Forwarded-For` the visitor sent, so the header can arrive with a forged value in front of the real one. The edge reads the rightmost address that is not in `FLUXER_EDGE_TRUSTED_PROXIES`, which is the one Cloudflare appended. A Transform Rule that sets `X-Forwarded-For` to `cf.connecting_ip` removes the ambiguity outright.
+
+Cloudflare caps a request body at 100 MB on Free and Pro, 200 MB on Business, and 500 MB on Enterprise, and answers 413 above the cap. The cap applies to tunnel traffic, and no `cloudflared` setting raises it. Keep the [`max_attachment_file_size`](/http-api/instance/#limit-keys) limit below the cap for your plan, in the admin dashboard under limit configuration. It defaults to 26214400 bytes for a non-premium account and 524288000 bytes for a premium one, which is above every cap below Enterprise.
+
+A tunnel has the web app, API, Gateway, admin dashboard, media routes, and LiveKit signalling. It has no LiveKit media.
+
+## Nginx Proxy Manager
+
+Add a proxy host with these values:
+
+| Field | Value |
+| --- | --- |
+| Domain Names | The hostname `chat.example.com` |
+| Scheme | Plain `http` |
+| Forward Hostname / IP | `127.0.0.1`, or the `edge` container when both run in Docker |
+| Forward Port | Port `8080` |
+| Websockets Support | On, and required |
+| Block Common Exploits | Off, because its request filtering rejects legitimate API traffic |
+| SSL | Request a certificate, then turn on Force SSL and HTTP/2 Support |
+
+In the Advanced tab:
+
+```nginx
+client_max_body_size 512m;
+proxy_read_timeout 3600s;
+proxy_send_timeout 3600s;
+```
+
+Nginx Proxy Manager appends to `X-Forwarded-For`, and the visitor's own value arrives in front of the real address. The edge takes the rightmost entry that is not in `FLUXER_EDGE_TRUSTED_PROXIES`, which is the one Nginx Proxy Manager appended. Users on a LAN or a VPN inside the default `private_ranges` are the exception and resolve to the forged entry, so narrow `FLUXER_EDGE_TRUSTED_PROXIES` to the proxy's address in that layout.
+
+## What the single port routes
+
+The instance rewrites paths before handing them to an upstream. Your proxy must not rewrite anything itself.
+
+#### `/_health`
+
+No upstream. Answered by the edge itself.
+
+#### `/gateway?v=1&encoding=json&compress=zstd-stream&stream=1`
+
+Goes to `gateway:8080` and reaches the upstream as `/?v=1&encoding=json&compress=zstd-stream&stream=1`.
+
+#### `/gateway/foo`
+
+Goes to `gateway:8080` and reaches the upstream as `/foo`.
+
+#### `/api/v1/users/@me`
+
+Goes to `api:8080` and reaches the upstream as `/v1/users/@me`.
+
+#### `/media/attachments/1/2/a.png`
+
+Goes to `media-proxy:8080` and reaches the upstream as `/attachments/1/2/a.png`.
+
+#### `/livekit/rtc/v1`
+
+Goes to `livekit:7880` and reaches the upstream as `/rtc/v1`.
+
+#### `/admin`
+
+Goes to `admin:8080` and reaches the upstream as `/`.
+
+#### `/admin/users`
+
+Goes to `admin:8080` and reaches the upstream as `/users`.
+
+#### Static asset paths
+
+`/web/*`, `/emoji/*`, `/libs/*`, `/avatars/*`, `/badges/*`, `/desktop/*` and `/embeds/*` go to `static-proxy:8080` unchanged.
+
+#### `/.well-known/fluxer`
+
+Goes to `api:8080` unchanged.
+
+#### Apple app site association
+
+`/.well-known/apple-app-site-association`, and `/apple-app-site-association` for older iOS, go to `app-proxy:8080` unchanged.
+
+#### `/.well-known/assetlinks.json`
+
+Goes to `app-proxy:8080` unchanged.
+
+#### `/version.json`
+
+Goes to `app-proxy:8080` unchanged.
+
+#### Anything else
+
+Goes to `app-proxy:8080` unchanged.
+
+Pass the query string on `/gateway` through untouched. Clients always send `?v=`, `?encoding=`, `?compress=` and `?stream=`, and `1` is the only version the Gateway accepts.
+
+Apple and Google fetch the two association files themselves at those fixed paths, for saved-password autofill in the iOS apps and link handling in the Android ones. The last entry already has all four, so a proxy that forwards `/` needs no extra rule. A proxy that forwards a named path allowlist has to list these four paths along with everything else that entry covers.
+
+`/_metrics` on the API, Media Proxy, and Gateway, plus `/_health/ready`, `/_health/drain`, and `/_health/undrain` on the Gateway, are gated to loopback and are unreachable through any proxy. The probes that work through a proxy are `/_health`, `/api/_health`, `/gateway/_health`, and `/media/_health`.
+
+## Trusted proxies
+
+`FLUXER_EDGE_TRUSTED_PROXIES` names the peer addresses whose `X-Forwarded-For` the edge believes. It defaults to `private_ranges`, which Caddy expands to `192.168.0.0/16`, `172.16.0.0/12`, `10.0.0.0/8`, `127.0.0.1/8`, `fd00::/8`, and `::1`, so a proxy on the same host or the same Docker network needs no change.
+
+The edge resolves one client address per request and rewrites `X-Forwarded-For` to it on every upstream hop, so no service ever reads what a visitor sent. A peer outside the list becomes the client address, and the edge discards the header it sent. A peer inside the list contributes the rightmost header entry that is not itself trusted, and a proxy that appends still delivers the real caller.
+
+A proxy that reaches the instance from a public address is not trusted, so the edge discards its header and attributes every request to the proxy itself. That puts all your users in one rate limit bucket and one geolocation. Add the address, and list `private_ranges` too if you still need it:
+
+```ini
+FLUXER_EDGE_TRUSTED_PROXIES=private_ranges 203.0.113.10/32
+```
+
+`private_ranges` does not cover `100.64.0.0/10`, so a proxy reaching the instance over a Tailscale or other CGNAT tailnet address is untrusted and collapses every visitor onto that one address. Name the tailnet address of the proxy:
+
+```ini
+FLUXER_EDGE_TRUSTED_PROXIES=private_ranges 100.101.102.103/32
+```
+
+The edge believes a trusted peer without question. Anyone who can open a TCP connection from a trusted address can set `X-Forwarded-For` to any value and be recorded as that address, which defeats bans and rate limits and pollutes abuse detection. Keep the list down to the one address your proxy arrives from. That is also the only correct list on a LAN or VPN deployment, where a visitor whose own address falls inside a wider list is recorded under the proxy's address.
+
+Find the address the edge sees a host-side proxy arrive from:
+
+```bash
+docker network inspect fluxer_fluxer -f '{{(index .IPAM.Config 0).Gateway}}'
+```
+
+The edge reads the variable at container start, so apply a change with `docker compose up -d`.
+
+:::caution[Keep the plain HTTP port off the LAN]
+`private_ranges` trusts the whole LAN. With `FLUXER_EDGE_BIND=0.0.0.0:8080`, any host on that network can impersonate any client address. Firewall the port to the proxy host.
+:::
+
+## Voice media does not use the proxy
+
+LiveKit signalling goes through `/livekit/*` like everything else. WebRTC media does not touch the proxy at all:
+
+- `7882/udp` is media.
+- `7881/tcp` is the fallback when UDP is blocked.
+
+Both ports are published directly by the stack and must reach the host. A proxy or tunnel in front of `443` does nothing for them.
+
+Hosting LiveKit on a hostname other than `FLUXER_DOMAIN` means widening the Content-Security-Policy the web app runs under:
+
+```ini
+FLUXER_CSP_EXTRA_CONNECT_SRC=wss://livekit.example.com:7881
+```

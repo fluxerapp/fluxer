@@ -1,0 +1,259 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin API keys
+description: Admin API key objects and the five operations that manage them.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An Admin API key is a long-lived credential for the [Admin API](/admin-api/). It authenticates as the account that created it, has its own [ACL](/admin-api/#acl-registry) set, and is honoured only on paths below `/v1/admin`.
+
+Every operation on this page requires `admin_api_key:manage`. None records an Admin audit entry or reads the `X-Audit-Log-Reason` header. An operation that addresses one key returns 404 `ADMIN_API_KEY_NOT_FOUND` when no key has that identifier, when another account created the key, or when the key has expired.
+
+:::caution[Key management is scoped to the creating account]
+The wildcard ACL reaches no key created by another account, and such a key reports `ADMIN_API_KEY_NOT_FOUND`.
+:::
+
+## Admin API key object
+
+A key is owned by the account that created it, and it stores its own ACL set. Narrowing the owner and narrowing the key are separate actions.
+
+Fluxer checks both sets when a request presents a key. A request passes when all three of these hold:
+
+- The owning account holds `admin:authenticate` or `*`.
+- The owning account holds the ACL the operation requires, or `*`.
+- The key itself has that ACL, or `*`.
+
+A key therefore never has wider permission than the account behind it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key_id | snowflake | The ID of the key |
+| name | string | The name given to the key (1-100 characters) |
+| acls<sup>1</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key |
+| created_by_user_id<sup>2</sup> | snowflake | The ID of the account that created the key, and whose identity the key assumes |
+| created_at | ISO8601 timestamp | Time the key was created |
+| last_used_at<sup>3</sup> | ?ISO8601 timestamp | Time the key last authenticated a request, or null when it never has |
+| expires_at<sup>4</sup> | ?ISO8601 timestamp | Time the key expires, or null when the key does not expire |
+
+<sup>1</sup> Bounded at 111 entries, the size of the [ACL registry](/admin-api/#acl-registry). Every value written through this API is a registry member
+
+<sup>2</sup> Never changes, so a key cannot be transferred to another account
+
+<sup>3</sup> Written on every successful authentication, including when the authenticated operation is a read
+
+<sup>4</sup> An expired key is absent from every listing and is reported as not found
+
+### Example
+
+```json
+{
+  "key_id": "1501314428688998182",
+  "name": "moderation-tooling",
+  "acls": ["user:lookup", "report:view", "report:resolve"],
+  "created_by_user_id": "1489200013322551296",
+  "created_at": "2026-05-14T09:12:44.183000+00:00",
+  "last_used_at": "2026-06-02T18:40:11.902000+00:00",
+  "expires_at": null
+}
+```
+
+## Admin API key creation object
+
+Only [Create Admin API key](#create-admin-api-key) returns this object. It has the raw credential and omits `last_used_at` and `created_by_user_id`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key_id | snowflake | The ID of the key |
+| key<sup>1</sup> | string | The raw credential the key authenticates with |
+| name | string | The name given to the key (1-100 characters) |
+| created_at | ISO8601 timestamp | Time the key was created |
+| expires_at<sup>2</sup> | ?ISO8601 timestamp | Time the key expires, or null when the key does not expire |
+| acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key |
+
+<sup>1</sup> Has the form `fa_<key_id>_<32 characters>` described by [token formats](/authentication/#token-formats), and is presented as `Admin <token>` in the `Authorization` header
+
+<sup>2</sup> Derived from `expires_in_days` at the instant the key is created, and null when that field is omitted
+
+<sup>3</sup> Reflects the stored set, so a value repeated in the request appears once
+
+:::caution[The secret is returned once]
+Fluxer stores the value as a password hash, so no later operation returns it and none rotates it. A key whose raw value is lost must be revoked and replaced.
+:::
+
+### Example
+
+```json
+{
+  "key_id": "1501314428688998182",
+  "key": "fa_1501314428688998182_7Qk2ZbW9xLmR4TnP0vAeJdCyHs6UgF1B",
+  "name": "moderation-tooling",
+  "created_at": "2026-05-14T09:12:44.183000+00:00",
+  "expires_at": "2026-08-12T09:12:44.183000+00:00",
+  "acls": ["user:lookup", "report:view"]
+}
+```
+
+## List Admin API keys
+
+<RouteHeader method="GET" path="/v1/admin/api-keys" />
+
+Returns every [Admin API key](#admin-api-key-object) object the acting account created, as a bare JSON array with no ordering guarantee. Requires `admin_api_key:manage`.
+
+A key past its expiry is never returned.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | array[[Admin API key](#admin-api-key-object) object] | Keys were returned |
+
+<sup>1</sup> An account that created no key receives an empty array
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Create Admin API key
+
+<RouteHeader method="POST" path="/v1/admin/api-keys" />
+
+Creates a key and returns an [Admin API key creation](#admin-api-key-creation-object) object that has the raw credential, with HTTP 200 rather than 201. Requires `admin_api_key:manage`.
+
+The acting credential must already have every value in `acls`, unless it has `*`. The key authenticates immediately, and its effective permission is the intersection described under [Admin API key object](#admin-api-key-object).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | The name given to the key (1-100 characters) |
+| expires_in_days?<sup>2</sup> | integer | The number of days until the key expires (1-365) |
+| acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key, each a registry value (at most 111) |
+
+<sup>1</sup> A value that is empty after trimming is rejected, so whitespace alone is not a name
+
+<sup>2</sup> The stored expiry is the request instant plus this many days. Omitting the field creates a key that does not expire
+
+<sup>3</sup> An empty array produces a key that satisfies no operation. Fluxer compares `acls` against the presenting key's own ACLs, so a key cannot mint a broader key
+
+An ungrantable ACL fails with 403 `MISSING_ACL` on the first offending value, and a request that names several ungrantable ACLs still reports only that one.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin API key creation](#admin-api-key-creation-object) object | Key was created |
+| 400 | [error response](/admin-api/#error-response) | Body validation fails, including an `acls` value outside the [ACL registry](/admin-api/#acl-registry), returned as `INVALID_FORM_BODY` |
+| 403 | [error response](/admin-api/#error-response) | Credential type is refused, `admin_api_key:manage` is absent, or `acls` names a value the acting credential does not have |
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `admin:code:generation` bucket.
+
+## Get Admin API key
+
+<RouteHeader method="GET" path="/v1/admin/api-keys/{key_id}" />
+
+Returns one [Admin API key](#admin-api-key-object) object. Requires `admin_api_key:manage`.
+
+This operation never returns the raw credential.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key_id | snowflake | The ID of the key |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin API key](#admin-api-key-object) object | Key was returned |
+| 404 | [error response](/admin-api/#error-response) | `ADMIN_API_KEY_NOT_FOUND`, which also covers an expired key and a key created by another account |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Update Admin API key
+
+<RouteHeader method="PATCH" path="/v1/admin/api-keys/{key_id}" />
+
+Renames a key or replaces its ACL set, and returns the updated [Admin API key](#admin-api-key-object) object. Requires `admin_api_key:manage`.
+
+An omitted field is left unchanged, and the supplied fields take effect on the key's next authenticated request. The acting credential must already have every value in a supplied `acls`, unless it has `*`. A key with an expiry keeps it.
+
+:::caution[Supplying acls replaces the whole stored set]
+An update never rotates the credential, and no field on this route changes the expiry, so revoking the key is the only way to disable it.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key_id | snowflake | The ID of the key |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name?<sup>1</sup> | string | The replacement name for the key (1-100 characters) |
+| acls?<sup>2</sup> | array[string] | The complete replacement set of [ACLs](/admin-api/#acl-registry), each a registry value (at most 111) |
+
+<sup>1</sup> A value that is empty after trimming is rejected
+
+<sup>2</sup> An empty array leaves the key with no ACLs, the narrowest state short of revocation. An empty request body is accepted and changes nothing
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin API key](#admin-api-key-object) object | Key was updated |
+| 400 | [error response](/admin-api/#error-response) | Body validation fails, including an `acls` value outside the [ACL registry](/admin-api/#acl-registry), returned as `INVALID_FORM_BODY` |
+| 403<sup>1</sup> | [error response](/admin-api/#error-response) | Credential type is refused, `admin_api_key:manage` is absent, or `acls` names a value the acting credential does not have |
+| 404 | [error response](/admin-api/#error-response) | `ADMIN_API_KEY_NOT_FOUND`, which also covers an expired key and a key created by another account |
+
+<sup>1</sup> The ownership check runs before the ACL grant check, so a key belonging to another account returns 404 rather than 403
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Revoke Admin API key
+
+<RouteHeader method="DELETE" path="/v1/admin/api-keys/{key_id}" />
+
+Revokes an Admin API key and answers HTTP 200 with a response body. Requires `admin_api_key:manage`.
+
+The credential stops authenticating on its next use. A request already in flight runs to completion.
+
+:::danger[Revocation is permanent]
+Every later request presenting that credential fails authentication, and no operation recovers the key ID or reissues the raw value.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key_id | snowflake | The ID of the key |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always true |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Key was revoked |
+| 404 | [error response](/admin-api/#error-response) | `ADMIN_API_KEY_NOT_FOUND`, which also covers an expired key and a key created by another account |
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.

@@ -1,0 +1,574 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Discovery
+description: Guild discovery listings, the application lifecycle, and joining an approved guild.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Discovery is the public directory of guilds any account can browse and join. A guild manager applies to have a guild listed, and an operator reviews that application through the [Admin Discovery API](/admin-api/discovery/).
+
+[Join discovery guild](#join-discovery-guild) is user-only and rejects a bot token with 403 `ACCESS_DENIED`. Every other route accepts a user session token or a bot token.
+
+On a guild an operator has marked unavailable, Fluxer refuses [Apply for discovery](#apply-for-discovery), [Edit discovery application](#edit-discovery-application), [Withdraw discovery application](#withdraw-discovery-application), and [Get discovery status](#get-discovery-status) with 403 `MISSING_ACCESS` before the route runs. The gate does not cover [Join discovery guild](#join-discovery-guild).
+
+The four routes under `/v1/guilds/{guild_id}/discovery` require [MANAGE_GUILD](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one. A guild that does not exist returns 404 `UNKNOWN_GUILD`. Both a non-member and a member without the permission return 403 `MISSING_PERMISSIONS`. The routes answer 503 `SERVICE_UNAVAILABLE` when the check cannot be admitted, and 504 `GATEWAY_TIMEOUT` when it does not answer in time.
+
+:::note[Discovery is an optional instance capability]
+Searching, applying, editing, withdrawing, and joining fail with 400 `DISCOVERY_DISABLED` while an operator has it disabled. [List discovery categories](#list-discovery-categories) and [Get discovery status](#get-discovery-status) keep answering.
+:::
+
+## Discovery guild object
+
+One search result. Every field except the two counts is read from the discovery search index.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name of the guild at index time |
+| icon<sup>3</sup> | ?string | The icon hash of the guild, or null when it stores none |
+| banner<sup>3</sup> | ?string | The banner hash of the guild, or null when it stores none |
+| description<sup>1</sup> | ?string | The description supplied on the application, or null |
+| category_type<sup>1</sup> | integer | The [discovery category](#discovery-categories) the listing is filed under |
+| primary_language<sup>1</sup> | ?string | The [supported primary language](#supported-primary-languages) code of the listing, or null |
+| custom_tags<sup>1</sup> | array[string] | The normalised [custom tags](#custom-tags) of the listing |
+| member_count<sup>2</sup> | integer | The current member count of the guild |
+| online_count<sup>2</sup> | integer | The current online member count of the guild |
+| features | array[string] | The [guild features](/http-api/guilds/#guild-features) the guild has |
+| verification_level<sup>4</sup> | integer | The effective [verification level](/http-api/guilds/#verification-levels) of the guild |
+
+<sup>1</sup> The four listing fields come from the guild's approved application as it stood at index time, and an entry that stores no category is reported as category `0`
+
+<sup>2</sup> Refreshed from the main Gateway at response time. When that refresh fails, the operation still succeeds and reports the indexed member count with an `online_count` of `0`
+
+<sup>3</sup> An animated hash retains its `a_` prefix, which is the animation indicator for this object
+
+<sup>4</sup> A listed guild is reported at least at level `1`, so a guild that stores level `0` is reported as `1` while it remains discoverable
+
+:::note[Index values lag the guild record]
+A guild that changed its name, icon, banner, features, or verification level since the last synchronisation is still reported with the indexed values, for up to 15 minutes.
+:::
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "name": "Example guild",
+  "icon": "a_9f1c2d3e4b5a60718293a4b5c6d7e8f9",
+  "banner": null,
+  "description": "A place to talk about the example project.",
+  "category_type": 4,
+  "primary_language": "en-US",
+  "custom_tags": ["open source", "rust"],
+  "member_count": 4120,
+  "online_count": 318,
+  "features": ["DISCOVERABLE"],
+  "verification_level": 1
+}
+```
+
+## Discovery search result object
+
+One page of matching listings, together with the total and the per-category counts.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guilds | array[[discovery guild](#discovery-guild-object) object] | The matching approved guilds on this page of results |
+| total<sup>1</sup> | integer | The total number of guilds matching the query |
+| category_counts<sup>2</sup> | array[[discovery category count](#discovery-category-count-object) object] | The match count for each category under the current filters |
+
+<sup>1</sup> The count describes the complete match set, so it bounds paging through `offset`
+
+<sup>2</sup> Computed with the `category` filter removed and every other filter applied, so the counts describe what selecting a different category would return. A category with no match is omitted, and the array is ordered by ascending category
+
+## Discovery category count object
+
+One category and the number of listings it holds under the current filters.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| category_type | integer | The [discovery category](#discovery-categories) counted |
+| count | integer | The number of matching guilds in that category |
+
+## Discovery application object
+
+One guild's discovery listing and review state. A guild has at most one application. A rejected or removed application remains readable with its outcome and reason until the guild applies again or withdraws it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| guild_nsfw_level?<sup>1</sup> | ?integer | The [NSFW level](/http-api/guilds/#nsfw-levels) of the guild |
+| status | string | The [application status](#discovery-application-statuses) of the listing |
+| description | string | The description shown on the listing |
+| category_type | integer | The [discovery category](#discovery-categories) the listing is filed under |
+| primary_language<sup>2</sup> | ?string | The [supported primary language](#supported-primary-languages) code of the listing, or null |
+| custom_tags | array[string] | The normalised [custom tags](#custom-tags) of the listing |
+| applied_at | ISO8601 timestamp | The time at which the application was submitted |
+| reviewed_at<sup>3</sup> | ?ISO8601 timestamp | The time at which the application was approved or rejected, or null |
+| review_reason<sup>4</sup> | ?string | The reason recorded with the approval or rejection, or null |
+| removed_at<sup>5</sup> | ?ISO8601 timestamp | The time at which an approved listing was removed, or null |
+| removal_reason<sup>5</sup> | ?string | The reason recorded with the removal, or null |
+
+<sup>1</sup> No route here populates the field. The [guild object](/http-api/guilds/#guild-object) has the guild's NSFW level
+
+<sup>2</sup> An application that supplies no language is stored with the default `en-US`, so the public routes never produce the null form
+
+<sup>3</sup> Set at review time. An application approved automatically on submission has its submission time here
+
+<sup>4</sup> Always null for an automatic approval
+
+<sup>5</sup> Set only when an operator removes an approved listing. A guild that withdraws its own application deletes the record
+
+### Example
+
+```json
+{
+  "guild_id": "1489002177550843904",
+  "status": "pending",
+  "description": "A place to talk about the example project.",
+  "category_type": 4,
+  "primary_language": "en-US",
+  "custom_tags": ["open source", "rust"],
+  "applied_at": "2026-08-04T11:22:19.000Z",
+  "reviewed_at": null,
+  "review_reason": null,
+  "removed_at": null,
+  "removal_reason": null
+}
+```
+
+## Discovery status object
+
+The application state of one guild and its current eligibility to apply.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application | ?[discovery application](#discovery-application-object) object | The current application of the guild, or null when it has never applied or has withdrawn |
+| eligible<sup>1</sup> | boolean | Whether the guild currently satisfies the requirement to apply |
+| min_member_count<sup>2</sup> | integer | The number of members the instance currently requires |
+
+<sup>1</sup> False whenever discovery is disabled for the instance, whatever the guild would otherwise satisfy
+
+<sup>2</sup> Read from instance configuration, so it is identical for every guild and defaults to `1`
+
+### Example
+
+```json
+{
+  "application": null,
+  "eligible": true,
+  "min_member_count": 1
+}
+```
+
+## Discovery category object
+
+One entry of the fixed category registry, as [List discovery categories](#list-discovery-categories) returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | integer | The [discovery category](#discovery-categories) value |
+| name | string | The display name of the category |
+
+## Discovery categories
+
+The release fixes the set, so an operator cannot add, rename, or remove a category.
+
+| Value | Name | Display name |
+| --- | --- | --- |
+| 0 | GAMING | Gaming |
+| 1 | MUSIC | Music |
+| 2 | ENTERTAINMENT | Entertainment |
+| 3 | EDUCATION | Education |
+| 4 | SCIENCE_AND_TECHNOLOGY | Science & Technology |
+| 5 | CONTENT_CREATOR | Content Creator |
+| 6 | ANIME_AND_MANGA | Anime & Manga |
+| 7 | MOVIES_AND_TV | Movies & TV |
+| 8 | OTHER | Other |
+
+Every category value on the wire is one of these integers.
+
+A value outside 0 through 8 fails body or query validation with the validation code `INVALID_FORMAT`, so [Apply for discovery](#apply-for-discovery) and [Edit discovery application](#edit-discovery-application) reject it before the listing is stored.
+
+The display names above are the strings [List discovery categories](#list-discovery-categories) returns. They are not localised, so the same ID has the same name for every account.
+
+## Discovery application statuses
+
+| Value | Description |
+| --- | --- |
+| pending | Application has been submitted and awaits an operator decision |
+| approved | Guild is listed and has the discoverable feature |
+| rejected | Application was refused, and the guild can submit a new one |
+| removed | Approved listing was withdrawn by an operator, and the guild can submit a new one |
+
+A guild holding a pending or approved application cannot submit another. A guild whose application is rejected or removed can apply again, and the new submission replaces the previous record entirely.
+
+## Supported primary languages
+
+Fluxer stores one primary language on each listing, drawn from the closed set below. The set is specific to discovery, and the client [locale registry](/topics/locales/#supported-locales) does not apply here. An application that supplies no language is stored as `en-US`.
+
+| Value | Name | Native name |
+| --- | --- | --- |
+| ar | Arabic | العربية |
+| bg | Bulgarian | Български |
+| cs | Czech | Čeština |
+| da | Danish | Dansk |
+| de | German | Deutsch |
+| el | Greek | Ελληνικά |
+| en-US | English | English |
+| es-ES | Spanish (Spain) | Español (España) |
+| es-419 | Spanish (Latin America) | Español (Latinoamérica) |
+| fi | Finnish | Suomi |
+| fr | French | Français |
+| he | Hebrew | עברית |
+| hi | Hindi | हिन्दी |
+| hr | Croatian | Hrvatski |
+| hu | Hungarian | Magyar |
+| id | Indonesian | Bahasa Indonesia |
+| it | Italian | Italiano |
+| ja | Japanese | 日本語 |
+| ko | Korean | 한국어 |
+| lt | Lithuanian | Lietuvių |
+| nl | Dutch | Nederlands |
+| no | Norwegian | Norsk |
+| pl | Polish | Polski |
+| pt-BR | Portuguese (Brazil) | Português (Brasil) |
+| ro | Romanian | Română |
+| ru | Russian | Русский |
+| sv-SE | Swedish | Svenska |
+| th | Thai | ไทย |
+| tr | Turkish | Türkçe |
+| uk | Ukrainian | Українська |
+| vi | Vietnamese | Tiếng Việt |
+| zh-CN | Chinese (Simplified) | 中文 (简体) |
+| zh-TW | Chinese (Traditional) | 中文 (繁體) |
+
+## Custom tags
+
+A listing has up to ten custom tags. Fluxer normalises a tag by trimming it, lowercasing it, and collapsing each run of whitespace to one space. Both the submitted string and its normalised form must be 2 through 30 characters, so a submitted string longer than 30 characters is rejected even when trimming would bring it inside the bound. The normalised form must begin with a letter or digit and otherwise contain only letters, digits, spaces, hyphens, underscores, plus signs, and ampersands.
+
+Duplicate normalised values collapse to the first occurrence. A submitted array longer than ten entries fails body validation. An entry that fails these constraints is rejected against its own index.
+
+## Search discovery guilds
+
+<RouteHeader method="GET" path="/v1/discovery/guilds" bot />
+
+Searches the approved discovery listings and returns a [discovery search result object](#discovery-search-result-object).
+
+The caller needs no permission and no relationship to the matched guilds.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| query?<sup>1</sup> | string | The free-text query (at most 100 characters) |
+| category?<sup>2</sup> | integer | The single [discovery category](#discovery-categories) results are restricted to (0-8) |
+| language?<sup>3</sup> | string | The single [supported primary language](#supported-primary-languages) results are restricted to |
+| tag?<sup>4</sup> | string | The single [custom tag](#custom-tags) results are restricted to (at most 30 characters) |
+| sort_by?<sup>5</sup> | string | The result ordering, one of `member_count`, `online_count`, or `relevance` |
+| limit? | integer | The number of results per page (1-48, default 24) |
+| offset? | integer | The number of matches to skip (at least 0, default 0) |
+
+<sup>1</sup> An omitted query matches every approved listing, so the operation doubles as a browse of the complete directory
+
+<sup>2</sup> A value outside 0 through 8 is rejected by query validation
+
+<sup>3</sup> A language outside the [supported set](#supported-primary-languages) is rejected by query validation
+
+<sup>4</sup> Trimmed, lowercased, and whitespace-normalised like a [custom tag](#custom-tags), so equivalent spellings match and a value empty after trimming applies no filter
+
+<sup>5</sup> Only `member_count` selects a distinct ordering. `online_count`, `relevance`, and an omitted field all order by relevance. Both orderings are descending
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery search result](#discovery-search-result-object) object | Search completed, possibly with no match |
+| 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+
+<sup>1</sup> Only a bearer credential produces this code. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `discovery:search` bucket, which is not partitioned by query.
+
+## List discovery categories
+
+<RouteHeader method="GET" path="/v1/discovery/categories" bot />
+
+Returns an array of every [discovery category object](#discovery-category-object) in ascending `id` order, which is also the intended display order. The caller needs no permission.
+
+The route answers even while discovery is disabled for the instance.
+
+A client that wants a translated label supplies its own translation keyed on `id`, and MUST NOT invent a label for an ID this response does not have.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[discovery category](#discovery-category-object) object] | Categories were returned |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+<sup>1</sup> Only a bearer credential produces `ACCESS_DENIED`. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `discovery:categories` bucket.
+
+## Join discovery guild
+
+<RouteHeader method="POST" path="/v1/discovery/guilds/{guild_id}/join" />
+
+Admits the authenticated account into an approved discovery guild and returns 204 with an empty body. Emits [Guild Create](/gateway/events/#guild-create), [Guild Member Add](/gateway/events/#guild-member-add), [User Settings Update](/gateway/events/#user-settings-update), [User Guild Settings Update](/gateway/events/#user-guild-settings-update), and [Message Create](/gateway/events/#message-create) Gateway events.
+
+The caller needs no invite and no permission.
+
+:::caution[Only an approved listing admits]
+A pending, rejected, removed, or absent application fails with 400 `DISCOVERY_NOT_DISCOVERABLE`, even when the guild has the discoverable feature for another reason. A guild with invites disabled refuses admission with 403 `INVITES_DISABLED`.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the approved guild to join |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Account was admitted, or was already a member of the guild |
+| 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
+| 400 | [error response](/http-api/#error-response) | The guild has no approved application and the request returns `DISCOVERY_NOT_DISCOVERABLE` |
+| 400 | [error response](/http-api/#error-response) | The caller already holds the maximum number of guilds and the request returns `MAX_GUILDS` |
+| 400 | [error response](/http-api/#error-response) | The guild is full and the request returns `MAX_GUILD_MEMBERS` |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Caller is a bot, presents a bearer credential, or holds a revoked account and the request returns `ACCESS_DENIED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The guild has the invites-disabled feature and the request returns `INVITES_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The caller is banned from the guild directly or by address and the request returns `USER_BANNED_FROM_GUILD` or `USER_IP_BANNED_FROM_GUILD` |
+| 404 | [error response](/http-api/#error-response) | The approved application names a guild whose record no longer exists and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> An account whose phone requirement was deferred is re-evaluated against the target guild at join time, so an account that satisfies the standing check can still be refused here
+
+<sup>2</sup> Only a bot token or a bearer credential produces this code. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+:::note[A guild that never existed returns 400, not 404]
+No approved application names it, so the request fails with `DISCOVERY_NOT_DISCOVERABLE` before any guild record is read.
+:::
+
+### Side effects
+
+An account that is already a member receives the same 204 response with no Dispatch. Otherwise the operation creates the membership, records discovery as its join source, and adds the guild to the caller's settings and folder layout.
+
+The joining account's sessions receive [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is dispatched guild-wide and reaches whichever sessions [event filtering](/gateway/event-filtering/) selects. A bot session always receives it, and a passive user session in a guild with more than 250 members does not receive it until [Lazy Request](/gateway/commands/#lazy-request) marks that guild active. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join changes its restricted guild set or its folder layout, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its account default hides muted channels.
+
+Unless join notifications are suppressed or the guild stores no system channel, the operation creates a [USER_JOIN](/http-api/messages/#message-types) system message in that channel and delivers [Message Create](/gateway/events/#message-create). The new member is indexed for [Guild member search](/http-api/guild-member-search/) only in a guild whose member list has already been indexed. No invite use is consumed.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `discovery:join` bucket, which is not partitioned by guild.
+
+## Apply for discovery
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/discovery" bot />
+
+Submits the discovery listing application of a guild and returns the resulting [discovery application object](#discovery-application-object). Requires [MANAGE_GUILD](/http-api/permissions/). An automatic approval emits a [Guild Update](/gateway/events/#guild-update) Gateway event.
+
+:::note[A verified or partnered guild is approved immediately]
+Its submission time is also its review time, it gains the discoverable feature, and it appears in search. Every other application stays pending until an operator approves it through the [Admin Discovery API](/admin-api/discovery/).
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| description<sup>1</sup> | string | The listing description (10-300 characters) |
+| category_type<sup>2</sup> | integer | The [discovery category](#discovery-categories) to file the listing under (0-8) |
+| primary_language?<sup>3</sup> | string | The [supported primary language](#supported-primary-languages) code of the listing (default en-US) |
+| custom_tags?<sup>4</sup> | array[string] | The [custom tags](#custom-tags) to store (at most 10) |
+
+<sup>1</sup> Scanned against the instance content blocklists before the guild is read and before the eligibility and duplicate checks run, and a match returns 403 `CONTENT_BLOCKED`
+
+<sup>2</sup> A value outside 0 through 8, a negative value, or a non-integer value is rejected by body validation
+
+<sup>3</sup> A code outside the supported set is rejected by body validation, and an omitted field stores `en-US`
+
+<sup>4</sup> Each entry is normalised and validated as described by [custom tags](#custom-tags), and an omitted field stores an empty array
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery application](#discovery-application-object) object | Application was stored as pending, or was approved immediately |
+| 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED`, or the guild has fewer members than the instance requires and the request returns `DISCOVERY_INSUFFICIENT_MEMBERS` |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The description matches a content blocklist and the request returns `CONTENT_BLOCKED` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+| 409 | [error response](/http-api/#error-response) | The guild already holds a pending or approved application and the request returns `DISCOVERY_ALREADY_APPLIED` |
+
+<sup>1</sup> Only a bearer credential produces this code. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+### Side effects
+
+The submitted listing replaces a previous rejected or removed application.
+
+A pending application changes no guild feature, does not appear in search, and emits no Dispatch. An automatic approval adds the discoverable feature, indexes the listing so that [Search discovery guilds](#search-discovery-guilds) returns it, and delivers [Guild Update](/gateway/events/#guild-update) to every session that can see the guild.
+
+### Rate limit
+
+5 requests per minute for each authenticated user and guild ID, on the `discovery:apply::guild_id` bucket, which is shared with [Edit discovery application](#edit-discovery-application) and [Withdraw discovery application](#withdraw-discovery-application).
+
+## Edit discovery application
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/discovery" bot />
+
+Updates the stored listing of a guild and returns the updated [discovery application object](#discovery-application-object). Requires [MANAGE_GUILD](/http-api/permissions/). The operation emits no Gateway Dispatch.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+Every field is optional, and an omitted field preserves the stored value.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| description?<sup>1</sup> | string | The listing description (10-300 characters) |
+| category_type?<sup>2</sup> | integer | The [discovery category](#discovery-categories) to file the listing under (0-8) |
+| primary_language?<sup>3</sup> | string | The [supported primary language](#supported-primary-languages) code of the listing |
+| custom_tags?<sup>4</sup> | array[string] | The [custom tags](#custom-tags) to store (at most 10) |
+
+<sup>1</sup> A supplied value is scanned against the instance content blocklists before the stored application is read, and a match returns 403 `CONTENT_BLOCKED`
+
+<sup>2</sup> A value outside 0 through 8 is rejected by body validation
+
+<sup>3</sup> A supplied code replaces the stored one. A listing always stores a language, so no update clears it
+
+<sup>4</sup> A supplied array becomes the complete stored tag list, so an empty array clears every tag
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery application](#discovery-application-object) object | Listing was updated, or the submitted values already matched the stored ones |
+| 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The description matches a content blocklist and the request returns `CONTENT_BLOCKED` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | The guild exists but holds no application, and the request returns `DISCOVERY_APPLICATION_NOT_FOUND` |
+| 409 | [error response](/http-api/#error-response) | The stored application is rejected or removed and the request returns `DISCOVERY_APPLICATION_ALREADY_REVIEWED` |
+
+<sup>1</sup> Only a bearer credential produces this code. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+### Side effects
+
+The supplied fields update the listing while preserving its status, submission time, review time, and review reason. Editing an approved listing reindexes its result for [Search discovery guilds](#search-discovery-guilds). A pending listing remains absent from search. No guild feature changes.
+
+### Rate limit
+
+5 requests per minute for each authenticated user and guild ID, on the `discovery:apply::guild_id` bucket, which is shared with [Apply for discovery](#apply-for-discovery) and [Withdraw discovery application](#withdraw-discovery-application).
+
+## Withdraw discovery application
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/discovery" bot />
+
+Deletes the application record of a guild and returns 204 with an empty body. Requires [MANAGE_GUILD](/http-api/permissions/). Withdrawing an approved listing emits a [Guild Update](/gateway/events/#guild-update) Gateway event.
+
+:::caution[Withdrawal destroys the application and review history]
+The stored review time, review reason, removal time, and removal reason are deleted with the application. A guild that applies again is treated as a new applicant.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Application was deleted |
+| 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | The guild exists but holds no application, and the request returns `DISCOVERY_APPLICATION_NOT_FOUND` |
+
+<sup>1</sup> Only a bearer credential produces this code. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+### Side effects
+
+The application is permanently deleted. Withdrawing an approved listing also removes the discoverable feature, removes the listing from the discovery index, and delivers [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. Withdrawing a pending, rejected, or removed application changes no guild feature and emits no Dispatch. Existing members are unaffected.
+
+### Rate limit
+
+5 requests per minute for each authenticated user and guild ID, on the `discovery:apply::guild_id` bucket, which is shared with [Apply for discovery](#apply-for-discovery) and [Edit discovery application](#edit-discovery-application).
+
+## Get discovery status
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/discovery" bot />
+
+Returns the [discovery status object](#discovery-status-object) of one guild, including for a guild that has never applied. Requires [MANAGE_GUILD](/http-api/permissions/).
+
+The route answers even while discovery is disabled for the instance, reporting `eligible` as false in that case. It computes `eligible` from the current member count.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery status](#discovery-status-object) object | Status was returned |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> Only a bearer credential produces this code. A session, bot, or bearer token that no longer resolves to an account returns 401 `UNAUTHORIZED`
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user and guild ID, on the `discovery:status::guild_id` bucket.

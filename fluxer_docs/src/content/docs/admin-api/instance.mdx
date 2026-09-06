@@ -1,0 +1,806 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin instance
+description: Instance configuration, branding, registration control, limits, and diagnostics.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Instance configuration is everything an operator can change at runtime. It covers single sign-on, Gateway rollout, registration policy, branding and legal links, instance policy, third party integrations, media retention, and the ordered limit configuration. The [Instance](/http-api/instance/) resource serves the subset published to unauthenticated clients.
+
+Every write is a merge over the stored configuration. An omitted key leaves the stored value unchanged.
+
+Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`. The heap snapshot requires `system:heap_snapshot`.
+
+:::note[Initial setup accepts a plain session credential]
+Until setup is marked complete, [Get instance configuration](#get-instance-configuration), [Update instance configuration](#update-instance-configuration), [Create branding asset](#create-branding-asset), and [Create SMTP test](#create-smtp-test) also accept a session credential holding no Admin ACL.
+:::
+
+That relaxation applies only to a session credential, so an Admin API key and a bearer token are evaluated normally even before setup is complete. Completing setup grants the acting session the wildcard ACL. Registration URLs, pending registrations, limit configuration, and the heap snapshot always need their own ACL.
+
+:::caution[No read returns a stored secret]
+A secret is reported by a companion boolean such as `client_secret_set`. Except for the single sign-on client secret, that boolean is true whether the value is stored here or supplied by deployment configuration.
+:::
+
+## Instance configuration object
+
+The complete runtime configuration of the deployment. Every configuration operation here except the limit configuration and the heap snapshot returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sso | [SSO configuration](#sso-configuration-object) object | Single sign-on settings |
+| gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
+| registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
+| self_hosted | boolean | Whether the deployment runs in self-hosted mode |
+| app_public | [public application configuration](#public-application-configuration-object) object | Branding, legal, setup, and registration field policy |
+| policy | [instance policy](#instance-policy-object) object | Community, direct message, premium, and gating policy |
+| integrations | [instance integrations](#instance-integrations-object) object | Third party provider settings and their resolved availability |
+| media | [instance media](#instance-media-object) object | Attachment retention settings |
+
+## SSO configuration object
+
+Single sign-on settings for the deployment's OpenID Connect provider.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether single sign-on is offered |
+| enforced<sup>1</sup> | boolean | Whether single sign-on is the only accepted login method |
+| display_name | ?string | Provider name shown on the login screen |
+| issuer | ?string | OpenID Connect issuer |
+| authorization_url | ?string | Authorisation endpoint |
+| token_url | ?string | Token endpoint |
+| userinfo_url | ?string | Userinfo endpoint |
+| jwks_url | ?string | JWKS endpoint |
+| client_id | ?string | Registered client identifier |
+| client_secret_set | boolean | Whether a client secret is stored |
+| scope | ?string | Space-separated scope string |
+| allowed_domains<sup>2</sup> | array[string] | Email domains permitted to sign in (max 100 entries) |
+| auto_provision | boolean | Whether a first-time sign-in creates an account |
+| redirect_uri<sup>3</sup> | ?string | Redirect URI to register with the provider |
+
+<sup>1</sup> A deployment that has never stored the value reports the same value as `enabled`
+
+<sup>2</sup> Each entry is stored lowercased and IDNA encoded, duplicates are collapsed, and an empty entry is dropped
+
+<sup>3</sup> The configured web application endpoint followed by `/auth/sso/callback`. No operation can set it
+
+## Gateway rollout configuration object
+
+Admission and dispatch tuning for the Gateway cluster.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| session_rollout_percentage | number | Percentage of sessions admitted to the new Gateway (0-100, default 100) |
+| session_rollout_mode | string | `modulo` or `random` (default `modulo`) |
+| guild_rollout_percentage | number | Percentage of guilds admitted to the new Gateway (0-100, default 100) |
+| rpc_request_timeout_ms | integer | Deadline for one Gateway RPC (1000-60000, default 10000) |
+| max_concurrent_session_starts | integer | Session starts admitted at once (1-10000, default 512) |
+| max_concurrent_guild_starts | integer | Guild starts admitted at once (1-10000, default 256) |
+| gateway_dispatch_relay_shards | integer | Dispatch relay shard count (1-10000, default 32) |
+| gateway_dispatch_relay_max_queue | integer | Dispatch relay queue ceiling (0-1000000, default 50000) |
+| voice_e2ee_scope | string | `guild_feature_only` or `platform_wide` (default `guild_feature_only`) |
+| voice_reconciliation_v3_percentage | number | Percentage of voice states on the newer reconciliation path (0-100, default 100) |
+| voice_reconciliation_v3_interval_ms | integer | Voice reconciliation interval (500-60000, default 2000) |
+
+Every field is present on read. A deployment that has stored nothing reports the defaults above.
+
+## Registration configuration object
+
+Registration policy in force, plus every issued registration URL and every account awaiting a decision.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mode | string | [Registration mode](#registration-modes) |
+| admin_registration_urls_enabled<sup>1</sup> | boolean | Whether Admin-issued registration URLs are accepted |
+| urls<sup>2</sup> | array[[registration URL](#registration-url-object) object] | Every issued registration URL, including revoked and exhausted records |
+| pending_registrations<sup>3</sup> | array[[pending registration](#pending-registration-object) object] | Accounts awaiting a decision |
+
+<sup>1</sup> While the value is false, registration refuses every supplied registration URL code, so an issued URL stops working without being revoked
+
+<sup>2</sup> Ordered by creation time, newest first
+
+<sup>3</sup> Ordered by request time, oldest first
+
+Both collections are embedded in the configuration response. There is no separate listing operation and no pagination, so every configuration read returns every issued URL.
+
+## Registration modes
+
+| Value | Description |
+| --- | --- |
+| open | Anyone can register |
+| approval | Anyone can register, and an Admin decision is required before the account can be used |
+| closed | Public registration is closed |
+
+A valid registration URL is accepted in every mode, including `closed`, and its own `approval_required` replaces the mode for the account it creates.
+
+## Registration URL object
+
+A registration URL is an invitation an Admin can issue while public registration is closed or gated. It has its own expiry, use budget, and approval requirement.
+
+Fluxer accepts a URL while it has no revocation time, has not passed its expiry, and has a use count below `max_uses`. A URL failing any of those tests is still reported here.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | string | Identifier of the registration URL (1-128 characters) |
+| label | ?string | Admin note attached to the URL, or null when unset |
+| created_by_user_id | snowflake | Admin account that issued the URL |
+| created_at | ISO8601 timestamp | Time the URL was issued |
+| expires_at | ?ISO8601 timestamp | Time the URL stops working, or null when it never expires |
+| max_uses | ?integer | Maximum permitted uses, or null for unlimited use |
+| use_count | integer | How many registrations have completed through the URL |
+| revoked_at | ?ISO8601 timestamp | Time the URL was revoked, or null while it has not been revoked |
+| approval_required<sup>2</sup> | boolean | Whether an account created through the URL still needs an Admin decision |
+| last_used_at | ?ISO8601 timestamp | Time the URL was last used, or null when it never has been |
+| last_used_by_user_id | ?snowflake | Most recent account created through the URL, or null when there is none |
+
+<sup>1</sup> A randomly generated UUID that is also the bearer code authorising registration, so every reader of the configuration can redeem an unrevoked URL
+
+<sup>2</sup> The value replaces the instance registration mode for an account created through this URL, in both directions. A URL with the value false lets an account skip approval on an instance in `approval` mode
+
+### Example
+
+```json
+{
+  "id": "3f2a91c4-6d1e-4a77-9f0b-2c5d8e114a20",
+  "label": "Design team",
+  "created_by_user_id": "1478812292088791040",
+  "created_at": "2026-08-20T10:00:00.000Z",
+  "expires_at": null,
+  "max_uses": 25,
+  "use_count": 3,
+  "revoked_at": null,
+  "approval_required": false,
+  "last_used_at": "2026-08-29T18:22:10.000Z",
+  "last_used_by_user_id": "1500901337221828608"
+}
+```
+
+## Pending registration object
+
+One account that registered and is still waiting for an Admin decision.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | Account awaiting a decision |
+| username | string | Username chosen at registration |
+| discriminator | integer | Discriminator tag from 0 to 9999 |
+| global_name | ?string | Display name of the account, or null when unset |
+| email | ?string | Email address of the account, or null when none is stored |
+| requested_at | ISO8601 timestamp | Time the account registered |
+| registration_url_id | ?string | [Registration URL](#registration-url-object) the account signed up through (1-128 characters), or null when it registered directly |
+| client_ip<sup>1</sup> | ?string | IP address the account registered from, or null when none was recorded |
+
+<sup>1</sup> Stored at registration time and never refreshed, so it can be stale by the time an Admin reads it
+
+## Public application configuration object
+
+Branding, legal, setup and registration field policy, in the Admin form of what the [Instance](/http-api/instance/) resource publishes to clients.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| branding | [public branding](/http-api/instance/#public-branding-object) object | Product name, image URLs, and theme colour |
+| setup<sup>1</sup> | object | Has the single boolean `configured` |
+| legal | [public legal configuration](/http-api/instance/#public-legal-configuration-object) object | Terms and privacy URLs |
+| registration<sup>2</sup> | [public registration fields](/http-api/instance/#public-registration-fields-object) object | Registration field collection policy |
+
+<sup>1</sup> The [Instance](/http-api/instance/) resource publishes `admin_url` in this object as well
+
+<sup>2</sup> The object has the single boolean `collect_date_of_birth`
+
+## Instance policy object
+
+Community, direct message, premium and gating policy for the whole deployment.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| single_community_enabled | boolean | Whether the deployment presents one community |
+| single_community_guild_id | ?string | Guild used as that community, or null before one has been provisioned |
+| direct_messages_disabled | boolean | Whether direct messages are disabled |
+| direct_messages_locked<sup>1</sup> | boolean | Whether the direct message setting is locked against further change |
+| premium_mode | string | [Premium mode](#premium-modes) |
+| services | object | Operator overrides for `gif_enabled`, `youtube_enabled`, and `bluesky_enabled`. Each is nullable, and null means no override |
+| services_resolved<sup>2</sup> | object | The same three keys as concrete booleans, resolved from the override and the provider's own availability |
+| services_available<sup>3</sup> | object | Provider availability for `gif`, `youtube`, and `bluesky`, with no operator override applied |
+| deferred_phone_gate | [deferred phone gate](#deferred-phone-gate-object) object | Delayed phone verification policy |
+
+<sup>1</sup> The lock is set each time direct messages are re-enabled. [Update instance configuration](#update-instance-configuration) clears it when the policy object has `direct_messages_locked` set to false
+
+<sup>2</sup> Each key is the operator override when one is set, and otherwise the matching `services_available` value
+
+<sup>3</sup> `gif` and `youtube` report whether an API key resolves from either the stored configuration or the deployment configuration. `bluesky` reports the integration's resolved enablement
+
+## Premium modes
+
+| Value | Description |
+| --- | --- |
+| mirror | Resolve premium access from the account's own entitlement and premium flags |
+| everyone | Grant premium access to every account on a self-hosted deployment |
+
+Changing this value reloads the resolved limit configuration across every node.
+
+## Deferred phone gate object
+
+A rule that imposes phone verification in a configured window of hours after registration.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the delayed phone requirement is applied (default false) |
+| window_hours | number | Hours after registration in which the requirement can be imposed (default 6) |
+| member_threshold | number | Guild member count above which the requirement is imposed (default 50) |
+
+## Instance integrations object
+
+Every provider reports its stored settings, a `_set` boolean in place of each secret, and the availability resolved from the stored settings and the deployment configuration.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| gif | object | `klipy_api_key_set` and `effective_available` |
+| youtube | object | `api_key_set` and `effective_available` |
+| captcha | [captcha integration](#captcha-integration-object) object | CAPTCHA provider settings |
+| email | [email integration](#email-integration-object) object | Outbound email settings |
+| bluesky | [Bluesky integration](#bluesky-integration-object) object | Bluesky client settings |
+
+## Captcha integration object
+
+CAPTCHA provider settings, and the provider resolved from them.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| provider | ?string | Operator override of `hcaptcha`, `turnstile`, or `none`, or null for no override |
+| effective_provider | string | Provider actually in use, one of `hcaptcha`, `turnstile`, or `none` |
+| hcaptcha_site_key | ?string | hCaptcha site key |
+| hcaptcha_secret_key_set | boolean | Whether an hCaptcha secret is stored or supplied by deployment configuration |
+| turnstile_site_key | ?string | Turnstile site key |
+| turnstile_secret_key_set | boolean | Whether a Turnstile secret is stored or supplied by deployment configuration |
+| effective_enabled | boolean | Whether CAPTCHA verification is in force |
+
+## Email integration object
+
+Outbound email settings, and the provider resolved from them.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | ?boolean | Operator override, or null for no override |
+| effective_enabled | boolean | Whether outbound email is in force |
+| provider | ?string | Operator override of `smtp` or `none`, or null for no override |
+| effective_provider | string | Provider actually in use, either `smtp` or `none` |
+| from_email | ?string | Envelope sender address |
+| from_name | ?string | Envelope sender name |
+| smtp<sup>1</sup> | object | `host`, `port`, `username`, `secure`, and `password_set` |
+| disable_new_ip_authorization | boolean | Whether new-IP authorisation email is suppressed by the stored setting |
+| effective_disable_new_ip_authorization<sup>2</sup> | boolean | Whether it is suppressed once outbound email state is taken into account |
+
+<sup>1</sup> `host`, `username`, and `secure` are nullable, `port` is a nullable integer from 1 to 65535, and `password_set` is a plain boolean
+
+<sup>2</sup> True whenever the stored setting is true or outbound email is not in force
+
+## Bluesky integration object
+
+Client identity the deployment presents to Bluesky, and the number of signing keys it stores.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | ?boolean | Operator override, or null for no override |
+| effective_enabled | boolean | Whether the integration is in force |
+| client_name | ?string | Client name presented to Bluesky |
+| client_uri | ?string | Client URI |
+| logo_uri | ?string | Client logo URI |
+| tos_uri | ?string | Client terms URI |
+| policy_uri | ?string | Client policy URI |
+| key_count | integer | Number of stored signing keys |
+
+## Instance media object
+
+Attachment retention overrides the operator has set, and the values in force.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| attachment_decay<sup>1</sup> | object | Nullable operator overrides plus an `effective` object of the same keys with concrete values |
+
+<sup>1</sup> The override keys are `enabled`, `min_size_mb`, `max_size_mb`, `max_eligible_size_mb`, `min_lifetime_days`, `max_lifetime_days`, `curve`, `renew_threshold_days`, and `renew_window_days`. Each is null when the deployment default applies, and `effective` reports the value in force. `enabled` is a boolean, `curve` is a number from 0 to 1, the `_mb` keys are positive numbers, and the `_days` keys are positive integers
+
+## Branding asset kinds
+
+| Value | Description |
+| --- | --- |
+| icon | Writes `branding.icon_url` |
+| symbol | Writes `branding.symbol_url` |
+| logo | Writes `branding.logo_url` |
+| wordmark | Writes `branding.wordmark_url` |
+| favicon | Writes `branding.favicon_url` |
+
+## SMTP test result object
+
+Whether one [Create SMTP test](#create-smtp-test) connection attempt succeeded, and the failure text when it did not.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ok | boolean | Whether the server accepted the connection and credentials |
+| error<sup>1</sup> | ?string | Failure text, or null when the test succeeded |
+
+<sup>1</sup> The message reported by the SMTP client, so it can repeat text supplied by the remote server
+
+### Example
+
+```json
+{
+  "ok": false,
+  "error": "Invalid login: 535 5.7.8 Authentication credentials invalid"
+}
+```
+
+## Registration URL creation object
+
+One issued registration URL together with the link an Admin hands out.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| registration_url | [registration URL](#registration-url-object) object | Record that was issued |
+| code<sup>1</sup> | string | Bearer code that authorises registration (1-256 characters) |
+| url<sup>2</sup> | string | Complete registration link built from the configured web application endpoint |
+
+<sup>1</sup> Equal to `registration_url.id`, so it can be recovered from any later configuration read
+
+<sup>2</sup> The configured web application endpoint followed by `/register?registration_url=` and the percent-encoded code
+
+## Limit configuration response object
+
+The stored limit configuration together with the deployment defaults and the metadata an editor needs.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit_config | [limit configuration](#limit-configuration-object) object | Stored configuration in force |
+| limit_config_json | string | The same document rendered as JSON indented by two spaces, for an editor to display |
+| self_hosted | boolean | Whether the deployment runs in self-hosted mode |
+| defaults<sup>1</sup> | map[string, map[string, integer]] | Deployment default limits, keyed by rule identifier and then by limit key |
+| metadata | map[string, [limit key metadata](#limit-key-metadata-object) object] | Presentation metadata for each limit key |
+| categories<sup>2</sup> | map[string, string] | Display label for each metadata category |
+| limit_keys | array[string] | Every [limit key](/http-api/instance/#limit-keys) in registry order |
+| bounds?<sup>3</sup> | map[string, object] | Optional `min` and `max` pair for each limit key |
+
+<sup>1</sup> Built with the premium mode treated as `everyone`, so on a self-hosted deployment whose premium mode is `mirror` it omits the `premium` rule that is applied
+
+<sup>2</sup> The keys are `messages`, `guilds`, `channels`, `expressions`, `files`, `social`, and `features`
+
+<sup>3</sup> Absent from every response
+
+## Limit configuration object
+
+Trait definitions and the ordered rules that decide each [limit key](/http-api/instance/#limit-keys).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| traitDefinitions | array[string] | Trait names a rule filter can match |
+| rules | array[[limit rule](#limit-rule-object) object] | Ordered limit rules |
+
+The two field names are camelCase, unlike the rest of the Admin API.
+
+## Limit rule object
+
+One rule in that ordered set, with the filters that scope it and the limits it sets.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | Rule identifier (at least 1 character) |
+| filters? | object | Optional `traits` and `guildFeatures` string arrays that scope the rule |
+| limits | map[string, integer] | Non-negative value for each [limit key](/http-api/instance/#limit-keys) the rule sets |
+| modifiedFields?<sup>1</sup> | array[string] | Limit keys whose value differs from the deployment default |
+
+<sup>1</sup> A rule whose identifier matches no default rule and no rule named `default` reports every key it sets. A rule with no differing key omits the field
+
+## Limit key metadata object
+
+Presentation metadata for one [limit key](/http-api/instance/#limit-keys), which an editor uses to render its control.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key | string | The [limit key](/http-api/instance/#limit-keys) |
+| label | string | Display label |
+| description | string | Description of what the limit bounds |
+| category | string | Category key, resolved against `categories` |
+| scope | string | `user`, `guild`, or `both` |
+| isToggle | boolean | Whether the key is a feature gate whose value is 0 or 1 |
+| unit? | string | `bytes` or `count` |
+| min? | number | Suggested minimum for an editor |
+| max? | number | Suggested maximum for an editor |
+
+## Get instance configuration
+
+<RouteHeader method="GET" path="/v1/admin/instance/config" />
+
+Returns the [instance configuration](#instance-configuration-object) object. Requires `instance:config:view`, or a session credential until setup is marked complete.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [instance configuration](#instance-configuration-object) object | Configuration was returned |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Update instance configuration
+
+<RouteHeader method="PATCH" path="/v1/admin/instance/config" />
+
+Applies a merge patch to the stored configuration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
+
+:::note[Every section is optional and merged independently]
+The body has one optional object for each section, and Fluxer leaves an absent section alone. Within a section, an absent key keeps its stored value, and a key sent as null clears the stored value where the schema permits null.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sso?<sup>1</sup> | object | Every [SSO configuration](#sso-configuration-object) field except `client_secret_set` and `redirect_uri`, plus `client_secret` |
+| gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
+| registration? | object | `mode` and `admin_registration_urls_enabled` |
+| app_public?<sup>2</sup> | object | `branding`, `setup`, `legal`, and `registration` sub-objects, each merged field by field |
+| integrations?<sup>3</sup> | object | `gif`, `youtube`, `captcha`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
+| media? | object | `attachment_decay` overrides, each nullable to restore the deployment default |
+| policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium, and gating policy |
+
+<sup>1</sup> The supplied fields are merged over the stored configuration and the result is validated as a whole. Every supplied endpoint URL uses `https`, has no credentials and no fragment, and resolves to a publicly routable address, otherwise the request returns 400 `INVALID_FORM_BODY` with `INVALID_URL_FORMAT` or `URL_NOT_PUBLICLY_ROUTABLE`
+
+<sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. Every string is trimmed before it is stored
+
+<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
+
+:::note[Single sign-on URL validation is conditional]
+Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration that is both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source. `issuer` stands in for the two endpoints and the claims source.
+:::
+
+#### Instance policy update structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| single_community_enabled?<sup>1</sup> | boolean | Whether the deployment presents one community |
+| single_community_name?<sup>1</sup> | string | Name used only when the community has to be created (1-100 characters) |
+| direct_messages_disabled?<sup>2</sup> | boolean | Whether direct messages are disabled |
+| direct_messages_locked?<sup>2</sup> | boolean | Whether the direct message setting stays locked |
+| premium_mode? | string | [Premium mode](#premium-modes) |
+| services? | object | Nullable `gif_enabled`, `youtube_enabled`, and `bluesky_enabled` overrides |
+| deferred_phone_gate?<sup>3</sup> | object | `enabled`, `window_hours`, and `member_threshold` |
+
+<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists, and otherwise provisions a community using `single_community_name` or the configured product name. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
+
+<sup>2</sup> The setting can be changed only while `direct_messages_locked` is false, and a change attempted after the lock is set fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` unless the same request sets `direct_messages_locked` to false. Re-enabling direct messages sets the lock again
+
+<sup>3</sup> `window_hours` is a positive number up to 8760 and `member_threshold` is a positive integer up to 1000000. Each key is applied on its own
+
+`direct_messages_locked` accepts only false, and a body that sets it to true fails with 400 `INVALID_FORM_BODY`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [instance configuration](#instance-configuration-object) object | The patch was applied |
+| 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
+
+:::caution[Sections are applied one after another]
+The order is `gateway_rollout`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+:::
+
+### Side effects
+
+Fluxer validates a Gateway rollout change against the complete stored configuration and then publishes it to the Gateway cluster. A premium mode change reloads the resolved limit configuration on every node. Enabling single community mode creates the community when none is designated, and the acting Admin becomes its owner.
+
+Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
+
+The operation records no Admin audit entry of its own.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Create branding asset
+
+<RouteHeader method="POST" path="/v1/admin/instance/config/branding-assets" />
+
+Uploads an image, stores its [Media Proxy](/media-proxy/overview/) URL in the selected branding slot, and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| kind | string | [Branding asset kind](#branding-asset-kinds) naming the slot to write |
+| image?<sup>1</sup> <sup>2</sup> | ?string | Base64 image or data URI (max 16000000 characters) |
+
+<sup>1</sup> Omitting the key and sending null both clear the slot
+
+<sup>2</sup> The image decodes to no more than the resolved `avatar_max_size` limit, which defaults to 10485760 bytes, and is a PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, or SVG. An animated AVIF is refused
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [instance configuration](#instance-configuration-object) object | The slot was written or cleared |
+| 400<sup>1</sup> | [error response](/admin-api/#error-response) | The image cannot be decoded, exceeds the size ceiling, or is not an accepted format |
+
+<sup>1</sup> Returned as 400 `INVALID_FORM_BODY` with `IMAGE_SIZE_EXCEEDS_LIMIT`, `INVALID_IMAGE_FORMAT`, or `FAILED_TO_UPLOAD_IMAGE` against `image`
+
+### Side effects
+
+The stored image is served through the Media Proxy. Non-JPEG images are re-encoded to strip metadata and JPEG images are re-encoded at quality 100. The previously referenced image is not deleted.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Create SMTP test
+
+<RouteHeader method="POST" path="/v1/admin/instance/config/smtp-tests" />
+
+Opens a connection to the supplied SMTP server, authenticates against it, and reports the outcome as an [SMTP test result](#smtp-test-result-object) object without storing anything. Requires `instance:config:update`, or a session credential until setup is marked complete.
+
+:::note[A rejected credential is still a successful test]
+A test that runs to completion answers 200 whether or not the server accepted the connection. The `ok` field is the verdict and `error` is the failure text.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| host | string | SMTP host to connect to (1-255 characters after trimming) |
+| port | integer | SMTP port to connect to (1-65535) |
+| username | string | SMTP username to authenticate with (1-320 characters after trimming) |
+| password | string | SMTP password to authenticate with (1-4096 characters after trimming) |
+| secure? | boolean | Whether to connect with implicit TLS (default true) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [SMTP test result](#smtp-test-result-object) object | The test ran to completion, including a rejected credential |
+
+### Side effects
+
+No configuration is written and the supplied credentials are discarded when the request completes. The connection, greeting, and socket each have a ten-second deadline.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Create registration URL
+
+<RouteHeader method="POST" path="/v1/admin/instance/registration-urls" />
+
+Issues a registration URL an Admin can hand out while public registration is closed or gated, and returns a [registration URL creation](#registration-url-creation-object) object. Requires `instance:config:update`.
+
+:::caution[The code is the identifier]
+The returned `code` is the same value as `registration_url.id`, and every [Get instance configuration](#get-instance-configuration) response has that identifier. Treat `instance:config:view` as a registration capability on a gated deployment.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| label?<sup>1</sup> | ?string | Admin note to attach to the URL (1-120 characters), or null for none |
+| expires_at? | ?ISO8601 timestamp | Time the URL stops working, or null for a URL that never expires |
+| max_uses? | ?integer | Maximum permitted uses (1-1000000), or null for unlimited use |
+| approval_required? | boolean | Whether an account created through the URL still needs an Admin decision (default false) |
+
+<sup>1</sup> The label is trimmed before it is length checked, so a whitespace-only label fails body validation. Omit the key or send null for a URL with no label
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [registration URL creation](#registration-url-creation-object) object | The URL was issued |
+
+### Side effects
+
+A newly issued URL has a use count of zero, no revocation time, and the acting Admin as its issuer. It is the first entry of `registration.urls` on the next configuration read. The operation records no Admin audit entry and changes no account.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Revoke registration URL
+
+<RouteHeader method="DELETE" path="/v1/admin/instance/registration-urls/{registration_url_id}" />
+
+Revokes one registration URL so it can no longer be redeemed and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| registration_url_id | string | Identifier of the registration URL to revoke (1-128 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | [instance configuration](#instance-configuration-object) object | The revocation was applied |
+
+<sup>1</sup> An identifier naming no registration URL answers 200 with the configuration unchanged. Revoking an already revoked URL keeps the original revocation time
+
+:::caution[Revocation stops only later registrations]
+An account that registered through the URL keeps its access, membership, and decision. A revocation cannot be reversed.
+:::
+
+### Side effects
+
+The URL records its revocation time and stays in the configuration response afterwards. The operation records no Admin audit entry and changes no account.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Update pending registration
+
+<RouteHeader method="PATCH" path="/v1/admin/instance/pending-registrations/{user_id}" auditReason />
+
+Approves or rejects one pending registration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | Account awaiting a decision |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | Either `approved` or `rejected` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | [instance configuration](#instance-configuration-object) object | The decision was applied |
+
+<sup>1</sup> An account that no longer exists still answers 200. The pending registration is removed, no trait is written, and no audit entry is recorded
+
+:::caution[A decision is final]
+Both decisions remove the pending registration, so the same account cannot be decided again here. Rejecting an account writes the `registration_rejected` trait. Reversing the decision means clearing that trait through [Set user traits](/admin-api/users/#set-user-traits).
+:::
+
+### Side effects
+
+Approval removes both the `registration_pending_approval` trait and the `registration_rejected` trait, and joins the account to the single community when that mode is enabled and a guild is designated. A join that fails is logged and does not fail the request. Rejection removes the `registration_pending_approval` trait and adds the `registration_rejected` trait, which blocks login and every later session creation. A session issued before the decision stays valid. The pending registration is removed either way.
+
+One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account and records the audit reason. It has no metadata.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Get limit configuration
+
+<RouteHeader method="GET" path="/v1/admin/limit-config" />
+
+Returns the [limit configuration response](#limit-configuration-response-object) object. Requires `instance:limit_config:view`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [limit configuration response](#limit-configuration-response-object) object | The configuration was returned |
+
+### Side effects
+
+The response reflects the configuration in force on the node that serves the request, so two nodes can report different values while a change propagates.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Replace limit configuration
+
+<RouteHeader method="PUT" path="/v1/admin/limit-config" />
+
+Replaces the stored limit configuration with the supplied document and returns the resulting [limit configuration response](#limit-configuration-response-object) object. Requires `instance:limit_config:update`.
+
+:::caution[An absent custom rule is removed]
+A rule whose identifier matches a deployment default rule survives. Fluxer re-merges the write with the current defaults immediately.
+:::
+
+:::note[The stored document can differ from the body]
+The re-merge restores every default rule and back-fills every default limit key the submitted rule did not override. Read the response to see what was stored.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit_config<sup>1</sup> | [limit configuration](#limit-configuration-object) object | Complete replacement document |
+
+<sup>1</sup> `traitDefinitions` can be omitted and is then stored as an empty array. Every key inside a rule's `limits` map is a known [limit key](/http-api/instance/#limit-keys) and every value is a non-negative safe integer, otherwise the body fails validation. `modifiedFields` is not accepted on input and is recomputed
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [limit configuration response](#limit-configuration-response-object) object | The configuration was replaced |
+| 400 | [error response](/admin-api/#error-response) | Body validation fails, including an unknown limit key, returned as `INVALID_FORM_BODY` |
+
+### Side effects
+
+On a self-hosted deployment whose premium mode is `everyone`, Fluxer drops the `premium` trait definition and every rule filtered on the `premium` trait before storing the document.
+
+Each rule's `modifiedFields` is then recomputed and the merged document replaces the stored one. Every API node adopts the new configuration. Clients observe it through the published [limit configuration](/http-api/instance/#limit-configuration-object).
+
+The operation records no Admin audit entry.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Create heap snapshot
+
+<RouteHeader method="POST" path="/v1/admin/system/heap-snapshots" />
+
+Writes a V8 heap snapshot of the API process that serves the request and returns the file. Requires `system:heap_snapshot`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | heap snapshot file | The snapshot was written |
+
+<sup>1</sup> The body is the raw `.heapsnapshot` file streamed as an attachment. The filename is `heap-` followed by the Unix time in milliseconds at which the snapshot was taken
+
+The 200 has `Content-Type: application/octet-stream`, `Content-Disposition: attachment`, and `Content-Length`.
+
+A client MUST NOT decode the body as JSON. The published OpenAPI document declares a JSON object of `success`, `filename`, and `size_bytes` here, so a generated client has to be overridden.
+
+:::danger[A snapshot stalls the process and exposes memory]
+Writing a snapshot blocks the process that serves the request for as long as the dump takes. The file contains whatever that process held in memory, including message content, tokens, and personal data.
+:::
+
+:::caution[Only the serving node is captured]
+A deployment behind a load balancer needs several attempts to reach a particular node, and the file grows with that process heap.
+:::
+
+### Side effects
+
+The snapshot is written to a temporary file on the serving node, streamed to the caller, and deleted once the stream closes. No configuration is changed and no Admin audit entry is recorded.
+
+### Rate limit
+
+2 requests per five minutes for each authenticated user, on the `admin:system:heap_snapshot` bucket.

@@ -1,0 +1,209 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin applications
+description: Application inspection, the owner and guild selectors, and ownership transfer.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An application is an OAuth2 client, and it can own one bot account. These routes report its ownership, bot state, redirect configuration, and non-secret credential metadata. [Transfer application ownership](#transfer-application-ownership) is the only one that writes.
+
+The records are the same ones the public [Applications](/http-api/applications/) resource serves. Creation, deletion, renaming, bot provisioning, redirect URI editing, and credential rotation stay there.
+
+:::note[Admin operations report credential metadata only]
+The Admin application object reports whether a client secret or bot token hash is stored, when it was provisioned, and the non-secret bot token preview.
+:::
+
+## Admin application object
+
+The Admin view of one application. An application and its bot account share one identifier, so an application that has a bot reports the same [snowflake](/snowflakes/) in `id` and `bot_user_id`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+| name | string | The display name (1-256 characters) |
+| owner_user_id | snowflake | The ID of the owning account |
+| owner_username<sup>1</sup> | ?string | The username of the owner |
+| owner_global_name<sup>1</sup> | ?string | The display name of the owner, or null when unset |
+| owner_discriminator<sup>1</sup> | ?string | The discriminator of the owner, as four decimal digits with leading zeroes |
+| bot_user_id | ?snowflake | The ID of the bot account, or null when the application has no bot |
+| bot_username<sup>2</sup> | ?string | The username of the bot |
+| bot_global_name<sup>2</sup> | ?string | The display name of the bot, or null when unset |
+| bot_discriminator<sup>2</sup> | ?string | The discriminator of the bot, as four decimal digits with leading zeroes |
+| bot_is_public | boolean | Whether an account other than the owner can add the bot |
+| bot_require_code_grant | boolean | Whether adding the bot requires a completed authorisation code grant |
+| oauth2_redirect_uris<sup>3</sup> | array[string] | The registered OAuth2 redirect URIs (at most 10 entries) |
+| has_client_secret | boolean | Whether a client secret hash is stored |
+| has_bot_token | boolean | Whether a bot token hash is stored |
+| bot_token_preview | ?string | The non-secret trailing preview of the bot token, or null when none is stored |
+| bot_token_created_at | ?ISO8601 timestamp | When the bot token was provisioned, or null when none is stored |
+| client_secret_created_at<sup>4</sup> | ?ISO8601 timestamp | When the client secret was provisioned |
+| version<sup>5</sup> | integer | The optimistic locking version of the stored record (0-2147483647) |
+
+<sup>1</sup> Null when the owner account can no longer be read
+
+<sup>2</sup> Null when the application has no bot, and also null when the bot account can no longer be read
+
+<sup>3</sup> The stored set arrives in no guaranteed order
+
+<sup>4</sup> Null when no client secret is stored, and null for the [built-in Admin application](#the-built-in-admin-application)
+
+<sup>5</sup> Incremented by every stored change, including one made through the public [Applications](/http-api/applications/) resource
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "name": "Metronome",
+  "owner_user_id": "1483920011884392448",
+  "owner_username": "wren",
+  "owner_global_name": "Wren",
+  "owner_discriminator": "0042",
+  "bot_user_id": "1501314428688998182",
+  "bot_username": "metronome",
+  "bot_global_name": null,
+  "bot_discriminator": "0001",
+  "bot_is_public": true,
+  "bot_require_code_grant": false,
+  "oauth2_redirect_uris": ["https://example.com/oauth2/callback"],
+  "has_client_secret": true,
+  "has_bot_token": true,
+  "bot_token_preview": "kQ9x",
+  "bot_token_created_at": "2026-02-11T09:14:02.117Z",
+  "client_secret_created_at": "2026-02-11T09:13:58.004Z",
+  "version": 7
+}
+```
+
+## The built-in Admin application
+
+Fluxer serves one synthetic application for its own Admin OAuth2 client. Its ID is the fixed constant `1234567890123456789`, its `name` is `Fluxer Admin`, its `owner_user_id` is the system account `0`, and its only redirect URI is the configured Admin endpoint followed by `/oauth2_callback`.
+
+It has no bot, so every `bot_` field is null or false and `has_bot_token` is false. `has_client_secret` is true on every response that has it, `client_secret_created_at` is null, and `version` is always 1.
+
+:::caution[The built-in application is read-only]
+[Get application](#get-application) resolves it only while a client secret is configured for the deployment, and answers a null `application` otherwise. [List applications](#list-applications) never returns it. [Transfer application ownership](#transfer-application-ownership) answers 403 `FORBIDDEN`.
+:::
+
+## List applications
+
+<RouteHeader method="GET" path="/v1/admin/applications" />
+
+Returns the [Admin application](#admin-application-object) objects selected by exactly one of `owner_id` and `guild_id`. Requires `application:lookup` or `application:list:by_owner`.
+
+The route returns the complete selection in one response. There is no cursor, no limit, and no name search.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| owner_id?<sup>1</sup> <sup>2</sup> | snowflake | Select the applications owned by this account |
+| guild_id?<sup>1</sup> <sup>3</sup> | snowflake | Select the applications whose bot account is a member of this guild |
+
+<sup>1</sup> Supplying both fails with 400 `INVALID_FORM_BODY` reported against `guild_id`, and supplying neither fails against `owner_id`
+
+<sup>2</sup> An `owner_id` naming no account fails with 404 `UNKNOWN_USER`
+
+<sup>3</sup> A `guild_id` naming no guild fails with 404 `UNKNOWN_GUILD`
+
+`owner_id` returns every application the account owns, with or without a bot. `guild_id` returns an application only while its own bot account is a member of that guild.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| applications<sup>1</sup> | array[[Admin application](#admin-application-object) object] | The selected applications |
+
+<sup>1</sup> No order is guaranteed, and the array is empty when the account owns no application or the guild has no bot member
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The selected applications were returned |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER` when `owner_id` names no account, or `UNKNOWN_GUILD` when `guild_id` names no guild |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Get application
+
+<RouteHeader method="GET" path="/v1/admin/applications/{application_id}" />
+
+Returns one [Admin application](#admin-application-object) object wrapped in a single-member object. Requires `application:lookup`.
+
+Fluxer answers 200 with `application` set to null when the ID names no application.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application_id | snowflake | The ID of the application |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application<sup>1</sup> | ?[Admin application](#admin-application-object) object | The resolved application, or null when no application has this ID |
+
+<sup>1</sup> Also null for the [built-in Admin application](#the-built-in-admin-application) on a deployment with no configured Admin client secret
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The lookup completed, whether or not it resolved an application |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Transfer application ownership
+
+<RouteHeader method="PATCH" path="/v1/admin/applications/{application_id}" auditReason />
+
+Moves the application to another account and returns the stored [Admin application](#admin-application-object) object. Requires `application:transfer_ownership`.
+
+Ownership is the only field this operation writes. The new owner need not be related to the application, and Fluxer does not notify the previous owner.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application_id | snowflake | The ID of the application |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| new_owner_id<sup>1</sup> | snowflake | The account to transfer the application to |
+
+<sup>1</sup> Fluxer resolves the application before the account, so an unknown application fails with 404 `UNKNOWN_APPLICATION` and an unknown replacement owner fails with 404 `UNKNOWN_USER`
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application | [Admin application](#admin-application-object) object | The application as stored after the transfer |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Ownership was transferred |
+| 403 | [error response](/admin-api/#error-response) | `FORBIDDEN` because the target is the [built-in Admin application](#the-built-in-admin-application) |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_APPLICATION` for the application, or `UNKNOWN_USER` for the replacement owner |
+
+### Side effects
+
+Fluxer rewrites the record with the new `owner_user_id` and increments its `version`. The application moves in both the `owner_id` selector of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). Fluxer emits no Gateway Dispatch.
+
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the target type `application`, the target ID equal to the application ID, and the action `transfer_ownership`. Its metadata is `old_owner_id` and `new_owner_id`. Neither owner is resolved into `related_users`.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.

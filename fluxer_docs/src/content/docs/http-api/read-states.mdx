@@ -1,0 +1,191 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Read states
+description: Current account message read states and the batch acknowledgement operations.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A read state records how far the current account has read in one channel. It holds the highest message read through, the mention count, and the last acknowledged pin timestamp. The [Messages resource](/http-api/messages/) defines single-channel acknowledgement, read state deletion, and pin acknowledgement.
+
+Both routes on this page are user-only. Fluxer rejects a bot or OAuth2 credential with 403 `ACCESS_DENIED`.
+
+## Read state object
+
+An account holds at most one read state per channel, keyed by the account and the channel.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the channel the read state belongs to |
+| mention_count<sup>1</sup> | integer | The number of mentions stored for the channel (0-2,147,483,647) |
+| last_message_id | ?snowflake | The highest message ID the account has read through, or null when the entry stores no watermark |
+| last_pin_timestamp<sup>2</sup> | ?ISO8601 timestamp | The time of the last acknowledged pin, or null when pins have never been acknowledged |
+| version?<sup>3</sup> | string | The read state version as a canonical decimal unsigned 64-bit string |
+
+<sup>1</sup> The value the last acknowledgement stored, incremented by the server as new mentions arrive. It is never recomputed from message history
+
+<sup>2</sup> Neither operation on this page writes it, so an acknowledged pin timestamp survives every message acknowledgement
+
+<sup>3</sup> Present on every entry the API returns. The value is always `0`
+
+An entry is created by an acknowledgement, by [Acknowledge pins](/http-api/messages/#acknowledge-pins), and by the server when a mention arrives in a channel the account has no entry for. A pin acknowledgement writes only `last_pin_timestamp`, and the entry it creates reports `last_message_id` as null. An entry the server creates for a mention starts from the channel's own baseline watermark, which is the snowflake of the channel ID itself, so every message already in the channel stays unread.
+
+[Clear channel read state](/http-api/messages/#clear-channel-read-state) deletes the whole entry, so it drops the watermark and the mention count along with the pin timestamp.
+
+:::note[The aggregate is delivered through the Gateway]
+There is no HTTP read for the read state aggregate. The complete entry array arrives once as `read_states` in the main Gateway [Ready](/gateway/events/#ready) payload.
+:::
+
+Only an acknowledgement produces a later Dispatch. A message acknowledgement emits [Message ACK](/gateway/events/#message-ack), and a pin acknowledgement emits [Channel Pins ACK](/gateway/events/#channel-pins-ack). A server-side mention increment and [Clear channel read state](/http-api/messages/#clear-channel-read-state) both change the stored entry and emit nothing, so the Dispatch stream is not a complete change feed. A client that needs the authoritative aggregate reconciles from a new Ready, or from the entries [Acknowledge read states](#acknowledge-read-states) returns.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "mention_count": 3,
+  "last_message_id": "1501320000000000000",
+  "last_pin_timestamp": null,
+  "version": "0"
+}
+```
+
+## Read state acknowledgement object
+
+One entry in the body of [Acknowledge read states](#acknowledge-read-states). It names the channel whose entry changes, the message the account has read through, and the mention count that survives the read.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the channel whose read watermark changes |
+| message_id<sup>2</sup> | snowflake | The ID of the message watermark to acknowledge |
+| mention_count?<sup>3</sup> | integer | The number of mentions to store for the channel (0-2,147,483,647, default `0`) |
+| manual?<sup>4</sup> | boolean | Whether the stored watermark becomes exactly `message_id` |
+
+<sup>1</sup> Fluxer never resolves the channel. It stores the value as the read state key with no check that the channel exists or that the account can see it
+
+<sup>2</sup> Fluxer does not resolve the message either. An entry equal to the stored watermark still produces a write, so it resets the stored mention count
+
+<sup>3</sup> Fluxer stores the submitted value verbatim, so an acknowledgement leaving mentions above the watermark must send how many remain
+
+<sup>4</sup> With `manual` false an entry strictly below the stored watermark is discarded whole
+
+:::caution[A manual acknowledgement can rewind the watermark]
+A lower `message_id` marks later messages unread again. Fluxer replaces the stored mention count at the same time, so a rewinding acknowledgement that omits `mention_count` clears it.
+:::
+
+### Example
+
+```json
+{
+  "channel_id": "1501314428688998182",
+  "message_id": "1501320000000000000",
+  "mention_count": 0
+}
+```
+
+## Bulk read state acknowledgement object
+
+One entry in the body of [Mark channels as read](#mark-channels-as-read). It names the channel and the message to read through.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The ID of the channel whose read watermark changes |
+| message_id<sup>1</sup> | snowflake | The ID of the message watermark to acknowledge |
+
+<sup>1</sup> Neither identifier is resolved, so an entry may name a channel or a message that does not exist
+
+## Acknowledge read states
+
+<RouteHeader method="POST" path="/v1/read-states/ack" />
+
+Applies 1 through 100 [read state acknowledgement objects](#read-state-acknowledgement-object) to the current account's aggregate and returns the resulting [read state](#read-state-object) entries. User-only. Emits one [Message ACK](/gateway/events/#message-ack) Gateway event to the caller's own sessions for each submitted entry.
+
+The route resolves no channel and evaluates no permission. The write mutates only the caller's own read states.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| read_states<sup>1</sup> | array[[read state acknowledgement](#read-state-acknowledgement-object) object] | The acknowledgements to apply (1-100) |
+
+<sup>1</sup> A list of fewer than 1 or more than 100 entries fails with 400 `INVALID_FORM_BODY`
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| read_states<sup>1</sup> | array[[read state](#read-state-object) object] | The authoritative entries after the write |
+
+<sup>1</sup> One entry for each submitted acknowledgement, in the submitted order. An entry whose watermark did not move reports the values already stored
+
+:::note[A plain list takes the batched path]
+When no entry sets `manual` and no entry has a `mention_count` above `0`, Fluxer applies the whole list through the batched path [Mark channels as read](#mark-channels-as-read) uses.
+:::
+
+A list with one manual entry or one positive mention count takes the entry-by-entry path in submitted order, and a later entry naming the same channel is evaluated against the earlier entry's result.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Acknowledgements were processed and the resulting entries returned |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+### Side effects
+
+Each entry updates its channel watermark according to the entry's `manual` value and stores the submitted mention count. The write invalidates the account's unread badge total.
+
+One [Message ACK](/gateway/events/#message-ack) goes to the caller's own sessions for every submitted entry, including one that leaves the watermark and mention count unchanged. The Dispatch has the resulting `message_id`, `mention_count`, and `version`, so a non-manual entry below the stored watermark reports the higher stored value. The entry-by-entry path also has the submitted `manual` value, and the batched path has no `manual` at all.
+
+Fluxer logs a failed Dispatch or a failed unread badge invalidation on either path and does not fail the request. A client that misses a Dispatch reconciles from a later read.
+
+Every entry also clears delivered notifications for its channel through the submitted `message_id`, so a discarded or rewound entry clears a different range than the entry stores.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `read_state:ack_bulk` bucket, shared with [Mark channels as read](#mark-channels-as-read).
+
+## Mark channels as read
+
+<RouteHeader method="POST" path="/v1/read-states/ack-bulk" />
+
+Applies 1 through 100 [bulk read state acknowledgement objects](#bulk-read-state-acknowledgement-object) and returns 204 with an empty body. User-only. Emits one [Message ACK](/gateway/events/#message-ack) Gateway event to the caller's own sessions for each submitted entry.
+
+Every entry advances its channel watermark monotonically and sets the channel's stored mention count to `0`. An entry whose `message_id` is strictly below the stored watermark is skipped and leaves the stored entry untouched. Like [Acknowledge read states](#acknowledge-read-states), the operation resolves no channel and evaluates no permission.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| read_states<sup>1</sup> | array[[bulk read state acknowledgement](#bulk-read-state-acknowledgement-object) object] | The channel and message pairs to acknowledge (1-100) |
+
+<sup>1</sup> Two entries naming the same channel are both evaluated against the value stored before the request
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Acknowledgements were processed |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+### Side effects
+
+An entry equal to the stored watermark still produces a write, and two entries naming the same channel produce two writes. The unread badge total is invalidated once for the whole request.
+
+One [Message ACK](/gateway/events/#message-ack) goes to the caller's own sessions for every submitted entry, including a skipped one. Every entry clears delivered notifications for its channel through the submitted `message_id`. The Dispatch has no `manual`, and a skipped entry reports the stored watermark and mention count.
+
+Fluxer logs a failed Dispatch or a failed unread badge invalidation and does not fail the request, so a client tolerates a missing Dispatch for an entry the write applied.
+
+:::note[A failed request can leave some entries written]
+A request that fails partway leaves the entries already written in place. A retry is safe, because a repeated monotonic acknowledgement is idempotent.
+:::
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `read_state:ack_bulk` bucket, shared with [Acknowledge read states](#acknowledge-read-states).

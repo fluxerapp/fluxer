@@ -1,0 +1,363 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Phone verification
+description: Proving control of a phone number over outbound SMS or an inbound challenge, and setting a deferred requirement aside.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Phone verification proves that the current account controls a phone number. The account either receives a one-time code over outbound SMS, or texts an issued challenge code to a Fluxer number. Success sets the account's verified phone state, which the phone [required actions](/http-api/users/#required-actions) and the `VERY_HIGH` guild [verification level](/http-api/guilds/#verification-levels) consult.
+
+Every route here needs a non-bot user session, and each one admits a session with suspicious account state.
+
+## Eligibility
+
+[Send phone verification](#send-phone-verification) and [Verify phone code](#verify-phone-code) admit only an account that satisfies at least one of four conditions.
+
+- The account already holds a verified phone.
+- A TOTP [authenticator](/http-api/users/#authenticator-types) is enrolled on the account.
+- The stored suspicious activity bitfield is non-zero.
+- The account belongs to at least one guild whose [verification level](/http-api/guilds/#verification-levels) is `VERY_HIGH`.
+
+An account satisfying none of them is refused with 403 `PHONE_ADD_NOT_ELIGIBLE`.
+
+Both operations run the check before they examine the submitted number. A refused account receives no message and consumes no challenge. [Start inbound phone challenge](#start-inbound-phone-challenge) skips the check entirely and issues a challenge for any non-bot session.
+
+:::note[Eligibility reads the stored bitfield]
+The [required actions](/http-api/users/#required-actions) array is filtered: empty for an account with no email address, empty for a contact address holding the required-actions exemption, and stripped of requirements the account already satisfies. An account with no visible required actions can still be eligible.
+:::
+
+## Deferred phone requirement
+
+An instance can defer a new account's phone requirement instead of imposing it at registration. The [deferred phone gate](/admin-api/instance/#deferred-phone-gate-object) policy sets the window after registration in which a qualifying join makes the requirement due, and the member count above which a guild is a qualifying one. A guild with the `DISCOVERABLE` [feature](/http-api/guilds/#guild-features) qualifies at any member count.
+
+A deferred requirement is absent from the [required actions](/http-api/users/#required-actions) array and restricts nothing. An attempt to join a qualifying guild inside the window makes it due, and [Accept invite](/http-api/invites/#accept-invite) refuses that attempt with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The account then owes `REQUIRE_VERIFIED_PHONE` or `REQUIRE_REVERIFIED_PHONE`, and every ordinary user route refuses it with the same code.
+
+[Get phone gate escape preview](#get-phone-gate-escape-preview) and [Run phone gate escape](#run-phone-gate-escape) set that requirement aside again in place of verifying a number. Both admit an account the rest of the API refuses. The escape is available only while all six of these hold.
+
+- The instance has the deferred phone gate enabled.
+- The account holds no verified phone.
+- The account owes `REQUIRE_VERIFIED_PHONE` or `REQUIRE_REVERIFIED_PHONE`.
+- The account does not owe `REQUIRE_INBOUND_PHONE_VERIFICATION`.
+- The requirement became due through a qualifying join and has not been deferred again.
+- The account has at least one visible required action.
+
+## Number representation
+
+The `phone` field is a number already in canonical E.164 form. Fluxer strips control and formatting characters, trims the value, and then matches it against `^\+[1-9]\d{1,14}$`. A value that fails returns 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `path` is `phone` and whose `code` is `PHONE_NUMBER_INVALID_FORMAT`.
+
+A number whose leading characters appear on the instance's banned prefix list is refused with 400 `INVALID_PHONE_NUMBER`. The list holds a built-in set of country prefixes plus operator additions, and one entry blocks every number that starts with it.
+
+:::note[Only the verified state is exposed]
+A successful verification sets a boolean on the account. The `phone` field of the [user object](/http-api/users/#user-object) is always null, and no route returns the submitted number.
+:::
+
+:::danger[Numbers and codes are confidential]
+Keep phone numbers, verification codes, and challenge codes out of logs, analytics, URLs, and messages to unintended recipients.
+:::
+
+## Phone verification channel values
+
+| Value | Description |
+| --- | --- |
+| sms<sup>1</sup> | Fluxer asks the SMS provider to deliver a one-time code to the submitted number |
+| inbound_challenge<sup>2</sup> | The user texts the issued challenge code to the returned Fluxer number |
+
+<sup>1</sup> Requesting this value is equivalent to omitting the field
+
+<sup>2</sup> Requesting this value always yields an inbound challenge, and neither the lookup provider nor the outbound SMS provider is contacted
+
+## Provider lookup verdicts
+
+[Verify phone code](#verify-phone-code) resolves the destination through the configured lookup provider before it checks the code. [Send phone verification](#send-phone-verification) does the same before it sends a code, except on an attempt that policy routes inbound before the lookup, where no lookup runs. A lookup result is cached for 7 days and reused for later attempts against the same number. The rules below run in order, and the first match decides.
+
+| Order | Condition | Verdict |
+| --- | --- | --- |
+| 1 | The lookup could not be performed<sup>1</sup> | Refused with `INVALID_PHONE_NUMBER` |
+| 2 | The provider reports the number as invalid | Refused with `INVALID_PHONE_NUMBER` |
+| 3 | The line type is `fixedVoip` or `nonFixedVoip` | Inbound, reason `voip` |
+| 4 | The number starts with `+1` and its numbering plan area is Canadian | Inbound, reason `canadian` |
+| 5 | The line type is absent or `unknown` | Inbound, reason `unknown_line_type` |
+| 6 | The line type is `landline`, `tollFree`, `premium`, `sharedCost`, `uan`, `voicemail`, or `pager` | Refused with `INVALID_PHONE_NUMBER` |
+| 7 | The line type is anything other than `mobile` or `personal`<sup>2</sup> | Refused with `INVALID_PHONE_NUMBER` |
+| 8 | The SMS pumping risk score reaches the threshold for the reported country<sup>3</sup> | Refused with `INVALID_PHONE_NUMBER` |
+| 9 | No rule above matched | Accepted for outbound SMS |
+
+<sup>1</sup> An instance whose lookup provider is unavailable or unconfigured refuses every number
+
+<sup>2</sup> `mobile` and `personal` are the only accepted line types
+
+<sup>3</sup> The threshold is 100 for `US` and `CA`, 70 for `GB`, `DE`, `FR`, `IT`, `ES`, `NL`, `SE`, `NO`, `DK`, `FI`, `AU`, `NZ`, `JP`, `KR`, `CH`, `AT`, `BE`, `IE`, and `PT`, and 35 for every other country and for a lookup reporting no country
+
+Only [Send phone verification](#send-phone-verification) converts an inbound verdict into a challenge. [Verify phone code](#verify-phone-code) refuses the same three verdicts with 400 `INVALID_PHONE_NUMBER`.
+
+## Inbound challenge reason values
+
+A reason explains why the attempt could not complete over outbound SMS.
+
+| Value | Description |
+| --- | --- |
+| voip | Provider lookup classified the destination as a VoIP line |
+| canadian<sup>1</sup> | The destination is a Canadian numbering plan area |
+| unknown_line_type | Provider lookup reported no line type or an unknown line type |
+| expensive_destination<sup>2</sup> | The configured inbound-required prefix policy matches the destination |
+| account_forced<sup>3</sup> | The account has the flag that forces inbound verification |
+| behavioural_risk | Phone attempt risk controls forced this attempt onto the inbound channel |
+
+<sup>1</sup> Determined from the numbering plan area of a `+1` number, and evaluated after the VoIP rule, so a Canadian VoIP number reports `voip` instead
+
+<sup>2</sup> Also reported when the caller explicitly requests the `inbound_challenge` channel. The prefix policy itself applies only while the account holds no verified phone
+
+<sup>3</sup> Reported in preference to `expensive_destination` when both would apply
+
+## SMS delivery object
+
+Confirmation that the SMS provider accepted a one-time code for delivery. [Send phone verification](#send-phone-verification) returns it on an outbound result, and [Verify phone code](#verify-phone-code) then takes the number itself.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The delivery channel, always the literal `sms` |
+
+## Inbound challenge object
+
+The instructions for texting a code to Fluxer, returned by [Send phone verification](#send-phone-verification) when policy routed the attempt inbound. `channel` tells the two response shapes apart.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The delivery channel, always the literal `inbound_challenge` |
+| challenge_code<sup>1</sup> | string | The code the user texts to `our_number` |
+| our_number | string | The Fluxer E.164 number that receives the code |
+| expires_at<sup>2</sup> | ISO8601 timestamp | The moment the challenge stops being redeemable |
+| reason | string | The [inbound challenge reason](#inbound-challenge-reason-values) that forced this channel |
+
+<sup>1</sup> Six decimal digits
+
+<sup>2</sup> 15 minutes after the challenge was issued
+
+### Example
+
+```json
+{
+  "channel": "inbound_challenge",
+  "challenge_code": "418207",
+  "our_number": "+15550000000",
+  "expires_at": "2026-03-04T18:15:00.000Z",
+  "reason": "voip"
+}
+```
+
+## Direct inbound challenge object
+
+The code and the Fluxer number for a caller that asked for an inbound challenge directly. [Start inbound phone challenge](#start-inbound-phone-challenge) returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| challenge_code<sup>1</sup> | string | The code the user texts to `our_number` |
+| our_number | string | The Fluxer E.164 number that receives the code |
+| expires_at<sup>2</sup> | ISO8601 timestamp | The moment the challenge stops being redeemable |
+
+<sup>1</sup> Six decimal digits
+
+<sup>2</sup> 15 minutes after the challenge was issued
+
+## Phone verification result object
+
+Returned by [Verify phone code](#verify-phone-code) on a successful verification.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| verified | boolean | Always the literal `true` |
+
+## Phone gate escape guild object
+
+One guild in a [phone gate escape preview](#phone-gate-escape-preview-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name the guild is listed under |
+
+## Phone gate escape preview object
+
+What [Run phone gate escape](#run-phone-gate-escape) would do for the current account.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| available | boolean | Whether the escape is open to this account right now |
+| guilds | array[[phone gate escape guild](#phone-gate-escape-guild-object) object] | The qualifying guilds the escape leaves, empty while `available` is false |
+| owned_guilds | array[[phone gate escape guild](#phone-gate-escape-guild-object) object] | The qualifying guilds the account owns, which the escape keeps |
+
+## Send phone verification
+
+<RouteHeader method="POST" path="/v1/users/@me/phone/send-verification" />
+
+Starts verification of the submitted number. Requires an account satisfying [eligibility](#eligibility). Returns an [SMS delivery](#sms-delivery-object) object or an [inbound challenge](#inbound-challenge-object) object on success.
+
+Several independent policies can force the inbound channel, and each one overrides a requested `sms`. Fluxer routes the attempt inbound before it contacts the lookup and SMS providers in three cases. The caller asks for `inbound_challenge`. The account has the flag that forces inbound verification. The configured inbound-required prefix policy matches the number while the account holds no verified phone.
+
+An attempt that survives that step passes through phone attempt risk controls keyed by account, by client IP address, and by /24 network. A hard block returns 429 `PHONE_RATE_LIMIT_EXCEEDED` with a `Retry-After` of 86400. A captcha decision returns 400 `CAPTCHA_REQUIRED`, and this route reads no [CAPTCHA](/topics/captcha/) solution header, so the attempt cannot be retried with a solution. An inbound decision returns a challenge with the `behavioural_risk` reason.
+
+An earlier attempt against the same account or number can record a provider cooldown, and a later request under that cooldown returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The destination is then resolved through [provider lookup](#provider-lookup-verdicts). A number that has already completed verification twice is refused with 400 `PHONE_ALREADY_USED`.
+
+Two further controls bound outbound delivery: 3 sends per 6 hours for each account, and 3 sends per 5 days for each number. Either denial returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The provider can also refuse the send: an invalid destination returns 400 `INVALID_PHONE_NUMBER`, a throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED`, and every other refusal, an unreachable provider included, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. An attempt routed inbound on an instance where the inbound flow or its receiving number is unconfigured returns the same code.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| phone | string | The number in canonical E.164 form, matching `^\+[1-9]\d{1,14}$` |
+| channel?<sup>1</sup> | string | The preferred [verification channel](#phone-verification-channel-values) |
+
+<sup>1</sup> Omitting the field requests outbound SMS. Requesting `inbound_challenge` always yields a challenge reported with the `expensive_destination` reason, unless the account flag independently forces the channel and the reason becomes `account_forced`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [SMS delivery](#sms-delivery-object) object \| [inbound challenge](#inbound-challenge-object) object | Verification was started on the channel named by the response |
+| 400 | [error response](/http-api/#error-response) | The number is refused with `INVALID_PHONE_NUMBER`, was verified twice already and returns `PHONE_ALREADY_USED`, risk controls demand `CAPTCHA_REQUIRED`, or the send could not start and returns `SMS_VERIFICATION_UNAVAILABLE` |
+| 403 | [error response](/http-api/#error-response) | The account is not eligible and the request returns `PHONE_ADD_NOT_ELIGIBLE` |
+| 429<sup>1</sup> | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Risk controls, a provider throttle, or an account or per-number send control denies the request, which returns `PHONE_RATE_LIMIT_EXCEEDED` |
+
+<sup>1</sup> A phone denial uses the rate limit envelope with `code` set to `PHONE_RATE_LIMIT_EXCEEDED` rather than the `RATE_LIMITED` an ordinary route denial returns
+
+On the 429, `X-RateLimit-Scope` reports `shared` when the per-number control or a number-scoped provider throttle produced the denial.
+
+### Side effects
+
+On an outbound result, Fluxer asks the configured SMS provider to deliver a one-time code. On an inbound result, it creates a one-use challenge for the current account.
+
+Fluxer records an attempt against the phone attempt risk counters only once it reaches [provider lookup](#provider-lookup-verdicts).
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `phone:send_verification` bucket.
+
+## Start inbound phone challenge
+
+<RouteHeader method="POST" path="/v1/users/@me/phone/inbound-challenge" />
+
+Issues an inbound challenge without submitting or examining a phone number. Returns a [direct inbound challenge](#direct-inbound-challenge-object) object on success.
+
+The [eligibility](#eligibility) check does not apply here. The challenge code is six decimal digits, lives for 15 minutes, and can be redeemed once. Requesting a further challenge does not revoke an earlier one, so several codes issued to the same account can be live at the same time until each expires or is redeemed.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [direct inbound challenge](#direct-inbound-challenge-object) object | A challenge was issued |
+| 400 | [error response](/http-api/#error-response) | The instance has no receiving number for the inbound challenge and the request returns `SMS_VERIFICATION_UNAVAILABLE` |
+
+### Side effects
+
+Fluxer creates a one-use challenge for the current account. The challenge completes out of band when the provider delivers the matching inbound message, and the HTTP response has no part of it. On completion, Fluxer sets the verified phone state, clears the phone requirements from the stored suspicious activity bitfield, and dispatches [User Update](/gateway/events/#user-update). When the sending number has already completed verification twice, Fluxer abandons the completion and produces no observable error.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `phone:send_verification` bucket, shared with [Send phone verification](#send-phone-verification).
+
+## Verify phone code
+
+<RouteHeader method="POST" path="/v1/users/@me/phone/verify" />
+
+Verifies an outbound SMS code. Requires an account satisfying [eligibility](#eligibility). Returns a [phone verification result](#phone-verification-result-object) object on success. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+The number is resolved through [provider lookup](#provider-lookup-verdicts) again before the code is checked, so a number that has become ineligible since the code was sent is refused.
+
+The configured SMS provider checks the number and the code together, so the provider decides the code lifetime and the attempt allowance. A rejected code returns 400 `INVALID_PHONE_VERIFICATION_CODE`. A provider throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED` and records a cooldown that also denies [Send phone verification](#send-phone-verification) until it expires. An unreachable provider, or one answering with a server error, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. An account record that has been deleted, or can no longer be read, fails with 400 `PHONE_VERIFICATION_REQUIRED` after the code has been accepted.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| phone | string | The number in canonical E.164 form, matching `^\+[1-9]\d{1,14}$` |
+| code<sup>1</sup> | string | The code the outbound SMS delivered (1-32 characters) |
+
+<sup>1</sup> Stripped of control and formatting characters and trimmed before the length check, and the normalised value is what the provider checks
+
+:::caution[A third verification consumes the code before refusing]
+A number can complete verification twice, and each success refreshes that record for a further 31 days. A third attempt is refused with 400 `PHONE_ALREADY_USED`, but only after the provider has accepted the code.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [phone verification result](#phone-verification-result-object) object | The number is now verified for the account |
+| 400 | [error response](/http-api/#error-response) | The number returns `INVALID_PHONE_NUMBER`, the code returns `INVALID_PHONE_VERIFICATION_CODE`, the provider returns `SMS_VERIFICATION_UNAVAILABLE`, the number returns `PHONE_ALREADY_USED`, or the account returns `PHONE_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The account is not eligible and the request returns `PHONE_ADD_NOT_ELIGIBLE` |
+| 429<sup>1</sup> | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A provider throttle denies the request, which returns `PHONE_RATE_LIMIT_EXCEEDED` |
+
+<sup>1</sup> A phone denial uses the rate limit envelope with `code` set to `PHONE_RATE_LIMIT_EXCEEDED` rather than the `RATE_LIMITED` an ordinary route denial returns
+
+On the 429, `X-RateLimit-Scope` reports `shared` when a number-scoped provider throttle produced the denial.
+
+### Side effects
+
+Fluxer marks the account as holding a verified phone. It then clears every phone requirement from the stored suspicious activity bitfield: `REQUIRE_VERIFIED_PHONE`, `REQUIRE_REVERIFIED_PHONE`, the four combined email-or-phone requirements, `REQUIRE_INBOUND_PHONE_VERIFICATION`, and the marker deferring a phone requirement until the account joins a qualifying community guild. Email-only requirements remain, so an account that also owes email verification stays restricted.
+
+Fluxer clears the spammer flag when present and dispatches [User Update](/gateway/events/#user-update). When the spammer flag was cleared, Fluxer also dispatches [Guild Member Update](/gateway/events/#guild-member-update) for the account in every guild it belongs to, before the HTTP response returns.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `phone:verify_code` bucket.
+
+## Get phone gate escape preview
+
+<RouteHeader method="GET" path="/v1/users/@me/required-actions/phone-gate-escape" />
+
+Returns a [phone gate escape preview](#phone-gate-escape-preview-object) object for the current account. For an account outside the state [Deferred phone requirement](#deferred-phone-requirement) describes, `available` is false and both arrays are empty.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [phone gate escape preview](#phone-gate-escape-preview-object) object | The preview was returned |
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `user:phone_gate_escape:preview` bucket.
+
+## Run phone gate escape
+
+<RouteHeader method="POST" path="/v1/users/@me/required-actions/phone-gate-escape" />
+
+Leaves the qualifying guilds the account does not own and defers the phone requirement again. Returns the [user](/http-api/users/#user-object) object.
+
+### Limitations
+
+- The account is in the state [Deferred phone requirement](#deferred-phone-requirement) defines, and one outside it is rejected with 400 [`PHONE_GATE_ESCAPE_UNAVAILABLE`](/http-api/errors/).
+- One request leaves at most 25 guilds.
+
+### JSON body
+
+The body is an empty object. An absent or empty body is read as an empty object, and any supplied property is discarded. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. A body that parses as valid JSON but is not an object is rejected with 400.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user](/http-api/users/#user-object) object | The escape ran, wholly or up to the per-request limit |
+| 400 | [error response](/http-api/#error-response) | The escape is unavailable and the request returns `PHONE_GATE_ESCAPE_UNAVAILABLE` |
+
+### Side effects
+
+Fluxer leaves each qualifying guild the account does not own, at most 25 in one request, with the same effects as [Leave guild](/http-api/guilds/#leave-guild). A qualifying guild the account owns is kept and does not block the escape.
+
+A request that leaves the whole set then defers the requirement again and dispatches [User Update](/gateway/events/#user-update). A request that stopped at the limit writes no account field, dispatches nothing, and returns the account with the requirement still due. Repeat the request until the returned `required_actions` has no phone entry.
+
+### Rate limit
+
+5 requests per hour for each authenticated user, on the `user:phone_gate_escape:execute` bucket.

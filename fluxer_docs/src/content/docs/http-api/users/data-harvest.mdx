@@ -1,0 +1,355 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Data harvests
+description: Compiling the account's data into a downloadable ZIP archive.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A data harvest is a ZIP archive of the current account's data. Fluxer compiles it asynchronously, reports progress while it runs, and issues a temporary download URL once the archive is written.
+
+Every route except [Download data harvest archive](#download-data-harvest-archive) is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. No route here requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](/http-api/users/content/#delete-current-users-messages) takes the same filter shape, destroys the messages, and requires it.
+
+:::caution[A completed archive has a seven day download deadline]
+A completed harvest records a deadline exactly seven days after the archive was written. After it, [Get data harvest download URL](#get-data-harvest-download-url) returns 400 `HARVEST_EXPIRED` and [Download data harvest archive](#download-data-harvest-archive) returns 404, while the record keeps reporting `completed`. Nothing extends or restores it.
+:::
+
+## Harvest status values
+
+The status is derived from the recorded timestamps in a fixed order, testing `failed_at` first, then `completed_at`, then `started_at`.
+
+| Value | Description |
+| --- | --- |
+| pending | No processing attempt has started |
+| processing | An attempt has started and has neither completed nor failed |
+| completed | The archive was written and is ready for download |
+| failed | The latest attempt recorded a failure |
+
+Fluxer retries the underlying job. A retry clears `failed_at` and `error_message`, sets `started_at` again, resets the reported progress to 0, and reports `processing` while it runs. A retry that succeeds records `completed_at`, `file_size`, and a download deadline, and reports `completed`.
+
+## Harvest creation object
+
+The acknowledgement returned by both creation operations.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| harvest_id | snowflake | The ID of the created harvest |
+| status<sup>1</sup> | string | The [harvest status](#harvest-status-values) at creation |
+| created_at<sup>2</sup> | ISO8601 timestamp | When the harvest was requested |
+
+<sup>1</sup> Always `pending`
+
+<sup>2</sup> Recorded at the same moment the [snowflake](/snowflakes/) is generated, so ordering harvests by ID is the same as ordering them by `created_at`
+
+## Harvest status object
+
+The full state of one harvest. It extends the [harvest creation](#harvest-creation-object) object with progress and completion fields.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| harvest_id | snowflake | The ID of the harvest |
+| status | string | The derived [harvest status](#harvest-status-values) |
+| created_at | ISO8601 timestamp | When the harvest was requested |
+| started_at<sup>1</sup> | ?ISO8601 timestamp | When the current processing attempt began, or null while the harvest is pending |
+| completed_at | ?ISO8601 timestamp | When the archive was written, or null when it has not been |
+| failed_at<sup>2</sup> | ?ISO8601 timestamp | When the latest attempt recorded a failure, or null when it has not |
+| file_size<sup>3</sup> | ?string | The archive size in bytes as a decimal string, or null before the archive was written |
+| progress_percent<sup>4</sup> | number | Progress from 0 through 100 |
+| progress_step<sup>5</sup> | ?string | The [harvest progress step](#harvest-progress-steps) for the current stage |
+| error_message<sup>6</sup> | ?string | The latest attempt's failure description, or null when it has not failed |
+| download_url_expires_at<sup>7</sup> | ?ISO8601 timestamp | When the archive's download deadline elapses, or null before completion |
+| expires_at<sup>8</sup> | ?ISO8601 timestamp | When the archive's download deadline elapses, or null before completion |
+
+<sup>1</sup> A new processing attempt replaces this timestamp, resets `progress_percent` to 0, and sets `progress_step` to `Starting harvest`
+
+<sup>2</sup> Cleared when a new attempt starts, so it is non-null only when the latest attempt failed
+
+<sup>3</sup> A decimal string because the value is 64-bit
+
+<sup>4</sup> Every recorded value is a whole number. It never decreases inside a single attempt, and completion sets it to exactly 100
+
+<sup>5</sup> Every record is created with the step `Queued`, so this member is never null
+
+<sup>6</sup> The string form of the underlying failure. It is diagnostic and is not stable for programmatic matching
+
+<sup>7</sup> Recorded when the archive is written, exactly seven days after that moment. Past it Fluxer issues no new download URL
+
+<sup>8</sup> A second name for `download_url_expires_at`. The stored value is the same
+
+## Harvest progress steps
+
+A short English label describing the current stage. Every value is fixed except the harvested-message label, which includes the message count.
+
+| Value | Description |
+| --- | --- |
+| Queued | Recorded when the harvest record is created, with progress 0 |
+| Starting harvest | Recorded when a processing attempt begins, with progress reset to 0 |
+| Harvesting messages | Message collection has started, with progress 5 |
+| Harvested N messages<sup>1</sup> | Message collection has finished, where N is the exact decimal count collected |
+| Collecting user metadata | Account data is being collected, with progress 60 |
+| Downloading attachments and creating archive | The ZIP archive is being written, with progress 65 |
+| Completed | The archive is ready, with progress 100 |
+
+<sup>1</sup> Skipped entirely when the harvest collected no message. Its progress is 5 plus the whole part of N divided by 200, capped at 55
+
+## Harvest download object
+
+One issued download URL and its stated expiry.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| download_url<sup>1</sup> | string | The temporary archive download URL (1-2048 characters) |
+| expires_at<sup>2</sup> | ISO8601 timestamp | Seven days after this response was produced |
+
+<sup>1</sup> Resolves to a single ZIP object served as `application/zip`
+
+<sup>2</sup> Exactly seven days after issuance, even when the archive's own deadline falls earlier
+
+Each response mints a URL, and a later call invalidates no earlier one. A URL pointing at [Download data harvest archive](#download-data-harvest-archive) still stops resolving at the archive's own deadline, so its stated expiry can outlast the point at which it stops working.
+
+:::note[An issued URL has its own seven day validity]
+A presigned object storage URL, the default form, is never rechecked against the harvest record, so one issued shortly before the deadline keeps working past it. The signed token form rechecks the deadline.
+:::
+
+## Harvest message filter object
+
+The filter chooses which messages a harvest collects. Every non-message section of the archive is included whatever the filter says.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope?<sup>1</sup> | string | Which set of contexts the harvest targets, either `selected` or `inaccessible_only` (default `selected`) |
+| include_dms? | boolean | Whether to include one-to-one direct messages the caller still has open (default true) |
+| include_dms_closed?<sup>2</sup> | boolean | Whether to include one-to-one direct messages the caller has closed (default true) |
+| include_group_dms? | boolean | Whether to include group DMs the caller is still a member of (default true) |
+| include_guilds? | boolean | Whether to include text channels in guilds the caller is a member of (default true) |
+| guild_filter_mode?<sup>3</sup> | string | How the guild list is read, either `exclude` or `include_only` (default `exclude`) |
+| excluded_guild_ids? | array[snowflake] | The guilds to leave out in `exclude` mode (max 500, default empty) |
+| included_guild_ids? | array[snowflake] | The only guilds to include in `include_only` mode (max 500, default empty) |
+| start_date?<sup>4</sup> | ?ISO8601 timestamp | Inclusive lower bound on message timestamps, or null for no lower bound |
+| end_date?<sup>4</sup> | ?ISO8601 timestamp | Exclusive upper bound on message timestamps, or null for no upper bound |
+
+<sup>1</sup> The `selected` scope requires at least one of the four include fields to be true, and a body disabling all four is rejected at path `include_dms`
+
+<sup>2</sup> Independent of `include_dms`, so setting `include_dms` false and `include_dms_closed` true targets closed conversations only
+
+<sup>3</sup> The guild lists are read only when `include_guilds` is true and the scope is `selected`, and the list that does not match the mode is ignored
+
+<sup>4</sup> Compared against the creation time embedded in the message [snowflake](/snowflakes/), so editing an old message does not move it into a later window
+
+Under the `selected` scope a one-to-one direct message is collected when the conversation is still open and `include_dms` is true, or when it has been closed and `include_dms_closed` is true. A group DM is collected only while the caller is still a recipient and `include_group_dms` is true. A guild channel is collected only while the caller is still a member, `include_guilds` is true, and the guild is admitted by the configured list mode.
+
+The `inaccessible_only` scope selects messages in guilds the caller has left or been removed from and in group DMs the caller has left. It never selects one-to-one direct messages, and it ignores the four toggles, the guild filter mode, and both guild lists.
+
+Both scopes exclude the caller's personal notes channel, and both exclude a message whose channel no longer resolves or is neither a direct message, a group DM, nor a guild channel.
+
+Supplying both date bounds requires `start_date` strictly earlier than `end_date`. An equal or inverted pair is rejected at path `end_date`.
+
+:::caution[A filtered archive still has every non-message section]
+The archive still contains the account document, the payment history document, the owned application document, the security document, and the account's avatar and banner. No read response returns the applied filter, so a caller keeps its own record of what it submitted.
+:::
+
+## Request data harvest
+
+<RouteHeader method="POST" path="/v1/users/@me/harvest" />
+
+Creates an unfiltered harvest of the account. Returns a [harvest creation](#harvest-creation-object) object on success.
+
+The operation takes no request body and always returns before the archive exists, so the caller polls [Get data harvest status](#get-data-harvest-status) or [Get latest data harvest](#get-latest-data-harvest) with the returned ID.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [harvest creation](#harvest-creation-object) object | The harvest request was accepted |
+| 404 | [error response](/http-api/#error-response) | The authenticated account no longer resolves and the request returns `UNKNOWN_USER` |
+| 500 | [error response](/http-api/#error-response) | The harvest record could not be written or the job could not be queued |
+
+### Side effects
+
+A harvest record is created with a new [snowflake](/snowflakes/), the request time as `created_at`, progress 0, the step `Queued`, and every other timestamp null. Creating a harvest removes no earlier record and enforces no ceiling on how many an account holds, so the route bucket is the only bound.
+
+Fluxer prepares the archive asynchronously. It contains `user.json` with the account document, one `channels/{channel_id}/messages.json` file for each channel that contributed a message, `payments/payment_history.json`, `integrations/oauth.json` listing the [applications](/http-api/applications/) the account owns rather than the ones it authorised, and `account/security.json`. The account avatar and banner are added under `assets/user/` when present. Messages inside each channel file are ordered oldest first. Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
+
+At most 100,000 authored messages are collected. The collector skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was minted.
+
+### Rate limit
+
+5 requests per 30 minutes for each authenticated user, on the `user:data:harvest` bucket shared with [Request filtered data harvest](#request-filtered-data-harvest).
+
+## Request filtered data harvest
+
+<RouteHeader method="POST" path="/v1/users/@me/harvest/filtered" />
+
+Creates a harvest whose message collection is constrained by a filter. Returns a [harvest creation](#harvest-creation-object) object on success.
+
+### JSON body
+
+The body is a [harvest message filter](#harvest-message-filter-object) object. Every field is optional, so an empty object is accepted and every default admits its context. An empty request body is read as an empty object.
+
+:::note[A filtered archive tests channel eligibility for every message]
+Even with every default, a filtered archive drops messages in the caller's personal notes channel, in group DMs and guilds the caller has left, and in a channel that no longer resolves. [Request data harvest](#request-data-harvest) collects those.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [harvest creation](#harvest-creation-object) object | The filtered harvest request was accepted |
+| 400 | [error response](/http-api/#error-response) | A filter field failed validation, the `selected` scope enabled no context, a guild list exceeded 500 entries, or the date bounds were not strictly increasing |
+| 404 | [error response](/http-api/#error-response) | The authenticated account no longer resolves and the request returns `UNKNOWN_USER` |
+| 500 | [error response](/http-api/#error-response) | The harvest record could not be written or the job could not be queued |
+
+### Side effects
+
+The side effects match [Request data harvest](#request-data-harvest), except that only messages selected by the filter are collected.
+
+### Rate limit
+
+5 requests per 30 minutes for each authenticated user, on the `user:data:harvest` bucket shared with [Request data harvest](#request-data-harvest).
+
+## Get latest data harvest
+
+<RouteHeader method="GET" path="/v1/users/@me/harvest/latest" />
+
+Returns the account's most recently created [harvest status](#harvest-status-object) object.
+
+The most recent harvest is the one with the highest ID, and because IDs are [Snowflakes](/snowflakes/) that ordering is creation order. The result is the newest record whatever its state, so a completed archive is not preferred over a newer failed one.
+
+:::note[An account with no harvest receives 200 and `null`]
+The body is the literal JSON value `null`, so decode it before treating the response as an object.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [harvest status](#harvest-status-object) object \| null | The latest harvest state was returned, or null when none exists |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:harvest:latest` bucket.
+
+## Get data harvest status
+
+<RouteHeader method="GET" path="/v1/users/@me/harvest/{harvestId}" />
+
+Returns one [harvest status](#harvest-status-object) object owned by the current account.
+
+A harvest belonging to another account returns 404 `UNKNOWN_HARVEST`.
+
+Fluxer removes no harvest record, so an ID that once resolved keeps resolving. A 404 means the ID was never issued to this account, and another account's harvest is never distinguishable from one that never existed.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| harvestId | snowflake | The ID of the harvest |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [harvest status](#harvest-status-object) object | The harvest state was returned |
+| 404 | [error response](/http-api/#error-response) | The harvest is unknown or belongs to another account, returning `UNKNOWN_HARVEST` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:harvest:status` bucket.
+
+## Get data harvest download URL
+
+<RouteHeader method="GET" path="/v1/users/@me/harvest/{harvestId}/download" />
+
+Issues a temporary download URL for one completed harvest. Returns a [harvest download](#harvest-download-object) object on success.
+
+Fluxer evaluates four rejection cases in a fixed order, each with its own code. An unknown or foreign harvest is 404 `UNKNOWN_HARVEST`. A harvest whose latest attempt failed is 400 `HARVEST_FAILED`. A harvest with no recorded completion or no stored archive is 400 `HARVEST_NOT_READY`. A harvest past its download deadline is 400 `HARVEST_EXPIRED`.
+
+:::danger[Each request issues a new bearer URL]
+A URL is created for each call, its stated expiry is seven days later, and a later call revokes nothing. Treat every issued URL as a secret.
+:::
+
+The URL takes one of two forms. When the instance has presigned harvest downloads enabled, which is the default, it is an object storage presigned URL. Otherwise it points at [Download data harvest archive](#download-data-harvest-archive) on this API with a signed `token` query parameter.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| harvestId | snowflake | The ID of the harvest |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [harvest download](#harvest-download-object) object | A download URL was issued |
+| 400 | [error response](/http-api/#error-response) | The harvest returns `HARVEST_NOT_READY`, `HARVEST_FAILED`, or `HARVEST_EXPIRED` |
+| 404 | [error response](/http-api/#error-response) | The harvest is unknown or belongs to another account, returning `UNKNOWN_HARVEST` |
+| 500 | [error response](/http-api/#error-response) | A download URL could not be issued |
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `user:harvest:download` bucket.
+
+## Download data harvest archive
+
+<RouteHeader method="GET" path="/v1/harvest-downloads/{harvestId}" unauthenticated />
+
+Streams the archive of one completed harvest.
+
+The signed `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) is the whole authorisation, so the link stays usable from the harvest completion email and from a plain browser.
+
+The operation is active only while the instance has presigned harvest downloads disabled. That setting is enabled by default, so a default deployment answers every request here as 404 without inspecting the token.
+
+The token binds the account, the harvest ID, the stored object key, and an expiry.
+
+:::note[Every rejection looks identical]
+A missing, malformed, forged, or expired token, a token for another harvest, a harvest that never completed or recorded a failure, a harvest past its deadline, and a stale object key all return 404 with the plain text body `Not Found`.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| harvestId | snowflake | The ID of the harvest |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | Signed download token issued with the download URL |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Range? | string | Standard byte range, answered with 206 and a `Content-Range` header |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | archive bytes | The complete archive was streamed |
+| 206 | archive bytes | The requested byte range was streamed |
+| 404 | `Not Found` | The token is missing, invalid, or expired, the harvest is not downloadable, or the instance issues presigned URLs instead |
+| 500 | [error response](/http-api/#error-response) | Object storage could not be read |
+
+### Response headers
+
+The 200 has `Content-Type: application/zip`, `Content-Disposition`<sup>1</sup>, `Content-Length`, `Accept-Ranges: bytes`, and `Cache-Control: private, no-store`. The 206 has the 200 headers plus `Content-Range`. The 404 has `Content-Type: text/plain`.
+
+<sup>1</sup> `Content-Disposition` is always `attachment` and names the file `fluxer-data-{harvestId}.zip`
+
+### Side effects
+
+The archive is read and streamed. The harvest is unchanged and the token is not consumed, so it stays usable until its own expiry.
+
+### Rate limit
+
+60 requests per minute for each client IP address, or for the authenticated account when the request has a resolvable credential, on the `user:harvest:download_file` bucket.

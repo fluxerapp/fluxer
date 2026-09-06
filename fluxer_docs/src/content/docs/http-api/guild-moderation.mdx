@@ -1,0 +1,208 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guild moderation
+description: Guild bans, temporary bans, ban replacement, and the blocks a ban has.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A guild ban keeps one account out of one guild, and it outlives the membership it removes. Removing a member is a separate operation with its own permission, and [Remove guild member](/http-api/guild-members/#remove-guild-member) defines it.
+
+Every route here requires [BAN_MEMBERS](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions). In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, every caller except the guild owner also needs an enrolled multi-factor authenticator. A guild an operator has marked unavailable returns 403 `MISSING_ACCESS` before the route runs.
+
+[List guild bans](#list-guild-bans) is the only operation that reads a ban record, and there is no bulk ban operation.
+
+## Guild ban object
+
+A guild ban object names the banned account, the moderator, the reason, and any expiry. Creating a ban for a user who is already banned replaces the existing record.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [partial user](/http-api/users/#partial-user-object) object | The banned account |
+| reason<sup>1</sup> | ?string | The stored ban reason, or null when none was recorded |
+| moderator_id | snowflake | The account that issued or most recently replaced the ban |
+| banned_at<sup>2</sup> | ISO8601 timestamp | Time the ban was issued or most recently replaced |
+| expires_at<sup>3</sup> | ?ISO8601 timestamp | Time a temporary ban stops applying, or null for a permanent ban |
+
+<sup>1</sup> The body `reason` when that field is supplied, and the `X-Audit-Log-Reason` value when it is omitted or null
+
+<sup>2</sup> Replacing a ban rewrites this value, so it records the most recent issuance
+
+<sup>3</sup> An expired temporary ban is removed and never returned with a past `expires_at`
+
+### Example
+
+```json
+{
+  "user": {"id": "1489002177550843906", "username": "spammer", "discriminator": "0042"},
+  "reason": "Advertising",
+  "moderator_id": "1489002177550843905",
+  "banned_at": "2026-08-14T09:12:44.000Z",
+  "expires_at": null
+}
+```
+
+:::note[Fluxer never returns the ban address or email]
+A ban also stores the target's last known IP address and the lower-cased address of their account email. An address on the instance exemption list is stored as null.
+:::
+
+Accepting an [invite](/http-api/invites/) compares the joining account against the banned account identifier, the stored address, and the stored email. The address comparison uses a normalised decision key: the exact address for IPv4, the mapped IPv4 address for an IPv4-mapped IPv6 address, and the `/64` network for every other IPv6 address. An address match refuses the join with 403 `USER_IP_BANNED_FROM_GUILD`.
+
+Fluxer skips the address match when the joining address is on the instance exemption list, and also when the banned address is a single address and the joining address is reported as high mobile or carrier-grade NAT blast radius. The match runs when that report is unavailable or fails.
+
+The email comparison is exact and runs only when an invite is accepted. An email match refuses the join with 403 `USER_BANNED_FROM_GUILD`. Every other path that adds a member compares the account identifier and the address alone, and several compare nothing. [Grant OAuth2 consent](/http-api/oauth2/#grant-oauth2-consent) installing a bot, the admin membership operations, the stock community auto-join, and the premium entitlement guild join all add the member without consulting the ban list.
+
+[Remove guild ban](#remove-guild-ban) releases both blocks. Permanently deleting the banned account deletes every guild ban it holds, and that releases both blocks in every guild at once.
+
+## List guild bans
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/bans" bot />
+
+Returns every [guild ban object](#guild-ban-object) of the guild. Requires [BAN_MEMBERS](/http-api/permissions/).
+
+A non-member cannot hold `BAN_MEMBERS`, so a caller outside the guild receives 403 `MISSING_PERMISSIONS`.
+
+The operation returns the complete collection in one response and has no limit or cursor parameters. The response excludes an expired temporary ban, and omits a ban whose account can no longer be resolved, so the array can be shorter than the number of stored bans.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[guild ban](#guild-ban-object) object] | Bans were returned |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller holds `BAN_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `BAN_MEMBERS` is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`, returned only after the permission itself has been confirmed
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild and `MISSING_PERMISSIONS` otherwise
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user and guild ID, on the shared `guild:members::guild_id` bucket.
+
+## Create or replace guild ban
+
+<RouteHeader method="PUT" path="/v1/guilds/{guild_id}/bans/{user_id}" bot auditReason />
+
+Creates a guild ban, or replaces an existing one, and returns 204 with an empty body. Requires [BAN_MEMBERS](/http-api/permissions/). Emits a [Guild Ban Add](/gateway/events/#guild-ban-add) Gateway event.
+
+### Limitations
+
+- The caller cannot ban themselves, and Fluxer reports a self-target as 404 `UNKNOWN_MEMBER`.
+- Banning a target who is currently a member also requires role hierarchy authority over that member. The guild owner holds that authority over everyone, and no other caller holds it over the owner.
+- A target who is not a member can still be banned, and the ban pre-empts a future join.
+
+Fluxer scans every string in a JSON request body against the instance phrase and URL blocklists, and that includes `reason`. A blocked value returns 403 `CONTENT_BLOCKED` before the rate limit bucket, the credential check, and the permission check.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the account to ban |
+
+### JSON body
+
+The body is optional, and so is every field in it. Fluxer reads an omitted or whitespace-only body as an empty object, so a bare request creates a permanent ban that deletes no messages and records no body reason. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| delete_message_seconds?<sup>1</sup> | integer | Age of the target's recent guild messages to delete, in seconds (0-604800) |
+| delete_message_days?<sup>2</sup> | integer | Legacy age of those messages, in whole days (0-7, default 0) |
+| reason?<sup>3</sup> | ?string | Reason stored on the ban record (max 512 characters) |
+| ban_duration_seconds?<sup>4</sup> | integer | Ban duration in seconds, either 0 or 60 through 63072000 |
+
+<sup>1</sup> Zero and an omitted field delete nothing. The field takes precedence over `delete_message_days` whenever it is present, including when it is 0
+
+<sup>2</sup> Multiplied by 86400 to produce the effective interval, and only when `delete_message_seconds` is absent
+
+<sup>3</sup> Stripped of removed control and format code points and trimmed before its length is measured. A longer result fails with `STRING_LENGTH_INVALID` at the `reason` path
+
+<sup>4</sup> Zero and an omitted field both create a permanent ban. Any value outside 60 through 63072000, which is two years, fails with `INVALID_FORMAT`
+
+`delete_message_days` defaults to 0, so a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) entry always records `options.delete_member_days`. That option is `0` for a ban that supplied only `delete_message_seconds`.
+
+An omitted or null `reason` falls back to the `X-Audit-Log-Reason` value, while a supplied value that normalises to the empty string is stored as null without falling back. The header remains the audit entry reason in every case.
+
+:::caution[Banning an already banned account succeeds]
+The second ban overwrites the stored reason, moderator, issue time, expiry, address, and email. Re-issuing can downgrade a permanent ban to a temporary one or extend a temporary one. There is no conditional form.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Ban was created or replaced |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Duration, deletion interval, or reason is invalid, or the caller holds `BAN_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, blocked content was supplied, `BAN_MEMBERS` is absent, or hierarchy authority over a member target is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+| 404<sup>3</sup> | [error response](/http-api/#error-response) | Target account does not exist, or the target is the caller |
+
+<sup>1</sup> The missing-authenticator [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`, returned only after the permission itself has been confirmed
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked string, and `MISSING_PERMISSIONS` otherwise
+
+<sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_USER` for an account that does not exist and `UNKNOWN_MEMBER` for a caller that names itself, and the self-target check runs first
+
+### Side effects
+
+The operation stores the ban together with the target's last known IP address and account email. It records a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) audit entry whose change list has the stored [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields), emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Ban Add](/gateway/events/#guild-ban-add) to the guild's sessions, subject to [event filtering](/gateway/event-filtering/). A positive deletion interval schedules permanent deletion of the target's newer guild messages.
+
+A target that is a current member also loses that membership. The guild member count decreases, the guild's sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove), the banned account's sessions receive [Guild Delete](/gateway/events/#guild-delete), and the membership is dropped from the member search index of an indexed guild. Fluxer records no `MEMBER_KICK` entry alongside the ban entry.
+
+A ban does not preserve an active communication timeout for a later rejoin, and [Remove guild member](/http-api/guild-members/#remove-guild-member) does. The banned account loses its guild nickname, guild avatar hash, guild banner hash, biography, pronouns, accent colour, and role set. Its read states and guild settings stay in place.
+
+From that point Fluxer refuses a join attempt by the banned account. The address and email matches described under the [guild ban object](#guild-ban-object) apply as well. A ban therefore restricts more than one account when an address or an email is shared.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:remove::guild_id` bucket.
+
+## Remove guild ban
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/bans/{user_id}" bot auditReason />
+
+Removes an existing guild ban and returns 204 with an empty body. Requires [BAN_MEMBERS](/http-api/permissions/). Emits a [Guild Ban Remove](/gateway/events/#guild-ban-remove) Gateway event.
+
+Fluxer rejects a target that is not currently banned with 400 `INVALID_FORM_BODY`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| user_id | snowflake | The ID of the banned account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Ban was removed |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Target is not banned, or the caller holds `BAN_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `BAN_MEMBERS` is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> A target that is not banned returns `INVALID_FORM_BODY` with [`USER_IS_NOT_BANNED`](/http-api/errors/#validation-error-code-registry) against `user_id`. The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after the permission is confirmed
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild and `MISSING_PERMISSIONS` otherwise
+
+### Side effects
+
+The operation deletes the ban together with the address and email blocks it had. It records a [`MEMBER_BAN_REMOVE`](/http-api/guild-audit-logs/#audit-actions) audit entry whose change list has the removed [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields), emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Ban Remove](/gateway/events/#guild-ban-remove) to the guild's sessions, subject to [event filtering](/gateway/event-filtering/).
+
+It does not restore the removed membership, the guild profile fields and roles that membership had, or the deleted messages. The unbanned account can rejoin through an ordinary invite.
+
+An instance-wide IP ban is a separate mechanism this operation does not touch. Every request from an address it covers is still refused with 403 `GLOBAL_IP_BANNED` for a permanent ban and 403 `GLOBAL_IP_TEMPORARILY_BANNED` for a 24 hour one.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:member:remove::guild_id` bucket.

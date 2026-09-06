@@ -1,0 +1,42 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {Icon} from '@astrojs/starlight/components';
+---
+
+<script is:inline>
+	window.StarlightThemeProvider = (() => {
+		const storedTheme = typeof localStorage !== 'undefined' && localStorage.getItem('starlight-theme');
+		const resolveTheme = () => {
+			if (storedTheme === 'light' || storedTheme === 'dark') {
+				return storedTheme;
+			}
+			if (storedTheme === 'auto') {
+				return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+			}
+			return 'dark';
+		};
+		document.documentElement.dataset.theme = resolveTheme();
+		return {
+			updatePickers(theme = storedTheme || 'dark') {
+				document.querySelectorAll('starlight-theme-select').forEach((picker) => {
+					const select = picker.querySelector('select');
+					if (select) select.value = theme;
+					const tmpl = document.querySelector('#theme-icons');
+					const newIcon = tmpl && tmpl.content.querySelector('.' + theme);
+					if (newIcon) {
+						const oldIcon = picker.querySelector('svg.label-icon');
+						if (oldIcon) {
+							oldIcon.replaceChildren(...newIcon.cloneNode(true).childNodes);
+						}
+					}
+				});
+			},
+		};
+	})();
+</script>
+
+<template id="theme-icons">
+	<Icon name="sun" class="light" />
+	<Icon name="moon" class="dark" />
+	<Icon name="laptop" class="auto" />
+</template>

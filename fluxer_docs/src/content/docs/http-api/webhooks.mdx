@@ -1,0 +1,1508 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Webhooks
+description: Webhook objects, management, token-authenticated execution, and the third-party callbacks.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A webhook posts messages into one guild channel under a name and avatar of its own.
+
+Management routes take a user session token or a bot token. Every other webhook operation uses the webhook ID and secret token in its own path as the complete credential and ignores the `Authorization` header.
+
+The [Messages resource](/http-api/messages/) defines the message, rich embed input, and message reference input objects.
+
+## Authorisation
+
+A management operation requires [MANAGE_WEBHOOKS](/http-api/permissions/) at guild level and again in the webhook's channel. `MANAGE_WEBHOOKS` is an [elevated permission](/http-api/permissions/#elevated-permissions). In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller who is neither the guild owner nor enrolled in multi-factor authentication receives 400 `TWO_FACTOR_REQUIRED`. Fluxer confirms the permission before that check, so a caller who lacks it outright receives 403 `MISSING_PERMISSIONS`.
+
+Fluxer resolves the guild before every management operation. A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`.
+
+[List guild webhooks](#list-guild-webhooks), [List channel webhooks](#list-channel-webhooks), and [Create webhook](#create-webhook) name a guild or a channel in their paths, so the availability gate applies. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) refuses an authenticated request with 403 `MISSING_ACCESS` before the operation runs, and [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. The three remaining management routes name only a webhook ID and are not gated.
+
+Fluxer scans a submitted webhook `name` against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`. The same lists scan the resolved content and embed text of a created or edited message, and a match returns the same code. The `avatar` member is exempt from that scan, and Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
+
+## Rate limit keying
+
+Every route bucket on this page is keyed on the caller identity as well as on the path parameter in its bucket name. The caller identity is the authenticated account when a request resolves one and the client IP address otherwise, so a token-authenticated operation is bounded per address.
+
+Fluxer resolves an `Authorization` credential on a token-authenticated operation for this keying alone. [Rate limits](/topics/rate-limits/) defines the keying in full.
+
+The [global HTTP limit](/topics/rate-limits/) applies to every management route. [Get webhook with token](#get-webhook-with-token), [Update webhook with token](#update-webhook-with-token), and [Delete webhook with token](#delete-webhook-with-token) consume it under the caller identity. Every other route on this page is exempt and is bounded only by its own route bucket.
+
+## Origin refusal
+
+Fluxer refuses a call from the official web client on four routes. A request whose `Origin` header is exactly `https://web.fluxer.app` or `https://web.canary.fluxer.app` returns 403 `INVALID_API_ORIGIN` on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message).
+
+A request that sends no `Origin`, or any other `Origin` value, passes the check. It runs after the route rate limit and before path validation.
+
+Both token paths also have a second CORS policy that answers every origin, which the [cross-origin request contract](/http-api/#cross-origin-requests) states in full.
+
+## Webhook object
+
+A webhook belongs to exactly one guild and posts into exactly one guild text or voice channel of that guild. Fluxer generates its execution token once at creation and never rotates it, so the pair of ID and token is a bearer credential for the lifetime of the webhook.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the webhook |
+| guild_id | snowflake | The ID of the guild containing the webhook |
+| channel_id | snowflake | The ID of the channel the webhook sends messages to |
+| name | string | The name the webhook posts under (1-80 characters) |
+| avatar | ?string | The avatar hash the webhook posts under, or null when no avatar is set |
+| token<sup>1</sup> | string | The secret token that authorises execution of this webhook |
+| user<sup>2</sup> | [partial user](/http-api/users/#partial-user-object) object | The account that created the webhook |
+
+<sup>1</sup> 64 characters drawn from the 62-character alphanumeric alphabet. No operation rotates or reissues it
+
+<sup>2</sup> Absent from the [token webhook object](#token-webhook-object). The value is the deleted user partial when the creating account no longer exists
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "guild_id": "1501314428688990000",
+  "channel_id": "1501314428688991111",
+  "name": "Build bot",
+  "avatar": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "token": "Xk3Qw9ZpL2vB7nR4tY6uI8oP0aS1dF5gH2jK4lZ9xC7vB1nM3qW5eR8tY0uI2oP4",
+  "user": {
+    "id": "1501314428688990001",
+    "username": "ada",
+    "discriminator": "0001",
+    "avatar": null
+  }
+}
+```
+
+## Token webhook object
+
+Token-authenticated operations return this object. It has every field of the [webhook object](#webhook-object) except `user`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the webhook |
+| guild_id | snowflake | The ID of the guild containing the webhook |
+| channel_id | snowflake | The ID of the channel the webhook sends messages to |
+| name | string | The name the webhook posts under (1-80 characters) |
+| avatar | ?string | The avatar hash the webhook posts under, or null when no avatar is set |
+| token | string | The secret token that authorises execution of this webhook |
+
+:::danger[The token is returned in full]
+Every operation returning a [webhook object](#webhook-object) or a token webhook object includes the complete execution token, so its response body grants full execution and management authority over each webhook it names.
+:::
+
+## Webhook message body
+
+[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` is a valid body that fails later as an empty message.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| content?<sup>1</sup> | ?string | Message content |
+| embeds?<sup>2</sup> | array[[rich embed input](/http-api/messages/#rich-embed-input-objects) object] | Rich embeds |
+| attachments?<sup>3</sup> | array[[webhook attachment input](#webhook-attachment-input-object) object] | Attachment metadata |
+| message_reference?<sup>4</sup> | ?[message reference input](/http-api/messages/#message-reference-input-object) object | Reply or forward reference, or null |
+| allowed_mentions?<sup>5</sup> | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Mention parsing policy, or null |
+| flags? | integer | [Message flags](/http-api/messages/#message-flags), where omission is treated as zero and every bit outside the sendable mask is cleared |
+| favorite_meme_id? | ?snowflake | Favorite meme to attach |
+| sticker_ids? | ?array[snowflake] | At most 3 sticker IDs |
+| tts?<sup>6</sup> | boolean | Text-to-speech request |
+| nonce?<sup>7</sup> | string \| integer | Client-generated message identifier (1-32 characters). A non-negative safe integer becomes its decimal string |
+| username?<sup>8</sup> | ?string | Per-message webhook name override (1-80 characters), or null |
+| avatar_url?<sup>8</sup> | ?string | Absolute `http` or `https` per-message webhook avatar URL override of at most 2,048 characters, or null |
+
+<sup>1</sup> A webhook author always resolves an effective [max_message_length](/http-api/instance/#limit-keys) of at least 4000 characters, and a higher configured value for the guild raises it further. Exceeding it returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`
+
+<sup>2</sup> Bounded by the resolved [max_embeds_per_message](/http-api/instance/#limit-keys) value for the guild, defaulting to 10. Exceeding it returns 400 `INVALID_FORM_BODY` with `TOO_MANY_EMBEDS`
+
+<sup>3</sup> A JSON body attaches no file. A multipart body uses the ordinary message attachment contract
+
+<sup>4</sup> A forward reference requires both `channel_id` and `message_id`, and it must not accompany content, embeds, or attachments. See [message references](#message-references)
+
+<sup>5</sup> An omitted policy suppresses every mention, which is the opposite of the [Create message](/http-api/messages/#create-message) default
+
+<sup>6</sup> The field takes no part in the non-empty message check, so a body supplying `tts` and nothing else returns 400 `CANNOT_SEND_EMPTY_MESSAGE`. A webhook message is never marked text-to-speech
+
+<sup>7</sup> The nonce is remembered per webhook for five minutes and is echoed on the [Message Create](/gateway/events/#message-create) Dispatch. A repeated execution presenting it inside that window creates no second message and returns the first one, and a repeat after the webhook moved to another channel returns 404 `UNKNOWN_MESSAGE`
+
+<sup>8</sup> Applies to the created message, and the stored webhook keeps its own name and avatar
+
+When `embeds` is absent, Fluxer rewrites the singular key `embed` to a one-element `embeds` array, and an `embed` of null becomes an empty array. When both are present, `embed` is dropped.
+
+A multipart body accepts both [pre-uploaded attachments](/http-api/messages/#pre-uploaded-attachment-object) and [direct multipart attachment metadata](/http-api/messages/#direct-multipart-attachment-metadata-object).
+
+Fluxer fetches an `avatar_url` through the media boundary.
+
+## Webhook attachment input object
+
+A JSON [webhook message body](#webhook-message-body) accepts this attachment metadata shape. Every member is optional, and a member outside this table is discarded.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | snowflake \| integer | The ID of the attachment |
+| filename? | string | Attachment filename (1-1024 characters) |
+| description? | string | Attachment description (1-4096 characters) |
+| content_type? | string | Media type (1-256 characters) |
+| size? | integer | Byte count, as a non-negative safe integer |
+| url? | string | Absolute `http` or `https` URL of at most 2,048 characters |
+| proxy_url? | string | Absolute `http` or `https` URL of at most 2,048 characters |
+| height? | integer | Pixel height |
+| width? | integer | Pixel width |
+| ephemeral? | boolean | Whether the attachment is ephemeral |
+| duration? | number | Audio duration in seconds |
+| waveform? | string | Base64 waveform data (1-256 characters) |
+| flags? | integer | [Attachment flags](/http-api/messages/#attachment-flags) |
+
+:::caution[A JSON body cannot attach a file]
+The execution attaches only an entry with `upload_filename`, and this object defines no such member. A webhook that needs to attach a file uses a [multipart body](#execute-webhook).
+:::
+
+Every entry supplied in a JSON body is dropped, and it counts towards neither the attachment limit nor the non-empty message check.
+
+## Message references
+
+A webhook execution accepts the [message reference input](/http-api/messages/#message-reference-input-object) object defined by the Messages resource. Three constraints are specific to webhooks.
+
+The `channel_id` field is required for a forward reference and must equal the webhook's own channel. A value naming any other channel returns 404 `UNKNOWN_MESSAGE`. A reply reference always resolves in the webhook's own channel and ignores this field.
+
+The referenced message must exist in the webhook's channel, and a missing message returns 404 `UNKNOWN_MESSAGE`. A reply reference additionally requires the referenced message to be an ordinary or reply message. Any other type returns 400 `INVALID_FORM_BODY` with the validation code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`.
+
+A forward reference must not accompany content, embeds, or attachments, and one that does returns 400 `INVALID_FORM_BODY` with the validation code `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT`. A forward reference that omits `channel_id` or `message_id` returns the same status with `FORWARD_REFERENCE_REQUIRES_CHANNEL_AND_MESSAGE`.
+
+## Webhook message edit body
+
+[Edit webhook message](#edit-webhook-message) accepts this JSON body. Every supplied field replaces the stored value outright, and an omitted field keeps it. A body with no visible `content`, no non-empty `embeds`, and no `flags` is rejected with 400 `CANNOT_SEND_EMPTY_MESSAGE`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| content?<sup>1</sup> | ?string | Replacement message content, or null |
+| embeds?<sup>2</sup> | array[[rich embed input](/http-api/messages/#rich-embed-input-objects) object] | Replacement collection of embeds |
+| flags? | integer | Replacement [message flags](/http-api/messages/#message-flags) |
+| allowed_mentions? | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Replacement mention parsing policy, or null |
+
+<sup>1</sup> The same effective maximum length as [Execute webhook](#execute-webhook) applies
+
+<sup>2</sup> The supplied array becomes the complete embed collection, so an empty array removes every embed. The same resolved [max_embeds_per_message](/http-api/instance/#limit-keys) ceiling applies
+
+`flags` replaces only the bits inside the sendable mask, and every other stored bit is kept.
+
+## Slack callback objects
+
+These objects define the body [Execute Slack webhook](#execute-slack-webhook) accepts and the embed each part converts to.
+
+### Slack callback object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| text?<sup>1</sup> | string | Message text |
+| username? | string | Webhook name override for this message (1-80 characters) |
+| icon_url?<sup>2</sup> | string | Webhook avatar URL override for this message |
+| attachments? | array[[Slack attachment](#slack-attachment-object) object] | Slack attachments converted to embeds |
+
+<sup>1</sup> When text is omitted and at least one attachment converts to an embed, the created message content is the empty string
+
+<sup>2</sup> The value is used only when it parses as an absolute `http` or `https` URL of at most 2,048 characters, and any other value is discarded silently
+
+### Slack attachment object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| fallback?<sup>1</sup> | string | Fallback text |
+| pretext?<sup>1</sup> | string | Text above the attachment |
+| text?<sup>1</sup> | string | Main attachment text |
+| color?<sup>2</sup> | string | Sidebar colour value |
+| title? | string | Attachment title, mapped to the embed title |
+| title_link?<sup>3</sup> | string | Title URL, mapped to the embed URL |
+| fields?<sup>4</sup> | array[[Slack attachment field](#slack-attachment-field-object) object] | Fields mapped to embed fields |
+| footer? | string | Footer text, mapped to the embed footer |
+| ts?<sup>5</sup> | number | Unix seconds, mapped to the embed timestamp |
+| author_name?<sup>6</sup> | string | Author name, mapped to the embed author name |
+| author_link?<sup>3</sup> | string | Author URL, mapped to the embed author URL |
+| author_icon?<sup>3</sup> | string | Author icon URL, mapped to the embed author icon |
+| image_url?<sup>3</sup> | string | Main image URL, mapped to the embed image |
+| thumb_url?<sup>3</sup> | string | Thumbnail URL, mapped to the embed thumbnail |
+
+<sup>1</sup> The embed description is pretext and text joined by a newline in that order, and fallback is used only when both pretext and text are absent
+
+<sup>2</sup> The value is mapped to the embed colour only when it is exactly six hexadecimal digits with an optional leading `#`, and any other value leaves the embed without a colour
+
+<sup>3</sup> The value is used only when it parses as an absolute `http` or `https` URL of at most 2,048 characters, and any other value is discarded silently
+
+<sup>4</sup> A field is converted only when it supplies both a title and a value, and any other field is discarded silently
+
+<sup>5</sup> The value is accepted as a JSON number or as a decimal string and must be a non-negative integer
+
+<sup>6</sup> The embed author is emitted only when `author_name` is present, so `author_link` and `author_icon` alone produce no author
+
+### Slack attachment field object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| title? | string | Field title, mapped to the embed field name |
+| value? | string | Field value, mapped to the embed field value |
+| short? | boolean | Whether the embed field is rendered inline (default false) |
+
+:::caution[Converted embeds skip the rich embed schema]
+No per-embed title, description, footer, or field maximum applies to a Slack value.
+:::
+
+The Slack schema bounds only `username`, which must be 1 through 80 characters and rejects a longer value with `WEBHOOK_NAME_LENGTH_INVALID`. Fluxer applies no bound to any other Slack string or to either array.
+
+Three checks do apply. A conversion yielding neither content nor an embed returns 400 `CANNOT_SEND_EMPTY_MESSAGE`. Content longer than the effective maximum returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`, and more converted embeds than the resolved ceiling returns the same status with `TOO_MANY_EMBEDS`. Fluxer discards an attachment that produces no embed property.
+
+## GitHub callback objects
+
+These objects define the body [Execute GitHub webhook](#execute-github-webhook) accepts.
+
+### GitHub callback object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| action?<sup>1</sup> | ?string | GitHub event action, or null |
+| answer? | ?[GitHub comment](#github-comment-object) object | Accepted discussion answer, or null (validated, never rendered) |
+| check_run? | ?[GitHub check run](#github-check-run-object) object | Check run data, or null |
+| check_suite? | ?[GitHub check suite](#github-check-suite-object) object | Check suite data, or null |
+| comment? | ?[GitHub comment](#github-comment-object) object | Issue, review, commit, or discussion comment, or null |
+| commits? | ?array[[GitHub commit](#github-commit-object) object] | Push commits, or null |
+| compare? | ?string | Absolute comparison URL, or null |
+| discussion? | ?[GitHub discussion](#github-discussion-object) object | Discussion data, or null |
+| forced? | ?boolean | Whether a push was forced, or null |
+| forkee? | ?[GitHub service](#github-service-object) object | Fork repository, or null |
+| head_commit? | ?[GitHub commit](#github-commit-object) object | Head commit, or null |
+| issue? | ?[GitHub issue](#github-issue-object) object | Issue data, or null |
+| member? | ?[GitHub user](#github-user-object) object | Repository member data, or null |
+| pull_request?<sup>2</sup> | ?[GitHub issue](#github-issue-object) object | Pull request representation, or null |
+| ref_type?<sup>3</sup> | ?string | Git reference type, or null |
+| ref? | ?string | Git reference, or null |
+| release? | ?[GitHub release](#github-release-object) object | Release data, or null |
+| repository?<sup>4</sup> | ?[GitHub service](#github-service-object) object | Repository data, or null |
+| review? | ?[GitHub review](#github-review-object) object | Pull request review data, or null |
+| sender | [GitHub user](#github-user-object) object | Event sender |
+
+<sup>1</sup> The value gates rendering for most event types, and the exact accepted action for each type is stated in [GitHub event types](#github-event-types)
+
+<sup>2</sup> A pull request uses the same representation as an issue, so only the fields listed in the [GitHub issue structure](#github-issue-object) are consumed
+
+<sup>3</sup> Only the exact values `branch` and `tag` are rendered for a create or delete event, and any other reference type produces no message
+
+<sup>4</sup> Every rendered event type requires repository, so a callback without it produces no message
+
+A top-level `pull_request` field selects the wording of an `issue_comment` rendering, which names a pull request when the field is present and an issue when it is absent.
+
+Every GitHub string in these objects accepts at most 152,133 characters unless a narrower bound is stated, and every field typed as an absolute URL must parse as an `http` or `https` URL of at most 2,048 characters. A field marked as accepted and validated still has its declared type and bound, so a malformed value rejects the callback with 400 `INVALID_FORM_BODY`.
+
+Every rendered embed title is truncated to 70 characters, except the ordinary push, check run, and check suite titles, which are truncated to 256. Every rendered embed description is truncated to 350 characters, except the forced push description, which is the fixed compare link and is neither decoded nor truncated. Fluxer decodes HTML entities and trims each value before truncating it.
+
+### GitHub user object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | integer | Non-negative 32-bit GitHub user ID (validated, never rendered) |
+| login | string | GitHub login, used as the rendered embed author name |
+| html_url | string | Absolute profile URL |
+| avatar_url | string | Absolute avatar URL |
+
+### GitHub service object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | integer | Non-negative 32-bit GitHub repository ID (validated, never rendered) |
+| html_url | string | Absolute repository URL |
+| name<sup>1</sup> | string | Repository name |
+| full_name<sup>1</sup> | string | Owner-qualified repository name |
+
+<sup>1</sup> The push, check run, and check suite renderings use name, and every other rendering uses `full_name`
+
+### GitHub author object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| username? | ?string | GitHub username, or null (validated, never rendered) |
+| name | string | Author display name, which is the value rendered beside each pushed commit |
+
+### GitHub commit object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | string | Commit identifier |
+| url | string | Absolute commit API URL |
+| message<sup>2</sup> | string | Commit message |
+| author | [GitHub author](#github-author-object) object | Commit author |
+
+<sup>1</sup> Renderings abbreviate the identifier to its first seven characters
+
+<sup>2</sup> Every `This reverts commit <sha>.` sentence with a 40-character identifier is rewritten to a Markdown link to the reverted commit
+
+### GitHub comment object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string \| integer (validated, never rendered) | Signed 64-bit comment ID, accepted as a decimal string or as a safe integer |
+| html_url | string | Absolute comment URL |
+| user | [GitHub user](#github-user-object) object | Comment author |
+| commit_id?<sup>1</sup> | ?string | Associated commit identifier, or null |
+| body | string | Comment body |
+
+<sup>1</sup> The field is required for a `commit_comment` event and unused for every other comment-bearing event
+
+### GitHub discussion object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| title | string | Discussion title |
+| number | integer | Non-negative 32-bit discussion number |
+| html_url | string | Absolute discussion URL |
+| answer_html_url? | ?string | Absolute accepted-answer URL, or null (validated, never rendered) |
+| body? | ?string | Discussion body, or null |
+| user | [GitHub user](#github-user-object) object | Discussion author |
+
+### GitHub issue object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | string \| integer | Signed 64-bit issue or pull request ID, accepted as a decimal string or as a safe integer |
+| number | integer | Non-negative 32-bit issue or pull request number |
+| html_url | string | Absolute issue or pull request URL |
+| user<sup>1</sup> | [GitHub user](#github-user-object) object | Issue or pull request author |
+| title | string | Issue or pull request title |
+| body?<sup>2</sup> | ?string | Issue or pull request body, or null |
+
+<sup>1</sup> The field is accepted and validated and never rendered. The issue, pull request, and `issue_comment` renderings take their embed author from the callback sender or the comment author
+
+<sup>2</sup> The body is rendered as the embed description only for the `opened` action, and a `closed` or `reopened` action renders no description
+
+No other key is read. An unlisted key, including a `pull_request` marker that GitHub places on the issue itself, is discarded.
+
+### GitHub release object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | integer | Non-negative 32-bit release ID (validated, never rendered) |
+| tag_name | string | Git tag name |
+| html_url | string | Absolute release URL |
+| body? | ?string | Release body, or null (validated, never rendered) |
+
+### GitHub review object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [GitHub user](#github-user-object) object | Review author |
+| body? | ?string | Review body, or null |
+| html_url | string | Absolute review URL |
+| state<sup>1</sup> | string | Review state |
+
+<sup>1</sup> The field is accepted and validated but does not contribute to the rendered message, so an approval, a change request, and a comment review all render the same embed
+
+### GitHub check pull request object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| number | integer | Non-negative 32-bit pull request number (validated, never rendered) |
+
+The object exists only inside the `pull_requests` arrays of the [GitHub check suite structure](#github-check-suite-object) and the [GitHub check run structure](#github-check-run-object). Both arrays are validated and never read.
+
+### GitHub check application object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | Check application name, rendered in the check suite embed title |
+
+### GitHub check suite object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| conclusion?<sup>1</sup> | ?string | Check conclusion, or null |
+| head_branch? | ?string | Head branch, or null |
+| head_sha | string | Head commit identifier, used to build the rendered commit URL |
+| pull_requests? | ?array[[GitHub check pull request](#github-check-pull-request-object) object] | Associated pull requests, or null (validated, never rendered) |
+| app | [GitHub check application](#github-check-application-object) object | Check application |
+
+<sup>1</sup> The exact value `skipped` suppresses the message entirely, the exact value `success` renders a green embed, and every other value renders a red embed
+
+### GitHub check run output object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| title? | ?string | Output title, or null (validated, never rendered) |
+| summary? | ?string | Output summary, or null (validated, never rendered) |
+
+### GitHub check run object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| conclusion?<sup>1</sup> | ?string | Check conclusion, or null |
+| name | string | Check run name |
+| html_url<sup>2</sup> | string | Absolute check run URL |
+| check_suite<sup>3</sup> | [GitHub check suite](#github-check-suite-object) object | Parent check suite |
+| details_url?<sup>2</sup> | ?string | Absolute details URL, or null |
+| output?<sup>2</sup> | ?[GitHub check run output](#github-check-run-output-object) object | Check output, or null |
+| pull_requests?<sup>2</sup> | ?array[[GitHub check pull request](#github-check-pull-request-object) object] | Associated pull requests, or null |
+
+<sup>1</sup> The exact value `success` renders a green embed and every other value renders a red embed
+
+<sup>2</sup> The field is accepted and validated and never rendered. The check run embed links the commit built from the parent suite's `head_sha`
+
+<sup>3</sup> A check run whose parent suite reports the conclusion `skipped` produces no message
+
+## GitHub event types
+
+The value of the `X-GitHub-Event` request header selects the rendering. An event type outside this registry, and an absent header, are both acknowledged without creating a message. Every listed type additionally requires repository.
+
+| Value | Description |
+| --- | --- |
+| commit_comment<sup>1</sup> | New comment on a commit, requiring the action `created` and a comment with commit_id |
+| create<sup>2</sup> | Creation of a branch or a tag, requiring ref and ref_type |
+| delete<sup>2</sup> | Deletion of a branch or a tag, requiring ref and ref_type |
+| fork | Creation of a fork, requiring forkee |
+| issue_comment<sup>1</sup> | New comment on an issue or a pull request, requiring the action `created` and both comment and issue |
+| issues<sup>3</sup> | Issue lifecycle change, requiring issue and the action `opened`, `closed`, or `reopened` |
+| member | Repository collaborator addition, requiring the action `added` and member |
+| public | Repository becoming public |
+| pull_request<sup>3</sup> | Pull request lifecycle change, requiring pull_request and the action `opened`, `closed`, or `reopened` |
+| pull_request_review<sup>1</sup> | Pull request review, requiring the action `submitted` and both review and pull_request |
+| pull_request_review_comment<sup>1</sup> | New review comment, requiring the action `created` and both comment and pull_request |
+| push<sup>4</sup> | Git push, requiring ref |
+| release | Release publication, requiring the action `published` and release |
+| watch | Repository star, requiring the action `started` |
+| check_run<sup>5</sup> | Check run completion, requiring the action `completed` and check_run |
+| check_suite<sup>5</sup> | Check suite completion, requiring the action `completed` and check_suite |
+| discussion<sup>1</sup> | New discussion, requiring the action `created` and discussion |
+| discussion_comment<sup>1</sup> | New discussion comment, requiring the action `created` and both comment and discussion |
+| repository | Repository creation, requiring the action `created` |
+
+<sup>1</sup> The embed author is the comment, discussion, or review author
+
+<sup>2</sup> Only the reference types `branch` and `tag` render, and any other `ref_type` produces no message
+
+<sup>3</sup> The description is rendered only for the `opened` action
+
+<sup>4</sup> A forced push requires `head_commit` and compare, and renders a compare link as its whole description
+
+<sup>5</sup> A conclusion of `skipped` on the relevant suite suppresses the message
+
+An ordinary push requires compare and at least one commit, and renders one line for each commit. The line set is not capped by count, and the assembled description is truncated to the ordinary 350-character ceiling.
+
+## Instatus callback objects
+
+These objects define the body [Execute Instatus webhook](#execute-instatus-webhook) accepts.
+
+### Instatus callback object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| meta? | ?[Instatus metadata](#instatus-metadata-object) object | Callback metadata, or null (validated, never rendered) |
+| page?<sup>1</sup> | ?[Instatus page](#instatus-page-object) object | Status page data, or null |
+| incident?<sup>2</sup> | ?[Instatus incident](#instatus-incident-object) object | Incident data, or null |
+| maintenance?<sup>2</sup> | ?[Instatus maintenance](#instatus-maintenance-object) object | Maintenance data, or null |
+| component_update?<sup>2</sup> | ?[Instatus component update](#instatus-component-update-object) object | Component transition data, or null |
+| component?<sup>2</sup> | ?[Instatus component](#instatus-component-object) object | Component data, or null |
+
+<sup>1</sup> The page supplies the embed footer text and the fallback embed URL when the incident or maintenance item supplies no URL of its own. A component transition always takes its URL from the page
+
+<sup>2</sup> Exactly one rendering is selected in the order incident, maintenance, then component transition. A section with no non-empty name renders nothing, and the next section in that order is tried
+
+### Instatus metadata object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| unsubscribe? | ?string | Unsubscribe value (max 2,048 characters), or null |
+| documentation? | ?string | Documentation value (max 2,048 characters), or null |
+
+### Instatus page object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Page ID (max 256 characters), or null |
+| status_indicator?<sup>1</sup> | ?string | Status indicator (max 256 characters), or null |
+| status_description?<sup>1</sup> | ?string | Status description (max 1,024 characters), or null |
+| url?<sup>2</sup> | ?string | Page URL (max 2,048 characters), or null |
+
+<sup>1</sup> The footer text is `status_description` when it is non-empty, otherwise the humanised form of `status_indicator`
+
+<sup>2</sup> Used as an embed URL only when it parses as an absolute `http` or `https` URL
+
+A backfilled incident or maintenance item appends `Backfilled` to the footer text, so the footer is omitted only when both page values are empty and the rendered item is not backfilled.
+
+### Instatus affected component object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Component ID (max 256 characters), or null |
+| name?<sup>1</sup> | ?string | Component name (max 1,024 characters), or null |
+| status?<sup>2</sup> | ?string | Component status (max 256 characters), or null |
+
+<sup>1</sup> A component without a non-empty name is omitted from the rendered affected components field, and a callback whose components all lack names renders no such field
+
+<sup>2</sup> A non-empty status is rendered in lower case in parentheses after the name, and a component without one renders its name alone
+
+### Instatus component object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Component ID (max 256 characters), or null |
+| name?<sup>1</sup> | ?string | Component name (max 1,024 characters), or null |
+| status?<sup>2</sup> | ?string | Component status (max 256 characters), or null |
+| created_at?<sup>3</sup> | ?string | Provider creation time (max 64 characters), or null |
+
+<sup>1</sup> A component transition with no non-empty name renders the literal words `A component` in its place
+
+<sup>2</sup> The value is the fallback for the rendered transition status when the [component update](#instatus-component-update-object) supplies no `new_status`
+
+<sup>3</sup> The value is the fallback for the embed timestamp when the component update supplies no `created_at`, and a value the runtime cannot parse as a date leaves the embed without a timestamp
+
+### Instatus incident update object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Update ID (max 256 characters), or null |
+| incident_id? | ?string | Incident ID (max 256 characters), or null |
+| markdown?<sup>1</sup> | ?string | Update body (max 65,536 characters), or null |
+| status? | ?string | Update status (max 256 characters), or null (validated, never rendered) |
+| created_at?<sup>1</sup> | ?string | Provider creation time (max 64 characters), or null |
+| updated_at? | ?string | Provider update time (max 64 characters), or null (validated, never rendered) |
+
+<sup>1</sup> Only the update with the latest `created_at` contributes. Its markdown becomes the embed description, truncated to 4,096 characters, and its `created_at` becomes the embed timestamp
+
+### Instatus incident object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Incident ID (max 256 characters), or null |
+| name?<sup>1</sup> | ?string | Incident name (max 1,024 characters), or null |
+| url? | ?string | Incident URL (max 2,048 characters), or null |
+| status?<sup>2</sup> | ?string | Incident status (max 256 characters), or null |
+| backfilled?<sup>3</sup> | ?boolean | Whether the incident was backfilled, or null |
+| created_at?<sup>4</sup> | ?string | Provider creation time (max 64 characters), or null |
+| updated_at?<sup>4</sup> | ?string | Provider update time (max 64 characters), or null |
+| resolved_at? | ?string | Provider resolution time (max 64 characters), or null (validated, never rendered) |
+| incident_updates? | ?array[[Instatus incident update](#instatus-incident-update-object) object] | Incident updates, or null |
+| affected_components? | ?array[[Instatus affected component](#instatus-affected-component-object) object] | Affected components, or null |
+
+<sup>1</sup> The name becomes the embed title, truncated to 256 characters. An incident with no non-empty name is skipped, and the maintenance or component data in the same callback renders in its place
+
+<sup>2</sup> The value selects the embed colour and the rendered Status field through [Instatus status values](#instatus-status-values), and an absent status renders the neutral colour and no Status field
+
+<sup>3</sup> A true value appends `Backfilled` to the embed footer, separated from the page footer text by a vertical bar. When the page supplies no footer text, `Backfilled` is the whole footer
+
+<sup>4</sup> The embed timestamp is the latest update's `created_at`, then `updated_at`, then `created_at`, and the first value the runtime can parse as a date wins
+
+### Instatus maintenance update object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Update ID (max 256 characters), or null |
+| maintenance_id? | ?string | Maintenance ID (max 256 characters), or null |
+| markdown?<sup>1</sup> | ?string | Update body (max 65,536 characters), or null |
+| created_at?<sup>1</sup> | ?string | Provider creation time (max 64 characters), or null |
+| updated_at? | ?string | Provider update time (max 64 characters), or null (validated, never rendered) |
+
+<sup>1</sup> Only the update with the latest `created_at` contributes. Its markdown becomes the embed description, truncated to 4,096 characters, and its `created_at` becomes the embed timestamp
+
+### Instatus maintenance object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id? | ?string | Maintenance ID (max 256 characters), or null |
+| name?<sup>1</sup> | ?string | Maintenance name (max 1,024 characters), or null |
+| url? | ?string | Maintenance URL (max 2,048 characters), or null |
+| status?<sup>2</sup> | ?string | Maintenance status (max 256 characters), or null |
+| maintenance_start_date?<sup>3</sup> | ?string | Provider start time (max 64 characters), or null |
+| maintenance_end_date?<sup>3</sup> | ?string | Provider end time (max 64 characters), or null |
+| backfilled? | ?boolean | Whether the maintenance was backfilled, or null |
+| created_at?<sup>4</sup> | ?string | Provider creation time (max 64 characters), or null |
+| updated_at?<sup>4</sup> | ?string | Provider update time (max 64 characters), or null |
+| resolved_at? | ?string | Provider resolution time (max 64 characters), or null (validated, never rendered) |
+| maintenance_updates? | ?array[[Instatus maintenance update](#instatus-maintenance-update-object) object] | Maintenance updates, or null |
+| affected_components? | ?array[[Instatus affected component](#instatus-affected-component-object) object] | Affected components, or null |
+
+<sup>1</sup> The name becomes the embed title, truncated to 256 characters. A maintenance item with no non-empty name is skipped, and the component transition in the same callback renders in its place
+
+<sup>2</sup> An absent status renders the maintenance colour
+
+<sup>3</sup> Each parseable value renders as a full timestamp in the Window field, and the field is omitted when neither value parses
+
+<sup>4</sup> The embed timestamp is the latest update's `created_at`, then `updated_at`, then `created_at`, and the first value the runtime can parse as a date wins
+
+### Instatus component update object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| created_at? | ?string | Provider creation time (max 64 characters), or null |
+| new_status?<sup>1</sup> | ?string | New component status (max 256 characters), or null |
+| component_id? | ?string | Component ID (max 256 characters), or null (validated, never rendered) |
+
+<sup>1</sup> The rendering prefers `new_status` and falls back to the status of the accompanying component, using the literal word `updated` when neither is present. The selected value is rendered in lower case
+
+## Instatus status values
+
+Fluxer normalises an incident, maintenance, or component status by uppercasing it and removing every character outside `A` to `Z`, so `degraded_performance` becomes `DEGRADEDPERFORMANCE`. A normalised value in this registry selects the rendered label and the embed colour, and any other value is rendered unchanged with a neutral colour.
+
+| Value | Description |
+| --- | --- |
+| UP | Rendered as `All systems operational`, with the neutral colour |
+| HASISSUES | Rendered as `Has issues`, with the neutral colour |
+| OPERATIONAL | Rendered as `Operational`, with the operational colour |
+| UNDERMAINTENANCE | Rendered as `Under maintenance`, with the maintenance colour |
+| DEGRADEDPERFORMANCE | Rendered as `Degraded performance`, with the degraded colour |
+| PARTIALOUTAGE | Rendered as `Partial outage`, with the partial outage colour |
+| MAJOROUTAGE | Rendered as `Major outage`, with the major outage colour |
+| INVESTIGATING | Rendered as `Investigating`, with the major outage colour |
+| IDENTIFIED | Rendered as `Identified`, with the partial outage colour |
+| MONITORING | Rendered as `Monitoring`, with the degraded colour |
+| RESOLVED | Rendered as `Resolved`, with the operational colour |
+| NOTSTARTEDYET | Rendered as `Scheduled`, with the maintenance colour |
+| PLANNED | Rendered as `Planned`, with the maintenance colour |
+| INPROGRESS | Rendered as `In progress`, with the maintenance colour |
+| COMPLETED | Rendered as `Completed`, with the operational colour |
+
+## List guild webhooks
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/webhooks" bot />
+
+Returns an array of [webhook objects](#webhook-object) in a guild. The caller must be a member of the guild and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild whose webhooks are returned |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | array[[webhook](#webhook-object) object] | Webhooks were returned, and an empty array is returned when the guild has none |
+| 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
+| 400<sup>2</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>3</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
+| 403<sup>3</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403<sup>3</sup> | [error response](/http-api/#error-response) | The guild is unavailable |
+| 403<sup>3</sup> | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `MANAGE_WEBHOOKS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> The array can be shorter than the number of stored webhooks
+
+<sup>2</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
+
+<sup>3</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_ACCESS` for an unavailable guild, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+
+A webhook is returned only when the caller also holds both `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` in that webhook's own channel. A webhook with no channel target is never returned.
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user and guild ID, on the `webhook:list::guild_id` bucket.
+
+## List channel webhooks
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/webhooks" bot />
+
+Returns an array of [webhook objects](#webhook-object) in a guild text or voice channel. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild text or voice channel whose webhooks are returned |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[webhook](#webhook-object) object] | Webhooks were returned, and an empty array is returned when the channel has none |
+| 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The guild is unavailable |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text or voice channel, each returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Its guild does not resolve, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
+
+<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_ACCESS` for an unavailable guild, `NSFW_CONTENT_AGE_RESTRICTED` for an unverified account in an age restricted channel, `MISSING_PERMISSIONS` for a membership, channel access, or permission failure, and `ACCESS_DENIED` otherwise
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user and channel ID, on the `webhook:list::channel_id` bucket.
+
+## Create webhook
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/webhooks" bot auditReason />
+
+Creates a webhook in a guild text or voice channel and returns the new [webhook object](#webhook-object) with its execution token. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel. The operation accepts an audit reason.
+
+Creation emits a [Webhooks Update](/gateway/events/#webhooks-update).
+
+Fluxer checks the request in a fixed order: the content filter, the rate limit, the credential, the body schema, channel access and `MANAGE_WEBHOOKS`, the guild allowance, the channel allowance, the name scan, and only then the avatar itself.
+
+The guild allowance is the resolved [max_webhooks_per_guild](/http-api/instance/#limit-keys) value for the guild, defaulting to 1000, and the channel allowance is the resolved [max_webhooks_per_channel](/http-api/instance/#limit-keys) value, defaulting to 15.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the guild text or voice channel the webhook is created in |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | Webhook name (1-80 characters) |
+| avatar?<sup>1</sup> | ?base64 string | Base64-encoded avatar image, or null |
+
+<sup>1</sup> A leading data URI header is stripped at the first comma before decoding, and the base64 payload is 1 through 13981016 characters
+
+The decoded bytes must be at most the resolved [avatar_max_size](/http-api/instance/#limit-keys) value, which is the 10 MiB ceiling of 10485760 bytes by default. The decoded image must be an accepted avatar upload format, and an animated AVIF is rejected.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [webhook](#webhook-object) object | Webhook was created |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Body or avatar is invalid |
+| 400<sup>2</sup> | [error response](/http-api/#error-response) | The avatar is blocked as explicit media |
+| 400<sup>3</sup> | [error response](/http-api/#error-response) | The guild or channel webhook allowance is already reached |
+| 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403 | [error response](/http-api/#error-response) | The guild is unavailable |
+| 403 | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
+| 403 | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
+| 403 | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified |
+| 403 | [error response](/http-api/#error-response) | The name is blocked |
+| 403 | [error response](/http-api/#error-response) | The avatar hash is banned |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Its guild does not resolve, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> An avatar failure names the `avatar` path with `BASE64_LENGTH_INVALID`, `INVALID_BASE64_FORMAT`, `IMAGE_SIZE_EXCEEDS_LIMIT`, or `INVALID_IMAGE_FORMAT`
+
+<sup>2</sup> The classifier block has its score in `probability`
+
+<sup>3</sup> The reached allowance is in a top-level member named after its limit key
+
+| Condition | Error |
+| --- | --- |
+| Guild or channel webhook allowance reached | 400 `MAX_WEBHOOKS_PER_GUILD` or 400 `MAX_WEBHOOKS_PER_CHANNEL` |
+| Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
+| Explicit media classifier blocks the avatar | 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
+| Schema or image failure | 400 `INVALID_FORM_BODY` |
+| Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
+| Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| Guild is unavailable | 403 `MISSING_ACCESS` |
+| Unverified account in an age restricted channel | 403 `NSFW_CONTENT_AGE_RESTRICTED` |
+| Membership, channel access, or permission failure | 403 `MISSING_PERMISSIONS` |
+| Any other credential refusal | 403 `ACCESS_DENIED` |
+
+### Side effects
+
+The operation consumes one guild and channel webhook slot, generates a 64-character execution token, and stores the optional avatar. It records a `WEBHOOK_CREATE` guild audit entry that names the created webhook, has the target channel in its metadata, and has the supplied reason. A failure to write that entry does not fail the request, and the webhook still exists.
+
+It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs to guild sessions that can view the channel. A failed creation leaves no webhook and consumes no slot.
+
+### Rate limit
+
+10 requests per minute for each authenticated user and channel ID, on the `webhook:create::channel_id` bucket.
+
+## Get webhook
+
+<RouteHeader method="GET" path="/v1/webhooks/{webhook_id}" bot />
+
+Returns a [webhook object](#webhook-object). The caller must be a member of the webhook's guild and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the webhook's current channel.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to return |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [webhook](#webhook-object) object | Webhook was returned |
+| 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild or lacks `MANAGE_WEBHOOKS` in the webhook's channel |
+| 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK`, or its guild does not resolve, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
+
+<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and webhook ID, on the `webhook:read::webhook_id` bucket.
+
+## Update webhook
+
+<RouteHeader method="PATCH" path="/v1/webhooks/{webhook_id}" bot auditReason />
+
+Updates a webhook and returns the modified [webhook object](#webhook-object). Emits a [Webhooks Update](/gateway/events/#webhooks-update) Gateway event.
+
+### Limitations
+
+- The caller is a member of the webhook's guild and holds [MANAGE_WEBHOOKS](/http-api/permissions/) at guild level and in the webhook's current channel.
+- Moving the webhook additionally requires channel access and that permission in the destination channel, which must belong to the same guild.
+- The operation accepts an audit reason.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to update |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | Replacement webhook name (1-80 characters) |
+| avatar?<sup>1</sup> | ?base64 string | Base64-encoded replacement avatar, or null to remove the current avatar |
+| channel_id?<sup>2</sup> | snowflake | Destination guild text or voice channel in the same guild |
+
+<sup>1</sup> An omitted avatar leaves the stored hash unchanged, and an explicit null clears it. The same encoding, size, and format rules as [create webhook](#create-webhook) apply
+
+<sup>2</sup> A destination equal to the current channel is a no-op, and any other destination is subject to the destination channel's own [max_webhooks_per_channel](/http-api/instance/#limit-keys) allowance
+
+:::caution[A move notifies the source channel only]
+The Dispatch is emitted once and names the webhook's channel as it stood before the update. Sessions watching the destination channel receive nothing, so a client tracking a channel's webhook set refreshes it itself.
+:::
+
+The returned webhook object has the destination channel.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [webhook](#webhook-object) object | Webhook was updated |
+| 400 | [error response](/http-api/#error-response) | Body or avatar is invalid |
+| 400 | [error response](/http-api/#error-response) | The avatar is blocked as explicit media |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The destination channel already holds its maximum webhooks |
+| 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403 | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild |
+| 403 | [error response](/http-api/#error-response) | The caller lacks `MANAGE_WEBHOOKS` in the current or destination channel |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The destination channel is age restricted and the account is not age verified |
+| 403 | [error response](/http-api/#error-response) | The name is blocked |
+| 403 | [error response](/http-api/#error-response) | The avatar hash is banned |
+| 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The destination channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The destination channel belongs to another guild, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The webhook's guild does not resolve, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> The destination allowance failure has the reached value in a top-level `max_webhooks_per_channel` member
+
+<sup>2</sup> The age restriction applies to the destination channel
+
+| Condition | Error |
+| --- | --- |
+| Destination channel already holds its maximum webhooks | 400 `MAX_WEBHOOKS_PER_CHANNEL` |
+| Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
+| Explicit media classifier blocks the avatar | 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
+| Schema or image failure | 400 `INVALID_FORM_BODY` |
+| Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
+| Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| Unverified account in an age restricted destination channel | 403 `NSFW_CONTENT_AGE_RESTRICTED` |
+| Membership, channel access, or permission failure | 403 `MISSING_PERMISSIONS` |
+| Any other credential refusal | 403 `ACCESS_DENIED` |
+
+### Side effects
+
+The operation replaces the supplied fields, uploading a new avatar when one is supplied and clearing the stored hash when avatar is null. It records a `WEBHOOK_UPDATE` guild audit entry containing the previous and next webhook snapshots, the webhook's channel in its metadata, and the supplied audit reason.
+
+It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild ID and the webhook's previous channel ID to guild sessions that can view that channel.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and webhook ID, on the `webhook:update::webhook_id` bucket.
+
+## Delete webhook
+
+<RouteHeader method="DELETE" path="/v1/webhooks/{webhook_id}" bot auditReason />
+
+Permanently deletes a webhook and returns 204 with an empty body on success. The caller must be a member of the webhook's guild and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the webhook's channel. The operation accepts an audit reason.
+
+Deletion emits a [Webhooks Update](/gateway/events/#webhooks-update).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to delete |
+
+:::caution[Deletion removes the webhook and its token permanently]
+No operation restores the webhook or reissues its token. Messages it already created remain in the channel and can no longer be edited or deleted through a webhook route.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Webhook was deleted |
+| 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild or lacks `MANAGE_WEBHOOKS` in the webhook's channel |
+| 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK`, or its guild does not resolve, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
+
+<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+
+### Side effects
+
+The operation removes the webhook, frees its guild and channel webhook slot, and records a `WEBHOOK_DELETE` guild audit entry with the deleted webhook, its channel in the entry metadata, and the supplied reason. It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs to guild sessions that can view the channel.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and webhook ID, on the `webhook:delete::webhook_id` bucket.
+
+## Token routes
+
+The ten routes below take the matching webhook ID and token in their paths as the complete credential. The `Authorization` header is neither required nor read on any of them.
+
+## Get webhook with token
+
+<RouteHeader method="GET" path="/v1/webhooks/{webhook_id}/{token}" />
+
+Returns a [token webhook object](#token-webhook-object). No permission is evaluated.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to return |
+| token<sup>1</sup> | string | Webhook execution token (1-256 characters) |
+
+<sup>1</sup> A token outside that length returns 400 `INVALID_FORM_BODY`. A well-formed token that does not match the webhook is reported as an unknown webhook, so valid and invalid webhook IDs are indistinguishable
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [token webhook](#token-webhook-object) object | Webhook was returned |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+
+### Rate limit
+
+100 requests per 10 seconds for each caller identity and webhook ID, on the `webhook:read::webhook_id` bucket.
+
+## Update webhook with token
+
+<RouteHeader method="PATCH" path="/v1/webhooks/{webhook_id}/{token}" />
+
+Updates a webhook and returns the modified [token webhook object](#token-webhook-object). This form cannot move the webhook and does not accept an audit reason.
+
+A successful update emits a [Webhooks Update](/gateway/events/#webhooks-update).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to update |
+| token | string | Webhook execution token (1-256 characters) |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | Replacement webhook name (1-80 characters) |
+| avatar?<sup>1</sup> | ?base64 string | Base64-encoded replacement avatar, or null to remove the current avatar |
+
+<sup>1</sup> An omitted avatar leaves the stored hash unchanged and an explicit null clears it, exactly as in the authenticated form. The same encoding, size, and format rules as [create webhook](#create-webhook) apply
+
+:::note[The token body is strict]
+Unlike [update webhook](#update-webhook), this body rejects any field it does not define. Sending `channel_id` or any other unknown key returns 400, so a token alone cannot move a webhook between channels.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [token webhook](#token-webhook-object) object | Webhook was updated |
+| 400 | [error response](/http-api/#error-response) | Path, body, or avatar is invalid |
+| 400 | [error response](/http-api/#error-response) | The body has an unknown field |
+| 400 | [error response](/http-api/#error-response) | The avatar is blocked as explicit media, returning `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
+| 403 | [error response](/http-api/#error-response) | Name is blocked or the avatar hash is banned, each returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+
+### Side effects
+
+The operation replaces the supplied fields and emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs to guild sessions that can view the channel. It records no guild audit entry.
+
+### Rate limit
+
+20 requests per 10 seconds for each caller identity and webhook ID, on the `webhook:update::webhook_id` bucket.
+
+## Delete webhook with token
+
+<RouteHeader method="DELETE" path="/v1/webhooks/{webhook_id}/{token}" />
+
+Permanently deletes a webhook and returns 204 with an empty body on success. The operation does not accept an audit reason.
+
+Deletion emits a [Webhooks Update](/gateway/events/#webhooks-update).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to delete |
+| token | string | Webhook execution token (1-256 characters) |
+
+:::caution[Any token holder can delete the webhook]
+The route evaluates no guild permission and records no audit entry naming a user. The webhook and its token are permanently removed and cannot be restored.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Webhook was deleted |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+
+### Side effects
+
+The operation removes the webhook, frees its guild and channel webhook slot, and emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs to guild sessions that can view the channel. It records no guild audit entry.
+
+### Rate limit
+
+20 requests per 10 seconds for each caller identity and webhook ID, on the `webhook:delete::webhook_id` bucket.
+
+## Execute webhook
+
+<RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}" />
+
+Creates a webhook-authored [message](/http-api/messages/#message-object) in the webhook's channel. When `wait` is true the created message is returned, and otherwise the operation returns 204 with an empty body.
+
+The route refuses a call from the official web client. See [origin refusal](#origin-refusal). A successful execution emits a [Message Create](/gateway/events/#message-create) Gateway Dispatch whether or not wait is true.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to execute |
+| token | string | Webhook execution token (1-256 characters) |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| wait?<sup>1</sup> | boolean | Whether to return the created message (default false) |
+
+<sup>1</sup> Only the exact trimmed values `true`, `True`, and `1` are treated as true, and every other value, including `TRUE` and `yes`, is treated as false
+
+### JSON body
+
+The JSON representation of the request body is a [webhook message body](#webhook-message-body). Any request whose `Content-Type` does not contain `multipart/form-data` is read as JSON. Fluxer reads a body that is empty, whitespace-only, or unparseable as `{}`, and the request then fails as an empty message.
+
+### Multipart body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| payload_json?<sup>1</sup> | string | JSON encoded [webhook message body](#webhook-message-body) |
+| files[n]?<sup>2</sup> | binary | Direct attachment at zero-based index n |
+| content?<sup>3</sup> | string | Message content, merged into the payload |
+| nonce?<sup>3</sup> | string | Client-generated message identifier, merged into the payload |
+| tts?<sup>3</sup> | string | Text-to-speech request, merged into the payload |
+| flags?<sup>3</sup> | string | Message flags, merged into the payload |
+
+<sup>1</sup> An absent `payload_json` is read as `{}`. A present value that is not a string, or that is not valid JSON, returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_JSON_IN_PAYLOAD_JSON`
+
+<sup>2</sup> The index must be a decimal integer from 0 through the resolved [max_attachments_per_message](/http-api/instance/#limit-keys) ceiling minus one, defaulting to 9. The indices may have gaps, and each index has at most one file. A field name beginning with `files[` that does not match the exact form is rejected, and the legacy names `file` and `file<n>` are also accepted
+
+<sup>3</sup> Supplied as an ordinary form field, and it overrides the value in `payload_json` under the same name. Every other form field name is ignored
+
+A multipart execution uploads every direct file as the webhook's creating account, and as the deleted user account when that creator no longer exists. The upload requires `VIEW_CHANNEL`, `SEND_MESSAGES`, and `ATTACH_FILES` in the webhook's channel, so a body with a direct file returns 403 `MISSING_PERMISSIONS` when the uploading account no longer holds them. A body with no direct file is unaffected.
+
+An attachment metadata entry whose `id` matches a supplied file index supplies that file's filename, title, description, flags, duration, and waveform. An entry whose `id` matches no supplied file and that has a `filename` returns 400 `INVALID_FORM_BODY` with the validation code `NO_FILE_FOR_ATTACHMENT_METADATA`. Two entries claiming the same file index return `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED`. When the payload supplies no attachment metadata at all, one entry is synthesised for each file from its index and its own filename.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [message](/http-api/messages/#message-object) object | Message was created and wait is true |
+| 204 | empty | Message was created and wait is false or omitted |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Path, query, multipart framing, or message input is invalid |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The resolved payload has no content, embed, or attachment |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The content exceeds the effective maximum length |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The embed or attachment count exceeds its effective ceiling |
+| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | The resolved content or embed text is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The referenced message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |
+
+<sup>1</sup> `CANNOT_SEND_EMPTY_MESSAGE` is returned as the 400 error code itself. Every other code below, including `CONTENT_EXCEEDS_MAX_LENGTH`, sits inside an `INVALID_FORM_BODY` body
+
+| Condition | Error |
+| --- | --- |
+| Resolved payload has nothing sendable | `CANNOT_SEND_EMPTY_MESSAGE` |
+| Content longer than the effective maximum | `CONTENT_EXCEEDS_MAX_LENGTH` |
+| Payload the webhook message schema rejects | `INVALID_MESSAGE_DATA` |
+| Embed or attachment count ceiling exceeded | `TOO_MANY_EMBEDS` or `TOO_MANY_FILES` |
+| Forward reference omits `channel_id` or `message_id` | `FORWARD_REFERENCE_REQUIRES_CHANNEL_AND_MESSAGE` |
+| Forward reference accompanies content, embeds, or attachments | `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT` |
+| Reply reference names a system message | `CANNOT_REPLY_TO_SYSTEM_MESSAGE` |
+
+### Side effects
+
+The operation creates one webhook-authored message, attaches direct multipart files, and resolves forward snapshots and mentions under the allowed mentions policy.
+
+A supplied `username` replaces the author name on this message. A supplied `avatar_url` is fetched for this message, and the webhook's stored name and avatar do not change. When the avatar cannot be fetched, or the explicit media classifier blocks it, Fluxer creates the message without the override.
+
+The operation updates channel state and search results and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
+
+### Rate limit
+
+60 requests per minute for each caller identity and webhook ID, on the `webhook:execute::webhook_id` bucket, which is exempt from the global limit.
+
+## Get webhook message
+
+<RouteHeader method="GET" path="/v1/webhooks/{webhook_id}/{token}/messages/{message_id}" />
+
+Returns a [message](/http-api/messages/#message-object) that the webhook authored.
+
+The route refuses a call from the official web client. See [origin refusal](#origin-refusal).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook that authored the message |
+| token | string | Webhook execution token (1-256 characters) |
+| message_id<sup>1</sup> | snowflake | The ID of the message to return |
+
+<sup>1</sup> The message is resolved within the webhook's current channel, so a message the webhook created before it was moved to another channel is no longer reachable through this route
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [message](/http-api/messages/#message-object) object | Webhook message was returned |
+| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The webhook has no channel target, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The message does not exist in that channel, returning `UNKNOWN_MESSAGE` |
+
+### Rate limit
+
+60 requests per minute for each caller identity and webhook ID, on the `webhook:message_get::webhook_id` bucket, which is exempt from the global limit.
+
+## Edit webhook message
+
+<RouteHeader method="PATCH" path="/v1/webhooks/{webhook_id}/{token}/messages/{message_id}" />
+
+Updates a message that the webhook authored and returns the modified [message](/http-api/messages/#message-object).
+
+The route refuses a call from the official web client. See [origin refusal](#origin-refusal). A successful edit emits a [Message Update](/gateway/events/#message-update).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook that authored the message |
+| token | string | Webhook execution token (1-256 characters) |
+| message_id | snowflake | The ID of the message to update |
+
+### JSON body
+
+The body is a [webhook message edit body](#webhook-message-edit-body).
+
+:::note[A default message and a reply are editable]
+Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which has message snapshots, returns 400 `INVALID_FORM_BODY` with the validation code `MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED`. The body defines no field for the author name, avatar, attachments, message reference, or stickers, so an edit cannot change them.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [message](/http-api/messages/#message-object) object | Webhook message was updated |
+| 400 | [error response](/http-api/#error-response) | Path, body, embed, flag, or mention input is invalid |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The body leaves the message empty |
+| 400 | [error response](/http-api/#error-response) | The content or embed count exceeds its effective ceiling |
+| 400 | [error response](/http-api/#error-response) | The target message is not an editable type |
+| 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel |
+| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The replacement content or embed text is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |
+
+<sup>1</sup> A `flags` member of any value, including zero, satisfies the non-empty check, so `{}` is rejected while `{"flags": 0}` is accepted
+
+| Condition | Error |
+| --- | --- |
+| Target message type cannot be edited | 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK` |
+| Stored channel no longer resolves to a guild channel | 400 `CANNOT_EXECUTE_ON_DM` |
+| Body has no visible content, no non-empty embeds, and no `flags` | 400 `CANNOT_SEND_EMPTY_MESSAGE` |
+| Content longer than the effective maximum | 400 `CONTENT_EXCEEDS_MAX_LENGTH` |
+| Anything else | 400 `INVALID_FORM_BODY` |
+
+`CONTENT_EXCEEDS_MAX_LENGTH` is a validation code inside a 400 `INVALID_FORM_BODY` body.
+
+### Side effects
+
+The operation replaces the supplied fields, and a content change marks the message edited. An edit does not re-extract mentions. The stored mention lists are kept, and `allowed_mentions` is accepted and not read. Supplying embeds replaces the complete embed collection and revalidates every attachment reference the embeds make. The operation emits [Message Update](/gateway/events/#message-update) to sessions that can read the channel.
+
+### Rate limit
+
+30 requests per minute for each caller identity and webhook ID, on the `webhook:message_edit::webhook_id` bucket, which is exempt from the global limit.
+
+## Delete webhook message
+
+<RouteHeader method="DELETE" path="/v1/webhooks/{webhook_id}/{token}/messages/{message_id}" />
+
+Deletes a message that the webhook authored and returns 204 with an empty body on success.
+
+The route refuses a call from the official web client. See [origin refusal](#origin-refusal). Deletion emits a [Message Delete](/gateway/events/#message-delete).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook that authored the message |
+| token | string | Webhook execution token (1-256 characters) |
+| message_id | snowflake | The ID of the message to delete |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Webhook message was deleted |
+| 400 | [error response](/http-api/#error-response) | Path parameters are invalid |
+| 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel, returning `CANNOT_EXECUTE_ON_DM` |
+| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |
+
+### Side effects
+
+The operation permanently removes the message, purges its attachments, and removes it from search. It emits [Message Delete](/gateway/events/#message-delete) to sessions that can read the channel. Deleting a pinned message also removes the pin and emits [Channel Pins Update](/gateway/events/#channel-pins-update).
+
+### Rate limit
+
+30 requests per minute for each caller identity and webhook ID, on the `webhook:message_delete::webhook_id` bucket, which is exempt from the global limit.
+
+## Execute GitHub webhook
+
+<RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}/github" />
+
+Accepts a GitHub callback and creates one formatted message when the event renders. The route always returns 204 with an empty body, whether or not a message was created.
+
+A rendered event emits a [Message Create](/gateway/events/#message-create).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to execute |
+| token | string | Webhook execution token (1-256 characters) |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-GitHub-Event?<sup>1</sup> | string | [GitHub event type](#github-event-types) |
+| X-GitHub-Delivery?<sup>2</sup> | string | Delivery identifier used for deduplication |
+
+<sup>1</sup> Neither header is validated and neither is bounded in length. An absent header is read as the empty string, which matches no event type and therefore renders nothing
+
+<sup>2</sup> An absent or empty delivery identifier disables deduplication for that request, so the callback is processed and no dedup marker is recorded
+
+### JSON body
+
+The body is a [GitHub callback](#github-callback-object) object. A body the schema rejects returns 400 `INVALID_FORM_BODY`.
+
+:::note[Deduplication is per webhook and delivery]
+Only the first callback for a webhook and non-empty delivery identifier is processed within a 24-hour window. A repeated delivery is acknowledged without creating a second message.
+:::
+
+A callback that renders nothing, and one whose message creation fails, both leave the delivery identifier free for a later retry.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Callback was accepted, was not renderable, or repeated a delivery within the deduplication window |
+| 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+A renderable event creates one message with exactly one embed, authored under the fixed name `GitHub` with the bundled GitHub avatar, and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel. Mention parsing is disabled for the created message, so no mention in a commit message, issue title, or comment body notifies anyone.
+
+An unrecognised event type, a recognised type whose required fields or action are absent, and a repeated non-empty delivery identifier all create nothing and emit no Dispatch.
+
+### Rate limit
+
+200 requests per minute for each caller identity and webhook ID, on the `webhook:github::webhook_id` bucket, which is exempt from the global limit.
+
+## Execute Slack webhook
+
+<RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}/slack" />
+
+Accepts a Slack-compatible callback, converts it to the Fluxer message contract, and creates one webhook-authored message.
+
+A successful callback emits a [Message Create](/gateway/events/#message-create).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to execute |
+| token | string | Webhook execution token (1-256 characters) |
+
+### JSON body
+
+The body is a [Slack callback](#slack-callback-object) object.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | the literal string `ok` | Callback message was created |
+| 400 | [error response](/http-api/#error-response) | Path or Slack callback is invalid |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The conversion yields neither content nor an embed |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The resulting content exceeds the effective maximum length |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The converted embed count exceeds its effective ceiling |
+| 403 | [error response](/http-api/#error-response) | Converted content or embed text is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `CANNOT_SEND_EMPTY_MESSAGE` for a conversion that yields nothing, `CONTENT_EXCEEDS_MAX_LENGTH` for over-length content, and `INVALID_FORM_BODY` with the validation code `TOO_MANY_EMBEDS` for the embed ceiling
+
+:::note[The Slack callback answers in HTML]
+The success body is the literal string `ok` under the `text/html` content type. It has no representation of the created message.
+:::
+
+### Side effects
+
+The converted callback creates one webhook-authored message with the converted content and embeds, and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
+
+A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the media boundary and stored as the message avatar, and the stored webhook name and avatar do not change. When the URL cannot be fetched, or the explicit media classifier blocks the image, the callback still succeeds and the message has no avatar override.
+
+The webhook execution default applies, and every mention in the converted content is suppressed. The callback has no nonce, so a repeated callback creates a second message.
+
+### Rate limit
+
+60 requests per minute for each caller identity and webhook ID, on the `webhook:execute::webhook_id` bucket, which is exempt from the global limit and is the same bucket [execute webhook](#execute-webhook) consumes.
+
+## Execute Instatus webhook
+
+<RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}/instatus" />
+
+Accepts an Instatus callback and creates one formatted message when the callback renders. The route always returns 204 with an empty body, whether or not a message was created.
+
+A rendered callback emits a [Message Create](/gateway/events/#message-create).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_id | snowflake | The ID of the webhook to execute |
+| token | string | Webhook execution token (1-256 characters) |
+
+### JSON body
+
+The body is an [Instatus callback](#instatus-callback-object) object. A body the schema rejects returns 400 `INVALID_FORM_BODY`.
+
+:::note[Deduplication is per webhook and callback]
+Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. A callback with no such identifier is processed every time.
+:::
+
+A callback that renders nothing, and one whose message creation fails, both leave the identifier free for a later retry.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Callback was accepted, was not renderable, or repeated a callback within the deduplication window |
+| 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+
+### Side effects
+
+An incident with a non-empty name, a maintenance item with a non-empty name, or a component transition creates one message with exactly one embed, authored under the fixed name `Instatus` with the bundled Instatus avatar. Fluxer emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
+
+Mention parsing is disabled for the created message, so no mention in a provider-supplied name or update body notifies anyone. A callback that selects none of those renderings creates nothing and emits no Dispatch. A repeated callback inside the deduplication window does the same.
+
+### Rate limit
+
+200 requests per minute for each caller identity and webhook ID, on the `webhook:instatus::webhook_id` bucket, which is exempt from the global limit.
+

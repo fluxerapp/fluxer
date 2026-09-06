@@ -1,0 +1,964 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guilds
+description: Guild objects, creation templates, configuration registries, and lifecycle operations.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A guild is a community with its own channels, roles, members, and configuration. Membership and ownership transfer live on [Guild members](/http-api/guild-members/), and channels on [Guild channels](/http-api/guild-channels/).
+
+[List current user guilds](#list-current-user-guilds) and [Get guild](#get-guild) declare the `guilds` [OAuth2 scope](/http-api/oauth2/#oauth2-scopes), and a bearer credential without that scope receives 403 `MISSING_OAUTH_SCOPE`. Every other route rejects a bearer credential with 403 `ACCESS_DENIED`.
+
+A guild that does not exist returns 404 `UNKNOWN_GUILD`, and an existing guild that does not hold the caller as a member returns 403 `MISSING_PERMISSIONS`, so any authenticated caller can tell a missing guild from one they are not in. A guild whose stored record exists while the main Gateway reports it unknown returns 403 `ACCESS_DENIED`.
+
+Fluxer screens a route whose path opens with `/guilds/{guild_id}` for [guild availability](#guild-features) before the operation runs. [Create guild](#create-guild), [List current user guilds](#list-current-user-guilds), [Leave guild](#leave-guild), and [Bulk delete current user's guild messages](#bulk-delete-current-users-guild-messages) do not have the guild in their first two path segments, so a forced-unavailable guild is still listed and can still be left.
+
+The instance-wide content filter screens the JSON body of every `POST`, `PUT`, and `PATCH` route here before the route runs. A string of at least 3 characters matching the phrase blocklist, or a URL matching the URL blocklist, returns 403 `CONTENT_BLOCKED`. The `icon`, `banner`, `splash`, `embed_splash`, `permissions`, `roles`, `channels`, `password`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` members are exempt. The guild `name` is scanned a second time inside [Create guild](#create-guild) and [Modify guild](#modify-guild), without the 3 character floor.
+
+## Guild object
+
+A guild object contains the guild's configuration. The operation that returns it decides which embedded collections and caller-specific fields it has.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name of the guild (1-100 characters) |
+| icon<sup>1</sup> | ?string | Guild icon hash |
+| banner<sup>2</sup> | ?string | Guild banner hash |
+| banner_width<sup>3</sup> | ?integer | Banner width in pixels |
+| banner_height<sup>3</sup> | ?integer | Banner height in pixels |
+| splash<sup>4</sup> | ?string | Invite splash hash |
+| splash_width<sup>3</sup> | ?integer | Invite splash width in pixels |
+| splash_height<sup>3</sup> | ?integer | Invite splash height in pixels |
+| splash_card_alignment | integer | [Splash card alignment](#splash-card-alignments) |
+| embed_splash<sup>4</sup> | ?string | Embedded invite splash hash |
+| embed_splash_width<sup>3</sup> | ?integer | Embedded invite splash width in pixels |
+| embed_splash_height<sup>3</sup> | ?integer | Embedded invite splash height in pixels |
+| vanity_url_code | ?string | Custom invite code |
+| owner_id | snowflake | The ID of the guild owner |
+| system_channel_id | ?snowflake | Text channel that receives system messages |
+| system_channel_flags | integer | [System channel flags](#system-channel-flags) |
+| rules_channel_id<sup>5</sup> | ?snowflake | The ID of the rules channel |
+| afk_channel_id | ?snowflake | Voice channel that inactive members are moved to |
+| afk_timeout | integer | AFK timeout in seconds (60-3600) |
+| features<sup>6</sup> | array[string] | [Guild features](#guild-features) |
+| verification_level | integer | [Verification level](#verification-levels) |
+| mfa_level | integer | [MFA level](#mfa-levels) |
+| nsfw_level<sup>7</sup> | integer | [NSFW level](#nsfw-levels) |
+| nsfw | boolean | Whether the guild is marked as adult content |
+| content_warning_level | integer | [Guild content warning level](#guild-content-warning-levels) |
+| content_warning_text<sup>8</sup> | ?string | Guild content warning text (max 200 characters) |
+| explicit_content_filter | integer | [Guild explicit content filter level](#guild-explicit-content-filter-levels) |
+| default_message_notifications | integer | [Default message notification level](#default-message-notification-levels) |
+| disabled_operations<sup>9</sup> | integer | [Disabled guild operations](#disabled-guild-operations) |
+| message_history_cutoff<sup>10</sup> | ?ISO8601 timestamp | Earliest message visible to a member without `READ_MESSAGE_HISTORY` |
+| permissions?<sup>11</sup> | decimal string | Caller permissions in the guild |
+| roles?<sup>12</sup> | array[[guild role](/http-api/permissions/#guild-role-object) object] | Guild roles |
+| emojis?<sup>12</sup> | array[[guild emoji](/http-api/guild-emojis/#guild-emoji-object) object] | Guild emojis |
+| stickers?<sup>12</sup> | array[[guild sticker](/http-api/guild-stickers/#guild-sticker-object) object] | Guild stickers |
+| channels?<sup>13</sup> | array[[channel](/http-api/channels/#channel-object) object] | Guild channels the caller can view |
+| member_count?<sup>14</sup> | integer | Member count held by the main Gateway |
+| online_count?<sup>14</sup> | integer | Online presence count held by the main Gateway |
+| approximate_member_count?<sup>15</sup> | integer | Member count read from the main Gateway count cache |
+| approximate_presence_count?<sup>15</sup> | integer | Online presence count read from the main Gateway count cache |
+
+<sup>1</sup> An animated icon hash has the `a_` prefix, and that prefix is removed from the returned value while the guild lacks `ANIMATED_ICON`
+
+<sup>2</sup> The field is null whenever the guild lacks `BANNER`, and the `a_` prefix is removed from the returned value while the guild lacks `ANIMATED_BANNER`
+
+<sup>3</sup> The dimension is null whenever its own asset hash field is null
+
+<sup>4</sup> The field is null whenever the guild lacks `INVITE_SPLASH`
+
+<sup>5</sup> No operation on this page assigns the rules channel
+
+<sup>6</sup> The set has each feature at most once, and its order is not stable
+
+<sup>7</sup> The value is derived from `nsfw`, so it is 3 when `nsfw` is true and 0 otherwise
+
+<sup>8</sup> A null value means the client renders the localised default warning text for the guild
+
+<sup>9</sup> Written only through the [Admin API](/admin-api/guilds/)
+
+<sup>10</sup> The cutoff is evaluated only for a member that lacks [READ_MESSAGE_HISTORY](/http-api/permissions/). A null value denies that member every message in the guild, and a set value exposes messages created at or after the timestamp
+
+<sup>11</sup> Only [List current user guilds](#list-current-user-guilds) populates this field, and only when its permission lookup succeeds. The value is the complete mask the caller's roles grant
+
+<sup>12</sup> Only [Get guild](#get-guild) populates this field
+
+<sup>13</sup> Only [Get guild](#get-guild) populates this field, and the array is filtered to the channels the caller can currently view
+
+<sup>14</sup> Only [Get guild](#get-guild) populates these two fields, and both are computed from the guild's live main Gateway state
+
+<sup>15</sup> Only [List current user guilds](#list-current-user-guilds) populates these two fields, and only when `with_counts` is true. A guild whose counts are not currently held reports 0 for both
+
+:::note[An absent field means the operation omitted it]
+`roles`, `emojis`, `stickers`, `channels`, and every count field arrive only from the operations named in the footnotes above. A guild returned without `roles` can still hold roles.
+:::
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "name": "Ada's Workshop",
+  "icon": "a_9f2c1d4e",
+  "banner": null,
+  "splash": null,
+  "vanity_url_code": "workshop",
+  "owner_id": "1489002177550843905",
+  "system_channel_id": "1489002177550843907",
+  "system_channel_flags": 0,
+  "afk_channel_id": null,
+  "afk_timeout": 300,
+  "features": ["ANIMATED_ICON", "BANNER", "VANITY_URL"],
+  "verification_level": 1,
+  "mfa_level": 0,
+  "nsfw_level": 0,
+  "nsfw": false,
+  "content_warning_level": 0,
+  "content_warning_text": null,
+  "explicit_content_filter": 1,
+  "default_message_notifications": 1,
+  "disabled_operations": 0,
+  "message_history_cutoff": null
+}
+```
+
+## Partial guild object
+
+A partial guild object is the smaller guild shape that appears inside invite payloads. It has identity and presentation fields only, and the feature-gated asset rules of the complete [guild object](#guild-object) apply to it unchanged.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name of the guild |
+| icon<sup>1</sup> | ?string | Guild icon hash |
+| banner<sup>2</sup> | ?string | Guild banner hash |
+| banner_width<sup>3</sup> | ?integer | Banner width in pixels |
+| banner_height<sup>3</sup> | ?integer | Banner height in pixels |
+| splash<sup>4</sup> | ?string | Invite splash hash |
+| splash_width<sup>3</sup> | ?integer | Invite splash width in pixels |
+| splash_height<sup>3</sup> | ?integer | Invite splash height in pixels |
+| splash_card_alignment | integer | [Splash card alignment](#splash-card-alignments) |
+| embed_splash<sup>4</sup> | ?string | Embedded invite splash hash |
+| embed_splash_width<sup>3</sup> | ?integer | Embedded invite splash width in pixels |
+| embed_splash_height<sup>3</sup> | ?integer | Embedded invite splash height in pixels |
+| features<sup>5</sup> | array[string] | [Guild features](#guild-features) |
+
+<sup>1</sup> An animated icon hash has the `a_` prefix, and that prefix is removed from the returned value while the guild lacks `ANIMATED_ICON`
+
+<sup>2</sup> The field is null whenever the guild lacks `BANNER`, and the `a_` prefix is removed from the returned value while the guild lacks `ANIMATED_BANNER`
+
+<sup>3</sup> The dimension is null whenever its own asset hash field is null
+
+<sup>4</sup> The field is null whenever the guild lacks `INVITE_SPLASH`
+
+<sup>5</sup> The set has each feature at most once, and `vanity_url_code` is never part of this representation
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "name": "Ada's Workshop",
+  "icon": "a_9f2c1d4e",
+  "banner": null,
+  "splash": null,
+  "splash_card_alignment": 0,
+  "embed_splash": null,
+  "features": ["ANIMATED_ICON", "BANNER"]
+}
+```
+
+## Guild creation template object
+
+A creation template describes the roles and channels that [Create guild](#create-guild) creates. Fluxer remaps its template-local identifiers to newly allocated guild snowflakes during creation. Every template-local identifier is compared as its decimal string form, so the integer `1` and the string `"1"` name the same entity.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | Template name |
+| description?<sup>1</sup> | ?string | Template description |
+| verification_level?<sup>2</sup> | integer | [Verification level](#verification-levels), defaulting to 0 |
+| default_message_notifications?<sup>2</sup> | integer | [Default message notification level](#default-message-notification-levels), defaulting to 0 |
+| explicit_content_filter?<sup>2</sup> | integer | [Guild explicit content filter level](#guild-explicit-content-filter-levels), defaulting to 0 |
+| system_channel_id?<sup>3</sup> | ?decimal string \| integer | Template-local ID of the text channel that becomes the system channel |
+| afk_timeout?<sup>2</sup> | integer | AFK timeout in seconds, clamped to 60-3600 and defaulting to 300 |
+| system_channel_flags?<sup>4</sup> | integer | [System channel flags](#system-channel-flags), defaulting to 0 |
+| roles<sup>5</sup> | array[[guild template role](#guild-template-role-object) object] | Template roles (max 250) |
+| channels<sup>6</sup> | array[[guild template channel](#guild-template-channel-object) object] | Template channels (max 500) |
+
+<sup>1</sup> The field is read and discarded. The new guild takes its name from the `name` of the [Create guild](#create-guild) body
+
+<sup>2</sup> The value is truncated to an integer and clamped into its registry range, and a missing value becomes the stated default. A non-numeric value fails validation and returns 400 `INVALID_FORM_BODY`
+
+<sup>3</sup> An identifier that resolves to no text channel in the same template, and an absent or null value, all fall back to the template's first text channel. A template with no text channel receives a root text channel named `general`, which becomes the system channel
+
+<sup>4</sup> Every bit outside the registry is discarded
+
+<sup>5</sup> A template with more than 250 roles is rejected with 400 `GUILD_TEMPLATE_INVALID`. The ceiling counts the submitted array, and the everyone role is created on top of it, so 250 template roles that name no everyone role produce a guild holding 251
+
+<sup>6</sup> A template with more than 500 channels is rejected with 400 `GUILD_TEMPLATE_INVALID`
+
+### Guild template role object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | decimal string \| integer | Template-local role ID |
+| name?<sup>2</sup> | ?string | Role name, defaulting to the empty string |
+| permissions?<sup>3</sup> | decimal string \| integer | Legacy role permission bitfield |
+| permissions_new?<sup>3</sup> | decimal string \| integer | Preferred role permission bitfield |
+| color? | integer | Role colour, defaulting to 0 |
+| hoist? | boolean | Whether the role is displayed separately (default false) |
+| mentionable? | boolean | Whether anyone can mention the role (default false) |
+| unicode_emoji?<sup>4</sup> | ?string | Role Unicode emoji |
+
+<sup>1</sup> A duplicate identifier rejects creation with 400 `GUILD_TEMPLATE_INVALID`
+
+<sup>2</sup> The role whose name is exactly `@everyone` supplies the permissions of the new guild's everyone role, and when no role has that name the role whose identifier is `0` supplies them. Every remaining role is created in array order at positions 1 upward
+
+<sup>3</sup> `permissions_new` takes precedence over `permissions`, the value is masked to the permission bits Fluxer defines, and a value that is not a valid integer rejects creation with 400 `GUILD_TEMPLATE_INVALID`. An everyone role whose resolved mask is 0 receives the default permission set
+
+<sup>4</sup> The value is stored on the created role. The everyone role is always created with no Unicode emoji
+
+### Guild template channel object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | decimal string \| integer | Template-local channel ID |
+| type<sup>2</sup> | integer | Source channel type |
+| name? | ?string | Channel name, defaulting to the empty string |
+| topic? | ?string | Channel topic |
+| position | integer | The sort position of the channel |
+| parent_id?<sup>3</sup> | ?decimal string \| integer | Template-local parent category ID |
+| bitrate?<sup>4</sup> | ?integer | Voice bitrate, defaulting to 64000 for a voice channel |
+| user_limit?<sup>4</sup> | ?integer | Voice occupancy limit, defaulting to 0 for a voice channel |
+| voice_connection_limit?<sup>4</sup> | ?integer | Per-user voice connection limit, defaulting to 5 for a voice channel |
+| nsfw? | boolean | Whether the channel is age restricted (default false) |
+| rate_limit_per_user? | integer | Slowmode interval in seconds, defaulting to 0 |
+| permission_overwrites?<sup>5</sup> | array[[guild template role permission overwrite](#guild-template-role-permission-overwrite-object) object] | Role permission overwrites |
+
+<sup>1</sup> A duplicate identifier in the same template rejects creation with 400 `GUILD_TEMPLATE_INVALID`
+
+<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, and 4 a category, and for an import from the other platform 5 creates a text channel and 13 a voice channel. Fluxer skips every other value, so the channel is not created
+
+<sup>3</sup> The identifier is applied only when it resolves to a category in the same template, and every other value leaves the channel at the guild root
+
+<sup>4</sup> The three voice fields are stored only on a voice channel and are null on every other channel type
+
+<sup>5</sup> An entry is applied only when its resolved `type` is 0 and its `id` resolves to a role in the same template, and the identifier `0` resolves to the everyone role. Fluxer skips every other entry, and a channel whose entries are all skipped is created with no overwrites
+
+### Guild template role permission overwrite object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | decimal string \| integer | Template-local role ID |
+| type<sup>1</sup> | integer \| string | Overwrite type |
+| allow<sup>2</sup> | decimal string \| integer | Allowed permission bitfield |
+| deny<sup>2</sup> | decimal string \| integer | Denied permission bitfield |
+
+<sup>1</sup> The string `role` resolves to 0 and the string `member` resolves to 1, and every other string is read as a number. Only a resolved value of 0 is applied
+
+<sup>2</sup> The value is masked to the permission bits Fluxer defines, and a value that is not a valid integer rejects creation with 400 `GUILD_TEMPLATE_INVALID`
+
+## Verification levels
+
+A verification level gates member participation. Fluxer evaluates it when a member sends a message in the guild.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | NONE | No verification requirement |
+| 1 | LOW<sup>1</sup> | The account is claimed and its email address verified |
+| 2 | MEDIUM | The LOW requirement, and the account is at least 5 minutes old |
+| 3 | HIGH<sup>2</sup> | The MEDIUM requirement, and the membership is at least 10 minutes old |
+| 4 | VERY_HIGH<sup>3</sup> | The account has a verified phone number |
+
+<sup>1</sup> A guild with `DISCOVERABLE` is evaluated at an effective minimum of LOW even when the stored value is NONE, and [Modify guild](#modify-guild) rejects lowering a discoverable guild below LOW with 400 `INVALID_FORM_BODY` and the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`
+
+<sup>2</sup> The membership age requirement is skipped when the join timestamp cannot be read, so the level behaves as MEDIUM
+
+<sup>3</sup> A verified phone number is the whole requirement at this level
+
+The guild owner, a bot, and any member holding at least one role bypass the check at every level.
+
+## MFA levels
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | NONE | MFA is not required for moderation actions |
+| 1 | ELEVATED<sup>1</sup> | MFA is required for moderation actions |
+
+<sup>1</sup> Only the guild owner can change this value, the owner account needs a second factor already configured, and the change requires sudo mode
+
+While the level is ELEVATED, a caller other than the guild owner exercises the nine [elevated permissions](/http-api/permissions/#elevated-permissions) only with an enrolled authenticator, and a bot inherits the enrolment state of its application owner. An operation that asserts an elevated permission the caller holds but cannot exercise returns 400 `TWO_FACTOR_REQUIRED` after the permission itself has been confirmed.
+
+## Splash card alignments
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | CENTER | Centre the splash card |
+| 1 | LEFT | Align the splash card to the left |
+| 2 | RIGHT | Align the splash card to the right |
+
+## Guild explicit content filter levels
+
+A guild explicit content filter level is the guild-wide filter a moderator selects. The account setting of the same name on the [user settings object](/http-api/users/settings/) is a different registry with different values.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | DISABLED | Do not apply the guild explicit content filter |
+| 1 | MEMBERS_WITHOUT_ROLES | Apply the filter to members without roles |
+| 2 | ALL_MEMBERS | Apply the filter to all members |
+
+## Default message notification levels
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ALL_MESSAGES | Notify for all messages by default |
+| 1 | ONLY_MENTIONS | Notify only for mentions by default |
+
+## NSFW levels
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | SAFE | Guild is not age restricted |
+| 3 | AGE_RESTRICTED | Guild is age restricted |
+
+The registry has no other value. Fluxer derives the level from the guild's `nsfw` field and never writes it directly.
+
+## Guild content warning levels
+
+The guild is the last position in the resolution chain described by [channel content warning levels](/http-api/channels/#content-warning-levels).
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | INHERIT | No level is set at guild level, so a channel that inherits displays no content warning |
+| 1 | CONTENT_WARNING | A channel that inherits displays the guild content warning |
+
+## System channel flags
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | SUPPRESS_JOIN_NOTIFICATIONS | Suppress member join system messages |
+
+Every bit outside this registry is discarded when the field is written.
+
+## Disabled guild operations
+
+A set bit disables the named behaviour across the guild. Only the [Admin API](/admin-api/guilds/) writes the bitfield.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | PUSH_NOTIFICATIONS | Disable push notifications |
+| 1 &lt;&lt; 1 | EVERYONE_MENTIONS | Disable mentions of the everyone role |
+| 1 &lt;&lt; 2 | TYPING_EVENTS | Disable typing events |
+| 1 &lt;&lt; 3 | INSTANT_INVITES | Disable instant invites |
+| 1 &lt;&lt; 4 | SEND_MESSAGE | Disable message sending |
+| 1 &lt;&lt; 5 | REACTIONS | Disable reactions |
+| 1 &lt;&lt; 6 | MEMBER_LIST_UPDATES | Disable member list updates |
+
+## Guild features
+
+A feature is a capability or availability flag in the guild's `features` array.
+
+| Value | Description |
+| --- | --- |
+| ANIMATED_ICON | Guild can use an animated icon |
+| ANIMATED_BANNER | Guild can use an animated banner |
+| BANNER | Guild can use a banner |
+| CLONE_EMOJI_DISABLED<sup>1</sup> | The one-click emoji clone shortcut is disabled for non-members |
+| CLONE_STICKER_DISABLED<sup>1</sup> | The one-click sticker clone shortcut is disabled for non-members |
+| DETACHED_BANNER<sup>1</sup> | Guild banner is independent from its splash |
+| INVITE_SPLASH | Guild can use invite splash assets |
+| INVITES_DISABLED<sup>1</sup> | Guild invite use is disabled |
+| RAID_DETECTED | Raid detection is active and invites are restricted |
+| TEXT_CHANNEL_FLEXIBLE_NAMES<sup>1</sup> | Text channel names accept the flexible naming policy |
+| HIDE_OWNER_CROWN<sup>1</sup> | Guild owner crown is hidden |
+| MORE_EMOJI<sup>2</sup> | Legacy increased emoji slot allowance |
+| MORE_STICKERS<sup>2</sup> | Legacy increased sticker slot allowance |
+| UNLIMITED_EMOJI<sup>3</sup> | Guild emoji slots are effectively unlimited |
+| UNLIMITED_STICKERS<sup>3</sup> | Guild sticker slots are effectively unlimited |
+| EXPRESSION_PURGE_ALLOWED | Expression assets can be purged through delete operations |
+| VANITY_URL | Guild can own a custom invite code |
+| DISCOVERABLE | Guild is present in public discovery |
+| PARTNERED | Guild has partnered status |
+| VERIFIED | Guild has verified status |
+| VIP_VOICE | Guild has VIP voice capability |
+| VOICE_E2EE | Guild voice channels support end-to-end encryption |
+| UNAVAILABLE_FOR_EVERYONE<sup>4</sup> | Guild is unavailable to every account |
+| UNAVAILABLE_FOR_EVERYONE_BUT_STAFF<sup>4</sup> | Guild is unavailable to every account without the instance staff flag |
+| UNAVAILABLE_HIDDEN | Guild is hidden while it is forced unavailable |
+| VISIONARY | Guild has visionary status |
+| LARGE_GUILD_OVERRIDE<sup>2</sup> | Guild is marked as a large guild |
+| VERY_LARGE_GUILD<sup>5</sup> | Guild member capacity is raised |
+
+<sup>1</sup> The feature is added or removed through [Modify guild](#modify-guild), as part of the complete array. Send every feature without this marker back to `features` exactly as the guild holds it
+
+<sup>2</sup> The feature changes no HTTP API behaviour. An instance can name it in a filter of the ordered [limit configuration](/http-api/instance/#limit-keys), and the stock configuration names none of the three
+
+<sup>3</sup> The expression operations raise the slot ceiling directly, outside the instance limit configuration
+
+<sup>4</sup> An authenticated request whose path opens with `/guilds/{guild_id}` or `/channels/{channel_id}`, where that channel belongs to this guild, is rejected before the operation runs with 403 `MISSING_ACCESS`. `UNAVAILABLE_FOR_EVERYONE` applies to the guild owner exactly as it applies to every other member, while `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` exempts an account with the instance staff flag
+
+<sup>5</sup> The feature raises the default `max_guild_members` limit from 1000000 to 10000000 before the ordered [limit configuration](/http-api/instance/#limit-keys) is consulted, so the raised ceiling applies even when no configured rule names the feature
+
+## Custom invite URL object
+
+A custom invite URL object reports the guild's current custom invite code and how many times the invite behind it has been used. [Get guild custom invite URL](#get-guild-custom-invite-url) returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | ?string | Current custom invite code |
+| uses<sup>1</sup> | integer | Use count of the invite backing the current code |
+
+<sup>1</sup> The value is 0 when the guild holds no code and when the backing invite can no longer be resolved
+
+### Example
+
+```json
+{
+  "code": "workshop",
+  "uses": 128
+}
+```
+
+## Custom invite URL selection object
+
+A custom invite URL selection object reports the code the guild holds after a write. [Modify guild custom invite URL](#modify-guild-custom-invite-url) returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | ?string | Custom invite code held by the guild after the request (2-32 characters) |
+
+## Sudo verification fields
+
+These fields prove [sudo mode](/http-api/users/mfa/#sudo-mode) when an operation requires it. A caller can also supply an existing proof through the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| password?<sup>1</sup> | string | Current account password |
+| mfa_method?<sup>2</sup> | string | MFA method, either `totp` or `webauthn` |
+| mfa_code? | string | Authenticator code when the method is `totp` (1-32 characters) |
+| webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | Assertion when the method is `webauthn` |
+| webauthn_challenge? | string | Challenge bound to the WebAuthn assertion |
+
+<sup>1</sup> The password is accepted only when the account has no second factor, and it returns the field code `INVALID_PASSWORD` when it does not match
+
+<sup>2</sup> The MFA proof is accepted only when the account has a second factor, and it returns the field code `INVALID_MFA_CODE` on any failure
+
+A bot credential satisfies sudo mode without any proof. An account that has no password hash and no second factor also satisfies it without any proof. Every other account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose error object has `has_mfa` and a `methods` object reporting whether `totp` and `webauthn` are available.
+
+Fluxer issues a newly generated proof in the `X-Fluxer-Sudo-Mode-JWT` header of the success response, and only for an account that has a second factor. A proof supplied on the request is echoed back in that same header.
+
+## Create guild
+
+<RouteHeader method="POST" path="/v1/guilds" />
+
+Creates a guild owned by the caller. Requires a user session credential. Returns a [guild object](#guild-object) on success. Emits [Guild Create](/gateway/events/#guild-create) and [User Settings Update](/gateway/events/#user-settings-update) Gateway events to the owner.
+
+### Limitations
+
+- A bot credential is rejected with 400 `BOTS_CANNOT_CREATE_GUILDS`.
+- An unclaimed account is rejected with 400 `UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS`.
+- An account without a verified email address is rejected with 403 `GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED`.
+- A caller already at the configured guild limit is rejected with 400 `MAX_GUILDS`.
+- While the instance's single community policy is active, every caller is rejected with 400 `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS`.
+
+Fluxer decides the single community refusal first, so it precedes the email, bot, unclaimed, and guild limit failures.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | Guild name (1-100 characters) |
+| icon?<sup>2</sup> | ?base64 string | Guild icon |
+| empty_features?<sup>3</sup> | boolean | Whether to create the guild with no features (default false) |
+| template? | [guild creation template object](#guild-creation-template-object) | Roles and channels to provision for the new guild |
+
+<sup>1</sup> Fluxer trims the value before it measures the length bound
+
+<sup>2</sup> The field accepts raw base64, or a data URL whose payload is everything after the first comma
+
+<sup>3</sup> When false the guild is created holding `ANIMATED_ICON`, `ANIMATED_BANNER`, `BANNER`, and `INVITE_SPLASH`
+
+A `name` that satisfies the 1 to 100 character bound only before normalisation is rejected with the field code `STRING_LENGTH_INVALID`. The normalised name is scanned against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`.
+
+The `icon` base64 payload is bounded to 1 to 13981016 characters and is otherwise rejected with `BASE64_LENGTH_INVALID`, and a payload that is not valid base64 with `INVALID_BASE64_FORMAT`. The decoded image must fit within the instance `avatar_max_size` limit, which defaults to the 10 MiB ceiling, and a larger image is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted. An animated AVIF is rejected with `INVALID_IMAGE_FORMAT`. An image the media classifier marks as explicit is rejected with 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT`.
+
+Without a template the guild is created with a `Text Channels` category holding a text channel named `general`, a `Voice Channels` category holding a voice channel named `General`, and an everyone role with the default permission set. The `general` channel becomes the system channel.
+
+:::note[Embedded collections arrive on the Guild Create Dispatch]
+The creation response has none of them. Read [Get guild](#get-guild) afterwards to fetch roles, channels, emojis, stickers, and member counts over HTTP.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild object](#guild-object) | Guild was created |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Body, image, template, bot or unclaimed credential, configured guild limit, or single community policy rejects creation |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Email address is unverified, or the name is blocked |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS` while the single community policy is active, `BOTS_CANNOT_CREATE_GUILDS` for a bot credential, `UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS` for an unclaimed account, `MAX_GUILDS` at the configured guild limit, `GUILD_TEMPLATE_INVALID` for a rejected template, `EXPLICIT_CONTENT_CANNOT_BE_SENT` for an explicit icon, and `INVALID_FORM_BODY` otherwise
+
+<sup>2</sup> The [error code](/http-api/errors/) is `GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED` for an unverified email address and `CONTENT_BLOCKED` for a blocked name or body string
+
+### Side effects
+
+The operation creates the guild, its everyone role, its template or default channels, and the owner's membership. A supplied icon becomes the guild icon. Fluxer adds the guild to the owner's guild folder layout. The owner receives [Guild Create](/gateway/events/#guild-create) for the new guild and [User Settings Update](/gateway/events/#user-settings-update) with the changed folder layout. No audit log entry is recorded, and an `X-Audit-Log-Reason` header on this request is read and discarded.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `guild:create` bucket.
+
+## List current user guilds
+
+<RouteHeader method="GET" path="/v1/users/@me/guilds" bot oauth2="guilds" />
+
+Returns an array of [guild objects](#guild-object), one for every guild the authenticated user is a member of. A bearer credential requires the `guilds` [OAuth2 scope](/http-api/oauth2/#oauth2-scopes).
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| before?<sup>1</sup> | snowflake | Return guilds with a lower ID than this guild ID |
+| after?<sup>1</sup> | snowflake | Return guilds with a higher ID than this guild ID |
+| limit? | integer | Maximum number returned (1-200, default 200) |
+| with_counts?<sup>2</sup> | boolean | Include approximate member and presence counts (default false) |
+
+<sup>1</sup> A page is always ordered by ascending guild ID whichever cursor is used, and `after` takes precedence when both cursors are supplied. A cursor naming a guild the caller is not a member of is ignored, so the page starts at the first guild
+
+<sup>2</sup> A guild whose counts cannot be fetched is returned without them
+
+A membership whose guild record can no longer be resolved is dropped before the cursor and `limit` are applied, so the page still has up to `limit` guilds when further guilds remain. This route runs no availability screen, and a guild with `UNAVAILABLE_FOR_EVERYONE` is still listed.
+
+:::caution[`permissions` needs a limit of 100 or lower]
+A page of more than 100 guilds, or a failed lookup, omits `permissions` from every guild. The request still succeeds.
+:::
+
+A page within that ceiling can still omit `permissions` from an individual guild the lookup could not resolve.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[guild](#guild-object) object] | Guilds were returned |
+| 403 | [error response](/http-api/#error-response) | Bearer credential lacks the `guilds` scope and the request returns `MISSING_OAUTH_SCOPE` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `guild:list` bucket.
+
+## Get guild
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}" bot oauth2="guilds" />
+
+Returns the [guild object](#guild-object) with its roles, emojis, stickers, viewable channels, `member_count`, and `online_count`. Requires membership of the guild, and a bearer credential requires the `guilds` [OAuth2 scope](/http-api/oauth2/#oauth2-scopes).
+
+The response has no `permissions` field. Read [List current user guilds](#list-current-user-guilds) for the caller's mask.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild object](#guild-object) | Guild was returned |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the bearer credential lacks the `guilds` scope, or the caller is not a member |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `MISSING_OAUTH_SCOPE` for a missing scope, `MISSING_PERMISSIONS` for a non-member, and `ACCESS_DENIED` when the record exists while the Gateway reports the guild unknown
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and guild, on the `guild:read::guild_id` bucket.
+
+## Modify guild
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}" bot auditReason mfa />
+
+Modifies guild configuration and returns the updated [guild object](#guild-object). Requires membership and [MANAGE_GUILD](/http-api/permissions/). Emits a [Guild Update](/gateway/events/#guild-update) Gateway event to every session that can see the guild.
+
+`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
+
+Changing `mfa_level` to a different value additionally requires the guild owner, an owner account that already has a second factor, and sudo mode. A caller who is not the owner receives 403 `MISSING_PERMISSIONS` for that change even while holding `MANAGE_GUILD`. Sudo mode is verified before ownership, so a non-owner without a proof receives 403 `SUDO_MODE_REQUIRED` first.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT? | string | Existing sudo mode proof, read when the MFA level changes |
+
+### JSON body
+
+Every field is optional. An omitted field preserves its current value, and a field explicitly set to null clears it where the type allows null.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name?<sup>1</sup> | string | Guild name (1-100 characters) |
+| icon?<sup>2</sup> | ?base64 string | Guild icon, or null to clear it |
+| system_channel_id?<sup>3</sup> | ?snowflake | System channel ID, or null to clear it |
+| system_channel_flags?<sup>4</sup> | integer | [System channel flags](#system-channel-flags) |
+| afk_channel_id?<sup>5</sup> | ?snowflake | AFK voice channel ID, or null to clear it |
+| afk_timeout? | integer | AFK timeout in seconds (60-3600) |
+| default_message_notifications? | integer | [Default message notification level](#default-message-notification-levels) |
+| verification_level?<sup>6</sup> | integer | [Verification level](#verification-levels) |
+| mfa_level?<sup>7</sup> | integer | [MFA level](#mfa-levels) |
+| nsfw_level?<sup>8</sup> | integer | Legacy [NSFW level](#nsfw-levels), which is translated into `nsfw` and the content warning level |
+| nsfw?<sup>9</sup> | boolean | Whether the guild is marked as adult content |
+| content_warning_level?<sup>10</sup> | integer | [Guild content warning level](#guild-content-warning-levels) |
+| content_warning_text?<sup>11</sup> | ?string | Content warning text (max 200 characters), or null for the localised default |
+| explicit_content_filter? | integer | [Guild explicit content filter level](#guild-explicit-content-filter-levels) |
+| banner?<sup>12</sup> | ?base64 string | Guild banner, or null to clear it |
+| splash?<sup>13</sup> | ?base64 string | Static invite splash, or null to clear it |
+| embed_splash?<sup>13</sup> | ?base64 string | Static embedded invite splash, or null to clear it |
+| splash_card_alignment? | integer | [Splash card alignment](#splash-card-alignments) |
+| features?<sup>14</sup> | array[string] | Complete desired [guild feature](#guild-features) set (max 100 entries) |
+| message_history_cutoff?<sup>15</sup> | ?ISO8601 timestamp | Earliest history visible without [READ_MESSAGE_HISTORY](/http-api/permissions/), or null to deny historical access |
+| password? | string | [Sudo verification](#sudo-verification-fields) password |
+| mfa_method? | string | [Sudo verification](#sudo-verification-fields) method, either `totp` or `webauthn` |
+| mfa_code? | string | [Sudo verification](#sudo-verification-fields) authenticator code |
+| webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | [Sudo verification](#sudo-verification-fields) assertion |
+| webauthn_challenge? | string | Challenge bound to the WebAuthn assertion |
+
+<sup>1</sup> The value is normalised and trimmed before its length is measured, and the normalised name is scanned against the instance phrase and URL blocklists, so a match returns 403 `CONTENT_BLOCKED`
+
+<sup>2</sup> The accepted encoding, byte ceiling, and format set are the ones listed by [Create guild](#create-guild), and an image the media classifier marks as explicit is rejected with 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT`. No guild feature gates an animated icon on write, but the `a_` prefix is stripped from the returned hash while the guild lacks `ANIMATED_ICON`
+
+<sup>3</sup> The channel must exist in this guild and be a text channel, and is otherwise rejected with `SYSTEM_CHANNEL_MUST_BE_IN_GUILD` or `SYSTEM_CHANNEL_MUST_BE_TEXT`
+
+<sup>4</sup> Every bit outside the registry is discarded
+
+<sup>5</sup> The channel must exist in this guild and be a voice channel, and is otherwise rejected with `AFK_CHANNEL_MUST_BE_IN_GUILD` or `AFK_CHANNEL_MUST_BE_VOICE`
+
+<sup>6</sup> A guild with `DISCOVERABLE` cannot be lowered below LOW and is rejected with the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`. That check runs before the MFA level check
+
+<sup>7</sup> Sending the value the guild already holds needs neither ownership nor sudo mode, and an owner without a configured second factor is rejected with the field code `MUST_ENABLE_2FA_BEFORE_REQUIRING_FOR_MODS`
+
+<sup>8</sup> The only accepted values are 0 and 3, and `nsfw` takes precedence when both fields are supplied. Setting 3 through this field also raises the content warning level to CONTENT_WARNING when `content_warning_level` is absent from the same body and the guild currently sits at INHERIT
+
+<sup>9</sup> The write also sets `nsfw_level` to 3 when true and 0 when false, and unlike `nsfw_level` it never changes the content warning level
+
+<sup>10</sup> Any value other than 1 is stored as 0
+
+<sup>11</sup> The value is trimmed, and a value that is empty after trimming is stored as null
+
+<sup>12</sup> A non-null value requires `BANNER`, and an animated image additionally requires `ANIMATED_BANNER`, otherwise the request is rejected with the field codes `GUILD_BANNER_REQUIRES_FEATURE` or `ANIMATED_GUILD_BANNER_REQUIRES_FEATURE`
+
+<sup>13</sup> A non-null value requires `INVITE_SPLASH` and is rejected with the field codes `INVITE_SPLASH_REQUIRES_FEATURE` or `EMBED_SPLASH_REQUIRES_FEATURE`. Both splash fields take static images only, so GIF and APNG are not accepted for either and an animated upload is rejected with the field code `INVALID_IMAGE_FORMAT`
+
+<sup>14</sup> Adding a feature that is not user-toggleable is rejected with the field code `GUILD_FEATURE_NOT_TOGGLEABLE`, while omitting a feature that is not user-toggleable leaves it in place. The user-toggleable features are `INVITES_DISABLED`, `TEXT_CHANNEL_FLEXIBLE_NAMES`, `DETACHED_BANNER`, `CLONE_EMOJI_DISABLED`, `CLONE_STICKER_DISABLED`, and `HIDE_OWNER_CROWN`
+
+<sup>15</sup> A timestamp earlier than the guild's creation time or in the future is rejected with `MESSAGE_HISTORY_CUTOFF_BEFORE_GUILD_CREATION` or `MESSAGE_HISTORY_CUTOFF_IN_FUTURE`
+
+:::caution[Omitting a user-toggleable feature removes it]
+Send the current array with the intended changes applied. A feature without the toggleable marker stays in place when the array omits it.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild object](#guild-object) | Guild was modified, or the supplied values matched current state |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Body, image, feature set, channel reference, timestamp, or sudo proof is invalid |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot exercise `MANAGE_GUILD` |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the name is blocked, `MANAGE_GUILD` or ownership is absent, or sudo mode is required |
+| 404<sup>3</sup> | [error response](/http-api/#error-response) | Guild does not exist |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot exercise it, `EXPLICIT_CONTENT_CANNOT_BE_SENT` for an explicit image, and `INVALID_FORM_BODY` otherwise
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked name or body string, `SUDO_MODE_REQUIRED` when an MFA level change is unproven, and `MISSING_PERMISSIONS` for a non-member, a missing `MANAGE_GUILD`, or a non-owner changing the MFA level
+
+<sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_GUILD`
+
+### Side effects
+
+Every successful request emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild, and a request that writes no field still emits it.
+
+Only a change to an audited field records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new values, which in turn emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
+
+Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text channel whose stored name does not satisfy the strict naming policy and, when at least one channel is renamed, emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
+
+Replacing an image queues the previous asset for deletion after the change succeeds. A failed replacement rolls back the newly uploaded asset and leaves the previous image unchanged.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild, on the `guild:update::guild_id` bucket.
+
+## Delete guild
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/delete" mfa />
+
+Permanently deletes the guild and returns 204 with an empty body. Requires the guild owner and sudo mode. Emits a [Guild Delete](/gateway/events/#guild-delete) Gateway event to every member session.
+
+Fluxer refuses a non-owner with 403 `MISSING_PERMISSIONS`. A bot can never own a guild, so a bot credential never satisfies the requirement.
+
+A guild protected by an active single community policy cannot be deleted and returns 400 `SINGLE_COMMUNITY_CANNOT_DELETE`. Fluxer decides that refusal before the ownership check and before sudo mode is verified, so a non-owner of such a guild receives the 400 rather than the 403.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT? | string | Existing sudo mode proof |
+
+### JSON body
+
+The body is the optional [sudo verification fields](#sudo-verification-fields). A request that already has a valid proof can omit it.
+
+:::danger[Deleting a guild destroys its messages and attachments]
+There is no grace period and no scheduled deadline. The guild, its memberships, roles, channels, messages, attachments, invites, webhooks, and discovery listing are destroyed as the request runs, and nothing in the HTTP API restores them.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Guild was deleted |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Body, sudo proof, or single community policy rejects the request |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the caller is not the owner, or sudo mode is required |
+| 404<sup>3</sup> | [error response](/http-api/#error-response) | Guild does not exist |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `SINGLE_COMMUNITY_CANNOT_DELETE` while the policy protects this guild, and `INVALID_FORM_BODY` otherwise
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `SUDO_MODE_REQUIRED` when sudo mode is unproven, and `MISSING_PERMISSIONS` for a caller who is not a member or not the owner
+
+<sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_GUILD`
+
+### Side effects
+
+Every member session receives [Guild Delete](/gateway/events/#guild-delete) before any state is removed. The operation then removes every membership, deletes each member's guild settings, and removes the guild from each non-bot member's folder layout, which emits [User Settings Update](/gateway/events/#user-settings-update) to that member's sessions. It deletes every invite, webhook, message, attachment, and discovery record, and then the guild itself.
+
+No audit log entry is recorded, because the audit log is destroyed with the guild. An `X-Audit-Log-Reason` header on this request is read and discarded.
+
+### Rate limit
+
+10 requests per minute for each authenticated user and guild, on the `guild:delete::guild_id` bucket.
+
+## Leave guild
+
+<RouteHeader method="DELETE" path="/v1/users/@me/guilds/{guild_id}" bot />
+
+Removes the authenticated account's membership and returns 204 with an empty body. Requires a current membership. Emits a [Guild Member Remove](/gateway/events/#guild-member-remove) Gateway event to the remaining guild sessions and a [Guild Delete](/gateway/events/#guild-delete) Gateway event to the leaving account's own sessions.
+
+A caller with no current membership receives 404 `UNKNOWN_MEMBER` whether or not the guild exists. The guild owner cannot leave and receives 400 `INVALID_FORM_BODY` with the field code `CANNOT_LEAVE_GUILD_AS_OWNER`. A guild protected by an active single community policy cannot be left and returns 400 `SINGLE_COMMUNITY_CANNOT_LEAVE`. Setting `delete_messages` requires sudo mode, which a bot credential satisfies implicitly.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| delete_messages?<sup>1</sup> | boolean | Delete every message the caller authored in the guild before leaving (default false) |
+
+<sup>1</sup> The deletion runs inside this request and completes before the membership is removed. The response is sent only after every matching message is gone
+
+Setting `delete_messages` also changes the failure order. Fluxer resolves the guild and proves sudo mode before it reads the membership, so a non-member of an existing guild receives 403 `MISSING_PERMISSIONS` rather than 404 `UNKNOWN_MEMBER`.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT? | string | Existing sudo mode proof, read only when `delete_messages` is true |
+
+### JSON body
+
+The optional body is the [sudo verification fields](#sudo-verification-fields). It is validated on every request and used only when `delete_messages` is true.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Membership was removed |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Query, body, sudo proof, guild ownership, or single community policy rejects the request |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Sudo mode is required, or the caller is not a member while `delete_messages` is true |
+| 404<sup>3</sup> | [error response](/http-api/#error-response) | Caller holds no membership in the guild |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `SINGLE_COMMUNITY_CANNOT_LEAVE` while the policy protects this guild, and `INVALID_FORM_BODY` otherwise, with the field code `CANNOT_LEAVE_GUILD_AS_OWNER` on `guild_id` for the guild owner
+
+<sup>2</sup> The [error code](/http-api/errors/) is `SUDO_MODE_REQUIRED` when `delete_messages` is true and sudo mode is unproven, and `MISSING_PERMISSIONS` for a non-member reached through the `delete_messages` path
+
+<sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_MEMBER`, and `UNKNOWN_GUILD` when `delete_messages` is true and the guild does not exist
+
+### Side effects
+
+The operation snapshots the membership's first join time, leave time, and any active communication timeout for one year, removes the membership, and decreases the guild's member count. For a non-bot account it also removes the guild from the account's folder layout, which emits [User Settings Update](/gateway/events/#user-settings-update) to that account's sessions.
+
+Remaining guild sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove) and the leaving account's sessions receive [Guild Delete](/gateway/events/#guild-delete).
+
+Fluxer leaves the guild's read states and per-guild settings in place. The membership row is destroyed with everything on it, so the guild nickname, guild avatar, guild banner, bio, pronouns, accent colour, and roles do not survive the leave. Rejoining within the retention window restores an unexpired communication timeout and nothing else. No audit log entry is recorded, and an `X-Audit-Log-Reason` header on this request is read and discarded.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and guild, on the `guild:leave::guild_id` bucket.
+
+## Bulk delete current user's guild messages
+
+<RouteHeader method="POST" path="/v1/users/@me/guilds/{guild_id}/messages/bulk-delete-mine" bot mfa />
+
+Deletes every message the authenticated account has authored in the guild and returns 202 with an empty body. Requires membership and sudo mode, which a bot credential satisfies implicitly. The membership survives the request.
+
+The deletion runs inside this request, so the 202 is sent only after every matching message in every guild channel has been removed. Each processed batch emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in its channel.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT? | string | Existing sudo mode proof |
+
+### JSON body
+
+The body is the optional [sudo verification fields](#sudo-verification-fields).
+
+:::danger[Deletion is irreversible and unbounded]
+Every message the caller authored in the guild is destroyed together with its attachments. There is no filter and no dry run, and the request runs for as long as the caller's authored history takes.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 202 | empty | Messages were deleted |
+| 400 | [error response](/http-api/#error-response) | Body or sudo proof is invalid |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller is not a member, or sudo mode is required |
+| 404<sup>2</sup> | [error response](/http-api/#error-response) | Guild does not exist |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_PERMISSIONS` for a caller who is not a member and `SUDO_MODE_REQUIRED` when sudo mode is unproven
+
+<sup>2</sup> The [error code](/http-api/errors/) is `UNKNOWN_GUILD`
+
+### Side effects
+
+The operation deletes the caller's messages in this guild's channels in batches of at most 100 per channel. Each batch purges the messages' attachments and emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) with that batch's IDs to the channel. No audit log entry is recorded.
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and guild, on the shared `guild:leave::guild_id` bucket.
+
+## Get guild custom invite URL
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/vanity-url" bot />
+
+Returns the guild's [custom invite URL object](#custom-invite-url-object). Requires membership and [MANAGE_GUILD](/http-api/permissions/).
+
+`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [custom invite URL object](#custom-invite-url-object) | Custom invite URL state was returned |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot exercise `MANAGE_GUILD` |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `MANAGE_GUILD` is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED`
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild and `MISSING_PERMISSIONS` for a non-member or a caller lacking `MANAGE_GUILD`
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and guild, on the `guild:vanity_url:get::guild_id` bucket.
+
+## Modify guild custom invite URL
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/vanity-url" bot auditReason mfa />
+
+Sets or removes the guild's custom invite code and returns the [custom invite URL selection object](#custom-invite-url-selection-object). Requires membership and [MANAGE_GUILD](/http-api/permissions/). An effective change emits a [Guild Update](/gateway/events/#guild-update) Gateway event to every session that can see the guild.
+
+`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
+
+A non-null code additionally requires the `VANITY_URL` guild feature and is otherwise rejected with the field code `VANITY_URL_REQUIRES_FEATURE`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code?<sup>1</sup> | ?string | Custom invite code to claim, or null to remove the current code |
+
+<sup>1</sup> Fluxer lowercases the value, turns each whitespace run into one hyphen, and collapses repeated hyphens. The result must match `^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$` and be 2 to 32 characters
+
+A result that fails the pattern is rejected with the field code `VANITY_URL_INVALID_CHARACTERS`, and one outside the length bound with `VANITY_URL_CODE_LENGTH_INVALID`. A code containing the term `fluxer` is rejected with the field code `VANITY_URL_CODE_CANNOT_CONTAIN_FLUXER`. Sending the code the guild already holds returns that code unchanged, after the feature and reserved term checks and before the uniqueness check. A code that any existing invite already holds is otherwise rejected with the field code `VANITY_URL_CODE_ALREADY_TAKEN`.
+
+:::note[A custom invite code competes with ordinary invites]
+Selecting a code claims it in the global invite namespace, and replacing or removing the code releases it back.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [custom invite URL selection object](#custom-invite-url-selection-object) | Code was claimed, removed, or already matched |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Code, reserved term policy, feature requirement, or global uniqueness check rejects the request |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot exercise `MANAGE_GUILD` |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the code is blocked, or `MANAGE_GUILD` is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot exercise it, and `INVALID_FORM_BODY` otherwise
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked code, and `MISSING_PERMISSIONS` for a non-member or a caller lacking `MANAGE_GUILD`
+
+### Side effects
+
+Supplying the current code, or removing a code when the guild has none, changes nothing, records no audit entry, and emits no Dispatch. Any other request deletes the invite backing the previous code. Where a code was supplied, it claims the new one. It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new code, emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild, and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
+
+### Rate limit
+
+10 requests per minute for each authenticated user and guild, on the `guild:vanity_url:patch::guild_id` bucket.
+

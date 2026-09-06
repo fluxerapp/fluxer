@@ -1,0 +1,429 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin discovery
+description: Discovery application review, listing reads, category moves, and removal.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Admin discovery is the review side of the public guild directory. An Admin decides the application a guild manager submits, reads and edits the approved listing, moves it between categories, and removes the guild from the directory. A guild has at most one application, and the public [Discovery](/http-api/discovery/) resource drives the same lifecycle from the guild's side.
+
+Every operation except [Remove discovery listing](#remove-discovery-listing) requires `discovery:review`, which covers the four reads, [Review discovery application](#review-discovery-application), [Move discovery listings to a category](#move-discovery-listings-to-a-category), and [Update discovery listing](#update-discovery-listing). [Remove discovery listing](#remove-discovery-listing) requires `discovery:remove` instead. Neither implies the other.
+
+No operation here reads `X-Audit-Log-Reason` or records an Admin audit entry. An operation that stores a reason takes it in its request body.
+
+:::note[Review runs regardless of the discovery setting]
+An operator can disable discovery for the whole instance. Only the public [Discovery](/http-api/discovery/) routes read that state, and they return 400 `DISCOVERY_DISABLED` while it is off, so an application can be reviewed into a directory no account can see.
+:::
+
+## Admin pending application object
+
+A guild's submitted application, together with the guild details Fluxer resolves at request time.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild that applied to discovery |
+| guild_name<sup>1</sup> | string | Current guild name |
+| guild_icon<sup>1</sup> | ?string | Current guild icon hash, or null when the guild has none |
+| guild_owner_id<sup>1</sup> | snowflake | Current guild owner |
+| guild_owner_username<sup>2</sup> | ?string | Username of the owner |
+| guild_owner_global_name<sup>2</sup> | ?string | Display name of the owner, or null when unset |
+| guild_owner_discriminator<sup>2</sup> <sup>3</sup> | ?string | Discriminator of the owner |
+| guild_member_count<sup>1</sup> <sup>4</sup> | integer | The member count on the guild record |
+| guild_nsfw_level<sup>1</sup> | ?integer | Current [NSFW level](/http-api/guilds/#nsfw-levels) of the guild |
+| guild_features<sup>1</sup> <sup>5</sup> | array[string] | Current [guild features](/http-api/guilds/#guild-features) |
+| description | string | Listing description of 10 through 300 characters |
+| category_type<sup>6</sup> | integer | [Discovery category](/http-api/discovery/#discovery-categories) the listing is filed under |
+| primary_language<sup>7</sup> | ?string | [Supported primary language](/http-api/discovery/#supported-primary-languages) code |
+| custom_tags<sup>6</sup> <sup>8</sup> | array[string] | Normalised [custom tags](/http-api/discovery/#custom-tags) of the listing |
+| applied_at | ISO8601 timestamp | Time at which the guild applied |
+
+<sup>1</sup> Resolved from the guild at request time. A guild that can no longer be resolved yields the literal name `(unknown guild)`, a null icon, the owner ID `0`, a member count of 0, a null NSFW level, an empty feature array, and null for all three owner name fields
+
+<sup>2</sup> Read from the owner account, so it is null when the guild resolved but the owner account did not
+
+<sup>3</sup> Rendered as four digits with leading zeroes
+
+<sup>4</sup> The count stored on the guild record, so it is approximate
+
+<sup>5</sup> An approved application has the discoverable feature here
+
+<sup>6</sup> A stored null reads as `0` for the category and as an empty array for the tags
+
+<sup>7</sup> A stored null reads as `en-US`, so this read does not produce null
+
+<sup>8</sup> Stored already trimmed, lowercased, and whitespace collapsed, so a tag does not round-trip in the casing it was submitted with
+
+### Example
+
+```json
+{
+  "guild_id": "1478812292088791040",
+  "guild_name": "Example Guild",
+  "guild_icon": "a1b2c3d4e5f60718293a4b5c6d7e8f90",
+  "guild_owner_id": "1478812292088791041",
+  "guild_owner_username": "example",
+  "guild_owner_global_name": "Example",
+  "guild_owner_discriminator": "0042",
+  "guild_member_count": 1204,
+  "guild_nsfw_level": 0,
+  "guild_features": ["COMMUNITY"],
+  "description": "A place to talk about building things.",
+  "category_type": 3,
+  "primary_language": "en-US",
+  "custom_tags": ["makers", "diy"],
+  "applied_at": "2026-08-19T14:03:55.000Z"
+}
+```
+
+## Admin discovery listing object
+
+An approved listing. It has every field of the [Admin pending application object](#admin-pending-application-object) with the same meaning, plus the field below.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| approved_at<sup>1</sup> | ?ISO8601 timestamp | Time at which the application was approved |
+
+<sup>1</sup> The review time of the application, so a guild approved automatically on submission has its submission time here
+
+## Discovery application object
+
+This is the [discovery application object](/http-api/discovery/#discovery-application-object) of the public Discovery resource. Every write on this page answers with it, so a client re-reads the listing after a write to render the enriched guild fields.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild the application belongs to |
+| guild_nsfw_level?<sup>1</sup> | ?integer | [NSFW level](/http-api/guilds/#nsfw-levels) of the guild |
+| status | string | [Discovery application status](/http-api/discovery/#discovery-application-statuses) |
+| description | string | The description shown on the listing |
+| category_type | integer | [Discovery category](/http-api/discovery/#discovery-categories) the listing is filed under |
+| primary_language | ?string | [Supported primary language](/http-api/discovery/#supported-primary-languages) code |
+| custom_tags | array[string] | Normalised [custom tags](/http-api/discovery/#custom-tags) of the listing |
+| applied_at | ISO8601 timestamp | Time at which the guild applied |
+| reviewed_at<sup>2</sup> | ?ISO8601 timestamp | Time at which the application was approved or rejected, or null while it is pending |
+| review_reason<sup>3</sup> | ?string | Reason recorded with the approval or rejection, or null |
+| removed_at<sup>4</sup> | ?ISO8601 timestamp | Time at which an approved listing was removed, or null |
+| removal_reason<sup>4</sup> | ?string | Reason recorded with the removal, or null |
+
+<sup>1</sup> No route on this page populates it. Read the level from the [Admin pending application object](#admin-pending-application-object) or the [guild object](/http-api/guilds/#guild-object) instead
+
+<sup>2</sup> An application approved automatically on submission has its submission time here
+
+<sup>3</sup> Null for an approval that supplied no reason and for an automatic approval. A rejection always has one
+
+<sup>4</sup> Both fields are set only by [Remove discovery listing](#remove-discovery-listing)
+
+### Example
+
+```json
+{
+  "guild_id": "1478812292088791040",
+  "status": "approved",
+  "description": "A place to talk about building things.",
+  "category_type": 3,
+  "primary_language": "en-US",
+  "custom_tags": ["makers", "diy"],
+  "applied_at": "2026-08-19T14:03:55.000Z",
+  "reviewed_at": "2026-08-20T09:11:02.000Z",
+  "review_reason": null,
+  "removed_at": null,
+  "removal_reason": null
+}
+```
+
+## Reviewer identity
+
+The application records the Admin that approved, rejected, or removed it. No response on this page exposes that value.
+
+## Discovery categories
+
+Each release ships a fixed category set, and no Admin operation changes it. See [discovery categories](/http-api/discovery/#discovery-categories) for the set.
+
+Every `category_type` and `category_id` here is an integer of 0 through 8. A value outside that range fails path, query, or body validation.
+
+## List discovery applications
+
+<RouteHeader method="GET" path="/v1/admin/discovery/applications" />
+
+Returns every pending application as an array of [Admin pending application](#admin-pending-application-object) objects. Requires `discovery:review`.
+
+Applications arrive in storage order, keyed by application time and then by guild ID. That direction is not specified, so a client that needs a stable order sorts the array itself. The response is a bare array, and the operation accepts no cursor and no limit.
+
+A guild approved automatically on submission never appears here. An application whose stored record can no longer be read is dropped from the array. The request still succeeds.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[Admin pending application](#admin-pending-application-object) object] | Pending applications were returned |
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
+
+## Review discovery application
+
+<RouteHeader method="PATCH" path="/v1/admin/discovery/applications/{guild_id}" />
+
+Approves or rejects a pending application and returns the updated [discovery application](#discovery-application-object) object. Requires `discovery:review`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild that applied to discovery |
+
+### JSON body
+
+`status` is the decision, and the constraint on `reason` depends on which one it is.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status<sup>1</sup> | approved \| rejected | Decision to apply |
+| reason<sup>2</sup> <sup>3</sup> | string | Reason stored on the application as `review_reason` (at most 500 characters) |
+
+<sup>1</sup> A value outside the two listed fails body validation. Neither `removed` nor `pending` is accepted
+
+<sup>2</sup> Optional when `status` is `approved`, and omitting it stores null. An empty string fails body validation with 400 `INVALID_FORM_BODY`
+
+<sup>3</sup> Required and at least one character when `status` is `rejected`, so a rejection without a reason fails body validation
+
+:::caution[Review is a one-way transition]
+An application that is already approved, rejected, or removed fails with 409 `DISCOVERY_APPLICATION_ALREADY_REVIEWED`, and nothing returns a reviewed application to pending. Listing a removed or rejected guild again requires a new application.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery application](#discovery-application-object) object | Decision was applied |
+| 404 | [error response](/admin-api/#error-response) | The guild holds no application, returned as `DISCOVERY_APPLICATION_NOT_FOUND` |
+| 409 | [error response](/admin-api/#error-response) | The application is not pending, returned as `DISCOVERY_APPLICATION_ALREADY_REVIEWED` |
+
+### Side effects
+
+An approval moves the application to `approved` and records the review time, the reviewing Admin, and the supplied reason. It adds the discoverable feature to the guild and indexes the listing, so the guild appears in [Search discovery guilds](/http-api/discovery/#search-discovery-guilds). [Guild Update](/gateway/events/#guild-update) fires to every session that can observe the guild. Indexing is skipped on an instance with no search backend configured, and the approval still succeeds.
+
+Fluxer moves a rejected application to `rejected` and records the review time, the reviewing Admin, and the required reason. It leaves every guild field as it is and emits no Gateway Dispatch.
+
+An approval whose guild can no longer be resolved still succeeds. Fluxer skips the feature grant and the Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
+
+## List discovery categories
+
+<RouteHeader method="GET" path="/v1/admin/discovery/categories" />
+
+Returns the fixed [discovery category](/http-api/discovery/#discovery-categories) set as an array of [discovery category](/http-api/discovery/#discovery-category-object) objects, in ascending ID order. Requires `discovery:review`.
+
+It reports the same set on every instance running the same release and has no listing counts. Names are the release's display names and are not localised.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[discovery category](/http-api/discovery/#discovery-category-object) object] | Categories were returned |
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
+
+## List guilds in a discovery category
+
+<RouteHeader method="GET" path="/v1/admin/discovery/categories/{category_id}/listings" />
+
+Returns an offset page of the approved listings filed under one category, most members first, as an array of [Admin discovery listing](#admin-discovery-listing-object) objects. Requires `discovery:review`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| category_id | integer | [Discovery category](/http-api/discovery/#discovery-categories) of 0 through 8 |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit? | integer | Listings to return (1-100, default 50) |
+| offset?<sup>1</sup> | integer | Listings to skip (0-10000, default 0) |
+
+<sup>1</sup> Applied after the category filter and the member sort, so raise it to page a category
+
+A rebuild of the discovery search index does not change what it answers. It reports no total, so a page shorter than `limit` is the only end-of-category signal. A listing whose guild could not be resolved sorts as if it had no members and lands at the end.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[Admin discovery listing](#admin-discovery-listing-object) object] | The page was returned |
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
+
+## List discovery listings
+
+<RouteHeader method="GET" path="/v1/admin/discovery/listings" />
+
+Returns every approved listing as an array of [Admin discovery listing](#admin-discovery-listing-object) objects. Requires `discovery:review`.
+
+Listings arrive in the same unspecified storage order as [List discovery applications](#list-discovery-applications). The response is a bare array, and the operation accepts no cursor and no limit. A pending, rejected, or removed application is never returned.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[Admin discovery listing](#admin-discovery-listing-object) object] | Approved listings were returned |
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
+
+## Move discovery listings to a category
+
+<RouteHeader method="PATCH" path="/v1/admin/discovery/listings" />
+
+Files every named guild under one [discovery category](/http-api/discovery/#discovery-categories) and reports how many moved. Requires `discovery:review`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_ids<sup>1</sup> | array[snowflake] | Guilds to move, 1 through 100 entries |
+| category_type | integer | [Discovery category](/http-api/discovery/#discovery-categories) of 0 through 8 to file every named guild under |
+
+<sup>1</sup> Duplicate entries are collapsed before the move, so a guild named twice is attempted once and counted once
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| updated | integer | Number of distinct guilds that were moved |
+| failed_guild_ids<sup>1</sup> | array[snowflake] | Distinct guilds that were not moved |
+
+<sup>1</sup> A guild lands here when it holds no application, when its application is rejected or removed, or when the write failed. The response does not say which, so retry the guild through [Update discovery listing](#update-discovery-listing) to read the error
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The batch ran, whether or not every guild moved |
+
+:::caution[Some named guilds can fail inside a 200]
+Fluxer attempts the guilds one at a time and in order, and a failure does not stop the ones after it. Read `failed_guild_ids` for the guilds that did not move. The operation never returns 404.
+:::
+
+Repeating the request is safe. A pending application moves on the same terms as an approved one, so this operation can refile a guild that is still awaiting review.
+
+### Side effects
+
+A move replaces the application's `category_type` and preserves its description, language, tags, status, and timestamps. A moved listing that is already approved appears under the new category in the next public search. No guild field changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
+
+## Update discovery listing
+
+<RouteHeader method="PATCH" path="/v1/admin/discovery/listings/{guild_id}" />
+
+Updates the stored listing of one guild and returns the updated [discovery application](#discovery-application-object) object. Requires `discovery:review`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id<sup>1</sup> | snowflake | Guild whose application is edited |
+
+<sup>1</sup> Despite the route path, a pending application is accepted as well as an approved listing, which lets an Admin correct the wording before approving it
+
+### JSON body
+
+Every member is optional. An omitted member preserves the stored value, and an empty object is accepted and changes nothing.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| description?<sup>1</sup> | string | Listing description of 10 through 300 characters |
+| category_type? | integer | [Discovery category](/http-api/discovery/#discovery-categories) of 0 through 8 |
+| primary_language?<sup>2</sup> | string | [Supported primary language](/http-api/discovery/#supported-primary-languages) code |
+| custom_tags?<sup>3</sup> <sup>4</sup> | array[string] | Up to 10 [custom tags](/http-api/discovery/#custom-tags) |
+
+<sup>1</sup> A supplied value is scanned against the instance content blocklists before the stored application is read, so a match returns 403 `CONTENT_BLOCKED` even when the guild holds no application. The scan covers banned phrases and banned URLs and domains found in the text
+
+<sup>2</sup> A code outside the supported set fails body validation. A language is always stored, so the listing cannot be returned to having none
+
+<sup>3</sup> A supplied array replaces the stored tags outright, so an empty array clears every tag
+
+<sup>4</sup> Each entry is 2 through 30 characters both as submitted and after normalisation. An entry that fails that bound or the character rule fails body validation against its own index, and duplicate normalised values collapse to the first occurrence
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery application](#discovery-application-object) object | Listing was updated, or the submitted values already matched the stored ones |
+| 403 | [error response](/admin-api/#error-response) | The description matches a content blocklist, returned as `CONTENT_BLOCKED` |
+| 404 | [error response](/admin-api/#error-response) | The guild holds no application, returned as `DISCOVERY_APPLICATION_NOT_FOUND` |
+| 409 | [error response](/admin-api/#error-response) | The stored application is rejected or removed, returned as `DISCOVERY_APPLICATION_ALREADY_REVIEWED` |
+
+### Side effects
+
+The supplied members update the application while preserving its status, submission time, review time, review reason, and removal fields. Editing an approved listing does not return it to review. The new copy is visible in the next public search. Editing a pending application changes nothing a public reader can see.
+
+No guild field changes, so no [Guild Update](/gateway/events/#guild-update) fires.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
+
+## Remove discovery listing
+
+<RouteHeader method="DELETE" path="/v1/admin/discovery/listings/{guild_id}" />
+
+Removes an approved listing from discovery, strips the guild's discoverable feature, and returns the updated [discovery application](#discovery-application-object) object. Requires `discovery:remove`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The guild whose listing is removed |
+
+### JSON body
+
+The operation takes a required body even though it is a DELETE, so a request without one fails body validation.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reason | string | Reason stored on the application as `removal_reason`, 1 through 500 characters |
+
+:::caution[Removal is terminal for this application]
+The application moves to `removed`, and the guild can be listed again only through a new application submitted to the public [Discovery](/http-api/discovery/) resource. That submission replaces the removed record and its removal reason entirely.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [discovery application](#discovery-application-object) object | Listing was removed |
+| 400<sup>1</sup> | [error response](/admin-api/#error-response) | The application is not approved, returned as `DISCOVERY_NOT_DISCOVERABLE` |
+| 404 | [error response](/admin-api/#error-response) | The guild holds no application, returned as `DISCOVERY_APPLICATION_NOT_FOUND` |
+
+<sup>1</sup> A pending application is refused this way, so rejecting it through [Review discovery application](#review-discovery-application) is the only way to close it
+
+### Side effects
+
+The application moves to `removed` and records the removal time, the removing Admin, and the required reason. The discoverable feature is removed from the guild, the guild stops appearing in [Search discovery guilds](/http-api/discovery/#search-discovery-guilds), and [Guild Update](/gateway/events/#guild-update) fires to every session that can observe the guild.
+
+A removal whose guild can no longer be resolved still succeeds. Fluxer skips the feature strip and the Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
+

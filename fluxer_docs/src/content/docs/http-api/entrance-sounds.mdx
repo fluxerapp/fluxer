@@ -1,0 +1,361 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Entrance sounds
+description: Personal entrance sound library, per-scope selections, upload validation, and playback.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An entrance sound is a short audio clip an account plays while it is connected to a voice channel. An account uploads a clip once into its own library, then assigns it to a scope: globally, in guild voice channels, in private calls, or in one named guild. Playback publishes no media. [Voice](/voice/) defines voice state and placement.
+
+Every route on this page is user-only, requires no permission, and acts on the caller's own library.
+
+## Clip limits
+
+Every bound below is a fixed constant of the instance, and none is resolved from an account [limit rule](/http-api/instance/#limit-rule-object).
+
+| Bound | Value |
+| --- | --- |
+| Clips per account | 8 |
+| Decoded clip size<sup>1</sup> | 1048576 bytes |
+| Encoded upload payload<sup>1</sup> | 1398134 characters |
+| Clip duration<sup>2</sup> | 100 through 5200 milliseconds |
+| Display name | 1 through 32 characters after normalisation |
+
+<sup>1</sup> The character bound is the 1 MiB decoded ceiling expressed in base64 with 32 characters of slack, so it is the bound an oversized payload reaches first
+
+<sup>2</sup> Only [Upload entrance sound](#upload-entrance-sound) applies the lower bound
+
+The [instance discovery](/http-api/instance/#limit-keys) document publishes a `feature_voice_entrance_sounds` limit key. That key gates the feature in the client. No route on this page consults it, so a library can be read, written, and played back regardless of its resolved value.
+
+## Supported containers
+
+The container is detected from the decoded bytes, so a filename, a `data:` media type, or any other declared type has no effect on the result. The detected container resolves to one of four stored extensions, and every other input fails with `ENTRANCE_SOUND_INVALID_FORMAT`.
+
+| Detected container | Stored extension | Stored content type |
+| --- | --- | --- |
+| MP3, MPEG<sup>1</sup> | mp3 | audio/mpeg |
+| Ogg<sup>2</sup> | ogg | audio/ogg |
+| MP4, QuickTime, AAC<sup>3</sup> | m4a | audio/mp4 |
+| WAV | wav | audio/wav |
+
+<sup>1</sup> An MPEG program stream resolves here as well as bare MPEG audio
+
+<sup>2</sup> An audio Ogg and a video Ogg both resolve here
+
+<sup>3</sup> The container alone decides this row, so an MP4 or QuickTime file with a video stream is accepted as long as a duration can be measured from it. A bare AAC stream outside an MP4 container is not detected and is rejected
+
+FLAC, WebM, Matroska, AIFF, 3GPP, AVI, FLV, WMV, MPEG-TS, and every image type resolve to no extension and are rejected.
+
+:::caution[The uploaded bytes are stored verbatim]
+The decoded bytes are written exactly as they arrived, under the extension and content type the table assigns. A QuickTime upload stays a QuickTime file, and Fluxer serves it as `audio/mp4` under an `m4a` extension.
+:::
+
+## Entrance sound object
+
+One stored audio clip owned by one account. Every field except `name` is fixed at upload, and `id` is the only handle the other routes accept.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the sound |
+| name | string | The display label shown for the clip (1-32 characters) |
+| hash<sup>1</sup> | string | The content digest of the stored audio, 16 hexadecimal characters |
+| extension | string | The stored extension, one of `mp3`, `ogg`, `m4a`, and `wav`, chosen by the [detected container](#supported-containers) |
+| content_type | string | The MIME type the clip is stored and served with, derived from `extension` |
+| duration_ms<sup>2</sup> | integer | The measured duration in milliseconds (0-5200) |
+| size_bytes | integer | The decoded size in bytes (0-1048576) |
+| url<sup>3</sup> | string | The absolute CDN URL the clip is fetched from |
+| created_at | ISO8601 timestamp | The time the clip was uploaded |
+
+<sup>1</sup> The leading 16 hexadecimal characters of the MD5 digest of the decoded bytes, so two clips with identical audio have an identical `hash`
+
+<sup>2</sup> Measured from the decoded audio and rounded to the nearest millisecond
+
+<sup>3</sup> Built as `/entrance-sounds/{user_id}/{hash}.{extension}` on the instance's media endpoint. The [route that serves it](/media-proxy/routes/#get-entrance-sound) accepts no credential, so anyone holding the URL can fetch the audio
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "name": "airhorn",
+  "hash": "9f2c41ab77de0135",
+  "extension": "mp3",
+  "content_type": "audio/mpeg",
+  "duration_ms": 1240,
+  "size_bytes": 20416,
+  "url": "https://cdn.example.com/entrance-sounds/1490000000000000000/9f2c41ab77de0135.mp3",
+  "created_at": "2026-08-31T09:12:04.118Z"
+}
+```
+
+## Entrance sound selection object
+
+One scope and the clip assigned to it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope_id | string | [Entrance sound scope](#entrance-sound-scopes) the selection applies to |
+| sound_id | snowflake | The clip assigned to that scope |
+
+A scope with no assigned sound has no selection object. Clearing a scope deletes its entry.
+
+### Example
+
+```json
+{
+  "scope_id": "guild:1490000000000000123",
+  "sound_id": "1501314428688998182"
+}
+```
+
+## Entrance sound scopes
+
+| Value | Description |
+| --- | --- |
+| global | Applies wherever no narrower scope is selected |
+| guilds | Applies in guild voice channels |
+| dms | Applies in direct message and group calls |
+| `guild:{guild_id}` | Applies in one named guild, where the ID is 1 through 20 digits |
+
+`scope_id` must match one of the four forms exactly. Any other value fails with the validation code `INVALID_FORMAT` at the `scope_id` path.
+
+:::note[Fluxer stores scopes but never resolves them]
+A selection records which sound belongs to which scope and nothing more. [Play entrance sound](#play-entrance-sound) names the sound explicitly, so the client decides which selection applies to a channel.
+:::
+
+## List entrance sounds
+
+<RouteHeader method="GET" path="/v1/users/@me/entrance-sounds" />
+
+Returns the current account's complete entrance sound library together with its per-scope selections.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sounds | array[[entrance sound](#entrance-sound-object) object] | Every clip the account owns, at most 8 |
+| selections | array[[entrance sound selection](#entrance-sound-selection-object) object] | Every scope that currently has a sound assigned |
+
+Both members are always present and both arrays are empty for an account that has uploaded nothing. A selection always names a sound present in `sounds`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Library was returned |
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `user:entrance_sound:list` bucket.
+
+## Upload entrance sound
+
+<RouteHeader method="POST" path="/v1/users/@me/entrance-sounds" />
+
+Decodes, validates, and stores one audio clip in the current account's library, and returns the created [entrance sound object](#entrance-sound-object).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | The display label shown for the clip (1-32 characters) |
+| audio<sup>2</sup> | base64 string | The audio bytes of the clip, base64 encoded (1-1398134 characters) |
+
+<sup>1</sup> Trimmed before its length is measured
+
+<sup>2</sup> A `data:` URI prefix is accepted and discarded, and only the part after the first comma is measured and decoded
+
+Invisible characters in `name` are not stripped and count toward the 32 character bound.
+
+### Validation
+
+Every failure below is a 400 `INVALID_FORM_BODY`. One response can report two of the first four rows when both fields are bad. The remaining rows are reported one at a time, in the order the table lists them.
+
+| Failure | Validation code | Path |
+| --- | --- | --- |
+| The field is absent or is a literal empty string<sup>1</sup> | `INVALID_FORMAT` | name or audio |
+| The normalised name is empty or longer than 32 characters | `STRING_LENGTH_INVALID` | name |
+| The encoded payload is empty or longer than 1398134 characters<sup>2</sup> | `BASE64_LENGTH_INVALID` | audio |
+| The payload is not valid base64 | `INVALID_BASE64_FORMAT` | audio |
+| The library already holds 8 clips | `ENTRANCE_SOUND_QUOTA_REACHED` | audio |
+| The decoded bytes exceed 1048576 bytes | `ENTRANCE_SOUND_SIZE_EXCEEDS_LIMIT` | audio |
+| The bytes resolve to no [supported container](#supported-containers), or their duration cannot be measured | `ENTRANCE_SOUND_INVALID_FORMAT` | audio |
+| The measured duration is above 5200 ms or below 100 ms | `ENTRANCE_SOUND_DURATION_EXCEEDS_LIMIT` | audio |
+| The validated clip could not be written to storage | `FAILED_TO_UPLOAD_IMAGE` | audio |
+
+<sup>1</sup> An empty string is read as null under [input normalisation](/http-api/#input-normalisation), and neither field accepts null
+
+<sup>2</sup> Measured after any `data:` prefix is discarded, so a value that is whitespace only, or that ends at its first comma, has zero payload characters and fails here
+
+The first four rows are checked before the quota, so an account already holding 8 clips receives `BASE64_LENGTH_INVALID` or `INVALID_BASE64_FORMAT` for a malformed or over-long payload.
+
+Both duration bounds report the same code at the `audio` path, and the entry has no member naming which of the two was crossed.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [entrance sound](#entrance-sound-object) object | Clip was stored |
+| 400 | [error response](/http-api/#error-response) | Name or audio fails [validation](#validation) |
+
+### Side effects
+
+The operation assigns no scope and emits no Gateway Dispatch.
+
+:::note[Identical audio shares one stored object]
+Uploading the same bytes twice creates a second entry with the same `hash`, so both entries have the same `url`. Fluxer deletes the stored object only when the last entry that references it is removed.
+:::
+
+### Rate limit
+
+5 requests per 5 minutes for each authenticated user, on the `user:entrance_sound:upload` bucket.
+
+## Rename entrance sound
+
+<RouteHeader method="PATCH" path="/v1/users/@me/entrance-sounds/{sound_id}" />
+
+Changes the display label of one clip and returns the updated [entrance sound object](#entrance-sound-object).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sound_id | snowflake | The ID of the sound |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | Replacement display label (1-32 characters) |
+
+<sup>1</sup> Required, and normalised and bounded exactly as the `name` of [Upload entrance sound](#upload-entrance-sound)
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [entrance sound](#entrance-sound-object) object | Clip was renamed |
+| 400 | [error response](/http-api/#error-response) | Name normalises to the empty string or exceeds 32 characters and the request returns `STRING_LENGTH_INVALID` at the `name` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
+
+:::note[An unknown clip returns 400, not 404]
+Fluxer reports a clip owned by another account exactly like one that never existed, so a caller cannot tell ownership from existence. [Set entrance sound selection](#set-entrance-sound-selection) and [Play entrance sound](#play-entrance-sound) report an unknown clip the same way.
+:::
+
+### Side effects
+
+Only the label changes. The stored audio is untouched, and every selection pointing at the clip keeps pointing at it. Fluxer emits no Gateway Dispatch.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `user:entrance_sound:mutate` bucket, which is shared with [Delete entrance sound](#delete-entrance-sound) and [Set entrance sound selection](#set-entrance-sound-selection).
+
+## Delete entrance sound
+
+<RouteHeader method="DELETE" path="/v1/users/@me/entrance-sounds/{sound_id}" />
+
+Deletes one clip from the current account's library, clears every scope selection that pointed at it, and returns 204 with an empty body. An unknown clip, or a clip owned by another account, is a successful no-op.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sound_id | snowflake | The ID of the sound |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Clip was deleted, or no owned clip existed |
+
+### Side effects
+
+Fluxer removes every selection naming the clip first, then the library entry, then the stored audio object unless another clip in the library has the same `hash` and `extension`. A storage failure is logged, and the request still returns 204, so the entry is removed either way. Fluxer emits no Gateway Dispatch.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the shared `user:entrance_sound:mutate` bucket.
+
+## Set entrance sound selection
+
+<RouteHeader method="PUT" path="/v1/users/@me/entrance-sound-selections" />
+
+Assigns one of the account's clips to one [scope](#entrance-sound-scopes), or clears that scope, and returns 204 with an empty body. Each call addresses exactly one scope, and a scope that already has a sound is overwritten.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope_id | string | [Entrance sound scope](#entrance-sound-scopes) to write (1-32 characters) |
+| sound_id<sup>1</sup> | ?snowflake | The clip to assign, or null to clear the scope |
+
+<sup>1</sup> Required. An explicit null clears the scope, succeeds even when the scope had no selection, and looks up no clip
+
+Fluxer accepts a `guild:{guild_id}` scope on its shape alone. It neither resolves the guild nor checks membership, so a selection can name a guild the account has left. A non-null `sound_id` must name a clip the account owns, and Fluxer writes the scope only after that lookup succeeds.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Selection was written or cleared |
+| 400 | [error response](/http-api/#error-response) | Scope is unrecognised and the request returns `INVALID_FORMAT` at the `scope_id` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
+
+### Side effects
+
+Fluxer writes or removes the scope's selection. One clip can be selected in any number of scopes at once. The operation emits no Gateway Dispatch, so the caller's other sessions learn about the change only by listing the library again.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the shared `user:entrance_sound:mutate` bucket.
+
+## Play entrance sound
+
+<RouteHeader method="POST" path="/v1/voice/channels/{channel_id}/entrance-sound" />
+
+Fans the caller's chosen clip out to everyone else connected to a voice channel and returns 204 with an empty body. The caller must already hold a voice state in that channel and must own the clip. Emits an [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) Gateway event.
+
+Nothing is published to the media servers. Each recipient receives a Dispatch naming the clip's CDN URL, then fetches and plays it locally.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the voice channel the clip is played in |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sound_id | snowflake | The clip to play, drawn from the caller's own library |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Fan-out was attempted for every other connected account |
+| 400 | [error response](/http-api/#error-response) | Caller holds no voice state in the channel and the request returns `ENTRANCE_SOUND_INVALID_SCOPE` at the `channel_id` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+
+:::caution[Connection is the only authorisation]
+Fluxer evaluates no channel permission and checks no guild membership.
+:::
+
+:::caution[Any account can probe channel existence]
+Fluxer resolves the channel before the connection check. A channel the caller is not connected to returns 400, and an ID naming no channel returns 404.
+:::
+
+The connection check runs before the clip is looked up, so a caller who is not connected never learns whether the named clip exists.
+
+### Side effects
+
+Fluxer sends one [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) Dispatch to every other account holding a voice state in the channel, at most once for each account, and never to the caller. A recipient whose Dispatch fails is skipped, and the request still returns 204.
+
+Fluxer addresses the Dispatch to the account, so every session that account holds receives it, including sessions that are not in the channel. A client filters on `channel_id`.
+
+### Rate limit
+
+3 requests per 30 seconds for each authenticated user and channel ID, on the `voice:entrance_sound:play::user_id::channel_id` bucket.

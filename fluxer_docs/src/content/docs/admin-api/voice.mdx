@@ -1,0 +1,581 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin voice
+description: Voice regions, voice servers, placement eligibility, and topology publication.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A voice region is a named group of media machines, and a voice server is one machine registered inside it. Together they are the topology [Voice](/voice/) places a session into when it joins a voice channel or a call.
+
+No operation here addresses a live session, a participant, or a track. [Get voice state counts](/admin-api/gateway/#get-voice-state-counts) reports occupancy, and [List RTC regions](/http-api/channels/#list-rtc-regions) is the caller-facing view of the same regions.
+
+:::note[A change decides placements made after the reload]
+Every write takes effect once each API node reloads its topology. No write moves, disconnects, or re-places a live session.
+:::
+
+:::caution[Each write runs in three separate steps]
+It stores the record, notifies every node to reload, then records the audit entry. A failure at the second or third step answers 500 with the record already stored, so read the record back before retrying.
+:::
+
+## Media transport
+
+[LiveKit](https://livekit.io) is the media transport. Each voice server record names one LiveKit deployment and the API key pair the instance authenticates to it with.
+
+`endpoint` is that deployment's signalling URL, a `ws://` or `wss://` address. Fluxer hands it to the placed session verbatim as the `endpoint` of [Voice Server Update](/gateway/events/#voice-server-update), and the client opens its media connection there. The API rewrites the same value to `http://` or `https://` for its own room service calls, and it keeps any path prefix.
+
+`api_key` and `api_secret` mint the access token the placed session presents. The token is valid for 600 seconds, grants room admission to exactly one room, and has the track sources the member's permissions allow.
+
+A room is one voice channel. A guild channel uses the room name `guild_{guild_id}_channel_{channel_id}` and a private call uses `dm_channel_{channel_id}`.
+
+A participant is one voice connection, identified as `user_{user_id}_{connection_id}`. One account holding several connections in a channel is several participants. Going live publishes a screen share track from the participant that already exists, so a stream needs no second server, room, or grant.
+
+## Placement eligibility
+
+Four stored fields decide whether a region or a server can be chosen for one placement. Fluxer evaluates the four identically on both records, and it also skips a server whenever `is_active` is false. It resolves a region first and then a server inside it, so a caller admitted to a region whose servers all refuse it has no access to that region.
+
+`allowed_user_ids` is evaluated first and on its own. A non-empty list admits only the accounts it names and refuses every other caller whatever the remaining three fields say. An empty list gates nothing.
+
+`vip_only`, `required_guild_features`, and `allowed_guild_ids` are guild gates. When none of the three is set, the record admits every caller that passed the user gate, including a private call, which has no guild. When any of the three is set, the record admits only a placement that has a guild, so a restricted region or server is never selectable for a [call](/http-api/calls/#modify-call-region) or a group direct message.
+
+With a guild present, a guild named by `allowed_guild_ids` is admitted at once and the other two gates are not consulted. Otherwise `vip_only` requires the guild to hold the `VIP_VOICE` [guild feature](/http-api/guilds/#guild-features), and `required_guild_features` requires the guild to hold at least one of the features it names. A guild holding none of them is refused.
+
+## Admin voice region object
+
+A region record has the identity a client sees, the coordinate placement measures distance from, and the eligibility fields described under [placement eligibility](#placement-eligibility). It has no capacity, no health, and no server count.
+
+The operator supplies `id` on creation, and it is the primary key. It is the value a channel stores as its `rtc_region` and the value [Modify call region](/http-api/calls/#modify-call-region) accepts, so changing it means creating a new region and deleting the old one.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The ID of the region, chosen by the operator and never renamed (1-64 characters) |
+| name | string | The name shown for the region in a client (1-100 characters) |
+| emoji | string | The emoji the operator configured for the region (1-64 characters) |
+| latitude | number | The latitude placement measures distance from, in decimal degrees |
+| longitude | number | The longitude placement measures distance from, in decimal degrees |
+| is_default<sup>1</sup> | boolean | Whether automatic placement falls back to this region |
+| vip_only<sup>2</sup> | boolean | Whether the guild has to hold `VIP_VOICE` |
+| required_guild_features<sup>2</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild, any one of which suffices (max 100) |
+| allowed_guild_ids<sup>2</sup><sup>3</sup> | array[snowflake] | The guilds admitted without consulting the other two guild gates (max 1000) |
+| allowed_user_ids<sup>3</sup> | array[snowflake] | The accounts allowed to use the region at all (max 1000) |
+| created_at | ?ISO8601 timestamp | Time the region record was created, or null when the stored row has none |
+| updated_at | ?ISO8601 timestamp | Time the region record last changed, or null when the stored row has none |
+| servers?<sup>4</sup> | array[[Admin voice server](#admin-voice-server-object) object] | The servers registered in the region |
+
+<sup>1</sup> The flag is not exclusive, and setting it on a second region does not clear it on the first. Each node then treats the first region its reload enumerates as the default, and a topology with the flag on no region falls back the same way
+
+<sup>2</sup> Setting any of these three makes the region unusable for a private call
+
+<sup>3</sup> Duplicate entries collapse and the returned order is not the submitted order
+
+<sup>4</sup> Present only on [List voice regions](#list-voice-regions) and [Get voice region](#get-voice-region), and only when `include_servers` resolved to true. [List voice regions](#list-voice-regions) sorts the array by server identifier, and [Get voice region](#get-voice-region) returns it in the order the store yields
+
+### Example
+
+```json
+{
+  "id": "europe-north",
+  "name": "Northern Europe",
+  "emoji": "🇸🇪",
+  "latitude": 59.33,
+  "longitude": 18.06,
+  "is_default": true,
+  "vip_only": false,
+  "required_guild_features": [],
+  "allowed_guild_ids": [],
+  "allowed_user_ids": [],
+  "created_at": "2026-02-11T08:14:00.000Z",
+  "updated_at": "2026-08-02T17:45:31.000Z"
+}
+```
+
+## Admin voice server object
+
+A server record names one LiveKit deployment, the API key pair the instance authenticates to it with, and its own copy of the eligibility fields. A server is reachable for placement only when its region is also reachable.
+
+The `region_id` and `server_id` pair addresses one server, and a server belongs to exactly one region. The same server identifier can exist in two regions, and moving a server between regions means deleting it and recreating it. Both are operator-chosen strings of 1 to 64 characters, and no operation renames either one.
+
+A server can have its own coordinate. When it does, placement measures distance from that coordinate to pick the closest server for an automatically placed session. When it does not, the server takes no part in distance comparison.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region the server belongs to (1-64 characters) |
+| server_id | string | The ID of the server, unique inside its region (1-64 characters) |
+| endpoint<sup>1</sup> | string | The LiveKit signalling URL the client opens its media connection to |
+| latitude<sup>2</sup> | ?number | The latitude replacing this server's region coordinate, in decimal degrees, or null when the region coordinate is used |
+| longitude<sup>2</sup> | ?number | The longitude replacing this server's region coordinate, in decimal degrees, or null when the region coordinate is used |
+| is_active<sup>3</sup> | boolean | Whether the server is in rotation for new placement |
+| vip_only | boolean | Whether the guild has to hold `VIP_VOICE` |
+| required_guild_features | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild, any one of which suffices (max 100) |
+| allowed_guild_ids<sup>4</sup> | array[snowflake] | The guilds admitted without consulting the other two guild gates (max 1000) |
+| allowed_user_ids<sup>4</sup> | array[snowflake] | The accounts allowed to use the server at all (max 1000) |
+| created_at | ?ISO8601 timestamp | Time the server record was created, or null when the stored row has none |
+| updated_at | ?ISO8601 timestamp | Time the server record last changed, or null when the stored row has none |
+
+<sup>1</sup> An instance can configure an internal URL that the API uses for its own room service calls to one designated server, and that URL changes neither the stored value nor the value the session receives
+
+<sup>2</sup> The two coordinates are set and cleared together, and a server with only one of them cannot be stored
+
+<sup>3</sup> Fluxer skips an inactive server when it resolves a new placement. Server-side moderation of a session already on it keeps working
+
+<sup>4</sup> Duplicate entries collapse and the returned order is not the submitted order
+
+:::caution[Server credentials are never returned]
+`api_key` and `api_secret` are stored on the record and accepted by the create and update bodies, but no read returns them. A lost secret has to be replaced with an update.
+:::
+
+### Example
+
+```json
+{
+  "region_id": "europe-north",
+  "server_id": "europe-north-server-1",
+  "endpoint": "wss://voice.example.com/livekit",
+  "latitude": null,
+  "longitude": null,
+  "is_active": true,
+  "vip_only": false,
+  "required_guild_features": [],
+  "allowed_guild_ids": [],
+  "allowed_user_ids": [],
+  "created_at": "2026-02-11T08:15:22.000Z",
+  "updated_at": "2026-02-11T08:15:22.000Z"
+}
+```
+
+## List voice regions
+
+<RouteHeader method="GET" path="/v1/admin/voice/regions" />
+
+Returns every [Admin voice region](#admin-voice-region-object) object in ascending display name order. Requires `voice:region:list`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| include_servers?<sup>1</sup> | boolean | Whether each region has its servers, sorted by server identifier (default false) |
+
+<sup>1</sup> The value is read as a string and counts as true only for `true`, `True`, or `1`, so any other value, including `yes` and `TRUE`, is false. Supplying the parameter twice makes it an array, which fails validation
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| regions | array[[Admin voice region](#admin-voice-region-object) object] | Every configured region |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The regions were returned |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Get voice region
+
+<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}" />
+
+Returns one [Admin voice region](#admin-voice-region-object) object. Requires `voice:region:list`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region (1-64 characters) |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| include_servers?<sup>1</sup><sup>2</sup> | boolean | Whether the region has its servers (default true) |
+
+<sup>1</sup> The default is true here and false on [List voice regions](#list-voice-regions)
+
+<sup>2</sup> The value is read as a string and counts as true only for `true`, `True`, or `1`, so any other value suppresses the servers
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region<sup>1</sup> | ?[Admin voice region](#admin-voice-region-object) object | The region, or null when no region has the identifier |
+
+<sup>1</sup> An unknown region answers 200 with a null region, so region existence is read from the body
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | A lookup was performed, whether or not it resolved |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Create voice region
+
+<RouteHeader method="POST" path="/v1/admin/voice/regions" auditReason />
+
+Stores a region and returns it. Requires `voice:region:create`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | string | The ID to store the region under (1-64 characters) |
+| name | string | The name shown for the region in a client (1-100 characters) |
+| emoji | string | The emoji the operator configured for the region (1-64 characters) |
+| latitude | number | The latitude placement measures distance from, in decimal degrees |
+| longitude | number | The longitude placement measures distance from, in decimal degrees |
+| is_default? | boolean | Whether automatic placement falls back to this region (default false) |
+| vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` (default false) |
+| required_guild_features?<sup>2</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items, default empty) |
+| allowed_guild_ids? | array[snowflake] | The guilds admitted without consulting the other two guild gates (max 1000, default empty) |
+| allowed_user_ids? | array[snowflake] | The accounts allowed to use the region at all (max 1000, default empty) |
+
+<sup>1</sup> The identifier is not checked for collision. Reusing the identifier of an existing region overwrites that record in full, resets its creation time to now, and replaces every one of its collections
+
+<sup>2</sup> Each item is 1 to 64 characters. A value that is not a real guild feature is stored as supplied and then matches no guild
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region<sup>1</sup> | [Admin voice region](#admin-voice-region-object) object | The stored region |
+
+<sup>1</sup> The object has no `servers` member
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The region was stored |
+
+### Side effects
+
+Each node reloads its topology after the write. One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `create_voice_region` and the target type `voice_region` records the region identifier and its name in metadata, together with the audit reason.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+
+## Update voice region
+
+<RouteHeader method="PATCH" path="/v1/admin/voice/regions/{region_id}" auditReason />
+
+Applies a partial update to a region and returns the updated record. Requires `voice:region:update`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region (1-64 characters) |
+
+### JSON body
+
+Every field is optional and an omitted field is left unchanged. An absent, empty, or whitespace-only body is read as an empty object, which validates and updates nothing but `updated_at`. A body that does not parse as JSON returns 400 `INVALID_FORM_BODY` with one element at path `body` and code `INVALID_FORMAT`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | The name shown for the region in a client (1-100 characters) |
+| emoji? | string | The emoji the operator configured for the region (1-64 characters) |
+| latitude? | number | The latitude placement measures distance from, in decimal degrees |
+| longitude? | number | The longitude placement measures distance from, in decimal degrees |
+| is_default? | boolean | Whether automatic placement falls back to this region |
+| vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` |
+| required_guild_features?<sup>1</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each) |
+| allowed_guild_ids?<sup>1</sup> | array[snowflake] | The guilds admitted without consulting the other two guild gates (max 1000) |
+| allowed_user_ids?<sup>1</sup> | array[snowflake] | The accounts allowed to use the region at all (max 1000) |
+
+<sup>1</sup> A supplied collection replaces the stored collection outright, so removing one entry means sending the complete remaining set and clearing a collection means sending an empty array
+
+The body has no identifier. An `id` member in the body is overwritten from the path and never renames the region.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region<sup>1</sup> | [Admin voice region](#admin-voice-region-object) object | The updated region |
+
+<sup>1</sup> The object has no `servers` member. Read the servers with [List voice servers](#list-voice-servers) or [Get voice region](#get-voice-region)
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The region was updated |
+| 404 | [error response](/admin-api/#error-response) | No region has the identifier, returned as `UNKNOWN_VOICE_REGION` |
+
+### Side effects
+
+The write sets `updated_at` to the time it ran, and each node reloads its topology. One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `update_voice_region` and the target type `voice_region` records the region identifier in metadata, together with the audit reason. The entry has no field diff.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+
+## Delete voice region
+
+<RouteHeader method="DELETE" path="/v1/admin/voice/regions/{region_id}" auditReason />
+
+Deletes a region and every server registered in it. Requires `voice:region:delete`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region (1-64 characters) |
+
+:::danger[Deleting a region deletes every server in it]
+The region record and every server record stored under it are removed in one batch. There is no confirmation step and no way to recover the server records, including their stored credentials, so read the servers back first if they have to be recreated.
+:::
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success<sup>1</sup> | boolean | Always true |
+
+<sup>1</sup> The value is fixed, so a client reads the status to learn whether the call succeeded
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The region was deleted |
+| 404 | [error response](/admin-api/#error-response) | No region has the identifier, returned as `UNKNOWN_VOICE_REGION` |
+
+### Side effects
+
+Each node reloads its topology once for the whole batch, and an operation that has to reach a deleted server afterwards fails. Sessions already placed in the region are not disconnected by the deletion itself.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `delete_voice_region` and the target type `voice_region` records the region identifier and its name in metadata, together with the audit reason. No `delete_voice_server` entry is written for the servers deleted with the region.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+
+## List voice servers
+
+<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers" />
+
+Returns every [Admin voice server](#admin-voice-server-object) object registered in one region. Requires `voice:server:list`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region (1-64 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| servers<sup>1</sup> | array[[Admin voice server](#admin-voice-server-object) object] | The servers registered in the region |
+
+<sup>1</sup> A region with no server and an identifier naming no region both answer with an empty array
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The servers were returned |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Get voice server
+
+<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" />
+
+Returns one [Admin voice server](#admin-voice-server-object) object. Requires `voice:server:list`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region the server belongs to (1-64 characters) |
+| server_id | string | The ID of the server (1-64 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| server<sup>1</sup> | ?[Admin voice server](#admin-voice-server-object) object | The server, or null when the pair resolves to nothing |
+
+<sup>1</sup> An unknown server answers 200 with a null server, and an unknown region is reported the same way
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | A lookup was performed, whether or not it resolved |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Create voice server
+
+<RouteHeader method="POST" path="/v1/admin/voice/regions/{region_id}/servers" auditReason />
+
+Registers a voice server in a region and returns it. Requires `voice:server:create`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region the server belongs to (1-64 characters) |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| server_id<sup>1</sup> | string | The ID to store the server under, unique inside the region (1-64 characters) |
+| endpoint<sup>2</sup> | string | The LiveKit signalling URL the client opens its media connection to |
+| api_key | string | The LiveKit API key the instance authenticates with (1-256 characters) |
+| api_secret | string | The LiveKit API secret the instance authenticates with (1-256 characters) |
+| latitude?<sup>3</sup> | ?number | The latitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
+| longitude?<sup>3</sup> | ?number | The longitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
+| is_active? | boolean | Whether the server is in rotation for new placement (default true) |
+| vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` (default false) |
+| required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each, default empty) |
+| allowed_guild_ids? | array[snowflake] | The guilds admitted without consulting the other two guild gates (max 1000, default empty) |
+| allowed_user_ids? | array[snowflake] | The accounts allowed to use the server at all (max 1000, default empty) |
+
+<sup>1</sup> The pair of region and server identifier is not checked for collision. Reusing an existing pair overwrites that record in full, resets its creation time to now, and replaces both stored credentials
+
+<sup>2</sup> The value has to parse as a URL. Validation does not constrain the scheme, and the client receives the value unchanged
+
+<sup>3</sup> The two coordinates are supplied together and are either both null or both a number. A mismatched pair fails body validation on the `latitude` path
+
+The body has no `region_id`. A `region_id` member in the body is overwritten from the path and cannot register the server under a different region.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| server<sup>1</sup> | [Admin voice server](#admin-voice-server-object) object | The stored server |
+
+<sup>1</sup> Neither `api_key` nor `api_secret` appears on the object
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The server was stored |
+| 400 | [error response](/admin-api/#error-response) | A non-URL endpoint or an unpaired coordinate, returned as `INVALID_FORM_BODY` |
+| 404 | [error response](/admin-api/#error-response) | The identifier names no region, returned as `UNKNOWN_VOICE_REGION` |
+
+### Side effects
+
+Each node reloads its topology after the write. One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `create_voice_server` and the target type `voice_server` records the region identifier, the server identifier, and the endpoint in metadata, together with the audit reason. Neither credential is recorded.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+
+## Update voice server
+
+<RouteHeader method="PATCH" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" auditReason />
+
+Applies a partial update to a voice server and returns the updated record. Requires `voice:server:update`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region the server belongs to (1-64 characters) |
+| server_id | string | The ID of the server (1-64 characters) |
+
+### JSON body
+
+Every field is optional and an omitted field is left unchanged. An absent, empty, or whitespace-only body is read as an empty object, which validates and updates nothing but `updated_at`. A body that does not parse as JSON returns 400 `INVALID_FORM_BODY` with one element at path `body` and code `INVALID_FORMAT`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| endpoint? | string | The LiveKit signalling URL the client opens its media connection to, which has to parse as a URL |
+| api_key?<sup>1</sup> | string | The LiveKit API key the instance authenticates with (1-256 characters) |
+| api_secret?<sup>1</sup> | string | The LiveKit API secret the instance authenticates with (1-256 characters) |
+| latitude?<sup>2</sup> | ?number | The latitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
+| longitude?<sup>2</sup> | ?number | The longitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
+| is_active? | boolean | Whether the server is in rotation for new placement |
+| vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` |
+| required_guild_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each) |
+| allowed_guild_ids?<sup>3</sup> | array[snowflake] | The guilds admitted without consulting the other two guild gates (max 1000) |
+| allowed_user_ids?<sup>3</sup> | array[snowflake] | The accounts allowed to use the server at all (max 1000) |
+
+<sup>1</sup> An omitted credential is left unchanged and a supplied one replaces it. An empty string fails the length bound, so a credential can be replaced but never cleared
+
+<sup>2</sup> The two coordinates are supplied together and are either both null or both a number. Sending both as null clears the override and returns the server to its region coordinate
+
+<sup>3</sup> A supplied collection replaces the stored collection outright, so removing one entry means sending the complete remaining set and clearing a collection means sending an empty array
+
+The body has no identifiers. A `region_id` or `server_id` member in the body is overwritten from the path and cannot move the server to another region.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| server | [Admin voice server](#admin-voice-server-object) object | The updated server |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The server was updated |
+| 404 | [error response](/admin-api/#error-response) | The pair resolves to no server, returned as `UNKNOWN_VOICE_SERVER` |
+
+### Side effects
+
+The write sets `updated_at` to the time it ran, and each node reloads its topology and uses the stored credentials for later calls to the server. Setting `is_active` to false stops new placement and does not move sessions already on the server.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `update_voice_server` and the target type `voice_server` records the region identifier and the server identifier in metadata, together with the audit reason. The entry records neither credential and no field diff, so a credential rotation is indistinguishable in the audit log from any other update.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.
+
+## Delete voice server
+
+<RouteHeader method="DELETE" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" auditReason />
+
+Deletes a voice server. Requires `voice:server:delete`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| region_id | string | The ID of the region the server belongs to (1-64 characters) |
+| server_id | string | The ID of the server (1-64 characters) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success<sup>1</sup> | boolean | Always true |
+
+<sup>1</sup> The value is fixed, so a client reads the status to learn whether the call succeeded
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The server was deleted |
+| 404 | [error response](/admin-api/#error-response) | The pair resolves to no server, returned as `UNKNOWN_VOICE_SERVER` |
+
+### Side effects
+
+Each node reloads its topology after the removal, and server-side moderation of a session still on that server fails afterwards. Sessions already placed on the server are not disconnected by the deletion itself. The stored credentials are removed with the record and are not recoverable.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `delete_voice_server` and the target type `voice_server` records the region identifier, the server identifier, and the endpoint the server held in metadata, together with the audit reason.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:guild:modify` bucket.

@@ -1,0 +1,222 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Archives
+description: Administrative user and guild archive state, listing filters, and download grants.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An archive is a snapshot of one user account or one guild, built in the background and downloaded as a file. [Create user archive](/admin-api/users/#create-user-archive) and [Create guild archive](/admin-api/guilds/#create-guild-archive) request one. The operations here read archive state and issue time-limited download URLs.
+
+Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject type it touches. A user archive needs `archive:view_all` or `archive:trigger:user`. A guild archive needs `archive:view_all` or `archive:trigger:guild`. Reading both types at once needs `archive:view_all`.
+
+:::note[An expired archive stops being readable]
+`expires_at` is 365 days after the archive is requested and is never extended. The archive record is removed at that instant, and no operation reads the stored file afterwards.
+:::
+
+## Archive object
+
+An archive is in one of three lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. A retried attempt clears `failed_at` and `error_message` when it starts, so a failed archive reads as building again while the retry runs.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| archive_id | snowflake | The ID of the archive, used with its subject to address the record |
+| subject_type | string | The [archive subject type](#archive-subject-types) the record is stored under |
+| subject_id | snowflake | The user or guild the archive was taken of |
+| requested_by | snowflake | The Admin account that requested the archive |
+| requested_at | ISO8601 timestamp | The time the archive record was created |
+| started_at | ?ISO8601 timestamp | The time construction began, or null while the task has not started |
+| completed_at | ?ISO8601 timestamp | The time construction completed, or null when it has not completed |
+| failed_at | ?ISO8601 timestamp | The time construction failed, or null when it has not failed |
+| file_size<sup>1</sup> | ?string | The size of the stored archive object in bytes, or null before completion |
+| progress_percent<sup>2</sup> | number | The construction progress from 0 to 100 |
+| progress_step<sup>2</sup> | ?string | The step the construction task last reported |
+| error_message | ?string | The failure text the construction task reported, or null when it has not failed |
+| download_url_expires_at<sup>3</sup> | ?ISO8601 timestamp | The cache expiry stamped on the stored archive object at completion, or null before completion |
+| expires_at<sup>4</sup> | ?ISO8601 timestamp | The time the archive stops being readable |
+
+<sup>1</sup> The size is a decimal string
+
+<sup>2</sup> A new archive starts at 0 with the step `Queued`, and completion sets 100 and `Completed`. Failure leaves `progress_percent` where it was and sets the step to `Failed`
+
+<sup>3</sup> Written once, at completion, to one year after the archive file was uploaded. [Create archive download](#create-archive-download) returns a URL with its own expiry, and no operation here updates this field
+
+<sup>4</sup> The value is 365 days after `requested_at`, and every write fills the field in
+
+### Example
+
+```json
+{
+  "archive_id": "1501314428688998182",
+  "subject_type": "user",
+  "subject_id": "1478812292088791040",
+  "requested_by": "1478812292088791041",
+  "requested_at": "2026-08-14T11:02:03.000Z",
+  "completed_at": "2026-08-14T11:06:41.000Z",
+  "file_size": "48211904",
+  "progress_percent": 100,
+  "progress_step": "Completed",
+  "expires_at": "2027-08-14T11:02:03.000Z"
+}
+```
+
+## Archive subject types
+
+| Value | Description |
+| --- | --- |
+| user | The archive captures one user account |
+| guild | The archive captures one guild |
+
+[List archives](#list-archives) also accepts `all` as a filter value, and it is the default there. No path segment accepts it.
+
+## Archive download object
+
+This object uses camelCase field names, unlike every other Admin response body.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| downloadUrl<sup>1</sup> | string | The time-limited URL the archive file is fetched from |
+| expiresAt<sup>2</sup> | ISO8601 timestamp | The time this URL stops working |
+
+<sup>1</sup> The URL is a presigned object storage link with no Admin credential, so possession of it grants access until it expires
+
+<sup>2</sup> The value is seven days after the grant was issued, regardless of the archive's own `expires_at`
+
+### Example
+
+```json
+{
+  "downloadUrl": "https://storage.example.com/harvests/1501314428688998182.zip?signature=abc123",
+  "expiresAt": "2026-09-07T11:06:41.000Z"
+}
+```
+
+## List archives
+
+<RouteHeader method="GET" path="/v1/admin/archives" />
+
+Returns [archive](#archive-object) objects matching the supplied filters, newest first. Requires an ACL covering the requested `subject_type`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subject_type?<sup>1</sup> | string | `user`, `guild`, or `all` (default `all`) |
+| subject_id?<sup>2</sup> | snowflake | The exact subject whose archives are returned |
+| requested_by?<sup>3</sup> | snowflake | The Admin account that requested the returned archives |
+| limit?<sup>4</sup> | integer | The maximum number of archives to return (1-200, default 50) |
+| include_expired?<sup>5</sup> | boolean | Whether to include archives past their `expires_at` (default false) |
+
+<sup>1</sup> `all` returns the newest `limit` archives across both subject types, so a busy subject type can crowd out the other
+
+<sup>2</sup> `subject_type` also has to name `user` or `guild`
+
+<sup>3</sup> Ignored when `subject_id` is supplied. When it does apply it runs regardless of `subject_type`
+
+<sup>4</sup> The listing is not paginated and returns no cursor. Only a narrower filter reaches older records
+
+<sup>5</sup> The value counts as true only for `true`, `True`, or `1`. Expired archives are dropped after `limit` rows have been read, so a response can hold fewer than `limit` archives
+
+:::caution[A trigger ACL cannot use the default filter]
+`all` is the default and needs `archive:view_all`. An account holding only `archive:trigger:user` or `archive:trigger:guild` has to set `subject_type` explicitly or the request returns 403 `MISSING_ACL`.
+:::
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| archives | array[[archive](#archive-object) object] | The archives matching the filters, newest first |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The archives were returned |
+| 400 | [error response](/admin-api/#error-response) | `subject_id` is supplied while `subject_type` is `all`. `INVALID_FORM_BODY` has `INVALID_FORMAT` on `subject_type` |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without an ACL covering the requested subject type |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Get archive
+
+<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}" />
+
+Returns one [archive](#archive-object) object. Requires an ACL covering the subject type.
+
+An archive is addressed by its subject and its identifier together.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subject_type | string | The [archive subject type](#archive-subject-types), either `user` or `guild` |
+| subject_id | snowflake | The user or guild the archive was taken of |
+| archive_id | snowflake | The ID of the archive |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| archive<sup>1</sup> | ?[archive](#archive-object) object | The archive, or null when the subject and identifier resolve to nothing |
+
+<sup>1</sup> A missing archive answers 200 with a null archive, which is also the answer when the identifier belongs to a different subject and when the archive has passed `expires_at`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | A lookup was performed, whether or not it resolved |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without an ACL covering the subject type |
+
+### Side effects
+
+The read returns archive metadata and issues no download grant.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Create archive download
+
+<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}/download" />
+
+Issues a temporary download URL for a completed archive. Returns an [archive download](#archive-download-object) object on success. Requires an ACL covering the subject type.
+
+:::caution[The grant is an unauthenticated bearer URL]
+The URL has its own signature and works for seven days for anyone who holds it. No operation revokes it, and it is bound to no Admin account. Each repeat of the operation issues a further independent grant.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| subject_type | string | The [archive subject type](#archive-subject-types), either `user` or `guild` |
+| subject_id | snowflake | The user or guild the archive was taken of |
+| archive_id | snowflake | The ID of a completed archive |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [archive download](#archive-download-object) object | The grant was issued |
+| 400<sup>1</sup> | [error response](/admin-api/#error-response) | The archive is not downloadable, returned as `HARVEST_NOT_READY`, `HARVEST_FAILED`, or `HARVEST_EXPIRED` |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without an ACL covering the subject type |
+| 404<sup>2</sup> | [error response](/admin-api/#error-response) | The subject and identifier resolve to nothing, returned as `UNKNOWN_HARVEST` |
+
+<sup>1</sup> `HARVEST_FAILED` while `failed_at` is set, `HARVEST_NOT_READY` while the archive has no completion time or no stored object, and `HARVEST_EXPIRED` once `expires_at` has passed, tested in that order
+
+<sup>2</sup> The archive record stops being readable at `expires_at`, so an archive past its expiry answers `UNKNOWN_HARVEST` rather than `HARVEST_EXPIRED`
+
+### Side effects
+
+The operation creates a presigned download URL valid for seven days and changes no field of the archive, including `download_url_expires_at`. It records no Admin audit entry.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.

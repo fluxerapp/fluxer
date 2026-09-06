@@ -1,0 +1,496 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: User settings
+description: Account-wide settings, guild folders, notification settings, and voice activity sharing.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+User settings are the stored preferences of one account. Fluxer keeps them in two records: the account-wide [user settings object](/http-api/users/#user-settings-object), and a [user guild settings object](#user-guild-settings-object) for each guild and for private channels.
+
+Every route here is user-only and rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`. Every route except [Get current user settings](#get-current-user-settings) also rejects an account with an outstanding required action, with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+
+## Presence status values
+
+| Value | Description |
+| --- | --- |
+| online | User is presented as online |
+| dnd | User is presented as do not disturb |
+| idle | User is presented as idle |
+| invisible<sup>1</sup> | User is presented as offline to everyone else |
+
+<sup>1</sup> The account stays connected and keeps receiving Gateway traffic while this value is stored
+
+:::note[The settings boundary accepts only a chosen status]
+Gateway presence also uses offline, which describes an account with no active session. The settings boundary rejects offline in both `status` and `status_resets_to`, and invisible is the stored form of appearing offline while connected.
+:::
+
+## Theme values
+
+| Value | Description |
+| --- | --- |
+| dark | Dark theme |
+| dark_legacy | Previous generation of the dark theme |
+| coal | Coal theme |
+| light | Light theme |
+| system | Theme follows the operating system |
+
+## Notification levels
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ALL_MESSAGES | Notify for every message |
+| 1 | ONLY_MENTIONS | Notify only for mentions |
+| 2 | NO_MESSAGES | Do not notify for messages |
+| 3 | INHERIT | Inherit the parent setting |
+
+## Guild mute configuration object
+
+Mute expiry for a guild, a private channel group, or a channel override.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| end_time<sup>1</sup> | ?ISO8601 timestamp | The time at which the temporary mute stops applying, or null for no expiry |
+| selected_time_window<sup>2</sup> | integer | The opaque mute duration the client selected |
+
+<sup>1</sup> An `end_time` in the past no longer mutes notifications but can remain present in the response
+
+<sup>2</sup> The value is returned unchanged and takes no part in notification delivery. An absent value is returned as 0
+
+## Guild mute configuration input object
+
+The input form of the [guild mute configuration object](#guild-mute-configuration-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| end_time?<sup>1</sup> | ?ISO8601 timestamp \| integer | The time at which the temporary mute stops applying, or null for no expiry |
+| selected_time_window | integer | The opaque mute duration the client selected, stored verbatim |
+
+<sup>1</sup> The value is an ISO 8601 timestamp string or Unix milliseconds. A string that is not a valid timestamp is rejected with `INVALID_ISO_TIMESTAMP`
+
+## Channel notification override object
+
+Notification settings stored for one channel.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| collapsed<sup>1</sup> | boolean | Whether the channel category is collapsed |
+| message_notifications | integer | [Notification level](#notification-levels) |
+| muted | boolean | Whether channel notifications are muted |
+| mute_config | ?[guild mute configuration](#guild-mute-configuration-object) object | The mute configuration of the channel, or null when none is stored |
+| unread_badges<sup>1</sup> <sup>2</sup> | ?integer | [Notification level](#notification-levels) for unread badges, or null to inherit |
+
+<sup>1</sup> The value controls client presentation and does not affect notification delivery
+
+<sup>2</sup> Every response has the member, with null standing in for an unset level
+
+## Channel notification override input object
+
+The input form of the [channel notification override object](#channel-notification-override-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| collapsed | boolean | Whether the channel category is collapsed |
+| message_notifications | integer | [Notification level](#notification-levels) |
+| muted | boolean | Whether channel notifications are muted |
+| mute_config? | ?[guild mute configuration input](#guild-mute-configuration-input-object) object | The mute configuration of the channel, or null to clear it |
+| unread_badges? | ?integer | [Notification level](#notification-levels) for unread badges, or null to inherit |
+
+## User guild settings object
+
+Notification settings for one guild, or for every private channel when `guild_id` is null.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id<sup>1</sup> | ?snowflake | The ID of the guild, or null for direct message and group DM settings |
+| message_notifications | integer | The default [notification level](#notification-levels) |
+| muted | boolean | Whether the guild or private channel group is muted |
+| mute_config | ?[guild mute configuration](#guild-mute-configuration-object) object | The mute configuration, or null when none is stored |
+| mobile_push | boolean | Whether notification delivery is enabled for the guild |
+| suppress_everyone | boolean | Whether `@everyone` mentions are suppressed |
+| suppress_roles | boolean | Whether role mentions are suppressed |
+| hide_muted_channels<sup>3</sup> | boolean | Whether muted channels are hidden |
+| channel_overrides<sup>2</sup> | ?map[snowflake, [channel notification override](#channel-notification-override-object) object] | The per-channel overrides, or null when none are set |
+| unread_badges<sup>3</sup> <sup>5</sup> | ?integer | The default [notification level](#notification-levels) for unread badges, or null to follow `message_notifications` |
+| version<sup>4</sup> | integer | The monotonic revision of this settings object |
+
+<sup>1</sup> The private channel settings are always serialised with `guild_id` null
+
+<sup>2</sup> An override map holding no entry is serialised as null
+
+<sup>3</sup> The value controls client presentation and does not affect notification delivery
+
+<sup>4</sup> The value increases on every stored write, including one that changes no other member, so a client can discard a stale [User Guild Settings Update](/gateway/events/#user-guild-settings-update)
+
+<sup>5</sup> Every response has the member, with null standing in for an unset level
+
+### Example
+
+```json
+{
+  "guild_id": null,
+  "message_notifications": 1,
+  "muted": false,
+  "mute_config": null,
+  "mobile_push": true,
+  "suppress_everyone": false,
+  "suppress_roles": false,
+  "hide_muted_channels": false,
+  "channel_overrides": null,
+  "unread_badges": null,
+  "version": 4
+}
+```
+
+## Guild settings update fields
+
+Both notification settings operations accept exactly these fields. Every field is optional, and an omitted field leaves the stored value unchanged.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message_notifications? | integer | The default [notification level](#notification-levels), INHERIT for new settings |
+| muted? | boolean | Whether the guild is muted, default false for new settings |
+| mute_config? | ?[guild mute configuration input](#guild-mute-configuration-input-object) object | The mute configuration, or null to clear it |
+| mobile_push? | boolean | Whether notification delivery is enabled, default true for new settings |
+| suppress_everyone? | boolean | Whether `@everyone` mentions are suppressed, default false for new settings |
+| suppress_roles? | boolean | Whether role mentions are suppressed, default false for new settings |
+| hide_muted_channels? | boolean | Whether muted channels are hidden, default false for new settings |
+| channel_overrides?<sup>1</sup> | ?map[snowflake, [channel notification override input](#channel-notification-override-input-object) object] | The complete per-channel override map, or null to clear it |
+| unread_badges? | ?integer | The default [notification level](#notification-levels) for unread badges, or null to follow `message_notifications` |
+
+<sup>1</sup> The supplied map becomes the complete override set, and an empty map clears every override
+
+:::note[Which of these fields the server reads]
+Fluxer reads `suppress_everyone` and `suppress_roles` when it counts the mentions in a guild message. Push notification delivery reads `muted`, `mute_config`, `mobile_push`, `message_notifications`, `suppress_everyone`, and `suppress_roles`, and the `muted` and `message_notifications` members of a channel override. Every other field is stored and returned unchanged.
+:::
+
+A direct mention of the account always counts. An `@everyone` or `@here` mention counts only while `suppress_everyone` is false, and a role mention only while `suppress_roles` is false. A mention that counts increments `mention_count` on the channel's [read state](/http-api/read-states/#read-state-object) and adds an entry to the [recent mention history](/http-api/users/content/#list-recent-mentions). A guild message whose every mention is suppressed records nothing.
+
+Neither field is read outside a guild. A direct message and a group DM collect only direct mentions, and every one of them counts whatever the private channel settings hold.
+
+## User settings update object
+
+The input form of the [user settings object](/http-api/users/#user-settings-object). Every field is optional, and an omitted field leaves the stored value unchanged. A field present with a value overwrites the stored value in full, including an array or object member.
+
+The three staff-only fields are the exception. Every update resets `suppress_unprivileged_self_mentions`, `suppress_unprivileged_self_mentions_bypass_user_ids`, and `staff_dm_access_user_ids` to false, empty, and empty for an ordinary account, including an update that names none of them.
+
+Two further members are accepted and ignored. `guild_positions` is an array of at most 200 guild snowflakes, and nothing reads it. `default_share_voice_activity` belongs to [Modify voice activity sharing](#modify-voice-activity-sharing).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status? | string | [Presence status](#presence-status-values) |
+| status_resets_at?<sup>1</sup> | ?ISO8601 timestamp \| integer | The moment at which the scheduled reset applies, or null to clear it |
+| status_resets_to? | ?string | [Presence status](#presence-status-values) applied by the scheduled reset, or null to clear it |
+| theme? | string | [Theme value](#theme-values) |
+| locale?<sup>2</sup> | string | Interface [locale](/topics/locales/#supported-locales) |
+| restricted_guilds?<sup>3</sup> | array[snowflake] | The guilds where member direct messages are restricted (max 200) |
+| bot_restricted_guilds?<sup>3</sup> | array[snowflake] | The guilds where bot direct messages are restricted (max 200) |
+| default_guilds_restricted? | boolean | Whether newly joined guilds restrict member direct messages |
+| bot_default_guilds_restricted? | boolean | Whether newly joined guilds restrict bot direct messages |
+| inline_attachment_media? | boolean | Whether attachment media is rendered inline |
+| inline_embed_media? | boolean | Whether embed media is rendered inline |
+| gif_auto_play? | boolean | Whether GIF media plays automatically |
+| render_embeds? | boolean | Whether message embeds are rendered |
+| render_reactions? | boolean | Whether message reactions are rendered |
+| animate_emoji? | boolean | Whether custom emoji animate |
+| animate_stickers? | integer | [Sticker animation setting](/http-api/users/#sticker-animation-settings) |
+| render_spoilers? | integer | [Spoiler rendering setting](/http-api/users/#spoiler-rendering-settings) |
+| message_display_compact? | boolean | Whether messages use compact presentation |
+| flags?<sup>4</sup> | integer | [Friend source flags](/http-api/users/#friend-source-flags) |
+| friend_source_flags?<sup>4</sup> | integer | [Friend source flags](/http-api/users/#friend-source-flags) |
+| incoming_call_flags?<sup>5</sup> | integer | [Incoming call flags](/http-api/users/#incoming-call-flags) |
+| group_dm_add_permission_flags?<sup>6</sup> | integer | [Group DM add permission flags](/http-api/users/#group-dm-add-permission-flags) |
+| guild_folders?<sup>7</sup> | array[[guild folder input](#guild-folder-input-object) object] | The complete guild folder layout (max 100) |
+| custom_status?<sup>8</sup> | ?[custom status input](#custom-status-input-object) object | The custom status, or null to clear it |
+| afk_timeout? | integer | The idle seconds before the account is presented as away (60-600) |
+| time_format? | integer | [Time format setting](/http-api/users/#time-format-settings) |
+| developer_mode? | boolean | Whether developer mode is enabled |
+| trusted_domains?<sup>9</sup> | array[string] | The trusted external link domains (max 1000, each 1-253 characters) |
+| default_hide_muted_channels? | boolean | Whether newly joined guilds hide muted channels |
+| sensitive_content_friend_dm_filter?<sup>10</sup> | integer | [Sensitive media filter](/http-api/users/#sensitive-media-filters) for friend direct messages |
+| sensitive_content_non_friend_dm_filter?<sup>11</sup> | integer | [Sensitive media filter](/http-api/users/#sensitive-media-filters) for non-friend direct messages |
+| sensitive_content_guild_filter?<sup>11</sup> | integer | [Guild sensitive media filter](/http-api/users/#guild-sensitive-media-filters) |
+| suppress_unprivileged_self_mentions?<sup>12</sup> | boolean | Whether direct and reply mentions from unprivileged users are suppressed |
+| suppress_unprivileged_self_mentions_bypass_user_ids?<sup>12</sup> | ?array[snowflake] | The users exempt from mention suppression |
+| staff_dm_access_user_ids?<sup>12</sup> | ?array[snowflake] | The users granted staff direct message access |
+| profile_privacy? | integer | [Profile privacy level](/http-api/users/#profile-privacy-levels) |
+| synced_preferences?<sup>13</sup> | ?string | The base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` snapshot, or null to clear it |
+
+<sup>1</sup> A string matches ISO 8601 and an integer is Unix milliseconds between 0 and 8640000000000000. Anything else is rejected with `INVALID_ISO_TIMESTAMP`
+
+<sup>2</sup> The value is an exact entry of the [supported locale registry](/topics/locales/#supported-locales), never a negotiated nearest match. A change also applies to email localisation
+
+<sup>3</sup> Duplicate identifiers are removed before the bound is applied, and an empty array clears the stored set
+
+<sup>4</sup> `flags` is a legacy alias for `friend_source_flags`, which wins when both are supplied. `friend_source_flags` is bounded to 0 through 2147483647 while `flags` accepts any integer
+
+<sup>5</sup> The stored value is collapsed before it is written. `FRIENDS_ONLY` wins over `NOBODY`, and either collapse preserves `SILENT_EVERYONE`
+
+<sup>6</sup> `FRIENDS_ONLY`, then `NOBODY`, then `EVERYONE` are tested in that order against the already collapsed value, so `EVERYONE` applies only when neither of the other two is supplied
+
+<sup>7</sup> The array replaces the layout in full
+
+<sup>8</sup> The object replaces the stored custom status in full, so an omitted member is cleared. [Input normalisation](/http-api/#input-normalisation) turns an all-empty object into null, which clears the status
+
+<sup>9</sup> The single entry `*` trusts every domain and cannot be combined with a concrete domain, which fails against `trusted_domains` with `INVALID_TRUSTED_DOMAINS`. An empty array clears the set
+
+<sup>10</sup> An account that is not a verified adult can set only blur or block. Any other value fails against that field with `AGE_RESTRICTED`
+
+<sup>11</sup> An account that is not a verified adult cannot modify this field, and supplying it fails against that field with `AGE_RESTRICTED`
+
+<sup>12</sup> The field is staff-only
+
+<sup>13</sup> The value runs to at most 349528 characters of base64 and decodes to at most 262144 bytes, the 256 KiB ceiling. A longer string fails at the boundary, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
+
+Fluxer decodes an accepted `synced_preferences` value, re-encodes it canonically, and stores the result, so a snapshot with only zero values is stored as cleared and read back as the empty string.
+
+:::caution[A rebuilt folder layout drops unresolved references]
+The submitted array replaces the layout in full and is retained as sent, so a client that rebuilds it from only the items it can render loses the rest. Send unresolved references back and omit them only from the rendered view.
+:::
+
+:::note[Fluxer edits the layout on its own]
+Joining a guild prepends it to the uncategorised folder unless some folder already lists it. Leaving or losing a guild removes its ID from every folder and drops any non-uncategorised folder left empty. Each edit emits [User Settings Update](/gateway/events/#user-settings-update).
+:::
+
+Fluxer prepends an empty uncategorised folder to a submitted layout that omits one. A guild ID listed in more than one folder is kept only in the highest-ranked folder. A name is the primary key, so a named folder outranks an unnamed one whatever its identity, and an ordinary folder outranks the uncategorised folder only when both are named or both unnamed. The earliest folder in the submitted order wins a tie.
+
+## Guild folder input object
+
+One folder of a submitted guild folder layout.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | integer | The identifier of the folder |
+| name? | ?string | The name of the folder (0-100 characters) |
+| color?<sup>2</sup> | ?integer | The packed 24-bit RGB colour of the folder (0-16777215) |
+| flags?<sup>2</sup> | integer | [Guild folder flags](/http-api/users/#guild-folder-flags) |
+| icon?<sup>2</sup> | string | [Guild folder icon](/http-api/users/#guild-folder-icons) |
+| guild_ids<sup>3</sup> | array[snowflake] | The guild IDs in display order (max 200) |
+
+<sup>1</sup> The value is at least `-1`, and `-1` identifies the uncategorised folder
+
+<sup>2</sup> An omitted `color` is stored as `0`, an omitted `flags` as `0`, and an omitted `icon` as `folder`. A `color` below 0 fails with `COLOR_VALUE_TOO_LOW` and one above 16777215 with `COLOR_VALUE_TOO_HIGH`
+
+<sup>3</sup> Duplicate identifiers within one folder are removed before the bound is applied
+
+## Custom status input object
+
+A custom status as submitted with a settings update.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| text?<sup>1</sup> | ?string | The status text (1-128 characters) |
+| expires_at?<sup>2</sup> | ?ISO8601 timestamp \| integer | The expiry as a timestamp string or Unix milliseconds, or null for no expiry |
+| emoji_id?<sup>3</sup> | ?snowflake | The custom emoji to display |
+| emoji_name?<sup>3</sup> | ?string | The Unicode emoji to display (1-32 characters) |
+
+<sup>1</sup> Fluxer measures the length after [input normalisation](/http-api/#input-normalisation), which turns an empty string into null. Blocklisted text or a blocklisted link is rejected with 403 `CONTENT_BLOCKED`
+
+<sup>2</sup> The value is in the future, and a value at or before the current time is rejected
+
+<sup>3</sup> `emoji_name` is ignored, and not validated, when `emoji_id` has a value. An `emoji_id` of null leaves `emoji_name` in place, and it is then exactly one Unicode emoji
+
+A custom emoji ID that does not resolve fails with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. Fluxer drops the resolved emoji for an account without the global expression entitlement, so the request succeeds with text alone.
+
+:::caution[The stored expiry is not swept]
+An `expires_at` in the past does not clear the stored custom status and emits no Dispatch. The next Gateway session omits the expired status, and only an update naming `custom_status` replaces the stored record. Compare `expires_at` against the current time before rendering.
+:::
+
+## Initial settings
+
+A new account starts with these values. Every field not listed starts empty, so there is no custom status and `synced_preferences` is the empty string.
+
+| Setting | Initial value |
+| --- | --- |
+| Theme | The theme chosen at registration, or `system` |
+| Status | `online` |
+| Rendering | Animated custom emoji, always-animated stickers, GIF autoplay, embeds and reactions rendered, spoilers on click, inline attachment and embed media |
+| Incoming calls and group DM additions | Friends only |
+| Guild DM restrictions | Unrestricted for both members and bots |
+| Guild folders | One empty uncategorised folder |
+| AFK timeout | 600 seconds |
+| Time format | Automatic |
+| Trusted domains | None |
+| Profile privacy | Visible to all guild members |
+| Voice activity sharing | Enabled |
+| Friend sources | Mutual friends and mutual guilds, plus no relation for a verified adult |
+| Sensitive media filters | Show for a verified adult and blur otherwise on friend DMs, block on non-friend DMs, blur in guilds |
+| Developer mode | Enabled in development, disabled elsewhere |
+
+## Get current user settings
+
+<RouteHeader method="GET" path="/v1/users/@me/settings" />
+
+Returns the [user settings](/http-api/users/#user-settings-object) object.
+
+An account with an outstanding required action can still call this route. An account with no stored settings record returns 404 `UNKNOWN_USER`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user settings](/http-api/users/#user-settings-object) object | Settings were returned |
+| 404 | [error response](/http-api/#error-response) | Settings do not exist and the request returns `UNKNOWN_USER` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:settings:get` bucket shared with [Get current user](/http-api/users/current-user/#get-current-user).
+
+## Modify current user settings
+
+<RouteHeader method="PATCH" path="/v1/users/@me/settings" />
+
+Modifies the account-wide settings and returns the complete [user settings](/http-api/users/#user-settings-object) object. Emits a [User Settings Update](/gateway/events/#user-settings-update) Gateway event.
+
+An account with no stored settings record returns 404 `UNKNOWN_USER`. A locale change additionally emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+An unresolvable custom status emoji returns 400 `INVALID_FORM_BODY` with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. The trusted domain, age restriction, and synced preferences decisions return 400 `VALIDATION_ERROR` with their own codes in `errors`.
+
+### JSON body
+
+The body uses the [user settings update object](#user-settings-update-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user settings](/http-api/users/#user-settings-object) object | Settings were applied and returned |
+| 400 | [error response](/http-api/#error-response) | A field value, the custom status emoji, the trusted domain combination, an age-restricted filter, or the synced preferences snapshot is invalid |
+| 403 | [error response](/http-api/#error-response) | Custom status text is blocked and the request returns `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Settings do not exist and the request returns `UNKNOWN_USER` |
+
+### Side effects
+
+Fluxer emits [User Settings Update](/gateway/events/#user-settings-update) to the caller's own sessions. A value-identical patch still performs the write and produces the Dispatch. A locale change also applies to email and notification localisation and emits [User Update](/gateway/events/#user-update). The user object has no locale member.
+
+Every [User Settings Update](/gateway/events/#user-settings-update) republishes the caller's current [Presence Update](/gateway/events/#presence-update) to eligible sessions, so a custom status change becomes visible without a further request.
+
+A status of invisible forces every one of the caller's sessions to invisible. A later status of online, idle, or dnd releases them, and it does so only when at least one session is currently invisible.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `user:settings:update` bucket shared with [Modify voice activity sharing](#modify-voice-activity-sharing).
+
+## Modify voice activity sharing
+
+<RouteHeader method="PUT" path="/v1/users/@me/settings/voice-activity-sharing" />
+
+Changes the default voice activity sharing value, applies it to the caller's side of every existing friendship, and returns the caller's [user](/http-api/users/#user-object) object. Emits [Relationship Update](/gateway/events/#relationship-update) and [User Update](/gateway/events/#user-update) Gateway events, and a [User Settings Update](/gateway/events/#user-settings-update) Gateway event only when the stored default changes.
+
+A missing account or settings record returns 404 `UNKNOWN_USER`.
+
+This operation owns `default_share_voice_activity`, which is read-only in the [user settings object](/http-api/users/#user-settings-object).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| share_voice_activity | boolean | Whether voice activity is shared, stored as the new default and applied to the caller's side of every friendship |
+
+:::caution[The cooldown is evaluated before the value comparison]
+A 24-hour cooldown recorded on the account is checked before the request is compared against the stored value, so re-sending the current value inside the window fails with `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` on `share_voice_activity`. The remaining delay appears only inside the localised message.
+:::
+
+Outside the window the cooldown restarts on every accepted request, including one that sets the value it already holds. The [user object](/http-api/users/#user-object) has that moment as `last_voice_activity_sharing_change_at`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user](/http-api/users/#user-object) object | Sharing state was returned after applying the request |
+| 400 | [error response](/http-api/#error-response) | The 24-hour cooldown remains active and the request returns `INVALID_FORM_BODY` |
+| 404 | [error response](/http-api/#error-response) | The account or its settings do not exist and the request returns `UNKNOWN_USER` |
+
+### Side effects
+
+An accepted request writes `default_share_voice_activity` and then walks every friendship. A friendship whose caller-side value already equals the submitted value is skipped, and its stored `version` does not advance. Every friendship, skipped or rewritten, produces one [Relationship Update](/gateway/events/#relationship-update) to the caller and one to the friend, so re-sending the current value still fans the full set out. The friend's Dispatch is emitted only when the reciprocal friendship exists.
+
+It then records the change time in `last_voice_activity_sharing_change_at` and emits [User Update](/gateway/events/#user-update) to the caller.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `user:settings:update` bucket shared with [Modify current user settings](#modify-current-user-settings).
+
+## Modify DM notification settings
+
+<RouteHeader method="PATCH" path="/v1/users/@me/guilds/@me/settings" />
+
+Modifies and returns the [user guild settings](#user-guild-settings-object) object that governs direct messages and group DMs. Emits a [User Guild Settings Update](/gateway/events/#user-guild-settings-update) Gateway event on every success.
+
+Fluxer creates the settings with the documented defaults when they are absent.
+
+### JSON body
+
+The body uses the [guild settings update fields](#guild-settings-update-fields).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user guild settings](#user-guild-settings-object) object | DM settings were returned after applying the request |
+
+### Side effects
+
+The private channel settings are returned with `guild_id` null. Fluxer performs the write and emits the Dispatch to the caller's own sessions even when the request changes nothing, and `version` advances on that write. No other account receives a Dispatch.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `user:guild_settings:update` bucket shared with [Modify guild notification settings](#modify-guild-notification-settings).
+
+## Modify guild notification settings
+
+<RouteHeader method="PATCH" path="/v1/users/@me/guilds/{guild_id}/settings" />
+
+Modifies and returns the [user guild settings](#user-guild-settings-object) object for the supplied guild ID. Emits a [User Guild Settings Update](/gateway/events/#user-guild-settings-update) Gateway event on every success.
+
+Fluxer creates the settings with the documented defaults when they are absent.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The guild settings key |
+
+:::note[No membership check runs here]
+The operation neither confirms nor denies that the guild exists. A settings object written for a guild the caller has never joined is stored and returned like any other.
+:::
+
+:::note[`guild_id` of 0 is the DM alias]
+`PATCH /v1/users/@me/guilds/0/settings` writes the same private channel record as the `@me` route and returns `guild_id` null.
+:::
+
+### JSON body
+
+The body uses the [guild settings update fields](#guild-settings-update-fields).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user guild settings](#user-guild-settings-object) object | Guild settings were returned after applying the request |
+
+### Side effects
+
+Fluxer performs the write and emits the Dispatch to the caller's own sessions even when the request changes nothing, and `version` advances on that write. No guild member other than the caller receives a Dispatch.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `user:guild_settings:update` bucket shared with [Modify DM notification settings](#modify-dm-notification-settings).

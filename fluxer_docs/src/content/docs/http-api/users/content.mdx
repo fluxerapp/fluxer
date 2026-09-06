@@ -1,0 +1,423 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: User content collections
+description: Recent mentions, saved messages, and deletion of the caller's own messages.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Recent mentions and saved messages are private lists that only the account owning them can read. Two further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests live on [Data harvests](/http-api/users/data-harvest/).
+
+Every route here is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has an outstanding required action with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+
+Every route except [Delete current user's messages](#delete-current-users-messages) reaches the main Gateway, and a Gateway failure returns 502 `BAD_GATEWAY`, 503 `SERVICE_UNAVAILABLE`, or 504 `GATEWAY_TIMEOUT`. [Save message](#save-message) resolves the channel before it writes, so a failure there stores nothing. The request still returns 204 when a [Saved Message Create](/gateway/events/#saved-message-create), [Saved Message Delete](/gateway/events/#saved-message-delete), or [Recent Mention Delete](/gateway/events/#recent-mention-delete) Dispatch fails to publish after the write.
+
+:::caution[The schedule is written before the Dispatch]
+[Request bulk message deletion](#request-bulk-message-deletion) and [Cancel bulk message deletion](#cancel-bulk-message-deletion) publish [User Update](/gateway/events/#user-update) after the account row is written. A Gateway failure returns 502, 503, or 504 with the stored schedule already changed.
+:::
+
+## Saved message object
+
+A saved entry is a private bookmark pairing one message with the channel it was saved from. Saving a message notifies nobody, including its author.
+
+An entry stores no copy of the message. Fluxer resolves the message against current permissions on every read, so one entry can have a message on one read and none on the next.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | snowflake | The ID of the saved entry |
+| channel_id<sup>2</sup> | snowflake | The channel the message was saved from |
+| message_id | snowflake | The ID of the saved message |
+| status | string | The [saved message status](#saved-message-statuses) of the entry |
+| message<sup>3</sup> | ?[message](/http-api/messages/#message-object) object | The message as the caller can currently see it, or null |
+
+<sup>1</sup> Always equal to `message_id`, because one message can be saved at most once per account
+
+<sup>2</sup> The channel supplied when the message was saved, and it is not re-derived on read
+
+<sup>3</sup> Null exactly when `status` is `missing_permissions`, and otherwise the message resolved for the caller at read time. A message that still exists and needs `READ_MESSAGE_HISTORY` the caller no longer holds is also null.
+
+## Saved message statuses
+
+| Value | Description |
+| --- | --- |
+| available | The message resolved and is included in the entry |
+| missing_permissions<sup>1</sup> | The caller can no longer reach the channel or read the message, so `message` is null |
+
+<sup>1</sup> Reported when resolving the channel fails with `MISSING_PERMISSIONS`, `UNKNOWN_CHANNEL`, `UNKNOWN_GUILD`, `ACCESS_DENIED`, or `NSFW_CONTENT_AGE_RESTRICTED`. Also reported when the channel resolves and a stored message needs `READ_MESSAGE_HISTORY` the caller does not hold.
+
+## Bulk message deletion scopes
+
+| Value | Description |
+| --- | --- |
+| selected | The supplied context toggles and guild filter choose what is deleted |
+| inaccessible_only<sup>1</sup> | The deletion covers only guilds the caller has left and group DMs the caller is no longer a member of |
+
+<sup>1</sup> One-to-one direct messages are never eligible under this scope
+
+## Guild filter modes
+
+| Value | Description |
+| --- | --- |
+| exclude | The deletion covers every eligible guild except `excluded_guild_ids` |
+| include_only | The deletion covers only `included_guild_ids` |
+
+## List recent mentions
+
+<RouteHeader method="GET" path="/v1/users/@me/mentions" />
+
+Lists the caller's recent mention history. Returns an array of [message](/http-api/messages/#message-object) objects the caller can still read, in descending message ID order.
+
+Fluxer resolves each retained entry against current permissions. A message that has been deleted, or whose channel the caller can no longer reach, is omitted without being removed from history. The filters and `limit` apply before that resolution, so a full page can return fewer messages than `limit`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit?<sup>1</sup> | integer | The maximum number of mentions read from history (1-100, default 25) |
+| roles?<sup>2</sup> <sup>3</sup> | boolean | Whether entries recorded as role mentions are included (default true) |
+| everyone?<sup>2</sup> <sup>3</sup> <sup>4</sup> | boolean | Whether entries recorded as everyone mentions are included (default true) |
+| guilds?<sup>2</sup> <sup>5</sup> | boolean | Whether entries in a guild channel are included (default true) |
+| before? | snowflake | The upper bound on entry message ID, exclusive |
+
+<sup>1</sup> A value outside the range fails with `VALUE_MUST_BE_INTEGER_IN_RANGE` at the `limit` path. The value is read with a leading-integer parse, so `25abc` is accepted as `25`
+
+<sup>2</sup> Only the exact strings `true`, `True`, and `1` are read as true. Every other value, `TRUE` and `yes` included, is read as false
+
+<sup>3</sup> The filter excludes every entry with the named mention kind, so a message that arrived through both a direct and a role mention is excluded while `roles` is false
+
+<sup>4</sup> An `@here` mention is recorded as an everyone mention. It is recorded only for an account holding a live Gateway session on the guild when the mention was fanned out
+
+<sup>5</sup> Every recorded entry has a guild, so setting this to false always returns an empty array
+
+:::note[Only guild channel mentions are recorded]
+A direct message never produces an entry. Fluxer records nothing for the message author, for a bot account, or for a member who cannot view the channel.
+:::
+
+The response has no cursor metadata, so `before` and `limit` are the only pagination controls.
+
+Fluxer drops a direct mention at message creation when the mentioned account has blocked the author, so it never reaches the history. An `@everyone` or `@here` mention is not recorded while `suppress_everyone` is enabled for the guild, and a role mention is not recorded while `suppress_roles` is enabled. A message that also has a direct mention is still recorded. Changing those [guild notification settings](/http-api/users/settings/#user-guild-settings-object) later does not retroactively add or remove history.
+
+:::caution[One bad entry can fail the whole listing]
+Fluxer omits an entry whose channel the caller cannot reach. An entry that needs age verification, or one whose membership state does not resolve, returns 403 for the whole request. Narrow the window with `before` to page around it.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[message](/http-api/messages/#message-object) object] | Readable mentions were returned |
+| 403 | [error response](/http-api/#error-response) | A retained entry sits in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel the account has not verified for, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:mentions:read` bucket.
+
+## Mark recent mentions read
+
+<RouteHeader method="POST" path="/v1/users/@me/mentions/read" />
+
+Removes entries from the caller's recent mention history. Returns 204 with an empty body. Emits one [Recent Mention Delete](/gateway/events/#recent-mention-delete) Gateway event for each entry it removes.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message_ids<sup>1</sup> | array[snowflake] | The recent mention message IDs to remove (1-100 entries) |
+
+<sup>1</sup> An ID absent from the history is an idempotent no-op that emits no Dispatch. A duplicate ID is not deduplicated, so an ID naming a real entry twice emits the Dispatch twice
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Every supplied ID was processed |
+
+:::note[Removing an entry leaves the message unread]
+The mention count on the entry's channel does not change. [Read states](/http-api/read-states/) defines acknowledgement.
+:::
+
+### Side effects
+
+Fluxer looks up every supplied ID first and deletes only the entries that exist. [Recent Mention Delete](/gateway/events/#recent-mention-delete) reaches the caller's own sessions once for every entry found, so a request naming only unknown IDs writes nothing.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `user:mentions:delete` bucket, which is shared with [Delete recent mention](#delete-recent-mention).
+
+## Delete recent mention
+
+<RouteHeader method="DELETE" path="/v1/users/@me/mentions/{message_id}" />
+
+Removes one entry from the caller's recent mention history. Returns 204 with an empty body. Emits a [Recent Mention Delete](/gateway/events/#recent-mention-delete) Gateway event when an entry is removed.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message_id | snowflake | The message ID of the recent mention entry |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The entry was removed, or no entry named that message |
+
+### Side effects
+
+A matching entry is deleted and [Recent Mention Delete](/gateway/events/#recent-mention-delete) reaches the caller's own sessions. When no entry existed the request writes nothing. The message stays in its channel, and the caller's channel mention count and unread badge are unchanged.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `user:mentions:delete` bucket, which is shared with [Mark recent mentions read](#mark-recent-mentions-read).
+
+## List saved messages
+
+<RouteHeader method="GET" path="/v1/users/@me/saved-messages" />
+
+Lists the caller's saved message collection. Returns an array of [saved message](#saved-message-object) objects in descending message ID order.
+
+The response is a bare array with no cursor metadata, so `limit` is the only control and an account holding more than 100 entries cannot page past the first 100. An entry whose channel the caller can no longer reach, or whose message the caller can no longer read, comes back with status `missing_permissions` and a null message. An entry whose message no longer exists is deleted and omitted. The array can hold fewer entries than `limit`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit?<sup>1</sup> <sup>2</sup> | integer | The maximum number of entries read from the collection (1-100, default 25) |
+
+<sup>1</sup> A value outside the range fails with `VALUE_MUST_BE_INTEGER_IN_RANGE` at the `limit` path
+
+<sup>2</sup> Applied to the stored entries before each one is resolved
+
+:::caution[Reading the collection deletes entries]
+Fluxer permanently deletes an entry whenever its message no longer exists. An entry whose message the caller cannot read is kept and reported as `missing_permissions`.
+:::
+
+A guild configuring [message_history_cutoff](/http-api/guilds/#guild-object) still serves a message posted at or after the cutoff to a member without `READ_MESSAGE_HISTORY`, so the entry stays `available`. A message posted before the cutoff is reported as `missing_permissions`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[saved message](#saved-message-object) object] | Saved entries were returned |
+| 403 | [error response](/http-api/#error-response) | A stored entry sits in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+
+### Side effects
+
+The cleanup deletion emits no [Saved Message Delete](/gateway/events/#saved-message-delete).
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:saved_messages:read` bucket.
+
+## Save message
+
+<RouteHeader method="POST" path="/v1/users/@me/saved-messages" />
+
+Adds a message to the caller's private saved message collection. Returns 204 with an empty body. Emits a [Saved Message Create](/gateway/events/#saved-message-create) Gateway event.
+
+The caller needs access to the channel and to the message.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | snowflake | The channel containing the message |
+| message_id | snowflake | The ID of the message to save |
+
+<sup>1</sup> The saved entry retains this channel ID verbatim
+
+### Collection limit
+
+An account holds at most the instance-configured `max_bookmarks` [limit](/http-api/instance/#limit-keys) entries. Fluxer resolves the account's effective value on every save, and the default is 50. Reaching the ceiling fails with 400 `MAX_BOOKMARKS`, whose body has `max_bookmarks` reporting the ceiling.
+
+The check runs before Fluxer touches the channel or the message, so re-saving an already stored message is refused at the ceiling too.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Message is present in the saved collection |
+| 400 | [error response](/http-api/#error-response) | The collection is at its ceiling and the request returns `MAX_BOOKMARKS` |
+| 403 | [error response](/http-api/#error-response) | The caller lacks `VIEW_CHANNEL` or guild membership, returning `MISSING_PERMISSIONS`, the membership state cannot be resolved, returning `ACCESS_DENIED`, or the channel needs age verification, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | The channel returns `UNKNOWN_CHANNEL`, its guild returns `UNKNOWN_GUILD`, the message returns `UNKNOWN_MESSAGE`, or the account returns `UNKNOWN_USER` |
+
+### Side effects
+
+Saving an already stored message rewrites the entry. [Saved Message Create](/gateway/events/#saved-message-create) reaches the caller's own sessions on every accepted save, a repeat save included, with the complete message object as the caller can currently see it.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `user:saved_messages:write` bucket, which is shared with [Unsave message](#unsave-message).
+
+## Unsave message
+
+<RouteHeader method="DELETE" path="/v1/users/@me/saved-messages/{message_id}" />
+
+Removes a message from the caller's private saved message collection. Returns 204 with an empty body. Emits a [Saved Message Delete](/gateway/events/#saved-message-delete) Gateway event.
+
+No current access to the channel is required.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message_id | snowflake | The message ID of the saved entry |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Message is absent from the saved collection |
+
+### Side effects
+
+Fluxer issues the delete unconditionally, and [Saved Message Delete](/gateway/events/#saved-message-delete) reaches the caller's own sessions on every accepted request, including one naming a message the account never saved. The saved entry is removed and the message stays in its channel.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `user:saved_messages:write` bucket, which is shared with [Save message](#save-message).
+
+## Delete current user's messages
+
+<RouteHeader method="POST" path="/v1/users/@me/messages/bulk-delete-mine" mfa />
+
+Deletes the messages the caller authored that the supplied filter selects. Requires [sudo mode](/http-api/users/mfa/#sudo-mode). Returns 202 with an empty body before deletion begins.
+
+Deletion emits batched [Message Delete Bulk](/gateway/events/#message-delete-bulk) Dispatches as it progresses, and finally a [Message Create](/gateway/events/#message-create) for the completion direct message.
+
+:::danger[Deletion is permanent]
+Every message the filter selects is deleted from its channel for every recipient, and its attachments are permanently removed. No operation restores them. Obtain explicit user confirmation before submitting, and never present the 202 as confirmation that deletion has finished.
+:::
+
+### JSON body
+
+The caller proves sudo mode either with the five sudo fields below or with an existing proof in the request. An existing proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scope? | string | The [deletion scope](#bulk-message-deletion-scopes), default `selected` |
+| include_dms? | boolean | Whether one-to-one DMs the caller still has open are included (default true) |
+| include_dms_closed?<sup>1</sup> | boolean | Whether one-to-one DMs the caller has closed are included (default true) |
+| include_group_dms?<sup>2</sup> | boolean | Whether group DMs the caller is still a member of are included (default true) |
+| include_guilds?<sup>2</sup> | boolean | Whether channels in guilds the caller is still a member of are included (default true) |
+| guild_filter_mode?<sup>3</sup> | string | The [guild filter mode](#guild-filter-modes), default `exclude` |
+| excluded_guild_ids? | array[snowflake] | The guilds left untouched in `exclude` mode (max 500 IDs, default empty) |
+| included_guild_ids? | array[snowflake] | The only guilds targeted in `include_only` mode (max 500 IDs, default empty) |
+| start_date?<sup>4</sup> | ?ISO8601 timestamp | The inclusive lower bound on message time, or null for no lower bound |
+| end_date?<sup>4</sup> | ?ISO8601 timestamp | The exclusive upper bound on message time, or null for no upper bound |
+| password?<sup>5</sup> | string | The account password (8-256 characters) |
+| mfa_method?<sup>5</sup> | string | The sudo MFA method, either `totp` or `webauthn` |
+| mfa_code?<sup>5</sup> | string | The sudo authenticator code, or an unconsumed backup code (1-32 characters) |
+| webauthn_response?<sup>5</sup> | [WebAuthn assertion](/http-api/users/mfa/#webauthn-assertion-object) object | The sudo WebAuthn assertion |
+| webauthn_challenge?<sup>5</sup> | string | The sudo WebAuthn challenge (1-256 characters) |
+
+<sup>1</sup> Independent of `include_dms`, so setting `include_dms` false and `include_dms_closed` true targets closed direct messages only
+
+<sup>2</sup> Under the `selected` scope a group DM is eligible only while the caller is still a recipient, and a guild channel only while the caller is still a member
+
+<sup>3</sup> Evaluated only while `include_guilds` is true and `scope` is `selected`
+
+<sup>4</sup> Supplying both bounds requires `start_date` strictly earlier than `end_date`, and an equal pair fails validation on `end_date`
+
+<sup>5</sup> The five sudo fields are the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). Which combination is accepted depends on the account's configured authenticators
+
+The `selected` scope requires at least one of the four context toggles to be true, and a request that disables all four fails validation on `include_dms`. The `inaccessible_only` scope ignores the toggles and the guild filter.
+
+Neither scope includes the caller's personal notes channel, so this operation cannot delete a personal note.
+
+[Request filtered data harvest](/http-api/users/data-harvest/#request-filtered-data-harvest) accepts the same filter shape and applies it to the messages an archive contains. That operation requires no sudo mode.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 202 | empty | Deletion was accepted for asynchronous processing |
+| 400 | [error response](/http-api/#error-response) | The date range or context selection is invalid, or a supplied sudo proof is wrong and the request returns `INVALID_PASSWORD`, `PASSWORD_NOT_SET`, or `INVALID_MFA_CODE` |
+| 403 | [error response](/http-api/#error-response) | No accepted sudo proof is present and the request returns `SUDO_MODE_REQUIRED` |
+| 500 | [error response](/http-api/#error-response) | Deletion could not be enqueued |
+
+### Side effects
+
+An account holding an MFA authenticator that proved sudo mode with MFA receives a fresh proof in the response header. A request that already had a valid proof gets that same token echoed back without an extended lifetime.
+
+Fluxer enqueues the work with at most 5 attempts. As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs, and the deleted messages' attachments are permanently removed.
+
+On completion the system account sends the caller a direct message in the account locale reporting the total deleted message count and the number of channels touched. That message arrives through the ordinary [Message Create](/gateway/events/#message-create) Dispatch.
+
+### Rate limit
+
+5 requests per 30 minutes for each authenticated user, on the `user:messages:bulk_delete_mine_filtered` bucket.
+
+## Request bulk message deletion
+
+<RouteHeader method="POST" path="/v1/users/@me/messages/delete" mfa />
+
+Schedules deletion of every message the caller has ever sent. Returns 204 with an empty body. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+The request requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](#delete-current-users-messages) is the immediate counterpart and takes a filter. This form takes none and waits a day, so the caller can change their mind.
+
+Calling the operation again replaces the pending schedule. The account holds at most one pending deletion, reported by the [pending bulk message deletion object](/http-api/users/#pending-bulk-message-deletion-object) on the [user object](/http-api/users/#user-object).
+
+:::danger[Deletion is permanent once it runs]
+The schedule targets every message the caller authored before the scheduled moment and removes their attachments. Unlike the filtered form it applies no channel eligibility rule, so it also deletes the caller's personal notes. [Cancel bulk message deletion](#cancel-bulk-message-deletion) is the only way to stop it.
+:::
+
+### JSON body
+
+The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). It has no other field, and an existing proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The deletion was scheduled |
+| 400 | [error response](/http-api/#error-response) | A supplied sudo proof is wrong and the request returns `INVALID_PASSWORD`, `PASSWORD_NOT_SET`, or `INVALID_MFA_CODE` |
+| 403 | [error response](/http-api/#error-response) | No accepted sudo proof is present and the request returns `SUDO_MODE_REQUIRED` |
+| 500 | [error response](/http-api/#error-response) | The deletion could not be scheduled |
+
+The 204 has `X-Fluxer-Sudo-Mode-JWT` when sudo verification issued or reused a token.
+
+### Side effects
+
+Any pending deletion for the account is removed from the queue first. The account then records a scheduled moment exactly one day in the future together with the number of messages and channels the deletion would affect. Those counts are computed once at scheduling time and are not recomputed while the deletion waits.
+
+The updated counts and schedule are published to the caller through [User Update](/gateway/events/#user-update). No message is deleted by this request, so no channel receives a Dispatch until the scheduled work runs.
+
+:::caution[Nothing announces that the deletion finished]
+When the scheduled work runs it clears the three stored fields directly and emits no [User Update](/gateway/events/#user-update).
+:::
+
+### Rate limit
+
+6 requests per minute for each authenticated user, on the `user:messages:bulk_delete` bucket, which is shared with [Cancel bulk message deletion](#cancel-bulk-message-deletion).
+
+## Cancel bulk message deletion
+
+<RouteHeader method="DELETE" path="/v1/users/@me/messages/delete" />
+
+Cancels a pending bulk message deletion. Returns 200 on success. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+No sudo verification applies. An account with no pending deletion still returns 200 and still emits the Dispatch. Once the scheduled work has started there is nothing left to cancel, and the deleted messages are not restored.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Whether the cancellation was applied, always true |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The pending deletion, if any, was cancelled |
+| 500 | [error response](/http-api/#error-response) | The cancellation could not be applied |
+
+### Side effects
+
+The scheduled moment and both stored counts are cleared from the account, the queued work is removed, and [User Update](/gateway/events/#user-update) reaches the caller with `pending_bulk_message_deletion` set to null.
+
+### Rate limit
+
+6 requests per minute for each authenticated user, on the `user:messages:bulk_delete` bucket, which is shared with [Request bulk message deletion](#request-bulk-message-deletion).

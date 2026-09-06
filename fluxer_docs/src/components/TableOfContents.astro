@@ -1,0 +1,22 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import TableOfContentsList from './TableOfContentsList.astro';
+
+const {toc} = Astro.locals.starlightRoute;
+---
+
+{
+	toc && (
+		<starlight-toc data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+			<nav aria-labelledby="starlight__on-this-page">
+				<h2 id="starlight__on-this-page">{Astro.locals.t('tableOfContents.onThisPage')}</h2>
+				<TableOfContentsList toc={toc.items} markFirst />
+			</nav>
+		</starlight-toc>
+	)
+}
+
+<script>
+	import './StarlightToc.ts';
+</script>

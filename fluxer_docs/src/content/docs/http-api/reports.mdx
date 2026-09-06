@@ -1,0 +1,509 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Reports
+description: Safety report submission, the category registries, and the DSA notice flow.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A safety report tells moderators that a message, a user, or a guild broke the rules, and any user account can file one. A Digital Services Act notice needs no account, only a verified email address. The [Admin Reports API](/admin-api/reports/) covers reading, triaging, and closing a stored report.
+
+| Operation | Credential | Target |
+| --- | --- | --- |
+| [Report message](#report-message) | User session | One message the reporter can read |
+| [Report user](#report-user) | User session | One account, optionally with a guild for context |
+| [Report guild](#report-guild) | User session | One guild the reporter can reach |
+| [Send DSA report email](#send-dsa-report-email) | None | An email address to verify |
+| [Verify DSA report email](#verify-dsa-report-email) | None | A verification code, exchanged for a ticket |
+| [Create DSA report](#create-dsa-report) | A ticket | A message, user, or guild |
+
+Fluxer discards a body member that no schema here defines, so a misspelt member is dropped without an error. A body that is not parseable JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
+
+:::caution[A submitted report is durable evidence]
+Fluxer copies the reported content when the report is submitted. A message report also copies the surrounding conversation and the bytes of every attachment in it. Deleting the message or leaving the guild afterwards does not remove that snapshot.
+:::
+
+## Access rules
+
+[Report message](#report-message), [Report user](#report-user), and [Report guild](#report-guild) accept a user session token only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`. The account must also be claimed and email-verified. An account holding no password and no SSO identity is rejected with 400 `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, and one whose address is unverified with 403 `REPORT_EMAIL_VERIFICATION_REQUIRED`. An account with the report ban flag is rejected with 403 `REPORT_BANNED`.
+
+The three Digital Services Act routes require no credential. Fluxer still resolves a valid credential presented anyway, so the request draws on that account's rate limit allowance.
+
+Every route bucket is keyed by the authenticated user ID when a credential resolves and by client IP address otherwise. Report creation applies further policy allowances keyed by the reporter.
+
+## Content screening
+
+The instance-wide content filter screens the JSON body of [Report message](#report-message), [Report user](#report-user), [Report guild](#report-guild), and [Create DSA report](#create-dsa-report) before the route runs. A string of at least 3 characters matching the instance phrase blocklist, or a URL matching the instance URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. The `ticket`, `channel_id`, `message_id`, `user_id`, and `guild_id` members are exempt, and so is any value shorter than 3 characters.
+
+:::note[The screen precedes the bucket and the credential check]
+A blocked body returns `CONTENT_BLOCKED` rather than `RATE_LIMITED` or `UNAUTHORIZED`. [Send DSA report email](#send-dsa-report-email) and [Verify DSA report email](#verify-dsa-report-email) are exempt by path, so a submitted address is never scanned.
+:::
+
+## Submission side effects
+
+Every accepted submission writes one report and returns a [report object](#report-object). Submission emits no Gateway Dispatch.
+
+## Report object
+
+The receipt Fluxer returns when it records a submission.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The [snowflake](/snowflakes/) identifying this report |
+| status<sup>1</sup> | string | [Report status](#report-status-values) |
+| reported_at<sup>2</sup> | ISO8601 timestamp | Time the report row was written |
+
+<sup>1</sup> Always `pending`
+
+<sup>2</sup> A Digital Services Act notice has its filing time, even when its verification code was issued much earlier
+
+### Example
+
+```json
+{
+  "report_id": "1501314428688998182",
+  "status": "pending",
+  "reported_at": "2026-08-04T11:22:19.000Z"
+}
+```
+
+## Success object
+
+The fixed acknowledgement returned by [Send DSA report email](#send-dsa-report-email).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ok | boolean | Always true, because a failure is reported as an error status instead |
+
+### Example
+
+```json
+{
+  "ok": true
+}
+```
+
+## Ticket object
+
+The single credential [Create DSA report](#create-dsa-report) accepts. Fluxer binds the ticket to the verified address it was issued for, and that address becomes the reporter identity on the resulting notice.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket<sup>1</sup> | string | The opaque credential [Create DSA report](#create-dsa-report) consumes |
+
+<sup>1</sup> 64 lowercase hexadecimal characters encoding 32 random bytes, valid for one hour from verification, and consumed by the first [Create DSA report](#create-dsa-report) that presents it
+
+### Example
+
+```json
+{
+  "ticket": "6b1f0a92c73d4e58a0b1c2d3e4f5061728394a5b6c7d8e9f0a1b2c3d4e5f6071"
+}
+```
+
+## Report status values
+
+| Value | Description |
+| --- | --- |
+| pending | The report has been recorded and no moderator decision exists yet |
+| resolved | A moderator has closed the report |
+| unknown | The stored status is neither of the two values above |
+
+Only `pending` and `resolved` are ever stored. A client MUST still tolerate a status it does not recognise.
+
+## Message report categories
+
+A message report and the `message` variant of a Digital Services Act notice both draw `category` from this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
+
+| Value | Description |
+| --- | --- |
+| harassment | Content that harasses, bullies, or intimidates users |
+| hate_speech | Content promoting hatred against protected groups |
+| violent_content | Content depicting or promoting violence |
+| spam | Unsolicited bulk messages or promotional content |
+| nsfw_violation | Adult content posted outside age-restricted channels |
+| illegal_activity | Content promoting or facilitating illegal activities |
+| doxxing | Content revealing private personal information |
+| self_harm | Content promoting self-harm or suicide |
+| child_safety | Content that endangers minors or depicts child abuse |
+| malicious_links | Links to malware, phishing, or other malicious sites |
+| impersonation | Content falsely claiming to be another person or entity |
+| other | Other violations not covered by specific categories |
+
+## User report categories
+
+A user report and the `user` variant of a Digital Services Act notice both draw `category` from this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
+
+| Value | Description |
+| --- | --- |
+| harassment | User engages in harassment, bullying, or intimidation |
+| hate_speech | User promotes hatred against protected groups |
+| spam_account | Account used for spamming or bulk messaging |
+| impersonation | User falsely claims to be another person or entity |
+| underage_user | User appears to be under the minimum required age |
+| inappropriate_profile | Profile contains inappropriate or offensive content |
+| other | Other violations not covered by specific categories |
+
+## Guild report categories
+
+A guild report and the `guild` variant of a Digital Services Act notice both draw `category` from this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
+
+| Value | Description |
+| --- | --- |
+| harassment | Guild facilitates harassment, bullying, or intimidation |
+| hate_speech | Guild promotes hatred against protected groups |
+| extremist_community | Guild promotes extremist or terrorist ideologies |
+| illegal_activity | Guild promotes or facilitates illegal activities |
+| child_safety | Guild endangers minors or hosts child abuse content |
+| raid_coordination | Guild coordinates attacks on other communities |
+| spam | Guild used for spamming or bulk messaging |
+| malware_distribution | Guild distributes malware or malicious software |
+| other | Other violations not covered by specific categories |
+
+## EU country codes
+
+No instance configuration changes this registry. A value outside it returns 400 `INVALID_FORM_BODY`.
+
+| Value | Description |
+| --- | --- |
+| AT | Austria |
+| BE | Belgium |
+| BG | Bulgaria |
+| HR | Croatia |
+| CY | Cyprus |
+| CZ | Czechia |
+| DK | Denmark |
+| EE | Estonia |
+| FI | Finland |
+| FR | France |
+| DE | Germany |
+| GR | Greece |
+| HU | Hungary |
+| IE | Ireland |
+| IT | Italy |
+| LV | Latvia |
+| LT | Lithuania |
+| LU | Luxembourg |
+| MT | Malta |
+| NL | Netherlands |
+| PL | Poland |
+| PT | Portugal |
+| RO | Romania |
+| SK | Slovakia |
+| SI | Slovenia |
+| ES | Spain |
+| SE | Sweden |
+
+## Report message
+
+<RouteHeader method="POST" path="/v1/reports/message" />
+
+Creates and returns a [report object](#report-object) for a message the reporter can currently read.
+
+### Limitations
+
+- The reporter must be able to open the containing channel and read the message.
+- A reporter who authored the message receives 400 `CANNOT_REPORT_OWN_MESSAGE`.
+- A channel that does not exist and a direct message the reporter is not a recipient of both return 404 `UNKNOWN_CHANNEL`.
+- A non-member and a member without [VIEW_CHANNEL](/http-api/permissions/) both return 403 `MISSING_PERMISSIONS`.
+- An age-restricted guild channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED` for an account that is not age verified.
+- A message not stored under `channel_id`, a message with no author, and any message a reporter without [READ_MESSAGE_HISTORY](/http-api/permissions/) cannot reach all return 404 `UNKNOWN_MESSAGE`.
+- An author whose account no longer exists returns 404 `UNKNOWN_USER`.
+
+:::note[No cutoff means no history at all]
+A reporter without `READ_MESSAGE_HISTORY` can report only a message at or after the guild's message history cutoff. A guild that sets no cutoff withholds the whole channel from that reporter.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel containing the reported message |
+| message_id | snowflake | The ID of the reported message |
+| category | string | [Message report category](#message-report-categories) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report](#report-object) object | Report was created |
+| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter is the message author and the request returns `CANNOT_REPORT_OWN_MESSAGE` |
+| 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
+| 403 | [error response](/http-api/#error-response) | The reporter is not a guild member or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The channel is age restricted and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | The channel, the message, or the message author is not visible to the reporter |
+| 409<sup>1</sup> | [error response](/http-api/#error-response) | The reporter already reported this message, returning `CONFLICT` |
+
+<sup>1</sup> The reporter, the channel, and the message form a permanent submission key. A second report of the same message by the same reporter is refused however much time has passed and whichever category it names
+
+### Side effects
+
+The operation writes one report with a frozen evidence snapshot. The snapshot records the reporter's account ID and email address, the message author's identity and avatar hash, the channel and guild identity, and the guild and channel NSFW and content warning state.
+
+The snapshot also records a conversation window of up to 25 messages before the reported message, the reported message itself, and up to 25 messages after it. Each context message records its author identity, content, timestamps, type, flags, mentions, embeds, and sticker items, and each attachment is copied byte for byte. A context message whose author no longer exists is dropped from the window, and an attachment whose copy fails is dropped without failing the request. A reporter without `READ_MESSAGE_HISTORY` receives a window trimmed to the guild's message history cutoff.
+
+### Rate limit
+
+10 requests per hour, on the `report:create` bucket, which is shared with [Report user](#report-user) and [Report guild](#report-guild).
+
+Four further allowances apply, each counted over one hour. One reporter creates at most 5 reports across all report types and at most 3 message reports in one channel, and one message receives at most 20 reports across all reporters. When the reported message is in a guild, one reporter creates at most 4 message reports in that guild. A duplicate submission returns 409 `CONFLICT` before any of the four is consumed.
+
+## Report user
+
+<RouteHeader method="POST" path="/v1/reports/user" />
+
+Creates and returns a [report object](#report-object) for another user, optionally noting the guild in which the conduct occurred.
+
+### Limitations
+
+- A reporter naming their own account receives 400 `CANNOT_REPORT_YOURSELF`.
+- A `user_id` that resolves to no account returns 404 `UNKNOWN_USER`.
+- A `guild_id` that resolves to no guild returns 404 `UNKNOWN_GUILD`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the reported user |
+| category | string | [User report category](#user-report-categories) |
+| guild_id? | snowflake | The ID of the guild in which the reported conduct occurred |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report](#report-object) object | Report was created |
+| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter is the reported user and the request returns `CANNOT_REPORT_YOURSELF` |
+| 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
+| 404 | [error response](/http-api/#error-response) | The reported user does not exist and the request returns `UNKNOWN_USER` |
+| 404 | [error response](/http-api/#error-response) | The supplied `guild_id` does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The operation writes one report recording the reporter's account ID and the email address on that account, the reported user's ID and avatar hash, and, when `guild_id` is supplied, the guild's ID, name, icon hash, NSFW flag, and content warning state. No message evidence is captured and no media bytes are copied.
+
+Every accepted request writes a new report, and nothing deduplicates a repeat submission.
+
+### Rate limit
+
+10 requests per hour, on the `report:create` bucket, which is shared with [Report message](#report-message) and [Report guild](#report-guild).
+
+One reporter creates at most 5 reports each hour across all report types.
+
+## Report guild
+
+<RouteHeader method="POST" path="/v1/reports/guild" />
+
+Creates and returns a [report object](#report-object) for a guild.
+
+### Limitations
+
+- A `guild_id` that resolves to no guild returns 404 `UNKNOWN_GUILD`.
+- The guild owner reporting their own guild returns 400 `CANNOT_REPORT_OWN_GUILD`.
+
+Fluxer establishes access to the guild in one of three ways, tried in that order. A current member needs nothing further. Any reporter can report a guild with the `DISCOVERABLE` [guild feature](/http-api/guilds/#guild-features). Any other reporter supplies `invite_code` for an invite pointing at that exact guild. A reporter satisfying none of the three returns 403 `CANNOT_REPORT_GUILD`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the reported guild |
+| category | string | [Guild report category](#guild-report-categories) |
+| invite_code?<sup>1</sup> | string | [Invite](/http-api/invites/) code proving access to the guild (1-64 characters) |
+
+<sup>1</sup> Read only after the member check and the `DISCOVERABLE` check both fail
+
+This route reads the bare code and accepts no invite URL. A code that resolves to no invite, or to an invite for another guild, returns 403 `CANNOT_REPORT_GUILD` rather than a 404.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report](#report-object) object | Report was created |
+| 400 | [error response](/http-api/#error-response) | The account is unclaimed and the request returns `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, or the reporter owns the guild and the request returns `CANNOT_REPORT_OWN_GUILD` |
+| 403 | [error response](/http-api/#error-response) | A body string is blocked and the request returns `CONTENT_BLOCKED` |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or OAuth2 bearer and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Its email is unverified and the request returns `REPORT_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The account is report banned and the request returns `REPORT_BANNED` |
+| 403 | [error response](/http-api/#error-response) | Access to the guild cannot be established and the request returns `CANNOT_REPORT_GUILD` |
+| 404 | [error response](/http-api/#error-response) | The reported guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The operation writes one report recording the reporter's account ID and the email address on that account, the guild's ID, name, and icon hash, the guild's NSFW flag and content warning state, and the supplied invite code when one was sent. No message evidence is captured and no media bytes are copied.
+
+Every accepted request writes a new report, and nothing deduplicates a repeat submission.
+
+### Rate limit
+
+10 requests per hour, on the `report:create` bucket, which is shared with [Report message](#report-message) and [Report user](#report-user).
+
+One reporter creates at most 5 reports each hour across all report types.
+
+## Send DSA report email
+
+<RouteHeader method="POST" path="/v1/reports/dsa/email/send" unauthenticated />
+
+Issues a Digital Services Act verification code for an email address and returns a [success object](#success-object).
+
+The address must be deliverable. A domain publishing no MX record and no A or AAAA record returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_EMAIL_ADDRESS` on `email`. A DNS lookup that fails for a transient reason is treated as deliverable. A domain result is cached for 30 minutes when it resolves and 5 minutes when it does not.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email<sup>1</sup> | string | The address that receives the verification code (1-254 characters) |
+
+<sup>1</sup> Trimmed and lowercased before use, so two spellings that differ only in case address the same verification record
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [success](#success-object) object | The code was generated and handed to the email provider |
+| 400 | [error response](/http-api/#error-response) | The address failed validation or its domain publishes no usable mail DNS record, and the request returns `INVALID_FORM_BODY` |
+
+### Side effects
+
+The operation stores one verification record for the normalised address. The record expires 10 minutes after issue. It is keyed by address alone, so sending again for the same address replaces the previous code and restarts the 10 minute window. The code is nine characters in `XXXX-XXXX` form drawn from uppercase letters and digits.
+
+Fluxer attempts delivery inside the request and discards the outcome. The operation creates no ticket and emits no Gateway Dispatch.
+
+:::caution[A 200 covers every delivery outcome]
+The response is 200 when the provider accepts the message, when it refuses the message, when the address was previously recorded as a hard bounce, and when the instance has email delivery switched off entirely.
+:::
+
+### Rate limit
+
+5 requests per hour, on the `dsa:report:email:send` bucket.
+
+## Verify DSA report email
+
+<RouteHeader method="POST" path="/v1/reports/dsa/email/verify" unauthenticated />
+
+Consumes a verification code and returns the [ticket object](#ticket-object) that [Create DSA report](#create-dsa-report) requires.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| email<sup>1</sup> | string | The address that received the verification code (1-254 characters) |
+| code | string | The nine-character code in `XXXX-XXXX` form, using uppercase letters and digits |
+
+<sup>1</sup> Trimmed and lowercased before the verification record is looked up, exactly as [Send DSA report email](#send-dsa-report-email) normalises it
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [ticket](#ticket-object) object | The code matched the unexpired verification record for the address |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The address or code failed validation, or no unexpired record matches, returning `INVALID_DSA_VERIFICATION_CODE` |
+
+<sup>1</sup> An address with no verification record, an expired record, and a wrong code all produce the same error code. A malformed address or code fails schema validation and returns 400 `INVALID_FORM_BODY`.
+
+### Side effects
+
+The operation deletes the verification record and writes one ticket that expires one hour later. Fluxer deletes the record only on success, so a wrong guess leaves the outstanding code usable until it expires. The operation emits no Gateway Dispatch.
+
+### Rate limit
+
+10 requests per hour, on the `dsa:report:email:verify` bucket.
+
+## Create DSA report
+
+<RouteHeader method="POST" path="/v1/reports/dsa" unauthenticated />
+
+Consumes a ticket, files the notice, and returns a [report object](#report-object).
+
+`report_type` selects which extra fields the body has, and `category` comes from the registry that matches it.
+
+A ticket that is unknown or past its one hour expiry returns 400 `INVALID_DSA_TICKET`. The ticket is consumed when the notice is written, so a notice that is rejected or rate limited leaves it usable. Nothing deduplicates a repeat notice.
+
+### JSON body
+
+#### Common fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ticket | string | The ticket returned by [Verify DSA report email](#verify-dsa-report-email) (1-128 characters) |
+| report_type | string | The discriminator selecting the variant, one of `message`, `user`, or `guild` |
+| category | string | The category matching `report_type`, drawn from the [message](#message-report-categories), [user](#user-report-categories), or [guild](#guild-report-categories) registry |
+| additional_info? | string | The free-text context supplied by the reporter (0-1000 characters) |
+| reporter_full_legal_name | string | The full legal name of the person filing the notice (1-160 characters) |
+| reporter_country_of_residence | string | [EU country code](#eu-country-codes) of the reporter's residence |
+| reporter_fluxer_tag?<sup>1</sup> | string | The reporter's own tag in `username#1234` form (3-37 characters) |
+
+<sup>1</sup> Validated for shape and then discarded, so Fluxer never resolves it against an account and no moderator sees it
+
+#### Message fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| message_link<sup>1</sup> | string | The link to the reported message (1-2048 characters) |
+| reported_user_tag?<sup>2</sup> | string | The message author's tag in `username#1234` form (3-37 characters) |
+
+<sup>1</sup> Parsed as an absolute URL whose path is `/channels/&lt;guild_id&gt;/&lt;channel_id&gt;/&lt;message_id&gt;`. Fluxer ignores the origin and the guild segment, and reads only the channel and message segments
+
+<sup>2</sup> When supplied it resolves to exactly the account that authored the linked message. A mismatch returns 400 `INVALID_DSA_REPORT_TARGET`, and a tag that resolves to no account returns 404 `UNKNOWN_USER`
+
+A value that is not an absolute URL, whose path holds fewer than four segments, whose first segment is not `channels`, or whose third or fourth segment is not a decimal snowflake, returns 404 `UNKNOWN_MESSAGE`.
+
+:::caution[This variant applies no visibility check]
+The guild need not be discoverable, the channel need not be readable by the default role, and the evidence window is captured with no permission filtering. A notice can reference a message no unauthenticated party could otherwise read.
+:::
+
+#### User fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id?<sup>1</sup> | snowflake | The ID of the reported user |
+| user_tag?<sup>1</sup> | string | The reported user's tag in `username#1234` form (3-37 characters) |
+
+<sup>1</sup> Supply at least one of the two. A body that supplies neither returns 400 `INVALID_FORM_BODY`, and an ID or tag that resolves to no account returns 404 `UNKNOWN_USER`
+
+When both are supplied they must resolve to the same account. A mismatch returns 400 `INVALID_DSA_REPORT_TARGET`.
+
+#### Guild fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the reported guild |
+| invite_code?<sup>1</sup> | string | [Invite](/http-api/invites/) code or invite URL for the reported guild (1-64 characters) |
+
+<sup>1</sup> This variant checks no access to the guild, so the code is never required. When supplied it is reduced to its final `/` separated segment, and a complete invite URL is accepted
+
+An unknown code returns 404 `UNKNOWN_INVITE`. A code that resolves to an invite of another type, or to an invite for another guild, returns 400 `INVALID_DSA_REPORT_TARGET`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report](#report-object) object | The notice was recorded |
+| 400 | [error response](/http-api/#error-response) | The ticket is unknown or expired and the request returns `INVALID_DSA_TICKET`, or the target could not be resolved to the reported subject and the request returns `INVALID_DSA_REPORT_TARGET` |
+| 403 | [error response](/http-api/#error-response) | A body string is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | The referenced channel, message, user, guild, or invite does not exist |
+
+### Side effects
+
+The operation resolves the target, deletes the ticket, and writes one report under a freshly generated [snowflake](/snowflakes/). A message notice captures the same conversation window as [Report message](#report-message), including the byte copy of every attachment, and applies no permission filtering to it. A user notice records the reported user's ID and avatar hash and nothing else about the target. A guild notice records the guild's ID, name, icon hash, NSFW flag, content warning state, and the sanitised invite code when one was supplied.
+
+Every notice also records `additional_info`, the reporter's legal name, country of residence, and the verified address behind the ticket. A notice has no account ID even when the request presented a credential, and it discards `reporter_fluxer_tag`.
+
+### Rate limit
+
+5 requests per hour, on the `dsa:report:create` bucket. The verified address behind the ticket files at most 5 reports each hour.

@@ -1,0 +1,598 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Applications
+description: Application objects, bot accounts, redirect URIs, credential rotation, and deletion.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An application is an OAuth2 client owned by one user account, and every bot account is registered under one. A user owns at most 25. The authorisation code grant, the scope registry, and the tokens issued to third-party clients belong to the [OAuth2 resource](/http-api/oauth2/).
+
+## Access rules
+
+Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. An account with an outstanding required action is accepted everywhere here.
+
+The three sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. An account with no authenticator proves sudo mode with `password` in the body, because Fluxer issues it no token.
+
+:::caution[Credentials are shown once]
+A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a bot token only by [Create application](#create-application) and [Reset bot token](#reset-bot-token). Both are stored as one-way hashes.
+:::
+
+## Rate limits
+
+A bucket name ending in `::client_id` still counts one allowance for the authenticated user across every application that user owns. [List owned applications](#list-owned-applications), [Get current application](#get-current-application), [Get application](#get-application), [Get public application](#get-public-application), and [List OAuth2 authorisations](/http-api/oauth2/#list-oauth2-authorisations) all draw on one `oauth_dev:clients:list` allowance. [Get bot application](#get-bot-application) draws on the same bucket, keyed by the bot account the token names. That allowance is separate from the owner's.
+
+## Application object
+
+The application record as its owner sees it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+| name | string | The name of the application (1-100 characters) |
+| redirect_uris<sup>1</sup> | array[string] | The redirect URIs registered for the application |
+| bot_public | boolean | Whether any eligible user can install the bot |
+| bot_require_code_grant | boolean | Whether bot installation requires an OAuth2 code grant |
+| client_secret?<sup>2</sup> | string | The client secret that authenticates token exchange, introspection, and revocation |
+| bot?<sup>3</sup> | [application bot](#application-bot-object) object | The bot account the application owns |
+
+<sup>1</sup> Always emitted, and an empty array when the application has registered none. [Create application](#create-application) and [Update application](#update-application) accept at most 10 entries
+
+<sup>2</sup> Present only in the response to [Create application](#create-application) and [Reset client secret](#reset-client-secret), which are the only operations that issue one
+
+<sup>3</sup> Present only when the operation resolved the bot account, which excludes [Reset client secret](#reset-client-secret), an application that owns no bot account, and an application whose bot account record can no longer be read
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "name": "Party Parrot",
+  "redirect_uris": ["https://example.com/callback"],
+  "bot_public": true,
+  "bot_require_code_grant": false
+}
+```
+
+## Application bot object
+
+The bot account an application owns. [Create application](#create-application) creates exactly one bot account with the application, so the bot user [snowflake](/snowflakes/) always equals the application ID.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the bot user, always equal to the application ID |
+| username | string | The username of the bot account, 1 to 32 ASCII letters, digits, or underscores |
+| discriminator | string | The discriminator of the bot account, always four decimal digits with leading zeroes |
+| avatar?<sup>1</sup> <sup>2</sup> | ?string | The avatar hash of the bot account, or null when none is stored |
+| banner?<sup>1</sup> <sup>2</sup> | ?string | The banner hash of the bot account, or null when none is stored |
+| bio | ?string | The profile biography of the bot account, or null when none is stored |
+| token?<sup>3</sup> | string | The bot token issued for the account |
+| mfa_enabled?<sup>4</sup> | boolean | Whether the bot account has an authenticator configured |
+| authenticator_types?<sup>4</sup> | array[integer] | The [authenticator types](/http-api/users/#authenticator-types) configured on the bot account |
+| flags<sup>5</sup> | integer | [Bot flags](#bot-flags) |
+
+<sup>1</sup> Declared optional by the schema and always emitted
+
+<sup>2</sup> An animated hash retains its `a_` prefix, which is the animation indicator for this object. A bot account always holds the animated avatar and animated banner entitlements, so neither hash is ever stripped or suppressed
+
+<sup>3</sup> Present only in the response to [Create application](#create-application). [Reset bot token](#reset-bot-token) returns the new token in the enclosing [bot token reset](#bot-token-reset-object) object instead
+
+<sup>4</sup> Declared optional by the schema and always emitted, except on the [public application](#public-application-object) object, which omits both. `authenticator_types` is an empty array when the account has no authenticator, and `mfa_enabled` is true exactly when that array is not empty
+
+<sup>5</sup> The bitfield is the account's [public user flags](/http-api/users/#public-user-flags), and [Update bot profile](#update-bot-profile) sets only the two [bot flags](#bot-flags) in it
+
+:::note[Bot token format]
+A bot token is the application ID, a full stop, and an opaque secret of 32 random bytes encoded as base64url.
+:::
+
+The API identifies the application from the token itself and rejects an invalid secret without revealing whether the application exists. The built-in `Fluxer Admin` application owns no bot account, so a token bearing its ID is always rejected.
+
+## Public application object
+
+The application as any caller sees it, including a caller that presents no credential.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+| name | string | The name of the application |
+| icon<sup>1</sup> | ?string | The avatar hash of the bot account, used as the application icon |
+| description | ?string | Always null on this object |
+| redirect_uris | array[string] | The redirect URIs registered for the application |
+| scopes<sup>2</sup> | array[string] | [OAuth2 scopes](/http-api/oauth2/#oauth2-scopes) the application can currently be authorised for |
+| bot_public<sup>3</sup> | boolean | Whether the requester can install the bot |
+| bot<sup>4</sup> | ?[application bot](#application-bot-object) object | The bot account the application owns |
+| current_user?<sup>5</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The requesting account |
+
+<sup>1</sup> Null when the application has no bot account or that account has no avatar, and the stored hash is reported unchanged
+
+<sup>2</sup> Contains `bot` when the application owns a bot account, and is otherwise empty
+
+<sup>3</sup> Reported as true for the application owner even when the bot is not public
+
+<sup>4</sup> Null when the application has no bot account. Its `token`, `mfa_enabled`, and `authenticator_types` are never populated here
+
+<sup>5</sup> Declared optional by the schema and always emitted, and null when the request has no credential that resolves to an account
+
+## Current bot application object
+
+The application as the bot token that application issued sees it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+| name | string | The name of the application |
+| icon<sup>1</sup> | ?string | The avatar hash of the bot account, used as the application icon |
+| description<sup>1</sup> | ?string | The biography of the bot account, used as the application description |
+| bot_public | boolean | Whether any eligible user can install the bot |
+| bot_require_code_grant | boolean | Whether bot installation requires an OAuth2 code grant |
+| verify_key<sup>2</sup> | string | A compatibility placeholder |
+| owner<sup>3</sup> | [partial user](/http-api/users/#partial-user-object) object | The account that owns the application |
+| bot?<sup>4</sup> | [application bot](#application-bot-object) object | The bot account the application owns |
+| redirect_uris?<sup>5</sup> | array[string] | The redirect URIs registered for the application |
+
+<sup>1</sup> Read from the bot account, so it changes with [Update bot profile](#update-bot-profile), and it is null when the application has no bot account
+
+<sup>2</sup> Fluxer persists no application signing key
+
+<sup>3</sup> The request fails with 401 `INVALID_TOKEN` when the owning account no longer exists
+
+<sup>4</sup> Absent when the application has no bot account, and its `token` is never populated here
+
+<sup>5</sup> Declared optional by the schema and always emitted, and an empty array when the application has registered no redirect URI
+
+## Bot profile object
+
+The bot account's profile fields after an update. [Update bot profile](#update-bot-profile) is the only operation that returns this shape, and it has no bot token.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the bot user |
+| username | string | The username of the bot account |
+| discriminator | string | The discriminator of the bot account, always four decimal digits with leading zeroes |
+| avatar<sup>1</sup> | ?string | The avatar hash of the bot account, or null when none is stored |
+| banner<sup>1</sup> | ?string | The banner hash of the bot account, or null when none is stored |
+| bio | ?string | The profile biography of the bot account, or null when none is stored |
+| flags | integer | [Bot flags](#bot-flags) |
+
+<sup>1</sup> An animated hash retains its `a_` prefix, which is the animation indicator for this object. A bot account's stored banner is never suppressed
+
+## Bot flags
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 4 | FRIENDLY_BOT | The bot accepts friend requests from users |
+| 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | The bot requires manual approval for friend requests |
+
+These two bits are a subset of the account's [public user flags](/http-api/users/#public-user-flags), so a bot account that also has `STAFF`, `PARTNER`, `BUG_HUNTER`, or `SPAMMER` reports that bit in the same field. A client MUST ignore a bit it does not recognise.
+
+## Bot token reset object
+
+The response to [Reset bot token](#reset-bot-token). The fields are the new token and the bot account it belongs to.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The newly issued bot token |
+| bot<sup>1</sup> | [application bot](#application-bot-object) object | The bot account the token belongs to |
+
+<sup>1</sup> The nested object omits its own `token` member
+
+## List owned applications
+
+<RouteHeader method="GET" path="/v1/users/@me/applications" />
+
+Returns every [application](#application-object) object the current user owns.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[application](#application-object) object] | The applications were returned |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token (`ACCESS_DENIED`) |
+
+The listing is unpaginated because one user can own at most 25 applications. No entry has a client secret or bot token. The system account owns the built-in `Fluxer Admin` application, which never appears in this listing.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `oauth_dev:clients:list` bucket.
+
+## Get current application
+
+<RouteHeader method="GET" path="/v1/oauth2/applications/@me" bot />
+
+Returns the caller's own applications, selected by credential type. A user session returns the same array as [List owned applications](#list-owned-applications). A bot token returns the [current bot application](#current-bot-application-object) object for the application that issued the token.
+
+An OAuth2 bearer credential is rejected.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[application](#application-object) object] \| [current bot application](#current-bot-application-object) object | The current application data was returned |
+| 401 | [error response](/http-api/#error-response) | Authentication is missing or invalid (`UNAUTHORIZED`) |
+| 401 | [error response](/http-api/#error-response) | The presented bot token belongs to an application whose owner account no longer exists (`INVALID_TOKEN`) |
+| 403 | [error response](/http-api/#error-response) | The credential is a bearer token (`ACCESS_DENIED`) |
+
+:::note[Response shape depends on the credential]
+The body is an array for a user session and a single object for a bot token. A client that accepts both credential types MUST branch on the received shape.
+:::
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `oauth_dev:clients:list` bucket.
+
+## Get bot application
+
+<RouteHeader method="GET" path="/v1/applications/@me" bot />
+
+Returns the [current bot application](#current-bot-application-object) object for the application that issued the presented bot token. The route accepts only the `Bot` scheme in the `Authorization` header.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [current bot application](#current-bot-application-object) object | The application was returned |
+| 401 | [error response](/http-api/#error-response) | The header is absent or does not use the `Bot` scheme (`INVALID_TOKEN`) |
+| 401 | [error response](/http-api/#error-response) | The header does not resolve to a live bot token (`INVALID_TOKEN`) |
+| 401 | [error response](/http-api/#error-response) | The token names an application or owner account that no longer exists (`INVALID_TOKEN`) |
+
+Every rejection reports the same `INVALID_TOKEN`, so a caller cannot distinguish a malformed credential from a valid secret whose application has since been deleted.
+
+### Rate limit
+
+60 requests per minute for each authenticated account, or for each client IP address when no account resolved, on the `oauth_dev:clients:list` bucket.
+
+## Get public application
+
+<RouteHeader method="GET" path="/v1/oauth2/applications/{id}/public" unauthenticated />
+
+Returns the [public application](#public-application-object) object for any application. Authentication is not required. A credential that resolves to an account also populates `current_user` and reports the owner's view of `bot_public`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [public application](#public-application-object) object | The application was returned |
+| 400 | [error response](/http-api/#error-response) | The application ID is not a valid snowflake |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
+
+This representation exposes the application's complete registered redirect URI list and its bot profile to anonymous callers. It has no client secret, no bot token, no owner identity, and nothing about the owner's MFA enrolment. An application owner should not register a redirect URI whose hostname is itself sensitive.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `oauth_dev:clients:list` bucket.
+
+## Create application
+
+<RouteHeader method="POST" path="/v1/oauth2/applications" />
+
+Creates an application together with its bot account. Returns the [application](#application-object) object with the initial client secret and bot token.
+
+An unclaimed account cannot create an application. An account is unclaimed while it holds no password credential, is not a bot, and does not have the single sign-on trait.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof for the request |
+| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider to verify against, either `hcaptcha` or `turnstile` |
+
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Fluxer skips verification when CAPTCHA is disabled for the instance, when the account has the CAPTCHA exemption flag, or when the caller's contact has the CAPTCHA exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
+
+<sup>2</sup> Fluxer verifies against the instance's configured provider when the header is absent
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | The name of the application (1-100 characters) |
+| redirect_uris?<sup>2</sup> <sup>3</sup> | ?array[string] | The redirect URIs to register, at most 10 |
+| bot_public? | boolean | Whether any eligible user can install the bot (default true) |
+| bot_require_code_grant? | boolean | Whether bot installation requires an OAuth2 code grant (default false) |
+
+<sup>1</sup> Rejected with 403 `CONTENT_BLOCKED` when content moderation blocks the value
+
+<sup>2</sup> Null registers no redirect URI. Each entry is normalised and then bounded at 1 to 256 characters
+
+<sup>3</sup> Each URI must parse as an absolute URL with a host and must use the HTTPS scheme. HTTP is accepted only when the host is `localhost`, a `.localhost` subdomain, an IPv4 literal, or a bracketed IPv6 literal. A URI that content moderation blocks is rejected with 403 `CONTENT_BLOCKED`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [application](#application-object) object | The application and its bot were created |
+| 400 | [error response](/http-api/#error-response) | The body fails validation |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA proof is missing (`CAPTCHA_REQUIRED`) or rejected (`INVALID_CAPTCHA`) |
+| 400 | [error response](/http-api/#error-response) | The account is unclaimed<sup>4</sup> |
+| 400 | [error response](/http-api/#error-response) | The owner already has 25 applications (`MAX_APPLICATIONS`) |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token (`ACCESS_DENIED`) |
+| 403 | [error response](/http-api/#error-response) | The name, a redirect URI, or the derived bot username is blocked (`CONTENT_BLOCKED`) |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs, including when no bot username can be allocated (`BOT_USER_GENERATION_FAILED`) |
+
+<sup>4</sup> `UNCLAIMED_ACCOUNT_CANNOT_CREATE_APPLICATIONS`
+
+Fluxer derives the bot username from the application name when that name yields an available tag, and otherwise assigns a random username. The resulting username and discriminator can both differ from the application name.
+
+### Side effects
+
+Fluxer creates the application and the bot account together. The bot starts with no avatar, banner, biography, or global display name. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per hour for each authenticated user, on the `oauth_dev:clients:create` bucket.
+
+## Get application
+
+<RouteHeader method="GET" path="/v1/oauth2/applications/{id}" />
+
+Returns one owned [application](#application-object) object. The caller must own the application.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [application](#application-object) object | The application was returned |
+| 400 | [error response](/http-api/#error-response) | The application ID is not a valid snowflake |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
+
+Fluxer reports existence before ownership, so an application the caller does not own returns 403 `ACCESS_DENIED` rather than 404.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `oauth_dev:clients:list` bucket.
+
+## Update application
+
+<RouteHeader method="PATCH" path="/v1/oauth2/applications/{id}" />
+
+Updates one owned application and returns the resulting [application](#application-object) object. The caller must own the application.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name?<sup>1</sup> | string | The name of the application (1-100 characters) |
+| redirect_uris?<sup>2</sup> | ?array[string] | The redirect URIs to register, at most 10 |
+| bot_public? | boolean | Whether any eligible user can install the bot |
+| bot_require_code_grant? | boolean | Whether bot installation requires an OAuth2 code grant |
+
+<sup>1</sup> Rejected with 403 `CONTENT_BLOCKED` when content moderation blocks the value
+
+<sup>2</sup> Each entry is normalised, bounded at 1 to 256 characters, and validated on the same terms as [Create application](#create-application). A supplied array becomes the complete registered set, null clears every registered URI, and an omitted field leaves the current set unchanged
+
+:::caution[Redirect URIs are replaced]
+Removing a redirect URI takes effect immediately for new authorisation requests. An authorisation code that was already issued against the removed URI still requires that exact URI at [Exchange OAuth2 token](/http-api/oauth2/#exchange-oauth2-token), and previously issued access and refresh tokens are unaffected.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [application](#application-object) object | The application was updated |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
+| 403 | [error response](/http-api/#error-response) | The name or a redirect URI is blocked (`CONTENT_BLOCKED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
+
+### Side effects
+
+The submitted fields replace the corresponding application configuration. Neither credential is rotated, and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `oauth_dev:clients:update::client_id` bucket, shared with [Update bot profile](#update-bot-profile).
+
+## Update bot profile
+
+<RouteHeader method="PATCH" path="/v1/oauth2/applications/{id}/bot" />
+
+Updates the bot account owned by an application and returns the resulting [bot profile](#bot-profile-object) object. The caller must own the application.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| username?<sup>1</sup> | string | The new username for the bot account (1-32 characters) |
+| discriminator?<sup>2</sup> | string \| integer | The discriminator, 1 to 4 decimal digits parsed as an integer |
+| avatar?<sup>3</sup> | ?string | The base64-encoded avatar image, or null to clear the stored avatar |
+| banner?<sup>3</sup> | ?string | The base64-encoded banner image, or null to clear the stored banner |
+| bio?<sup>4</sup> | ?string | The profile biography (0-1024 characters), or null to clear the stored value |
+| bot_flags?<sup>5</sup> | integer | [Bot flags](#bot-flags) |
+
+<sup>1</sup> Trimmed before validation and restricted to ASCII letters, digits, and underscores. The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`. A change that alters more than letter case always reallocates the discriminator. A username the profile substring blocklist rejects returns 403 `CONTENT_BLOCKED`
+
+<sup>2</sup> Accepted only when it equals the bot's current discriminator. Any other value returns the field code `BOT_DISCRIMINATOR_CANNOT_BE_CHANGED`
+
+<sup>3</sup> The value can include a `data:...;base64,` prefix, which Fluxer strips before it measures the payload. The remaining base64 payload is bounded at 13981016 characters for both fields, the encoded length of a full 10485760-byte image, and a longer value is rejected with the field code `BASE64_LENGTH_INVALID`
+
+<sup>4</sup> Rejected with 403 `CONTENT_BLOCKED` when content moderation or the profile substring blocklist blocks the value
+
+<sup>5</sup> Fluxer reads only the two [bot flags](#bot-flags) from the supplied bitfield and sets or clears each to match. It ignores every other bit
+
+Fluxer checks the decoded bytes of `avatar` and `banner` against the instance's avatar byte ceiling, which applies to both fields and defaults to 10 MiB. Each image also passes the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are never checked.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [bot profile](#bot-profile-object) object | The profile was updated |
+| 400 | [error response](/http-api/#error-response) | The path or body fails validation |
+| 400 | [error response](/http-api/#error-response) | No discriminator can be allocated for the requested username (`USERNAME_NOT_AVAILABLE`) |
+| 400 | [error response](/http-api/#error-response) | The discriminator differs from the current one |
+| 400 | [error response](/http-api/#error-response) | The image is malformed, oversized, or an unsupported format |
+| 400 | [error response](/http-api/#error-response) | The image is marked explicit (`EXPLICIT_CONTENT_CANNOT_BE_SENT`) |
+| 400 | [error response](/http-api/#error-response) | The tag change allowance is exhausted |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
+| 403 | [error response](/http-api/#error-response) | The username or biography is blocked (`CONTENT_BLOCKED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`), or it has no bot account (`BOT_USER_NOT_FOUND`) |
+
+This operation always clears the bot's global display name, so a bot is always presented by its username. The write consumes the tag change allowance only when it changes the username or the discriminator. Fluxer reports an exhausted allowance as a body validation entry on `username` with the code `USERNAME_CHANGED_TOO_MANY_TIMES` rather than as 429.
+
+:::note[Only null clears a stored value]
+An omitted `avatar`, `banner`, or `bio` leaves the stored value untouched. Sending `{"bio": null}` clears the biography, and sending `{}` changes nothing except the global display name.
+:::
+
+### Side effects
+
+Fluxer applies the supplied profile fields to the bot account. Replaced avatar and banner assets stop appearing after the update, and a username change that alters more than letter case also replaces the discriminator with a random free one for the new username. The operation emits a [User Update](/gateway/events/#user-update) Gateway Dispatch to the bot account's own sessions.
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `oauth_dev:clients:update::client_id` bucket, shared with [Update application](#update-application), and a change to the resulting tag is additionally limited to 5 changes per 3 hours for each bot account.
+
+## Reset bot token
+
+<RouteHeader method="POST" path="/v1/oauth2/applications/{id}/bot/reset-token" mfa />
+
+Rotates the bot token and returns the [bot token reset](#bot-token-reset-object) object with the new token. The caller must own the application and must prove sudo mode.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### JSON body
+
+The body is a [sudo verification](/http-api/users/mfa/#sudo-verification-object) object. Its fields are not required when the request already has a valid proof.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [bot token reset](#bot-token-reset-object) object | The token was rotated |
+| 400 | [error response](/http-api/#error-response) | The path or sudo body fails validation, or the supplied password or MFA code is wrong |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
+| 403 | [error response](/http-api/#error-response) | Sudo mode is required and was not proven (`SUDO_MODE_REQUIRED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`), or it has no bot account (`BOT_USER_NOT_FOUND`) |
+
+:::caution[Rotation disconnects the bot]
+The previous token stops authenticating the moment the new one is stored, and every live main Gateway session the bot holds is terminated.
+:::
+
+A running bot reconnects only after its operator installs the returned token.
+
+### Side effects
+
+Fluxer stores the new token and terminates every active main Gateway session belonging to the bot account. The bot's guild memberships, group direct message memberships, and OAuth2 grants are unchanged, and no resource Dispatch is emitted.
+
+### Rate limit
+
+10 requests per hour for each authenticated user, on the `oauth_dev:clients:rotate_secret::client_id` bucket, shared with [Reset client secret](#reset-client-secret).
+
+## Reset client secret
+
+<RouteHeader method="POST" path="/v1/oauth2/applications/{id}/client-secret/reset" mfa />
+
+Rotates the OAuth2 client secret and returns the [application](#application-object) object with the new secret. The caller must own the application and must prove sudo mode.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### JSON body
+
+The body is a [sudo verification](/http-api/users/mfa/#sudo-verification-object) object. Its fields are not required when the request already has a valid proof.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [application](#application-object) object | The client secret was rotated |
+| 400 | [error response](/http-api/#error-response) | The path or sudo body fails validation, or the supplied password or MFA code is wrong |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
+| 403 | [error response](/http-api/#error-response) | Sudo mode is required and was not proven (`SUDO_MODE_REQUIRED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
+
+The returned application object has the new `client_secret` and no `bot` member. A caller that needs both reads [Get application](#get-application) afterwards.
+
+### Side effects
+
+The previous client secret stops authenticating token exchange, introspection, and revocation immediately. Existing access and refresh tokens remain valid until they expire or are revoked, and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per hour for each authenticated user, on the `oauth_dev:clients:rotate_secret::client_id` bucket, shared with [Reset bot token](#reset-bot-token).
+
+## Delete application
+
+<RouteHeader method="DELETE" path="/v1/oauth2/applications/{id}" mfa />
+
+Deletes one owned application and anonymises its bot account, then returns 204 with an empty body. The caller must own the application and must prove sudo mode.
+
+Removing the bot from its guilds emits one [Guild Member Remove](/gateway/events/#guild-member-remove) Gateway Dispatch per guild, and each removal also delivers [Guild Delete](/gateway/events/#guild-delete) to the bot's own Gateway sessions.
+
+:::danger[Deleting an application strips its bot account]
+Deletion permanently destroys the application, its client secret, and its bot token, strips the bot account's identity, and removes the bot from every guild.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+
+### JSON body
+
+The body is a [sudo verification](/http-api/users/mfa/#sudo-verification-object) object. Its fields are not required when the request already has a valid proof.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The application was deleted |
+| 400 | [error response](/http-api/#error-response) | The path or sudo body fails validation, or the supplied password or MFA code is wrong |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
+| 403 | [error response](/http-api/#error-response) | Sudo mode is required and was not proven (`SUDO_MODE_REQUIRED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
+
+A 204 response means the removal has finished. Repeating the request afterwards returns 404 `UNKNOWN_APPLICATION`.
+
+### Side effects
+
+Fluxer reattributes every message the bot authored to a freshly created placeholder account with the deleted-account representation, and it creates that placeholder only when the bot authored at least one message. The bot's tag is released for reuse.
+
+The bot is removed from every guild it is a member of, and the bot account record is retained and rewritten to the deleted-account representation. That representation has the username `DeletedUser`, the global name `Deleted User`, and the discriminator `0000`, with no email, no password, no authenticators, no avatar, banner, biography, pronouns, accent colour, timezone, or date of birth, and only the deleted flag set. Fluxer then deletes the application record.
+
+The bot token and the client secret stop authenticating as soon as the application record is gone. No further token exchange, refresh, introspection, or revocation succeeds for the application. Access and refresh tokens already issued to it are not deleted, and an outstanding access token keeps authenticating a scope-gated route until it expires. [Get current OAuth2 authorisation](/http-api/oauth2/#get-current-oauth2-authorisation) and [Get OAuth2 user information](/http-api/oauth2/#get-oauth2-user-information) resolve the application as well, so both return 401 `INVALID_TOKEN` for that token.
+
+### Rate limit
+
+10 requests per hour for each authenticated user, on the `oauth_dev:clients:delete::client_id` bucket.

@@ -1,0 +1,458 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Memes
+description: Saved favourite media and batch GIF URL resolution.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A meme is an image, video, or audio asset the current account has saved as a favourite. Every meme is a durable Fluxer copy held as an account-owned attachment, so it keeps working after the URL or message it came from disappears.
+
+The routes here are user-only and operate on the caller's own collection. Fluxer rejects a bot token with 403 `ACCESS_DENIED`. [Create message](/http-api/messages/#create-message) sends a stored meme through its `favorite_meme_id` field, and the [GIF provider API](/http-api/gifs/) searches the configured provider for a GIF to save.
+
+## Collection limits
+
+Fluxer caps a collection at the instance-configured `max_favorite_memes` [limit](/http-api/instance/#limit-keys), with a fallback of 50. Both creation operations check the count before they touch the channel, the message, or the source URL, so an account at its limit is refused with 400 `MAX_FAVORITE_MEMES` even when the rest of the request would have failed. The error body has `max_favorite_memes` reporting the ceiling reached.
+
+A meme has at most `max_favorite_meme_tags` tags, with a fallback of 10. A request that exceeds the allowance returns 400 `INVALID_FORM_BODY` with the validation code `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path.
+
+Fluxer normalises and trims a tag before counting it, and the result must be 1 through 30 characters. A tag that normalises to the empty string fails with 400 `INVALID_FORM_BODY` and `STRING_LENGTH_INVALID`.
+
+## Deduplication
+
+A meme is identified by the content hash of its stored bytes. The same bytes reached through a different URL or a different message are still a duplicate. Saving an asset whose hash already exists in the account's collection returns 400 `INVALID_FORM_BODY` with the validation code `MEDIA_ALREADY_IN_FAVORITE_MEMES` at the `media` path. The existing meme is not returned and nothing is created.
+
+## Meme object
+
+One media asset owned by one account. Fluxer resolves every media field at creation, and only the name, alt text, and tags change afterwards.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the meme |
+| user_id | snowflake | The ID of the owning account |
+| name<sup>1</sup> | string | The display name of the meme (1-100 characters) |
+| alt_text<sup>2</sup> | ?string | The accessibility description of the media, or null when none is set |
+| tags | array[string] | The search tags stored on the meme, each 1-30 characters |
+| attachment_id<sup>3</sup> | snowflake | The ID of the attachment holding the durable Fluxer copy |
+| filename | string | The filename of the stored copy |
+| content_type | string | The MIME type of the stored copy |
+| content_hash | ?string | The content hash used for [deduplication](#deduplication), or null when it is unavailable |
+| size | integer | The stored size of the copy in bytes |
+| width | ?integer | The width of the media in pixels, or null when inapplicable or unknown |
+| height | ?integer | The height of the media in pixels, or null when inapplicable or unknown |
+| duration | ?number | The duration of the media in seconds, or null when inapplicable or unknown |
+| url<sup>3</sup> | string | The Fluxer attachment URL of the stored copy |
+| is_gifv<sup>4</sup> | boolean | Whether the stored media is animated or a video converted from a GIF |
+| gif_slug<sup>5</sup> | ?string | The provider-issued slug this meme was sourced from, or null |
+| gif_provider<sup>5</sup> | ?string | The name of the GIF provider that issued `gif_slug`, or null |
+| media<sup>6</sup> | ?map[string, [GIF media format](#gif-media-format-object) object] | The provider format map for a GIF-sourced meme, or null |
+| placeholder | ?string | The compact thumbhash placeholder recorded at save time, or null |
+
+<sup>1</sup> Required by [Save meme from message](#save-meme-from-message). [Save meme from URL](#save-meme-from-url) derives it from `filename`, truncated to 100 characters, when it is omitted or null
+
+<sup>2</sup> [Save meme from message](#save-meme-from-message) falls back to the selected attachment's own description when the body supplies no non-empty alt text
+
+<sup>3</sup> `url` is the media endpoint followed by `attachments/{user_id}/{attachment_id}/{filename}`
+
+<sup>4</sup> Set when the source attachment or embed was already animated, and when the Media Proxy reports the stored copy as animated
+
+<sup>5</sup> Both fields are null together. `klipy` is the only value a new meme records, and `tenor` appears on legacy records alone
+
+<sup>6</sup> Keyed by [GIF media format name](#gif-media-format-names). Persisted only by [Save meme from URL](#save-meme-from-url), and null on every message-sourced meme
+
+A message-sourced meme records a slug only when the selected embed is a `gifv` embed whose URL the configured provider recognises. An attachment selection never records one.
+
+The creation time is the timestamp embedded in `id`, as defined by [Snowflakes](/snowflakes/).
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "user_id": "1501314428688990000",
+  "name": "party_parrot.gif",
+  "alt_text": null,
+  "tags": ["parrot", "party"],
+  "attachment_id": "1501314428688998183",
+  "filename": "party_parrot.gif",
+  "content_type": "image/gif",
+  "size": 40213,
+  "width": 320,
+  "height": 240,
+  "is_gifv": true,
+  "gif_slug": "party-parrot-1234",
+  "gif_provider": "klipy",
+  "placeholder": "3PcNNYYONWQPFxrsUeUcRh4"
+}
+```
+
+## GIF media format object
+
+One descriptor describes one encoding of one provider GIF. A provider returns several for the same GIF so a client can pick the smallest encoding it can decode.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| src | string | The direct media URL of this format |
+| proxy_src | string | The [Media Proxy](/media-proxy/overview/) URL of this format |
+| width<sup>1</sup> | integer | The width of this format in pixels |
+| height<sup>1</sup> | integer | The height of this format in pixels |
+
+<sup>1</sup> A non-negative value of at most 2147483647. A descriptor with an empty `src` or `proxy_src`, or a zero dimension, is unusable as a preview and is skipped
+
+A client submitting a format map to [Save meme from URL](#save-meme-from-url) supplies all four members of every descriptor, and a descriptor missing one fails validation with 400 `INVALID_FORM_BODY`.
+
+## GIF media format names
+
+| Value | Description |
+| --- | --- |
+| webm | Full-size WebM video |
+| mp4 | Full-size MP4 video |
+| webp | Full-size WebP image |
+| gif | Full-size GIF image |
+| mediumwebm | Medium WebM video |
+| mediummp4 | Medium MP4 video |
+| mediumwebp | Medium WebP image |
+| mediumgif | Medium GIF image |
+| tinywebm | Small WebM video |
+| tinymp4 | Small MP4 video |
+| tinywebp | Small WebP image |
+| tinygif | Small GIF image |
+| nanowebm | Smallest WebM video |
+| nanomp4 | Smallest MP4 video |
+| nanowebp | Smallest WebP image |
+| nanogif | Smallest GIF image |
+| loopedmp4 | Looping MP4 video |
+
+A map contains only the formats the provider returned, so no key is guaranteed to be present. A client walks a priority list until it finds a key the map has. A client that cannot decode the video keys SHOULD prefer `tinywebp`, `tinygif`, `mediumwebp`, `mediumgif`, `webp`, `gif`, `nanowebp`, and `nanogif`, in that order.
+
+## Resolved GIF entry object
+
+One entry describes one URL submitted to [Resolve GIF URLs](#resolve-gif-urls).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url<sup>1</sup> | string | The source GIF URL |
+| proxy_url | string | The signed [Media Proxy](/media-proxy/overview/) URL for the preview format |
+| width<sup>2</sup> | integer | The width of the preview format in pixels |
+| height<sup>2</sup> | integer | The height of the preview format in pixels |
+| media<sup>3</sup> | map[string, [GIF media format](#gif-media-format-object) object] | The formats available for the URL, keyed by [GIF media format name](#gif-media-format-names) |
+| content_type<sup>4</sup> | string | The MIME type of the media addressed by `proxy_url` |
+| placeholder | ?string | The compact thumbhash placeholder, or null when the Media Proxy emitted none |
+
+<sup>1</sup> The provider's own canonical URL when the submitted URL resolved through the configured GIF provider, and the submitted URL otherwise
+
+<sup>2</sup> Zero when the dimensions could not be determined
+
+<sup>3</sup> Empty when the URL belongs to no registered GIF provider and no single direct format could be derived from it
+
+<sup>4</sup> The empty string means the type is unknown, and a client treats that as `image/gif`
+
+A direct format is derived only for `video/webm`, `video/mp4`, `image/webp`, and `image/gif`, and only when both dimensions are positive.
+
+The preview format is the first usable descriptor in the order `tinywebm`, `tinymp4`, `mediumwebm`, `mediummp4`, `webm`, `mp4`, `loopedmp4`, `nanowebm`, `nanomp4`, `tinywebp`, `tinygif`, `mediumwebp`, `webp`, `mediumgif`, `gif`, `nanowebp`, `nanogif`. When no key in that list is usable, Fluxer takes the first usable descriptor in map order. When the map holds nothing usable, it takes the provider's own top-level media.
+
+## List memes
+
+<RouteHeader method="GET" path="/v1/users/@me/memes" />
+
+Returns every [meme object](#meme-object) the current account owns, in descending meme ID order, so the most recently saved comes first.
+
+The account's [collection limit](#collection-limits) bounds how many entries the array holds.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[meme](#meme-object) object] | Collection was returned, possibly as an empty array |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `favorite_meme:list` bucket.
+
+## Save meme from URL
+
+<RouteHeader method="POST" path="/v1/users/@me/memes" />
+
+Fetches an absolute media URL, stores a durable Fluxer copy, and returns the created [meme object](#meme-object). Emits a [Favorite Meme Create](/gateway/events/#favorite-meme-create) Gateway event.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url | string | The absolute media URL to fetch and store |
+| name?<sup>1</sup> | ?string | The display name of the meme (1-100 characters) |
+| alt_text? | ?string | The accessibility description of the media (0-500 characters) |
+| tags?<sup>2</sup> | ?array[string] | The search tags to store, each 1-30 characters |
+| gif_slug?<sup>3</sup> | ?string | The provider-issued slug or slug-id token for the GIF (1-300 characters) |
+| gif_provider?<sup>3</sup> | ?string | The stable name of the provider that issued `gif_slug` (1-32 characters) |
+| media?<sup>4</sup> | ?map[string, [GIF media format](#gif-media-format-object) object] | The provider format map captured by the client at save time |
+
+<sup>1</sup> When omitted or null, the name is the stored `filename` truncated to 100 characters
+
+<sup>2</sup> An omitted or null value is an empty tag list
+
+<sup>3</sup> Honoured together only when `gif_provider` names the configured provider. Otherwise Fluxer extracts a slug from `url` with the configured provider
+
+<sup>4</sup> Persisted only when the request resolved to a provider GIF and the map is non-empty, and discarded otherwise
+
+The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot, then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. A segment that normalises to nothing, or to only dots and underscores, yields `unnamed`, and the extension is `bin` when the content type maps to none.
+
+The stored `gif_provider` is always the configured provider's own name, so new provider GIFs are sourced from KLIPY even when the request names another provider.
+
+Fluxer fetches the asset and resolves its metadata before it stores anything. A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. When the request resolves to a provider GIF, the provider's canonical share URL is unfurled and the video content hash it reports replaces the fetched hash for [deduplication](#deduplication).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [meme](#meme-object) object | Meme was created |
+| 400 | [error response](/http-api/#error-response) | Body fails validation with `INVALID_FORM_BODY`<sup>5</sup> |
+| 400 | [error response](/http-api/#error-response) | The URL resolves to no usable media with `MEDIA_METADATA_ERROR` |
+| 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+<sup>5</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path and `MEDIA_ALREADY_IN_FAVORITE_MEMES` at the `media` path
+
+### Side effects
+
+The meme is created against a new attachment of its own holding the fetched bytes.
+
+The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-create) with the created object to the caller's own sessions.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `favorite_meme:create:url` bucket.
+
+## Save meme from message
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/{message_id}/memes" />
+
+Copies one attachment or one embed asset from a readable message into the caller's own collection and returns the created [meme object](#meme-object). Requires [VIEW_CHANNEL](/http-api/permissions/) in a guild channel. Emits a [Favorite Meme Create](/gateway/events/#favorite-meme-create) Gateway event.
+
+A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select media only from a message on or after the guild's message history cutoff. Attachments and embeds in the message's forwarded snapshots are selectable alongside its own.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel containing the message |
+| message_id | snowflake | The ID of the message containing the selected media |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The display name of the meme (1-100 characters) |
+| attachment_id?<sup>1</sup> | ?snowflake | The ID of an attachment in the message or one of its snapshots |
+| embed_index?<sup>1</sup> <sup>2</sup> | ?integer | The zero-based index of an embed in the message or one of its snapshots |
+| alt_text?<sup>3</sup> | ?string | The accessibility description of the media (0-500 characters) |
+| tags? | ?array[string] | The search tags to store, each 1-30 characters |
+
+<sup>1</sup> At least one of the two keys must be present, and a body with neither fails validation. Both may be present as null, which selects nothing explicitly
+
+<sup>2</sup> `embed_index` takes precedence when both have a value, and an index outside the combined embed list fails with `EMBED_INDEX_OUT_OF_BOUNDS`
+
+<sup>3</sup> Taken from the selected attachment's own description whenever the supplied value is omitted, null, empty, or whitespace only
+
+When neither key selects anything, Fluxer takes the message's first attachment. It takes the first usable embed when the message has no attachment, or when that attachment has no supported media type. An embed selection has no alt text of its own.
+
+Only an `image/*`, `video/*`, or `audio/*` asset can be saved. `attachment_id` is matched only when the message or one of its snapshots has at least one attachment, and an ID matching none of them fails with `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE` at the `attachment_id` path. When the message has no attachment at all, Fluxer ignores the ID and takes the first usable embed. Only the selected attachment is tried, so a message whose chosen attachment has an unsupported type falls through to its embeds. A selection that resolves to no supported media fails with `NO_VALID_MEDIA_IN_MESSAGE` at the `media` path.
+
+An embed selection uses the embed's image, video, or thumbnail, in that order. A URL the instance's own media endpoint serves is copied without a fetch. Any other URL is fetched over the network, and a fetch that resolves no metadata fails with 400 `MEDIA_METADATA_ERROR`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [meme](#meme-object) object | Meme was created |
+| 400 | [error response](/http-api/#error-response) | Body or selection fails validation with `INVALID_FORM_BODY`<sup>4</sup> |
+| 400 | [error response](/http-api/#error-response) | External media metadata cannot be resolved with `MEDIA_METADATA_ERROR` |
+| 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The channel requires age verification the account has not completed and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel is unavailable or the caller is not a recipient of it with `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The message is unavailable or unreadable with `UNKNOWN_MESSAGE` |
+
+<sup>4</sup> The validation code is `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE`, `EMBED_INDEX_OUT_OF_BOUNDS`, `NO_VALID_MEDIA_IN_MESSAGE`, `MEDIA_ALREADY_IN_FAVORITE_MEMES`, or `MAX_FAVORITE_MEME_TAGS_EXCEEDED`
+
+:::note[Missing message history reads as an unknown message]
+A guild caller that can view the channel but lacks `READ_MESSAGE_HISTORY` receives 404 `UNKNOWN_MESSAGE` for a message before the guild's history cutoff, and for every message when the guild has no cutoff. This matches [Get message](/http-api/messages/#get-message).
+:::
+
+### Side effects
+
+Fluxer copies the selected asset into the account's own attachment space under a new attachment ID and creates the meme record against that attachment. Reading the source message renews its attachment decay deadline when attachment decay is enabled. The source message, its attachments, and its embeds are untouched.
+
+The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-create) with the created object to the caller's own sessions.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `favorite_meme:create:message` bucket.
+
+## Get meme
+
+<RouteHeader method="GET" path="/v1/users/@me/memes/{meme_id}" />
+
+Returns one [meme object](#meme-object) owned by the current account.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| meme_id | snowflake | The ID of the meme |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [meme](#meme-object) object | Meme was returned |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 404 | [error response](/http-api/#error-response) | Meme is unknown or belongs to another account with `UNKNOWN_FAVORITE_MEME` |
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user, on the `favorite_meme:get` bucket.
+
+## Modify meme
+
+<RouteHeader method="PATCH" path="/v1/users/@me/memes/{meme_id}" />
+
+Changes the name, alt text, or tags of one meme owned by the current account and returns the updated [meme object](#meme-object). Emits a [Favorite Meme Update](/gateway/events/#favorite-meme-update) Gateway event.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| meme_id | snowflake | The ID of the meme |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | The replacement display name (1-100 characters) |
+| alt_text?<sup>1</sup> | ?string | The replacement accessibility description (0-500 characters), or null to clear it |
+| tags?<sup>2</sup> | ?array[string] | The replacement tags, each 1-30 characters |
+
+<sup>1</sup> An omitted field leaves the stored value unchanged, and an explicit null clears it
+
+<sup>2</sup> An omitted or null value leaves the stored tags unchanged
+
+:::caution[Supplying `tags` overwrites the complete tag list]
+An empty array clears every tag. Omit the field, or send null, to leave the stored tags untouched.
+:::
+
+Fluxer checks the tag allowance against the resulting list, so a request omitting `tags` re-checks the tags already stored. A meme that exceeds a since-lowered allowance therefore fails with 400 `INVALID_FORM_BODY` and `MAX_FAVORITE_MEME_TAGS_EXCEEDED` until the caller supplies a shorter list.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [meme](#meme-object) object | Meme was updated |
+| 400 | [error response](/http-api/#error-response) | Path, name, alt text, or tag length fails validation with `INVALID_FORM_BODY`<sup>3</sup> |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 404 | [error response](/http-api/#error-response) | Meme is unknown or belongs to another account with `UNKNOWN_FAVORITE_MEME` |
+
+<sup>3</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path
+
+### Side effects
+
+The operation changes the supplied fields and leaves every omitted field unchanged. It emits one [Favorite Meme Update](/gateway/events/#favorite-meme-update) with the updated object to the caller's own sessions.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `favorite_meme:update` bucket.
+
+## Delete meme
+
+<RouteHeader method="DELETE" path="/v1/users/@me/memes/{meme_id}" />
+
+Deletes one meme owned by the current account and returns 204 with an empty body. Emits a [Favorite Meme Delete](/gateway/events/#favorite-meme-delete) Gateway event.
+
+An unknown meme, or one owned by another account, is a successful no-op.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| meme_id | snowflake | The ID of the meme |
+
+:::danger[Deleting a meme destroys its stored copy]
+Every meme owns its stored bytes, so deletion removes them permanently. The meme cannot be restored, and saving the same source again creates a new meme with a new ID and a new attachment ID.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Meme was deleted, or no owned meme existed |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+### Side effects
+
+The operation removes the meme record and permanently deletes its stored copy. A storage failure is logged and does not fail the request, so the record is removed either way.
+
+It emits one [Favorite Meme Delete](/gateway/events/#favorite-meme-delete) with `meme_id` to the caller's own sessions. A request naming a meme the account does not own emits nothing.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `favorite_meme:delete` bucket.
+
+## Resolve GIF URLs
+
+<RouteHeader method="POST" path="/v1/users/@me/favorite-gifs/resolve" />
+
+Resolves a batch of GIF URLs into [resolved GIF entry objects](#resolved-gif-entry-object) with signed [Media Proxy](/media-proxy/overview/) URLs and preview metadata.
+
+A client uses it to turn stored URL-only favourite GIFs into renderable picker entries without saving anything.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Accept-Language?<sup>1</sup> | string | The preferred locale used for a GIF provider lookup |
+
+<sup>1</sup> Resolved against the [supported locale registry](/topics/locales/#supported-locales), superseded by the account's own stored locale, and defaulting to `en-US`
+
+Fluxer derives a two-letter country from the requesting address by geolocation, with `US` as the fallback.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| urls | array[string] | The absolute GIF URLs to resolve (1-200) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| entries<sup>1</sup> | array[[resolved GIF entry](#resolved-gif-entry-object) object] | One entry for each submitted URL |
+
+<sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result positionally against its request
+
+Fluxer resolves a URL in three stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. A failure in any stage downgrades that URL's entry alone. A URL that none of the three stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Every URL was resolved |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `favorite_gif:resolve` bucket.

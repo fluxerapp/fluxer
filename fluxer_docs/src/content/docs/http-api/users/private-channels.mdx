@@ -1,0 +1,282 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Private channels
+description: Direct message and group DM discovery, creation, preload, and pin order.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A private channel is a conversation outside any guild. It is either a direct message between two accounts or a group DM with its own participant set. Its fields come from the [channel object](/http-api/channels/#channel-object).
+
+The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+
+:::note[Open state is per participant]
+A direct message channel exists once, and each participant holds its own open state. Closing one leaves the channel and its messages in place, so reopening the pair resolves the stored channel.
+:::
+
+## Preloaded messages object
+
+The response of both preload operations. It has no fixed field set, and each property name is the [snowflake](/snowflakes/) of one requested channel.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| &#123;channel_id&#125;<sup>1</sup><sup>2</sup> | ?[message](/http-api/messages/#message-object) object | The latest message the caller can read in the channel, or null |
+
+<sup>1</sup> A requested channel that is neither a direct message nor a group DM has no property at all. A channel that cannot be resolved, or whose latest message is missing, is present with the value null
+
+<sup>2</sup> A repeated channel ID collapses into one property, so the object holds at most one entry for each distinct ID
+
+## Group DM unaddable recipient object
+
+One recipient that could not be added to a group DM, and the reason. [Create private channel](#create-private-channel) returns an array of these as `unaddable_recipients` at the top level of a `GROUP_DM_RECIPIENTS_NOT_ADDABLE` [error response](/http-api/#error-response).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The recipient that could not be added |
+| reason | string | The [unaddable reason](#group-dm-unaddable-reasons) the recipient was rejected under |
+
+## Group DM unaddable reasons
+
+| Value | Name | Description |
+| --- | --- | --- |
+| unknown_user | Unknown user | The recipient does not resolve |
+| not_friends | Not friends | The caller is an ordinary account and holds no friendship with the recipient |
+| blocked<sup>1</sup> | Blocked | The caller is a bot account and shares no guild with the recipient |
+| group_dm_add_disabled | Group DM add disabled | The recipient's [group DM add permission flags](/http-api/users/#group-dm-add-permission-flags) reject the caller |
+
+<sup>1</sup> Reported only on the bot path. The ordinary path reports a missing friendship as `not_friends`
+
+## List private channels
+
+<RouteHeader method="GET" path="/v1/users/@me/channels" bot />
+
+Returns the caller's open direct message and group DM [channel](/http-api/channels/#channel-object) objects.
+
+The route returns only the channels the caller currently has open, so a closed direct message is absent even though the channel and its history still exist. The response has no ordering guarantee and is unpaginated. The caller's personal notes channel is never returned.
+
+Each returned channel has its recipients with the caller removed, so a direct message holds exactly one recipient and a group DM one fewer than its participant count. A group DM whose only participant is the caller omits the `recipients` key entirely.
+
+An open entry whose channel no longer lists the caller among its recipients is omitted, so leaving a group DM needs no separate cleanup call.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[channel](/http-api/channels/#channel-object) object] | Open private channels were returned |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:channels` bucket, shared with [Create private channel](#create-private-channel), [Pin private channel](#pin-private-channel), and [Unpin private channel](#unpin-private-channel).
+
+## Create private channel
+
+<RouteHeader method="POST" path="/v1/users/@me/channels" bot />
+
+Opens a direct message with one account, or creates a group DM. Returns a [channel](/http-api/channels/#channel-object) object on success. Emits [Channel Create](/gateway/events/#channel-create) and [Message Create](/gateway/events/#message-create) Gateway events.
+
+One body field selects the channel type. `recipient_id` opens a direct message. `recipients` always creates a group DM whatever its length, so a single-element array creates a two-participant group DM, and an empty array creates a group DM whose only participant is the caller.
+
+A request supplying `recipients` additionally consumes the `user:group_dm:create` bucket and passes the CAPTCHA check below, whatever the resulting participant count.
+
+Instance policy can disable private channel creation entirely, in which case every request returns 400 `DIRECT_MESSAGES_DISABLED` after the body has been validated and the group DM bucket and CAPTCHA have been applied.
+
+An unclaimed account holds no password and did not arrive through SSO. Fluxer rejects an unclaimed caller with 400 `UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS` when `recipients` is supplied, and with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES` otherwise. An ordinary caller then needs a verified email address, failing which the request returns 403 `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED`. A bot caller is exempt from the email requirement and is never unclaimed.
+
+### Direct message admission
+
+A request naming the caller as its own target returns 400 `CANNOT_DM_YOURSELF` as the field code on `recipient_id` under `INVALID_FORM_BODY`. An unresolved target returns 404 `UNKNOWN_USER`.
+
+Fluxer reads no block state, no friendship, and no shared guild on this route. A target that resolves is admitted, so the caller opens a direct message with an account that has blocked them. `CANNOT_SEND_MESSAGES_TO_USER` is reachable from [Create message](/http-api/messages/#create-message) alone, which applies the recipient's direct message policy on every send.
+
+:::caution[Blocking removes no channel from the blocked account]
+Blocking refuses no creation and closes no channel. The blocked account still opens the pair's direct message through this route and receives 200. Fluxer refuses the send alone, with 400 `CANNOT_SEND_MESSAGES_TO_USER`.
+:::
+
+:::caution[A SPAMMER caller receives a channel nobody sees]
+An ordinary caller with the [SPAMMER](/http-api/users/#public-user-flags) flag never opens a shared direct message. An unresolved target returns 404 `UNKNOWN_USER`, and any other returns 200 with a channel that exists only for the caller. No Dispatch reaches the target.
+:::
+
+### Group DM admission
+
+The participant set, meaning the supplied recipients plus the caller, stays within the instance `max_group_dm_recipients` limit resolved for the caller, which defaults to 50. Exceeding it returns 400 `MAX_GROUP_DM_RECIPIENTS` with the applied ceiling in the top-level `max_recipients` member. `recipients` is capped at 49 elements before the limit is read, so a raised instance limit does not raise the effective ceiling.
+
+A duplicated ID within `recipients` returns 400 `DUPLICATE_RECIPIENTS_NOT_ALLOWED`, and the caller's own ID within it returns 400 `CANNOT_ADD_YOURSELF_TO_GROUP_DM`. Both are field codes on `recipients` under `INVALID_FORM_BODY`.
+
+Every participant, the caller included, holds fewer open group DMs than the instance `max_group_dms_per_user` limit resolved for that account, which defaults to 150. A participant at the ceiling makes the request return 400 `MAX_GROUP_DMS` with the applied ceiling in the top-level `max_group_dms` member.
+
+Fluxer then evaluates each other recipient independently and collects every failure, using the [unaddable reasons](#group-dm-unaddable-reasons) above. One failing recipient rejects the whole request with 400 `GROUP_DM_RECIPIENTS_NOT_ADDABLE`. The response has the rejected entries in the top-level `unaddable_recipients` member and the accepted user IDs in `addable_recipients`, so the caller can retry with a smaller set.
+
+An ordinary caller never adds a recipient across a block in either direction, because blocking deletes the friendship both ways and a friend request crosses no block.
+
+:::note[Group DM admission reads no block state]
+Fluxer holds a bot caller to no friendship, so a recipient that has blocked the bot is added when the two share a guild and the recipient's [group DM add permission flags](/http-api/users/#group-dm-add-permission-flags) admit it.
+:::
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof |
+| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+
+<sup>1</sup> Read only on a request supplying `recipients`, where a missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, as does a proof for a provider the instance holds no secret key for. [CAPTCHA](/topics/captcha/) states when an instance skips verification
+
+<sup>2</sup> The value `hcaptcha` or `turnstile` selects that provider whether or not the instance configured it. The instance's configured provider is used when the header is absent or has any other value
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| recipient_id?<sup>1</sup> | snowflake | The sole recipient of a direct message |
+| recipients?<sup>1</sup> | array[snowflake] | The other participants of a group DM, excluding the caller (max 49) |
+
+<sup>1</sup> Exactly one of the two is supplied. Supplying both or neither fails validation with the entry path `root`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](/http-api/channels/#channel-object) object | The direct message was opened or the group DM was created |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA, account eligibility, the recipient set, relationship policy, a group DM limit, or instance policy rejects creation |
+| 403 | [error response](/http-api/#error-response) | An ordinary caller's email address is unverified and the request returns `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | The caller or the direct message recipient does not resolve |
+
+### Side effects
+
+A newly created direct message opens for the caller only and emits [Channel Create](/gateway/events/#channel-create) to the caller. The recipient's side stays closed until they open it themselves, or until the pair becomes friends through [Accept request or block user](/http-api/users/relationships/#accept-request-or-block-user), which opens both sides. Reopening an existing direct message emits `CHANNEL_CREATE` to the caller unconditionally.
+
+Creating a group DM makes the caller its owner, adds the complete participant set, and emits [Channel Create](/gateway/events/#channel-create) to every participant. It creates one [RECIPIENT_ADD](/http-api/messages/#message-types) system message authored by the caller for each other recipient and emits [Message Create](/gateway/events/#message-create) for each to every participant. Initial creation emits no [Channel Recipient Add](/gateway/events/#channel-recipient-add), which is reserved for a recipient added later. A group DM created from an empty `recipients` array produces no system message.
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:channels` bucket, shared with [List private channels](#list-private-channels), [Pin private channel](#pin-private-channel), and [Unpin private channel](#unpin-private-channel).
+
+A request supplying `recipients` additionally draws on the `user:group_dm:create` bucket of 10 requests per hour for each authenticated user, which is exempt from the global HTTP limit.
+
+## Preload private channel messages
+
+<RouteHeader method="POST" path="/v1/users/@me/preload-messages" bot />
+
+Returns the [preloaded messages](#preloaded-messages-object) object holding the latest readable message of each requested private channel.
+
+Fluxer resolves each requested channel independently and reports an unknown channel, a missing permission, or a missing message as null for that channel. The request still answers 200. It applies the same read authorisation as ordinary message history. A channel the caller cannot see is indistinguishable from one whose history is empty.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channels<sup>1</sup> | array[snowflake] | The private channels to preload (max 100) |
+
+<sup>1</sup> Required. An empty array is accepted and returns an empty object, and more than 100 elements fails body validation before any channel is read
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [preloaded messages](#preloaded-messages-object) object | The requested channels were resolved |
+
+### Side effects
+
+This read acknowledges no message and does not change the caller's read state. The caller's own user ID is the ID of their personal notes channel, and resolving it creates that channel row when the account holds none. The notes channel is neither a direct message nor a group DM, so the response has no property for it.
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:preload_messages` bucket, shared with [Preload private channel messages by alias](#preload-private-channel-messages-by-alias).
+
+## Preload private channel messages by alias
+
+<RouteHeader method="POST" path="/v1/users/@me/channels/messages/preload" bot />
+
+An alias of [Preload private channel messages](#preload-private-channel-messages). The request body, response, authorisation, and side effects are identical, including the personal notes channel creation described there.
+
+### JSON body
+
+The body is the same as [Preload private channel messages](#preload-private-channel-messages).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [preloaded messages](#preloaded-messages-object) object | The requested channels were resolved |
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:preload_messages` bucket. The two paths share one allowance.
+
+## Pin private channel
+
+<RouteHeader method="PUT" path="/v1/users/@me/channels/{channel_id}/pin" bot />
+
+Adds a direct message or group DM to the caller's pinned order. Returns 204 with an empty body. Emits a [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) Gateway event.
+
+Fluxer resolves the channel with the caller's ordinary channel authorisation first. A private channel the caller is not a recipient of returns 404 `UNKNOWN_CHANNEL`, and a channel that does not exist returns the same. The channel then has to be a direct message or a group DM, so the caller's personal notes channel and a visible guild channel are rejected with 400 `CHANNEL_MUST_BE_DM_OR_GROUP_DM`, a field code on `channel_id` under `INVALID_FORM_BODY`.
+
+A guild channel the caller cannot see fails resolution first and returns 403 `MISSING_PERMISSIONS`. A channel row that outlived its guild returns 404 `UNKNOWN_GUILD`. A guild record that still exists while the caller's membership state cannot be resolved returns 403 `ACCESS_DENIED`.
+
+A newly pinned channel is appended after every channel already pinned. A channel later closed, left, or deleted stays in the pinned set, and only [Unpin private channel](#unpin-private-channel) or deletion of the caller's account removes an entry.
+
+:::caution[Unpinning needs the channel to resolve]
+Unpinning resolves the channel first, so an entry whose channel the caller can no longer resolve stays in the pinned set.
+:::
+
+:::note[Pinning is idempotent and the Dispatch is unconditional]
+Pinning an already pinned channel leaves the order untouched, yet the operation still returns 204 and emits [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) with the unchanged order.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the direct message or group DM |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The channel is present in the pinned set |
+| 400 | [error response](/http-api/#error-response) | The channel is neither a direct message nor a group DM and the request returns `CHANNEL_MUST_BE_DM_OR_GROUP_DM` |
+| 403 | [error response](/http-api/#error-response) | A guild channel is not visible and the request returns `MISSING_PERMISSIONS`, or the guild exists while membership cannot be resolved and the request returns `ACCESS_DENIED` |
+| 404 | [error response](/http-api/#error-response) | The channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL`, or a guild channel outlived its guild and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The channel is appended to the caller's pinned order, and [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) reaches only the caller with the complete resulting order as an array of channel ID strings. The channel itself is not modified, and no other participant can observe the caller's pinned order.
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:channels` bucket, shared with [List private channels](#list-private-channels), [Create private channel](#create-private-channel), and [Unpin private channel](#unpin-private-channel).
+
+## Unpin private channel
+
+<RouteHeader method="DELETE" path="/v1/users/@me/channels/{channel_id}/pin" bot />
+
+Removes a direct message or group DM from the caller's pinned order. Returns 204 with an empty body. Emits a [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) Gateway event.
+
+Fluxer resolves and type checks the channel exactly as in [Pin private channel](#pin-private-channel), so a channel that no longer resolves cannot be unpinned through this route. Unpinning preserves the relative order of every channel that remains, and a later pin is appended to the end. Unpinning a channel that is not pinned still returns 204 and emits the same Dispatch.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the direct message or group DM |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The channel is absent from the pinned set |
+| 400 | [error response](/http-api/#error-response) | The channel is neither a direct message nor a group DM and the request returns `CHANNEL_MUST_BE_DM_OR_GROUP_DM` |
+| 403 | [error response](/http-api/#error-response) | A guild channel is not visible and the request returns `MISSING_PERMISSIONS`, or the guild exists while membership cannot be resolved and the request returns `ACCESS_DENIED` |
+| 404 | [error response](/http-api/#error-response) | The channel does not exist or the caller is not a recipient, each returning `UNKNOWN_CHANNEL`, or a guild channel outlived its guild and the request returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The channel is removed from the caller's pinned order, and [User Pinned DMs Update](/gateway/events/#user-pinned-dms-update) reaches only the caller with the complete resulting order as an array of channel ID strings. The channel itself is not closed or deleted, and its recipients receive no Dispatch.
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:channels` bucket, shared with [List private channels](#list-private-channels), [Create private channel](#create-private-channel), and [Pin private channel](#pin-private-channel).

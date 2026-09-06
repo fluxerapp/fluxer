@@ -1,0 +1,143 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: User notes
+description: Private note text the caller stores against another account.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A note is short private text the caller stores about another account.
+
+Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+
+:::note[A note is private to its author]
+The target account never receives it in an HTTP response or [Gateway Dispatch](/gateway/events/). A note has no relationship requirement, so the caller can hold one for an account that is neither a friend nor blocked.
+:::
+
+## User note object
+
+A single note the caller holds for one target account.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| note<sup>1</sup> | string | The note text the caller stored for the target account |
+
+<sup>1</sup> Never null and never the empty string. A stored note is always 1 to 256 characters after normalisation, and every clearing form deletes the record
+
+## User notes record
+
+Every note the caller has stored. The record is a `map[snowflake, string]`. Each property name is the [snowflake](/snowflakes/) of one target account, and its value is that target's note text.
+
+The Gateway delivers the same map as the `notes` field of the [READY](/gateway/events/#ready-object) payload, so a connected client already holds the record before it calls the list operation.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| &#123;target_id&#125;<sup>1</sup> | string | The stored note text for the account named by the property |
+
+<sup>1</sup> A target with no note has no property, so an account with no notes receives an empty object
+
+### Example
+
+```json
+{
+  "1501314428688998182": "met at the Berlin meetup",
+  "1501314428688998183": "always posts the good links"
+}
+```
+
+## List user notes
+
+<RouteHeader method="GET" path="/v1/users/@me/notes" />
+
+Returns the caller's complete [user notes record](#user-notes-record). The operation is not paged, so every stored note comes back in one response.
+
+A note has no creation or modification timestamp.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user notes record](#user-notes-record) | Notes were returned, possibly as an empty object |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `user:notes:read` bucket, shared with [Get user note](#get-user-note).
+
+## Get user note
+
+<RouteHeader method="GET" path="/v1/users/@me/notes/{target_id}" />
+
+Returns the caller's [user note](#user-note-object) object for one target account.
+
+A target with no stored note returns 404 `UNKNOWN_USER`. The same status covers an account that exists without a note and an ID that names no account at all.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| target_id<sup>1</sup> | snowflake | The ID of the account the note describes |
+
+<sup>1</sup> Fluxer removes leading and trailing whitespace before it reads the value. A leading zero, a sign, a decimal point, or any other non-digit returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_SNOWFLAKE_FORMAT`, and a value above 9223372036854775807 returns `SNOWFLAKE_OUT_OF_RANGE`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [user note](#user-note-object) object | The note was returned |
+| 404 | [error response](/http-api/#error-response) | No note is stored for the target ID and the request returns `UNKNOWN_USER` |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `user:notes:read` bucket, shared with [List user notes](#list-user-notes).
+
+## Set user note
+
+<RouteHeader method="PUT" path="/v1/users/@me/notes/{target_id}" />
+
+Creates, replaces, or deletes the caller's note for one target account. Returns 204 with an empty body. Emits a [User Note Update](/gateway/events/#user-note-update) Gateway event.
+
+The supplied text becomes the complete stored note. An unresolved target ID returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
+
+:::caution[An omitted, null, or empty note deletes it]
+An empty string is [read as `null`](/http-api/#input-normalisation), so the three forms are indistinguishable. A value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
+:::
+
+A `note` of at least 3 characters matching the instance phrase blocklist, or with a URL matching the URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. That screen runs ahead of the route's own credential and body checks, so a blocked value is refused with `CONTENT_BLOCKED` even when the request would also fail one of those checks.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| target_id<sup>1</sup> | snowflake | The ID of the account the note describes |
+
+<sup>1</sup> Fluxer removes leading and trailing whitespace before it reads the value. A leading zero, a sign, a decimal point, or any other non-digit returns `INVALID_SNOWFLAKE_FORMAT`, and a value above 9223372036854775807 returns `SNOWFLAKE_OUT_OF_RANGE`
+
+### JSON body
+
+Fluxer reads an omitted body as an empty object and deletes the stored note.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| note?<sup>1</sup> | ?string | The complete replacement note text, or null to delete the stored note (1-256 characters) |
+
+<sup>1</sup> Fluxer trims the value and the bound applies to the result, so a value that trims to empty returns `STRING_LENGTH_INVALID` at the `note` path
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The note was set or deleted |
+| 403 | [error response](/http-api/#error-response) | The note is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | The target account does not exist and the request returns `UNKNOWN_USER` |
+
+### Side effects
+
+Supplying text creates or replaces the note, and a request that supplies none deletes it. [User Note Update](/gateway/events/#user-note-update) reaches the caller's own sessions for every accepted request, including one that supplies the current value and one that deletes an absent note. Its payload has the target ID in `id` and the note text in `note`. A deletion has the empty string.
+
+### Rate limit
+
+40 requests per 10 seconds for each authenticated user, on the `user:notes:write` bucket.

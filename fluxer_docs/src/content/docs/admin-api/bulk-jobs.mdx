@@ -1,0 +1,171 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Bulk jobs
+description: Administrative bulk mutations over an explicit user or guild set.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A bulk job applies one operation to an explicit set of users or guilds. The `task` discriminator selects the payload contract, the [Admin ACL](/admin-api/#acl-registry) evaluated for the request, and the worker task that runs.
+
+Every target is a list of IDs. There is no search, role, tag, email, or IP selector, so the caller resolves its own target set first with [List users](/admin-api/users/#list-users) or [List guilds](/admin-api/guilds/#list-guilds).
+
+[Queue bulk job](#queue-bulk-job) returns a job identifier immediately and applies nothing synchronously. The caller reads progress, terminal state, and failure text through [Get job](/admin-api/jobs/#get-job). [Cancel job](/admin-api/jobs/#cancel-job) stops a run.
+
+## Bulk job creation object
+
+A bulk job creation has the identifier of the queued job.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id<sup>1</sup> | snowflake | The job that applies the requested operation, readable through [Get job](/admin-api/jobs/#get-job) |
+
+<sup>1</sup> Fluxer writes the ledger row before it enqueues the job, so the identifier in a 200 is always readable
+
+### Example
+
+```json
+{
+  "job_id": "1501314428688998182"
+}
+```
+
+## Bulk task types
+
+Each value is the exact `task` discriminator.
+
+### `update_user_flags`
+
+ACL `bulk:update:user_flags`. Adds and removes account flags on every targeted user. Runs as `bulkUpdateUserFlags`.
+
+### `update_suspicious_activity_flags`
+
+ACL `bulk:update:suspicious_activity`. Adds and removes verification requirements on every targeted user. Runs as `bulkUpdateSuspiciousActivityFlags`.
+
+### `update_guild_features`
+
+ACL `bulk:update:guild_features`. Adds and removes features on every targeted guild. Runs as `bulkUpdateGuildFeatures`.
+
+### `add_guild_members`
+
+ACL `bulk:add:guild_members`. Adds every targeted user to one guild. Runs as `bulkAddGuildMembers`.
+
+### `schedule_user_deletion`
+
+ACL `bulk:delete:users`. Schedules account deletion for every targeted user. Runs as `bulkScheduleUserDeletion`.
+
+Each worker task is recorded as `task_type` on the job and listed under [background job task types](/admin-api/jobs/#background-job-task-types). All five run in the `lifecycle` [processing lane](/admin-api/jobs/#processing-lanes).
+
+## Queue bulk job
+
+<RouteHeader method="POST" path="/v1/admin/bulk-jobs" auditReason />
+
+Queues one bulk operation. Returns a [bulk job creation](#bulk-job-creation-object) object on success.
+
+### Limitations
+
+- The body matches exactly one `task` variant.
+- The caller needs at least one of the five [bulk ACLs](#bulk-task-types) and then the exact ACL that `task` selects.
+
+:::caution[Authorisation depends on the validated body]
+Body validation runs ahead of authentication and ACL evaluation, so a malformed body answers 400 even when the request has no credential.
+:::
+
+### JSON body
+
+The `task` discriminator selects one of these five structures. Every ID array has an upper bound and no lower bound, so an empty array queues a job that processes nothing and settles as `succeeded`.
+
+#### Update user flags structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| task | string | The discriminator selecting this variant, `update_user_flags` |
+| user_ids | array[snowflake] | The users to update (max 1000 entries) |
+| add_flags?<sup>1</sup> | array[string] | [Account flag](/admin-api/users/#account-flags) values to add (max 64, default empty) |
+| remove_flags?<sup>1</sup> | array[string] | [Account flag](/admin-api/users/#account-flags) values to remove (max 64, default empty) |
+
+<sup>1</sup> Each entry is one 64-bit flag value as an unsigned decimal string, such as `1024`, rather than a symbolic name. Additions are applied before removals, so a value named in both arrays ends up cleared
+
+#### Update suspicious activity flags structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| task | string | The discriminator selecting this variant, `update_suspicious_activity_flags` |
+| user_ids | array[snowflake] | The users to update (max 1000 entries) |
+| add_flags?<sup>1</sup> <sup>2</sup> | array[string] | [Suspicious activity flag](/admin-api/users/#suspicious-activity-flags) names to add (max 32, default empty) |
+| remove_flags?<sup>1</sup> | array[string] | [Suspicious activity flag](/admin-api/users/#suspicious-activity-flags) names to remove (max 32, default empty) |
+
+<sup>1</sup> Each entry is the symbolic flag name such as `REQUIRE_VERIFIED_PHONE`. An entry naming no known flag is ignored, and additions are applied before removals
+
+<sup>2</sup> Adding `REQUIRE_VERIFIED_PHONE` or `REQUIRE_REVERIFIED_PHONE` also clears the deferred phone bit 1 &lt;&lt; 16, which turns a deferred phone requirement into an immediate one
+
+#### Update guild features structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| task | string | The discriminator selecting this variant, `update_guild_features` |
+| guild_ids | array[snowflake] | The guilds to update (max 1000 entries) |
+| add_features?<sup>1</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to add (max 100, default empty) |
+| remove_features?<sup>1</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to remove (max 100, default empty) |
+
+<sup>1</sup> The boundary accepts any string, so a name outside the registry is written to the guild's feature set. Additions are applied before removals
+
+#### Add guild members structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| task | string | The discriminator selecting this variant, `add_guild_members` |
+| guild_id | snowflake | The guild that receives the users |
+| user_ids | array[snowflake] | The users to add as members (max 1000 entries) |
+
+#### Schedule user deletion structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| task | string | The discriminator selecting this variant, `schedule_user_deletion` |
+| user_ids | array[snowflake] | The users to schedule for deletion (max 1000 entries) |
+| reason_code | integer | [Deletion reason](/admin-api/users/#deletion-reasons) recorded against every targeted account |
+| public_reason? | string | The reason shown to each account holder in the deletion notice (0-512 characters after normalisation) |
+| days_until_deletion?<sup>1</sup> | integer | The delay before deletion in whole days (1-365, default 60) |
+
+<sup>1</sup> Fluxer raises the value to the reason-specific minimum, 14 days for `USER_REQUESTED` and 60 days for every other code
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [bulk job creation](#bulk-job-creation-object) object | The bulk job was queued |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without the ACL selected by `task` |
+| 500<sup>1</sup> | [error response](/admin-api/#error-response) | The job could not be queued |
+
+<sup>1</sup> A full queue rejects the job, which surfaces as `INTERNAL_SERVER_ERROR`
+
+The 200 confirms that the job was queued. [Get job](/admin-api/jobs/#get-job) reports whether its mutations completed.
+
+### Side effects
+
+This operation writes no Admin audit entry. It records one [Jobs](/admin-api/jobs/) ledger row naming the acting Admin as the requester and storing the audit reason, then enqueues the worker task. When the ledger row cannot be written, Fluxer returns 500 `INTERNAL_SERVER_ERROR` and enqueues nothing.
+
+The worker processes entities in the submitted order, one at a time. A cancellation check runs before each entity, so [Cancel job](/admin-api/jobs/#cancel-job) stops the run between two entities and settles the job as `cancelled`. Every entity changed before cancellation or failure stays changed. An entity that fails, including an ID that resolves to nothing, is counted as failed and skipped, and the run continues through the rest of the set. The worker reports progress before the run starts, after every 25 entities, and once at the end. `schedule_user_deletion` reports after every 10 accounts instead. The closing progress message has the successful and failed counts.
+
+Every task writes one summary Admin audit entry when it finishes, with the action `bulk_update_user_flags`, `bulk_update_suspicious_activity_flags`, `bulk_update_guild_features`, `bulk_add_guild_members`, or `bulk_schedule_deletion`. The summary has the audit reason, the entity count, the operation-specific parameters, and the successful and failed counts. Its `target_id` is the guild for `add_guild_members` and `0` for the four tasks that target a set. A cancelled or failed job writes no summary entry.
+
+Updating account flags writes one `update_flags` entry for each account and dispatches [User Update](/gateway/events/#user-update) to the account's sessions. A change to a publicly visible flag also dispatches [Guild Member Update](/gateway/events/#guild-member-update) to every guild the account is in.
+
+Updating suspicious activity flags rewrites each account's verification requirements and dispatches [User Update](/gateway/events/#user-update). No [Guild Member Update](/gateway/events/#guild-member-update) follows. The task writes no per-account audit entry.
+
+Updating guild features writes one `update_features` entry for each guild, dispatches [Guild Update](/gateway/events/#guild-update), and reindexes the guild for search. Fluxer reconciles a guild that already has a discovery application record against the new feature set, so gaining `DISCOVERABLE` approves the record and losing it marks the record removed. A guild with no discovery record is left alone.
+
+Adding guild members bypasses the ban check and the risk gate. The task suppresses the join system message, records the join source as an Admin force add, and dispatches [Guild Member Add](/gateway/events/#guild-member-add) to the guild and [Guild Create](/gateway/events/#guild-create) to the added account's sessions. The task still enforces the per-account guild cap and the guild member cap, so an account at either ceiling is counted as failed. An account that is already a member is left unchanged and counted as successful, with no second membership and no Dispatch. Adding a bot account also records a `BOT_ADD` guild audit log entry attributed to the acting Admin.
+
+Scheduling deletion marks each account deleted. The task stores the reason code, public reason, and audit reason on the account, and reschedules its pending deletion. It dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account, and emails the account holder when an address is on file. A failed email is logged and does not fail the entity.
+
+:::caution[Bulk scheduling is narrower than the single-account operation]
+The worker only schedules the deletion. It does not terminate sessions, cancel or refund a Stripe subscription, ban the account's identifiers, or resolve pending reports, all of which [Schedule user deletion](/admin-api/users/#schedule-user-deletion) performs for one account, the last two only when the reason is not `USER_REQUESTED`.
+:::
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `admin:bulk:operation` bucket.

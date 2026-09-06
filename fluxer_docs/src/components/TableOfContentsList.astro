@@ -1,0 +1,51 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+interface TocItem {
+	slug: string;
+	text: string;
+	children: Array<TocItem>;
+}
+
+interface Props {
+	toc: Array<TocItem>;
+	depth?: number;
+
+	markFirst?: boolean;
+}
+
+const {toc, depth = 0, markFirst = false} = Astro.props;
+---
+
+<ul>
+	{
+		toc.map((heading, index) => (
+			<li>
+				<a href={`#${heading.slug}`} aria-current={markFirst && depth === 0 && index === 0 ? 'true' : undefined}>
+					<span>{heading.text}</span>
+				</a>
+				{heading.children.length > 0 && <Astro.self toc={heading.children} depth={depth + 1} />}
+			</li>
+		))
+	}
+</ul>
+
+<style define:vars={{depth}}>
+	@layer starlight.core {
+		ul {
+			padding: 0;
+			list-style: none;
+		}
+		a {
+			--pad-inline: 0.5rem;
+			display: block;
+			border-radius: 0.25rem;
+			padding-block: 0.25rem;
+			padding-inline: calc(1rem * var(--depth) + var(--pad-inline)) var(--pad-inline);
+			line-height: 1.25;
+		}
+		a[aria-current='true'] {
+			color: var(--sl-color-text-accent);
+		}
+	}
+</style>

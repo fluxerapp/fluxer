@@ -1,0 +1,481 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guild audit logs
+description: Guild audit log entries, their action registry, and the audit reason contract.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An audit log entry records one change made to a guild and the account that made it. It has a numeric action type, the ID of the thing changed, an option map, and a list of before-and-after values. Only [List guild audit logs](#list-guild-audit-logs) reads them.
+
+## Audit log reason
+
+An audit-capable route accepts the `X-Audit-Log-Reason` request header, listed with the other [standard request headers](/http-api/#standard-request-headers). Fluxer reads the value verbatim and never percent-decodes it, so a caller that percent-encodes the reason stores and reads back the percent-encoded form.
+
+Fluxer trims the value. A value that is blank before trimming, empty after it, or longer than 512 characters after it counts as no reason at all. None of the three fails the request, so a reason that misses the bound is dropped and the operation still succeeds.
+
+The operation writes the accepted reason onto its entry, returns it as the entry `reason` field, and sends it in the [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) Dispatch.
+
+:::note[Some operations record no reason at all]
+Channel modification and deletion, message deletion, bulk message deletion, pinning, unpinning, bot addition, and most [permission overwrite](#permission-overwrite-change-fields) entries never have one.
+:::
+
+## Guild audit log response object
+
+One page of audit history together with the accounts and webhooks it references. Only `audit_log_entries` is paginated.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| audit_log_entries<sup>1</sup> | array[[guild audit log entry](#guild-audit-log-entry-object) object] | The page of entries this request returned |
+| users<sup>2</sup> | array[[partial user](/http-api/users/#partial-user-object) object] | The accounts the returned entries name |
+| webhooks<sup>3</sup> | array[[audit log webhook](#audit-log-webhook-object) object] | The webhooks a returned webhook action targets |
+
+<sup>1</sup> The page ordering is defined by the [query parameters](#query-parameters) of the request that produced it
+
+<sup>2</sup> Deduplicated by user ID, and has no user named only by an option field or by a change value
+
+<sup>3</sup> One object for each distinct webhook that a returned webhook action targets and that still exists, so a deleted webhook resolves to no object
+
+`users` holds the actor of every returned entry and, for an action whose `target_id` names an account, that account as well. An account that can no longer be resolved is still returned, as the deleted-account representation with the username `DeletedUser`, the discriminator `0000`, the global name `Deleted User`, a null avatar, a null avatar colour, and `flags` of `0`.
+
+## Guild audit log entry object
+
+One recorded guild change. An entry is immutable once written, except for a run of message deletion entries, which [List guild audit logs](#list-guild-audit-logs) can replace with a single consolidated entry. The entry ID is a [snowflake](/snowflakes/), so it has the exact creation time.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the entry, whose [snowflake](/snowflakes/) timestamp is the time it was written |
+| action_type | integer | [Audit action](#audit-actions) value that identifies the recorded operation |
+| user_id<sup>1</sup> | snowflake | The ID of the user that performed the action |
+| target_id<sup>2</sup> | ?string | The ID of the affected entity |
+| reason?<sup>3</sup> | string | The [audit log reason](#audit-log-reason) recorded with the operation |
+| options?<sup>4</sup> | [audit log options](#audit-log-options-object) object | The context fields this [audit action](#audit-actions) records |
+| changes?<sup>5</sup> | array[[audit log change](#audit-log-change-object) object] | The fields the mutation changed |
+
+<sup>1</sup> Every entry has the acting user ID, and an entry produced by consolidation has the actor of the consolidated run
+
+<sup>2</sup> A decimal snowflake string for every action except [INVITE_CREATE](#audit-actions) and [INVITE_DELETE](#audit-actions), where it is the invite code, and null for [MESSAGE_BULK_DELETE](#audit-actions)
+
+<sup>3</sup> The field is omitted when the operation recorded no reason, and an entry written by consolidation never has one
+
+<sup>4</sup> The field is omitted when the action recorded no option key that this registry publishes
+
+<sup>5</sup> The field is omitted when the action records no field change, so it is never returned as an empty array
+
+:::note[An entry expires 45 days after the write]
+An expired entry is removed from storage, so a page never returns one older than that horizon. A consolidated entry is a fresh write and starts a fresh 45-day expiry of its own.
+:::
+
+### Example
+
+```json
+{
+  "id": "1501314428688998184",
+  "action_type": 24,
+  "user_id": "1489002177550843905",
+  "target_id": "1489002177550843906",
+  "reason": "Nickname violated the rules",
+  "changes": [{"key": "nick", "old_value": "spam bot", "new_value": null}]
+}
+```
+
+## Audit actions
+
+The Value column is the numeric `action_type`, which is also the value the `action_type` query filter accepts. Each description names what `target_id` identifies and which [audit log options](#audit-log-options-object) the action records. The overwrite options are `id`, `type`, and `channel_id`. The invite options are `max_age`, `max_uses`, `temporary`, `channel_id`<sup>7</sup>, and `inviter_id`<sup>7</sup>.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 | GUILD_UPDATE<sup>1</sup> | Guild settings or ownership were changed. `target_id` is the guild, and the action records no options |
+| 10 | CHANNEL_CREATE | Guild channel was created. `target_id` is the channel, and the action records `type` |
+| 11 | CHANNEL_UPDATE | Guild channel was changed. `target_id` is the channel, and the action records `type` |
+| 12 | CHANNEL_DELETE | Guild channel was deleted. `target_id` is the channel, and the action records `type` |
+| 13 | CHANNEL_OVERWRITE_CREATE | Channel permission overwrite was created. `target_id` is the role or member, and the action records the overwrite options |
+| 14 | CHANNEL_OVERWRITE_UPDATE | Channel permission overwrite was changed. `target_id` is the role or member, and the action records the overwrite options |
+| 15 | CHANNEL_OVERWRITE_DELETE | Channel permission overwrite was deleted. `target_id` is the role or member, and the action records the overwrite options |
+| 20 | MEMBER_KICK<sup>2</sup> | Member was removed by a moderator. `target_id` is the user, and the action records no options |
+| 21 | MEMBER_PRUNE<sup>3</sup> | Inactive members were pruned. `target_id` is nothing, and the action records no options |
+| 22 | MEMBER_BAN_ADD | Guild ban was created or replaced. `target_id` is the user, and the action records `delete_member_days`<sup>4</sup> |
+| 23 | MEMBER_BAN_REMOVE | Guild ban was removed. `target_id` is the user, and the action records no options |
+| 24 | MEMBER_UPDATE<sup>5</sup> | Guild member state was changed. `target_id` is the user, and the action records no options |
+| 25 | MEMBER_ROLE_UPDATE<sup>5</sup> | One role was added to or removed from a member. `target_id` is the user, and the action records no options |
+| 26 | MEMBER_MOVE<sup>6</sup> | Member voice session was moved to another channel. `target_id` is the user, and the action records `channel_id` and `count` |
+| 27 | MEMBER_DISCONNECT<sup>6</sup> | Member voice session was disconnected. `target_id` is the user, and the action records `channel_id` and `count` |
+| 28 | BOT_ADD | Bot was added to the guild. `target_id` is the user, and the action records `temporary` |
+| 30 | ROLE_CREATE | Role was created. `target_id` is the role, and the action records no options |
+| 31 | ROLE_UPDATE | Role was changed. `target_id` is the role, and the action records no options |
+| 32 | ROLE_DELETE | Role was deleted. `target_id` is the role, and the action records no options |
+| 40 | INVITE_CREATE | Invite was created. `target_id` is the invite code, and the action records the invite options |
+| 41 | INVITE_UPDATE<sup>8</sup> | Invite was changed. `target_id` is the invite code, and the action records no options |
+| 42 | INVITE_DELETE | Invite was deleted. `target_id` is the invite code, and the action records the invite options |
+| 50 | WEBHOOK_CREATE | Webhook was created. `target_id` is the webhook, and the action records `channel_id`<sup>7</sup> |
+| 51 | WEBHOOK_UPDATE | Webhook was changed. `target_id` is the webhook, and the action records `channel_id`<sup>7</sup> |
+| 52 | WEBHOOK_DELETE | Webhook was deleted. `target_id` is the webhook, and the action records `channel_id`<sup>7</sup> |
+| 60 | EMOJI_CREATE | Emoji was created. `target_id` is the emoji, and the action records no options |
+| 61 | EMOJI_UPDATE | Emoji was changed. `target_id` is the emoji, and the action records no options |
+| 62 | EMOJI_DELETE | Emoji was deleted. `target_id` is the emoji, and the action records no options |
+| 72 | MESSAGE_DELETE | Single message was deleted by a moderator. `target_id` is the message, and the action records `channel_id` |
+| 73 | MESSAGE_BULK_DELETE<sup>9</sup> | Several messages were deleted in one operation. `target_id` is nothing, and the action records `channel_id` and `count` |
+| 74 | MESSAGE_PIN | Message was pinned. `target_id` is the message, and the action records `channel_id` and `message_id` |
+| 75 | MESSAGE_UNPIN | Message was unpinned. `target_id` is the message, and the action records `channel_id` and `message_id` |
+| 90 | STICKER_CREATE | Sticker was created. `target_id` is the sticker, and the action records no options |
+| 91 | STICKER_UPDATE | Sticker was changed. `target_id` is the sticker, and the action records no options |
+| 92 | STICKER_DELETE | Sticker was deleted. `target_id` is the sticker, and the action records no options |
+
+<sup>1</sup> Recorded by [Modify guild](/http-api/guilds/#modify-guild), by [Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url), and by [Transfer guild ownership](/http-api/guild-members/#transfer-guild-ownership), and `target_id` is the guild in every case
+
+<sup>2</sup> A kick entry is always recorded with no change list, so the removed membership state is not published through the entry
+
+<sup>3</sup> The value is defined by the wire contract and is accepted by the `action_type` filter, and no current guild operation records it
+
+<sup>4</sup> The option is always recorded. Its value is the legacy `delete_message_days` body field of [Create or replace guild ban](/http-api/guild-moderation/#create-or-replace-guild-ban), which defaults to `0`, so a ban that used `delete_message_seconds` or sent no body at all records `"0"`
+
+<sup>5</sup> The entry has no `options`, so a member role change does not name the role it added or removed. The caller reads that from the [guild member change fields](#guild-member-change-fields)
+
+<sup>6</sup> `count` is always `1`. `channel_id` is the destination channel for a move and the vacated channel for a disconnect
+
+<sup>7</sup> The option is recorded only when the recorded entity has that value, so an invite with no channel or no inviter records neither, and a webhook with no channel records no option at all
+
+<sup>8</sup> The filter accepts this value, and no current guild operation records this action
+
+<sup>9</sup> A bulk deletion entry is recorded either by a bulk message deletion operation or by the consolidation described under [List guild audit logs](#list-guild-audit-logs)
+
+## Audit log options object
+
+Every field is present only for the actions listed against it in the [audit actions](#audit-actions) registry. Only the keys in this registry are published, and the response omits `options` entirely when an entry recorded none of them.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | string | The decimal ID of the channel the action concerns |
+| count<sup>1</sup> | number | The number of entities the action affected |
+| delete_member_days<sup>2</sup> | string | The whole days of the banned member's messages the ban deleted |
+| id | string | The decimal ID of the role or member an overwrite applies to |
+| integration_type<sup>3</sup> | number | The type of the integration the entry names |
+| message_id | string | The decimal ID of the single message the action concerns |
+| members_removed<sup>3</sup> | number | The number of memberships the action removed |
+| role_name<sup>3</sup> | string | The name of the role the action concerns |
+| type<sup>4</sup> | number | The channel type, or the permission overwrite type |
+| inviter_id | string | The decimal ID of the user that created the invite |
+| max_age | number | The configured invite lifetime in seconds |
+| max_uses | number | The configured maximum use count |
+| temporary | boolean | Whether the recorded entity is temporary |
+| uses<sup>3</sup> | number | The invite use count recorded with the action |
+
+<sup>1</sup> The value is the length of the consolidated run for [MESSAGE_BULK_DELETE](#audit-actions) and is always `1` for the two voice actions
+
+<sup>2</sup> Read from the legacy `delete_message_days` body field of [Create or replace guild ban](/http-api/guild-moderation/#create-or-replace-guild-ban), so a ban that supplied only `delete_message_seconds` records `"0"`
+
+<sup>3</sup> The field is defined by the wire contract and no current guild operation records it
+
+<sup>4</sup> The value is a [channel type](/http-api/channels/#channel-types) for the three channel actions and a [permission overwrite type](/http-api/channels/#permission-overwrite-types) for the three overwrite actions
+
+## Audit log change object
+
+One field a mutation changed, with the value on each side of the change.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key<sup>1</sup> | string | The name of the field that changed, drawn from the [change fields](#change-fields) of the entity the action targets |
+| old_value?<sup>2</sup> | audit log change value | The value the field held before the mutation |
+| new_value?<sup>2</sup> | audit log change value | The value the field holds after the mutation |
+
+<sup>1</sup> A change whose key is `ip` is never published through this resource, and `changes` is omitted entirely when no other change remains
+
+<sup>2</sup> A creation has only `new_value`, a deletion has only `old_value`, and a modification has both, so a change object always has at least one of the two
+
+A change value is a string, a JSON number, a boolean, `null`, an array of strings, an array of numbers, or an object with `added` and `removed` string arrays. The last shape comes only from the [permissions_diff](#guild-role-change-fields) key of a role modification.
+
+:::note[A 64-bit domain value is a decimal string]
+A permission mask or a snowflake is serialised as a decimal string. A bounded number such as a position or a colour remains a JSON number.
+:::
+
+:::caution[A change list holds only the differing fields]
+An update records one change object per differing field, so an unchanged field is absent. An identity field never appears in an update change list, though it does appear in a creation or deletion list, where only one side of the comparison exists.
+:::
+
+### Change fields
+
+Each table below names the fields an action of that family can record.
+
+#### Guild change fields
+
+Recorded by [GUILD_UPDATE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id<sup>1</sup> | string | The decimal ID of the guild itself |
+| name | string | The name the guild was given by this change (1-100 characters) |
+| owner_id | string | The decimal ID of the guild owner |
+| vanity_url_code | ?string | The configured custom invite code, or null when the guild has none |
+| icon_hash | ?string | The guild icon hash, or null when the guild has no icon |
+| banner_hash | ?string | The guild banner hash, or null when the guild has no banner |
+| banner_width | ?number | The guild banner width in pixels, or null when the guild has no banner |
+| banner_height | ?number | The guild banner height in pixels, or null when the guild has no banner |
+| splash_hash | ?string | The guild splash hash, or null when the guild has no splash |
+| splash_width | ?number | The guild splash width in pixels, or null when the guild has no splash |
+| splash_height | ?number | The guild splash height in pixels, or null when the guild has no splash |
+| splash_card_alignment | number | The [splash card alignment](/http-api/guilds/#splash-card-alignments) recorded with the change |
+| embed_splash_hash | ?string | The guild embed splash hash, or null when the guild has no embed splash |
+| embed_splash_width | ?number | The guild embed splash width in pixels, or null when the guild has no embed splash |
+| embed_splash_height | ?number | The guild embed splash height in pixels, or null when the guild has no embed splash |
+| features<sup>2</sup> | array[string] | The [guild features](/http-api/guilds/#guild-features) held at this side of the change, in ascending order |
+| verification_level | number | The [verification level](/http-api/guilds/#verification-levels) recorded with the change |
+| mfa_level | number | The [MFA level](/http-api/guilds/#mfa-levels) recorded with the change |
+| nsfw_level | number | The [NSFW level](/http-api/guilds/#nsfw-levels) recorded with the change |
+| nsfw | boolean | Whether the guild is marked age restricted |
+| content_warning_level | number | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) recorded with the change |
+| content_warning_text | ?string | The configured content warning text, or null when the guild sets none |
+| explicit_content_filter | number | The [guild explicit content filter level](/http-api/guilds/#guild-explicit-content-filter-levels) recorded with the change |
+| default_message_notifications | number | The [default message notification level](/http-api/guilds/#default-message-notification-levels) recorded with the change |
+| system_channel_id | ?string | The decimal ID of the configured system channel, or null when the guild sets none |
+| system_channel_flags | number | The [system channel flags](/http-api/guilds/#system-channel-flags) mask recorded with the change |
+| rules_channel_id | ?string | The decimal ID of the configured rules channel, or null when the guild sets none |
+| afk_channel_id | ?string | The decimal ID of the configured AFK voice channel, or null when the guild sets none |
+| afk_timeout | number | The AFK timeout in seconds |
+| disabled_operations | number | The [disabled guild operations](/http-api/guilds/#disabled-guild-operations) mask recorded with the change |
+| member_count | number | The member count recorded with the mutation |
+| message_history_cutoff | ?ISO8601 timestamp | The configured message history cutoff, or null when the guild sets none |
+
+<sup>1</sup> The field holds the same value on both sides of every guild action, so it never produces a change object
+
+<sup>2</sup> Fluxer sorts the array by string value on both sides of the comparison, so a change object appears only when a feature was added or removed
+
+#### Channel change fields
+
+Recorded by [CHANNEL_CREATE](#audit-actions), [CHANNEL_UPDATE](#audit-actions), and [CHANNEL_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | string | The decimal ID of the channel itself |
+| type | number | The [channel type](/http-api/channels/#channel-types) recorded with the change |
+| name | ?string | The name the channel was given by this change |
+| topic | ?string | The topic the channel was given by this change, or null when it has none |
+| parent_id | ?string | The decimal ID of the parent category, or null when the channel sits at the top level |
+| position | number | The position of the channel among its siblings |
+| nsfw | ?boolean | Whether the channel is marked age restricted, or null when it has no override |
+| content_warning_level | number | The [content warning level](/http-api/channels/#content-warning-levels) recorded with the change |
+| content_warning_text | ?string | The configured content warning text, or null when the channel sets none |
+| rate_limit_per_user | number | The slowmode interval in seconds |
+| user_limit | ?number | The configured voice occupancy limit |
+| voice_connection_limit | ?number | The configured per-user voice connection limit |
+| bitrate | ?number | The voice bitrate in bits per second |
+| rtc_region | ?string | The pinned voice region, or null when the channel is routed automatically |
+| permission_overwrite_count<sup>1</sup> | number | The number of permission overwrites the channel has |
+
+<sup>1</sup> Only the count is recorded. An individual overwrite mutation records its own [permission overwrite](#permission-overwrite-change-fields) entry
+
+#### Permission overwrite change fields
+
+Recorded by the three [channel overwrite actions](#audit-actions). Every value in this family is a string.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The decimal ID of the role or member the overwrite applies to |
+| type | string | The decimal [permission overwrite type](/http-api/channels/#permission-overwrite-types) |
+| allow | string | The decimal [permission](/http-api/permissions/) mask the overwrite grants |
+| deny | string | The decimal [permission](/http-api/permissions/) mask the overwrite denies |
+
+#### Guild member change fields
+
+Recorded by [MEMBER_UPDATE](#audit-actions) and [MEMBER_ROLE_UPDATE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | string | The decimal ID of the member itself |
+| nick | ?string | The nickname the member holds in this guild, or null when none is set |
+| roles | array[string] | The assigned role IDs as decimal strings, in ascending string order |
+| avatar_hash | ?string | The guild avatar hash, or null when the member has no guild avatar |
+| banner_hash | ?string | The guild banner hash, or null when the member has no guild banner |
+| bio | ?string | The guild profile bio, or null when none is set |
+| pronouns | ?string | The guild profile pronouns, or null when none is set |
+| accent_color | ?number | The guild profile accent colour, or null when none is set |
+| deaf | boolean | Whether a moderator has deafened the member |
+| mute | boolean | Whether a moderator has muted the member |
+| communication_disabled_until | ?ISO8601 timestamp | The time the communication restriction expires, or null when the member is not restricted |
+| temporary | boolean | Whether the membership is temporary |
+
+#### Voice move change fields
+
+Recorded by [MEMBER_MOVE](#audit-actions) and [MEMBER_DISCONNECT](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id<sup>1</sup> | string | The decimal ID of the voice channel the session occupied |
+
+<sup>1</sup> A move records the previous channel as `old_value` and the destination as `new_value`, while a disconnect records only `old_value`
+
+#### Guild ban change fields
+
+Recorded by [MEMBER_BAN_ADD](#audit-actions) and [MEMBER_BAN_REMOVE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | string | The decimal ID of the banned user |
+| moderator_id | string | The decimal ID of the user that issued the ban |
+| banned_at | ISO8601 timestamp | The time the ban was issued |
+| expires_at | ?ISO8601 timestamp | The expiry of a temporary ban, or null for a permanent ban |
+| reason | ?string | The stored [ban](/http-api/guild-moderation/#guild-ban-object) reason, which is separate from the audit reason |
+
+#### Guild role change fields
+
+Recorded by [ROLE_CREATE](#audit-actions), [ROLE_UPDATE](#audit-actions), and [ROLE_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| role_id | string | The decimal ID of the role itself |
+| name | string | The name the role was given by this change (1-100 characters) |
+| permissions | string | The decimal [permission](/http-api/permissions/) mask the role grants |
+| position | number | The position of the role in the guild hierarchy |
+| hoist_position | ?number | The separate hoisting position, or null when the role has none |
+| color | number | The colour recorded for the role |
+| icon_hash | ?string | The role icon hash, or null when the role has no icon |
+| unicode_emoji | ?string | The role Unicode emoji, or null when the role has none |
+| hoist | boolean | Whether the role is displayed separately |
+| mentionable | boolean | Whether the role is mentionable |
+| permissions_diff<sup>1</sup> | object | The permission names this change added and removed |
+
+<sup>1</sup> Recorded only by [Modify guild role](/http-api/permissions/#modify-guild-role), and only when the mask actually changed. The value is an object with `added` and `removed` string arrays of permission names
+
+`permissions_diff` arrives as `new_value` with no `old_value`, and the same change list still has the `permissions` change. The role position and hoist position operations record [ROLE_UPDATE](#audit-actions) without it.
+
+#### Invite change fields
+
+Recorded by [INVITE_CREATE](#audit-actions) and [INVITE_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The code that identifies the invite |
+| channel_id | ?string | The decimal ID of the channel the invite points at |
+| guild_id | ?string | The decimal ID of the guild the invite belongs to |
+| inviter_id | ?string | The decimal ID of the user that created the invite |
+| uses | number | The use count recorded with the change |
+| max_uses | number | The configured maximum use count |
+| max_age | number | The configured invite lifetime in seconds |
+| temporary | boolean | Whether accepting the invite grants a temporary membership |
+| created_at | ISO8601 timestamp | The time the invite was created |
+
+#### Webhook change fields
+
+Recorded by [WEBHOOK_CREATE](#audit-actions), [WEBHOOK_UPDATE](#audit-actions), and [WEBHOOK_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | string | The decimal ID of the webhook itself |
+| guild_id | ?string | The decimal ID of the guild the webhook belongs to |
+| channel_id | ?string | The decimal ID of the channel the webhook posts to |
+| name | string | The name the webhook posts under (1-80 characters) |
+| creator_id | ?string | The decimal ID of the user that created the webhook |
+| avatar_hash | ?string | The webhook avatar hash, or null when no avatar is set |
+| type<sup>1</sup> | number | The kind of webhook the change recorded |
+
+<sup>1</sup> The value is 1 for an incoming webhook and 2 for a channel follower webhook
+
+#### Emoji change fields
+
+Recorded by [EMOJI_CREATE](#audit-actions), [EMOJI_UPDATE](#audit-actions), and [EMOJI_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id | string | The decimal ID of the emoji itself |
+| name | string | The name the emoji was given by this change (2-32 characters) |
+| animated | boolean | Whether the emoji is animated |
+| creator_id | string | The decimal ID of the user that created the emoji |
+
+#### Sticker change fields
+
+Recorded by [STICKER_CREATE](#audit-actions), [STICKER_UPDATE](#audit-actions), and [STICKER_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sticker_id | string | The decimal ID of the sticker itself |
+| name | string | The name the sticker was given by this change (2-30 characters) |
+| description | ?string | The sticker description, or null when it has none |
+| animated | boolean | Whether the sticker is animated |
+| creator_id | string | The decimal ID of the user that created the sticker |
+
+## Audit log webhook object
+
+A reduced [webhook object](/http-api/webhooks/#webhook-object). It omits the execution token, application ID, and creating user, and it names the avatar hash `avatar_hash` rather than `avatar`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the webhook |
+| type<sup>1</sup> | integer | The kind of webhook this record describes |
+| guild_id | ?snowflake | The ID of the guild containing the webhook |
+| channel_id | ?snowflake | The ID of the channel the webhook sends messages to |
+| name | string | The name the webhook posts under |
+| avatar_hash | ?string | The avatar hash of the webhook, or null when no avatar is set |
+
+<sup>1</sup> The value is 1 for an incoming webhook and 2 for a channel follower webhook
+
+## List guild audit logs
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/audit-logs" bot />
+
+Returns one page of guild audit history as a [guild audit log response](#guild-audit-log-response-object) object. Requires [VIEW_AUDIT_LOG](/http-api/permissions/) in the target guild, and no MFA elevation applies.
+
+A guild ID that names no guild returns 404 `UNKNOWN_GUILD`. A non-member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is visible to any authenticated caller.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild whose audit log is read |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit?<sup>1</sup> | integer | The maximum number of entries to return (0-100, default 50) |
+| before?<sup>2</sup> | snowflake | The cursor selecting entries older than this audit entry ID |
+| after?<sup>2</sup> | snowflake | The cursor selecting entries newer than this audit entry ID |
+| user_id?<sup>3</sup> | snowflake | The acting user ID the page is filtered by |
+| action_type?<sup>3</sup> | integer | The [audit action](#audit-actions) value the page is filtered by |
+
+<sup>1</sup> A negative value and a value above 100 are both rejected, and the accepted value `0` is processed as `1`
+
+<sup>2</sup> The two cursors are mutually exclusive, and supplying both returns 400 `INVALID_FORM_BODY` with [`CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER`](/http-api/errors/#validation-error-code-registry) against `before`
+
+<sup>3</sup> Supplying either filter disables message deletion consolidation for the request, so a page filtered by actor or action returns the unconsolidated entries
+
+The read is ordered from newest to oldest by entry ID. `before` selects entries below the cursor and `after` selects entries above it, both read in that same descending order. An `after` page therefore begins with the newest entry above the cursor.
+
+Consolidation breaks that ordering. A consolidated entry keeps the array position of the first entry of the run it replaces. Its ID is freshly minted and larger than every stored entry on the page, so a client that needs a strictly descending array sorts the page by ID itself.
+
+A page holds fewer entries than `limit` only when the guild has no further matching entries in that direction.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild audit log response](#guild-audit-log-response-object) object | Page was returned |
+| 400 | [error response](/http-api/#error-response) | Both cursors were supplied, or a filter value is invalid |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `VIEW_AUDIT_LOG` is absent |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for a guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features), or [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) without the instance staff flag, and `MISSING_PERMISSIONS` otherwise
+
+:::caution[An unfiltered read rewrites message deletion entries]
+A request supplying neither `user_id` nor `action_type` deletes every run of two or more consecutive [MESSAGE_DELETE](#audit-actions) entries sharing one actor and one channel, and writes one [MESSAGE_BULK_DELETE](#audit-actions) entry in its place.
+:::
+
+:::note[The same consolidation also runs in the background]
+Fluxer also applies it to the 250 most recent entries about 30 seconds after a message deletion entry is written.
+:::
+
+### Side effects
+
+Consolidation writes the replacement entry with a fresh snowflake, `options.count` set to the run length, and no reason. It emits one [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) Dispatch, which the Gateway delivers only to guild sessions holding `VIEW_AUDIT_LOG`. A read that finds no run writes nothing and emits no Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:audit_logs::guild_id` bucket.

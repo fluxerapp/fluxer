@@ -1,0 +1,237 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Upgrading
+description: Upgrading and rolling back an instance with the installer, what the backup covers, and how to restore it.
+---
+
+:::tip[Plutonium and donations fund Fluxer]
+We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
+:::
+
+An upgrade moves an instance to a newer release. `install.sh --update` does all of it: back up, download the new stack files, pull the new images, recreate the containers that changed. The stack files are the three compose files, the `Caddyfile` and `.env.example`. Allow about twenty minutes, most of it the backup and the pull.
+
+| Requirement | Value |
+| --- | --- |
+| Working directory | The one holding `.env`, `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` and `Caddyfile` |
+| Compose commands | Behind your own reverse proxy, set `COMPOSE_FILE` in `.env` once and every command picks up the overlay |
+| Free disk | Room for one database dump, one copy of the uploads, and the new images beside the old ones |
+| Downtime | A minute or two for the recreate, plus however long the uploads copy takes with the stack stopped |
+
+Read the release notes between the version you run and the one you are moving to, at [Releases](https://github.com/fluxerapp/fluxer/releases).
+
+## Match the images to the stack files
+
+The images come from `FLUXER_IMAGE_TAG` in `.env`. The stack files come from a git ref, which is a branch or a tag in the Fluxer repository. The installer derives that ref from the image tag: `main` when the tag is `v1` or `latest`, and the tag string itself for anything else. `--ref` overrides the derivation. `docker compose pull` never updates a stack file, and refreshing a stack file never moves an image.
+
+The repository holds no ref by the name of a pinned image tag. A release tags each image on its own, as `fluxer-api@2026.813.205040`, so pass `--ref` with that tag or with the commit it points at. Without that override the download fails with exit 4.
+
+## What the script does
+
+`--update` runs these steps in this order, and stops on the first one that fails:
+
+| Step | What it does |
+| --- | --- |
+| Record | Writes the image references, the image ID each container has, and the tag `.env` names, into a new record directory |
+| Save | Copies `.env` and the five stack files into that record |
+| Dump | Dumps the database with the stack still serving, and checks the custom-format header on the result |
+| Copy | Stops the stack, copies the uploads volume, and starts it again on the images it was already running |
+| Fetch | Downloads the stack files at the ref into a staging directory inside the working directory |
+| Guard | Refuses when the refreshed `docker-compose.yml` moves Postgres to a new major version |
+| Place | Moves every downloaded file into the working directory at once |
+| Pull | Pulls the images while the old containers still serve |
+| Recreate | Runs `docker compose up -d --remove-orphans`, then restarts `edge` when the `Caddyfile` changed |
+| Verify | Polls Compose state until every service is ready, then probes `/_health` on the hostname |
+
+A failed run leaves the instance running on the images it already had.
+
+`docker compose up -d` does not notice a changed `Caddyfile`. The script restarts `edge` by name to pick it up.
+
+The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade.
+
+The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data` and `edge-config`, so the old two are left unused and the edge requests its certificate again on the first start.
+
+`FLUXER_IMAGE_TAG` is the only line in `.env` that either upgrade mode writes. Every secret is left as it is.
+
+The refreshed `docker-compose.yml` requires `FLUXER_ERLANG_COOKIE`. An `.env` written by an earlier installer has no such line, so add `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` to it before you upgrade. The value is 64 hex characters, which is what a fresh install writes. Until `.env` sets it, every Compose command against the stack stops with `set FLUXER_ERLANG_COOKIE in .env`.
+
+## The script is the reference
+
+Every step above sits in the script beside a comment holding the command that does that step alone and the reason the step exists. Read [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1) for Windows.
+
+## Run the upgrade
+
+Keep the installer beside the stack files. [Get started](/operator/get-started/#step-4-bring-up-the-instance) has the download and the checksum check for a fresh copy.
+
+See the plan first:
+
+```bash
+cd ~/fluxer
+sh install.sh --update --dry-run
+```
+
+It prints the images the stack runs now, the backup it intends to take, which stack files the ref changes, which services that makes it restart, and any refusal that would stop the run. It writes nothing outside a temporary directory it removes on exit.
+
+Then run it:
+
+```bash
+sh install.sh --update
+```
+
+On Windows:
+
+```powershell
+.\install.ps1 -Update
+```
+
+The run ends by naming the record it wrote and the command that rolls back to it. It checks its own work with the readiness poll and one probe of `/_health`. Run the public probes in [Check that it works](/operator/get-started/#step-5-check-that-it-works) afterwards.
+
+| Flag | Windows | Meaning |
+| --- | --- | --- |
+| `--update` | `-Update` | Record, back up, refresh, pull, recreate, verify |
+| `--rollback` | `-Rollback` | Put back the images and stack files of the newest record |
+| `--dry-run` | `-DryRun` | Print the plan. Change nothing |
+| `--backup-dir <path>` | `-BackupDir` | Where records go. Default `<dir>/backups` |
+| `--no-volume-backup` | `-NoVolumeBackup` | Take the database dump and skip the uploads copy |
+| `--skip-backup-accept-data-loss` | `-SkipBackupAcceptDataLoss` | Upgrade with no backup at all |
+
+`--dir` and `--ref` mean what they mean on an install, and the installer derives an omitted `--ref` from the `FLUXER_IMAGE_TAG` line in `.env`. Every failure prints a sentence on standard error and exits non-zero, and the script header lists what each code means. A Postgres major version change is exit 3.
+
+## What the backup covers
+
+Each upgrade writes one record directory, named `record-` and a UTC stamp, under `backups` or wherever `--backup-dir` points. It holds:
+
+| Artifact | What it covers |
+| --- | --- |
+| `fluxer.dump` | Every account, message, guild and configuration row, in the Postgres custom format |
+| `seaweedfs-data.tgz` | Every upload, avatar, report and harvest |
+| `.env` | Every secret the instance was built with |
+
+The five stack files sit in the record beside those three, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
+
+The dump costs no downtime. The uploads copy stops the stack, and the script starts the stack again on the old images before it goes any further.
+
+Nothing else is copied. The dump covers `postgres-data`. The other five volumes either rebuild themselves or hold queued work, and [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists all seven with what each one holds.
+
+Put a dump on a timer as well. On Linux and macOS, this crontab line writes one a night and keeps two weeks of them:
+
+```cron
+15 3 * * * cd /srv/fluxer && docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > "backups/fluxer-$(date -u +\%Y\%m\%dT\%H\%M\%SZ).dump" && find backups -name 'fluxer-*.dump' -mtime +14 -delete
+```
+
+`/srv/fluxer` stands for the directory holding `.env`. Write it as an absolute path, because cron does not expand `~`. An unescaped `%` in a crontab is a newline, which is why every one of them has a backslash.
+
+## Roll back
+
+A rollback puts the previous release back:
+
+```bash
+cd ~/fluxer
+sh install.sh --rollback
+```
+
+On Windows it is `.\install.ps1 -Rollback`. It takes the newest record, puts back the images and the stack files it holds, recreates, restarts `edge`, and verifies. `--dry-run` prints that plan too.
+
+A rollback never pulls, so it needs the old images still on the host. Run [Reclaim disk](#reclaim-disk) once an upgrade satisfies you and not before.
+
+The database does not move. `api`, `worker`, `users-shard` and `messages-shard` apply schema work in place while they start, and an older image does not undo it. Across a release that changed the schema, the dump in the record is the only way back, and putting it back is a decision you make.
+
+## Restore a backup
+
+Both artifacts go back with the stack stopped, so nothing writes while they are replaced. Name your own record directory in place of the one below.
+
+The database restores from the custom-format dump:
+
+```bash
+docker compose stop
+docker compose up -d --wait postgres
+docker compose exec -T postgres pg_restore -U fluxer -d fluxer --clean --if-exists \
+  < backups/record-20260831T120000Z/fluxer.dump
+docker compose up -d
+```
+
+`--clean` prints notices about objects that do not exist yet, which is expected against a fresh directory.
+
+PowerShell has no `<` redirection. On Windows, copy the dump into the container and name it as a file:
+
+```powershell
+docker compose stop
+docker compose up -d --wait postgres
+docker compose cp backups\record-20260831T120000Z\fluxer.dump postgres:/tmp/fluxer.dump
+docker compose exec -T postgres pg_restore -U fluxer -d fluxer --clean --if-exists /tmp/fluxer.dump
+docker compose exec -T postgres rm /tmp/fluxer.dump
+docker compose up -d
+```
+
+The uploads restore through the same helper container the backup used, in reverse:
+
+```bash
+docker compose stop
+docker run --rm -v fluxer_seaweedfs-data:/data \
+  -v "$PWD/backups/record-20260831T120000Z:/backup" alpine:3.22 \
+  sh -c 'find /data -mindepth 1 -delete && tar xzf /backup/seaweedfs-data.tgz -C /data'
+docker compose up -d
+```
+
+`tar` extracts over whatever is already on the volume, so the `find` empties it first. In PowerShell write `${PWD}` in place of `$PWD`. Success is an existing attachment URL answering 200 again. The `fluxer_` prefix is the Compose project name, which `docker-compose.yml` sets to `fluxer`.
+
+## Move to a new Postgres major version
+
+`docker-compose.yml` pins `postgres:16-alpine`. A newer major does not read the data directory an older major wrote, so the data moves across through a dump. The upgrade refuses when the refreshed compose file changes that pin, because the move destroys the volume holding the database.
+
+Take the dump while the old major is still serving, then stop everything and drop the volume:
+
+```bash
+docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom \
+  > backups/pre-major.dump
+docker compose down
+docker volume rm fluxer_postgres-data
+```
+
+On Windows, take that dump the way [Restore a backup](#restore-a-backup) moves one, with `-f /tmp/pre-major.dump` and `docker compose cp`, and restore it the same way.
+
+Once that volume is removed, the dump is the only copy of the database.
+
+Put the new `postgres` tag in `docker-compose.yml`, start the database on its own, and restore into the empty directory:
+
+```bash
+docker compose up -d --wait postgres
+docker compose exec -T postgres pg_restore -U fluxer -d fluxer --clean --if-exists \
+  < backups/pre-major.dump
+docker compose up -d
+```
+
+Run `sh install.sh --update` afterwards to finish the move on the refreshed files.
+
+## Pin a release
+
+`FLUXER_IMAGE_TAG=v1` tracks the latest compatible release, so every upgrade can move the instance. Set it to a release tag to hold one version and upgrade on your own schedule.
+
+A pinned instance also pins its stack files. [Match the images to the stack files](#match-the-images-to-the-stack-files) has the `--ref` a pinned tag needs.
+
+The tag applies only to the eleven Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs`, and `livekit` are pinned inside `docker-compose.yml` and move only when an upgrade refreshes that file.
+
+## Change the domain or the passkey relying party
+
+`FLUXER_DOMAIN` supplies the default `FLUXER_PASSKEY_RP_ID`, which is the domain a passkey is tied to. A passkey works only under the identifier it was created with.
+
+:::danger[Changing either value invalidates every passkey]
+Passkeys registered under the old `FLUXER_PASSKEY_RP_ID` stop working and cannot be recovered. Every user has to register a new one, so keep another sign-in method working before you change it.
+:::
+
+Changing `FLUXER_DOMAIN` also changes the certificate the edge requests, the CORS origins the API accepts, and the admin OAuth redirect URI.
+
+## Reclaim disk
+
+Each upgrade leaves the previous images behind, which adds up to a few gigabytes over time:
+
+```bash
+docker image prune -f
+```
+
+On the default moving tag, the pull moves `v1` onto the new images and leaves the ones it replaced untagged, so this removes them. Those are the images a rollback on a moving tag needs, so prune only once the upgrade satisfies you. A pinned release keeps its own tag and survives the prune. Remove one of those by naming its tag in `docker image rm`.
+
+`docker system prune -a` reclaims more. It also deletes every image that no container references, including ones unrelated to Fluxer.
+
+:::danger[Never add -a to a volume prune]
+`docker volume prune -a` removes named volumes no container uses. After a `docker compose down` that is every volume the instance has, which is the whole instance.
+:::

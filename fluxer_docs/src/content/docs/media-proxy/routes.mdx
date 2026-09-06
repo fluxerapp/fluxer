@@ -1,0 +1,501 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Read and asset routes
+description: Every Media Proxy read path with its inputs, representations, and statuses.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A Media Proxy read route resolves one path to one file and returns it. These paths are unversioned and sit under the base URL published as `endpoints.media` by [instance discovery](/http-api/instance/#instance-endpoints-object). The [static object read](#get-static-object) uses `endpoints.static_cdn`.
+
+## Shared route contract
+
+Every route here accepts `GET` and `HEAD`, reads no `Authorization` header, and has no request-count rate limit. HEAD returns the GET status and representation headers with an empty body, including 206 and 416.
+
+[Selector parsing](/media-proxy/overview/#selector-parsing) defines query decoding. [Byte ranges](/media-proxy/overview/#byte-ranges) defines which ranges are recognised and which headers a 206 or 416 has.
+
+## Common responses
+
+Every media read route can produce these statuses in addition to the ones in its own table.
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 403 | `origin not in bunny allowlist` | The request address is not permitted by the instance media access policy |
+| 404 | `Not Found` | The path is not a media route or the object does not exist |
+| 405 | `Method Not Allowed` | The method is neither `GET` nor `HEAD` |
+| 413 | `Payload Too Large` | The stored object exceeds the 500 MiB media bound |
+| 502 | `Bad Gateway` | The object store could not be read |
+
+## Get attachment
+
+<RouteHeader method="GET" path="/attachments/{path}" unauthenticated />
+
+Returns the attachment identified by the path, optionally transformed. The path comes from the attachment URL the HTTP API returned.
+
+:::caution[An attachment URL is a bearer capability]
+The path has no signature and no expiry, so anyone holding the URL reads the object from any origin for as long as it exists. Leaving the guild does not revoke a URL a member already holds.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| path<sup>1</sup> | string | The attachment object path from a [message attachment object](/http-api/messages/#message-attachment-object) |
+
+<sup>1</sup> Fluxer issues `{channel_id}/{attachment_id}/{filename}`. After percent-decoding, the storage key must be non-empty, must not begin with `/`, and must not contain an empty, `.`, or `..` segment, or the route returns 400
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| width? | integer | The output width in pixels (1 through the [decoded edge bound](/media-proxy/transformations/#allowed-dimensions), any other value returns 400) |
+| height? | integer | The output height in pixels under the same rule |
+| format? | string | The output format under the [attachment and external format contract](/media-proxy/transformations/#attachment-and-external-formats) (any other value returns 400) |
+| quality? | string | The encoder profile under the [quality contract](/media-proxy/transformations/#quality) |
+| animated? | boolean | Whether animated output is requested |
+| effort?<sup>1</sup> | integer | The WebP encoder effort, clamped to 9 |
+| download? | boolean | Whether attachment disposition is requested |
+
+<sup>1</sup> Read only on this route, and an empty or unparsable value is ignored. Only lossless animated WebP output uses a value above 6
+
+A transformation begins when `width`, `height`, `format`, or `quality` is present, or when `animated` resolves to true. `download` and `effort` select none on their own.
+
+Without a transformation Fluxer streams the object from the store and forwards the range to it. With a transformation it reads the complete object into memory first, and the range then applies to the transformed bytes.
+
+An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only an `mp` endpoint rasterises it, always as lossless WebP. An `upload` endpoint returns the stored SVG bytes.
+
+A video source requires an explicit image `format`. Another transformation parameter without `format` returns 400. A source that is neither an image nor a video returns 400 when `format` is present. Without `format`, Fluxer returns it unchanged.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete media representation | The object and selected representation are available |
+| 206 | Selected media bytes | One range is satisfiable |
+| 400 | `Bad Request` | The decoded key, a dimension, the format, or the transformation request is invalid, or the transformation failed |
+| 404 | `Not Found` | The attachment object does not exist |
+| 416 | empty | The range is unsatisfiable |
+| 504 | `Gateway Timeout` | Transformation capacity was unavailable or the transformation exceeded its deadline |
+
+The [common responses](#common-responses) also apply.
+
+## Get signed external media
+
+<RouteHeader method="GET" path="/external/{signature}/{target}" />
+
+Returns external media through Fluxer, optionally transformed. Fluxer verifies the signature before it decodes or fetches the target.
+
+Fluxer constructs the signed path and exposes it on `proxy_url` of an [embed media object](/http-api/messages/#embed-media-object), `proxy_icon_url` of an [embed author object](/http-api/messages/#embed-author-object), `proxy_icon_url` of an [embed footer object](/http-api/messages/#embed-footer-object), `proxy_url` of a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object), and `proxy_src` of a [GIF media format object](/http-api/memes/#gif-media-format-object).
+
+A field holds a signed path only when its source URL is external. A URL already under the Media Proxy endpoint, and any URL the deployment cannot sign, is returned verbatim, so a client MUST request the value exactly as issued and MUST NOT assume it has the signed shape.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| signature | string | The unpadded base64url HMAC-SHA256 of the target component under the deployment secret |
+| target<sup>1</sup> | string | The encoded target component, which can contain `/` separators |
+
+<sup>1</sup> The opaque form is `v2/` followed by the unpadded base64url of the complete URL. The segmented form joins an optional percent-encoded `?query` segment, the scheme, the host and port, and the percent-encoded path segments with `/`
+
+A client MUST preserve both components exactly as issued and MUST NOT decode or reconstruct either one. The signature covers the target component alone, so adding or changing a query parameter does not invalidate it. A path with no `/` after `/external/` returns 400.
+
+:::caution[The signed path is the only authorisation]
+Anyone holding a signed path fetches that external target through Fluxer for as long as the deployment secret is unchanged. The path has no expiry, user binding, or individual revocation.
+:::
+
+### Target validation
+
+Fluxer validates the decoded target before every request and again for every redirect hop. It must be at most 8,192 bytes, must use `http` or `https`, must have a non-zero port when it names one, and must not contain credentials or a control character. A fragment is dropped before the fetch.
+
+The target must resolve to a public address. A hostname must be at most 253 bytes and must contain at least one dot. Its labels use only ASCII letters, digits, and `-`, run to at most 63 bytes, and begin and end alphanumerically. The final label is not digits only. Fluxer rejects a literal address in an unspecified, loopback, private, link-local, carrier-grade NAT, benchmarking, documentation, 6to4 relay, multicast, reserved, broadcast, unique-local, IPv4-mapped, 6to4, or NAT64-embedded range. Fluxer validates every address DNS returns the same way before it opens the connection.
+
+A hostname whose lookup fails or resolves to no address returns 400.
+
+The route follows at most five redirects. A further redirect, a repeated URL, or a redirect without a `Location` header returns 502. A redirect to a rejected target returns 400.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| width? | integer | The output width in pixels (1 through the [decoded edge bound](/media-proxy/transformations/#allowed-dimensions), any other value returns 400) |
+| height? | integer | The output height in pixels under the same rule |
+| format? | string | The output format under the [attachment and external format contract](/media-proxy/transformations/#attachment-and-external-formats) (any other value returns 400) |
+| quality? | string | The encoder profile under the [quality contract](/media-proxy/transformations/#quality) |
+| animated? | boolean | Whether animated output is requested |
+| download? | boolean | Whether attachment disposition is requested |
+
+`effort` is read only on [Get attachment](#get-attachment) and is ignored here.
+
+A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so it still selects 206 or 416.
+
+A non-transforming request forwards the client range to the origin under the filter [byte ranges](/media-proxy/overview/#byte-ranges) defines, and relays an origin 206 with its `Content-Range` and `Content-Length` unchanged. An origin that ignores the range answers 200, and Fluxer streams that whole body through when the origin names an `image/`, `video/`, or `audio/` media type other than `image/svg+xml`. Fluxer buffers a transforming request, an SVG body, and any body whose declared media type is empty, `application/octet-stream`, or outside those three categories. A buffered response has the range applied to the bytes the route finally serves, so a client range over a buffered origin 200 produces 206.
+
+Buffering reserves the whole body from a process-wide external buffer budget of 500 MiB for each configured transform slot and queue slot, plus 512 KiB. A reservation the budget cannot cover returns 503.
+
+Fluxer answers a `HEAD` with no transformation and no range from an origin `HEAD` when that origin returns 200, declares a `Content-Length` of at most 500 MiB, and names a non-SVG media type. Any other `HEAD` runs the `GET` path and returns its headers with an empty body.
+
+A video target requires an explicit image `format` to produce a thumbnail. Without one, Fluxer returns the original bytes unchanged, and it does the same for a target that is neither an image nor a video.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete external representation | The validated origin returned a complete representation |
+| 206<sup>1</sup> | Selected external bytes | The origin answered a forwarded range, or a range over buffered or transformed bytes is satisfiable |
+| 400 | `Bad Request` | The path shape, decoded URL, redirect target, transformation request, or transformation is invalid or prohibited |
+| 401 | `Unauthorized` | The path signature is invalid |
+| 413 | `Payload Too Large` | The origin declared or delivered more than 500 MiB |
+| 416 | empty | A local range is unsatisfiable |
+| 502 | `Bad Gateway` | The origin could not be reached, exceeded the redirect bound, or returned a status outside the retained set |
+| 503 | `Service Unavailable` | The external buffer budget cannot cover the body, or the buffer allocation failed |
+| 504 | `Gateway Timeout` | Transformation capacity was unavailable or the transformation exceeded its deadline |
+
+<sup>1</sup> A forwarded range relays the origin `Content-Range` and `Content-Length` unchanged and omits either header the origin did not send, so a chunked origin 206 produces a 206 with no `Content-Length`. A local range over buffered or transformed bytes always has both
+
+An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged, with the body `Upstream fetch failed`. The origin body and headers are not returned. Any other unsuccessful origin status becomes 502. The [common responses](#common-responses) also apply.
+
+### Side effects
+
+The route requests the target from the validated third-party origin using the user agent `Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)`, which is visible to that origin.
+
+## Get theme CSS
+
+<RouteHeader method="GET" path="/themes/{path}" unauthenticated />
+
+Returns a theme stylesheet with the fixed media type `text/css; charset=utf-8`. The [themes resource](/http-api/themes/) writes the object to `themes/{theme_id}.css`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| path<sup>1</sup> | string | The path below `/themes/`, whose raw route path must end in the exact lowercase suffix `.css` |
+
+<sup>1</sup> After percent-decoding, the storage key must be non-empty, must not begin with `/`, and must not contain an empty, `.`, or `..` segment, or the route returns 400
+
+The route selects no representation and accepts a `Range`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete CSS representation | The theme object is available |
+| 206 | Selected CSS bytes | One range is satisfiable |
+| 400 | `Bad Request` | The decoded theme key is invalid |
+| 416 | empty | The range is unsatisfiable |
+
+The [common responses](#common-responses) also apply. A path that does not end in `.css` is not a theme path and falls through to 404.
+
+## Get entrance sound
+
+<RouteHeader method="GET" path="/entrance-sounds/{user_id}/{filename}" unauthenticated />
+
+Returns the stored audio of a user entrance sound. The [entrance sounds resource](/http-api/entrance-sounds/) writes the object to `entrance-sounds/{user_id}/{hash}.{ext}`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id<sup>1</sup> | string | The owning user [snowflake](/snowflakes/) |
+| filename<sup>2</sup> | string | `{hash}.{ext}` for the stored sound |
+
+<sup>1</sup> A non-empty run of ASCII digits. Any other value makes the path unroutable and returns 404
+
+<sup>2</sup> The hash is non-empty and ASCII alphanumeric, and Fluxer issues the first 16 hexadecimal characters of the MD5 digest of the audio. The extension is the exact lowercase `mp3`, `ogg`, `m4a`, or `wav`
+
+The route selects no representation, accepts a `Range`, and sends no `Content-Disposition`. A successful response streams the stored bytes with the detected audio media type and the one-year `no-transform` cache policy.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete audio representation | The sound object is available |
+| 206 | Selected audio bytes | One range is satisfiable |
+| 416 | empty | The range is unsatisfiable |
+
+The [common responses](#common-responses) also apply.
+
+## Image asset contract
+
+An image asset is a stored picture Fluxer serves at a requested size and format, such as an avatar, a guild icon, or an emoji. A resource object exposes the asset hash, and the path combines the owning resource, that hash, and a file extension. An emoji or sticker path has its own identifier as the filename. The grammar, query parameters, and responses below govern every image asset route. [Asset size selection](/media-proxy/transformations/#asset-size-selection) defines every size class.
+
+A client builds the complete URL from the Media Proxy [base URL](/media-proxy/overview/#base-urls), the path template for the asset class, the hash, and a file extension.
+
+:::note[Some resources publish their URL in the response]
+An attachment has its own `url` and `proxy_url`, a signed external media path has its own signature, and endpoint discovery publishes the instance branding images as complete URLs.
+:::
+
+Fluxer matches an asset path by its shape alone. A path with the wrong number of segments, an empty owner segment, or a filename without exactly one dot is not an asset path and returns 404. A hash containing anything but ASCII letters, digits, and `_` returns 404 as well, as does an extension outside the known image set. The known set is `png`, `jpg`, `jpeg`, `webp`, `gif`, `apng`, `avif`, `heic`, `heif`, `jxl`, and `svg`, matched case-insensitively.
+
+Fluxer issues an eight-character lowercase hexadecimal hash, taken from the MD5 digest of the submitted image before metadata stripping. An owner segment is any non-empty segment, and Fluxer never checks it against a snowflake.
+
+The storage key drops an `a_` prefix from the hash, except on an emoji or sticker path, whose key keeps the filename stem exactly as given. A path whose key is missing is also tried under the canonical name of its extension, so both `.jpg` and `.JPG` resolve an object stored as `.jpeg`.
+
+An owner segment of the literal `.` or `..` parses as an asset path but produces an unsafe storage key and returns 400. So does a hash of the literal `a_` on a path that strips the prefix.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| size?<sup>1</sup> | integer | The requested square edge in pixels, snapped to the [size ladder](/media-proxy/transformations/#allowed-dimensions) and clamped to the asset class |
+| format?<sup>2</sup> | string | The requested output format, also accepted under the name `fmt` |
+| quality? | string | The encoder profile under the [quality contract](/media-proxy/transformations/#quality), defaulting to `high` |
+| animated?<sup>3</sup> | boolean | Whether animated output is requested |
+| download? | boolean | Whether attachment disposition is requested |
+
+<sup>1</sup> An absent or unparsable value selects 128 before clamping. No value is rejected
+
+<sup>2</sup> Accepts case-insensitive `auto`, `png`, `jpg`, `jpeg`, `webp`, `gif`, `apng`, and `avif`, where `auto` keeps path-based selection and `avif` selects WebP. Any other value falls back to path-based selection, and a sticker path always selects WebP and ignores the field
+
+<sup>3</sup> An absent value keeps the hash-derived default, which is animated only for an `a_` hash. PNG and JPEG output has no animation
+
+`width`, `height`, and `effort` are not read on an asset path, and no asset query value produces a 400. The route accepts a `Range` over the selected representation.
+
+<a id="image-asset-response"></a>
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete asset representation | The original or transformed asset is available |
+| 206 | Selected asset bytes | One range is satisfiable |
+| 400 | `Bad Request` | An owner segment of `.` or `..`, or a hash of `a_` on a prefix-stripping path, makes the storage key unsafe |
+| 404 | `Not Found` | The path is not a valid asset path or the asset does not exist |
+| 416 | empty | The range is unsatisfiable |
+| 500<sup>1</sup> | `Transcode Failed` | A required transcode failed and the source is not directly displayable |
+| 504 | `Gateway Timeout` | Transformation capacity was unavailable or the transformation exceeded its deadline |
+
+<sup>1</sup> A failed transcode whose stored media type begins with `image/` and is not `image/avif`, `image/heic`, `image/heif`, or SVG instead returns 200 with the original stored bytes and media type but without `Content-Disposition`
+
+The [common responses](#common-responses) also apply. [Transformations](/media-proxy/transformations/) defines geometry, animation, output formats, and original representation selection.
+
+## Get user avatar
+
+<RouteHeader method="GET" path="/avatars/{user_id}/{hash}.{ext}" unauthenticated />
+
+Returns the user avatar under the icon size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | string | The owning user [snowflake](/snowflakes/) paired with the avatar hash |
+| hash | string | The avatar hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get guild icon
+
+<RouteHeader method="GET" path="/icons/{guild_id}/{hash}.{ext}" unauthenticated />
+
+Returns the guild icon under the icon size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | string | The owning guild [snowflake](/snowflakes/) paired with the icon hash |
+| hash | string | The icon hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get instance branding
+
+<RouteHeader method="GET" path="/branding/{entity_id}/{hash}.{ext}" unauthenticated />
+
+Returns the instance branding image written by [Create branding asset](/admin-api/instance/#create-branding-asset), under the icon size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| entity_id | string | The instance branding entity key supplied by the branding URL |
+| hash | string | The branding hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get owner banner
+
+<RouteHeader method="GET" path="/banners/{owner_id}/{hash}.{ext}" unauthenticated />
+
+Returns the owner banner under the banner size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| owner_id | string | The owning user or guild [snowflake](/snowflakes/) paired with the banner hash |
+| hash | string | The banner hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get guild splash
+
+<RouteHeader method="GET" path="/splashes/{guild_id}/{hash}.{ext}" unauthenticated />
+
+Returns the guild splash under the banner size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | string | The owning guild [snowflake](/snowflakes/) paired with the splash hash |
+| hash | string | The splash hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get guild embed splash
+
+<RouteHeader method="GET" path="/embed-splashes/{guild_id}/{hash}.{ext}" unauthenticated />
+
+Returns the guild embed splash under the banner size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | string | The owning guild [snowflake](/snowflakes/) paired with the embed splash hash |
+| hash | string | The embed splash hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get guild member avatar
+
+<RouteHeader method="GET" path="/guilds/{guild_id}/users/{user_id}/avatars/{hash}.{ext}" unauthenticated />
+
+Returns the guild member avatar under the icon size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | string | The guild [snowflake](/snowflakes/) owning the member asset |
+| user_id | string | The member user [snowflake](/snowflakes/) paired with the member avatar hash |
+| hash | string | The member avatar hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get guild member banner
+
+<RouteHeader method="GET" path="/guilds/{guild_id}/users/{user_id}/banners/{hash}.{ext}" unauthenticated />
+
+Returns the guild member banner under the banner size class.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | string | The guild [snowflake](/snowflakes/) owning the member asset |
+| user_id | string | The member user [snowflake](/snowflakes/) paired with the member banner hash |
+| hash | string | The member banner hash, optionally prefixed with `a_` to default to animated output |
+| ext | string | The path extension, which selects the output format |
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get emoji image
+
+<RouteHeader method="GET" path="/emojis/{emoji_id}.{ext}" unauthenticated />
+
+Returns the emoji image under the emoji size class with a square cover crop.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id<sup>1</sup> | string | The emoji [snowflake](/snowflakes/), which is also the storage key |
+| ext<sup>2</sup> | string | The path extension, which selects the output format |
+
+<sup>1</sup> Any non-empty run of ASCII letters, digits, and `_`. Fluxer clients request `{emoji_id}.webp`
+
+<sup>2</sup> An extension whose encoder is not enabled for output selects WebP instead
+
+Fluxer issues emoji paths without an `a_` prefix, so an emoji request defaults to static output and needs `animated=true` for animation. The parser still reads a leading `a_` as an animation request and keeps the stem verbatim in the storage key, so `/emojis/a_123.webp` names a different object than `/emojis/123.webp`.
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get sticker image
+
+<RouteHeader method="GET" path="/stickers/{sticker_id}.{ext}" unauthenticated />
+
+Returns the sticker image under the sticker size class with a square cover crop. Output is always WebP, except that an animated GIF source stays GIF when `animated` resolves to true.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sticker_id<sup>1</sup> | string | The sticker [snowflake](/snowflakes/), which is also the storage key |
+| ext | string | The path extension, used only as the source hint |
+
+<sup>1</sup> Any non-empty run of ASCII letters, digits, and `_`. Fluxer clients request `{sticker_id}.webp`
+
+Fluxer issues sticker paths without an `a_` prefix, so a sticker request defaults to static output and needs `animated=true` for animation. The parser still reads a leading `a_` as an animation request and keeps the stem verbatim in the storage key.
+
+### Response
+
+The operation uses the shared [image asset response](#image-asset-response).
+
+## Get static object
+
+<RouteHeader method="GET" path="/{key}" unauthenticated />
+
+Returns a raw object from the static bucket. The route exists only on the `static` deployment mode, published as `endpoints.static_cdn` by [instance discovery](/http-api/instance/#instance-endpoints-object). It serves default avatars, client bundles, and other published files.
+
+The complete request path is the storage key after percent-decoding. The route applies no transformation and reads no query parameter. The response uses the detected media type and the one-year cache policy, and a `static` endpoint omits `X-Robots-Tag`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| key<sup>1</sup> | string | The object key in the static bucket, taken from the complete request path |
+
+<sup>1</sup> After percent-decoding, the key must be non-empty, must not begin with `/`, and must not contain an empty, `.`, or `..` segment, or the route returns 400
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete object | The object is available |
+| 206 | Selected bytes | One range is satisfiable |
+| 400 | `Bad Request` | The decoded key is invalid |
+| 416 | empty | The range is unsatisfiable |
+
+The [common responses](#common-responses) also apply.
+
+## Operator and internal endpoints
+
+These paths are not part of the public API surface. They are exempt from the media access allowlist and are not published by instance discovery. A client MUST NOT depend on them.
+
+| Path | Method | Description |
+| --- | --- | --- |
+| `/_health` | GET | Returns 200 with the body `OK` |
+| `/_metrics` | GET | Returns the Prometheus text exposition of the process. A request from a non-loopback address returns 403 with the body `FORBIDDEN` |
+| `/_metadata` | POST | Extracts media metadata, a placeholder, and an optional NSFW verdict for the HTTP API |
+| `/_thumbnail` | POST | Produces a WebP thumbnail of a staged upload for the HTTP API |
+| `/_frames` | POST | Extracts one JPEG video frame for the HTTP API |
+
+`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 with the body `Unauthorized` without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413 with the body `Payload Too Large` on all three.

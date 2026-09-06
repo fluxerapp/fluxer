@@ -1,0 +1,288 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guild channels
+description: Guild channel types, creation, and bulk hierarchy repositioning.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A guild channel is one of the rooms a guild is divided into, including the categories that group them. The operations here list, create, and reorder a guild's channels, and the [Channels resource](/http-api/channels/) defines the channel object and every per-channel operation.
+
+## Access rules
+
+A caller who is not a member of an existing guild receives 403 `MISSING_PERMISSIONS`. Every operation here returns 404 `UNKNOWN_GUILD` for a guild that does not exist.
+
+A request whose path names a guild that has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) is refused with 403 `MISSING_ACCESS` before the operation runs.
+
+## Guild channel types
+
+These are the [channel types](/http-api/channels/#channel-types) that can exist inside a guild, and exactly the values [Create guild channel](#create-guild-channel) accepts in `type`.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | GUILD_TEXT | Text channel that has messages and slowmode |
+| 2 | GUILD_VOICE | Voice channel that has messages, voice sessions, and Go Live streams |
+| 4 | GUILD_CATEGORY | Category that groups other guild channels and supplies inherited permission overwrites |
+| 998 | GUILD_LINK | Channel whose only content is an external destination URL |
+
+## Create permission overwrite object
+
+The initial overwrite collection supplied when a channel is created. The stored form returned afterwards is the [permission overwrite object](/http-api/channels/#permission-overwrite-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the role or member the overwrite targets |
+| type<sup>1</sup> | integer | [Permission overwrite type](/http-api/channels/#permission-overwrite-types) |
+| allow?<sup>2</sup> | decimal string | The [permission](/http-api/permissions/) bits the overwrite grants (default 0) |
+| deny?<sup>2</sup> | decimal string | The [permission](/http-api/permissions/) bits the overwrite removes (default 0) |
+
+<sup>1</sup> Required. `0` names a role and `1` names a member, and no other value is accepted
+
+<sup>2</sup> A decimal string of at most 9223372036854775807, or a JSON integer of at most 9007199254740991. Null is rejected
+
+A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_OUT_OF_INT64_RANGE`. A JSON number outside the safe integer range returns `INVALID_INTEGER_FORMAT`, and so does a string that is not all digits.
+
+An undefined bit never fails the authority comparison described by [Create guild channel](#create-guild-channel). It is stored as supplied and echoed back by every later read of the channel.
+
+A denied bit is never compared against the caller's own permissions. A bit set in both masks resolves to an allow during [permission computation](/http-api/permissions/#permission-computation).
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "type": 0,
+  "allow": "1024",
+  "deny": "2048"
+}
+```
+
+## Channel position object
+
+One entry of the bulk hierarchy update. Entries are applied in array order, each against the result of the previous one.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the channel to move |
+| position?<sup>1</sup> | integer | Index among the destination siblings (minimum 0) |
+| parent_id?<sup>2</sup> | ?snowflake | New parent category, or null to move the channel to the guild root |
+| preceding_sibling_id?<sup>3</sup> | ?snowflake | Sibling that sits directly before this channel, or null to place it first |
+| lock_permissions?<sup>4</sup> | boolean | Whether to copy the destination category's overwrites onto the moved channel (default false) |
+
+<sup>1</sup> Read only when `preceding_sibling_id` is omitted. Sending `preceding_sibling_id` at all, including as null, makes it inert
+
+<sup>2</sup> An omitted field keeps the channel's current parent. A category given any parent is refused with `CATEGORIES_CANNOT_HAVE_PARENTS`
+
+<sup>3</sup> A preceding sibling must share the destination parent, so a category is valid here only when the moved channel's destination is the guild root
+
+<sup>4</sup> The copy runs only when the same entry also moves the channel into a category, and it replaces the moved channel's overwrites
+
+A supplied `position` is clamped to the number of destination siblings and converted into the preceding sibling at that index. An entry that omits both `position` and `preceding_sibling_id` appends a voice channel to the end of its destination siblings, and inserts any other channel directly before the first voice sibling.
+
+Naming a category as the preceding sibling places the moved channel after that category and after every channel already inside it.
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "parent_id": "1501314428688998100",
+  "preceding_sibling_id": null,
+  "lock_permissions": true
+}
+```
+
+## List guild channels
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/channels" bot />
+
+Returns every [channel object](/http-api/channels/#channel-object) in the guild that the authenticated member can see. Membership is the only requirement.
+
+Fluxer evaluates [channel visibility](/http-api/permissions/#permission-computation) per channel. A channel is included when the member holds [VIEW_CHANNEL](/http-api/permissions/) in it, or when the member currently holds temporary access to it through a voice transition. A category is included when at least one child grants the member `VIEW_CHANNEL`. A member with no visible channel receives an empty array.
+
+:::note[Every visible channel arrives in one body]
+The route accepts no limit and no cursor. Each entry is a complete channel object whose `permission_overwrites` array is always present and always complete.
+:::
+
+A guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), which defaults to 500.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[channel](/http-api/channels/#channel-object) object] | Visible channels were returned |
+| 403 | [error response](/http-api/#error-response) | Caller is not a member of the guild, returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user and guild ID, on the `guild:channels:list::guild_id` bucket.
+
+## Create guild channel
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/channels" bot auditReason mfa />
+
+Creates a guild channel and returns its [channel object](/http-api/channels/#channel-object) with status 200. Requires [MANAGE_CHANNELS](/http-api/permissions/) at guild level. Emits a [Channel Create](/gateway/events/#channel-create) Gateway event.
+
+### Limitations
+
+- Supplying `permission_overwrites` additionally requires [MANAGE_ROLES](/http-api/permissions/) at guild level.
+
+`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+`type` is required and decides which kind of channel is created. Every type accepts the same field set, so a field that has no meaning for the selected type is accepted and then ignored.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | integer | [Guild channel type](#guild-channel-types) |
+| name<sup>1</sup><sup>2</sup> | string | Channel name (1-100 characters after normalisation) |
+| topic? | ?string | Channel topic (1-1024 characters) |
+| url?<sup>3</sup> | ?string | Destination URL for a link channel |
+| parent_id?<sup>4</sup> | ?snowflake | Parent category |
+| bitrate?<sup>5</sup> | ?integer | Voice channel bitrate in bits per second (8000-320000, default 64000) |
+| user_limit?<sup>5</sup><sup>6</sup> | ?integer | Voice channel occupancy limit (0-99, default 0) |
+| voice_connection_limit?<sup>5</sup> | ?integer | Simultaneous voice connections permitted for one user in a voice channel (1-100, default 5) |
+| rate_limit_per_user? | ?integer | Slowmode interval in seconds (0-21600, default 0) |
+| permission_overwrites?<sup>7</sup> | array[[create permission overwrite](#create-permission-overwrite-object) object] | Complete initial overwrite collection |
+| nsfw?<sup>8</sup> | boolean | Legacy age restriction for this channel (default false) |
+| nsfw_override?<sup>8</sup> | ?boolean | Explicit age restriction, or null to inherit from the parent category and then the guild |
+| content_warning_level?<sup>9</sup> | integer | [Content warning level](/http-api/channels/#content-warning-levels) (default 0) |
+| content_warning_text?<sup>10</sup> | ?string | Content warning text (max 200 characters), or null to inherit |
+
+<sup>1</sup> Normalisation strips control, join, bidirectional, and tag code points, collapses whitespace runs to one space, and trims. An empty result is rejected with `NAME_EMPTY_AFTER_NORMALIZATION`
+
+<sup>2</sup> A text channel name is additionally lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
+
+<sup>3</sup> An `http` or `https` URL of at most 2048 characters with a host and no embedded credentials. It is stored for every channel type
+
+<sup>4</sup> Names a category in the same guild. A category cannot be given a parent
+
+<sup>5</sup> Stored only for the voice variant, where the stated default applies when the field is omitted or null, and discarded for every other type
+
+<sup>6</sup> The value `0` means no occupancy limit
+
+<sup>7</sup> When omitted, a new channel with a parent category copies that category's current overwrites. A present field replaces that inheritance completely, including with an empty array. Null is rejected
+
+<sup>8</sup> `nsfw_override` takes precedence, and `nsfw` supplies the value only when `nsfw_override` is absent. Omitting both stores an explicit `false`, and only a null `nsfw_override` inherits
+
+<sup>9</sup> The value `1` enables the warning on this channel. Every other accepted value stores `0` and inherits from the parent category and then the guild
+
+<sup>10</sup> The value is trimmed, and an empty result is stored as null
+
+A value longer than 10000 characters is rejected with `STRING_LENGTH_INVALID` before normalisation runs. A parent that does not exist in this guild returns `INVALID_PARENT_CHANNEL`, and one that is not a category returns `PARENT_MUST_BE_CATEGORY`.
+
+A parent category holds at most the instance-configured `max_channels_per_category` [limit](/http-api/instance/#limit-keys), defaulting to 50, and the guild holds at most `max_guild_channels`, defaulting to 500. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each message has the resolved limit. The new channel is created with no RTC region.
+
+The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text or link sibling when the category holds no voice channel. A text or link channel is placed after the last text or link sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered, so two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
+
+:::caution[Overwrites are checked against the parent category]
+Fluxer compares the allowed bits of every supplied overwrite against the caller's effective permissions in the parent category, or in the guild when no parent is supplied. A bit the caller does not hold there fails the entire request with 403 `MISSING_PERMISSIONS`.
+:::
+
+Only the allowed mask is compared, so a supplied deny is stored without any authority check. A caller holding `ADMINISTRATOR` in that context holds every bit, and every requested bit passes.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel](/http-api/channels/#channel-object) object | Channel was created |
+| 400<sup>1</sup><sup>2</sup> | [error response](/http-api/#error-response) | Body, type, name, parent, URL, voice setting, or content warning text is invalid, a channel limit is reached, or the caller has no enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `MANAGE_CHANNELS`, is not a member of the guild, supplied overwrites without `MANAGE_ROLES`, or allowed a permission they do not hold in the parent context, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+
+<sup>1</sup> A schema or parent failure returns `INVALID_FORM_BODY` and names the field with `CATEGORIES_CANNOT_HAVE_PARENTS`, `INVALID_PARENT_CHANNEL`, or `PARENT_MUST_BE_CATEGORY`. A capacity failure returns the top-level `MAX_GUILD_CHANNELS` or `MAX_CATEGORY_CHANNELS`
+
+<sup>2</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after `MANAGE_CHANNELS` has been confirmed, so a caller without the permission receives 403 instead
+
+### Side effects
+
+The operation consumes one guild channel slot and, when a parent is supplied, one slot in that category. It creates a [`CHANNEL_CREATE`](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason, plus one [`CHANNEL_OVERWRITE_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry for every stored overwrite, whether that overwrite was supplied or inherited.
+
+It emits [Channel Create](/gateway/events/#channel-create) with the complete channel object only to sessions that can view the new channel. Reaching either channel limit fails the request without consuming a slot.
+
+### Rate limit
+
+10 requests per minute for each authenticated user and guild ID, on the `guild:channel:create::guild_id` bucket.
+
+## Modify guild channel positions
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/channels" bot mfa />
+
+Applies a guild channel hierarchy update and returns 204 with an empty body. Requires [MANAGE_CHANNELS](/http-api/permissions/) at guild level. Emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Gateway event for each entry that changes the order.
+
+### Limitations
+
+- Setting `lock_permissions` on an entry that changes the parent additionally requires [MANAGE_ROLES](/http-api/permissions/) in the moved channel.
+- The operation records no guild audit log entry, so an `X-Audit-Log-Reason` header has no effect.
+
+`MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+
+The request takes a guild-wide lock for its duration. A request that arrives while another hierarchy update owns the guild is rejected with 423 [`GENERAL_ERROR`](/http-api/errors/) and a `Retry-After` header of two seconds. The lock expires on its own after 30 seconds.
+
+Fluxer resolves every channel, parent, and sibling named by any entry once before the first entry runs, so a request naming an unknown identifier anywhere applies nothing. After that check, each entry is committed as it is applied. A request that fails partway leaves the entries it already applied in place. Moving a category moves the channels inside it as one block, and that block is excluded from the sibling list an entry indexes into.
+
+Each entry flattens the complete guild hierarchy so that each root channel appears in position order, each category is immediately followed by its children, and each category's children put text and link channels before voice channels. Fluxer lifts the moved channel out of that list, together with its children when it is a category, and reinserts it at its destination. It then renumbers the result densely from 1 through the channel count.
+
+:::note[Renumbering can rewrite a channel no entry named]
+An entry that changes the flattened order renumbers the guild's complete hierarchy, so a channel the request never mentioned can end up at a new position. An entry whose flattened result matches the list it started from writes nothing.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+The top-level body is an array of [channel position objects](#channel-position-object) of any length, including zero. Every channel, parent, and sibling an entry names must exist in this guild. A category cannot be given a parent, and a parent that is not a category is refused. A channel cannot be positioned relative to itself or to one of its own children. Moving a channel into a full category is refused with 400 `MAX_CATEGORY_CHANNELS`.
+
+:::caution[Inside a category, voice channels come last]
+Fluxer checks each entry's planned result before committing it. It refuses the request with `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS` when a voice channel would come to rest directly above a text or link sibling, or the reverse.
+:::
+
+The check inspects the moved channel alone, and only inside its current parent and its destination parent, so no other category can fail an entry. Channels at the guild root are exempt. Every applied entry still orders each category's children with text and link channels first, and a category that already violated the rule is rewritten into that order by the same renumbering.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Channel hierarchy was applied |
+| 400<sup>1</sup><sup>2</sup> | [error response](/http-api/#error-response) | An entry is structurally invalid, the destination category is full, or the caller has no enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `MANAGE_CHANNELS`, is not a member of the guild, or set `lock_permissions` without sufficient authority in the moved channel, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
+| 423 | [error response](/http-api/#error-response) | Another hierarchy update currently owns this guild, returning `GENERAL_ERROR` |
+
+<sup>1</sup> A structural failure returns `INVALID_FORM_BODY` and names the field with `CHANNEL_NOT_FOUND`, `INVALID_CHANNEL_ID`, `INVALID_PARENT_CHANNEL`, `PARENT_MUST_BE_CATEGORY`, `CATEGORIES_CANNOT_HAVE_PARENTS`, `PRECEDING_CHANNEL_MUST_SHARE_PARENT`, `CANNOT_POSITION_CHANNEL_RELATIVE_TO_ITSELF`, or `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`. A full destination category returns the top-level `MAX_CATEGORY_CHANNELS`
+
+<sup>2</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after `MANAGE_CHANNELS` has been confirmed, so a caller without the permission receives 403 instead
+
+### Side effects
+
+The operation changes the position and parent of each affected channel, and every entry that changes the flattened order renumbers the guild's complete hierarchy densely from 1. It emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) per applied entry with the resulting hierarchy filtered to what each recipient can view. It sends nothing for an entry that leaves the order unchanged, and nothing to a recipient whose filtered list is empty.
+
+An entry with `lock_permissions` that changes the parent rewrites the moved channel's overwrites from the destination category after that entry's reorder has already been dispatched. The rewrite has no Gateway Dispatch and no audit entry, so a client must re-read the channel to observe the copied overwrites.
+
+The rewrite requires more than [MANAGE_ROLES](/http-api/permissions/) in the moved channel. In that channel, the caller must also hold each deny bit the copy would remove and each allow bit it would add. Any bit the caller does not hold returns 403 `MISSING_PERMISSIONS` after the reorder has already been committed.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user and guild ID, on the `guild:channel:positions::guild_id` bucket.

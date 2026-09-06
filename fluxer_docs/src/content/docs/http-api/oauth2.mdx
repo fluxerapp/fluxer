@@ -1,0 +1,775 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: OAuth2
+description: OAuth2 authorisation, token, identity, introspection, and revocation operations.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+OAuth2 is how a user grants an application access to their account. The same consent step can install the application's bot into a guild or group direct message. Application records, client secrets, and bot credentials belong to the [Applications resource](/http-api/applications/).
+
+## Authorisation code grant
+
+The grant begins at [Authorise application](#authorise-application). That route redirects the browser to the Fluxer consent interface, unless the caller asked for a silent authorisation. [Grant OAuth2 consent](#grant-oauth2-consent) records the decision, issues one authorisation code, and returns the callback URL that has it. The client presents that code to [Exchange OAuth2 token](#exchange-oauth2-token) with its client credentials and receives an access and refresh token pair.
+
+Proof Key for Code Exchange, or PKCE, supports the `S256` and `plain` challenge methods, and Fluxer binds the challenge to the code when it issues the code. A `code_challenge` supplied without a `code_challenge_method` is treated as `plain`. An exchange for a code that has a challenge supplies a matching `code_verifier`, and an exchange for a code that has none ignores any verifier it is given.
+
+## Credentials and lifetimes
+
+Fluxer generates an authorisation code, a client secret, an access token, and a refresh token as 32 random bytes encoded as base64url, and a bot token is the application ID, a full stop, then such a secret. Retrying an interrupted exchange with the same inputs is rejected as an invalid grant, and the client restarts the grant.
+
+An authorisation code expires 10 minutes after it is issued, an access token after 7 days, and a refresh token after 30 days. Every refresh exchange issues a replacement with a new 30 day life, so a grant ends 30 days after its last refresh.
+
+## Route authentication
+
+Every route with a delegated identity is user-only unless the operation says otherwise. Fluxer rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`, and accepts an account with an outstanding required action. The token, introspection, and revocation routes authenticate the client application instead, so their [rate limit](/topics/rate-limits/) is keyed by client IP address.
+
+## OAuth2 string normalisation
+
+Fluxer trims every bounded OAuth2 string field before it checks its length. Each such field accepts 1 to 256 UTF-16 code units, `redirect_uri` included.
+
+Fluxer validates, stores, compares, forwards, and returns the normalised value. The `permissions` field and the [Grant OAuth2 consent](#grant-oauth2-consent) `response_type` field are read verbatim and have no length bound of their own. HTTP Basic client credentials do not pass through this request field normalisation. The PKCE `code_challenge` and `code_verifier` are normalised too, so a client MUST NOT rely on surrounding whitespace surviving.
+
+## OAuth2 scopes
+
+A scope names one thing the application may read or do on the user's behalf.
+
+| Value | Description |
+| --- | --- |
+| identify<sup>1</sup> | Read the authorised user's account identity |
+| email<sup>2</sup> | Include the authorised user's email address and email verification state |
+| guilds<sup>3</sup> | Read the guilds the authorised user is a member of |
+| connections<sup>4</sup> | Read the authorised user's [connections](/http-api/connections/) |
+| bot<sup>5</sup> | Install the application's bot account into a selected guild or group direct message |
+
+<sup>1</sup> Grants [Get OAuth2 user information](#get-oauth2-user-information) and the reduced bearer representation from [Get current user](/http-api/users/current-user/#get-current-user), and is also required before [Get current OAuth2 authorisation](#get-current-oauth2-authorisation) includes a user object
+
+<sup>2</sup> Has no observable effect unless identify is granted as well, because every route that exposes the address also requires identify
+
+<sup>3</sup> Grants [List current user guilds](/http-api/guilds/#list-current-user-guilds), [Get guild](/http-api/guilds/#get-guild), and [List guild roles](/http-api/permissions/#list-guild-roles)
+
+<sup>4</sup> Grants [List connections](/http-api/connections/#list-connections)
+
+<sup>5</sup> Installs a bot account and grants no bearer access of its own, so an application whose grants are bot alone is never presented as an authorisation by [List OAuth2 authorisations](#list-oauth2-authorisations)
+
+An unrecognised scope value is rejected when the authorisation request is completed. Fluxer splits a scope string on runs of whitespace and `+` characters, and discards empty segments. A repeated scope value is granted once.
+
+:::note[Scope ordering differs by response]
+Scope order has no semantic meaning, so a client MUST compare scopes as a set.
+:::
+
+The `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) is sorted into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) and of an [OAuth2 authorisation](#oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed.
+
+## OAuth2 error response object
+
+The failure envelope the OAuth2 routes return.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| error | string | The [OAuth2 error code](#oauth2-error-codes) naming the failure |
+| error_description<sup>1</sup> | string | The human-readable description of the failure |
+
+<sup>1</sup> Always present, and some descriptions are a bare API error code identifier
+
+These two members are the whole body, so the routine that reads the ordinary [error response](/http-api/#error-response) cannot parse it. Fluxer returns every OAuth2 failure with status 400. A client MUST key on `error` and never on `error_description`.
+
+The consent, token, introspection, and revocation routes return this object for a grant, client authentication, scope, redirect, response type, or permission mask failure. Every other failure, including request validation, authentication, authorisation, and rate limiting, uses the ordinary [error response](/http-api/#error-response) with an [API error code](/http-api/errors/).
+
+:::note[Two error envelopes share status 400]
+The same route can return either one. [Authorise application](#authorise-application) returns neither, because it reports an OAuth2 failure as a query parameter on a redirect.
+:::
+
+### Example
+
+```json
+{
+  "error": "invalid_grant",
+  "error_description": "Authorization code is invalid or expired"
+}
+```
+
+### OAuth2 error codes
+
+| Value | Description |
+| --- | --- |
+| invalid_request<sup>2</sup> | The request itself is malformed |
+| invalid_client<sup>3</sup> | Client authentication failed |
+| invalid_grant<sup>4</sup> | The presented grant is not usable |
+| invalid_scope | The requested scope contains a value that is not in the [scope registry](#oauth2-scopes) |
+
+<sup>2</sup> The redirect URI is missing, unregistered, or unparseable, the response type is not `code` on a request that asks for a non-bot scope, the requested permission mask is not a non-negative integer literal, or client credentials are supplied in both an `Authorization` header and the form
+
+<sup>3</sup> The client application is unknown, supplied no client secret, or supplied a client secret that does not match the stored hash
+
+<sup>4</sup> The authorisation code or refresh token is unknown, expired, already used, bound to another application, or bound to another redirect URI, or the authorisation code has a PKCE challenge the presented verifier does not prove
+
+## OAuth2 token object
+
+The access and refresh token pair a successful token exchange returns.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| access_token | string | The bearer token the application presents in the `Authorization` header |
+| token_type | string | The token type, always `Bearer` |
+| expires_in<sup>1</sup> | integer | The access token lifetime in seconds, always 604800 |
+| refresh_token<sup>2</sup> | string | The refresh token that replaces this pair when it is exchanged |
+| scope | string | The granted scopes, space separated in registry order |
+
+<sup>1</sup> The configured access token lifetime, restated in every successful response
+
+<sup>2</sup> Every grant Fluxer issues is bound to a user, so a successful exchange always returns a refresh token
+
+### Example
+
+```json
+{
+  "access_token": "M2xQb1RkY0hqTmZLc1B2WndBcUx1RWc2WXRJbk9iUmE",
+  "token_type": "Bearer",
+  "expires_in": 604800,
+  "refresh_token": "VGhpc0lzQUZha2VSZWZyZXNoVG9rZW5Gb3JEb2NzMDE",
+  "scope": "identify email"
+}
+```
+
+## OAuth2 user information object
+
+The account identity an application reads with the `identify` scope.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sub | snowflake | The ID of the subject user, equal to `id` |
+| id | snowflake | The ID of the account |
+| username | string | The username of the account |
+| discriminator | string | The four-digit discriminator tag |
+| global_name | ?string | The display name of the account, or null when unset |
+| avatar<sup>1</sup> | ?string | The avatar hash of the account, or null when it has none |
+| email?<sup>2</sup> | ?string | The email address of the account, null unless the `email` scope is granted and an address is set |
+| verified?<sup>3</sup> | ?boolean | Whether the address has been verified |
+| flags?<sup>4</sup> | integer | The [public user flags](/http-api/users/#public-user-flags) on the account |
+| avatar_color<sup>5</sup> | ?integer | The default avatar colour |
+| bot<sup>5</sup> | boolean | Whether the account is a bot |
+| system<sup>5</sup> | boolean | Whether the account is a system user |
+
+<sup>1</sup> An animated avatar hash has the `a_` prefix, and the prefix is removed while the account has no animated avatar entitlement
+
+<sup>2</sup> Always emitted
+
+<sup>3</sup> Emitted only when the `email` scope is granted and the account has an address. An unverified address reports false
+
+<sup>4</sup> Declared optional by the response schema and populated on every response
+
+<sup>5</sup> Emitted on every response although the response schema does not declare it, so a client MUST NOT depend on it
+
+## OAuth2 introspection object
+
+The liveness and scope report Fluxer returns for one presented token.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| active | boolean | Whether the presented token is live and belongs to the authenticated client |
+| scope? | string | The granted scopes, space separated in registry order |
+| client_id? | snowflake | The ID of the application the token was issued to |
+| username?<sup>1</sup> | string | A reserved member that Fluxer never populates |
+| token_type? | string | The kind of token presented, `Bearer` for an access token and `refresh_token` for a refresh token |
+| exp?<sup>2</sup> | integer | The access token expiry time in Unix seconds |
+| iat? | integer | The issue time in Unix seconds |
+| sub?<sup>3</sup> | snowflake | The ID of the subject user |
+
+<sup>1</sup> Absent from every response
+
+<sup>2</sup> Absent for a refresh token, which still expires 30 days after it is issued
+
+<sup>3</sup> Every token Fluxer issues is bound to a user, so an active result always has a subject
+
+Apart from `username` and `exp`, every optional field above is present when `active` is true and absent when it is false. An active access token has `exp` and an active refresh token does not.
+
+:::note[Several conditions produce the same inactive body]
+The body has only `active` set to false, and names no reason.
+:::
+
+Fluxer reports an unknown token, an expired token, and a token issued to another application as inactive. Introspection never resolves the account behind the token, so an active result reports on the token alone.
+
+## Current OAuth2 authorisation object
+
+The application, scopes, and expiry behind the access token the caller presented.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application | [OAuth2 application summary](#oauth2-application-summary-object) object | The application the access token was issued to |
+| scopes<sup>1</sup> | array[string] | The granted scopes, with unrecognised values removed |
+| expires | ISO8601 timestamp | The expiry time of the access token |
+| user?<sup>2</sup> | [OAuth2 authorised user](#oauth2-authorised-user-object) object | The account the access token was issued for |
+
+<sup>1</sup> Emitted in no defined order, and `bot` is retained here even though it grants no delegated read
+
+<sup>2</sup> Present only when the token grants `identify` and the account still exists, so a token restricted to `bot` never has one
+
+## OAuth2 application summary object
+
+The reduced application record in a [current OAuth2 authorisation](#current-oauth2-authorisation-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+| name | string | The name of the application |
+| icon<sup>1</sup> | ?string | The icon hash, always null on this object |
+| description<sup>1</sup> | ?string | The description, always null on this object |
+| bot_public | boolean | Whether any eligible user can install the bot |
+| bot_require_code_grant | boolean | Whether bot installation requires an OAuth2 code grant |
+| flags<sup>2</sup> | integer | The application flags, always 0 |
+
+<sup>1</sup> Null even when the application's bot has an avatar or biography
+
+<sup>2</sup> No application flag bit is defined
+
+## OAuth2 authorised user object
+
+The account a [current OAuth2 authorisation](#current-oauth2-authorisation-object) was issued for.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the account |
+| username | string | The username of the account |
+| discriminator | string | The four-digit discriminator tag |
+| global_name | ?string | The display name of the account, or null when unset |
+| avatar<sup>1</sup> | ?string | The avatar hash of the account, or null when it has none |
+| avatar_color | ?integer | The default avatar colour |
+| bot?<sup>2</sup> | boolean | Whether the account is a bot |
+| system?<sup>2</sup> | boolean | Whether the account is a system user |
+| flags | integer | The [public user flags](/http-api/users/#public-user-flags) on the account |
+| email?<sup>3</sup> | ?string | The email address of the account, null unless the `email` scope is granted and an address is set |
+| verified?<sup>4</sup> | ?boolean | Whether the address has been verified |
+| sub<sup>5</sup> | snowflake | The ID of the subject user, equal to `id` |
+
+<sup>1</sup> An animated avatar hash has the `a_` prefix, and the prefix is removed while the account has no animated avatar entitlement
+
+<sup>2</sup> Emitted on every response, and false when the account is neither
+
+<sup>3</sup> Always emitted
+
+<sup>4</sup> Emitted only when the `email` scope is granted and the account has an address
+
+<sup>5</sup> Emitted on every response although the response schema does not declare it, so a client MUST NOT depend on it
+
+## OAuth2 authorisation object
+
+One application the current user has authorised, aggregated across its live refresh tokens.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application | [authorised application](#authorised-application-object) object | The application the user has granted access to |
+| scopes<sup>1</sup> | array[string] | The scopes aggregated across the user's live refresh tokens for the application |
+| authorized_at<sup>2</sup> | ISO8601 timestamp | The earliest creation time among the refresh tokens that contributed to this entry |
+
+<sup>1</sup> The refresh token that first contributes an application contributes only its recognised scopes other than `bot`. Every further refresh token for the same application contributes its stored scope set unfiltered, so `bot` and an unrecognised value can appear once more than one refresh token contributes
+
+<sup>2</sup> Lowered by every refresh token that contributes to the entry, including one that has only `bot`
+
+An authorisation appears only while the application holds a live refresh grant with a recognised scope other than `bot`.
+
+## Authorised application object
+
+The application named by an [OAuth2 authorisation](#oauth2-authorisation-object) entry.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the application |
+| name | string | The name of the application |
+| icon<sup>1</sup> | ?string | The avatar hash of the application's bot account |
+| description<sup>2</sup> | ?string | The description, always null on this object |
+| bot_public | boolean | Whether any eligible user can install the bot |
+
+<sup>1</sup> Null when the application has no bot account or that account has no avatar. The stored hash is reported unfiltered, so an animated hash retains its `a_` prefix
+
+<sup>2</sup> An application has no independent description
+
+## OAuth2 consent response object
+
+The callback URL [Grant OAuth2 consent](#grant-oauth2-consent) returns after it records the decision.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| redirect_to<sup>1</sup> | string | The absolute URL with the authorisation result |
+
+<sup>1</sup> The URL has the `code` query parameter, and the normalised caller `state` when one was supplied
+
+Fluxer builds the URL from the registered redirect URI the request resolved to, which is the Fluxer application endpoint when a bot-only authorisation supplied none. The code records the URL serialisation of that resolved URI, and the client later presents that exact serialisation to [Exchange OAuth2 token](#exchange-oauth2-token).
+
+## Authorise application
+
+<RouteHeader method="GET" path="/v1/oauth2/authorize" unauthenticated />
+
+Starts an authorisation request. A query that passes request validation always answers with a redirect, and authentication is optional.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response_type? | string | The OAuth2 response type, `code` when supplied |
+| client_id | snowflake | The ID of the application being authorised |
+| redirect_uri?<sup>1</sup> | string | The absolute redirect URI registered by the application (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| scope | string | The requested [OAuth2 scopes](#oauth2-scopes), space separated (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| state?<sup>4</sup> | string | The caller state (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| prompt? | string | The prompt mode, either `consent` or `none` |
+| guild_id?<sup>2</sup> | snowflake | The guild pre-selected for the `bot` scope |
+| channel_id?<sup>2</sup> | snowflake | The group direct message pre-selected for the `bot` scope |
+| permissions?<sup>3</sup> | string | The bot permission integer literal |
+| disable_guild_select? | string | Whether the consent interface suppresses guild selection, as the literal `true` or `false` |
+| code_challenge? | string | The PKCE challenge bound to the issued code (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| code_challenge_method? | string | The PKCE method, either `S256` or `plain`, defaulting to `plain` when a challenge is supplied without it |
+
+<sup>1</sup> The value must parse as an absolute URL with a scheme and a host, and must match a registered redirect URI before a code is issued
+
+<sup>2</sup> Both values are forwarded to the consent interface unchanged, and their mutual exclusion is enforced by [Grant OAuth2 consent](#grant-oauth2-consent)
+
+<sup>3</sup> The value is forwarded to the consent interface unchanged and is parsed as an integer only by [Grant OAuth2 consent](#grant-oauth2-consent)
+
+<sup>4</sup> The value is returned unchanged after normalisation, on both the success redirect and the error redirect
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 302 | empty | The consent interface, a successful client callback, or an OAuth2 error callback was selected |
+
+The 302 `Location` header is the selected redirect.
+
+Without `prompt=none`, the redirect targets the Fluxer consent interface and forwards every supplied parameter, so no application, scope, or redirect validation happens yet.
+
+With `prompt=none`, a request that resolves no user redirects with `error=login_required`. Every other silent failure redirects with `error=consent_required`. That covers every failure to issue a code, including an unknown application, an unrecognised scope, a missing or unregistered redirect URI, and a private bot the caller does not own. It also covers a requested non-bot scope the user has not already granted to this application. A silent request that asks only for `bot` skips the prior-grant test.
+
+An error redirect has `error` and the normalised `state` when the caller supplied one. It has no `error_description`, and never the more specific [OAuth2 error code](#oauth2-error-codes) the underlying failure raised.
+
+:::caution[An unregistered redirect URI never receives the error]
+The error redirect targets the supplied `redirect_uri` only when the named application has registered that exact string, so this route cannot bounce a browser to an arbitrary origin.
+:::
+
+Fluxer compares the two strings byte for byte, so a differing scheme, port, trailing slash, query, or fragment does not match. Every other case redirects to the Fluxer application endpoint. That covers an omitted redirect URI, an unknown application, and an application with no registered URI at all.
+
+### Side effects
+
+A successful `prompt=none` request issues one authorisation code bound to the application, user, resolved redirect URI, granted scopes, and PKCE challenge. The code expires after 10 minutes. Nothing else changes. Only [Grant OAuth2 consent](#grant-oauth2-consent) installs a bot.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `oauth:authorize` bucket.
+
+## Grant OAuth2 consent
+
+<RouteHeader method="POST" path="/v1/oauth2/authorize/consent" />
+
+Completes an authorisation request. Returns an [OAuth2 consent response](#oauth2-consent-response-object) object with the callback URL.
+
+Installing a bot into a guild requires [MANAGE_GUILD or ADMINISTRATOR](/http-api/permissions/) in that guild. Installing it into a group direct message requires the caller to be a recipient of that channel.
+
+A guild installation emits [Guild Create](/gateway/events/#guild-create), [Guild Member Add](/gateway/events/#guild-member-add), and, unless the guild suppresses join notifications, [Message Create](/gateway/events/#message-create). When a non-zero permission mask is requested it also emits [Guild Role Create](/gateway/events/#guild-role-create) and [Guild Member Update](/gateway/events/#guild-member-update). A group direct message installation emits [Channel Create](/gateway/events/#channel-create) to the bot, [Channel Recipient Add](/gateway/events/#channel-recipient-add) to the existing recipients, and [Message Create](/gateway/events/#message-create).
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response_type?<sup>1</sup> | string | The OAuth2 response type |
+| client_id | snowflake | The ID of the application being authorised |
+| redirect_uri?<sup>2</sup> | string | The absolute redirect URI registered by the application (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| scope | string | The requested [OAuth2 scopes](#oauth2-scopes), space separated (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| state? | string | The caller state appended to the callback URL (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| permissions?<sup>3</sup> | string | The bot permission integer literal requested for the installed bot |
+| guild_id?<sup>4</sup> | snowflake | The guild the bot is installed into |
+| channel_id?<sup>4</sup> | snowflake | The group direct message the bot is installed into |
+| code_challenge? | string | The PKCE challenge bound to the issued code (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| code_challenge_method? | string | The PKCE method, either `S256` or `plain`, defaulting to `plain` when a challenge is supplied without it |
+
+<sup>1</sup> On a request that asks for any scope other than `bot`, an omitted value defaults to `code` and a supplied value must be `code`. On a request that asks for the `bot` scope alone the field is ignored
+
+<sup>2</sup> Required unless the request asks for the `bot` scope alone, and it must match a registered redirect URI. A bot-only request still requires it when the application sets `bot_require_code_grant`
+
+<sup>3</sup> The value must parse as a non-negative integer literal. Every bit outside the defined [permission](/http-api/permissions/) mask is cleared before use, and a caller without ADMINISTRATOR cannot request a retained bit it does not itself hold
+
+<sup>4</sup> The two fields are mutually exclusive
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [OAuth2 consent response](#oauth2-consent-response-object) object | Consent completed |
+| 400<sup>5</sup> | [error response](/http-api/#error-response) | The body fails validation, or the bot installation target is not usable |
+| 400<sup>6</sup> | [OAuth2 error](#oauth2-error-response-object) object | The application, scope, redirect URI, response type, or permission mask is rejected |
+| 403<sup>7</sup> | [error response](/http-api/#error-response) | The credential or the caller's permissions do not allow the installation |
+| 404 | [error response](/http-api/#error-response) | The selected channel does not exist (`UNKNOWN_CHANNEL`), or the selected guild does not exist (`UNKNOWN_GUILD`) |
+
+<sup>5</sup> Both installation targets are supplied, the selected channel is not a group direct message (`INVALID_CHANNEL_TYPE`), the application has no bot (`NOT_A_BOT_APPLICATION`), the bot is already a member of the selected guild (`BOT_ALREADY_IN_GUILD`), the guild has reached its member limit (`MAX_GUILD_MEMBERS`) or its role limit (`MAX_GUILD_ROLES`), or the group direct message has reached its recipient limit (`MAX_GROUP_DM_RECIPIENTS`)
+
+<sup>6</sup> The application is unknown, a scope is unrecognised, the redirect URI is missing or unregistered, the response type is not `code` on a request that asks for a non-bot scope, or the permission mask is not a non-negative integer literal
+
+<sup>7</sup> The credential is a bot token or an OAuth2 bearer (`ACCESS_DENIED`), the bot is private and the caller does not own the application (`BOT_IS_PRIVATE`), the caller holds neither MANAGE_GUILD nor ADMINISTRATOR in the selected guild, or requests a permission bit it does not itself hold (`MISSING_PERMISSIONS`), or the caller is not a recipient of the selected channel (`MISSING_ACCESS`)
+
+### Side effects
+
+Consent issues one authorisation code bound to the application, user, resolved redirect URI, granted scopes, and PKCE challenge, and returns the callback URL that has it.
+
+With the `bot` scope and a guild target, consent adds the bot to the guild with the bot-invite join source and the caller recorded as inviter, bypassing both the bot account's own guild count limit and the guild ban list. The guild member limit still applies. When a non-zero permission mask is requested, it also creates one role with exactly those permissions, names the role after the application, and assigns it to the bot.
+
+That role is created at position 1 with no colour and is neither hoisted nor mentionable. It consumes a guild role slot and is not removed when the bot leaves. The installation records bot add, role create, and member role update [audit log](/http-api/guild-audit-logs/) entries.
+
+With the `bot` scope and a group direct message target, it adds the bot as a recipient and stores the recipient-add system message.
+
+When any part of the installation fails, Fluxer cancels the newly issued authorisation code, so the caller never receives a usable code.
+
+:::caution[The installed role has the filtered mask]
+The installation either succeeds with exactly that mask or fails with a missing-permissions error.
+:::
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `oauth:authorize` bucket.
+
+## Exchange OAuth2 token
+
+<RouteHeader method="POST" path="/v1/oauth2/token" />
+
+Exchanges an authorisation code or a refresh token. Returns an [OAuth2 token](#oauth2-token-object) object on success.
+
+The request body is `application/x-www-form-urlencoded` or `multipart/form-data`. The client application authenticates with HTTP Basic or with the `client_id` and `client_secret` form fields. No user credential is accepted.
+
+:::caution[Refresh rotates the token pair]
+A refresh exchange consumes the presented refresh token, so a client that loses the response MUST restart the authorisation code grant.
+:::
+
+Earlier access tokens for the same user and application survive a refresh and expire on their own schedule.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Authorization?<sup>1</sup> | string | The HTTP Basic client credentials |
+| Content-Type | string | The request media type, either `application/x-www-form-urlencoded` or `multipart/form-data` |
+
+<sup>1</sup> This route resolves the client from the form first and falls back to the header, so supplying both is accepted. The introspection and revocation routes reject that combination as `invalid_request`
+
+### Form body
+
+#### Authorisation code fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| grant_type | string | The grant type, always `authorization_code` on this variant |
+| code | string | The authorisation code returned by the callback (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| redirect_uri<sup>1</sup> | string | The redirect URI the authorisation request resolved to (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| client_id?<sup>2</sup> | snowflake | The client ID, which takes precedence over the HTTP Basic value |
+| client_secret?<sup>2</sup> | string | The client secret, which takes precedence over the HTTP Basic value (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| code_verifier?<sup>3</sup> | string | The PKCE verifier proving the challenge stored on the code (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+
+<sup>1</sup> Compared as an exact string against the URI recorded on the code, which the [OAuth2 consent response](#oauth2-consent-response-object) describes. A trailing slash, host casing, or percent-encoding difference is rejected as an invalid grant
+
+<sup>2</sup> Each credential field is resolved on its own, so a form value is used when it is supplied and the HTTP Basic value is used otherwise, and a form `client_id` can be combined with an HTTP Basic client secret. A request that resolves no client ID or no client secret is rejected as `invalid_client`
+
+<sup>3</sup> Required when the authorisation code has a PKCE challenge. For the `S256` method it is hashed with SHA-256 and base64url-encoded before comparison with the challenge stored on the code, and for `plain` it is compared unchanged
+
+When the code is PKCE-bound, an omitted or incorrect verifier is rejected as `invalid_grant` in the OAuth2 error response.
+
+#### Refresh token fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| grant_type | string | The grant type, always `refresh_token` on this variant |
+| refresh_token | string | The refresh token to exchange (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| client_id?<sup>1</sup> | snowflake | The client ID, which takes precedence over the HTTP Basic value |
+| client_secret?<sup>1</sup> | string | The client secret, which takes precedence over the HTTP Basic value (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+
+<sup>1</sup> Each credential field is resolved on its own, so a form value is used when it is supplied and the HTTP Basic value is used otherwise, and a form `client_id` can be combined with an HTTP Basic client secret. A request that resolves no client ID or no client secret is rejected as `invalid_client`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [OAuth2 token](#oauth2-token-object) object | A token pair was issued |
+| 400 | [error response](/http-api/#error-response) | The form fails validation, including an unsupported `grant_type` |
+| 400<sup>2</sup> | [OAuth2 error](#oauth2-error-response-object) object | Client authentication or the presented grant fails |
+
+<sup>2</sup> Client authentication, the authorisation code, the refresh token, the redirect URI, or a required PKCE verifier is missing or does not prove the grant
+
+An authorisation code is single-use. Fluxer consumes it before it issues the token pair. A replayed code is rejected as an invalid grant. Deleting an account purges every OAuth2 access and refresh token it holds, so a refresh exchange for a deleted account is rejected as an invalid grant as well. An authorisation code issued before the deletion still exchanges until it expires.
+
+Fluxer verifies client authentication before it examines the grant, so an unknown application, an absent client secret, and a wrong client secret are all reported as `invalid_client`.
+
+:::note[No client credentials grant]
+Only `authorization_code` and `refresh_token` exist, and Fluxer issues no token that is unbound to a user.
+:::
+
+Any other `grant_type`, `client_credentials` included, fails request validation with the ordinary [error response](/http-api/#error-response).
+
+### Side effects
+
+A successful exchange issues one access token that expires after 7 days and one refresh token that expires after 30 days. An authorisation code exchange consumes the code, and a refresh exchange consumes the presented refresh token. Nothing else changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+120 requests per minute for each client IP address, on the `oauth:token` bucket.
+
+## Get OAuth2 user information
+
+<RouteHeader method="GET" path="/v1/oauth2/userinfo" oauth2="identify" />
+
+Returns the [OAuth2 user information](#oauth2-user-information-object) object for the account the token was issued to. Requires the `identify` [scope](#oauth2-scopes).
+
+An OAuth2 bearer access token is required. The `email` scope populates the address fields.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Authorization | string | The OAuth2 bearer access token |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [OAuth2 user information](#oauth2-user-information-object) object | User information was returned |
+| 401<sup>1</sup> | [error response](/http-api/#error-response) | The bearer token is missing, unusable, or expired |
+| 403 | [error response](/http-api/#error-response) | The token lacks `identify` (`MISSING_OAUTH_SCOPE`) |
+
+<sup>1</sup> The credential is missing, is not an OAuth2 bearer access token, or has expired (`UNAUTHORIZED`), or the bearer no longer resolves to a user and an application (`INVALID_TOKEN`)
+
+A missing scope failure has the required scope as a top-level `required_scope` member of the [error response](/http-api/#error-response), so a client can request the correct authorisation without parsing the message text.
+
+### Rate limit
+
+120 requests per minute for each pair of authenticated user and bearer application, on the `oauth:introspect` bucket.
+
+## Introspect OAuth2 token
+
+<RouteHeader method="POST" path="/v1/oauth2/introspect" />
+
+Returns an [OAuth2 introspection](#oauth2-introspection-object) object describing one access or refresh token.
+
+The request body is `application/x-www-form-urlencoded` or `multipart/form-data`. The client application authenticates with HTTP Basic or with the `client_id` and `client_secret` form fields. No user credential is accepted.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Authorization? | string | The HTTP Basic client credentials |
+| Content-Type | string | The request media type, either `application/x-www-form-urlencoded` or `multipart/form-data` |
+
+### Form body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The access or refresh token to inspect (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| client_id?<sup>1</sup> | snowflake | The client ID, supplied when HTTP Basic is not used |
+| client_secret?<sup>1</sup> | string | The client secret, supplied when HTTP Basic is not used (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+
+<sup>1</sup> Supplying either field together with a well-formed HTTP Basic `Authorization` header is rejected as `invalid_request`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [OAuth2 introspection](#oauth2-introspection-object) object | Introspection completed, including a token reported as inactive |
+| 400 | [error response](/http-api/#error-response) | The form fails validation |
+| 400<sup>2</sup> | [OAuth2 error](#oauth2-error-response-object) object | Client authentication failed |
+
+<sup>2</sup> Client credentials are supplied in both the header and the form (`invalid_request`), no client secret is supplied, the client is unknown, or the client secret is wrong (`invalid_client`)
+
+Fluxer ignores an `Authorization` header that is not well-formed HTTP Basic and reads the client credentials from the form.
+
+Only a token issued to the authenticated client is reported as active.
+
+### Rate limit
+
+120 requests per minute for each client IP address, on the `oauth:introspect` bucket.
+
+## Revoke OAuth2 token
+
+<RouteHeader method="POST" path="/v1/oauth2/token/revoke" />
+
+Revokes a presented access or refresh token.
+
+The request body is `application/x-www-form-urlencoded` or `multipart/form-data`. The client application authenticates with HTTP Basic or with the `client_id` and `client_secret` form fields. No user credential is accepted.
+
+:::caution[Revocation clears the whole grant]
+Revoking a token deletes every access token and every refresh token its user holds for the authenticated application.
+:::
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Authorization? | string | The HTTP Basic client credentials |
+| Content-Type | string | The request media type, either `application/x-www-form-urlencoded` or `multipart/form-data` |
+
+### Form body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The access or refresh token to revoke (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+| token_type_hint?<sup>1</sup> | string | The kind of token presented, either `access_token` or `refresh_token` |
+| client_id?<sup>2</sup> | snowflake | The client ID, supplied when HTTP Basic is not used |
+| client_secret?<sup>2</sup> | string | The client secret, supplied when HTTP Basic is not used (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
+
+<sup>1</sup> Only `refresh_token` matches the presented value against refresh tokens, and access tokens are still tried when no refresh token matches. An absent hint and an `access_token` hint match access tokens only
+
+<sup>2</sup> Supplying either field together with a well-formed HTTP Basic `Authorization` header is rejected as `invalid_request`
+
+A client that presents a refresh token MUST send `token_type_hint=refresh_token`, or the revocation takes no effect.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | empty | The revocation request was processed, including a token that matched nothing |
+| 400 | [error response](/http-api/#error-response) | The form fails validation |
+| 400<sup>3</sup> | [OAuth2 error](#oauth2-error-response-object) object | Client authentication failed |
+
+<sup>3</sup> Client credentials are supplied in both the header and the form (`invalid_request`), no client secret is supplied, the client is unknown, or the client secret is wrong (`invalid_client`)
+
+Fluxer ignores an `Authorization` header that is not well-formed HTTP Basic and reads the client credentials from the form.
+
+An unknown token and a token issued to another application both return 200, so the response never reveals whether a token exists.
+
+### Side effects
+
+On a match, Fluxer deletes the user's complete token set for the authenticated application. Those tokens stop authenticating requests at once. A token that matched nothing mutates no state.
+
+No Gateway Dispatch is emitted, so a client holding a revoked token learns of the revocation from its next rejected request.
+
+### Rate limit
+
+120 requests per minute for each client IP address, on the `oauth:introspect` bucket.
+
+## Get current OAuth2 authorisation
+
+<RouteHeader method="GET" path="/v1/oauth2/@me" />
+
+Returns the [current OAuth2 authorisation](#current-oauth2-authorisation-object) object for the presented access token. Requires no scope.
+
+An OAuth2 bearer access token is required, and the token must belong to a non-bot account. The response has a user object only when the token holds `identify`.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Authorization | string | The OAuth2 bearer access token |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [current OAuth2 authorisation](#current-oauth2-authorisation-object) object | The authorisation was returned |
+| 401<sup>1</sup> | [error response](/http-api/#error-response) | The bearer token is missing, unusable, or expired |
+| 403 | [error response](/http-api/#error-response) | The token belongs to a bot account (`ACCESS_DENIED`) |
+
+<sup>1</sup> The credential is missing, is not an OAuth2 bearer access token, or has expired (`UNAUTHORIZED`), the bearer has no user identity (`UNAUTHORIZED`), or it names an application that no longer exists (`INVALID_TOKEN`)
+
+### Rate limit
+
+120 requests per minute for each pair of authenticated user and bearer application, on the `oauth:introspect` bucket.
+
+## List OAuth2 authorisations
+
+<RouteHeader method="GET" path="/v1/oauth2/@me/authorizations" />
+
+Returns the [OAuth2 authorisation](#oauth2-authorisation-object) objects the current user has granted to applications.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[OAuth2 authorisation](#oauth2-authorisation-object) object] | The authorisations were returned |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or an OAuth2 bearer (`ACCESS_DENIED`) |
+
+An application appears in the listing only while it holds a live refresh grant with a recognised scope other than `bot`. A deleted application is omitted. The listing is unpaginated.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `oauth_dev:clients:list` bucket.
+
+## Revoke OAuth2 authorisation
+
+<RouteHeader method="DELETE" path="/v1/oauth2/@me/authorizations/{applicationId}" />
+
+Revokes the current user's authorisation for one application.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| applicationId | snowflake | The ID of the application whose authorisation is revoked |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The authorisation was revoked, including when no grant remained |
+| 400 | [error response](/http-api/#error-response) | The application ID is not a valid snowflake |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or an OAuth2 bearer (`ACCESS_DENIED`) |
+| 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
+
+Fluxer resolves the application before it deletes any token, so a 404 leaves the grant untouched.
+
+:::caution[Revocation cannot be undone]
+The user completes the [authorisation code grant](#authorise-application) again before the application can act on the account, and the application receives no notice that its access has ended.
+:::
+
+### Side effects
+
+Revocation deletes every access token and refresh token the current user holds for the named application. Those tokens stop authenticating requests at once.
+
+A bot the application installed stays in every guild and group direct message it joined. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+120 requests per minute for each authenticated user, on the `oauth:introspect` bucket.
+
+## Bulk revoke OAuth2 authorisations
+
+<RouteHeader method="POST" path="/v1/oauth2/@me/authorizations/revoke" />
+
+Revokes the current user's authorisations for several applications.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| application_ids<sup>1</sup> | array[snowflake] | The IDs of the applications to revoke (1-100) |
+
+<sup>1</sup> Repeated IDs are collapsed before any revocation is performed
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The authorisations were revoked |
+| 400 | [error response](/http-api/#error-response) | The body fails validation, including an empty or oversized ID array |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or an OAuth2 bearer (`ACCESS_DENIED`) |
+| 404 | [error response](/http-api/#error-response) | One of the named applications does not exist (`UNKNOWN_APPLICATION`) |
+
+Fluxer resolves every named application before it deletes any token. One unknown application leaves every named application untouched.
+
+### Side effects
+
+Revocation deletes every access token and refresh token the current user holds for each named application. Those tokens stop authenticating requests at once. Bot memberships are unaffected and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+120 requests per minute for each authenticated user, on the `oauth:introspect` bucket.

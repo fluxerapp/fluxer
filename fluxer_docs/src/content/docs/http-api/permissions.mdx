@@ -1,0 +1,541 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Roles and permissions
+description: The guild permission bitfield, permission computation, role hierarchy, and role operations.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A permission grants a member one ability in a guild, such as sending a message or banning another member. A role has a set of them as an unsigned 64-bit mask, and a [permission overwrite](/http-api/channels/#permission-overwrite-object) stored on a channel adjusts that set for that channel.
+
+Only [List guild roles](#list-guild-roles) accepts an OAuth2 bearer credential, and every other route here rejects one with 403 `ACCESS_DENIED`. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) rejects an authenticated request with 403 `MISSING_ACCESS`, and [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag.
+
+Fluxer resolves the guild before any role. A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is visible to any authenticated caller. A route that names a role asserts `MANAGE_ROLES` before it reads the role. A caller without the permission receives 403 `MISSING_PERMISSIONS` even for a role that does not exist.
+
+## Permissions
+
+Every bit Fluxer defines appears below.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | CREATE_INSTANT_INVITE | Create an invite to a guild channel |
+| 1 &lt;&lt; 1 | KICK_MEMBERS | Remove a member from the guild |
+| 1 &lt;&lt; 2 | BAN_MEMBERS | Create and revoke a guild ban |
+| 1 &lt;&lt; 3 | ADMINISTRATOR<sup>1</sup> | Hold every permission and bypass every channel permission overwrite |
+| 1 &lt;&lt; 4 | MANAGE_CHANNELS | Create, modify, reorder, and delete a guild channel |
+| 1 &lt;&lt; 5 | MANAGE_GUILD | Modify guild settings and manage guild-level resources such as invites, the vanity URL, and discovery |
+| 1 &lt;&lt; 6 | ADD_REACTIONS | Add a reaction to a message in a guild channel |
+| 1 &lt;&lt; 7 | VIEW_AUDIT_LOG | Read the guild audit log |
+| 1 &lt;&lt; 8 | PRIORITY_SPEAKER | Use priority speaker in a guild voice channel, evaluated by the client |
+| 1 &lt;&lt; 9 | STREAM<sup>2</sup> | Publish a screenshare track on a guild voice connection |
+| 1 &lt;&lt; 10 | VIEW_CHANNEL<sup>3</sup> | View a guild channel |
+| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text or voice channel |
+| 1 &lt;&lt; 12 | SEND_TTS_MESSAGES | Send a message that requests text-to-speech playback |
+| 1 &lt;&lt; 13 | MANAGE_MESSAGES<sup>4</sup> | Delete another member's message, bulk delete messages, remove another member's reaction, and edit the flags and attachments of another member's message |
+| 1 &lt;&lt; 14 | EMBED_LINKS | Have a link in the caller's own message expanded into an embed |
+| 1 &lt;&lt; 15 | ATTACH_FILES | Attach a file to a message |
+| 1 &lt;&lt; 16 | READ_MESSAGE_HISTORY | Read messages that were sent before the current access began |
+| 1 &lt;&lt; 17 | MENTION_EVERYONE | Use the everyone and here mentions in a guild channel |
+| 1 &lt;&lt; 18 | USE_EXTERNAL_EMOJIS | Use an emoji owned by another guild in a message or a reaction |
+| 1 &lt;&lt; 20 | CONNECT | Connect to a guild voice channel |
+| 1 &lt;&lt; 21 | SPEAK | Transmit audio in a guild voice channel |
+| 1 &lt;&lt; 22 | MUTE_MEMBERS | Apply and clear a moderator mute in a guild voice channel |
+| 1 &lt;&lt; 23 | DEAFEN_MEMBERS | Apply and clear a moderator deafen in a guild voice channel |
+| 1 &lt;&lt; 24 | MOVE_MEMBERS | Move a member between guild voice channels or disconnect a member |
+| 1 &lt;&lt; 25 | USE_VAD | Use voice activity detection rather than push-to-talk in a guild voice channel, evaluated by the client |
+| 1 &lt;&lt; 26 | CHANGE_NICKNAME | Change the caller's own nickname in the guild |
+| 1 &lt;&lt; 27 | MANAGE_NICKNAMES | Change another member's nickname in the guild |
+| 1 &lt;&lt; 28 | MANAGE_ROLES<sup>5</sup> | Create, modify, position, and delete a role, assign a role to a member, and set a channel permission overwrite |
+| 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel |
+| 1 &lt;&lt; 30 | MANAGE_EXPRESSIONS<sup>6</sup> | Modify and delete an emoji or sticker created by another member |
+| 1 &lt;&lt; 37 | USE_EXTERNAL_STICKERS | Use a sticker owned by another guild |
+| 1 &lt;&lt; 40 | MODERATE_MEMBERS | Apply and clear a member communication timeout |
+| 1 &lt;&lt; 43 | CREATE_EXPRESSIONS<sup>6</sup> | Create an emoji or sticker, and modify or delete the ones the caller created |
+| 1 &lt;&lt; 51 | PIN_MESSAGES | Pin and unpin a message in a guild channel |
+| 1 &lt;&lt; 52 | BYPASS_SLOWMODE | Send a message without waiting for the channel slowmode interval |
+| 1 &lt;&lt; 53 | UPDATE_RTC_REGION | Change the voice region of a guild voice channel |
+| 1 &lt;&lt; 54 | VIEW_CHANNEL_MEMBERS<sup>7</sup> | View the member list of a guild channel |
+
+<sup>1</sup> A member who holds the bit through any assigned role receives the complete 64-bit mask, and Fluxer applies no channel overwrite afterwards
+
+<sup>2</sup> The same bit gates the camera track, so a member without it publishes neither screenshare nor video
+
+<sup>3</sup> Fluxer also treats a category as visible when at least one channel inside it is visible
+
+<sup>4</sup> Deleting or editing the caller's own message does not require the bit
+
+<sup>5</sup> A role mutation also needs [role hierarchy](#role-hierarchy) authority over the target role
+
+<sup>6</sup> Modifying or deleting an expression created by the caller requires `CREATE_EXPRESSIONS`, and the same operation on an expression created by another member requires `MANAGE_EXPRESSIONS`
+
+<sup>7</sup> The bit is [feature-gated on write](#feature-gated-permission-bits), so a request that does not declare the feature cannot change it
+
+Bits 19, 31 through 36, 38, 39, 41, 42, 44 through 50, and 55 through 63 are unassigned.
+
+:::note[`STREAM` authorises a track on the existing connection]
+The track is a screenshare or a camera. Fluxer opens no second connection for it, and losing the bit mutes the published tracks while the voice connection stays up.
+:::
+
+:::note[Permission masks are decimal strings on the wire]
+Every permission response field uses the decimal representation of an unsigned 64-bit integer inside a JSON string. A permission request field accepts that decimal string or a JSON number that is a safe integer, and the value is a non-negative integer no greater than 9223372036854775807.
+:::
+
+A value that is not a run of decimal digits is rejected with the validation code `INVALID_INTEGER_FORMAT`, and one above the maximum with `INTEGER_OUT_OF_INT64_RANGE`. A JSON number cannot represent the full 64-bit range, so a client MUST parse and combine masks with unsigned 64-bit integer arithmetic and MUST NOT compare them with string equality.
+
+Fluxer discards a bit it does not define. A role mutation intersects the requested mask with the set of defined bits before authorisation. An unassigned bit never appears in a response. A channel permission overwrite uses the same mask and the same defined-bit set, and Fluxer does not filter bits by channel type, so an overwrite can name a permission its channel does not use.
+
+### Feature-gated permission bits
+
+Fluxer gates some bits on a client feature declaration. A client sends the feature set in the `X-Fluxer-Features` request header as a comma-separated list.
+
+One bit is gated today. `VIEW_CHANNEL_MEMBERS` requires the feature name `view_channel_members_permission`.
+
+On a role or overwrite write that does not declare the matching feature, Fluxer keeps the gated bit at its stored value, so the request can neither set nor clear it. Every other bit in the same mask is written normally.
+
+Fluxer trims and lowercases each name in the header before matching it. A name that is empty, longer than 64 characters, or containing a character outside `a-z`, `0-9`, and `_` is ignored. Fluxer reads at most 64 names from one header. An absent or empty header declares no features.
+
+A [Create guild role](#create-guild-role) request that supplies `permissions` without declaring the feature always creates the role with `VIEW_CHANNEL_MEMBERS` cleared. A request that omits `permissions` copies the everyone role mask without applying the gate.
+
+## Elevated permissions
+
+`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, and `MODERATE_MEMBERS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner exercises them without an enrolled authenticator.
+
+An operation that asserts an elevated permission the caller holds but cannot exercise returns 400 `TWO_FACTOR_REQUIRED`. The check runs after Fluxer has confirmed the permission itself, so a caller who lacks the permission outright receives 403 `MISSING_PERMISSIONS` instead.
+
+[List guild roles](#list-guild-roles) asserts no permission, so it never produces `TWO_FACTOR_REQUIRED`.
+
+:::note[The reported mask keeps every elevated bit]
+Elevation gates the operation. A `permissions` field reports what the caller's roles grant, so a client hiding an action must compare the guild [MFA level](/http-api/guilds/#mfa-levels) and its own enrolment state.
+:::
+
+## Permission computation
+
+Fluxer computes a permission set for one member in one guild, and optionally in one channel of that guild. The result is the complete effective mask for that member at that moment.
+
+The guild owner receives the complete 64-bit mask. A user who is not a member receives an empty mask.
+
+Otherwise Fluxer starts from the permissions of the everyone role, whose [snowflake](/snowflakes/) equals the guild snowflake, then adds the permissions of every role assigned to the member with a bitwise union. If the result contains `ADMINISTRATOR` at that point, Fluxer returns the complete 64-bit mask and runs no further step.
+
+When no channel was named, the union is the final result. When a channel was named, Fluxer applies that channel's stored [permission overwrites](/http-api/channels/#permission-overwrite-object) to the union in three steps:
+
+1. The everyone role overwrite, by removing its denied bits and then adding its allowed bits.
+2. The overwrites targeting roles assigned to the member, accumulated into one union of allowed bits and one union of denied bits and applied as a single step in the same order. An allow on any one of the member's roles defeats a deny on another.
+3. The member overwrite, again denied bits first and allowed bits second.
+
+A named channel that does not exist in the guild leaves the guild-level union unchanged.
+
+:::caution[`ADMINISTRATOR` grants every bit and skips overwrites]
+No deny overwrite in any channel restricts a member who holds the bit. Removing `ADMINISTRATOR` from every role they hold is the only remedy.
+:::
+
+A guild channel is visible when its channel-scoped mask contains `VIEW_CHANNEL`, or when the member holds temporary access through an in-flight voice or call transition. A category is also visible when the mask of at least one child channel contains `VIEW_CHANNEL`. Temporary access applies only to the channel it was granted on.
+
+## Communication timeout
+
+A communication timeout stops a member from communicating in a guild until it expires. It does not change the computed mask. A member whose [communication_disabled_until](/http-api/guild-members/#guild-member-object) is in the future keeps every permission their roles grant, and Fluxer applies the restriction as a separate precondition on each communicating operation.
+
+Sending a message, editing the caller's own message, adding a reaction, requesting an attachment upload, starting a typing indicator, and changing the caller's own nickname each fail with 403 `COMMUNICATION_DISABLED` while the timeout is in the future. A timeout has no effect in a private channel.
+
+The order of the timeout precondition and the permission check varies by operation, so a caller who is both timed out and short of the permission can receive either `COMMUNICATION_DISABLED` or `MISSING_PERMISSIONS`.
+
+A client that gates its interface on the computed mask MUST also compare `communication_disabled_until` against the current time, because the mask still reports `SEND_MESSAGES` for a timed-out member.
+
+## Role hierarchy
+
+Roles are ranked by `position`, and the highest position ranks first. Two roles sharing a position are ranked by snowflake, and the lower snowflake ranks first. A member's rank is the rank of their highest assigned role, and a member with no assigned role ranks below every role.
+
+A caller manages a role when the caller's rank is strictly above the role's rank. The guild owner manages every role. The everyone role sits at position 0, so any caller holding a role above it outranks it and can modify it. It is never a valid target for a position or hoist position mutation.
+
+Fluxer enforces hierarchy independently of `MANAGE_ROLES`. A caller who holds the permission without outranking the target role receives 403 `MISSING_PERMISSIONS`. A caller whose only `MANAGE_ROLES` comes from the everyone role has no assigned role, so they can manage no role.
+
+:::caution[A non-owner cannot grant a permission they lack]
+A requested bit outside the caller's own effective guild permissions fails the whole request with `MISSING_PERMISSIONS`. Fluxer runs that check after it resolves the unassigned and feature-gated bits.
+:::
+
+## Guild role object
+
+Roles are named permission masks that a guild assigns to any number of its members.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the role |
+| name | string | The name of the role (1-100 characters) |
+| color | integer | The colour of the role as an RGB integer, which every operation on this resource writes in the range 0 through 16777215 |
+| position<sup>1</sup> | integer | The rank of the role in the permission hierarchy, where a larger value ranks higher |
+| hoist_position<sup>2</sup> | ?integer | The rank of the role among the separately displayed member list groups |
+| permissions | decimal string | The [permission](#permissions) bitfield the role grants |
+| hoist | boolean | Whether members holding the role are displayed as their own member list group |
+| mentionable | boolean | Whether a member without `MENTION_EVERYONE` can mention the role |
+| unicode_emoji?<sup>3</sup> | ?string | The Unicode emoji shown beside the role name |
+
+<sup>1</sup> The everyone role is always at position 0, and every other role occupies a dense position from 1 through the number of remaining roles after any hierarchy mutation
+
+<sup>2</sup> A null value means the role has no explicit member list position, and the role is then ordered by its hierarchy `position` instead
+
+<sup>3</sup> The field is absent from every role these operations return and from every role in a role Gateway Dispatch
+
+The everyone role has the same snowflake as its guild and is named `@everyone`. It defines the base permission set for every member, and it cannot be deleted, reordered, or given a hoist position. Its colour and its permissions remain mutable.
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "name": "Moderator",
+  "color": 3447003,
+  "position": 4,
+  "hoist_position": 1,
+  "permissions": "1099511637006",
+  "hoist": true,
+  "mentionable": false
+}
+```
+
+## Role position object
+
+Each entry names one role and the rank the caller requests for it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the role |
+| position?<sup>1</sup> | integer | The rank the caller requests for the role, where a larger value ranks higher |
+
+<sup>1</sup> Fluxer ranks a role whose entry omits the field by its stored `position` in the same sort, so a role that requested a position above that value still displaces it
+
+### Example
+
+```json
+[
+  {"id": "1489002177550843904", "position": 3},
+  {"id": "1489002177550843905", "position": 2}
+]
+```
+
+## Role hoist position object
+
+Each entry names one role and the member list position it receives.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the role |
+| hoist_position | integer | The member list position to give the role |
+
+### Example
+
+```json
+[
+  {"id": "1489002177550843904", "hoist_position": 1}
+]
+```
+
+## List guild roles
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/roles" bot oauth2="guilds" />
+
+Returns every [guild role object](#guild-role-object) in the guild, in descending `position` order, with a tie resolved by ascending role ID.
+
+### Limitations
+
+- The caller must be a member of the guild, and no permission is required.
+- A bearer credential requires the [guilds](/http-api/oauth2/#oauth2-scopes) OAuth2 scope.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[guild role](#guild-role-object) object] | Roles were returned |
+| 403 | [error response](/http-api/#error-response) | Bearer credential lacks the `guilds` scope and returns `MISSING_OAUTH_SCOPE`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member and returns `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD` |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated identity and guild ID, on the `guild:role:list::guild_id` bucket.
+
+## Create guild role
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/roles" bot auditReason />
+
+Creates a role and returns its [guild role object](#guild-role-object). Requires [MANAGE_ROLES](#permissions), which is an [elevated permission](#elevated-permissions). Emits a [Guild Role Create](/gateway/events/#guild-role-create) Gateway event.
+
+### Limitations
+
+- A caller who is not the guild owner cannot grant a permission absent from their own effective guild permissions.
+
+[Role hierarchy](#role-hierarchy) is not evaluated. The new role receives hierarchy position 1 and ranks below every existing role at that position. No other role is renumbered. The role is created without a hoist position or Unicode emoji and with `hoist` and `mentionable` set to false.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Features? | string | A comma-separated [feature declaration](#feature-gated-permission-bits) |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The name of the role (1-100 characters) |
+| color? | integer | The colour of the role as a 24-bit RGB integer (0-16777215, default 0) |
+| permissions?<sup>1</sup> | decimal string \| integer | The [permission](#permissions) bitfield the role grants |
+
+<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, resolved against the caller's [feature declaration](#feature-gated-permission-bits), then checked against the caller's own permissions
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild role object](#guild-role-object) | Role was created |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED`, or the guild role limit is reached and the request returns `MAX_GUILD_ROLES` |
+| 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or requested a permission they do not hold, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD` |
+
+### Side effects
+
+The operation consumes one guild role slot and creates a [ROLE_CREATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason. It emits [Guild Role Create](/gateway/events/#guild-role-create) to every session that can see the guild, including the acting session. A request that reaches the configured role limit fails with `MAX_GUILD_ROLES` and consumes no slot. The response body has the limit in a top-level `max_guild_roles` member. The default limit is 250 roles for each guild and counts the everyone role.
+
+### Rate limit
+
+10 requests per minute for each authenticated identity and guild ID, on the `guild:role:create::guild_id` bucket.
+
+## Modify guild role
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/roles/{role_id}" bot auditReason />
+
+Modifies one role and returns its [guild role object](#guild-role-object). Requires [MANAGE_ROLES](#permissions), which is an [elevated permission](#elevated-permissions). Emits a [Guild Role Update](/gateway/events/#guild-role-update) Gateway event.
+
+### Limitations
+
+- A caller who is not the guild owner additionally requires [hierarchy authority](#role-hierarchy) over the target role and cannot grant a permission absent from their own effective guild permissions.
+
+The everyone role is a valid target.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| role_id | snowflake | The ID of the role |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Features? | string | A comma-separated [feature declaration](#feature-gated-permission-bits) |
+
+### JSON body
+
+Every field is optional, and an omitted field leaves the stored value unchanged. `position` is not accepted here, because only [Modify guild role positions](#modify-guild-role-positions) writes the hierarchy.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name?<sup>1</sup> | string | The name of the role (1-100 characters) |
+| color? | integer | The colour of the role as a 24-bit RGB integer (0-16777215) |
+| permissions?<sup>2</sup> | decimal string \| integer | The complete replacement [permission](#permissions) bitfield |
+| hoist?<sup>1</sup> | boolean | Whether members holding the role are displayed as their own member list group |
+| hoist_position?<sup>1</sup> | ?integer | The member list position to give the role, or null to clear it |
+| mentionable?<sup>1</sup> | boolean | Whether a member without `MENTION_EVERYONE` can mention the role |
+
+<sup>1</sup> The field is accepted and then ignored when the target is the everyone role, which cannot be renamed, hoisted, given a member list position, or made mentionable
+
+<sup>2</sup> The supplied value becomes the complete stored mask. Fluxer intersects it with the set of defined bits and resolves it against the caller's [feature declaration](#feature-gated-permission-bits) before checking the caller's authority
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild role object](#guild-role-object) | Role was modified, or every supplied value already matched the stored value |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, does not outrank the target role, or requested a permission they do not hold, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`, or the role does not exist and returns `UNKNOWN_ROLE` |
+
+### Side effects
+
+The operation creates a [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason and emits [Guild Role Update](/gateway/events/#guild-role-update) to every session that can see the guild. A permission change adds a [permissions_diff](/http-api/guild-audit-logs/#guild-role-change-fields) change entry recording the exact added and removed permission names. A request whose values all match the current role still emits the Dispatch and still records the entry, with no change rows in it.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated identity and guild ID, on the `guild:role:update::guild_id` bucket.
+
+## Modify guild role positions
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/roles" bot auditReason />
+
+Reorders the role hierarchy and returns 204 with an empty body. Requires [MANAGE_ROLES](#permissions), which is an [elevated permission](#elevated-permissions). Emits a [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) Gateway event.
+
+### Limitations
+
+- The caller needs [hierarchy authority](#role-hierarchy) over every role whose entry supplies a position differing from that role's stored `position`.
+- An entry that omits the field or restates the stored value is accepted without that check.
+
+Fluxer holds a guild-wide lock while the operation runs, so a concurrent position write on the same guild returns 423 `GENERAL_ERROR`.
+
+Every role the caller can manage is sorted by its requested position in descending order, with a role that supplied no position keeping its stored position as the sort key and any remaining tie resolved by the current order. Fluxer then puts those roles back into the same set of slots they held before, so a role the caller cannot manage never moves. Every role other than the everyone role is then renumbered to a dense position. The highest-ranked role receives the number of roles other than the everyone role, the lowest-ranked role receives 1, and the everyone role stays at 0.
+
+:::note[A requested position is an ordering key]
+The dense renumbering that follows the sort decides the stored value, so it can differ from the one requested. A client reads the resulting `position` from the [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) payload.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+The top-level body is an array of [role position objects](#role-position-object). The everyone role cannot appear in the array and is rejected with the validation code `CANNOT_REORDER_EVERYONE_ROLE`, and a role that does not exist in the guild is rejected with `INVALID_ROLE_ID`. Both checks run over the whole array before the hierarchy check and before any write.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Positions were applied|
+| 400 | [error response](/http-api/#error-response) | An entry names the everyone role or a role that does not exist, or the caller cannot exercise `MANAGE_ROLES` because of the guild MFA level|
+| 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or supplied a position differing from the stored `position` of a role they do not outrank, each returning `MISSING_PERMISSIONS`|
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`|
+| 423 | [error response](/http-api/#error-response) | Another position write holds the guild lock, returning `GENERAL_ERROR` with `Retry-After: 2` |
+
+### Side effects
+
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose position changed and emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated identity and guild ID, on the `guild:role:positions::guild_id` bucket.
+
+## Modify role hoist positions
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/roles/hoist-positions" bot auditReason />
+
+Sets the member list position of one or more roles and returns 204 with an empty body. Requires [MANAGE_ROLES](#permissions), which is an [elevated permission](#elevated-permissions). Emits a [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) Gateway event.
+
+### Limitations
+
+- The caller needs [hierarchy authority](#role-hierarchy) over every named role.
+- The everyone role cannot receive a hoist position.
+
+A hoist position orders the separately displayed member list groups and is independent of the permission hierarchy. A role with no hoist position is ordered by its hierarchy `position` instead. The operation holds a guild-wide lock, so a concurrent hoist position write on the same guild returns 423 `GENERAL_ERROR`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+The top-level body is an array of [role hoist position objects](#role-hoist-position-object). Every entry supplies a hoist position, because this operation cannot clear one. The everyone role cannot appear in the array and is rejected with the validation code `CANNOT_SET_HOIST_FOR_EVERYONE_ROLE`, and a role that does not exist in the guild is rejected with `INVALID_ROLE_ID`. Every check runs over the whole array before any write.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Hoist positions were applied|
+| 400 | [error response](/http-api/#error-response) | An entry names the everyone role or a role that does not exist, or the caller cannot exercise `MANAGE_ROLES` because of the guild MFA level|
+| 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or does not outrank a named role, each returning `MISSING_PERMISSIONS`|
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`|
+| 423 | [error response](/http-api/#error-response) | Another hoist position write holds the guild lock, returning `GENERAL_ERROR` with `Retry-After: 2` |
+
+### Side effects
+
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role whose hoist position changed and emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with the changed roles to every session that can see the guild. Reasserting the current positions changes nothing, creates no audit entry, and emits no Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated identity and guild ID, on the `guild:role:hoist_positions::guild_id` bucket.
+
+## Reset role hoist positions
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/roles/hoist-positions" bot auditReason />
+
+Clears the member list position of every role in the guild and returns 204 with an empty body. Requires [MANAGE_ROLES](#permissions), which is an [elevated permission](#elevated-permissions). Emits a [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) Gateway event.
+
+### Limitations
+
+- [Role hierarchy](#role-hierarchy) is not evaluated. The permission alone clears the hoist position of every role in the guild, including roles the caller does not outrank.
+
+The operation takes the same guild-wide lock as [Modify role hoist positions](#modify-role-hoist-positions).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+The request has no body.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Hoist positions were cleared, or no role had one|
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED`|
+| 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member or lacks `MANAGE_ROLES`, each returning `MISSING_PERMISSIONS`|
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`|
+| 423 | [error response](/http-api/#error-response) | Another hoist position write holds the guild lock, returning `GENERAL_ERROR` with `Retry-After: 2` |
+
+### Side effects
+
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose hoist position is cleared and emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute for each authenticated identity and guild ID, on the `guild:role:hoist_positions_reset::guild_id` bucket.
+
+## Delete guild role
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/roles/{role_id}" bot auditReason />
+
+Deletes one role and returns 204 with an empty body. Requires [MANAGE_ROLES](#permissions), which is an [elevated permission](#elevated-permissions). Emits a [Guild Role Delete](/gateway/events/#guild-role-delete) Gateway event.
+
+### Limitations
+
+- A caller who is not the guild owner additionally requires [hierarchy authority](#role-hierarchy) over the target role.
+- The everyone role cannot be deleted.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| role_id | snowflake | The ID of the role |
+
+The request has no body.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Role was deleted |
+| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or does not outrank the target role, each returning `MISSING_PERMISSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`, or the role does not exist or is the everyone role, each returning `UNKNOWN_ROLE` |
+
+:::caution[Deletion is irreversible and rewrites every affected member]
+A deleted role cannot be restored, and its permissions, colour, and hoist state go with it. An overwrite naming it no longer affects any computed mask. Every member who held the role loses it in the same operation, so anyone relying on it for channel access loses that access immediately.
+:::
+
+### Side effects
+
+The operation removes the role from every member that held it, removes the role record, frees the guild role slot it occupied, and creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason. It emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. Subsequent member reads and [Guild Member Update](/gateway/events/#guild-member-update) payloads reflect the removed role.
+
+### Rate limit
+
+10 requests per minute for each authenticated identity and guild ID, on the `guild:role:delete::guild_id` bucket.

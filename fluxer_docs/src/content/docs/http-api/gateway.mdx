@@ -1,0 +1,112 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Gateway
+description: Bot discovery of the main Gateway endpoint, shard count, and session start limit.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Gateway information tells a bot where to open its connection to the [main Gateway](/gateway/overview/). The object has that URL, a shard count, and a session start budget. Framing, opcodes, heartbeats, resumption, and close codes belong to the [Gateway overview](/gateway/overview/).
+
+The one route here reads `Authorization` itself. Only the [bot token](/authentication/#bot-tokens) form is accepted. A user client instead reads the same WebSocket URL from `endpoints.gateway` in the [instance discovery document](/http-api/instance/#instance-endpoints-object) and presents its session token inside [Identify](/gateway/commands/#identify).
+
+## Gateway information object
+
+Every field is always present.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url<sup>1</sup> | string | The `ws` or `wss` URL of the main Gateway endpoint |
+| shards<sup>2</sup> | integer | The shard count recommended for the authenticated bot |
+| session_start_limit<sup>3</sup> | [session start limit](#session-start-limit-object) object | The advertised session start budget |
+
+<sup>1</sup> The deployment's configured Gateway endpoint, byte for byte the string [instance endpoints](/http-api/instance/#instance-endpoints-object) publishes as `endpoints.gateway`
+
+<sup>2</sup> Always the literal `1`
+
+<sup>3</sup> Every member of the object is a constant
+
+Fluxer appends no query string, so a client appends the [connection parameters](/gateway/overview/#connection-parameters) itself. A client MUST NOT upgrade a published `ws` value, because a deliberately plain HTTP deployment advertises one.
+
+### Example
+
+```json
+{
+  "url": "wss://gateway.example.com",
+  "shards": 1,
+  "session_start_limit": {
+    "total": 1000,
+    "remaining": 999,
+    "reset_after": 14400000,
+    "max_concurrency": 1
+  }
+}
+```
+
+[Identify](/gateway/commands/#identify) accepts a `shard` pair whose `shard_count` element is from 1 through 16,384 under the [sharding](/gateway/overview/#sharding) contract, whatever `shards` reports. A bot session whose shard is assigned more than 2,500 guilds closes with `4011`, and the bot must shard further. A user session is never checked against the guild ceiling.
+
+:::note[The response is currently static]
+Fluxer resolves only `url` from deployment configuration. `shards` and `session_start_limit` are fixed values that do not track the bot's guild count. Starting a session decrements neither value.
+:::
+
+## Session start limit object
+
+A session start limit reports how many new Gateway sessions a bot may open in a window. Fluxer publishes four constants here for client-library compatibility.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| total<sup>1</sup> | integer | The session starts allowed across the window, always `1000` |
+| remaining<sup>1</sup> | integer | The session starts reported as left, always `999` |
+| reset_after<sup>2</sup> | integer | The milliseconds reported until the budget resets, always `14400000` |
+| max_concurrency<sup>3</sup> | integer | The number of concurrent [Identify](/gateway/commands/#identify) buckets, always `1` |
+
+<sup>1</sup> Fluxer keeps no session-start ledger, so neither a request nor an Identify changes either value
+
+<sup>2</sup> 14400000 ms is four hours, and Fluxer runs no timer against it
+
+<sup>3</sup> Fluxer runs no Identify concurrency bucket, so a bot MAY identify its shards without pacing them against this value
+
+The limits the Gateway actually enforces live in [Session lifecycle](/gateway/limits-and-rate-limits/#session-lifecycle). Fluxer budgets Identify per source address. It caps a user account at a fixed number of concurrent sessions. Neither bound is reported here.
+
+:::caution[A remaining session start does not guarantee admission]
+A non-zero `remaining` reserves nothing, and neither does the constant `max_concurrency`. [Session admission](/gateway/limits-and-rate-limits/#session-lifecycle) can still hold or reject a connection.
+:::
+
+## Get Gateway information
+
+<RouteHeader method="GET" path="/v1/gateway/bot" bot />
+
+Returns a [Gateway information object](#gateway-information-object).
+
+The route matches the scheme prefix without regard to case and accepts `Bot `, `Bearer `, or a bare token, then trims the remainder. An empty remainder returns 401 `MISSING_AUTHORIZATION`. A remainder beginning with `flx_` returns 401 `INVALID_AUTH_TOKEN`, because that is the user session token prefix. The route accepts any other remainder only when it has a full stop that is neither its first nor its last character, with decimal digits before it.
+
+:::caution[Only the token form is enforced]
+The route checks the shape of the credential only. A well-formed value naming no live application receives the same 200 as a real bot token.
+:::
+
+Validate a token with [Identify](/gateway/commands/#identify) or [Get bot application](/http-api/applications/#get-bot-application) instead.
+
+A 200 has the informational [rate limit headers](/topics/rate-limits/#rate-limit-headers) only for the `Bot ` prefix. Fluxer keys the bare form and the `Bearer ` form on the client IP address.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Gateway information](#gateway-information-object) object | The credential is in bot token form |
+| 401<sup>1</sup> | [error response](/http-api/#error-response) | The credential is absent, is empty after its scheme prefix, or is not in bot token form |
+
+<sup>1</sup> An absent or empty credential uses `MISSING_AUTHORIZATION`, and every other rejected value uses `INVALID_AUTH_TOKEN`
+
+### Side effects
+
+Fluxer records an authentication failure signal of weight 1 against the client IP address for every credential it does not resolve to an account. A bot token resolves only under the `Bot ` prefix, so the bare form and the `Bearer ` form record that signal even on the requests this route answers 200. A client avoids that signal by presenting the `Bot ` prefix.
+
+A 401 adds a client error signal of weight 0.75, but only when the request resolved no account. A live user session token resolves an account under the `Bearer ` prefix and under no prefix, so the 401 it receives records no signal. Both signals feed the automatic address ban described in [Errors](/http-api/errors/).
+
+### Rate limit
+
+60 requests per minute for each authenticated account, or for each client IP address when no account resolved, on the `gateway:bot_info` bucket.

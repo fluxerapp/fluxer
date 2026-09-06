@@ -1,0 +1,688 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Users
+description: User objects, public profiles, account tags, and the settings record.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A user is a Fluxer account. Another account sees the [partial user object](#partial-user-object), and the owner sees the [user object](#user-object). Account mutation lives on [Current user](/http-api/users/current-user/).
+
+Every route on this page takes a user session token or a bot token. An OAuth2 bearer credential is rejected with 403 `ACCESS_DENIED`.
+
+| Object | Purpose |
+| --- | --- |
+| [Partial user](#partial-user-object) | Public account representation embedded everywhere |
+| [User](#user-object) | Private owner representation |
+| [User settings](#user-settings-object) | Account-wide settings record |
+| [Full user profile](#full-user-profile-object) | Profile read for one target account |
+
+## Partial user object
+
+The public account representation embedded by messages, relationships, guild members, and applications. It is the only representation returned to a caller other than the account owner.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The [snowflake](/snowflakes/) that identifies the account |
+| username | string | The account username (1-32 ASCII letters, digits, or underscores) |
+| discriminator | string | The account discriminator, four decimal digits with leading zeroes |
+| global_name | ?string | The display name of the account, or null when none is set |
+| avatar<sup>1</sup> | ?string | The image hash of the account avatar, or null when none is set |
+| avatar_color | ?integer | The packed 24-bit RGB colour derived from the stored avatar, or null |
+| bot? | boolean | Whether the account is a bot, omitted when false |
+| system? | boolean | Whether the account is a Fluxer system account, omitted when false |
+| flags | integer | [Public user flags](#public-user-flags) |
+| mention_flags? | integer | [Reply mention preference](#reply-mention-preferences), omitted when the account has no preference |
+
+<sup>1</sup> An animated avatar hash has the `a_` prefix, and the prefix is removed while the account has no animated avatar entitlement
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "username": "aria",
+  "discriminator": "0042",
+  "global_name": "Aria",
+  "avatar": "a_2f1c9d7be4a350c8",
+  "avatar_color": 5793266,
+  "flags": 8
+}
+```
+
+:::note[A deleted account keeps a renderable shape]
+A completed deletion returns the username `DeletedUser`, the discriminator `0000`, the global name `Deleted User`, null `avatar` and `avatar_color`, `flags` of `0`, and no `mention_flags`. The `bot` field keeps its account value.
+:::
+
+:::note[Substituted values appear only when deletion completes]
+A system account never receives the deleted representation. An account only scheduled for deletion keeps its ordinary representation throughout the grace period.
+:::
+
+## Public user flags
+
+`flags` holds the publicly visible subset of the account's stored flags. `STAFF` is also absent from an account with the staff-hidden flag.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | STAFF | Account is a staff member |
+| 1 &lt;&lt; 2 | PARTNER | Account is a partner |
+| 1 &lt;&lt; 3 | BUG_HUNTER | Account is a bug hunter |
+| 1 &lt;&lt; 4 | FRIENDLY_BOT | Bot accepts friend requests from users |
+| 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | Bot requires manual approval for friend requests |
+| 1 &lt;&lt; 6 | SPAMMER | Account is flagged as a spammer |
+
+## Reply mention preferences
+
+The account-wide preference applied when another account replies to one of this account's messages. `mention_flags` is exactly one of the three values below, and it is omitted from a serialised user while the stored value is `NO_PREFERENCE`.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | NO_PREFERENCE | Respect the sender's intent on each reply, with no warning when the mention is toggled |
+| 1 | PREFER_MENTION | Replies mention this account by default, and the sender is warned when they disable the mention |
+| 2 | PREFER_NO_MENTION | Replies omit the mention by default, and the sender is warned when they enable it |
+
+A guild member has the same enumeration in its own `mention_flags`, where `NO_PREFERENCE` inherits the account-wide value.
+
+## User object
+
+The private representation of the current account, returned by [Get current user](/http-api/users/current-user/#get-current-user) and by every operation that mutates the account. It extends the [partial user object](#partial-user-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The [snowflake](/snowflakes/) that identifies the account |
+| username | string | The account username (1-32 ASCII letters, digits, or underscores) |
+| discriminator | string | The account discriminator, four decimal digits with leading zeroes |
+| global_name | ?string | The display name of the account, or null when none is set |
+| avatar<sup>1</sup> | ?string | The image hash of the account avatar, or null when none is set |
+| avatar_color | ?integer | The packed 24-bit RGB colour derived from the stored avatar, or null |
+| bot? | boolean | Whether the account is a bot, omitted when false |
+| system? | boolean | Whether the account is a Fluxer system account, omitted when false |
+| flags | integer | [Public user flags](#public-user-flags) |
+| mention_flags? | integer | [Reply mention preference](#reply-mention-preferences), omitted when the account has no preference |
+| is_staff | boolean | Whether the account has the staff flag, including when that flag is hidden from `flags` |
+| acls<sup>2</sup> <sup>3</sup> | array[string] | The Admin access control entries held by the account |
+| traits<sup>3</sup> <sup>4</sup> | array[string] | The account traits, in sorted order |
+| email<sup>5</sup> | ?string | The account email address, or null when none exists |
+| email_bounced?<sup>3</sup> | boolean | Whether the mail provider marked the current email as bounced |
+| phone<sup>6</sup> | ?string | Always null |
+| has_verified_phone | boolean | Whether phone verification is complete |
+| bio | ?string | The profile biography, or null when none is set |
+| pronouns | ?string | The profile pronouns, or null when none are set |
+| accent_color | ?integer | The profile accent colour as packed 24-bit RGB, or null when none is set |
+| timezone?<sup>7</sup> | ?string | The IANA timezone identifier stored for the account, or null when none is set |
+| timezone_privacy_flags?<sup>7</sup> | integer | [Profile field privacy flags](#profile-field-privacy-flags) applied to the profile timezone |
+| banner<sup>8</sup> | ?string | The image hash of the profile banner, or null when none is set or the entitlement is missing |
+| banner_color | ?integer | The packed 24-bit RGB colour derived from the stored banner, or null |
+| mfa_enabled<sup>3</sup> <sup>9</sup> | boolean | Whether any authenticator is configured |
+| authenticator_types?<sup>3</sup> <sup>9</sup> | array[integer] | [Authenticator types](#authenticator-types) configured for the account |
+| verified<sup>5</sup> | boolean | Whether the account email is verified |
+| premium_type<sup>10</sup> | ?integer | [Premium type](#premium-types) |
+| premium_since<sup>3</sup> <sup>10</sup> | ?ISO8601 timestamp | The time premium was first activated, or null |
+| premium_until<sup>3</sup> <sup>11</sup> | ?ISO8601 timestamp | The end of current premium access, or null when no premium period is stored |
+| premium_will_cancel<sup>3</sup> | boolean | Whether subscription premium will cancel at the billing boundary |
+| premium_billing_cycle<sup>3</sup> | ?string | The premium billing cycle, or null |
+| premium_lifetime_sequence<sup>3</sup> | ?integer | The lifetime premium sequence, or null |
+| premium_grace_ends_at<sup>12</sup> | ?ISO8601 timestamp | The end of the post-cancellation grace interval, or null when the account is not in grace |
+| premium_discriminator<sup>13</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
+| premium_badge_hidden<sup>3</sup> | boolean | Whether the premium badge is withheld from the public profile |
+| premium_badge_masked<sup>3</sup> | boolean | Whether a lifetime badge is presented as an ordinary subscription badge |
+| premium_badge_timestamp_hidden<sup>3</sup> | boolean | Whether the premium activation time is withheld from the public profile |
+| premium_badge_sequence_hidden<sup>3</sup> | boolean | Whether the lifetime sequence is withheld from the public profile |
+| premium_purchase_disabled<sup>3</sup> | boolean | Whether premium purchasing is disabled for the account |
+| premium_enabled_override<sup>3</sup> | boolean | Whether an administrative override grants premium entitlements |
+| premium_perks_disabled<sup>3</sup> | boolean | Whether premium entitlements are suspended for the account |
+| force_inbound_phone_verification?<sup>14</sup> | boolean | The debugging switch that forces the inbound phone verification flow |
+| password_last_changed_at<sup>3</sup> | ?ISO8601 timestamp | The time of the most recent password change, or null |
+| last_voice_activity_sharing_change_at<sup>15</sup> | ?ISO8601 timestamp | The time of the most recent bulk voice activity sharing change, or null |
+| required_actions<sup>3</sup> <sup>16</sup> | array[string] | The ordered [required actions](#required-actions) the account must complete before unrestricted use |
+| nsfw_allowed<sup>3</sup> <sup>17</sup> | boolean | Whether the account can access age-restricted content |
+| has_dismissed_premium_onboarding<sup>3</sup> <sup>18</sup> | boolean | Whether premium onboarding was dismissed |
+| has_ever_purchased<sup>3</sup> | boolean | Whether the account has completed a purchase |
+| has_unread_gift_inventory<sup>3</sup> <sup>19</sup> | boolean | Whether the gift inventory has unread items |
+| unread_gift_inventory_count<sup>3</sup> <sup>19</sup> | integer | The number of unread gift inventory items |
+| pending_bulk_message_deletion<sup>3</sup> | ?[pending bulk message deletion](#pending-bulk-message-deletion-object) object | The message deletion the account scheduled for itself, or null when none is pending |
+| age_verified_adult? | boolean | Whether adult age verification is complete, omitted when false |
+| terms_agreed_at | ?ISO8601 timestamp | The time of the most recent terms acceptance, or null |
+| privacy_agreed_at | ?ISO8601 timestamp | The time of the most recent privacy policy acceptance, or null |
+
+<sup>1</sup> An animated avatar hash has the `a_` prefix, and the prefix is removed while the account has no animated avatar entitlement
+
+<sup>2</sup> The array is empty for an account with no Admin access, and it is replaced wholesale by [Set user ACLs](/admin-api/users/#set-user-acls). It is independent of `is_staff`
+
+<sup>3</sup> The field is neutralised for an OAuth2 bearer credential as described below
+
+<sup>4</sup> The value `premium` is present exactly when premium entitlements are currently active, regardless of the stored trait set, and every other stored trait is returned sorted
+
+<sup>5</sup> For an OAuth2 bearer credential without the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is `null`
+
+<sup>6</sup> Phone numbers are no longer stored on the account record. The field is retained so an older client keeps parsing the response
+
+<sup>7</sup> The pair is present only while the account has the staff flag, and it is absent for every other account
+
+<sup>8</sup> The banner hash is withheld entirely while the account lacks the animated banner entitlement, which gates every profile banner
+
+<sup>9</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator omits `authenticator_types`
+
+<sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not currently active
+
+<sup>11</sup> The value is the later of the subscription end and any stacked gift extension, and it is reported even when premium entitlements are no longer active
+
+<sup>12</sup> While the value is set, premium entitlements remain active until it passes, and it replaces the default grace interval that otherwise follows `premium_until`
+
+<sup>13</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and it marks the discriminator for reselection when that premium access ends
+
+<sup>14</sup> The field is declared but never populated, so it is absent from every response
+
+<sup>15</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
+
+<sup>16</sup> The array is empty when the account has no stored suspicious activity flag, when it has no email address, or when its contact is exempt from required actions
+
+<sup>17</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
+
+<sup>18</sup> The value is false while premium entitlements are not currently active, even when a dismissal was recorded earlier
+
+<sup>19</sup> Both values derive from the difference between the stored gift inventory sequence and the sequence the account has acknowledged, and they report `false` and `0` when no gift has ever been recorded
+
+:::note[A bearer read returns zero values]
+`acls`, `traits`, and `required_actions` become empty arrays. `email_bounced` and `authenticator_types` are dropped. Every field marked <sup>3</sup> above that is a boolean becomes `false`, every timestamp or nullable field becomes `null`, and `unread_gift_inventory_count` becomes `0`.
+:::
+
+:::caution[An outstanding required action blocks ordinary routes]
+While `required_actions` is non-empty, the ordinary login requirement returns 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The error body's `data` member has `suspicious_activity_flags`, rebuilt from the surviving list.
+:::
+
+Recovery routes stay open to a restricted account. They are [Get current user](/http-api/users/current-user/#get-current-user), [Modify current user](/http-api/users/current-user/#modify-current-user), [Get current user settings](/http-api/users/settings/#get-current-user-settings), every [email change](/http-api/users/email-and-password/) and [phone verification](/http-api/users/phone-verification/) route, [Resend email verification](/http-api/authentication/#resend-email-verification), session listing and termination, and the OAuth2 routes.
+
+A requirement disappears from the list as soon as it is met. An Admin operation applies no suspicious activity gate.
+
+## Pending bulk message deletion object
+
+A scheduled deletion of every message the account has sent. The field is this object only while the deletion requested through [Request bulk message deletion](/http-api/users/content/#request-bulk-message-deletion) is still waiting to run.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| scheduled_at | ISO8601 timestamp | The time at which the deletion runs |
+| channel_count<sup>1</sup> | integer | The number of channels holding a message that will be deleted |
+| message_count<sup>1</sup> | integer | The number of messages that will be deleted |
+
+<sup>1</sup> Both counts are computed when the deletion is scheduled and are not recomputed while it waits
+
+## Authenticator types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | TOTP | Time-based one-time password authenticator |
+| 2 | WEBAUTHN | WebAuthn authenticator |
+
+The value `1` is unassigned. Any stored authenticator value outside this registry is excluded from `authenticator_types`.
+
+## Premium types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | NONE | No premium subscription |
+| 1 | SUBSCRIPTION | Active premium subscription |
+| 2 | LIFETIME | Lifetime premium subscription |
+
+## Required actions
+
+Each entry is an exact string in the `required_actions` array of the [user object](#user-object), ordered by the registry order below. Fluxer removes a requirement the account already satisfies, and removes a requirement implied by a stricter retained one.
+
+| Value | Description |
+| --- | --- |
+| REQUIRE_VERIFIED_EMAIL | The account needs a verified email address |
+| REQUIRE_REVERIFIED_EMAIL | The account needs to verify its email address again |
+| REQUIRE_VERIFIED_PHONE | The account needs a verified phone number |
+| REQUIRE_REVERIFIED_PHONE | The account needs to verify its phone number again |
+| REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE | The account needs either a verified email address or a verified phone number |
+| REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE | The account needs to verify its email address again or hold a verified phone number |
+| REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs a verified email address or needs to verify its phone number again |
+| REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs to verify either its email address or its phone number again |
+| REQUIRE_INBOUND_PHONE_VERIFICATION<sup>1</sup> | The account needs to complete phone verification by sending an SMS to the instance's inbound number |
+
+<sup>1</sup> The entry appears only while a phone requirement is also outstanding. A stored inbound requirement with no other phone clause produces an ordinary verified phone requirement
+
+## Profile field privacy flags
+
+A field whose flags value is `0` is visible to nobody, including on the owner's own profile read.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | EVERYONE | Anyone permitted to view the full profile can see the field |
+| 1 &lt;&lt; 1 | FRIENDS | Friends can see the field |
+| 1 &lt;&lt; 2 | MUTUAL_GUILDS | Members of a mutual guild can see the field |
+
+## User settings object
+
+The complete account-wide settings record, with one field per setting. `synced_preferences` holds a base64-encoded Protobuf snapshot defined by the [user settings Protobuf reference](/http-api/users/settings-protobuf/). Fluxer stores that snapshot for clients and never interprets it.
+
+Update semantics belong to the [user settings update object](/http-api/users/settings/#user-settings-update-object). Both settings operations return this object, and so do [Ready](/gateway/events/#ready-object) and [User Settings Update](/gateway/events/#user-settings-update). Every field below is always present.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | [Presence status](/http-api/users/settings/#presence-status-values) |
+| status_resets_at | ?ISO8601 timestamp | The time at which the scheduled status reset applies, or null |
+| status_resets_to | ?string | [Presence status](/http-api/users/settings/#presence-status-values) applied by the scheduled reset, or null |
+| theme | string | [Theme value](/http-api/users/settings/#theme-values) |
+| locale | string | The interface [locale](/topics/locales/#supported-locales) |
+| restricted_guilds<sup>1</sup> | array[snowflake] | The guilds where member direct messages are restricted |
+| bot_restricted_guilds<sup>1</sup> | array[snowflake] | The guilds where bot direct messages are restricted |
+| default_guilds_restricted | boolean | Whether newly joined guilds restrict member direct messages |
+| bot_default_guilds_restricted | boolean | Whether newly joined guilds restrict bot direct messages |
+| inline_attachment_media | boolean | Whether attachment media is rendered inline |
+| inline_embed_media | boolean | Whether embed media is rendered inline |
+| gif_auto_play | boolean | Whether GIF media plays automatically |
+| render_embeds | boolean | Whether message embeds are rendered |
+| render_reactions | boolean | Whether message reactions are rendered |
+| animate_emoji | boolean | Whether custom emoji animate |
+| animate_stickers | integer | [Sticker animation setting](#sticker-animation-settings) |
+| render_spoilers | integer | [Spoiler rendering setting](#spoiler-rendering-settings) |
+| message_display_compact | boolean | Whether messages use compact presentation |
+| friend_source_flags | integer | [Friend source flags](#friend-source-flags) |
+| incoming_call_flags | integer | [Incoming call flags](#incoming-call-flags) |
+| group_dm_add_permission_flags | integer | [Group DM add permission flags](#group-dm-add-permission-flags) |
+| guild_folders<sup>2</sup> | array[[guild folder](#guild-folder-object) object] | The user-owned guild sidebar layout |
+| custom_status | ?[custom status](#custom-status-object) object | The current custom status, or null when none is set |
+| afk_timeout | integer | The idle time in seconds before the account is presented as away |
+| time_format | integer | [Time format setting](#time-format-settings) |
+| developer_mode | boolean | Whether developer mode is enabled |
+| trusted_domains<sup>3</sup> | array[string] | The external link domains the account trusts |
+| default_hide_muted_channels | boolean | Whether newly joined guilds hide muted channels |
+| sensitive_content_friend_dm_filter | integer | [Sensitive media filter](#sensitive-media-filters) for friend direct messages |
+| sensitive_content_non_friend_dm_filter | integer | [Sensitive media filter](#sensitive-media-filters) for non-friend direct messages |
+| sensitive_content_guild_filter | integer | [Guild sensitive media filter](#guild-sensitive-media-filters) |
+| suppress_unprivileged_self_mentions<sup>4</sup> | boolean | Whether direct and reply mentions from unprivileged users are suppressed |
+| suppress_unprivileged_self_mentions_bypass_user_ids<sup>4</sup> <sup>5</sup> | array[snowflake] | The users exempt from mention suppression |
+| staff_dm_access_user_ids<sup>4</sup> <sup>5</sup> | array[snowflake] | The users granted staff direct message access |
+| synced_preferences<sup>6</sup> | string | The base64-encoded [synced preferences](/http-api/users/settings-protobuf/) message |
+| profile_privacy | integer | [Profile privacy level](#profile-privacy-levels) |
+| default_share_voice_activity<sup>7</sup> | boolean | Whether a newly accepted friend relationship starts with voice activity sharing on |
+
+<sup>1</sup> Duplicate identifiers are removed when the array is written
+
+<sup>2</sup> An account with an empty stored layout that still holds a legacy guild ordering receives one uncategorised folder holding that ordering. An account with neither receives an empty array
+
+<sup>3</sup> The single entry `*` trusts every domain, and it cannot be combined with a concrete domain
+
+<sup>4</sup> The field is writable only by a staff account and is reset to its zero value on every settings update from an ordinary account
+
+<sup>5</sup> Duplicate identifiers are removed and the array is returned in ascending identifier order
+
+<sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 262144 bytes, the 256 KiB ceiling
+
+<sup>7</sup> The field is read-only here and is mutated by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing)
+
+## Custom status object
+
+A custom status is the text and emoji stored on the account's [user settings](#user-settings-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| text | ?string | The status text (1-128 characters), or null when none is set |
+| expires_at?<sup>1</sup> | ISO8601 timestamp | The time at which the status expires |
+| emoji_id?<sup>1</sup> | snowflake | The ID of the custom emoji shown beside the text |
+| emoji_name<sup>2</sup> | ?string | The custom emoji name resolved from `emoji_id`, the single Unicode emoji supplied directly, or null |
+| emoji_animated | boolean | Whether the selected custom emoji is animated |
+
+<sup>1</sup> The field is omitted when the status has no expiry or no custom emoji
+
+<sup>2</sup> A payload with `emoji_id` has its `emoji_name` replaced by the name of that emoji
+
+### Example
+
+```json
+{
+  "text": "shipping",
+  "expires_at": "2026-03-04T18:00:00.000Z",
+  "emoji_id": "1501314428688998182",
+  "emoji_name": "party_parrot",
+  "emoji_animated": true
+}
+```
+
+## Guild folder object
+
+One entry of the saved, user-owned guild sidebar layout. Joining a guild prepends its ID to the uncategorised folder. Leaving or losing a guild removes its ID from every folder and drops any non-uncategorised folder the removal leaves empty, whether or not it has a name.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | ?integer | The identifier of the folder |
+| name | ?string | The name of the folder, or null when none is set |
+| color<sup>2</sup> | ?integer | The folder colour as packed 24-bit RGB |
+| flags | integer | [Guild folder flags](#guild-folder-flags) |
+| icon<sup>3</sup> | string | [Guild folder icon](#guild-folder-icons) |
+| guild_ids<sup>4</sup> | array[snowflake] | The IDs of the guilds in the folder, in sidebar order |
+
+<sup>1</sup> The value `-1` identifies the uncategorised folder, which holds guilds not placed in a named folder. A stored layout that omits it has it prepended when the layout is written
+
+<sup>2</sup> A folder written without a colour is stored with `0`. The value is null on an uncategorised folder synthesised from a legacy guild ordering or created by a guild join
+
+<sup>3</sup> A folder written without an icon is stored with `folder`
+
+<sup>4</sup> Writing the layout keeps one occurrence of a guild ID that appears in more than one folder, preferring a named folder over the uncategorised one
+
+### Example
+
+```json
+{
+  "id": -1,
+  "name": null,
+  "color": null,
+  "flags": 0,
+  "icon": "folder",
+  "guild_ids": ["1501314428688998182", "1501314428688998183"]
+}
+```
+
+## Guild folder flags
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | SHOW_ICON_WHEN_COLLAPSED | Show the selected icon instead of guild previews while collapsed |
+
+## Guild folder icons
+
+| Value | Description |
+| --- | --- |
+| folder | Folder icon, applied when no icon is supplied |
+| star | Star icon |
+| heart | Heart icon |
+| bookmark | Bookmark icon |
+| game_controller | Game controller icon |
+| shield | Shield icon |
+| music_note | Music note icon |
+
+## Sticker animation settings
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ALWAYS_ANIMATE | Always animate stickers |
+| 1 | ANIMATE_ON_INTERACTION | Animate stickers during interaction |
+| 2 | NEVER_ANIMATE | Never animate stickers |
+
+## Spoiler rendering settings
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ALWAYS | Always reveal spoiler content |
+| 1 | ON_CLICK | Reveal spoiler content after interaction |
+| 2 | IF_MODERATOR | Reveal spoiler content for moderators |
+
+## Time format settings
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | AUTO | Select the time format from the locale |
+| 1 | TWELVE_HOUR | Use a 12-hour clock |
+| 2 | TWENTY_FOUR_HOUR | Use a 24-hour clock |
+
+## Sensitive media filters
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | SHOW | Show sensitive media |
+| 1 | BLUR | Blur sensitive media until revealed |
+| 2 | BLOCK | Hide sensitive media |
+
+## Guild sensitive media filters
+
+Guild channels accept only these two values.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | SHOW | Show sensitive media |
+| 1 | BLUR | Blur sensitive media until revealed |
+
+## Profile privacy levels
+
+A bot account is never subject to profile privacy, and a caller reading its own profile is never restricted.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | ALL_GUILDS | Friends and members of any mutual guild can view the full profile |
+| 1 | SMALL_GUILDS_ONLY | Friends and members of a mutual guild with at most 200 members can view the full profile |
+| 2 | FRIENDS_ONLY | Only friends can view the full profile |
+
+## Friend source flags
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | MUTUAL_FRIENDS | Accept requests from users with mutual friends |
+| 1 &lt;&lt; 1 | MUTUAL_GUILDS | Accept requests from users in mutual guilds |
+| 1 &lt;&lt; 2 | NO_RELATION | Accept requests without an existing relation |
+
+## Incoming call flags
+
+`SILENT_EVERYONE` applies to calls the other flags already permit. When conflicting policy flags are supplied, `FRIENDS_ONLY` takes precedence over `NOBODY`.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | FRIENDS_OF_FRIENDS | Permit calls from friends of friends |
+| 1 &lt;&lt; 1 | GUILD_MEMBERS | Permit calls from guild members |
+| 1 &lt;&lt; 2 | EVERYONE | Permit calls from everyone |
+| 1 &lt;&lt; 3 | FRIENDS_ONLY | Permit calls only from friends |
+| 1 &lt;&lt; 4 | NOBODY | Reject all incoming calls |
+| 1 &lt;&lt; 5 | SILENT_EVERYONE | Receive permitted calls silently |
+
+## Group DM add permission flags
+
+When conflicting policy flags are supplied, `FRIENDS_ONLY` takes precedence over `NOBODY`, which takes precedence over `EVERYONE`.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | FRIENDS_OF_FRIENDS | Permit friends of friends to add the user |
+| 1 &lt;&lt; 1 | GUILD_MEMBERS | Permit guild members to add the user |
+| 1 &lt;&lt; 2 | EVERYONE | Permit everyone to add the user |
+| 1 &lt;&lt; 3 | FRIENDS_ONLY | Permit only friends to add the user |
+| 1 &lt;&lt; 4 | NOBODY | Prevent every user from adding the user |
+
+## User profile object
+
+The account-wide profile customisation inside a [full user profile object](#full-user-profile-object).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| bio<sup>1</sup> | ?string | The account-wide biography, or null when none is set |
+| pronouns<sup>1</sup> | ?string | The account-wide pronouns, or null when none are set |
+| banner<sup>2</sup> | ?string | The image hash of the profile banner, or null when none is set |
+| banner_color | ?integer | The packed 24-bit RGB colour derived from the stored banner, or null |
+| accent_color | ?integer | The profile accent colour as packed 24-bit RGB, or null when none is set |
+
+<sup>1</sup> The value is forced to `null` when profile privacy restricts the viewer, which is reported by `profile_limited`
+
+<sup>2</sup> The banner hash is withheld while the account lacks the animated banner entitlement, which gates every profile banner. This withholding is independent of profile privacy
+
+## Guild member profile object
+
+A guild member profile is the per-guild profile customisation of the target account, in the guild named by the `guild_id` query parameter.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| bio<sup>1</sup> | ?string | The guild-specific biography, or null when none is set |
+| pronouns<sup>1</sup> | ?string | The guild-specific pronouns, or null when none are set |
+| banner<sup>2</sup> | ?string | The image hash of the guild-specific banner, or null when none is set |
+| accent_color | ?integer | The guild profile accent colour as packed 24-bit RGB, or null when none is set |
+
+<sup>1</sup> The value is forced to `null` when profile privacy restricts the viewer
+
+<sup>2</sup> The value is `null` while the member's premium-dependent guild customisation is sanitised. An animated banner hash has the `a_` prefix
+
+## Mutual guild object
+
+One guild that both the caller and the target account belong to.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| nick | ?string | The nickname the target account uses in the guild, or null when none is set |
+
+## Full user profile object
+
+The profile read returned by [Get user profile](#get-user-profile) for one target account.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [partial user](#partial-user-object) object | The public representation of the target account |
+| user_profile | [user profile](#user-profile-object) object | The account-wide profile customisation |
+| guild_member?<sup>1</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | The membership the target account holds in the named guild |
+| guild_member_profile?<sup>1</sup> | [guild member profile](#guild-member-profile-object) object | The per-guild profile customisation of the target account |
+| premium_type?<sup>2</sup> | integer | The [premium type](#premium-types) visible to the caller |
+| premium_since?<sup>2</sup> | ISO8601 timestamp | The premium activation time visible to the caller |
+| premium_lifetime_sequence?<sup>2</sup> | integer | The lifetime premium sequence visible to the caller |
+| mutual_friends?<sup>3</sup> | array[[partial user](#partial-user-object) object] | The mutual friends in descending account identifier order |
+| mutual_guilds?<sup>3</sup> | array[[mutual guild](#mutual-guild-object) object] | The guilds the caller and the target are both members of |
+| connected_accounts<sup>4</sup> | array[[connection](/http-api/connections/#connection-object) object] | The verified connections the caller is permitted to see |
+| timezone_offset<sup>5</sup> | ?integer | The offset of the target profile timezone in minutes from UTC, or null |
+| profile_limited?<sup>6</sup> | boolean | Whether profile privacy removed restricted fields |
+
+<sup>1</sup> The pair requires the `guild_id` query parameter and requires both the caller and the target to be members of that guild
+
+<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is additionally omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
+
+<sup>3</sup> The collection is omitted unless its query parameter is true, and always when the target is the caller
+
+<sup>4</sup> The array is empty when the profile is restricted. It otherwise holds only verified connections whose [profile field privacy flags](#profile-field-privacy-flags) admit the caller
+
+<sup>5</sup> The value is null unless the profile is unrestricted, the target has the staff flag, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
+
+<sup>6</sup> The field is present only on a restricted read
+
+A lifetime target that masks its badge reports `premium_type` of `1` rather than `2`.
+
+## Get user
+
+<RouteHeader method="GET" path="/v1/users/{user_id}" bot />
+
+Returns a [partial user](#partial-user-object) object for any account. Requires no permission and no relationship with the target.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+:::note[A deleted target still resolves]
+A target whose deletion has completed returns 200 with the substituted [deleted account representation](#partial-user-object), so historical references stay renderable. Only an identifier that was never allocated returns 404 `UNKNOWN_USER`.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [partial user](#partial-user-object) object | User was returned |
+| 404 | [error response](/http-api/#error-response) | Identifier was never allocated and the request returns `UNKNOWN_USER` |
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and target user ID, on the `user:read::user_id` bucket.
+
+## Get user profile
+
+<RouteHeader method="GET" path="/v1/users/{target_id}/profile" bot />
+
+Returns a [full user profile](#full-user-profile-object) object for one target account.
+
+### Limitations
+
+- A caller reading another account needs one of four relationships with the target: friendship, a pending friend request in either direction, a shared guild, or a shared group direct message channel.
+- Reading a bot target is always permitted.
+- Reading the caller's own profile bypasses both the access check and profile privacy.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| target_id | snowflake | The ID of the target account |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id?<sup>1</sup> | snowflake | The guild whose member and guild profile objects are included |
+| with_mutual_friends?<sup>2</sup> | boolean | Whether to include mutual friends (default false) |
+| with_mutual_guilds?<sup>2</sup> | boolean | Whether to include mutual guilds (default false) |
+
+<sup>1</sup> A guild that either the caller or the target is not a member of omits `guild_member` and `guild_member_profile`. The read still returns 200
+
+<sup>2</sup> The value is trimmed and read as true only for the exact strings `true`, `True`, and `1`. Every other value, including absence, is false
+
+:::note[Profile privacy is a field filter]
+A read that passes the access check can still be restricted. A restricted read nulls `bio` and `pronouns` in both profile objects, empties `connected_accounts`, nulls `timezone_offset`, and sets `profile_limited` to true. It also removes the three premium fields from the body.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [full user profile](#full-user-profile-object) object | Profile was returned |
+| 403 | [error response](/http-api/#error-response) | Caller has no relationship permitting profile access |
+| 404 | [error response](/http-api/#error-response) | Target user does not exist |
+
+### Side effects
+
+When the target's premium period and grace interval have both elapsed, this read clears the stored premium state on the target account before returning it. The cleared fields are the premium type, activation time, end time, gift extension, cancellation flag, billing cycle, and grace end. That write emits no Gateway Dispatch. The background sweep that performs the same clearing emits [User Update](/gateway/events/#user-update). The profile is still returned when the clearing write fails.
+
+### Rate limit
+
+100 requests per 10 seconds for each authenticated user and target user ID, on the `user:profile::target_id` bucket.
+
+## Check user tag
+
+<RouteHeader method="GET" path="/v1/users/check-tag" bot />
+
+Reports whether a username and discriminator pair is unavailable.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| username<sup>1</sup> | string | The username after trimming (1-32 ASCII letters, digits, or underscores) |
+| discriminator<sup>2</sup> | string | The discriminator (1-4 decimal digits) |
+
+<sup>1</sup> The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`, all compared case-insensitively
+
+<sup>2</sup> The value is parsed as a decimal integer before the lookup, so `7`, `07`, and `0007` describe the same tag
+
+Fluxer reports `false` for the caller's own current tag without a lookup. That comparison reads the username case-insensitively and the discriminator as an integer.
+
+A reserved username fails validation with `USERNAME_RESERVED_VALUE` or `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`, and no `taken` value comes back for it.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| taken | boolean | Whether the normalised tag is unavailable |
+
+:::caution[`true` also comes from two transient conditions]
+A tag claimed by a registration still in progress reads as taken for up to 30 seconds. A lookup that waits more than 10 seconds on a busy username also reads as taken.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Tag availability was returned |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `user:check_tag` bucket.

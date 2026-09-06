@@ -1,0 +1,172 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Gifts
+description: Gift code objects, duration units, public lookup, and one-time redemption.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A gift is a code that grants premium to the account that redeems it. Until then it belongs to no account. [Create gift checkout](/http-api/billing/#create-gift-checkout) defines how one is bought.
+
+Both routes are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. [Redeem gift](#redeem-gift) is user-only.
+
+:::caution[A code is a bearer credential]
+A gift records no recipient, so Fluxer binds the code to whichever eligible account presents it first. [Get gift](#get-gift) takes no credential and returns the full public record for any code. Treat an unredeemed code as a secret.
+:::
+
+## Gift object
+
+A gift records a duration. Fluxer computes the entitlement window at redemption time from the redeemer's existing state.
+
+Both creation paths record a creator. A completed gift checkout records the purchaser, and an Admin API gift records the system account with ID `0` rather than the administrator that requested it. No operation unredeems a code.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code<sup>1</sup> | string | The code presented to [Redeem gift](#redeem-gift) |
+| duration_type | string | The [gift duration unit](#gift-duration-units) that `duration_quantity` is measured in |
+| duration_quantity<sup>2</sup> | integer | The number of `duration_type` units the gift grants |
+| redeemed<sup>3</sup> | boolean | Whether the code has already been redeemed |
+| created_by?<sup>4</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The account that created the gift |
+
+<sup>1</sup> Exactly 32 characters drawn from the uppercase letters, the lowercase letters and the digits, regenerated until it does not collide with an existing code
+
+<sup>2</sup> Non-negative, and positive on every gift the current code paths create. The exact value `0` means lifetime Visionary entitlement and appears only on a record that predates that constraint
+
+<sup>3</sup> Derived from the stored redemption timestamp. Neither the redemption time nor the redeeming account appears in this object
+
+<sup>4</sup> Always present and non-null on this route. A creator ID that resolves to no account becomes a placeholder partial with the unresolved ID, `DeletedUser`, `0000` and `Deleted User`
+
+### Example
+
+```json
+{
+  "code": "aZ3kQ9mR2tX7bN4vC8wL5yH1sD6gF0pJ",
+  "duration_type": "months",
+  "duration_quantity": 1,
+  "redeemed": false,
+  "created_by": {
+    "id": "1501314428688998182",
+    "username": "quill",
+    "discriminator": "0001",
+    "global_name": "Quill",
+    "avatar": null,
+    "avatar_color": null,
+    "flags": 0
+  }
+}
+```
+
+## Gift duration units
+
+A purchased gift is always whole months or whole years, because a purchase of twelve months is normalised to one year. The day and week units exist for codes created through the Admin API.
+
+| Value | Description |
+| --- | --- |
+| days | The quantity counts days added to the entitlement anchor |
+| weeks | The quantity counts weeks added to the entitlement anchor |
+| months<sup>1</sup> | The quantity counts calendar months added to the entitlement anchor |
+| years<sup>1</sup> | The quantity counts calendar years, applied as twelve calendar months each |
+
+<sup>1</sup> A calendar month is added in UTC and clamped to the last day of the target month, so 31 January extended by one month lands on 28 or 29 February
+
+## Get gift
+
+<RouteHeader method="GET" path="/v1/gifts/{code}" unauthenticated />
+
+Reads a gift by its code. Returns the [gift](#gift-object) object on success.
+
+A code that does not exist and a code that has been revoked both return 404 `UNKNOWN_GIFT_CODE`, so a revoked code is never distinguishable from one that was never issued.
+
+A chargeback or a refund for the purchase revokes the gift when [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) processes it and the gift is still unredeemed. The gift also leaves [List current user gifts](/http-api/users/gifts/#list-current-user-gifts), so the buyer has no route that reports the reversal. A gift that was already redeemed when the same event arrives stays readable, and Fluxer recomputes the redeemer's entitlement from their remaining redeemed gifts.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The code to look up (1-32 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [gift](#gift-object) object | The gift was returned |
+| 404 | [error response](/http-api/#error-response) | No gift exists for the code, or the gift was revoked, and the request returns `UNKNOWN_GIFT_CODE` |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user or client IP address, on the `gift:get` bucket. A supplied credential only keys the bucket. A credential that does not resolve leaves the bucket keyed by the client IP address, and the request still succeeds.
+
+## Redeem gift
+
+<RouteHeader method="POST" path="/v1/gifts/{code}/redeem" />
+
+Redeems a gift for the authenticated account and returns 204 with an empty body. User-only. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+### Limitations
+
+- The redeeming account must be claimed, and an unclaimed account returns 400 `UNCLAIMED_ACCOUNT_CANNOT_MAKE_PURCHASES`.
+- The account must have a verified email address, and an unverified address returns 403 `PURCHASE_EMAIL_VERIFICATION_REQUIRED`.
+- The account must not have the purchase-disabled premium flag, and the flag returns 403 `PREMIUM_PURCHASE_BLOCKED` with a top-level `reason` member set to `purchase_disabled`.
+- An account already holding lifetime Visionary entitlement receives 400 `CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY`.
+
+A consumed code receives 400 `GIFT_CODE_ALREADY_REDEEMED`. A code another request is currently redeeming receives 400 `STRIPE_GIFT_REDEMPTION_IN_PROGRESS`. A code that does not exist or has been revoked receives 404 `UNKNOWN_GIFT_CODE`.
+
+:::note[The refusal order differs from checkout]
+The claimed account, verified email and purchase flag refusals are evaluated before the lifetime refusal here. [Create subscription checkout](/http-api/billing/#create-subscription-checkout) evaluates the same two groups in the opposite order.
+:::
+
+:::caution[Redemption is single-use per code]
+One redemption can be in flight for a code across the whole deployment, and a second concurrent request is refused at once.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| code | string | The code to redeem (1-32 characters) |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
+| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the caller's contact has the exemption capability
+
+<sup>2</sup> Any other value, including an omitted header, falls back to the instance's configured provider
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The gift was redeemed and the entitlement was applied |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA failed, the code is already redeemed, a redemption is already in flight, the account is unclaimed, the account holds lifetime entitlement, the payment provider rejected the subscription work, or the Visionary guild join for a lifetime gift failed |
+| 403 | [error response](/http-api/#error-response) | The email address is unverified, or purchases are disabled for the account |
+| 404 | [error response](/http-api/#error-response) | No gift exists for the code, the gift was revoked, the authenticated account record no longer exists, or the configured Visionary guild does not exist |
+
+### Side effects
+
+The gift becomes redeemed, so [Get gift](#get-gift) reports `redeemed` as true and [List current user gifts](/http-api/users/gifts/#list-current-user-gifts) shows the redemption time and the redeemer to the buyer.
+
+A gift with a positive quantity extends recurring premium. Fluxer stacks the duration onto the payment provider subscription only when the account's premium type is subscription, its premium end is unset or in the future, it has a stored subscription identity, and the instance has a payment provider configured. Stacking adds the duration to the existing trial end, or to the current period end when no trial end is set, and applies the update without proration.
+
+The stacked path and the unstacked path both set the gift extension end to the gift duration added to the latest of the current time, the current premium end and the existing gift extension end. Both also clear an active grace deadline and set the premium type when the account has none. The stacked path also records the account as having ever purchased.
+
+The provider refuses a stacking attempt when the subscription is unknown, already cancelled, or has neither a trial end nor a current period end. That refusal clears the stored subscription identity, the billing cycle and any pending cancellation. The redemption then continues unstacked. Any other provider failure aborts the redemption and returns 400 `STRIPE_ERROR`, and the code stays unredeemed.
+
+A gift whose quantity is `0` grants lifetime Visionary entitlement. Fluxer then cancels an active subscription immediately, without proration and without a final invoice, and that cancellation also clears the stored subscription identity, the billing cycle and any pending cancellation. The account then receives lifetime premium with no premium end and no grace deadline.
+
+A lifetime gift that has no Visionary sequence leaves the account's own sequence alone, and an account that already holds one is not joined to the guild. Fluxer allocates a sequence to an account that holds none and joins it to the Visionary guild as described by [Rejoin Visionary guild](/http-api/premium/#rejoin-visionary-guild), including its Gateway Dispatches.
+
+When a lifetime gift has a Visionary sequence, Fluxer clears the recorded slot of whatever account holds it and joins the redeeming account to the Visionary guild whether or not it already holds a sequence. The gift's sequence overwrites the account's stored sequence, and the slot is reserved for the redeeming account. No current creation path records a sequence on a gift.
+
+A Visionary guild join that fails aborts the entitlement grant, so the redemption is rolled back and the code stays unredeemed. An account at its guild ceiling returns 400 `MAX_GUILDS` and a Visionary guild at its member ceiling returns 400 `MAX_GUILD_MEMBERS`. A subscription the same request already cancelled is not restored.
+
+Every entitlement change sends [User Update](/gateway/events/#user-update) to each session owned by the redeemer. Immediate subscription cancellation for a lifetime gift, and the clearing of a refused subscription identity, each produce their own User Update.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `gift:redeem` bucket.

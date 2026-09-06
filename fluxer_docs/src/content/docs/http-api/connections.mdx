@@ -1,0 +1,533 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Connections
+description: External account connections, domain ownership proof, Bluesky authorisation, visibility flags, and display ordering.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A connection links a Fluxer account to an outside identity the account has proved it controls. The two [connection types](#connection-types) are a DNS domain and a Bluesky account authorised through atproto OAuth. A profile renders an account's connections as the `connected_accounts` field of the [full user profile object](/http-api/users/#full-user-profile-object).
+
+Every route that reads or writes a connection is user-only. A bot token is rejected with 403 `ACCESS_DENIED`, and so is an OAuth2 bearer except on [List connections](#list-connections), which accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes). An account with an outstanding required action is rejected with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. No connection identifier is a snowflake.
+
+[Get Bluesky client metadata](#get-bluesky-client-metadata) and [Get Bluesky JWKS](#get-bluesky-jwks) are the exception. They read no credential, publish no account data, and serve the atproto authorisation servers the [Bluesky authorisation flow](#start-bluesky-authorisation) talks to.
+
+## Account connection limit
+
+An account holds at most 20 connections in total across every [connection type](#connection-types). Fluxer reports the ceiling as 400 `CONNECTION_LIMIT_REACHED` with an [error response](/http-api/#error-response) body.
+
+[Initiate connection](#initiate-connection), [Verify and create connection](#verify-and-create-connection), and the provider callback that completes the [Bluesky authorisation flow](#start-bluesky-authorisation) each enforce the ceiling. [Start Bluesky authorisation](#start-bluesky-authorisation) does not.
+
+## Connection object
+
+The pair of [type](#connection-types) and `id` identifies a connection. Both values appear in the path of every per-connection operation. A connection exists only after its external proof has succeeded once.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id<sup>1</sup> | string | The ID of the connection, unique within its [connection type](#connection-types) |
+| type | string | [Connection type](#connection-types) |
+| name<sup>2</sup> | string | The domain or Bluesky handle shown for the connection |
+| verified<sup>3</sup> | boolean | Whether the most recent proof succeeded |
+| visibility_flags<sup>4</sup> | integer | [Connection visibility flags](#connection-visibility-flags) |
+| sort_order<sup>5</sup> | integer | The display order within the account's connection list (0-2147483647) |
+
+<sup>1</sup> A `domain` connection identifier is 64 lowercase hexadecimal characters, the SHA-256 of the owning account identifier and the lowercased domain joined by one ASCII colon, so deleting and recreating the same domain reproduces the same identifier. A `bsky` connection identifier is a random UUID assigned when the connection is first created
+
+<sup>2</sup> For a `domain` connection the name is the domain exactly as it was submitted. For a `bsky` connection it is the Bluesky handle resolved at the most recent completion of the [Bluesky authorisation flow](#start-bluesky-authorisation), so it changes when the account is renamed upstream and is not refreshed by [Verify connection](#verify-connection)
+
+<sup>3</sup> A connection is created only after a proof succeeds, so the value starts true, and only a failed [Verify connection](#verify-connection) against an already verified connection sets it to false
+
+<sup>4</sup> The stored value is the integer the client supplied and is not masked against the defined bits
+
+<sup>5</sup> A newly created connection receives the number of connections the account already held, and [Update connection](#update-connection) and [Reorder connections](#reorder-connections) rewrite it
+
+A `domain` connection is identified by the submitted domain, which equals `name`. A `bsky` connection is identified by the account's decentralised identifier while `name` is the current handle, so the connection survives an upstream rename.
+
+## Connection types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| bsky<sup>1</sup> | BLUESKY | A Bluesky account authorised through atproto OAuth |
+| domain | DOMAIN | A domain the account has proved it controls |
+
+<sup>1</sup> [Initiate connection](#initiate-connection) rejects this type with 400 `BLUESKY_OAUTH_NOT_ENABLED` before it consults the connection ceiling. A Bluesky connection is created only by completing the flow that begins at [Start Bluesky authorisation](#start-bluesky-authorisation)
+
+## Connection visibility flags
+
+The flags of one connection decide which viewers of the owner's profile see it. Fluxer evaluates them against a viewer with the same rule as the [profile field privacy flags](/http-api/users/#profile-field-privacy-flags).
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 &lt;&lt; 0 | EVERYONE | Anyone permitted to view the profile can see the connection |
+| 1 &lt;&lt; 1 | FRIENDS | Friends can see the connection |
+| 1 &lt;&lt; 2 | MUTUAL_GUILDS | Members of a mutual guild can see the connection |
+
+A connection created without an explicit value receives EVERYONE. A value of `0` hides the connection from every viewer, including the owner's read of their own profile. A client MUST ignore a bit it does not recognise.
+
+An unverified connection is never rendered on a profile, whatever its flags. A viewer who is not permitted to see the full profile sees no connections at all. [List connections](#list-connections) ignores the flags and returns every connection the account holds.
+
+## Connection verification object
+
+Returned by [Initiate connection](#initiate-connection). No connection exists until [Verify and create connection](#verify-and-create-connection) succeeds.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token<sup>1</sup> | string | The value to publish at the domain as proof of ownership |
+| type | string | [Connection type](#connection-types) |
+| id<sup>2</sup> | string | The domain being verified |
+| instructions<sup>3</sup> | string | The human-readable instructions for placing the token |
+| initiation_token<sup>4</sup> | string | The signed token accepted by [Verify and create connection](#verify-and-create-connection) |
+
+<sup>1</sup> The token is 64 lowercase hexadecimal characters. Repeating the operation for the same target returns the same token, so a client MAY leave a published record in place across attempts
+
+<sup>2</sup> The value is the `identifier` exactly as submitted, with no trimming, lowercasing, or other normalisation
+
+<sup>3</sup> The instructions name both the DNS TXT record and the well-known path described under [Domain ownership proof](#domain-ownership-proof)
+
+<sup>4</sup> The value is a base64url JSON payload and its base64url HMAC-SHA256 signature separated by one ASCII full stop. It binds the account identifier, the type, the identifier, and the verification token, and has an expiry 30 minutes after issue
+
+:::caution[Anyone holding the initiation token can read it]
+The payload is ordinary base64url and has the verification token in the clear. Treat the initiation token as a credential and do not log or forward it.
+:::
+
+## Domain ownership proof
+
+Fluxer attempts a `domain` proof against the stored identifier exactly as it was submitted. [Initiate connection](#initiate-connection) accepts any string of 1 to 253 characters and applies no syntax check of its own, so a malformed value is accepted and then fails its proof.
+
+Fluxer first resolves the TXT records of `_fluxer.<domain>`. It issues the query in parallel to a fixed set of eight public DNS resolvers, each with a 2000 millisecond timeout and one attempt. The proof succeeds when any resolver returns a record whose concatenated strings equal `fluxer-verification=<token>` exactly. A resolver that fails or times out is treated like an absent record and produces no separate error.
+
+When DNS does not prove ownership, Fluxer issues one HTTPS `GET` to `https://<domain>/.well-known/fluxer-verification` with a 5000 millisecond timeout. It follows up to 5 redirects. A sixth redirect fails the proof, as does a redirect response that has no `Location` header. The proof succeeds only when the status of the final response is in the 2xx range and the whitespace-trimmed body equals the token exactly. A response body over the 16384 byte ceiling fails the proof, and a declared `Content-Length` over that ceiling fails it before the body is read.
+
+The instance outbound URL policy applies to the initial request and to every redirect it follows. A redirect target must use the `http` or `https` scheme. Fluxer lowercases the host and strips one trailing dot before the check.
+
+A host that is an IP literal cannot sit in a loopback, private, shared, link-local, documentation, benchmarking, multicast, or otherwise reserved range. An IPv6 literal that embeds an IPv4 address is checked against the IPv4 ranges. A `domain` identifier that is a public IP literal skips the name checks below and can complete the HTTPS proof.
+
+Any other host must be a fully qualified domain name of at most 253 characters with at least one dot. Every label must be 1 to 63 characters of ASCII letters, digits, and hyphens that neither begins nor ends with a hyphen. The final label cannot consist only of digits, and every address the host resolves to must be a public internet address. A host that fails any of those checks fails the proof, so a domain pointed at a loopback, link-local, or private range is never provable this way.
+
+[Verify and create connection](#verify-and-create-connection) takes the token from the signed initiation token, and [Verify connection](#verify-connection) reuses the connection's stored verification token, so a recheck expects the same DNS record or document as the original proof.
+
+:::note[Only the DNS record has the prefix]
+The DNS record value has the `fluxer-verification=` prefix and the well-known document does not. A document that contains the prefixed form fails the HTTPS proof.
+:::
+
+## Bluesky authorisation object
+
+Returned by [Start Bluesky authorisation](#start-bluesky-authorisation).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| authorize_url<sup>1</sup> | string | The atproto authorisation server URL the user is sent to |
+
+<sup>1</sup> The URL is issued by the handle's own authorisation server, so its origin varies with the account being connected
+
+## List connections
+
+<RouteHeader method="GET" path="/v1/users/@me/connections" oauth2="connections" />
+
+Returns every [connection object](#connection-object) the authenticated account holds, in ascending `sort_order`.<sup>1</sup> An account with no connections returns an empty array.
+
+Fluxer checks the scope before it checks the account state, so a bearer without `connections` is rejected with 403 `MISSING_OAUTH_SCOPE` even when the account also has an outstanding required action.
+
+<sup>1</sup> The sort is stable and has no secondary key, so two connections that share a `sort_order` are returned in their stored order, which is ascending by [connection type](#connection-types) and then descending by `id`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[connection](#connection-object) object] | Collection was returned, possibly as an empty array |
+| 403 | [error response](/http-api/#error-response) | The bearer token lacks the `connections` scope and the request returns `MISSING_OAUTH_SCOPE` |
+
+:::caution[The Gateway array is not sorted]
+Every [User Connections Update](/gateway/events/#user-connections-update) Dispatch has the complete connection list in stored order, so a client MUST sort it by `sort_order` itself.
+:::
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `connection:list` bucket.
+
+## Initiate connection
+
+<RouteHeader method="POST" path="/v1/users/@me/connections" />
+
+Begins domain ownership verification and returns a [connection verification object](#connection-verification-object). This operation creates no connection.
+
+Only the `domain` type is accepted. A Bluesky connection is created through [Start Bluesky authorisation](#start-bluesky-authorisation).
+
+Fluxer checks the requested type first, then the 20-connection ceiling, and then the duplicate identifier. An account at the ceiling receives the ceiling failure even when the submitted identifier would also have been a duplicate.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | [Connection type](#connection-types), which must be domain |
+| identifier | string | The domain to prove ownership of (1-253 characters) |
+| visibility_flags?<sup>1</sup> | integer | [Connection visibility flags](#connection-visibility-flags) (0-2147483647) |
+
+<sup>1</sup> Accepted by the schema and then ignored, because [Verify and create connection](#verify-and-create-connection) chooses the visibility when it creates the connection
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [connection verification](#connection-verification-object) object | Verification was initiated |
+| 400 | [error response](/http-api/#error-response) | The requested type is bsky and the request returns `BLUESKY_OAUTH_NOT_ENABLED` |
+| 409 | [error response](/http-api/#error-response) | A connection of the same type already exists for that identifier, compared case-insensitively, and the request returns `CONNECTION_ALREADY_EXISTS` |
+
+### Side effects
+
+This operation creates no connection and emits no Gateway Dispatch. It returns a signed initiation token that expires 30 minutes after issue and a deterministic verification token that the caller MUST publish at the domain before calling [Verify and create connection](#verify-and-create-connection).
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `connection:create` bucket, which is shared with [Start Bluesky authorisation](#start-bluesky-authorisation).
+
+## Verify and create connection
+
+<RouteHeader method="POST" path="/v1/users/@me/connections/verify" />
+
+Checks the [domain ownership proof](#domain-ownership-proof) described by a signed initiation token. Creates and returns the [connection object](#connection-object) on success.
+
+The type, identifier, and verification token all come from the signed token, so a caller cannot verify a target it did not initiate. Fluxer re-evaluates the 20-connection ceiling and the duplicate identifier before it attempts the proof, and a target that became a duplicate since the token was issued is refused with no DNS or HTTPS lookup.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| initiation_token | string | The signed initiation token returned by [Initiate connection](#initiate-connection) |
+| visibility_flags?<sup>1</sup> | integer | [Connection visibility flags](#connection-visibility-flags) (0-2147483647) |
+
+<sup>1</sup> An omitted value stores EVERYONE
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 201 | [connection](#connection-object) object | Proof succeeded and the connection was created |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The initiation token is not usable and the request returns `CONNECTION_INITIATION_TOKEN_INVALID` |
+| 403 | [error response](/http-api/#error-response) | The proof failed and the request returns `CONNECTION_VERIFICATION_FAILED` |
+| 409 | [error response](/http-api/#error-response) | A connection of the same type already exists for that identifier, compared case-insensitively, and the request returns `CONNECTION_ALREADY_EXISTS` |
+
+<sup>1</sup> A malformed token, a token whose HMAC does not verify, an expired token, and a token issued to another account all produce the same code, so a caller cannot distinguish them
+
+### Side effects
+
+A successful proof creates one connection with `verified` set to true, `sort_order` set to the number of connections the account already held, and `visibility_flags` set to the supplied value or EVERYONE. The complete connection list is then published as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions. A failed proof creates no connection and emits no Dispatch.
+
+The initiation token stays usable until it expires, so a caller that publishes its proof late can retry with the same token.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `connection:verify_and_create` bucket.
+
+## Update connection
+
+<RouteHeader method="PATCH" path="/v1/users/@me/connections/{type}/{connection_id}" />
+
+Updates the visibility or display order of one existing connection and returns 204 with an empty body. Omitting a field leaves the stored value unchanged.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | [Connection type](#connection-types) |
+| connection_id | string | The ID of the connection, unique within its [connection type](#connection-types) |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| visibility_flags? | integer | [Connection visibility flags](#connection-visibility-flags) (0-2147483647) |
+| sort_order? | integer | The new display order (0-2147483647) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Connection was updated |
+| 404<sup>1</sup> | [error response](/http-api/#error-response) | No connection of that type and identifier is owned by the caller and the request returns `CONNECTION_NOT_FOUND` |
+
+<sup>1</sup> Both path parameters must name the same connection, so a correct identifier under the wrong type does not match
+
+### Side effects
+
+The supplied fields replace the corresponding connection values. The complete connection list is then published as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions. The Dispatch is emitted even when every supplied value already matched, and even when the body supplies no field at all.
+
+Assigning a `sort_order` that another connection already holds is permitted. [List connections](#list-connections) then resolves the tie by stored order.
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `connection:update` bucket, which is shared with [Reorder connections](#reorder-connections).
+
+## Delete connection
+
+<RouteHeader method="DELETE" path="/v1/users/@me/connections/{type}/{connection_id}" />
+
+Permanently removes one connection and returns 204 with an empty body.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | [Connection type](#connection-types) |
+| connection_id | string | The ID of the connection, unique within its [connection type](#connection-types) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Connection was deleted |
+| 404 | [error response](/http-api/#error-response) | No connection of that type and identifier is owned by the caller and the request returns `CONNECTION_NOT_FOUND` |
+
+### Side effects
+
+The connection is deleted and the remaining connection list is published as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions. Deletion does not renumber the `sort_order` of the remaining connections, so the surviving values can have a gap.
+
+Deleting a `bsky` connection does not revoke its stored atproto authorisation, which is retained for 24 hours after it was last written and then expires on its own.
+
+:::caution[Deletion is immediate]
+There is no grace period and no restore operation. Recreating a `domain` connection requires a fresh [Initiate connection](#initiate-connection) and a republished proof, and recreating a `bsky` connection requires completing the OAuth flow again.
+:::
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `connection:delete` bucket.
+
+## Verify connection
+
+<RouteHeader method="POST" path="/v1/users/@me/connections/{type}/{connection_id}/verify" />
+
+Rechecks the external proof of an existing connection and returns the resulting [connection object](#connection-object).
+
+A `domain` connection is rechecked against the [domain ownership proof](#domain-ownership-proof) using its stored identifier and stored verification token. A `bsky` connection is rechecked by restoring the stored atproto session for its decentralised identifier and resolving that account's current public handle.
+
+A `bsky` recheck succeeds only while the stored atproto session survives. That session is retained for 24 hours after it was last written, so a connection whose session has expired fails the recheck until the user completes [Start Bluesky authorisation](#start-bluesky-authorisation) again.
+
+:::note[A recheck never renames a connection]
+The handle a `bsky` recheck resolves proves the session is live and is then discarded. Only completing the [Bluesky authorisation flow](#start-bluesky-authorisation) writes `name`.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | [Connection type](#connection-types) |
+| connection_id | string | The ID of the connection, unique within its [connection type](#connection-types) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [connection](#connection-object) object | Proof succeeded |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | A bsky connection is rechecked on an instance with no Bluesky OAuth client and the request returns `BLUESKY_OAUTH_NOT_ENABLED` |
+| 403 | [error response](/http-api/#error-response) | The proof failed and the request returns `CONNECTION_VERIFICATION_FAILED` |
+| 404 | [error response](/http-api/#error-response) | No connection of that type and identifier is owned by the caller and the request returns `CONNECTION_NOT_FOUND` |
+
+<sup>1</sup> Every other recheck failure is reported as a failed proof. The route reads the configured OAuth client alone and never consults the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`
+
+### Side effects
+
+A successful proof sets `verified` to true, refreshes the last-verified timestamp, and sets the original verification timestamp to now when the connection had none. It then publishes the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions.
+
+A failed proof against a connection that was verified sets `verified` to false, clears the original verification timestamp, and refreshes the last-verified timestamp. A failed proof against a connection that was already unverified writes nothing. Both publish the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch, so every session of the account observes the current `verified` value.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `connection:verify` bucket.
+
+## Reorder connections
+
+<RouteHeader method="PATCH" path="/v1/users/@me/connections/reorder" />
+
+Assigns the display order of the listed connections from their position in the array and returns 204 with an empty body.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| connection_ids<sup>1</sup> <sup>2</sup> | array[string] | The connection IDs in their new display order (1-20 entries) |
+
+<sup>1</sup> An entry that names no connection owned by the caller is skipped without an error, and a connection that is not named keeps its current order, so a partial array reorders only the connections it names
+
+<sup>2</sup> An entry is matched by `id` alone, and a repeated entry is applied once for each occurrence, so the last occurrence of a repeated identifier decides its final order
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Connections were reordered |
+
+### Side effects
+
+Entries are applied in array order and each named connection receives its array index as the new `sort_order`. The complete connection list is then published as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions, even when the order was already identical.
+
+Fluxer writes every `sort_order` in one atomic batch. A write that fails returns 500, applies no entry, and publishes no Dispatch.
+
+A partial array can leave two connections sharing a `sort_order`, which [List connections](#list-connections) resolves by stored order.
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `connection:update` bucket, which is shared with [Update connection](#update-connection).
+
+## Start Bluesky authorisation
+
+<RouteHeader method="POST" path="/v1/users/@me/connections/bluesky/authorize" />
+
+Normalises a Bluesky handle, begins the atproto OAuth authorisation flow, and returns a [Bluesky authorisation object](#bluesky-authorisation-object) whose URL the user is sent to. This operation creates no connection.
+
+Fluxer trims surrounding whitespace, then removes a leading `https://bsky.app/profile/` or `http://bsky.app/profile/` prefix matched case-insensitively, then removes one leading `@`. Everything that remains becomes the handle verbatim, so a profile URL with a further path segment submits that segment as part of the handle and fails upstream resolution.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| handle | string | The Bluesky handle or profile URL to connect (1-253 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | [Bluesky authorisation](#bluesky-authorisation-object) object | Authorisation was initiated |
+| 400<sup>2</sup> | [error response](/http-api/#error-response) | Bluesky connections are unavailable on this instance and the request returns `BLUESKY_OAUTH_NOT_ENABLED`, or the flow could not be started and the request returns `BLUESKY_OAUTH_AUTHORIZATION_FAILED` |
+| 409<sup>3</sup> | [error response](/http-api/#error-response) | A bsky connection whose name equals the normalised handle already exists and the request returns `CONNECTION_ALREADY_EXISTS` |
+
+<sup>1</sup> This operation does not consult the 20-connection ceiling, which is enforced only when the provider callback creates the connection
+
+<sup>2</sup> Every authorisation failure other than an unavailable integration collapses into one code, including an unresolvable handle, a handle whose authorisation server is unreachable, and a rejected client registration, so a client MUST NOT derive a remedy from it
+
+<sup>3</sup> The comparison is case-insensitive and runs against the stored connection `name`, so an account whose upstream handle has since changed is not detected as a duplicate here and refreshes its existing connection at the callback
+
+:::note[Two independent availability gates]
+This operation requires both a configured Bluesky OAuth client and the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`. A missing client and a cleared flag both produce `BLUESKY_OAUTH_NOT_ENABLED`, and the response does not say which.
+:::
+
+### Side effects
+
+The authorisation state is stored for one hour and identifies the account when the unauthenticated provider callback arrives. No connection is created and no Gateway Dispatch is emitted.
+
+:::caution[The authorisation state is single-use]
+The provider callback reads and deletes the state in one operation. A replay and a callback more than one hour after issue both redirect with `callback_failed`.
+:::
+
+### Completing the flow
+
+The returned `authorize_url` is an atproto authorisation server URL. The client sends the user there, the user approves the request, and the authorisation server calls the instance's registered redirect URI, `/connections/bluesky/callback` on the `api_public` [instance endpoint](/http-api/instance/#instance-endpoints-object). A client MUST NOT call that route directly.
+
+Fluxer consumes the state, exchanges the authorisation code for an atproto session, resolves the account's decentralised identifier and current handle, writes the connection, and then redirects the browser to `/connection-callback` on the `webapp` [instance endpoint](/http-api/instance/#instance-endpoints-object).
+
+That redirect has `status=connected` on success. On failure it has `status=error` together with one `reason` value.
+
+| Value | Description |
+| --- | --- |
+| not_enabled | The instance has no configured Bluesky OAuth client |
+| state_invalid<sup>1</sup> | The failure message names a state or an expiry |
+| callback_failed<sup>2</sup> | Any other failure of the callback itself |
+| unknown<sup>3</sup> | Any failure after the callback itself succeeded |
+
+<sup>1</sup> A callback arriving with no `state` query parameter reports `state_invalid`, and a callback whose stored state is gone does not
+
+<sup>2</sup> A replayed callback and a callback more than one hour after issue both land here
+
+<sup>3</sup> An account already holding 20 connections lands here, as does any unexpected internal failure, so a client MUST NOT derive a remedy from this value
+
+On success, an account that has no `bsky` connection for that decentralised identifier receives a new one with `verified` set to true, EVERYONE visibility, and the number of connections it already held as its order. An account that already has one keeps its identifier and `sort_order`, has its `name` rewritten to the current handle, and has `verified` set back to true. Either path publishes the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to that account's own sessions.
+
+Completing the flow is the only way a `bsky` connection `name` is written, so it is the only way to reconcile an upstream handle rename. It renews the 24-hour atproto session that [Verify connection](#verify-connection) rechecks.
+
+The callback does not consult the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`. An authorisation started while the flag was set completes normally after an operator clears it, as long as the OAuth client is still configured.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `connection:create` bucket, which is shared with [Initiate connection](#initiate-connection).
+
+## Get Bluesky client metadata
+
+<RouteHeader method="GET" path="/connections/bluesky/client-metadata.json" unauthenticated />
+
+Returns the atproto OAuth client metadata document that registers this instance with every atproto authorisation server.
+
+The URL of this document is the `client_id` of the client. The authorisation server named by a handle fetches it while [Start Bluesky authorisation](#start-bluesky-authorisation) resolves that handle, and reads the redirect URI, the scope, and the client authentication method out of it. An instance that does not serve it to the public internet fails every authorisation with `BLUESKY_OAUTH_AUTHORIZATION_FAILED`. An instance that does not serve [Get Bluesky JWKS](#get-bluesky-jwks) authorises normally and then redirects with `callback_failed`, because the key set is read later, at the code exchange.
+
+Both documents are served whenever the instance has a configured Bluesky OAuth client. Clearing the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled` stops [Start Bluesky authorisation](#start-bluesky-authorisation) and leaves both documents in place.
+
+### Response body
+
+The document is the same for every request. Its URLs are built from the `api_public` [instance endpoint](/http-api/instance/#instance-endpoints-object), its display members come from instance configuration, and the protocol members are fixed.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| client_id | string | The URL this document is served from, which is also the atproto identifier of the client |
+| client_name | string | The name an authorisation server displays to the account holder |
+| client_uri | string | The `api_public` [instance endpoint](/http-api/instance/#instance-endpoints-object) with any trailing slash removed |
+| logo_uri?<sup>1</sup> | string | The logo an authorisation server displays to the account holder |
+| tos_uri?<sup>1</sup> | string | The terms of service document offered to the account holder |
+| policy_uri?<sup>1</sup> | string | The privacy policy document offered to the account holder |
+| redirect_uris | array[string] | The one URL an authorisation server may return to, `/connections/bluesky/callback` on `api_public` |
+| grant_types | array[string] | The two grants the client uses, `authorization_code` and `refresh_token` |
+| response_types | array[string] | The one response type the client accepts, `code` |
+| scope | string | The scope requested at authorisation, `atproto` |
+| application_type | string | The client type, `web` |
+| subject_type | string | The subject identifier type, `public` |
+| token_endpoint_auth_method | string | The way the client authenticates at the token endpoint, `private_key_jwt` |
+| token_endpoint_auth_signing_alg | string | The algorithm the client signs that assertion with, `ES256` |
+| authorization_signed_response_alg | string | The algorithm the client expects a signed authorisation response in, `RS256` |
+| dpop_bound_access_tokens | boolean | Whether the client binds its access tokens to a DPoP proof, always true |
+| jwks_uri | string | The URL of [Get Bluesky JWKS](#get-bluesky-jwks) |
+
+<sup>1</sup> Present only when the operator configured a non-empty value
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | client metadata document | Instance has a configured Bluesky OAuth client |
+| 404<sup>1</sup> | object | Instance has no configured Bluesky OAuth client |
+
+<sup>1</sup> The body is `{"error": "Bluesky OAuth is not enabled"}`, so it has no `code` and no `errors` member. The client is unconfigured when the operator disabled Bluesky, when no signing key is configured, and when a configured key was rejected at load
+
+### Rate limit
+
+60 requests per minute for each client IP address, on the `connection:bluesky:client_document` bucket, which is shared with [Get Bluesky JWKS](#get-bluesky-jwks).
+
+## Get Bluesky JWKS
+
+<RouteHeader method="GET" path="/connections/bluesky/jwks.json" unauthenticated />
+
+Returns the JSON Web Key Set holding the public half of every configured Bluesky OAuth signing key.
+
+An atproto authorisation server reads this document, named by `jwks_uri` in [Get Bluesky client metadata](#get-bluesky-client-metadata), to verify the `private_key_jwt` assertion the instance signs at the token endpoint. The server fetches it at the code exchange that completes the flow, and again at every session refresh, long after the account holder has left the browser.
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| keys | array[object] | The public half of each configured signing key, in configuration order |
+
+The array holds at least one entry on any 200. Each entry has the public members of one ES256 key. There is no `alg` and no `use`, so a verifier that demands either one rejects the set.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| kty | string | The key type, `EC` |
+| kid | string | The identifier the operator gave the key, which the signed assertion names in its header |
+| key_ops | array[string] | The operations the public key permits, `verify`, `encrypt`, and `wrapKey` |
+| crv | string | The curve, `P-256` |
+| x | string | The base64url encoded X coordinate |
+| y | string | The base64url encoded Y coordinate |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | JSON Web Key Set | Instance has a configured Bluesky OAuth client |
+| 404<sup>1</sup> | object | Instance has no configured Bluesky OAuth client |
+
+<sup>1</sup> The body is `{"error": "Bluesky OAuth is not enabled"}`, so it has no `code` and no `errors` member
+
+### Rate limit
+
+60 requests per minute for each client IP address, on the `connection:bluesky:client_document` bucket, which is shared with [Get Bluesky client metadata](#get-bluesky-client-metadata).

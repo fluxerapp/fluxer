@@ -1,0 +1,84 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Gift codes
+description: Administrative generation of one-use premium gift codes.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Admin gift code generation issues [premium](/http-api/premium/) codes in bulk, each one redeemable once and each granting a fixed span of entitlement. [Gifts](/http-api/gifts/) defines the public record of a code and its single redemption.
+
+This resource has that one operation. No Admin operation lists, revokes, or redeems a code, or reports who redeemed one.
+
+:::caution[A self-hosted instance answers 403]
+The error code is `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so a request that also fails validation is refused by that failure.
+:::
+
+## Gift duration units
+
+The unit and the quantity together define the span a redeemed code grants. Fluxer adds the span to the redeemer's entitlement anchor at redemption time. Lifetime gifts are not supported.
+
+| Value | Description |
+| --- | --- |
+| days | The quantity counts days added to the entitlement anchor |
+| weeks | The quantity counts weeks added to the entitlement anchor |
+| months<sup>1</sup> | The quantity counts calendar months added to the entitlement anchor |
+| years<sup>1</sup> | The quantity counts calendar years, applied as twelve calendar months each |
+
+<sup>1</sup> A calendar month is added in UTC and clamped to the last day of the target month, so an anchor of 31 January extended by one month lands on 28 or 29 February
+
+## Create gift codes
+
+<RouteHeader method="POST" path="/v1/admin/gift-codes" />
+
+Generates the requested number of unredeemed gift codes. Requires `gift_codes:generate`. Returns the complete redemption links on success.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| count | integer | The number of codes to generate (1-100) |
+| duration_type | string | The [gift duration unit](#gift-duration-units) the quantity is counted in |
+| duration_quantity | integer | The quantity of the selected unit (1-3650) |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| codes<sup>1</sup> | array[string] | The complete redemption links, one for each generated code, in generation order |
+
+<sup>1</sup> Each entry is the instance's configured gift endpoint, with one trailing slash removed if present, followed by `/` and the code
+
+```json
+{
+  "codes": [
+    "https://example.com/gift/aB3dEfGhIjKlMnOpQrStUvWxYz012345",
+    "https://example.com/gift/Zy9XwVuTsRqPoNmLkJiHgFeDcBa543210"
+  ]
+}
+```
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The codes were generated |
+| 403<sup>1</sup> | [error response](/admin-api/#error-response) | The account does not hold `admin:authenticate`, does not hold `gift_codes:generate`, or the instance is self-hosted |
+
+<sup>1</sup> Returned as `MISSING_PERMISSIONS` without `admin:authenticate`, as `MISSING_ACL` with that but without `gift_codes:generate`, and as `FEATURE_NOT_AVAILABLE_SELF_HOSTED` on a self-hosted instance
+
+:::caution[The codes are returned once]
+Reading a code back requires presenting it to [Get gift](/http-api/gifts/#get-gift), so a lost response cannot be recovered.
+:::
+
+### Side effects
+
+Each code is 32 characters drawn from the uppercase letters, the lowercase letters, and the digits. Each code is created unredeemed and records the system account with ID `0` as its creator, which is the creator the [gift object](/http-api/gifts/#gift-object) reports to the redeemer.
+
+Fluxer writes the codes one at a time. A failure part way through leaves the codes already written redeemable while the response reports the failure. Those codes appear in no response.
+
+The operation records no Admin audit entry and emits no Gateway Dispatch.
+
+### Rate limit
+
+30 requests per minute for each authenticated user, on the `admin:code:generation` bucket.

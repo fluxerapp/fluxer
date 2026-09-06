@@ -243,7 +243,6 @@ services:
         volume:
           nocopy: true
       - pnpm-store:/home/vscode/.local/share/pnpm/store
-      - docs-venv:/workspaces/fluxer/fluxer_docs/.venv
       - cargo-registry:/home/vscode/.cargo/registry
       - cargo-git:/home/vscode/.cargo/git
       - rust-target:/workspaces/fluxer/target
@@ -351,7 +350,6 @@ services:
 
 volumes:
   pnpm-store:
-  docs-venv:
   root-node-modules:
   fluxer-api-node-modules:
   fluxer-app-node-modules:

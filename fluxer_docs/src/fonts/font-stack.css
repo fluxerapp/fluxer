@@ -1,0 +1,7 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+:root {
+	--fluxer-font-stack: var(--font-radio-canada-big), var(--font-noto-sans), system-ui, sans-serif;
+	--fluxer-mono-stack:
+		var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}

@@ -1,0 +1,392 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Admin reports
+description: Report listing and search, captured message evidence, and report resolution.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A report is one complaint filed against a message, an account, or a guild, together with the evidence captured when it was filed. These routes list and search reports, return that evidence, and resolve a report with a comment shown to the reporter.
+
+Report submission belongs to the public [Reports](/http-api/reports/) resource, which defines the category registries `category` is drawn from.
+
+Reporter contact fields require `report:view:reporter_pii` on top of `report:view`. Without it `reporter_email`, `reporter_full_legal_name`, and `reporter_country_of_residence` are null on every report, so a redacted field looks like a field the reporter never supplied.
+
+:::note[A report stores the evidence as filed]
+The captured fields are the guild name, icon hash, invite code, channel name, safety levels, and message content. Later edits to any of them do not change the report.
+:::
+
+:::note[Reporter and reported identity are current values]
+Fluxer reads the tag, username, display name, and discriminator of both accounts when it produces the response. The author identity on each captured message stays as it was captured.
+:::
+
+## Admin report object
+
+A report is written once, when the reporter files it. [Update report](#update-report) moves it from PENDING to RESOLVED with an optional comment. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) for any reason other than a user request also resolves every pending report against the deleted account, with no public comment and no notice to the reporter.
+
+[List reports](#list-reports) returns this object without message context. [Get report](#get-report) returns the [Admin report detail object](#admin-report-detail-object), which extends it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+| reporter_id<sup>1</sup> | ?snowflake | The account that filed the report |
+| reporter_tag<sup>1</sup> <sup>2</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
+| reporter_username<sup>1</sup> <sup>2</sup> | ?string | The username of the reporter |
+| reporter_global_name<sup>1</sup> <sup>2</sup> | ?string | The display name of the reporter, or null when unset |
+| reporter_discriminator<sup>1</sup> <sup>2</sup> | ?string | The zero-padded four-digit reporter discriminator |
+| reporter_email<sup>3</sup> | ?string | The email address of the reporter |
+| reporter_full_legal_name<sup>3</sup> | ?string | The legal name supplied with a Digital Services Act notice |
+| reporter_country_of_residence<sup>3</sup> | ?string | The country of residence supplied with a Digital Services Act notice |
+| reported_at | ISO8601 timestamp | When the report was submitted |
+| status | integer | The [report status](#report-status) |
+| report_type | integer | The [report type](#report-type) |
+| category | ?string | The category the reporter filed the report under |
+| additional_info | ?string | The free-text detail the reporter supplied |
+| reported_user_id | ?snowflake | The reported account, or null for a guild report |
+| reported_user_tag<sup>2</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
+| reported_user_username<sup>2</sup> | ?string | The username of the reported account |
+| reported_user_global_name<sup>2</sup> | ?string | The display name of the reported account, or null when unset |
+| reported_user_discriminator<sup>2</sup> | ?string | The zero-padded four-digit reported account discriminator |
+| reported_user_avatar_hash<sup>4</sup> | ?string | The avatar hash of the reported account, or null when unset |
+| reported_guild_id | ?snowflake | The reported guild, or null when the report names none |
+| reported_guild_name<sup>4</sup> | ?string | The name of the reported guild |
+| reported_guild_icon_hash<sup>4</sup> | ?string | The icon hash of the reported guild, or null when unset |
+| reported_message_id | ?snowflake | The reported message, or null for a user or guild report |
+| reported_channel_id | ?snowflake | The channel the reported content was sent in |
+| reported_channel_name<sup>4</sup> | ?string | The channel name, or null for a direct message channel |
+| reported_channel_nsfw<sup>5</sup> | ?boolean | The effective NSFW state of the reported channel |
+| reported_guild_invite_code<sup>4</sup> | ?string | The invite code the reported guild was reached by |
+| reported_guild_nsfw_level<sup>6</sup> | ?integer | The guild [NSFW level](/http-api/guilds/#nsfw-levels) |
+| reported_guild_nsfw?<sup>4</sup> <sup>7</sup> | ?boolean | Whether the reported guild was marked NSFW |
+| reported_guild_content_warning_level?<sup>4</sup> <sup>7</sup> | ?integer | The [guild content warning level](/http-api/guilds/#guild-content-warning-levels) |
+| reported_guild_content_warning_text?<sup>4</sup> <sup>7</sup> | ?string | The guild content warning text (at most 200 characters) |
+| reported_channel_nsfw_override?<sup>4</sup> <sup>7</sup> | ?boolean | The NSFW override set on the reported channel itself |
+| reported_channel_content_warning_level?<sup>4</sup> <sup>7</sup> | ?integer | The [content warning level](/http-api/channels/#content-warning-levels) set on the channel itself |
+| reported_channel_content_warning_text?<sup>4</sup> <sup>7</sup> | ?string | The content warning text set on the channel itself (at most 200 characters) |
+| reported_channel_effective_nsfw?<sup>7</sup> <sup>8</sup> | ?boolean | Whether the channel was NSFW once the guild setting was applied |
+| reported_channel_effective_content_warning_level?<sup>7</sup> <sup>8</sup> | ?integer | The channel content warning level once the guild setting was applied |
+| reported_channel_effective_content_warning_text?<sup>7</sup> <sup>8</sup> | ?string | The channel content warning text once the guild setting was applied |
+| resolved_at<sup>9</sup> | ?ISO8601 timestamp | When the report was resolved |
+| resolved_by_admin_id<sup>9</sup> | ?snowflake | The Admin account that resolved the report |
+| public_comment<sup>9</sup> | ?string | The comment shown to the reporter (at most 512 characters) |
+
+<sup>1</sup> Null for an anonymous Digital Services Act notice, which is filed without a Fluxer account, so every reporter identity field is null exactly when `reporter_id` is null
+
+<sup>2</sup> Resolved from the account when the response is produced, and null when the account can no longer be read
+
+<sup>3</sup> Null unless the caller holds `report:view:reporter_pii`, and null when the reporter supplied no value
+
+<sup>4</sup> Captured when the report was filed and never updated afterwards
+
+<sup>5</sup> The captured effective state when the report recorded one, otherwise the current NSFW state of the reported channel
+
+<sup>6</sup> Derived from the captured guild NSFW flag, where true is level 3 and false is level 0. Otherwise it is read from the reported guild, the filing guild, or the channel's guild
+
+<sup>7</sup> Always emitted, so an absent member and a null member mean the same thing
+
+<sup>8</sup> Computed when the report was filed by applying the guild setting over the channel setting
+
+<sup>9</sup> Null while the report is PENDING and set when it moves to RESOLVED
+
+### Example
+
+```json
+{
+  "report_id": "1502771904419102720",
+  "reporter_id": "1483920011884392448",
+  "reporter_tag": "wren#0042",
+  "reporter_email": null,
+  "reported_at": "2026-03-04T18:22:10.441Z",
+  "status": 0,
+  "report_type": 0,
+  "category": "harassment",
+  "additional_info": "Repeated after being asked to stop.",
+  "reported_user_id": "1490118377238528000",
+  "reported_guild_id": "1471002884199612416",
+  "reported_message_id": "1502771119476146176",
+  "reported_channel_id": "1471002884199612420",
+  "reported_channel_nsfw": false,
+  "reported_guild_nsfw_level": 0,
+  "resolved_at": null,
+  "resolved_by_admin_id": null,
+  "public_comment": null
+}
+```
+
+## Report status
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | PENDING | Report is waiting to be reviewed |
+| 1 | RESOLVED | Report has been reviewed and resolved |
+
+## Report type
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 0 | MESSAGE | A message was reported |
+| 1 | USER | A user was reported |
+| 2 | GUILD | A guild was reported |
+
+## Admin report detail object
+
+The detail object extends the [Admin report object](#admin-report-object) with the evidence too large to return in a list page. [Get report](#get-report) emits these three members, and [List reports](#list-reports) omits them.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mutual_dm_channel_id<sup>1</sup> | ?snowflake | The direct message channel shared by the reporter and the reported account |
+| message_context<sup>2</sup> | array[[report message context](#report-message-context-object) object] | The messages captured around the reported content |
+| message_responses<sup>3</sup> | array[[message](/http-api/messages/#message-object) object] | The current state of the same messages, read live |
+
+<sup>1</sup> Set only for a USER report that has both a reporter and a reported account, and null when the two share no direct message channel
+
+<sup>2</sup> Empty for a report that captured no message context, which is every user report and every guild report
+
+<sup>3</sup> Resolved when the response is produced, so an edited message differs from its captured entry
+
+:::note[The live array can be shorter than the capture]
+Fluxer skips an entry when neither the capture nor the report records its channel. It also omits a message that no longer exists, or whose channel can no longer be read.
+:::
+
+## Report message context object
+
+A context entry is one message copied into the report when the report was filed. A later edit or deletion of the message does not update it. Fluxer copies its attachments into a separate evidence bucket, so they survive deletion of the original.
+
+A message report captures the reported message together with at most 25 messages before it and at most 25 after it, for at most 51 entries. A message whose author account Fluxer could not read at capture time is absent from the report.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the message |
+| channel_id<sup>1</sup> | string | The channel the captured messages were read from |
+| channel_nsfw<sup>2</sup> | ?boolean | The current NSFW state of that channel |
+| channel_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The channel content warning level |
+| channel_content_warning_text?<sup>3</sup> <sup>4</sup> | ?string | The channel content warning text |
+| guild_id<sup>5</sup> | ?snowflake | The guild the report is scoped to, or null when the report names none |
+| guild_nsfw_level<sup>2</sup> | ?integer | The current guild [NSFW level](/http-api/guilds/#nsfw-levels) |
+| guild_nsfw?<sup>3</sup> <sup>4</sup> | ?boolean | Whether the guild is marked NSFW |
+| guild_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The guild content warning level |
+| guild_content_warning_text?<sup>3</sup> <sup>4</sup> | ?string | The guild content warning text |
+| content | string | The captured message content, empty when the message had none |
+| timestamp<sup>6</sup> | ISO8601 timestamp | When the message was sent |
+| attachments<sup>7</sup> | array[[report message attachment](#report-message-attachment-object) object] | The captured attachment copies |
+| author_id | snowflake | The author of the message |
+| author_username | string | The captured author username |
+| author_global_name<sup>4</sup> | ?string | The display name of the author |
+| author_discriminator | string | The captured zero-padded four-digit author discriminator |
+| author_avatar | ?string | The captured author avatar hash, or null when unset |
+| user_prior_ncmec_report_ids?<sup>3</sup> <sup>8</sup> | array[string] | The NCMEC report IDs previously filed against the author |
+
+<sup>1</sup> The channel of the captured entry, otherwise the reported channel. An empty string when neither records one, so it does not always parse as a snowflake
+
+<sup>2</sup> Read from the current channel or guild, and null when the record can no longer be read
+
+<sup>3</sup> Always emitted, so an absent member and a null member mean the same thing
+
+<sup>4</sup> Always null, because the capture stores no value for it
+
+<sup>5</sup> The reported guild, or the guild the report was filed from, so every entry of one report has the same value
+
+<sup>6</sup> Derived from the message ID
+
+<sup>7</sup> Fluxer drops an evidence copy that records no file name, resolves to no channel, or receives no download URL, so this array can be shorter than the original
+
+<sup>8</sup> Sorted ascending, with at most 100 entries, and empty when no NCMEC report has been filed against the author
+
+### Report message attachment object
+
+#### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the attachment |
+| filename | string | The captured file name |
+| url<sup>9</sup> | string | The download URL for the evidence copy |
+| nsfw | ?boolean | Whether the attachment was marked NSFW |
+| content_type | ?string | The captured MIME type, or null when unknown |
+| width | ?integer | The pixel width, or null for a non-image attachment |
+| height | ?integer | The pixel height, or null for a non-image attachment |
+| size?<sup>3</sup> | ?integer | The size in bytes, or null when unknown |
+| ncmec_status<sup>10</sup> | string | The [NCMEC submission status](#ncmec-submission-statuses) |
+| ncmec_report_id | ?string | The NCMEC report ID, or null when the attachment was never submitted |
+| ncmec_failure_reason | ?string | The failure detail, or null unless `ncmec_status` is failed |
+
+<sup>9</sup> A presigned URL against the report evidence bucket, valid for five minutes, so a saved response body stops resolving attachments while the evidence copy is retained
+
+<sup>10</sup> An in-flight submission is stored as `submitting`, a value the registry below does not list
+
+#### NCMEC submission statuses
+
+| Value | Description |
+| --- | --- |
+| not_submitted | The attachment has never been submitted to NCMEC |
+| submitted | The attachment has been submitted to NCMEC |
+| failed | Submission to NCMEC was attempted and failed |
+
+## Report resolution object
+
+A report resolution is the reduced view [Update report](#update-report) returns. It has the fields the update writes and nothing else.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+| status | integer | The [report status](#report-status), always RESOLVED on a successful update |
+| resolved_at | ?ISO8601 timestamp | When the report was resolved |
+| public_comment | ?string | The comment shown to the reporter, or null when none was supplied |
+
+### Example
+
+```json
+{
+  "report_id": "1502771904419102720",
+  "status": 1,
+  "resolved_at": "2026-03-05T11:04:53.902Z",
+  "public_comment": "Thanks for the report. We actioned the account."
+}
+```
+
+## List reports
+
+<RouteHeader method="GET" path="/v1/admin/reports" />
+
+Returns a page of [Admin report](#admin-report-object) objects without message context. Requires `report:view`.
+
+The operation has two branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
+
+The branches default `status` differently. The status-only branch defaults to PENDING, so a request with no query string returns pending reports only. The search branch applies no status filter when `status` is omitted. `sort_by` and `sort_order` reach the search branch only. The status-only branch always orders by `reported_at` descending.
+
+An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on both branches.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| q?<sup>1</sup> | string | Free-text query matched against the searchable report fields (1-1024 characters) |
+| status? | pending \| resolved | Restrict results to one [report status](#report-status) |
+| report_type? | message \| user \| guild | Restrict results to one [report type](#report-type) |
+| category? | string | Restrict results to one submitted category (1-128 characters) |
+| reporter_id? | snowflake | Restrict results to one reporter |
+| reported_user_id? | snowflake | Restrict results to one reported account |
+| reported_guild_id? | snowflake | Restrict results to one reported guild |
+| reported_channel_id?<sup>2</sup> | snowflake | Restrict results to one reported channel |
+| guild_context_id? | snowflake | Restrict results to reports filed from within one guild |
+| resolved_by_admin_id? | snowflake | Restrict results to one resolving Admin account |
+| sort_by?<sup>3</sup> | created_at \| reported_at \| resolved_at | Sort field (default `reported_at`) |
+| sort_order? | asc \| desc | Sort direction, where asc is oldest first (default `desc`) |
+| limit? | integer | Maximum reports to return (1-200, default 50) |
+| offset?<sup>4</sup> | integer | Reports to skip (0-10000, default 0) |
+
+<sup>1</sup> Matched against `category`, `additional_info`, `reported_guild_name`, and `reported_channel_name` only. Omitting it matches every report satisfying the remaining filters
+
+<sup>2</sup> The route accepts it, and it alone selects the search branch. It narrows nothing
+
+<sup>3</sup> `created_at` orders by the time encoded in the report ID, and `reported_at` by the submission time stored on the report
+
+<sup>4</sup> The next page is requested with a larger `offset`
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| reports<sup>1</sup> | array[[Admin report](#admin-report-object) object] | Reports in this page, without message context |
+| total?<sup>2</sup> <sup>3</sup> | integer | Index hits matching the filters, less the hits on this page that no longer resolve |
+| offset?<sup>2</sup> | integer | The offset this page was read from |
+| limit?<sup>2</sup> | integer | The limit this page was read with |
+
+<sup>1</sup> An index hit whose report record no longer exists is dropped and the request still succeeds, so a full page can hold fewer entries than `limit`
+
+<sup>2</sup> Present on the search branch only, so the status-only branch reports no total
+
+<sup>3</sup> Reduced only by the unresolvable hits of the page that was read, so it is an upper bound on what a caller can page through
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Report page was returned |
+| 403 | [error response](/admin-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Get report
+
+<RouteHeader method="GET" path="/v1/admin/reports/{report_id}" />
+
+Returns one [Admin report detail](#admin-report-detail-object) object, which adds the captured message context and the live state of those messages. Requires `report:view`.
+
+The operation answers even when the report search index is unavailable. Reporter contact fields are redacted here exactly as they are in [List reports](#list-reports).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [Admin report detail](#admin-report-detail-object) object | Report was returned |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Update report
+
+<RouteHeader method="PATCH" path="/v1/admin/reports/{report_id}" auditReason />
+
+Resolves one report and returns a [report resolution](#report-resolution-object) object. Requires `report:resolve`.
+
+`status` is required and `resolved` is the only value it accepts, so this route changes no other field.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| report_id | snowflake | The ID of the report |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | resolved | The status to move the report to |
+| public_comment?<sup>1</sup> | string | The comment shown to the reporter (0-512 characters) |
+
+<sup>1</sup> Stored as null when it is omitted or empty, and shown to the reporter in the resolution notice otherwise
+
+:::caution[Resolution is terminal]
+Resolving a report notifies the reporter. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [report resolution](#report-resolution-object) object | Report was resolved |
+| 400 | [error response](/admin-api/#error-response) | The report is already resolved and the request returns `REPORT_ALREADY_RESOLVED` |
+| 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Side effects
+
+The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, and the public comment.
+
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id` and `report_type`.
+
+Fluxer notifies the reporter when the report has a reporter account that still exists. The reporter receives a system direct message, and an email when the account has an address. An anonymous Digital Services Act notice has no reporter account and is resolved with no notification.
+
+A reporter who does not already have the system channel open receives [Channel Create](/gateway/events/#channel-create), and every session of the reporter receives [Message Create](/gateway/events/#message-create). Fluxer logs a delivery failure, and the request still succeeds.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.

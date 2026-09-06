@@ -1,0 +1,389 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guild emojis
+description: Guild emoji objects, uploads, cloning, bulk creation, renaming, and deletion.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An emoji is a custom image that one guild owns. Members use it in messages and reactions. Its ID is a [snowflake](/snowflakes/) that is unique across every guild. [List guild emojis](#list-guild-emojis) is the only guild-scoped read, and [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) resolves a single emoji without membership of its guild.
+
+Every route names a guild in its path. A guild that has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) rejects the request with 403 `MISSING_ACCESS` before the operation runs, and [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag.
+
+A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is distinguishable from guild membership. On [Modify guild emoji](#modify-guild-emoji) a non-member receives the same 403 `MISSING_PERMISSIONS`, and a guild that does not exist returns 404 `UNKNOWN_EMOJI`.
+
+The instance phrase and URL blocklists screen a submitted emoji `name` before the operation runs, and a match returns 403 `CONTENT_BLOCKED`. A name of fewer than three characters is not scanned. Neither blocklist reads `image`. Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
+
+## Guild emoji object
+
+The stored image is written once at creation and is never replaced, so `name` is the only mutable field.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the emoji |
+| name | string | The name of the emoji (2-32 characters) |
+| animated<sup>1</sup> | boolean | Whether the stored image is animated |
+| user?<sup>2</sup> | [partial user](/http-api/users/#partial-user-object) object | The account that uploaded the emoji |
+
+<sup>1</sup> Detected from the submitted image at creation, and copied unchanged by [Clone guild emoji](#clone-guild-emoji)
+
+<sup>2</sup> Present only on [List guild emojis](#list-guild-emojis), where it is populated for every caller and requires no permission
+
+### Example
+
+```json
+{
+  "id": "1501314428688998182",
+  "name": "party_parrot",
+  "animated": true
+}
+```
+
+## Emoji create object
+
+The image and name submitted for one new emoji.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | The name of the emoji (2-32 characters, ASCII letters, digits, and underscore) |
+| image<sup>2</sup> <sup>3</sup> | base64 string | The image to store (at most the resolved `emoji_max_size` limit in decoded bytes, 524288 by default) |
+
+<sup>1</sup> The value is trimmed, and both bounds apply to the trimmed value
+
+<sup>2</sup> A data URL prefix is accepted and everything up to the first comma is removed before any bound applies
+
+<sup>3</sup> The decoded ceiling is the resolved `emoji_max_size` [limit key](/http-api/instance/#limit-keys) in guild scope, 524288 bytes by default
+
+The remaining encoded portion is bounded to 699052 characters, the base64 expansion of the 524288 byte default, and a longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`. An image over the resolved ceiling returns `IMAGE_SIZE_EXCEEDS_LIMIT` at the same path, and `maxSize` is the ceiling that applied.
+
+The 699052 character bound does not move with the limit key, so a resolved ceiling above 524288 bytes admits no more than 524289 decoded bytes.
+
+Accepted upload formats are PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG. Fluxer takes the format and the animation state from the decoded image. An animated AVIF is rejected.
+
+Pixel dimensions are not enforced. An accepted image is stored at its original dimensions and the [Media Proxy image asset contract](/media-proxy/routes/#image-asset-contract) selects the delivered size.
+
+### Example
+
+```json
+{
+  "name": "party_parrot",
+  "image": "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEAAAAALAAAAAABAAEAAAI="
+}
+```
+
+## Emoji bulk create response object
+
+The outcome of one bulk creation, holding one entry for every submitted item.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | array[[guild emoji](#guild-emoji-object) object] | The emojis this request created |
+| failed | array[[expression creation failure](#expression-creation-failure-object) object] | The items rejected after top-level request validation |
+
+Both arrays are present on every success response, and either can be empty. An item appears in exactly one of them, so the combined length equals the submitted item count.
+
+### Example
+
+```json
+{
+  "success": [{"id": "1501314428688998182", "name": "party_parrot", "animated": true}],
+  "failed": [{"name": "too_big", "error": "The image is too large."}]
+}
+```
+
+## Expression creation failure object
+
+One item a bulk creation rejected, identified only by the name the caller submitted.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name<sup>1</sup> | string | The name echoed from the submitted item |
+| error<sup>2</sup> | string | The failure message rendered for the item |
+
+<sup>1</sup> The object has no index, so two submitted items sharing a name cannot be told apart
+
+<sup>2</sup> Rendered in the locale of the authenticated account, so its value changes with the caller's locale
+
+There is no machine-readable code, so a client that needs to branch on the reason retries the item on its own. An item that fails because the guild is full renders the emoji limit message with the resolved limit. Every other failure with a registered [error code](/http-api/errors/) renders that code's own message. An undecodable or unaccepted image renders the generic `INVALID_FORM_BODY` message with no per-field validation code. A banned image hash renders the `CONTENT_BLOCKED` message. A failure with no registered code, such as an object storage fault, renders a fixed unknown-error message.
+
+## List guild emojis
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/emojis" bot />
+
+Returns every [guild emoji object](#guild-emoji-object) of the guild, each with `user`. Requires membership of the guild and no permission.
+
+Fluxer returns the complete collection in one response, and the operation has no pagination parameters. An emoji whose uploader cannot be resolved is omitted, so the array can be shorter than the number of stored emojis.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[guild emoji](#guild-emoji-object) object] | Emojis were returned |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or the caller is not a member |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild and `MISSING_PERMISSIONS` for a non-member
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user and guild ID, on the `guild:emojis:list::guild_id` bucket.
+
+## Create guild emoji
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/emojis" bot auditReason />
+
+Creates one emoji from submitted image data and returns its [guild emoji object](#guild-emoji-object) without `user`. Requires membership of the guild and [CREATE_EXPRESSIONS](/http-api/permissions/). Emits a [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event.
+
+The admission checks run in a fixed order: the body schema, then guild existence and membership, then `CREATE_EXPRESSIONS`, then the slot limit, and only then the image. A guild at its slot limit therefore returns `MAX_EMOJIS` even when the image would also have been rejected.
+
+The slot limit is the operator-configured [max_guild_emojis](/http-api/instance/#limit-keys) value resolved against the guild's complete feature set, defaulting to 500. A guild with [UNLIMITED_EMOJI](/http-api/guilds/#guild-features) bypasses that configuration and receives a fixed ceiling of 999999.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+The body is one [emoji create object](#emoji-create-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild emoji](#guild-emoji-object) object | Emoji was created |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Guild is at its emoji slot limit, or the image is undecodable, oversized, or in an unaccepted format |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Name is blocked, the guild is unavailable, the caller is not a member or lacks `CREATE_EXPRESSIONS`, or the image hash is banned |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MAX_EMOJIS` for the slot limit, with the resolved limit in its message variables, and `INVALID_FORM_BODY` for an image failure, with `BASE64_LENGTH_INVALID` for an oversized encoding, `IMAGE_SIZE_EXCEEDS_LIMIT` for decoded bytes over the resolved ceiling, or `INVALID_IMAGE_FORMAT` for an undecodable or unaccepted image at the `image` path
+
+<sup>2</sup> The [error code](/http-api/errors/) is `CONTENT_BLOCKED` for a blocked name and for a banned image hash, `MISSING_ACCESS` for an unavailable guild, and `MISSING_PERMISSIONS` for a membership or permission failure
+
+An image the decoder cannot read returns `INVALID_IMAGE_FORMAT`. The name scan runs before the route is reached, so it precedes the rate limit bucket and the credential check. The image hash check runs at upload time, after every other admission step has passed.
+
+### Side effects
+
+The operation consumes one guild emoji slot, stores the metadata-stripped image, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection to every session connected to the guild, and then writes an [`EMOJI_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason. A failed creation leaves no emoji, audit entry, or Dispatch and consumes no slot. Fluxer logs a failure to write the audit entry and still returns 200, so the emoji exists and the Dispatch is emitted.
+
+### Rate limit
+
+10 requests per 30 seconds for each authenticated user and guild ID, on the `guild:emoji:create::guild_id` bucket.
+
+## Bulk create guild emojis
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/emojis/bulk" bot auditReason />
+
+Attempts to create between 1 and 50 emojis in one request and returns an [emoji bulk create response object](#emoji-bulk-create-response-object). Requires membership of the guild and [CREATE_EXPRESSIONS](/http-api/permissions/). Emits one [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event for the whole batch.
+
+Fluxer processes the items strictly in the submitted order and treats each one independently. Once the guild is full, every remaining item fails with the limit. A later item can still succeed after an earlier item failed for any other reason.
+
+An undecodable image, an unaccepted format, and a banned hash each fail one item and leave the rest of the batch to run.
+
+:::caution[200 does not mean every item was created]
+The operation returns 200 whenever the top-level request was valid, including when every item failed. Read `success` and `failed` for the per-item outcome. The emojis in `success` are durable and are not rolled back when a later item fails.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emojis | array[[emoji create object](#emoji-create-object)] | The items to create, attempted in the order supplied (1-50) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [emoji bulk create response](#emoji-bulk-create-response-object) object | Every validated item was attempted |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Top-level body, item count, item shape, item name, or encoded image bound is invalid |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | An item name is blocked, the guild is unavailable, or the caller is not a member or lacks `CREATE_EXPRESSIONS` |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
+
+<sup>1</sup> Boundary validation rejects the whole request, so an oversized encoded image in one item fails before any item is created
+
+<sup>2</sup> The [error code](/http-api/errors/) is `CONTENT_BLOCKED` for a blocked item name, `MISSING_ACCESS` for an unavailable guild, and `MISSING_PERMISSIONS` for a membership or permission failure
+
+Every item name is scanned together before the route is reached, so one blocked name rejects the whole request and no item is created.
+
+### Side effects
+
+Each successful item consumes one guild emoji slot, stores its image, and writes an [`EMOJI_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason. One [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection is emitted after the batch when at least one item succeeded, and it is emitted before the audit entries are written. A failed item leaves no emoji, audit entry, or slot consumption.
+
+### Rate limit
+
+6 requests per minute for each authenticated user and guild ID, on the `guild:emoji:bulk_create::guild_id` bucket.
+
+## Clone guild emoji
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/emojis/clone" bot auditReason />
+
+Copies an existing emoji into the target guild and returns the new [guild emoji object](#guild-emoji-object) without `user`. Requires membership of the target guild and [CREATE_EXPRESSIONS](/http-api/permissions/) there. Emits a [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event in the target guild.
+
+The name, animation state, and stored image bytes are copied server-side, so the caller does not re-upload the image and cannot override any copied value. Membership of the source guild is not required. The source guild must not have [CLONE_EMOJI_DISABLED](/http-api/guilds/#guild-features).
+
+An unknown source emoji is reported first, then a source guild that is missing or that disables cloning, then target membership and permission, and only then the target slot limit. [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) reports whether a source permits cloning without attempting the operation.
+
+The copied bytes are not re-scanned against the banned asset hash list.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the target guild |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| source_emoji_id | snowflake | The ID of the emoji to copy, which can belong to any guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild emoji](#guild-emoji-object) object | Emoji was cloned |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Target guild is at its emoji slot limit |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Source guild is missing or disables cloning, the target guild is unavailable, or the caller is not a member of the target guild or lacks `CREATE_EXPRESSIONS` there |
+| 404<sup>3</sup> | [error response](/http-api/#error-response) | Source emoji or target guild does not exist |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MAX_EMOJIS`
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` when the source guild is missing or has `CLONE_EMOJI_DISABLED` and when the target guild is unavailable, and `MISSING_PERMISSIONS` for a target membership or permission failure
+
+<sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for the source emoji and `UNKNOWN_GUILD` for the target guild
+
+A source guild that no longer exists returns 403 `MISSING_ACCESS`, so a caller cannot tell it apart from a source guild that disables cloning.
+
+### Side effects
+
+The operation consumes one target guild emoji slot and creates a copy whose uploader is the caller. It emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the target guild's complete emoji collection and then writes an [`EMOJI_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. The source emoji and source guild are unchanged and receive no Dispatch.
+
+### Rate limit
+
+10 requests per 30 seconds for each authenticated user and target guild ID, on the `guild:emoji:clone::guild_id` bucket.
+
+## Modify guild emoji
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/emojis/{emoji_id}" bot auditReason />
+
+Renames an emoji and returns its [guild emoji object](#guild-emoji-object) without `user`. Emits a [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event.
+
+### Limitations
+
+- The uploader can rename their own emoji with [CREATE_EXPRESSIONS](/http-api/permissions/).
+- Any other caller requires [MANAGE_EXPRESSIONS](/http-api/permissions/).
+
+Neither permission is subject to the guild [MFA level](/http-api/guilds/#mfa-levels).
+
+The emoji is resolved within the guild named in the path before any permission is evaluated. An emoji that belongs to another guild and an emoji in a guild that does not exist both return 404 `UNKNOWN_EMOJI`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| emoji_id | snowflake | The ID of the emoji |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The new name of the emoji (2-32 characters, ASCII letters, digits, and underscore) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild emoji](#guild-emoji-object) object | Name was processed |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Path parameter or name is invalid |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Name is blocked, the guild is unavailable, or the caller is neither the uploader with `CREATE_EXPRESSIONS` nor a member holding `MANAGE_EXPRESSIONS` |
+| 404 | [error response](/http-api/#error-response) | Emoji does not exist in that guild and the request returns `UNKNOWN_EMOJI` |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `INVALID_FORM_BODY` with `INVALID_SNOWFLAKE_FORMAT` or `SNOWFLAKE_OUT_OF_RANGE` for a path parameter, `STRING_LENGTH_INVALID` for a name outside 2 to 32 characters after normalisation, and `INVALID_FORMAT` for a disallowed character
+
+<sup>2</sup> The [error code](/http-api/errors/) is `CONTENT_BLOCKED` for a blocked name, `MISSING_ACCESS` for an unavailable guild, and `MISSING_PERMISSIONS` for a permission failure
+
+### Side effects
+
+The operation sets the requested name, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection, and then writes an [`EMOJI_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. Both are produced even when the submitted name equals the current name, and the audit entry then records an empty change list.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:emoji:update::guild_id` bucket.
+
+## Delete guild emoji
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/emojis/{emoji_id}" bot auditReason />
+
+Deletes the emoji record and returns 204 with an empty body. Emits a [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event.
+
+### Limitations
+
+- The uploader can delete their own emoji with [CREATE_EXPRESSIONS](/http-api/permissions/).
+- Any other caller requires [MANAGE_EXPRESSIONS](/http-api/permissions/).
+
+Neither permission is subject to the guild [MFA level](/http-api/guilds/#mfa-levels). Fluxer resolves the guild, then the purge eligibility, then the emoji, and only then the permission, so a purging request in a guild without the required feature is refused before the emoji is looked up.
+
+:::caution[A purge cannot be undone through the API]
+Without `purge`, the emoji leaves the guild but its image remains available through the [Media Proxy](/media-proxy/routes/#image-asset-contract). With `purge`, the stored object and its `webp` and `gif` CDN representations are queued for permanent deletion.
+:::
+
+:::note[A clone outlives a purge of its source]
+A later purge of the source emoji does not affect an existing clone in another guild.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| emoji_id | snowflake | The ID of the emoji |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purge?<sup>1</sup> | boolean | Whether to permanently delete the stored image (default false) |
+
+<sup>1</sup> Read as true only when it is exactly `true`, `True`, or `1` after trimming. Every other value, including `TRUE` and `yes`, reads as false
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Emoji record was deleted |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Guild is unavailable or cannot purge expression assets, or the caller is neither the uploader with `CREATE_EXPRESSIONS` nor a member holding `MANAGE_EXPRESSIONS` |
+| 404<sup>2</sup> | [error response](/http-api/#error-response) | Guild or emoji does not exist |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild and when `purge` is true and the guild lacks [EXPRESSION_PURGE_ALLOWED](/http-api/guilds/#guild-features), and `MISSING_PERMISSIONS` for a membership or permission failure
+
+<sup>2</sup> The [error code](/http-api/errors/) is `UNKNOWN_GUILD` for the guild and `UNKNOWN_EMOJI` for the emoji
+
+### Side effects
+
+The operation removes the emoji from the guild, returns its slot, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's remaining emoji collection, and then writes an [`EMOJI_DELETE`](/http-api/guild-audit-logs/#audit-actions) audit entry. When `purge` is true, the stored object and its cached representations are queued for permanent deletion after the Dispatch and before the audit entry. Existing messages that reference the emoji are not rewritten, and no message Dispatch is produced.
+
+### Rate limit
+
+10 requests per 30 seconds for each authenticated user and guild ID, on the `guild:emoji:delete::guild_id` bucket. The route also draws on the `guild:emoji:delete:daily::guild_id` bucket of 300 requests per day for each authenticated user and guild ID.

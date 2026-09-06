@@ -1,0 +1,513 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Desktop downloads
+description: Desktop release metadata, artifact and checksum downloads, test builds, and the storage catch-all.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The download resource serves the desktop application builds a deployment has stored. It also serves a SHA-256 checksum for each build and the release feed files beside them. Every route here is unauthenticated. A request that sends a credential anyway receives the same status and body. No route here declares a rate limit bucket, and none draws on the global allowance.
+
+## Prefix and mounting
+
+Fluxer registers the routes under `/dl`, and the six desktop routes under `/dl/desktop`. A client builds the URL against `api_client` from the [instance endpoints object](/http-api/instance/#instance-endpoints-object).
+
+The prefix mounts at the root and at `/v1`, so `/v1/dl/desktop/...` resolves for the six routes that name their own segments.
+
+:::caution[The catch-all has no `/v1` form]
+[Download stored object](#download-stored-object) builds its storage key from the raw request path and keeps only a path beginning `/dl`. A request to `/v1/dl/...` returns 404 while the same path without that prefix returns the object.
+:::
+
+Every other route on this reference takes the `/v1` form, and [HTTP API](/http-api/) states that a client MUST use it.
+
+## Methods
+
+Every route answers `GET`. Five registrations also bind `HEAD`: the two checksum routes, the two artifact routes, and the catch-all. [Get latest desktop version](#get-latest-desktop-version) and [List desktop versions](#list-desktop-versions) bind `GET` alone, and a `HEAD` still reaches them under the [shared rule for HEAD](/http-api/#request-format).
+
+A `HEAD` on either JSON route runs the same resolution as the `GET` and returns its status and headers with no body. It can therefore answer 404.
+
+On a checksum route, a `HEAD` returns 200 with no body. The headers are `Content-Type`, `Content-Disposition`, `Cache-Control`, and the `Content-Length` of the checksum line.
+
+A `HEAD` on an artifact route or the catch-all reads object metadata. It returns 200 with `Content-Type`, `Content-Disposition`, `Accept-Ranges`, `Cache-Control`, `Content-Length`, and, where storage reports them, `ETag` and `Last-Modified`. It ignores `Range` and answers neither 206 nor 416. It never redirects to a [presigned storage URL](#redirects). Fluxer resolves a [country redirect](#redirects) before it reads the method, so a `HEAD` receives that 302 exactly as a `GET` does.
+
+## Release channels
+
+| Value | Name | Description |
+| --- | --- | --- |
+| stable | Stable | The channel a deployment publishes for general use |
+| canary | Canary | The channel that receives a build ahead of `stable` |
+
+The channel selects the storage prefix and the product name in a filename. A `canary` file is named `Fluxer-Canary` or `Fluxer Canary`, and a `stable` file is named `Fluxer`.
+
+## Platforms and architectures
+
+| Value | Name | Description |
+| --- | --- | --- |
+| win32 | Windows | The Windows build target |
+| darwin | macOS | The macOS build target |
+| linux | Linux | The Linux build target |
+
+The path segment with one of those values is named `plat`.
+
+| Value | Name | Description |
+| --- | --- | --- |
+| x64 | x64 | The 64-bit x86 architecture |
+| arm64 | ARM64 | The 64-bit ARM architecture |
+
+A channel, a platform, and an architecture together name one coordinate.
+
+## Package formats
+
+| Value | Name | Description |
+| --- | --- | --- |
+| setup | Setup | The Windows installer executable |
+| portable | Portable | The Windows archive that stores its data beside the executable |
+| dmg | DMG | The macOS disk image |
+| zip | ZIP | The macOS application archive |
+| appimage | AppImage | The Linux portable application image |
+| deb | DEB | The Debian package |
+| rpm | RPM | The RPM package |
+| tar_gz | TAR.GZ | The Linux compressed tarball |
+
+The registry is closed, and a `format` outside it returns 400 `INVALID_FORM_BODY`.
+
+Each format resolves on one platform. `setup` and `portable` resolve on `win32`, `dmg` and `zip` on `darwin`, and `appimage`, `deb`, `rpm`, and `tar_gz` on `linux`. A format paired with any other platform returns 404.
+
+On `darwin` a `dmg` or `zip` request tries the `universal` file before the architecture-specific one, so `x64` and `arm64` can resolve to the same file.
+
+## Checksum requests
+
+A client appends `.sha256` to the format segment to read the checksum, and sends the bare format to read the file. `tar_gz.sha256` is the checksum of `tar_gz`.
+
+The checksum route claims any last segment matching `[a-z_]+\.sha256` before the artifact route sees it.
+
+:::note[The constrained route claims the segment first]
+A segment ending in `.sha256` that names no [package format](#package-formats), such as `exe.sha256`, reaches the checksum route and fails there with 400 `INVALID_FORM_BODY`.
+:::
+
+The pattern is lowercase, so `appimage.SHA256` matches neither checksum route. It reaches the artifact route, where the format schema rejects it with the same status and code.
+
+## Version info object
+
+A version info object describes one release at a coordinate and the file it has for each format.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| version | string | The release version in `MAJOR.MINOR.PATCH` form |
+| pub_date<sup>1</sup> | ISO8601 timestamp | The moment the release was published |
+| minimum_system_version?<sup>2</sup> | ?string | The lowest operating system version the release supports |
+| files<sup>3</sup> | map[string, [version file](#version-file-object) object] | The download entry for each [package format](#package-formats) the release has |
+
+<sup>1</sup> Copied from the coordinate's manifest without reformatting. A coordinate with no usable manifest reports the newest storage modification time among the objects of that release instead
+
+<sup>2</sup> Present only where the coordinate has a manifest and that manifest names a value
+
+<sup>3</sup> A format that resolves no file is absent from the map
+
+### Example
+
+```json
+{
+  "version": "1.4.2",
+  "pub_date": "2026-08-19T11:04:00.000Z",
+  "minimum_system_version": "10.15.0",
+  "files": {
+    "dmg": {
+      "url": "https://api.example.com/dl/desktop/stable/darwin/arm64/1.4.2/dmg",
+      "sha256": "3b1f5c0d9e7a24486cf0b1d3a5e87209cc4d61fba0937e5528d1c4a67b0e93f2",
+      "checksum_url": "https://api.example.com/dl/desktop/stable/darwin/arm64/1.4.2/dmg.sha256"
+    }
+  }
+}
+```
+
+## Version file object
+
+A version file object is the download entry for one format of one release.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url<sup>1</sup> | string | The absolute URL of the versioned download for this format |
+| sha256<sup>2</sup> | ?string | The hash of the file as 64 lowercase hexadecimal characters, or null where no checksum was found |
+| checksum_url<sup>1</sup> | ?string | The absolute URL of the checksum file, or null where `sha256` is null |
+
+<sup>1</sup> Built from `api_client` in the [instance endpoints object](/http-api/instance/#instance-endpoints-object), with no `/v1` segment
+
+<sup>2</sup> Read from the sibling `.sha256` object in storage, or from the manifest entry where the manifest named the file that resolved. A value outside `^[a-f0-9]{64}$` is reported as null
+
+## Checksum files
+
+A checksum response is one `sha256sum` line: the hash, two spaces, the resolved filename, and a trailing newline.
+
+```text
+2f6d1a4b8c3e07f95ab61d4c2e8035971fd0ba46c7e213985cd0f74a6b1e82c3  Fluxer-1.4.2-linux-x86_64.AppImage
+```
+
+The response has `Content-Type: text/plain; charset=utf-8`, a `Content-Disposition` of `attachment` naming the resolved filename with `.sha256` appended, and a `Content-Length` counting the encoded line. It sets no `Accept-Ranges`, `ETag`, or `Last-Modified`, and it ignores a `Range` header.
+
+Fluxer reads the hash from the sibling `.sha256` object or from the manifest entry, and treats a value that is not 64 lowercase hexadecimal characters as absent. That case returns 404.
+
+## Artifact resolution
+
+Fluxer resolves a coordinate to one storage key before it answers. It reads `manifest.json` under the coordinate prefix first and takes the filename that manifest records for the requested format. Fluxer falls back to a listing when that manifest is absent, is not valid JSON, is not a manifest object, describes another coordinate, or names a file storage does not hold. The fallback lists the objects under the prefix and takes the highest version whose filename parses for the requested format.
+
+The listing skips any name containing `/`, the names `manifest.json`, `RELEASES.json`, and `releases.json`, and any name ending in `.sha256`, `.blockmap`, or `.yml`.
+
+A coordinate that resolves no file returns 404 with the plain text body `Not Found`.
+
+## Response headers and caching
+
+Every artifact response has `Accept-Ranges: bytes` and a `Content-Disposition` of `attachment` naming the resolved file, unless the stored object has its own `Content-Disposition`. The filename is percent-encoded inside the header, so a name containing a space is written with `%20`.
+
+| Response | Cache-Control |
+| --- | --- |
+| Latest version metadata and the version list | `public, max-age=300` |
+| Latest artifact and latest checksum | `no-store` |
+| Versioned artifact and versioned checksum under `desktop/` | `public, max-age=31536000` |
+| A release feed filename, and anything under `desktop-test/` | `public, max-age=300` |
+| Any `desktop/` artifact on a deployment that configures country redirects | `private, no-store` |
+| A redirect to a presigned storage URL | `no-store` |
+
+A release feed filename is `manifest.json`, a name ending in `.yml` or `.yaml`, a name beginning `RELEASES`, or a name beginning `releases` or `assets` and ending in `.json`.
+
+## Redirects
+
+Two deployment settings answer a download with 302.
+
+A deployment that reports `self_hosted` false on the [instance features object](/http-api/instance/#instance-features-object) and configures a country list for GitHub redirects resolves the caller's country on every `desktop/` artifact request. When a complete and verified release descriptor names the file, a caller in a listed country receives 302 to that GitHub release asset. Every other outcome streams from storage, and every response under this setting has `Cache-Control: private, no-store`.
+
+A deployment that issues presigned download URLs answers a `GET` with 302 to a storage URL valid for 900 seconds. That redirect has `Cache-Control: no-store` and `Accept-Ranges: bytes`. The setting is off by default.
+
+:::caution[A 302 has no bytes and no range]
+The client follows `Location` to read the file. Fluxer produces the redirect before it reads any `Range` header, so range handling on a redirected download belongs to the target.
+:::
+
+## Test builds
+
+Every route accepts `test` as a query parameter. The value `1` or `true`, matched without regard to case, resolves the object against the `desktop-test/` storage prefix. Any other value is read as false.
+
+On the six desktop routes the flag replaces the prefix outright. On [Download stored object](#download-stored-object) it rewrites a key beginning `desktop/` and leaves any other key unchanged, and a path that already names `desktop-test/` resolves there with no flag at all.
+
+A `url` and a `checksum_url` built for a request that sent the flag repeat `?test=1`, so a client following either one stays on the test prefix.
+
+:::caution[`?test=` fails the schema with 400 `INVALID_FORM_BODY`]
+The empty value normalises to null under [input normalisation](/http-api/#input-normalisation). `?limit=`, `?before=`, and `?after=` fail the same way.
+:::
+
+## Get latest desktop version
+
+<RouteHeader method="GET" path="/v1/dl/desktop/{channel}/{plat}/{arch}/latest" unauthenticated />
+
+Returns the [version info](#version-info-object) object for the newest release at the coordinate.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The [release channel](#release-channels) to resolve |
+| plat | string | The [platform](#platforms-and-architectures) to resolve |
+| arch | string | The [architecture](#platforms-and-architectures) to resolve |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to resolve under `desktop-test/` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [version info](#version-info-object) object | A release resolved at the coordinate |
+| 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
+| 404 | `Not Found` | No release resolved at the coordinate |
+
+A client reads `files` for the format it wants. A format whose file resolved no checksum reports `sha256` and `checksum_url` as null.
+
+### Response headers
+
+The 200 has `Cache-Control: public, max-age=300`. The 404 has `Content-Type: text/plain`.
+
+## List desktop versions
+
+<RouteHeader method="GET" path="/v1/dl/desktop/{channel}/{plat}/{arch}/versions" unauthenticated />
+
+Returns the releases stored at the coordinate, newest first.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The [release channel](#release-channels) to resolve |
+| plat | string | The [platform](#platforms-and-architectures) to resolve |
+| arch | string | The [architecture](#platforms-and-architectures) to resolve |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| limit? | integer | The maximum number of releases to return (1 through 100, default 25) |
+| before?<sup>1</sup> | string | The version to page below, exclusive |
+| after?<sup>1</sup> | string | The version to page above, exclusive |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to resolve under `desktop-test/` |
+
+<sup>1</sup> Compared component by component as numbers, and both bounds can be sent together to select a range
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| versions | array[[version info](#version-info-object) object] | The releases on this page, ordered newest first |
+| has_more | boolean | Whether the filtered set held more releases than `limit` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The listing completed, possibly with no release |
+| 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
+
+This route never answers 404. A coordinate that holds no object returns 200 with an empty array.
+
+Fluxer builds the listing from storage objects and ignores the manifest, so a release the manifest names but storage does not hold is absent here. `pub_date` reports the newest storage modification time among that release's objects, and `minimum_system_version` is never reported.
+
+A format is listed only where a filename under the coordinate parses for it, and `sha256` is reported only where the sibling `.sha256` object exists and holds a valid hash.
+
+### Response headers
+
+The 200 has `Cache-Control: public, max-age=300`.
+
+## Download latest desktop artifact
+
+<RouteHeader method="GET" path="/v1/dl/desktop/{channel}/{plat}/{arch}/latest/{format}" unauthenticated />
+
+Streams the newest file at the coordinate for one package format.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The [release channel](#release-channels) to resolve |
+| plat | string | The [platform](#platforms-and-architectures) to resolve |
+| arch | string | The [architecture](#platforms-and-architectures) to resolve |
+| format | string | The [package format](#package-formats) to resolve |
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to resolve under `desktop-test/` |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Range? | string | The standard byte range, answered with 206 and a `Content-Range` header |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | artifact bytes | The complete file was streamed |
+| 206 | artifact bytes | The requested byte range was streamed |
+| 302 | empty | The deployment [redirects](#redirects) this download |
+| 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
+| 404 | `Not Found` | No file resolved for the format at the coordinate |
+| 416 | empty | The requested range is unsatisfiable |
+
+The stored file keeps its own name, so the resolved filename has the release version even though the request named `latest`. A client that follows this route on every check reads a different file once the coordinate publishes a new release.
+
+### Response headers
+
+The 200 has `Content-Type`<sup>1</sup>, `Content-Disposition`<sup>2</sup>, `Content-Length`, `Accept-Ranges: bytes`, `Cache-Control: no-store`, `ETag`<sup>3</sup>, and `Last-Modified`<sup>3</sup>. The 206 has the 200 headers plus `Content-Range`. The 302 has `Location`, `Accept-Ranges: bytes`, and `Cache-Control`. The 404 has `Content-Type: text/plain`. The 416 has `Accept-Ranges: bytes`, `Content-Range: bytes */{size}`, and `Cache-Control`.
+
+<sup>1</sup> The stored media type, and `application/octet-stream` where storage reports none
+
+<sup>2</sup> `attachment` naming the resolved filename, percent-encoded
+
+<sup>3</sup> Sent where storage reports the value
+
+## Download latest desktop checksum
+
+<RouteHeader method="GET" path="/v1/dl/desktop/{channel}/{plat}/{arch}/latest/{format}.sha256" unauthenticated />
+
+Returns the [checksum file](#checksum-files) for the newest file at the coordinate.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The [release channel](#release-channels) to resolve |
+| plat | string | The [platform](#platforms-and-architectures) to resolve |
+| arch | string | The [architecture](#platforms-and-architectures) to resolve |
+| format<sup>1</sup> | string | The [package format](#package-formats) to resolve, followed by `.sha256` |
+
+<sup>1</sup> The complete segment matches `[a-z_]+\.sha256` for the route to claim it, and the part before the suffix names a format in the closed registry
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to resolve under `desktop-test/` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | checksum line | The file and a valid hash both resolved |
+| 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
+| 404 | `Not Found` | No file resolved for the format, or the resolved file has no valid hash |
+
+This hash is the value [Get latest desktop version](#get-latest-desktop-version) reports as `sha256` for the same format. The line names the file this coordinate's `latest` download streams.
+
+### Response headers
+
+The 200 has `Content-Type: text/plain; charset=utf-8`, `Content-Disposition`, `Content-Length`, and `Cache-Control: no-store`. The 404 has `Content-Type: text/plain`.
+
+## Download desktop artifact
+
+<RouteHeader method="GET" path="/v1/dl/desktop/{channel}/{plat}/{arch}/{version}/{format}" unauthenticated />
+
+Streams one released file by version and package format.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The [release channel](#release-channels) to resolve |
+| plat | string | The [platform](#platforms-and-architectures) to resolve |
+| arch | string | The [architecture](#platforms-and-architectures) to resolve |
+| version<sup>1</sup> | string | The release version to resolve |
+| format | string | The [package format](#package-formats) to resolve |
+
+<sup>1</sup> Three decimal components matching `^\d+\.\d+\.\d+$`, so a two-component or suffixed version returns 400 `INVALID_FORM_BODY`
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to resolve under `desktop-test/` |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Range? | string | The standard byte range, answered with 206 and a `Content-Range` header |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | artifact bytes | The complete file was streamed |
+| 206 | artifact bytes | The requested byte range was streamed |
+| 302 | empty | The deployment [redirects](#redirects) this download |
+| 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
+| 404 | `Not Found` | No file resolved for the version and format |
+| 416 | empty | The requested range is unsatisfiable |
+
+Fluxer reads the manifest only where the manifest names the requested version. Otherwise it tries the known filename spellings for the coordinate in turn and streams the first one storage holds, so a version published under an older naming scheme still resolves.
+
+### Response headers
+
+The 200 has `Content-Type`, `Content-Disposition`, `Content-Length`, `Accept-Ranges: bytes`, `Cache-Control`<sup>1</sup>, `ETag`<sup>2</sup>, and `Last-Modified`<sup>2</sup>. The 206 has the 200 headers plus `Content-Range`. The 302 has `Location`, `Accept-Ranges: bytes`, and `Cache-Control`. The 404 has `Content-Type: text/plain`. The 416 has `Accept-Ranges: bytes`, `Content-Range: bytes */{size}`, and `Cache-Control`.
+
+<sup>1</sup> `public, max-age=31536000` for a released file, and `public, max-age=300` under `desktop-test/` or for a [release feed filename](#response-headers-and-caching)
+
+<sup>2</sup> Sent where storage reports the value
+
+## Download desktop checksum
+
+<RouteHeader method="GET" path="/v1/dl/desktop/{channel}/{plat}/{arch}/{version}/{format}.sha256" unauthenticated />
+
+Returns the [checksum file](#checksum-files) for one released file.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel | string | The [release channel](#release-channels) to resolve |
+| plat | string | The [platform](#platforms-and-architectures) to resolve |
+| arch | string | The [architecture](#platforms-and-architectures) to resolve |
+| version | string | The release version to resolve |
+| format<sup>1</sup> | string | The [package format](#package-formats) to resolve, followed by `.sha256` |
+
+<sup>1</sup> The complete segment matches `[a-z_]+\.sha256` for the route to claim it, and the part before the suffix names a format in the closed registry
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to resolve under `desktop-test/` |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | checksum line | The file and a valid hash both resolved |
+| 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
+| 404 | `Not Found` | No file resolved for the version and format, or no valid hash was found for it |
+
+Fluxer reads the hash from the sibling `.sha256` object for the resolved file. Where that object is absent and the requested version is the newest one at the coordinate, Fluxer uses the manifest hash for that format instead. Any other case returns 404.
+
+### Response headers
+
+The 200 has `Content-Type: text/plain; charset=utf-8`, `Content-Disposition`, `Content-Length`, and `Cache-Control`<sup>1</sup>. The 404 has `Content-Type: text/plain`.
+
+<sup>1</sup> `public, max-age=31536000` for a released file, and `public, max-age=300` under `desktop-test/`
+
+## Download stored object
+
+<RouteHeader method="GET" path="/dl/{path}" unauthenticated />
+
+Streams one stored object addressed by its storage key. A release feed file has no format segment and no version segment, so this is the only route that reaches one.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| path<sup>1</sup> | string | The storage key under the downloads bucket, which can contain `/` separators |
+
+<sup>1</sup> Taken from the request path with the `/dl` prefix removed, then normalised. It begins `desktop/` or `desktop-test/` after normalisation, and every other key returns 404
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| test? | string | The [test build](#test-builds) flag, `1` or `true` to rewrite a `desktop/` key to `desktop-test/` |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| Range? | string | The standard byte range, answered with 206 and a `Content-Range` header |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | object bytes | The complete object was streamed |
+| 206 | object bytes | The requested byte range was streamed |
+| 302 | empty | The deployment [redirects](#redirects) this download |
+| 400 | [error response](/http-api/#error-response) | The `test` value fails its schema and the request returns `INVALID_FORM_BODY` |
+| 404 | `Not Found` | The key is outside the two permitted prefixes, the request has the `/v1` prefix, or storage holds no such object |
+| 416 | empty | The requested range is unsatisfiable |
+
+:::caution[The catch-all reaches two prefixes only]
+A key that does not begin `desktop/` or `desktop-test/` returns 404 before Fluxer reads storage.
+:::
+
+Fluxer also rejects the key when it is empty, when normalisation leaves it beginning `..` or `/`, or when any segment is `.`, `..`, or contains a NUL character. Each of those returns the same 404, so a caller cannot tell a traversal attempt from a missing object.
+
+A key can have the platform and architecture in one hyphenated segment, as in `desktop/stable/linux-x64/manifest.json`. Fluxer also tries that key with the segment split, as `desktop/stable/linux/x64/manifest.json`. It reads the requested form first and streams whichever of the two storage holds.
+
+### Response headers
+
+The 200 has `Content-Type`, `Content-Disposition`, `Content-Length`, `Accept-Ranges: bytes`, `Cache-Control`<sup>1</sup>, `ETag`<sup>2</sup>, and `Last-Modified`<sup>2</sup>. The 206 has the 200 headers plus `Content-Range`. The 302 has `Location`, `Accept-Ranges: bytes`, and `Cache-Control`. The 404 has `Content-Type: text/plain`. The 416 has `Accept-Ranges: bytes`, `Content-Range: bytes */{size}`, and `Cache-Control`.
+
+<sup>1</sup> `public, max-age=31536000` for a released artifact, and `public, max-age=300` for a [release feed filename](#response-headers-and-caching) or a key under `desktop-test/`
+
+<sup>2</sup> Sent where storage reports the value

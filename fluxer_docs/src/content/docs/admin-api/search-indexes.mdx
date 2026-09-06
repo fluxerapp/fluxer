@@ -1,0 +1,190 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Search indexes
+description: Administrative search index rebuilds, index names, and rebuild progress.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A search index holds the documents a search reads, and a rebuild writes those documents from current data. These two routes queue a rebuild and read its progress. The rebuild itself runs as the `refreshSearchIndex` background task described by [Jobs](/admin-api/jobs/).
+
+Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
+
+## Search index names
+
+`index_name` is one of the following values. A value outside the set fails path validation.
+
+| Value | Scope | Description |
+| --- | --- | --- |
+| guilds | Instance-wide | Every guild, backing Admin guild search |
+| users | Instance-wide | Every account, backing Admin user search |
+| reports | Instance-wide | Every report, backing Admin report search |
+| audit_logs | Instance-wide | Every Admin audit entry, backing Admin audit search |
+| discovery<sup>1</sup> | Instance-wide | Discovery metadata written onto the guild documents of approved listings |
+| channel_messages<sup>2</sup> | One guild | Messages of every channel in one guild, requiring `guild_id` |
+| guild_members<sup>3</sup> | One guild | Members of one guild, requiring `guild_id` |
+| favorite_memes<sup>4</sup> | One user | Favourited [memes](/http-api/memes/) of one user, requiring `user_id` |
+
+<sup>1</sup> This name has no index of its own. It reads every approved listing and writes its description, category, primary language, and tags onto the existing guild documents in batches of 200
+
+<sup>2</sup> This name indexes no message itself. It clears the message documents of every channel in the guild, then queues one `indexChannelMessages` job for each channel
+
+<sup>3</sup> The rebuild clears the guild's member documents first and stamps `members_indexed_at` on the guild when it finishes
+
+<sup>4</sup> No worker handler is registered for this name. The queued job fails before it writes any progress record
+
+Every instance-wide name other than `discovery` deletes its documents before the first batch is written, so search over that index is incomplete for the whole run.
+
+:::note[A `discovery` rebuild updates documents in place]
+The guild documents stay searchable for the whole run.
+:::
+
+## Search index refresh object
+
+A receipt for one queued rebuild.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always true |
+| job_id<sup>1</sup> | string | The ID of the queued rebuild, used to read its progress |
+
+<sup>1</sup> The value is a [snowflake](/snowflakes/) rendered as a string. It addresses the progress record that [Get search index refresh](#get-search-index-refresh) reads. It differs from the `job_id` of the [Jobs](/admin-api/jobs/) ledger entry for the same rebuild, and appears there only inside that entry's `payload`
+
+### Example
+
+```json
+{
+  "success": true,
+  "job_id": "1501314428688998182"
+}
+```
+
+## Search index refresh progress object
+
+Progress for one queued rebuild. The object has two shapes, selected by `status`.
+
+### Not found structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | Always `not_found` |
+
+### Progress structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | One of `in_progress`, `completed`, or `failed` |
+| index_type | string | The [search index name](#search-index-names) being rebuilt |
+| total?<sup>1</sup> | number | The number of documents expected, present while the rebuild reports progress and once it completes |
+| indexed?<sup>2</sup> | number | The number of documents written so far |
+| started_at?<sup>3</sup> | ISO8601 timestamp | The time the rebuild last reported progress |
+| completed_at? | ISO8601 timestamp | The time the rebuild finished, present only when `status` is `completed` |
+| failed_at? | ISO8601 timestamp | The time the rebuild failed, present only when `status` is `failed` |
+| error? | string | The failure text, present only when `status` is `failed` |
+
+<sup>1</sup> `total` is the same value as `indexed` while the rebuild runs and becomes the real total on completion. The `discovery` rebuild reports the approved listing count from its first batch onwards
+
+<sup>2</sup> The unit is the document the handler writes. A `channel_messages` rebuild counts the channels it queued
+
+<sup>3</sup> Rewritten on every progress report, so its value moves forward while the rebuild runs
+
+The failure write replaces the record with the status, the index type, the error text, and the failure time, so a `failed` record has neither `total` nor `indexed`.
+
+### Example
+
+```json
+{
+  "status": "in_progress",
+  "index_type": "guilds",
+  "total": 3000,
+  "indexed": 3000,
+  "started_at": "2026-08-31T09:12:44.118Z"
+}
+```
+
+## Refresh search index
+
+<RouteHeader method="POST" path="/v1/admin/search/indexes/{index_name}/refreshes" auditReason />
+
+Queues a rebuild of the named index. Requires `guild:lookup`. Returns a [search index refresh](#search-index-refresh-object) object on success.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| index_name | string | The [search index name](#search-index-names) to rebuild |
+
+### JSON body
+
+Every field is optional. Fluxer reads an absent or empty body as an empty object, so an instance-wide rebuild can send no body at all. A body that is not parseable JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id?<sup>1</sup> | snowflake | The ID of the guild whose copy of the index is rebuilt |
+| user_id?<sup>2</sup> | snowflake | The ID of the user whose copy of the index is rebuilt |
+
+<sup>1</sup> Required by `channel_messages` and `guild_members`. Every other index name ignores it
+
+<sup>2</sup> Required by `favorite_memes`. Every other index name ignores it
+
+Fluxer records both values on the audit entry whenever they are supplied, including on an index name that ignores them.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [search index refresh](#search-index-refresh-object) object | The rebuild was queued |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the scope ID the index name requires is missing, or the body is not parseable JSON |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` without `admin:authenticate`, or `MISSING_ACL` without `guild:lookup` |
+| 500 | [error response](/admin-api/#error-response) | The job could not be queued |
+
+A missing scope ID names `guild_id` or `user_id` in `errors`. Fluxer queues no job and records no audit entry for that failure.
+
+:::caution[The rebuild runs after the response]
+Search results over the named index can be incomplete until the rebuild finishes.
+:::
+
+### Side effects
+
+Fluxer rebuilds the named index from current data in batches of 1,000 documents. A guild-scoped rebuild does not check that the guild exists, so an unknown ID produces an empty index.
+
+The job has an attempt budget of 1, so a rebuild that throws is not retried.
+
+Fluxer records one Admin audit entry with the action `queue_refresh_index`, the target type `search_index`, and the target ID `0`. Its metadata has `index_type`, `job_id`, and whichever of `guild_id` and `user_id` the request supplied. Fluxer emits no Gateway Dispatch.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Get search index refresh
+
+<RouteHeader method="GET" path="/v1/admin/search/index-refreshes/{job_id}" />
+
+Returns the [search index refresh progress](#search-index-refresh-progress-object) object for one queued rebuild. Requires `guild:lookup`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| job_id<sup>1</sup> | string | The identifier returned by [Refresh search index](#refresh-search-index) |
+
+<sup>1</sup> The value is bounded at 1 to 128 characters after normalisation and need not be a snowflake
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200<sup>1</sup> | [search index refresh progress](#search-index-refresh-progress-object) object | A progress record was returned, including the not-found shape |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_PERMISSIONS` without `admin:authenticate`, or `MISSING_ACL` without `guild:lookup` |
+
+<sup>1</sup> An unknown identifier answers 200 with `status` set to `not_found`, which is also the answer for an expired record and for a rebuild that failed before writing its first record
+
+:::note[Progress expires after one hour]
+Each write of the progress record renews a one-hour lifetime, so a completed or failed outcome stays readable for one hour after its final update.
+:::
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
