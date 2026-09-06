@@ -24,6 +24,8 @@ import type {MessagePersistenceService} from '../message/MessagePersistenceServi
 import {createMessageResponseDataService} from '../message/MessageResponseDataService';
 import {MessageInteractionBase} from './MessageInteractionBase';
 
+const PIN_LIST_UNBOUNDED_TIMESTAMP = new Date('9999-12-31T23:59:59.999Z');
+
 export class MessagePinService extends MessageInteractionBase {
 	constructor(
 		gatewayService: IGatewayService,
@@ -81,7 +83,7 @@ export class MessagePinService extends MessageInteractionBase {
 		const pageSize = Math.min(limit ?? 50, 50);
 		const cutoffTimestamp = hasReadHistory ? null : new Date(authChannel.guild!.message_history_cutoff!).getTime();
 		const filtered: Array<Message> = [];
-		let before = beforeTimestamp ?? new Date();
+		let before = beforeTimestamp ?? PIN_LIST_UNBOUNDED_TIMESTAMP;
 		let exhausted = false;
 		while (filtered.length <= pageSize && !exhausted) {
 			const messages = await this.channelRepository.messageInteractions.listChannelPins(
