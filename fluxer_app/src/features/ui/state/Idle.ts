@@ -30,11 +30,11 @@ function normalizeIdleTimeMs(value: number): number | null {
 
 class Idle {
 	idle = false;
-	private lastActivityTime = Date.now();
+	private lastLocalActivityTime = Date.now();
+	private lastSystemActivityTime = 0;
 	private checkInterval: NodeJS.Timeout | null = null;
 	private systemIdleCheckInFlight = false;
 	private lastSystemIdleFailureAt = 0;
-	private activityVersion = 0;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -56,16 +56,15 @@ class Idle {
 	}
 
 	recordActivity(): void {
-		this.lastActivityTime = Date.now();
-		this.activityVersion++;
+		this.lastLocalActivityTime = Date.now();
 		if (this.idle) {
 			this.applyIdleState(false);
 		}
 	}
 
 	markBackground(): void {
-		this.lastActivityTime = 0;
-		this.activityVersion++;
+		this.lastLocalActivityTime = 0;
+		this.lastSystemActivityTime = 0;
 		this.applyIdleState(true);
 	}
 
@@ -74,16 +73,24 @@ class Idle {
 	}
 
 	getIdleSince(): number {
-		return this.idle ? this.lastActivityTime : 0;
+		return this.idle ? this.getLastActivityTime() : 0;
 	}
 
 	getInactiveDurationMs(now = Date.now()): number {
-		return Math.max(0, now - this.lastActivityTime);
+		return Math.max(0, now - this.getLastActivityTime());
+	}
+
+	private getLastActivityTime(): number {
+		return Math.max(this.lastLocalActivityTime, this.lastSystemActivityTime);
 	}
 
 	private updateIdleState(): void {
 		const desktopIdleApi = getDesktopIdleApi();
-		if (desktopIdleApi && Date.now() - this.lastSystemIdleFailureAt >= SYSTEM_IDLE_RETRY_DELAY_MS) {
+		if (
+			desktopIdleApi &&
+			!this.systemIdleCheckInFlight &&
+			Date.now() - this.lastSystemIdleFailureAt >= SYSTEM_IDLE_RETRY_DELAY_MS
+		) {
 			void this.updateIdleStateFromSystem(desktopIdleApi);
 			return;
 		}
@@ -96,29 +103,20 @@ class Idle {
 	}
 
 	private async updateIdleStateFromSystem(desktopIdleApi: Required<DesktopIdleApi>): Promise<void> {
-		if (this.systemIdleCheckInFlight) return;
 		this.systemIdleCheckInFlight = true;
-		const activityVersion = this.activityVersion;
-		const requestedAt = Date.now();
 		try {
 			const idleTimeMs = normalizeIdleTimeMs(await desktopIdleApi.getSystemIdleTimeMs());
 			if (idleTimeMs === null) {
 				this.lastSystemIdleFailureAt = Date.now();
-				this.updateIdleStateFromLocalActivity();
-				return;
+			} else {
+				this.lastSystemActivityTime = Math.max(this.lastSystemActivityTime, Date.now() - idleTimeMs);
 			}
-			if (activityVersion !== this.activityVersion && this.lastActivityTime >= requestedAt) {
-				return;
-			}
-			const now = Date.now();
-			this.lastActivityTime = Math.max(0, now - idleTimeMs);
-			this.applyIdleState(idleTimeMs >= IDLE_DURATION_MS);
 		} catch {
 			this.lastSystemIdleFailureAt = Date.now();
-			this.updateIdleStateFromLocalActivity();
 		} finally {
 			this.systemIdleCheckInFlight = false;
 		}
+		this.updateIdleStateFromLocalActivity();
 	}
 
 	private applyIdleState(idle: boolean): void {
