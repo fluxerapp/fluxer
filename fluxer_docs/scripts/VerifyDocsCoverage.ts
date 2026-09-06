@@ -1242,6 +1242,29 @@ console.log('self-hosting guide against deploy/self-hosting');
 	compareKeyLists('secret', shellSecrets, powershellSecrets);
 	compareKeyLists('non-secret value', shellNonSecrets, powershellNonSecrets);
 
+	const shellUpgrade = parseShellKeys('fluxer_upgrade_secret_keys', 'the install.sh upgrade secret list');
+	const powershellUpgrade = parsePowerShellKeys('FluxerUpgradeSecretKeys', 'the install.ps1 upgrade secret list');
+	compareKeyLists('upgrade secret', shellUpgrade, powershellUpgrade);
+
+	for (const [script, upgrade, secrets] of [
+		['install.sh', shellUpgrade, shellSecrets],
+		['install.ps1', powershellUpgrade, powershellSecrets],
+	] as const) {
+		if (upgrade.size === 0) {
+			problems.push(`${script} declares no upgrade secret keys, so an upgrade mints nothing`);
+		}
+		for (const [name, kind] of upgrade) {
+			const asInstalled = secrets.get(name);
+			if (asInstalled == null) {
+				problems.push(`${script} mints ${name} on an upgrade and never writes it on an install`);
+				continue;
+			}
+			if (asInstalled !== kind) {
+				problems.push(`${name} is ${kind} on an upgrade and ${asInstalled} on an install in ${script}`);
+			}
+		}
+	}
+
 	const expectedSecretKind = (name: string): string => {
 		if (name === 'FLUXER_VAPID_PUBLIC_KEY') {
 			return 'vapid_public';
