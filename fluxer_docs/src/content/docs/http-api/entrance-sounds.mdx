@@ -337,18 +337,13 @@ Nothing is published to the media servers. Each recipient receives a Dispatch na
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Fan-out was attempted for every other connected account |
-| 400 | [error response](/http-api/#error-response) | Caller holds no voice state in the channel and the request returns `ENTRANCE_SOUND_INVALID_SCOPE` at the `channel_id` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | Caller holds no voice state in the channel, including when the channel does not exist, and the request returns `ENTRANCE_SOUND_INVALID_SCOPE` at the `channel_id` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
 
 :::caution[Connection is the only authorisation]
 Fluxer evaluates no channel permission and checks no guild membership.
 :::
 
-:::caution[Any account can probe channel existence]
-Fluxer resolves the channel before the connection check. A channel the caller is not connected to returns 400, and an ID naming no channel returns 404.
-:::
-
-The connection check runs before the clip is looked up, so a caller who is not connected never learns whether the named clip exists.
+An ID naming no channel is refused exactly like a channel the caller is not connected to, so the response tells the two apart in neither direction. The connection check runs before the clip is looked up, so a caller who is not connected never learns whether the named clip exists.
 
 ### Side effects
 

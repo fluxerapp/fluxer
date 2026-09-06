@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {type ChannelID, createUserID, type EntranceSoundID, type UserID} from '../../BrandedTypes';
 import type {IChannelRepository} from '../../channel/IChannelRepository';
@@ -25,14 +24,10 @@ export class EntranceSoundPlayService {
 	async play(params: PlayEntranceSoundParams): Promise<void> {
 		const {userId, channelId, soundId} = params;
 		const channel = await this.channelRepository.findUnique(channelId);
-		if (!channel) {
-			throw new UnknownChannelError();
-		}
-		const guildId = channel.guildId ?? undefined;
-		const {voiceStates} = await this.gatewayService.getVoiceStatesForChannel({
-			guildId,
-			channelId,
-		});
+		const guildId = channel?.guildId ?? undefined;
+		const voiceStates = channel
+			? (await this.gatewayService.getVoiceStatesForChannel({guildId, channelId})).voiceStates
+			: [];
 		const senderInChannel = voiceStates.some((state) => state.userId === userId.toString());
 		if (!senderInChannel) {
 			throw InputValidationError.fromCode('channel_id', ValidationErrorCodes.ENTRANCE_SOUND_INVALID_SCOPE);
