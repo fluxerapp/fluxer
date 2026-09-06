@@ -647,6 +647,22 @@ Default empty. The LiveKit secret. Compose fills it from `LIVEKIT_API_SECRET`.
 
 Default empty. The client-facing LiveKit URL. When empty the API derives it from the public API origin as `wss://host/livekit`, or `ws://` under `http`, and keeps a non-default port. Set it only when LiveKit is served from another host. Compose forwards the `.env` value, empty by default.
 
+#### `FLUXER_LIVEKIT_USE_EXTERNAL_IP`
+
+Default `true`. Whether LiveKit discovers the address browsers dial by asking a STUN server. A host that cannot reach one over UDP fails to start with `could not resolve external IP: context deadline exceeded`. Set it to `false` and give `FLUXER_LIVEKIT_NODE_IP` the address instead. Read only by the `livekit` service.
+
+#### `FLUXER_LIVEKIT_NODE_IP`
+
+Default empty. The address LiveKit publishes in its ICE candidates. Empty leaves the choice to the discovery above, and with that discovery off LiveKit falls back to the container's own address, which no browser can reach. Set both together. `docker compose logs livekit` names the address in use as `nodeIP` on the starting line.
+
+#### `FLUXER_LIVEKIT_STUN_PRIMARY`
+
+Default `stun.l.google.com:19302`. The first STUN server the discovery asks. Point it at another server to keep the discovery without reaching Google.
+
+#### `FLUXER_LIVEKIT_STUN_SECONDARY`
+
+Default `stun1.l.google.com:19302`. The second STUN server, used the same way.
+
 #### `FLUXER_LIVEKIT_INTERNAL_URL`
 
 Default empty. The server-side LiveKit control API. Compose sets `http://livekit:7880`.

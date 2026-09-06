@@ -194,7 +194,9 @@ function Show-FluxerUsage {
 	Write-FluxerLine 'Options:'
 	Write-FluxerLine '  -Domain <host>          Hostname the instance answers on. Prompted when absent.'
 	Write-FluxerLine '  -Email <address>        Address written as FLUXER_VAPID_EMAIL. Prompted when absent.'
-	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home directory.'
+	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home'
+	Write-FluxerLine '                          directory, or the working directory itself when -Update or'
+	Write-FluxerLine '                          -Rollback is given and it holds an instance.'
 	Write-FluxerLine '  -Ref <git ref>          Ref the stack files come from. Default: the image tag, and main when that tag is v1 or latest.'
 	Write-FluxerLine '  -ImageTag <tag>         Value written as FLUXER_IMAGE_TAG. Default: v1.'
 	Write-FluxerLine '  -Tls <bundled|proxy>    Certificate mode. Default: bundled.'
@@ -773,6 +775,7 @@ function Get-FluxerComposeProject([string]$TargetDir) {
 }
 
 $script:FluxerComposeOut = ''
+$script:FluxerComposeSelector = ''
 $script:FluxerComposeErr = ''
 
 # One read-only Compose query, with what Compose printed on stderr kept.
@@ -785,7 +788,17 @@ function Invoke-FluxerComposeQuery([string]$Selector) {
 	$result = Invoke-FluxerCapture @('compose', 'config', $Selector)
 	$script:FluxerComposeOut = $result.Text
 	$script:FluxerComposeErr = $result.Error
+	$script:FluxerComposeSelector = $Selector
 	return $result.Code
+}
+
+# The two readers below parse whatever the last query returned, so each one names
+# the selector it belongs to. Reading the wrong one would otherwise hand back the
+# other kind of list with nothing to say it was wrong.
+function Assert-FluxerComposeSelector([string]$Selector) {
+	if ($script:FluxerComposeSelector -ne $Selector) {
+		Stop-Fluxer "Internal error: read of $Selector after a $($script:FluxerComposeSelector) query." $FluxerExitSecret
+	}
 }
 
 # What Compose printed on the last query, indented one level for the caller.
@@ -803,6 +816,7 @@ function Get-FluxerComposeError([string]$Indent) {
 # By hand:
 #   docker compose config --images
 function Get-FluxerComposeImages {
+	Assert-FluxerComposeSelector '--images'
 	$refs = @()
 	foreach ($line in $script:FluxerComposeOut.Split("`n")) {
 		$candidate = $line.Trim()
@@ -833,10 +847,22 @@ function Get-FluxerImageId([string]$Reference) {
 #
 # By hand:
 #   docker compose ps -aq | xargs docker inspect --format '{{.Config.Image}} {{.Image}}'
+# The text of a captured stream, indented one level for the caller, or a word
+# saying there was none.
+function Get-FluxerIndented([string]$Text, [string]$Indent) {
+	if ([string]::IsNullOrWhiteSpace($Text)) {
+		return "${Indent}nothing"
+	}
+	return (($Text -split "`n") | ForEach-Object {"$Indent$_"}) -join "`n"
+}
+
 function Get-FluxerRunningImageIds {
 	$ids = Invoke-FluxerCapture @('compose', 'ps', '-aq')
 	$map = @{}
-	if ($ids.Code -ne 0 -or $ids.Text.Length -eq 0) {
+	if ($ids.Code -ne 0) {
+		Stop-Fluxer "docker compose ps failed, so what is running cannot be read and the record would name no image ID at all. Compose printed:`n$(Get-FluxerIndented $ids.Error '  ')" $FluxerExitPrerequisite
+	}
+	if ($ids.Text.Length -eq 0) {
 		return $map
 	}
 	foreach ($container in $ids.Text.Split("`n")) {
@@ -846,7 +872,7 @@ function Get-FluxerRunningImageIds {
 		}
 		$row = Invoke-FluxerCapture @('inspect', '--format', '{{.Config.Image}} {{.Image}}', $candidate)
 		if ($row.Code -ne 0) {
-			continue
+			Stop-Fluxer "docker inspect failed for $candidate, so the image ID under its reference cannot be read and a rollback would have nothing to go back to. Docker printed:`n$(Get-FluxerIndented $row.Error '  ')" $FluxerExitPrerequisite
 		}
 		$parts = $row.Text.Trim().Split(' ')
 		if ($parts.Count -lt 2) {
@@ -925,6 +951,7 @@ function Get-FluxerChangedMounts([string]$TargetDir, [string]$StagingDir) {
 # By hand:
 #   docker compose config --services
 function Get-FluxerComposeServices {
+	Assert-FluxerComposeSelector '--services'
 	$services = @()
 	foreach ($line in $script:FluxerComposeOut.Split("`n")) {
 		$candidate = $line.Trim()
@@ -1011,6 +1038,30 @@ function Set-FluxerEnvValue([string]$EnvPath, [string]$Name, [string]$Value) {
 # every command this script runs before it reaches the step that would have reported it. Writing
 # the value first is what makes the rest of the run possible. This runs before the record, so the
 # .env the record saves is the one that works.
+# The keys the run would write, without writing any of them. The plan and the run
+# read the same list, so a plan cannot describe a run that does something else.
+function Get-FluxerMissingRequiredSecrets([string]$EnvPath) {
+	$missing = @()
+	foreach ($entry in $FluxerUpgradeSecretKeys) {
+		$current = Get-FluxerEnvValue $EnvPath $entry.Name
+		if ($current.Length -eq 0 -or $current -eq 'CHANGE_ME') {
+			$missing += $entry.Name
+		}
+	}
+	return @($missing)
+}
+
+# A plan writes nothing itself. The run it describes writes .env before it reads
+# anything when a required key is absent, and saying otherwise would describe a
+# different run.
+function Write-FluxerPlanFooter($Missing) {
+	if ($Missing.Count -gt 0) {
+		Write-FluxerLine 'This plan wrote nothing. The run it describes writes the keys above into .env before anything else.'
+	} else {
+		Write-FluxerLine 'Nothing outside a temporary directory was written.'
+	}
+}
+
 function Add-FluxerRequiredSecrets([string]$EnvPath) {
 	foreach ($entry in $FluxerUpgradeSecretKeys) {
 		$current = Get-FluxerEnvValue $EnvPath $entry.Name
@@ -1101,8 +1152,11 @@ function Save-FluxerCurrentFiles([string]$Record, [string]$TargetDir, [string]$E
 	Set-FluxerPrivateFile $envCopy
 	foreach ($name in $FluxerStackFiles) {
 		$source = Join-Path $TargetDir $name
-		if (Test-Path -LiteralPath $source) {
+		$length = Get-FluxerFileLength $source
+		if ($length -gt 0) {
 			Copy-Item -LiteralPath $source -Destination (Join-Path $Record $name) -Force
+		} elseif (Test-Path -LiteralPath $source) {
+			Stop-Fluxer "$source is empty, so the record would hold a file a rollback could not use. Put the file back before upgrading." $FluxerExitBackup
 		}
 	}
 }
@@ -1169,7 +1223,7 @@ function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
 	}
 	if (-not (Test-FluxerDumpHeader $dump)) {
 		Remove-FluxerTemporary $dump
-		Stop-Fluxer 'The dump does not carry the custom-format header. The instance is untouched.' $FluxerExitBackup
+		Stop-Fluxer 'The dump does not begin with the custom-format header. The instance is untouched.' $FluxerExitBackup
 	}
 	Write-FluxerLine "Dumped the database to $dump."
 }
@@ -1317,20 +1371,31 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 	Write-FluxerLine "  Ref:        $Ref"
 	Write-FluxerLine "  Image tag:  $(Get-FluxerEnvValue $EnvPath 'FLUXER_IMAGE_TAG') from .env"
 	Write-FluxerLine "  Backup dir: $BackupRoot"
+	$missing = Get-FluxerMissingRequiredSecrets $EnvPath
+	if ($missing.Count -gt 0) {
+		Write-FluxerLine '  Writes .env: the run mints these before it reads anything, because the refreshed stack requires them'
+		foreach ($name in $missing) {
+			Write-FluxerLine "              $name"
+		}
+	}
 	$running = Get-FluxerRunningImageIds
 	if ((Invoke-FluxerComposeQuery '--images') -ne 0) {
 		Write-FluxerLine '  Refusal:    docker compose config --images fails here, and step 1 of the upgrade reads that list'
 		Write-FluxerLine '  Compose said:'
 		Write-FluxerLine (Get-FluxerComposeError '    ')
-		Write-FluxerLine '  Outcome:    the run stops on step 1 and changes nothing'
-		Write-FluxerLine 'Nothing outside a temporary directory was written. Fix what Compose reports, then run this again.'
+		if ($missing.Count -gt 0) {
+			Write-FluxerLine '  Outcome:    the run writes the keys above first, which may be what Compose is missing, so this refusal may not stand'
+		} else {
+			Write-FluxerLine '  Outcome:    the run stops on step 1 and changes nothing'
+		}
+		Write-FluxerPlanFooter $missing
 		return
 	}
 	Write-FluxerLine '  Running now:'
 	foreach ($reference in Get-FluxerComposeImages) {
 		$id = Get-FluxerRunningImageId $running $reference
 		if ($id.Length -eq 0) {
-			$id = 'no container carries this image'
+			$id = 'no container runs this image'
 		}
 		Write-FluxerLine "    $reference $id"
 	}
@@ -1370,7 +1435,7 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 		if ($old.Length -gt 0 -and $new.Length -gt 0 -and $old -ne $new) {
 			Write-FluxerLine "  Refusal:    postgres moves from $old to $new, which this script does not do"
 			Write-FluxerLine '  Outcome:    the run stops at that refusal and changes nothing'
-			Write-FluxerLine 'Nothing outside a temporary directory was written.'
+			Write-FluxerPlanFooter $missing
 			return
 		}
 		foreach ($entry in Get-FluxerChangedMounts $TargetDir $staging) {
@@ -1380,7 +1445,8 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 		Remove-FluxerStagingDirectory $staging
 	}
 	Write-FluxerLine '  Commands:   docker compose pull, docker compose up -d'
-	Write-FluxerLine 'Nothing outside a temporary directory was written. Drop -DryRun to run this.'
+	Write-FluxerPlanFooter $missing
+	Write-FluxerLine 'Drop -DryRun to run this.'
 }
 
 function Show-FluxerRollbackPlan([string]$TargetDir, [string]$EnvPath, [string]$BackupRoot) {
@@ -1539,8 +1605,11 @@ function Invoke-FluxerRollback([string]$TargetDir, [string]$EnvPath, [string]$Ba
 
 	foreach ($name in $FluxerStackFiles) {
 		$source = Join-Path $record $name
-		if (Test-Path -LiteralPath $source) {
+		$length = Get-FluxerFileLength $source
+		if ($length -gt 0) {
 			Copy-Item -LiteralPath $source -Destination (Join-Path $TargetDir $name) -Force
+		} elseif (Test-Path -LiteralPath $source) {
+			Stop-Fluxer "$source is empty, so restoring it would replace a working file with nothing. Nothing was restored. Take the file from another record or from the ref the record names." $FluxerExitRefused
 		}
 	}
 	Write-FluxerLine "Stack files in $TargetDir are the ones the record holds."

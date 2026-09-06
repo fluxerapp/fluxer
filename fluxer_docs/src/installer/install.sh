@@ -54,6 +54,10 @@ FLUXER_RAW_BASE='https://raw.githubusercontent.com/fluxerapp/fluxer'
 FLUXER_STACK_PATH='deploy/self-hosting'
 FLUXER_MIN_ENGINE='24.0.0'
 FLUXER_MIN_COMPOSE='2.20.2'
+# Both overlays this script downloads use the !override tag, which Compose learned
+# in 2.24.4. A stack that loads neither runs on the lower minimum, so the higher
+# one is required only once COMPOSE_FILE names more than one file.
+FLUXER_MIN_COMPOSE_OVERLAY='2.24.4'
 FLUXER_READY_TIMEOUT=600
 FLUXER_READY_INTERVAL=5
 FLUXER_VAPID_ATTEMPTS=8
@@ -170,7 +174,9 @@ Usage: sh install.sh --domain <host> --email <address> [options]
 Options:
   --domain <host>          Hostname the instance answers on. Prompted when absent.
   --email <address>        Address the operator reads. Prompted when absent.
-  --dir <path>             Working directory. Default ~/fluxer.
+  --dir <path>             Working directory. Default ~/fluxer, or the working
+                           directory itself when --update or --rollback is given
+                           and it holds an instance.
   --ref <git ref>          Ref the stack files come from. Default: the image tag,
                            and main when that tag is v1 or latest.
   --image-tag <tag>        Image tag the stack runs. Default v1.
@@ -679,7 +685,7 @@ fluxer_fetch_stack() {
 			fluxer_fail 4 "Downloaded $fluxer_file is empty."
 		fi
 		if [ "$fluxer_file" = 'docker-compose.yml' ] && ! grep -q '^services:' "$fluxer_part"; then
-			fluxer_fail 4 'The downloaded docker-compose.yml carries no services block.'
+			fluxer_fail 4 "The docker-compose.yml downloaded from $opt_ref holds no services block."
 		fi
 	done < "$fluxer_scratch/files"
 }
@@ -731,7 +737,7 @@ fluxer_check_volumes() {
 	fi
 	docker volume ls -q --filter "label=com.docker.compose.project=$fluxer_project" > "$fluxer_scratch/volumes" 2>/dev/null || return 0
 	if [ -s "$fluxer_scratch/volumes" ]; then
-		fluxer_fail 3 "Docker already holds volumes for the $fluxer_project project. They carry the secrets of an earlier install, and this .env does not open them. Run install.sh --update in the directory that holds that instance, or remove the volumes with docker volume rm before you install again."
+		fluxer_fail 3 "Docker already holds volumes for the $fluxer_project project. They hold the secrets of an earlier install, and this .env does not open them. Run install.sh --update in the directory that holds that instance, or remove the volumes with docker volume rm before you install again."
 	fi
 }
 
@@ -961,6 +967,20 @@ fluxer_env_set() {
 #
 # This runs before the record, so the .env the record saves is the one that
 # works and a rollback does not reintroduce the gap.
+# The keys the run would write, one per line, without writing any of them. The
+# plan and the run read the same list, so a plan cannot describe a run that does
+# something else.
+fluxer_missing_required_secrets() {
+	fluxer_upgrade_secret_keys > "$fluxer_scratch/upgrade-keys"
+	while read -r fluxer_key fluxer_kind; do
+		[ -n "$fluxer_key" ] || continue
+		fluxer_current=$(fluxer_env_value "$fluxer_key")
+		case ${fluxer_current:-} in
+			''|CHANGE_ME) printf '%s\n' "$fluxer_key" ;;
+		esac
+	done < "$fluxer_scratch/upgrade-keys"
+}
+
 fluxer_fill_required_secrets() {
 	fluxer_upgrade_secret_keys > "$fluxer_scratch/upgrade-keys"
 	while read -r fluxer_key fluxer_kind; do
@@ -1037,6 +1057,7 @@ fluxer_require_compose_files() {
 	if [ -z "$fluxer_path_sep" ]; then
 		fluxer_path_sep=':'
 	fi
+	fluxer_compose_count=0
 	fluxer_rest=$fluxer_compose_file
 	while [ -n "$fluxer_rest" ]; do
 		case $fluxer_rest in
@@ -1054,6 +1075,7 @@ fluxer_require_compose_files() {
 			/*) fluxer_path=$fluxer_name ;;
 			*) fluxer_path="$opt_dir/$fluxer_name" ;;
 		esac
+		fluxer_compose_count=$((${fluxer_compose_count:-0} + 1))
 		[ ! -e "$fluxer_path" ] || continue
 		if fluxer_stack_files | grep -qxF "$fluxer_name"; then
 			fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every docker compose command in $opt_dir fails and this run stops before it changes anything. This script downloads $fluxer_name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:
@@ -1062,6 +1084,10 @@ Leave the COMPOSE_FILE line as it is. Without $fluxer_name the edge container bi
 		fi
 		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every docker compose command in $opt_dir fails. This script does not download $fluxer_name. Put that file back, or take it out of the COMPOSE_FILE line."
 	done
+	if [ "$fluxer_compose_count" -gt 1 ] &&
+		! fluxer_version_ge "$fluxer_compose_version" "$FLUXER_MIN_COMPOSE_OVERLAY"; then
+		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from loads $fluxer_compose_count files and this host runs Compose $fluxer_compose_version. Every overlay this script downloads uses the !override tag, which needs Compose $FLUXER_MIN_COMPOSE_OVERLAY or newer. Upgrade Compose, or load only docker-compose.yml."
+	fi
 }
 
 # One read-only Compose query, with what Compose printed on stderr kept.
@@ -1113,10 +1139,29 @@ fluxer_compose_images() {
 #
 # By hand:
 #   docker compose ps -aq | xargs docker inspect --format '{{.Config.Image}} {{.Image}}'
+# The text of a captured stream, indented one level for the caller, or a word
+# saying there was none. A command that fails without printing is rarer than one
+# that prints the reason, and both read the same way here.
+fluxer_indent_file() {
+	if [ -s "$1" ]; then
+		sed "s/^/$2/" "$1"
+	else
+		printf '%snothing\n' "$2"
+	fi
+}
+
 fluxer_running_image_ids() {
-	docker compose ps -aq > "$fluxer_scratch/containers" 2>/dev/null || return 0
+	if ! docker compose ps -aq > "$fluxer_scratch/containers" 2> "$fluxer_scratch/ps-err"; then
+		fluxer_fail 2 "docker compose ps failed in $opt_dir, so what is running cannot be read and the record would name no image ID at all. Compose printed:
+$(fluxer_indent_file "$fluxer_scratch/ps-err" '  ')"
+	fi
 	[ -s "$fluxer_scratch/containers" ] || return 0
-	xargs docker inspect --format '{{.Config.Image}} {{.Image}}' < "$fluxer_scratch/containers" 2>/dev/null | sort -u
+	if ! xargs docker inspect --format '{{.Config.Image}} {{.Image}}' \
+		< "$fluxer_scratch/containers" > "$fluxer_scratch/inspected" 2> "$fluxer_scratch/inspect-err"; then
+		fluxer_fail 2 "docker inspect failed in $opt_dir, so the image ID under each reference cannot be read and a rollback would have nothing to go back to. Docker printed:
+$(fluxer_indent_file "$fluxer_scratch/inspect-err" '  ')"
+	fi
+	sort -u "$fluxer_scratch/inspected"
 }
 
 # The recorded ID for one reference, or nothing when no container carries it.
@@ -1171,8 +1216,10 @@ fluxer_save_current_files() {
 	chmod 600 "$fluxer_record/.env"
 	while read -r fluxer_file; do
 		[ -n "$fluxer_file" ] || continue
-		if [ -e "$opt_dir/$fluxer_file" ]; then
+		if [ -s "$opt_dir/$fluxer_file" ]; then
 			cp -p "$opt_dir/$fluxer_file" "$fluxer_record/$fluxer_file"
+		elif [ -e "$opt_dir/$fluxer_file" ]; then
+			fluxer_fail 7 "$opt_dir/$fluxer_file is empty, so the record would hold a file a rollback could not use. Put the file back before upgrading."
 		fi
 	done < "$fluxer_scratch/files"
 }
@@ -1220,7 +1267,7 @@ fluxer_dump_postgres() {
 	fi
 	if [ "$(head -c 5 "$fluxer_dump_path")" != 'PGDMP' ]; then
 		rm -f "$fluxer_dump_path"
-		fluxer_fail 7 'The dump does not carry the custom-format header. The instance is untouched.'
+		fluxer_fail 7 'The dump does not begin with the custom-format header. The instance is untouched.'
 	fi
 	fluxer_say "Dumped the database to $fluxer_dump_path."
 }
@@ -1425,19 +1472,42 @@ fluxer_verify_stack() {
 	fi
 }
 
+# A plan writes nothing itself. The run it describes writes .env before it reads
+# anything when a required key is absent, and saying otherwise would describe a
+# different run.
+fluxer_plan_footer() {
+	if [ -s "$fluxer_scratch/plan-secrets" ]; then
+		fluxer_say 'This plan wrote nothing. The run it describes writes the keys above into .env before anything else.'
+	else
+		fluxer_say 'Nothing outside a temporary directory was written.'
+	fi
+}
+
 fluxer_plan_update() {
 	fluxer_say 'Plan: upgrade'
 	fluxer_say "  directory     $opt_dir"
 	fluxer_say "  ref           $opt_ref"
 	fluxer_say "  image tag     $(fluxer_env_value FLUXER_IMAGE_TAG) from .env"
 	fluxer_say "  backup dir    $opt_backup_dir"
+	fluxer_missing_required_secrets > "$fluxer_scratch/plan-secrets"
+	if [ -s "$fluxer_scratch/plan-secrets" ]; then
+		fluxer_say '  writes .env   the run mints these before it reads anything, because the refreshed stack requires them'
+		while read -r fluxer_key; do
+			[ -n "$fluxer_key" ] || continue
+			fluxer_say "                $fluxer_key"
+		done < "$fluxer_scratch/plan-secrets"
+	fi
 	fluxer_running_image_ids > "$fluxer_scratch/running"
 	if ! fluxer_compose_images > "$fluxer_scratch/refs"; then
 		fluxer_say '  refusal       docker compose config --images fails here, and step 1 of the upgrade reads that list'
 		fluxer_say '  compose said'
 		fluxer_compose_error '    '
-		fluxer_say '  outcome       the run stops on step 1 and changes nothing'
-		fluxer_say 'Nothing outside a temporary directory was written. Fix what Compose reports, then run this again.'
+		if [ -s "$fluxer_scratch/plan-secrets" ]; then
+			fluxer_say '  outcome       the run writes the keys above first, which may be what Compose is missing, so this refusal may not stand'
+		else
+			fluxer_say '  outcome       the run stops on step 1 and changes nothing'
+		fi
+		fluxer_plan_footer
 		return 0
 	fi
 	fluxer_say '  running now'
@@ -1445,7 +1515,7 @@ fluxer_plan_update() {
 		[ -n "$fluxer_ref" ] || continue
 		fluxer_id=$(fluxer_recorded_id_for "$fluxer_ref")
 		if [ -z "$fluxer_id" ]; then
-			fluxer_id='no container carries this image'
+			fluxer_id='no container runs this image'
 		fi
 		fluxer_say "    $fluxer_ref $fluxer_id"
 	done < "$fluxer_scratch/refs"
@@ -1480,7 +1550,7 @@ fluxer_plan_update() {
 	if [ -n "$fluxer_old_major" ] && [ -n "$fluxer_new_major" ] && [ "$fluxer_old_major" != "$fluxer_new_major" ]; then
 		fluxer_say "  refusal       postgres moves from $fluxer_old_major to $fluxer_new_major, which this script does not do"
 		fluxer_say '  outcome       the run stops at that refusal and changes nothing'
-		fluxer_say 'Nothing outside a temporary directory was written.'
+		fluxer_plan_footer
 		return 0
 	fi
 	fluxer_note_mounted_changes
@@ -1491,7 +1561,8 @@ fluxer_plan_update() {
 		done < "$fluxer_scratch/restart"
 	fi
 	fluxer_say '  commands      docker compose pull, docker compose up -d'
-	fluxer_say 'Nothing outside a temporary directory was written. Drop --dry-run to run this.'
+	fluxer_plan_footer
+	fluxer_say 'Drop --dry-run to run this.'
 }
 
 fluxer_plan_rollback() {
@@ -1666,8 +1737,10 @@ fluxer_run_rollback() {
 
 	while read -r fluxer_file; do
 		[ -n "$fluxer_file" ] || continue
-		if [ -e "$fluxer_rollback_dir/$fluxer_file" ]; then
+		if [ -s "$fluxer_rollback_dir/$fluxer_file" ]; then
 			cp -p "$fluxer_rollback_dir/$fluxer_file" "$opt_dir/$fluxer_file"
+		elif [ -e "$fluxer_rollback_dir/$fluxer_file" ]; then
+			fluxer_fail 3 "$fluxer_rollback_dir/$fluxer_file is empty, so restoring it would replace a working file with nothing. Nothing was restored. Take the file from another record or from the ref the record names."
 		fi
 	done < "$fluxer_scratch/files"
 	fluxer_say "Stack files in $opt_dir are the ones the record holds."

@@ -31,6 +31,7 @@ The repository holds no ref by the name of a pinned image tag. A release tags ea
 
 | Step | What it does |
 | --- | --- |
+| Mint | Writes any key the refreshed stack requires that `.env` does not hold, listed under [Run the upgrade](#run-the-upgrade) |
 | Record | Writes the image references, the image ID each container has, and the tag `.env` names, into a new record directory |
 | Save | Copies `.env` and the five stack files into that record |
 | Dump | Dumps the database with the stack still serving, and checks the custom-format header on the result |
@@ -45,6 +46,8 @@ The repository holds no ref by the name of a pinned image tag. A release tags ea
 A failed run leaves the instance running on the images it already had.
 
 `docker compose up -d` does not notice a changed `Caddyfile`. The script restarts `edge` by name to pick it up.
+
+An instance older than the `/livekit` routing needs one edit no upgrade can make for it. [Voice signalling moved to /livekit](#voice-signalling-moved-to-livekit) has it, and voice stays silent until it is made.
 
 The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one, and [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the failure a line naming an absent file produces.
 
@@ -86,7 +89,7 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
 
 Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory, so an override file is never backed up with them and belongs wherever the rest of the configuration lives.
 
-`.env` needs no such file. `FLUXER_IMAGE_TAG` is the only line either upgrade mode writes.
+`.env` needs no such file. The only value either upgrade mode replaces there is `FLUXER_IMAGE_TAG`, and the Mint step adds a required key the file does not hold at all.
 
 [Enable the overlay](/operator/reverse-proxy/#enable-the-overlay) has the overlay this is most often used for, and [Docker labels](/operator/reverse-proxy/#docker-labels) has a worked third file.
 

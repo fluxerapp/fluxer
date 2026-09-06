@@ -148,7 +148,7 @@ The run prints one line per phase and ends with the URL to open. It takes severa
 | --- | --- |
 | `--domain <host>` | Hostname the instance answers on. Prompted when absent |
 | `--email <address>` | Contact address written as `FLUXER_VAPID_EMAIL`. Prompted when absent |
-| `--dir <path>` | Working directory. Default `~/fluxer` |
+| `--dir <path>` | Working directory. Default `~/fluxer`, or the current directory when it holds an instance |
 | `--ref <git ref>` | Ref the stack files come from. Defaults to the image tag, and to `main` when that tag is `v1` or `latest` |
 | `--image-tag <tag>` | Image tag the stack runs. Default `v1` |
 | `--tls <mode>` | `bundled` or `proxy`. Default `bundled` |
@@ -255,13 +255,15 @@ A dump and a tarball in `backups`, and every service back to `running`, is the s
 
 ### Remove the instance
 
+:::danger[This deletes every account, message and upload]
+`-v` deletes all seven named volumes. Every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings any of it back. Take the copies above first. To upgrade rather than delete, the command is `sh install.sh --update`, below.
+:::
+
 Take the instance down and delete its data:
 
 ```bash
 docker compose down -v
 ```
-
-`-v` deletes all seven named volumes, so every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings them back. Take the copies above first.
 
 ## Upgrading
 
@@ -272,7 +274,7 @@ cd ~/fluxer
 sh install.sh --update
 ```
 
-`--update` records the running images, backs up the database and the uploads, refreshes the four stack files, pulls, recreates, and verifies. It leaves every secret in `.env` untouched. On Windows it is `.\install.ps1 -Update`. Run `sh install.sh --update --dry-run` first to see the plan.
+`--update` records the running images, backs up the database and the uploads, refreshes the five stack files, pulls, recreates, and verifies. It leaves every secret in `.env` untouched. On Windows it is `.\install.ps1 -Update`. Run `sh install.sh --update --dry-run` first to see the plan.
 
 [Upgrading](/operator/upgrading/) covers what the backup holds, rolling back, pinning a release and reclaiming disk.
 
