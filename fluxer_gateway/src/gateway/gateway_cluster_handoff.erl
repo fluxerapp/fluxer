@@ -17,6 +17,7 @@
 -define(DEBOUNCE_MS, 2000).
 -define(RECONCILE_MS, 60000).
 -define(HANDOFF_WORKER_TIMEOUT_MS, 30000).
+-define(UNDRAIN_CALL_TIMEOUT_MS, 5000).
 
 -type timer_state() :: undefined | {reference(), reference()}.
 -type reconcile_timer() :: undefined | reference().
@@ -50,8 +51,17 @@ drain_async() ->
     ok = drain_notify_role(),
     drain_dispatch().
 
--spec undrain() -> ok.
+-spec undrain() -> ok | {error, handoff_in_flight | unavailable}.
 undrain() ->
+    case whereis(?MODULE) of
+        undefined ->
+            clear_draining();
+        _Pid ->
+            shard_utils:safe_gen_call(?MODULE, undrain, ?UNDRAIN_CALL_TIMEOUT_MS)
+    end.
+
+-spec clear_draining() -> ok.
+clear_draining() ->
     persistent_term:erase({fluxer_gateway, draining}),
     logger:info("Gateway un-cordoned: draining flag cleared"),
     ok.
@@ -89,6 +99,10 @@ init([]) ->
     {reply, term(), state()}.
 handle_call(diagnostic_info, _From, State) ->
     {reply, info(State), State};
+handle_call(undrain, _From, #{handoff := undefined} = State) ->
+    {reply, clear_draining(), State};
+handle_call(undrain, _From, State) ->
+    {reply, {error, handoff_in_flight}, State};
 handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
@@ -612,6 +626,18 @@ undrain_clears_draining_flag_test() ->
     Previous = persistent_term:get({fluxer_gateway, draining}, undefined),
     persistent_term:put({fluxer_gateway, draining}, true),
     ?assertEqual(ok, undrain()),
+    ?assertEqual(false, persistent_term:get({fluxer_gateway, draining}, false)),
+    restore_persistent_term({fluxer_gateway, draining}, Previous).
+
+undrain_is_refused_while_handoff_in_flight_test() ->
+    Previous = persistent_term:get({fluxer_gateway, draining}, undefined),
+    persistent_term:put({fluxer_gateway, draining}, true),
+    Busy = (idle_state([node()]))#{handoff := {self(), make_ref(), [node()], #{}}},
+    {reply, Refused, Busy} = handle_call(undrain, {self(), make_ref()}, Busy),
+    ?assertEqual({error, handoff_in_flight}, Refused),
+    ?assertEqual(true, persistent_term:get({fluxer_gateway, draining}, false)),
+    {reply, Cleared, _Idle} = handle_call(undrain, {self(), make_ref()}, idle_state([node()])),
+    ?assertEqual(ok, Cleared),
     ?assertEqual(false, persistent_term:get({fluxer_gateway, draining}, false)),
     restore_persistent_term({fluxer_gateway, draining}, Previous).
 

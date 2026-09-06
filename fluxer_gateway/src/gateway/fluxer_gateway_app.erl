@@ -45,6 +45,7 @@ start_cowboy() ->
             {<<"/_health">>, health_handler, liveness},
             {<<"/_health/ready">>, health_handler, readiness},
             {<<"/_health/drain">>, health_handler, drain},
+            {<<"/_health/undrain">>, health_handler, undrain},
             {<<"/_metrics">>, metrics_handler, []},
             {<<"/">>, gateway_handler, []}
         ]}
