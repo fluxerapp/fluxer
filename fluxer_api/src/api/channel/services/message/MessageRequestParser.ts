@@ -33,7 +33,6 @@ type MultipartBody = Record<string, string | File | Array<string | File>>;
 type AttachmentMetadata = ClientAttachmentRequest | ClientUploadedAttachmentRequest | ClientAttachmentReferenceRequest;
 
 interface ParseMultipartMessageDataOptions {
-	uploadExpiresAt?: Date;
 	onPayloadParsed?: (payload: unknown) => void;
 }
 
@@ -159,7 +158,6 @@ export async function parseMultipartMessageData(
 				clientIp,
 				files: filesWithIndices,
 				attachmentMetadata: inlineNewAttachments,
-				expiresAt: options?.uploadExpiresAt,
 			});
 		const uploadedMap = new Map(uploadedAttachments.map((attachment) => [attachment.id, attachment]));
 		const processedInlineAttachments = inlineNewAttachments.map((clientData) => {

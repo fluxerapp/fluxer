@@ -76,7 +76,6 @@ interface UploadFormDataAttachmentsParams {
 		id: number;
 		filename: string;
 	}>;
-	expiresAt?: Date;
 }
 
 interface RequestPresignedAttachmentUploadUrlsParams {
@@ -113,7 +112,6 @@ export class AttachmentUploadService {
 		clientIp,
 		files,
 		attachmentMetadata,
-		expiresAt,
 	}: UploadFormDataAttachmentsParams): Promise<Array<UploadedAttachment>> {
 		const {maxFileSize} = await this.getUploadPermissionAndLimit({userId, channelId});
 		assertAttachmentFileSizesWithinLimit(
@@ -138,7 +136,6 @@ export class AttachmentUploadService {
 					key: uploadKey,
 					body,
 					contentType,
-					expiresAt: expiresAt ?? undefined,
 				}),
 			);
 			await this.attachmentUploadTraceRepository.recordRequestedUpload({

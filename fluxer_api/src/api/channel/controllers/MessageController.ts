@@ -424,20 +424,6 @@ export function MessageController(app: HonoApp) {
 		},
 	);
 	app.post(
-		'/channels/:channel_id/messages/bulk_delete',
-		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_BULK_DELETE),
-		LoginRequired,
-		Validator('param', ChannelIdParam),
-		Validator('json', BulkDeleteMessagesRequest),
-		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const messageIds = ctx.req.valid('json').message_ids.map(createMessageID);
-			await ctx.get('channelService').messages.deletion.bulkDeleteMessages({userId, channelId, messageIds});
-			return ctx.body(null, 204);
-		},
-	);
-	app.post(
 		'/channels/:channel_id/messages/purge',
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_PURGE),
 		LoginRequired,

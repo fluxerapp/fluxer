@@ -281,14 +281,6 @@ export class UserAccountLookupService {
 		}));
 	}
 
-	async generateUniqueDiscriminator(username: string): Promise<number> {
-		const usedDiscriminators = await this.deps.userAccountRepository.findDiscriminatorsByUsername(username);
-		for (let i = 1; i <= 9999; i++) {
-			if (!usedDiscriminators.has(i)) return i;
-		}
-		throw new Error('No available discriminators for this username');
-	}
-
 	async checkUsernameDiscriminatorAvailability(params: {username: string; discriminator: number}): Promise<boolean> {
 		const {username, discriminator} = params;
 		const isAvailable = await this.deps.discriminatorService.isDiscriminatorAvailableForUsername(
