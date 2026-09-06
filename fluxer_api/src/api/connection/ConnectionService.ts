@@ -164,24 +164,24 @@ export class ConnectionService extends IConnectionService {
 		if (!updated) {
 			throw new ConnectionNotFoundError();
 		}
+		await this.dispatchConnectionsUpdate(userId);
 		if (!isValid) {
 			throw new ConnectionVerificationFailedError();
 		}
-		await this.dispatchConnectionsUpdate(userId);
 		return updated;
 	}
 
 	async reorderConnections(userId: UserID, connectionIds: Array<string>): Promise<void> {
 		const connections = await this.repository.findByUserId(userId);
-		for (let i = 0; i < connectionIds.length; i++) {
-			const connectionId = connectionIds[i];
-			const connection = connections.find((c) => c.connection_id === connectionId);
+		const byId = new Map(connections.map((connection) => [connection.connection_id, connection]));
+		const entries = new Map<string, {connectionType: ConnectionType; connectionId: string; sortOrder: number}>();
+		connectionIds.forEach((connectionId, sortOrder) => {
+			const connection = byId.get(connectionId);
 			if (connection) {
-				await this.repository.update(userId, connection.connection_type, connectionId, {
-					sort_order: i,
-				});
+				entries.set(connectionId, {connectionType: connection.connection_type, connectionId, sortOrder});
 			}
-		}
+		});
+		await this.repository.updateSortOrders(userId, Array.from(entries.values()));
 		await this.dispatchConnectionsUpdate(userId);
 	}
 

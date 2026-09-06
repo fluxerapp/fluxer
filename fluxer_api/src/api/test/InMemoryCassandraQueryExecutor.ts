@@ -203,7 +203,10 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 		return [];
 	}
 
-	async executeBatch(queries: Array<{query: string; params: object; meta?: KvQueryMeta}>): Promise<void> {
+	async executeBatch(
+		queries: Array<{query: string; params: object; meta?: KvQueryMeta}>,
+		_atomic?: boolean,
+	): Promise<void> {
 		for (const query of queries) {
 			await this.executeQuery({
 				cql: query.query,

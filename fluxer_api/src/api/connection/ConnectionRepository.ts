@@ -2,7 +2,7 @@
 
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
 import type {UserID} from '../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
 import {Db, type DbOp} from '../database/CassandraTypes';
 import type {UserConnectionRow} from '../database/types/ConnectionTypes';
 import {UserConnections} from '../Tables';
@@ -107,6 +107,22 @@ export class ConnectionRepository extends IConnectionRepository {
 				),
 			);
 		}
+	}
+
+	async updateSortOrders(
+		userId: UserID,
+		entries: Array<{connectionType: ConnectionType; connectionId: string; sortOrder: number}>,
+	): Promise<void> {
+		const batch = new BatchBuilder();
+		for (const entry of entries) {
+			batch.addPrepared(
+				UserConnections.patchByPk(
+					{user_id: userId, connection_type: entry.connectionType, connection_id: entry.connectionId},
+					{sort_order: Db.set(entry.sortOrder)},
+				),
+			);
+		}
+		await batch.execute();
 	}
 
 	async delete(userId: UserID, connectionType: ConnectionType, connectionId: string): Promise<void> {

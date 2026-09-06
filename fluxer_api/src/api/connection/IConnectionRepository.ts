@@ -51,6 +51,11 @@ export abstract class IConnectionRepository {
 		params: UpdateConnectionParams,
 	): Promise<void>;
 
+	abstract updateSortOrders(
+		userId: UserID,
+		entries: Array<{connectionType: ConnectionType; connectionId: string; sortOrder: number}>,
+	): Promise<void>;
+
 	abstract delete(userId: UserID, connectionType: ConnectionType, connectionId: string): Promise<void>;
 
 	abstract count(userId: UserID): Promise<number>;
