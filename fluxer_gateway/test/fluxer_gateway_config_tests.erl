@@ -45,7 +45,7 @@ cluster_overrides_test() ->
         maps:get(cluster_static_peers, Config)
     ).
 
-cluster_static_peers_filters_invalid_node_names_test() ->
+cluster_static_peers_rejects_invalid_node_names_test() ->
     LongPeer = list_to_binary(lists:duplicate(260, $a)),
     RawConfig = #{
         <<"services">> => #{
@@ -57,6 +57,20 @@ cluster_static_peers_filters_invalid_node_names_test() ->
                     LongPeer/binary,
                     ",other-valid@node.local"
                 >>
+            }
+        }
+    },
+    ?assertError(
+        {invalid_cluster_static_peer, "invalid peer@127.0.0.2"},
+        fluxer_gateway_config:build_config(RawConfig)
+    ).
+
+cluster_static_peers_accepts_valid_node_names_test() ->
+    RawConfig = #{
+        <<"services">> => #{
+            <<"gateway">> => #{
+                <<"cluster_static_peers">> =>
+                    <<"valid_peer@127.0.0.1,other-valid@node.local">>
             }
         }
     },
@@ -139,6 +153,20 @@ rpc_concurrency_keys_are_independent_test() ->
             ?assertEqual(2048, maps:get(gateway_nats_rpc_max_handlers, Config))
         end
     ).
+
+env_int_rejects_a_non_integer_value_test() ->
+    with_env("FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "abc", fun() ->
+        ?assertError(
+            {invalid_integer_env, "FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "abc"},
+            fluxer_gateway_config:load()
+        )
+    end).
+
+env_int_falls_back_to_the_default_for_an_empty_value_test() ->
+    with_env("FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "", fun() ->
+        Config = fluxer_gateway_config:load(),
+        ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config))
+    end).
 
 rpc_concurrency_key_defaults_test() ->
     Config = fluxer_gateway_config:build_config(#{}),

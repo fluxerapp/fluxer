@@ -187,7 +187,7 @@ async fn job_detail_post(
             return flash::redirect_with_flash(
                 &format!("{base}/jobs/{job_id}"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -214,7 +214,7 @@ async fn job_detail_post(
     flash::redirect_with_flash(
         &format!("{base}/jobs/{job_id}"),
         flash,
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 

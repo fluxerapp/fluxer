@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
+import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {createServer} from '@fluxer/hono/src/Server';
 import {Hono} from 'hono';
-import {afterAll, afterEach, describe, expect, test, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, describe, expect, it, test, vi} from 'vitest';
 import {buildAPIConfigFromMaster, buildAPIServerOptions} from './Config';
 
 interface ListeningServer {
@@ -61,5 +62,52 @@ describe('buildAPIServerOptions', () => {
 		});
 		expect(server.requestTimeout).toBe(45_000);
 		expect(server.headersTimeout).toBe(45_000);
+	});
+});
+
+function withUploadRelaySecret(master: MasterConfig, secretBase64: string): MasterConfig {
+	return {
+		...master,
+		services: {
+			...master.services,
+			media_proxy: {
+				...master.services.media_proxy,
+				upload_relay: {
+					...master.services.media_proxy.upload_relay,
+					secret_base64: secretBase64,
+				},
+			},
+		},
+	};
+}
+
+describe('buildAPIConfigFromMaster upload relay secret', () => {
+	let master: MasterConfig;
+	beforeAll(async () => {
+		master = await loadConfig();
+	});
+
+	it('refuses to build without FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64', () => {
+		expect(() => buildAPIConfigFromMaster(withUploadRelaySecret(master, ''))).toThrow(
+			/FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64/,
+		);
+	});
+
+	it('refuses a secret that decodes to fewer than 32 bytes', () => {
+		const secret = Buffer.alloc(16, 7).toString('base64');
+		expect(() => buildAPIConfigFromMaster(withUploadRelaySecret(master, secret))).toThrow(/at least 32 bytes/);
+	});
+
+	it('accepts a secret that decodes to 32 bytes', () => {
+		const secret = Buffer.alloc(32, 7).toString('base64');
+		expect(
+			buildAPIConfigFromMaster(withUploadRelaySecret(master, secret)).mediaProxy.uploadRelay.relaySecretBase64,
+		).toBe(secret);
+	});
+
+	it('reads the relay secret from the loaded config rather than the environment', () => {
+		expect(buildAPIConfigFromMaster(master).mediaProxy.uploadRelay.relaySecretBase64).toBe(
+			master.services.media_proxy.upload_relay.secret_base64,
+		);
 	});
 });

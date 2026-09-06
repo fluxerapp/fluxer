@@ -398,22 +398,27 @@ characters_to_binary_or_default(Value, Default) ->
 
 -spec env_int(string(), integer()) -> integer().
 env_int(Name, Default) ->
-    parse_env_int(os:getenv(Name), Default).
+    parse_env_int(Name, os:getenv(Name), Default).
 
--spec parse_env_int(false | string(), integer()) -> integer().
-parse_env_int(false, Default) ->
+-spec parse_env_int(string(), false | string(), integer()) -> integer().
+parse_env_int(_Name, false, Default) ->
     Default;
-parse_env_int("", Default) ->
+parse_env_int(_Name, "", Default) ->
     Default;
-parse_env_int(Value, Default) ->
-    parse_int(Value, Default).
+parse_env_int(Name, Value, Default) ->
+    parse_int(Name, Value, Default).
 
--spec parse_int(string(), integer()) -> integer().
-parse_int(Value, Default) ->
-    try list_to_integer(Value) of
-        Parsed -> Parsed
-    catch
-        error:badarg -> Default
+-spec parse_int(string(), string(), integer()) -> integer().
+parse_int(Name, Value, Default) ->
+    case string:trim(Value) of
+        "" ->
+            Default;
+        Trimmed ->
+            try list_to_integer(Trimmed) of
+                Parsed -> Parsed
+            catch
+                error:badarg -> erlang:error({invalid_integer_env, Name, Value})
+            end
     end.
 
 -spec env_bool(string(), boolean()) -> boolean().
@@ -573,7 +578,7 @@ parse_node_list([], _Remaining, Acc) ->
 parse_node_list([Peer | Rest], Remaining, Acc) ->
     case gateway_node_name:from_string(Peer) of
         {ok, Node} -> parse_node_list(Rest, Remaining - 1, [Node | Acc]);
-        error -> parse_node_list(Rest, Remaining, Acc)
+        error -> erlang:error({invalid_cluster_static_peer, Peer})
     end.
 
 -spec normalize_log_level(term()) -> log_level() | undefined.

@@ -189,7 +189,7 @@ async fn user_detail_post(
             return flash::redirect_with_flash(
                 &format!("{base}/users/{user_id}"),
                 flash,
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -208,7 +208,7 @@ async fn user_detail_post(
     {
         return htmx::toast_response(&outcome.flash);
     }
-    flash::redirect_with_flash(&redirect, outcome.flash, config.is_production())
+    flash::redirect_with_flash(&redirect, outcome.flash, config.secure_cookies())
 }
 
 async fn user_tab(

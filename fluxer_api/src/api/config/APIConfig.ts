@@ -153,7 +153,6 @@ export interface APIConfig {
 			reports: string;
 			harvests: string;
 			downloads: string;
-			static: string;
 		};
 	};
 	s3Downloads: ResolvedDownloadsProvider;

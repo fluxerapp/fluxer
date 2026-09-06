@@ -82,7 +82,7 @@ async fn gift_codes_post(
             return flash::redirect_with_flash(
                 &format!("{base}/gift-codes"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -99,14 +99,14 @@ async fn gift_codes_post(
         .and_then(|s| s.parse::<u32>().ok())
         .unwrap_or(1);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let is_prod = config.is_production();
+    let secure_cookies = config.secure_cookies();
     match client.generate_gift_codes(count, dur_type, dur_qty).await {
         Ok(result) => {
             let codes = result.codes.join(",");
             flash::redirect_with_flash(
                 &format!("{base}/gift-codes?codes={codes}"),
                 FlashData::success(format!("{} gift code(s) generated", result.codes.len())),
-                is_prod,
+                secure_cookies,
             )
         }
         Err(error) => {
@@ -114,7 +114,7 @@ async fn gift_codes_post(
             flash::redirect_with_flash(
                 &format!("{base}/gift-codes"),
                 FlashData::error("Failed to generate gift codes"),
-                is_prod,
+                secure_cookies,
             )
         }
     }

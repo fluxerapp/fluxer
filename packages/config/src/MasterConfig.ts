@@ -77,7 +77,6 @@ export interface MasterConfig {
 			downloads: string;
 			reports: string;
 			harvests: string;
-			static: string;
 		};
 	};
 	s3_downloads?: {
@@ -146,6 +145,7 @@ export interface MasterConfig {
 			mode: string;
 			upload_relay: {
 				endpoint: string;
+				secret_base64: string;
 				max_body_bytes: number;
 				token_ttl_secs: number;
 				keep_direct_countries: Array<string>;
@@ -156,7 +156,6 @@ export interface MasterConfig {
 			rpc_auth_token?: string;
 			media_proxy_endpoint?: string;
 			api_rpc_endpoint?: string;
-			push_enabled: boolean;
 		};
 		admin: {
 			port: number;

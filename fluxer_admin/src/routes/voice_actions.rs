@@ -160,7 +160,7 @@ pub(crate) async fn voice_regions_post(
     flash::redirect_with_flash(
         &format!("{base}/voice-regions"),
         flash_from_level(level, &msg),
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 
@@ -232,7 +232,7 @@ pub(crate) async fn voice_servers_post(
     flash::redirect_with_flash(
         &redirect_url,
         flash_from_level(level, &msg),
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 

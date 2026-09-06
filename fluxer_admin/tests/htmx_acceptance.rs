@@ -708,11 +708,11 @@ fn csrf_cookie(headers: &HeaderMap) -> Option<String> {
         .iter()
         .filter_map(|value| value.to_str().ok())
         .find_map(|value| {
-            value
-                .split(';')
-                .next()
-                .and_then(|pair| pair.strip_prefix("csrf_token="))
-                .map(str::to_owned)
+            let pair = value.split(';').next()?;
+            let token = pair
+                .strip_prefix("__Host-csrf_token=")
+                .or_else(|| pair.strip_prefix("csrf_token="))?;
+            (!token.is_empty()).then(|| token.to_owned())
         })
 }
 

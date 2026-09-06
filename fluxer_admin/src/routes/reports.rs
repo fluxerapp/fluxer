@@ -195,7 +195,7 @@ async fn report_resolve(
             return flash::redirect_with_flash(
                 &format!("{base}/reports/{report_id}"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -212,7 +212,7 @@ async fn report_resolve(
             flash::redirect_with_flash(
                 &format!("{base}/reports/{report_id}"),
                 FlashData::success("Report resolved"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
         Err(error) => {
@@ -223,7 +223,7 @@ async fn report_resolve(
             flash::redirect_with_flash(
                 &format!("{base}/reports/{report_id}"),
                 FlashData::error("Failed to resolve report"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
     }
