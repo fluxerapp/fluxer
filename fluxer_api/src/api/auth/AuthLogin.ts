@@ -12,7 +12,7 @@ import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
-import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import type {AuthMfaMethod, LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {formatGeoipLocation, UNKNOWN_LOCATION} from '@pkgs/geoip/src/GeoipLookup';
 import type {RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
@@ -72,9 +72,7 @@ interface LoginTokenResult {
 interface LoginMfaResult {
 	mfa: true;
 	ticket: string;
-	allowed_methods: Array<string>;
-	totp: boolean;
-	webauthn: boolean;
+	allowed_methods: Array<AuthMfaMethod>;
 }
 
 type LoginResult = LoginTokenResult | LoginMfaResult;
@@ -451,14 +449,12 @@ async function createMfaTicketResponse(ctx: ApiContext, user: User): Promise<Log
 	const credentials = await users.listWebAuthnCredentials(user.id);
 	const hasWebauthn = credentials.length > 0;
 	const hasTotp = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
-	const allowedMethods: Array<string> = [];
+	const allowedMethods: Array<AuthMfaMethod> = [];
 	if (hasTotp) allowedMethods.push('totp');
 	if (hasWebauthn) allowedMethods.push('webauthn');
 	return {
 		mfa: true,
 		ticket,
 		allowed_methods: allowedMethods,
-		totp: hasTotp,
-		webauthn: hasWebauthn,
 	};
 }

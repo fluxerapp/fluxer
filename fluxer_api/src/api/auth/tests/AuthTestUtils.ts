@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, randomBytes, randomUUID} from 'node:crypto';
+import type {AuthMfaMethod} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {TEST_CREDENTIALS, TEST_USER_DATA} from '../../test/TestConstants';
@@ -19,9 +20,7 @@ export interface LoginSuccessResponse {
 export interface LoginMfaResponse {
 	mfa: true;
 	ticket: string;
-	allowed_methods: Array<string>;
-	totp: boolean;
-	webauthn: boolean;
+	allowed_methods: Array<AuthMfaMethod>;
 }
 
 type LoginResponse =
@@ -32,9 +31,7 @@ type LoginResponse =
 	| {
 			mfa: true;
 			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
+			allowed_methods: Array<AuthMfaMethod>;
 	  };
 
 export interface UserMeResponse {

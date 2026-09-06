@@ -6,6 +6,7 @@ import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {createAuthHarness, createTestAccount, createTotpSecret, generateTotpCode, seedMfaTicket} from './AuthTestUtils';
 import {createRegistrationResponse, createWebAuthnDevice, type WebAuthnRegistrationOptions} from './WebAuthnTestUtils';
+import type { AuthMfaMethod } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 
 describe('Auth MFA TOTP without secret', () => {
 	let harness: ApiTestHarness;
@@ -74,16 +75,12 @@ describe('Auth MFA TOTP without secret', () => {
 		const login = await createBuilderWithoutAuth<{
 			mfa: true;
 			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
+			allowed_methods: Array<AuthMfaMethod>;
 		}>(harness)
 			.post('/auth/login')
 			.body({email: account.email, password: account.password})
 			.execute();
 		expect(login.mfa).toBe(true);
-		expect(login.totp).toBe(false);
-		expect(login.webauthn).toBe(true);
 		expect(login.allowed_methods).toContain('webauthn');
 		expect(login.allowed_methods).not.toContain('totp');
 		const bypassAttempt = await createBuilderWithoutAuth<{

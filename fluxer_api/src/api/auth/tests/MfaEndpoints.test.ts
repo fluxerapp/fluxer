@@ -12,6 +12,7 @@ import {
 	totpCodeNow,
 	type UserMeResponse,
 } from './AuthTestUtils';
+import type { AuthMfaMethod } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 
 interface ValidationErrorResponse {
 	code: string;
@@ -53,14 +54,14 @@ describe('Auth MFA endpoints', () => {
 		const login = await createBuilderWithoutAuth<{
 			mfa: boolean;
 			ticket: string;
-			totp: boolean;
+			allowed_methods: Array<AuthMfaMethod>;
 		}>(harness)
 			.post('/auth/login')
 			.body({email: account.email, password: account.password})
 			.execute();
 		expect(login.mfa).toBe(true);
 		expect(login.ticket).toBeDefined();
-		expect(login.totp).toBe(true);
+		expect(login.allowed_methods).toContain('totp');
 		const backupResp = await createBuilderWithoutAuth<{
 			token: string;
 		}>(harness)
