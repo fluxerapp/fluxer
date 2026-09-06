@@ -271,7 +271,7 @@ function SelectionToolbarSurface({
 		}),
 		[editor],
 	);
-	const {ref, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
+	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
 		placement: 'top',
 		offsetMainAxis: 8,
 		shouldAutoUpdate: true,
@@ -381,7 +381,7 @@ function SelectionToolbarSurface({
 		>
 			<flx-lexical-selection-formatting-toolbar
 				ref={(element) => {
-					(ref as React.MutableRefObject<HTMLElement | null>).current = element;
+					setFloating(element);
 					toolbarRef.current = element;
 				}}
 				className={flxElementClassName(styles.toolbar)}
