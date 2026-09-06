@@ -13,7 +13,7 @@ const NON_FILENAME_CHARS_REGEX = /[^\p{L}\p{N}\p{M}_.-]/gu;
 const FILENAME_SAFE_REGEX = /^[\p{L}\p{N}\p{M}_.-]+$/u;
 const WINDOWS_RESERVED_NAMES = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)/i;
 
-function isValidBase64(value: string): boolean {
+export function isValidBase64(value: string): boolean {
 	if (value.length % 4 !== 0) {
 		return false;
 	}
@@ -86,6 +86,10 @@ export const FilenameType = withStringLengthRangeValidation(
 	.transform(normalizeFilename)
 	.refine((value) => value.length >= 1, ValidationErrorCodes.FILENAME_EMPTY_AFTER_NORMALIZATION)
 	.refine((value) => FILENAME_SAFE_REGEX.test(value), ValidationErrorCodes.FILENAME_INVALID_CHARACTERS);
+
+export function base64LengthForBytes(maxBytes: number): number {
+	return 4 * Math.ceil(maxBytes / 3);
+}
 
 export function createBase64StringType(minLength = 1, maxLength = 256) {
 	return withOpenApiType(

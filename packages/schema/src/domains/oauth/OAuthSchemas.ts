@@ -9,7 +9,7 @@ import {
 	UserAuthenticatorTypesDescriptions,
 } from '@fluxer/constants/src/UserConstants';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
 import {
 	createBitflagInt32Type,
 	createInt32EnumType,
@@ -448,10 +448,10 @@ export type ApplicationUpdateRequest = z.infer<typeof ApplicationUpdateRequest>;
 export const BotProfileUpdateRequest = z.object({
 	username: UsernameType.optional().describe('The username of the bot'),
 	discriminator: DiscriminatorType.optional().describe('The discriminator of the bot'),
-	avatar: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 		.nullish()
 		.describe('The avatar image as base64'),
-	banner: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+	banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 		.nullish()
 		.describe('The banner image as base64'),
 	bio: createStringType(0, 1024).nullish().describe('The bio or description of the bot'),

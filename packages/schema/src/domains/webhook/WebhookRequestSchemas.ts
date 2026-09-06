@@ -14,7 +14,7 @@ import {
 	RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {AllowedMentionsRequest, MessageReferenceRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
 import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	coerceNumberFromString,
@@ -31,7 +31,7 @@ import {z} from 'zod';
 
 export const WebhookCreateRequest = z.object({
 	name: WebhookNameType.describe('The name of the webhook'),
-	avatar: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 		.nullish()
 		.describe('The avatar image as a base64-encoded data URI'),
 });
@@ -41,7 +41,7 @@ export type WebhookCreateRequest = z.infer<typeof WebhookCreateRequest>;
 export const WebhookUpdateRequest = z
 	.object({
 		name: WebhookNameType.describe('The new name of the webhook'),
-		avatar: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 			.nullish()
 			.describe('The new avatar image as a base64-encoded data URI'),
 		channel_id: SnowflakeType.describe('The ID of the channel to move the webhook to'),
@@ -53,7 +53,7 @@ export type WebhookUpdateRequest = z.infer<typeof WebhookUpdateRequest>;
 export const WebhookTokenUpdateRequest = z
 	.object({
 		name: WebhookNameType.describe('The new name of the webhook'),
-		avatar: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 			.nullish()
 			.describe('The new avatar image as a base64-encoded data URI'),
 	})

@@ -78,8 +78,8 @@ describe('ErrorI18n', () => {
 		});
 		it('loads locale on-demand when first accessed', () => {
 			expect(hasErrorLocale('fr')).toBe(true);
-			const message = getErrorMessage('account.disabled', 'fr');
-			expect(message).toBe('Ce compte a été désactivé.');
+			const message = getErrorMessage('account.suspended_permanently', 'fr');
+			expect(message).toBe('Ce compte a été suspendu définitivement.');
 		});
 	});
 	describe('getMessage() - variable interpolation', () => {

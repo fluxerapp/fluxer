@@ -24,7 +24,7 @@ import {
 	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
-import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
 import {LocaleSchema} from '@fluxer/schema/src/primitives/LocaleSchema';
 import {createQueryIntegerType, DateTimeType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -68,10 +68,10 @@ export const UserUpdateRequest = z
 		email: EmailType.describe('The email address for the account'),
 		new_password: PasswordType.describe('The new password to set'),
 		password: PasswordType.describe('The current password for verification'),
-		avatar: createBase64StringType(1, AVATAR_MAX_SIZE * 1.33)
+		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 			.nullish()
 			.describe('Base64-encoded avatar image'),
-		banner: createBase64StringType(1, AVATAR_MAX_SIZE * 1.33)
+		banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 			.nullish()
 			.describe('Base64-encoded profile banner image'),
 		bio: createStringType(1, 320).nullish().describe('User biography text (max 320 characters)'),

@@ -230,6 +230,10 @@ describe('StripeSubscriptionService', () => {
 				.post('/premium/reactivate-subscription')
 				.expect(400, APIErrorCodes.STRIPE_NO_SUBSCRIPTION)
 				.execute();
+			await createBuilder(harness, account.token)
+				.post('/premium/cancel-subscription')
+				.expect(400, APIErrorCodes.STRIPE_NO_ACTIVE_SUBSCRIPTION)
+				.execute();
 			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
 		});
 		test('rejects when subscription not canceling', async () => {

@@ -112,6 +112,7 @@ export class EmojiService {
 		const {animated, imageBuffer, contentType} = await this.avatarService.processEmoji({
 			errorPath: 'image',
 			base64Image: image,
+			guildFeatures,
 		});
 		const emojiId = createEmojiID(await this.snowflakeService.generate());
 		await this.avatarService.uploadEmoji({
@@ -243,6 +244,7 @@ export class EmojiService {
 				const {animated, imageBuffer, contentType} = await this.avatarService.processEmoji({
 					errorPath: `emojis[${success.length + failed.length}].image`,
 					base64Image: emojiData.image,
+					guildFeatures,
 				});
 				const emojiId = createEmojiID(await this.snowflakeService.generate());
 				await this.avatarService.uploadEmoji({

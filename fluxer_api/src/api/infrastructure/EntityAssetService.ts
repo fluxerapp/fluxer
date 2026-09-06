@@ -390,12 +390,7 @@ export class EntityAssetService {
 		animated: boolean;
 	}> {
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveAvatarSizeLimit();
 		if (imageBuffer.length > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {

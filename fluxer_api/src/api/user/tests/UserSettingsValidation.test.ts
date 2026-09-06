@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
@@ -52,6 +53,29 @@ describe('User Settings Validation', () => {
 			.body({status: 'offline', gif_auto_play: 'nope'})
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
+	});
+	test('trusted_domains rejects the wildcard alongside specific domains', async () => {
+		const account = await createTestAccount(harness);
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+				message: string;
+			}>;
+		}>(harness, account.token)
+			.patch('/users/@me/settings')
+			.body({trusted_domains: ['*', 'example.com']})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		expect(response.code).toBe('VALIDATION_ERROR');
+		expect(response.errors[0]?.path).toBe('trusted_domains');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.INVALID_TRUSTED_DOMAINS);
+	});
+	test('trusted_domains accepts the wildcard on its own', async () => {
+		const account = await createTestAccount(harness);
+		const {json} = await updateUserSettings(harness, account.token, {trusted_domains: ['*']});
+		expect(json.trusted_domains).toEqual(['*']);
 	});
 	test('valid settings update', async () => {
 		const account = await createTestAccount(harness);

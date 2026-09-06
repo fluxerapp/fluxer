@@ -3,56 +3,42 @@
 import {defineStaticLocaleMessages} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 
 export const ERROR_I18N_MESSAGES = {
-	'account.already_verified': 'Your account is already verified.',
 	'account.communication_disabled': 'Communication is disabled.',
-	'account.disabled': 'This account has been disabled.',
 	'account.email_verification_required': 'Email verification is required for this action.',
 	'account.guild_verification_required': 'Community verification is required.',
 	'account.ip_authorization_required': 'IP authorization is required.',
 	'account.locked_suspicious_activity': 'Your account is locked due to suspicious activity.',
 	'account.phone_gate_escape_unavailable': 'This account cannot postpone the phone verification check.',
 	'account.phone_required_for_guild': 'You need to add a phone number to send messages in this community.',
-	'account.scheduled_for_deletion': 'This account is scheduled for deletion.',
+	'account.sensitive_content_filter_age_restricted': "This sensitive content filter isn't available for your age.",
 	'account.session_timeout': 'Session timed out. Refresh the page and log in again.',
 	'account.session_token_mismatch': 'Session token mismatch.',
 	'account.suspended_permanently': 'This account has been permanently suspended.',
 	'account.suspended_temporarily': 'This account has been temporarily suspended.',
 	'account.too_new_for_guild': 'Your account is too new to send messages in this community.',
+	'account.trusted_domains_wildcard_conflict': "The wildcard (*) can't be combined with specific domains.",
 	'account.unauthorized': 'Unauthorized.',
 	'admin_and_system.acls_must_be_non_empty': 'ACLs must be non-empty.',
 	'admin_and_system.instance_policy_transition_not_allowed': 'This instance policy change is not allowed.',
 	'admin_and_system.admin_api_key_not_found': "Admin API key wasn't found.",
-	'admin_and_system.audit_log_indexing': 'Audit logs are being indexed. Please try again in a moment.',
-	'admin_and_system.channel_indexing': 'Channels are being indexed. Please try again in a moment.',
-	'admin_and_system.creation_failed': "We couldn't create the resource. Please try again.",
-	'admin_and_system.decryption_failed':
-		"We couldn't decrypt the message. The encryption keys may be invalid or corrupted.",
 	'admin_and_system.deletion_failed': "We couldn't delete the resource. Please try again.",
-	'admin_and_system.empty_encrypted_body': 'Empty encrypted body.',
-	'admin_and_system.encryption_failed':
-		"We couldn't encrypt the message. The encryption keys may be invalid or corrupted.",
 	'admin_and_system.general_error': 'Something went wrong. Please try again later.',
 	'admin_and_system.invalid_acls_format': 'Invalid ACLs format.',
 	'admin_and_system.invalid_api_origin': 'Invalid API origin.',
 	'admin_and_system.invalid_audit_log_reason': 'Invalid audit log reason.',
 	'admin_and_system.invalid_bot_flag': 'Invalid bot flag.',
-	'admin_and_system.invalid_decrypted_json': 'Invalid decrypted JSON.',
-	'admin_and_system.invalid_ephemeral_key': 'Invalid ephemeral key.',
 	'admin_and_system.invalid_flags_format': 'Invalid flags format.',
 	'admin_and_system.invalid_form_body': 'Invalid form body.',
 	'admin_and_system.invalid_format': 'The provided value is in an invalid format.',
 	'admin_and_system.guild_id_required_for_search_index':
 		'Community ID is required for channel message and member search indexes.',
 	'admin_and_system.invalid_integer_format': 'Invalid integer format.',
-	'admin_and_system.invalid_iv': 'Invalid initialization vector.',
 	'admin_and_system.invalid_suspicious_flags_format': 'Invalid suspicious flags format.',
 	'admin_and_system.invalid_system_flag': 'Invalid system flag.',
 	'admin_and_system.invalid_timeout_value': 'Invalid timeout value.',
 	'admin_and_system.invalid_timestamp': 'Invalid timestamp.',
 	'admin_and_system.invalid_timezone_identifier': 'Invalid timezone identifier.',
 	'admin_and_system.missing_acl': 'Missing ACL.',
-	'admin_and_system.missing_ephemeral_key': 'Missing ephemeral key.',
-	'admin_and_system.missing_iv': 'Missing initialization vector.',
 	'admin_and_system.must_be_iso_timestamp': 'Must be a valid ISO timestamp.',
 	'admin_and_system.processing_failed': "We couldn't process the request. Please try again.",
 	'admin_and_system.response_validation_failed': 'Response validation failed: {errors}.',
@@ -63,20 +49,14 @@ export const ERROR_I18N_MESSAGES = {
 	'admin_and_system.update_failed': "We couldn't update the resource. Please try again.",
 	'admin_and_system.user_must_be_bot_for_system_user': 'User must be a bot to be marked as a system user.',
 	'age_verification.already_verified': "You've already completed age verification.",
-	'age_verification.invalid_card_type':
-		"Only credit cards are accepted for age verification. Debit and prepaid cards can't be used.",
 	'attachments_and_uploads.attachment_fields_required':
 		'`attachment_id`, `channel_id`, `message_id`, and `expires_at` are required.',
 	'attachments_and_uploads.attachment_ids_must_be_valid_integers':
 		'`attachment_id`, `channel_id`, and `message_id` must be valid integers.',
-	'attachments_and_uploads.attachment_metadata_without_files':
-		'Attachment metadata included a filename, but no files were uploaded.',
 	'attachments_and_uploads.attachment_must_be_image':
 		'Attachment "{filename}" must be an image file (png, jpg, jpeg, webp, or gif).',
 	'attachments_and_uploads.attachment_not_found_in_message':
 		"Attachment with ID {attachmentId} wasn't found in the message.",
-	'attachments_and_uploads.attachments_metadata_required_when_uploading':
-		'Attachments metadata array is required when uploading files.',
 	'attachments_and_uploads.attachments_not_allowed_for_message': "Attachments aren't allowed for this message.",
 	'attachments_and_uploads.cannot_edit_attachment_metadata':
 		'Users with MANAGE_MESSAGES can only edit attachment descriptions, not other metadata.',
@@ -91,17 +71,13 @@ export const ERROR_I18N_MESSAGES = {
 	'attachments_and_uploads.file_index_exceeds_maximum':
 		'File index {index} exceeds the maximum allowed index of {maxIndex}.',
 	'attachments_and_uploads.file_not_found': 'File not found.',
-	'attachments_and_uploads.file_not_found_for_scanning': 'File not found for scanning.',
 	'attachments_and_uploads.file_size_too_large': 'File size is too large. Maximum file size is {maxSize}.',
 	'attachments_and_uploads.filename_empty_after_normalization': "Filename can't be empty after normalization.",
 	'attachments_and_uploads.filename_invalid_characters': 'Filename contains invalid characters.',
 	'attachments_and_uploads.filename_length_invalid': 'Filename must be between {min} and {max} characters.',
-	'attachments_and_uploads.filename_mismatch_for_attachment':
-		'Filename mismatch for attachment {attachmentId}: metadata specifies "{expectedFilename}", but it doesn\'t match.',
 	'attachments_and_uploads.image_size_exceeds_limit': 'Image size exceeds {maxSize} bytes.',
 	'attachments_and_uploads.invalid_file_field_name':
 		'Invalid file field name: {key}. Expected format: `files[N]` where N is a number.',
-	'attachments_and_uploads.invalid_image_data': 'Invalid image data.',
 	'attachments_and_uploads.invalid_image_format': 'Invalid image format. Supported extensions: {supportedExtensions}.',
 	'attachments_and_uploads.invalid_json_in_payload_json': 'Invalid JSON in `payload_json`.',
 	'attachments_and_uploads.multiple_files_for_index_not_allowed': "Multiple files for index {index} aren't allowed.",
@@ -109,18 +85,14 @@ export const ERROR_I18N_MESSAGES = {
 		'No file was uploaded for attachment with ID {attachmentId}.',
 	'attachments_and_uploads.no_file_uploaded_for_attachment_metadata':
 		'No file was uploaded for attachment metadata with ID {attachmentId}.',
-	'attachments_and_uploads.no_metadata_for_file': 'No metadata was provided for file with ID {fileId}.',
 	'attachments_and_uploads.no_uploaded_parts_to_finalize': 'No uploaded parts are available to finalize.',
 	'attachments_and_uploads.no_valid_media_in_message': 'No valid media was found in the message.',
-	'attachments_and_uploads.payload_json_required_for_multipart':
-		'`payload_json` field is required for multipart messages.',
 	'attachments_and_uploads.preview_must_be_jpeg': 'Preview must be JPEG.',
 	'attachments_and_uploads.referenced_attachment_not_found':
 		'Referenced attachment "{filename}" wasn\'t found in message attachments.',
 	'attachments_and_uploads.size_bytes_must_be_valid_integer': '`size_bytes` must be a valid integer.',
 	'attachments_and_uploads.too_many_files':
 		'Too many files. Maximum {maxFiles, plural, one {# file} other {# files}} allowed.',
-	'attachments_and_uploads.unknown_image_format': 'Unknown image format.',
 	'attachments_and_uploads.unresolved_attachment_url':
 		'Unresolved `attachment://` URL detected. This should have been resolved before embed processing.',
 	'attachments_and_uploads.uploaded_attachment_not_found': "Uploaded attachment {filename} wasn't found.",
@@ -134,30 +106,19 @@ export const ERROR_I18N_MESSAGES = {
 		"We couldn't read the response from your SSO provider. Please try again.",
 	'auth_and_oauth.handoff_code_expired': 'Handoff code expired.',
 	'auth_and_oauth.handoff_code_invalid': 'Invalid handoff code.',
-	'auth_and_oauth.http_get_authorize_not_supported':
-		"GET /oauth2/authorize isn't supported. Use POST /oauth2/authorize/consent.",
-	'auth_and_oauth.invalid_client': 'Invalid client.',
-	'auth_and_oauth.invalid_client_secret': 'Invalid client secret.',
 	'auth_and_oauth.invalid_code': 'Invalid code.',
-	'auth_and_oauth.invalid_grant': 'The authorization grant is invalid, expired, or has been revoked.',
 	'auth_and_oauth.invalid_or_expired_authorization_ticket': 'Invalid or expired authorization ticket.',
 	'auth_and_oauth.invalid_or_expired_authorization_token': 'Invalid or expired authorization token.',
 	'auth_and_oauth.invalid_or_expired_sso_state': 'Invalid or expired SSO state. Please start the sign-in flow again.',
 	'auth_and_oauth.invalid_or_expired_ticket': 'Invalid or expired ticket.',
 	'auth_and_oauth.invalid_proof_token': 'Invalid proof token.',
-	'auth_and_oauth.invalid_redirect_uri': 'Invalid redirect URI.',
 	'auth_and_oauth.invalid_request': 'Invalid request.',
 	'auth_and_oauth.invalid_scope': "The requested scope isn't supported or you don't have permission to request it.",
 	'auth_and_oauth.invalid_sso_authorization_code': 'Invalid SSO authorization code.',
 	'auth_and_oauth.invalid_sso_token': 'Invalid SSO token.',
-	'auth_and_oauth.invalid_sudo_token': 'Invalid sudo token.',
 	'auth_and_oauth.invalid_token_admin_api_key': 'Invalid admin API key.',
 	'auth_and_oauth.missing_authorization': 'Missing or invalid authorization header.',
-	'auth_and_oauth.missing_client_secret': 'Missing client secret.',
-	'auth_and_oauth.missing_redirect_uri': 'Missing redirect URI.',
 	'auth_and_oauth.must_start_session_before_sending_messages': 'You must start a session before sending messages.',
-	'auth_and_oauth.oauth_fields_missing': 'Missing OAuth fields.',
-	'auth_and_oauth.redirect_uri_required_for_non_bot_scopes': 'Redirect URI is required for non-bot scopes.',
 	'auth_and_oauth.registration_closed': 'Registration is closed on this instance.',
 	'auth_and_oauth.registration_pending_approval': 'This registration is waiting for admin approval.',
 	'auth_and_oauth.registration_rejected': 'This registration request was rejected.',
@@ -171,20 +132,15 @@ export const ERROR_I18N_MESSAGES = {
 		"We couldn't allocate a discriminator for your SSO account. Please try again.",
 	'auth_and_oauth.sudo_mode_required': 'Sudo mode is required.',
 	'auth_and_oauth.unknown_application': 'Unknown application.',
-	'auth_and_oauth.unsupported_response_type': 'Unsupported response type.',
-	'auth_and_registration.current_password_incorrect': 'Current password is incorrect.',
 	'auth_and_registration.password_is_too_common': 'Your password is too common. Please choose a more unique password.',
 	'auth_and_registration.password_not_set': "Password isn't set.",
-	'bots.bot_application_not_found': "Bot application wasn't found.",
 	'bots.bot_discriminator_cannot_be_changed': "Bot discriminator can't be changed.",
 	'bots.bot_is_private': 'This bot is private.',
 	'bots.bot_user_generation_failed': 'Bot user generation failed.',
 	'bots.bot_user_not_found': "Bot user wasn't found.",
-	'bots.invalid_response_type_for_non_bot': 'Response type must be code for non-bot scopes.',
 	'bots.not_a_bot_application': "This application isn't a bot.",
 	'bots.search_scope_unavailable': 'Bots can only search within a single community or channel.',
 	'calls_and_voice.call_already_exists': 'A call is already in progress in this channel.',
-	'calls_and_voice.cannot_modify_voice_state': "You can't modify voice state.",
 	'calls_and_voice.invalid_or_restricted_rtc_region': 'Invalid or restricted RTC region: {region}.',
 	'calls_and_voice.invalid_rtc_region': 'Invalid RTC region: {region}. Available regions: {availableRegions}.',
 	'calls_and_voice.invalid_stream_key_format': 'Invalid stream key format.',
@@ -192,7 +148,6 @@ export const ERROR_I18N_MESSAGES = {
 	'calls_and_voice.no_active_call': 'No active call.',
 	'calls_and_voice.stream_key_channel_mismatch': 'Stream key channel mismatch.',
 	'calls_and_voice.stream_key_scope_mismatch': 'Stream key scope mismatch.',
-	'calls_and_voice.stream_thumbnail_payload_empty': 'Stream thumbnail payload is empty.',
 	'calls_and_voice.unknown_voice_region': 'Unknown voice region.',
 	'calls_and_voice.unknown_voice_server': 'Unknown voice server.',
 	'calls_and_voice.voice_message_duration_exceeds_limit':
@@ -234,10 +189,7 @@ export const ERROR_I18N_MESSAGES = {
 	'channels_and_guilds.guild_feature_not_toggleable': 'This feature cannot be toggled.',
 	'channels_and_guilds.guild_id_must_match_referenced_message':
 		'Community ID must match the channel the referenced message was fetched from.',
-	'channels_and_guilds.guild_template_fetch_failed':
-		'Failed to fetch the community template. The template may not exist or the external service is unavailable.',
 	'channels_and_guilds.guild_template_invalid': 'The community template data is invalid or malformed.',
-	'channels_and_guilds.invalid_channel': 'Invalid channel.',
 	'channels_and_guilds.invalid_channel_id': 'Invalid channel ID: {channelId}.',
 	'channels_and_guilds.invalid_channel_type': 'Invalid channel type.',
 	'channels_and_guilds.invalid_channel_type_for_call': 'Calls can only be made in direct messages or group DMs.',
@@ -259,8 +211,6 @@ export const ERROR_I18N_MESSAGES = {
 	'channels_and_guilds.message_history_cutoff_before_guild_creation':
 		"Message history cutoff can't be before the community was created.",
 	'channels_and_guilds.message_history_cutoff_in_future': "Message history cutoff can't be in the future.",
-	'channels_and_guilds.new_account_guild_join_rate_limited':
-		'New accounts are limited to joining 10 communities in the first 24 hours. Please try again later.',
 	'channels_and_guilds.parent_channel_not_in_guild': "Parent channel isn't present in the community.",
 	'channels_and_guilds.parent_must_be_category': 'Parent must be a category.',
 	'channels_and_guilds.preceding_channel_must_share_parent':
@@ -282,10 +232,8 @@ export const ERROR_I18N_MESSAGES = {
 		"We couldn't resolve that Bluesky handle. Please check it and try again.",
 	'connections.bluesky_oauth_callback_failed': "We couldn't complete the Bluesky connection. Please try again.",
 	'connections.bluesky_oauth_not_enabled': 'Bluesky connections are not enabled on this instance.',
-	'connections.bluesky_oauth_session_expired': 'Your Bluesky session has expired. Please reconnect your account.',
 	'connections.bluesky_oauth_state_invalid': 'The authorization request has expired or is invalid. Please try again.',
 	'connections.initiation_token_invalid': 'The connection initiation token is invalid or has expired.',
-	'connections.invalid_identifier': 'The connection identifier is invalid.',
 	'connections.invalid_type': 'The connection type is not supported.',
 	'connections.limit_reached': "You've reached the maximum number of connections ({limit}).",
 	'connections.not_found': 'Unknown connection.',
@@ -299,13 +247,10 @@ export const ERROR_I18N_MESSAGES = {
 	'discovery.already_applied': 'This community has already applied for discovery.',
 	'discovery.application_already_reviewed': 'This discovery application has already been reviewed.',
 	'discovery.application_not_found': "Discovery application wasn't found.",
-	'discovery.description_required': 'A description is required for discovery listing.',
 	'discovery.disabled': "Discovery isn't available on this instance.",
 	'discovery.insufficient_members': "This community doesn't meet the minimum member count for discovery.",
-	'discovery.invalid_category': 'Invalid discovery category.',
 	'discovery.not_discoverable': "This community isn't listed in discovery.",
 	'donation.amount_invalid': 'Donation amount is invalid.',
-	'donation.donor_not_found': 'Donor not found.',
 	'donation.magic_link_expired': 'Magic link has expired.',
 	'donation.magic_link_invalid': 'Magic link is invalid.',
 	'donation.magic_link_used': 'Magic link has already been used.',
@@ -385,8 +330,6 @@ export const ERROR_I18N_MESSAGES = {
 	'invites_and_gifts.unknown_gift_code': 'Unknown gift code.',
 	'invites_and_packs.emoji_requires_access':
 		"You can't use this emoji without access to its community or installed pack.",
-	'invites_and_packs.max_animated_emojis_reached':
-		"You've reached the maximum of {count, plural, one {# animated emoji} other {# animated emojis}}.",
 	'invites_and_packs.max_emojis_reached':
 		"You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}.",
 	'limits.at_least_one_entry_required': 'At least one entry is required.',
@@ -400,11 +343,11 @@ export const ERROR_I18N_MESSAGES = {
 	'limits.rows_required': '`rows` is required.',
 	'limits.string_length_exact': 'String must be exactly {length} characters.',
 	'limits.string_length_invalid': 'String length must be between {min} and {max} characters.',
+	'limits.synced_preferences_too_large': 'Synced preferences exceed {max_bytes} bytes.',
 	'limits.timeout_cannot_exceed_365_days':
 		"Timeout can't be longer than {maxDays, plural, one {# day} other {# days}} from now.",
 	'limits.value_must_be_integer_in_range':
 		'The value for `{name}` must be an integer between {minValue} and {maxValue}.',
-	'limits.value_too_small': 'Value is too small.',
 	'media_and_memes.favorite_meme_name_required': 'Favorite meme name is required.',
 	'media_and_memes.favorite_meme_not_found': "Favorite meme wasn't found.",
 	'media_and_memes.max_favorite_meme_tags_exceeded':
@@ -443,7 +386,6 @@ export const ERROR_I18N_MESSAGES = {
 		'You must enable 2FA on your account before requiring it for moderators.',
 	'mfa_and_passkeys.no_passkeys_registered': 'No passkeys are registered.',
 	'mfa_and_passkeys.passkey_authentication_failed': 'Passkey authentication failed.',
-	'mfa_and_passkeys.passkeys_disabled': 'Passkeys are disabled.',
 	'mfa_and_passkeys.totp_not_enabled': "Authenticator app two-factor isn't enabled for this account.",
 	'mfa_and_passkeys.two_factor_not_enabled': "Two-factor authentication isn't enabled.",
 	'mfa_and_passkeys.two_factor_required': 'Two-factor authentication is required.',
@@ -453,14 +395,10 @@ export const ERROR_I18N_MESSAGES = {
 	'misc.cannot_send_messages_in_non_text_channel': "You can't send messages in a non-text channel.",
 	'misc.cannot_send_messages_in_this_guild_without_email_verification':
 		'You need to verify your email to send messages in this community.',
-	'misc.invalid_job_id': 'Invalid job ID.',
 	'misc.invalid_permissions_integer': 'Permissions must be a valid integer.',
 	'misc.invalid_permissions_negative': 'Permissions must be non-negative.',
 	'misc.invalid_request_generic': 'Invalid request.',
 	'misc.invalid_snowflake': 'Invalid snowflake.',
-	'misc.job_already_processed': 'Job is already processed.',
-	'misc.job_id_required': 'Job ID is required.',
-	'misc.job_not_found': 'Job not found.',
 	'misc.max_files_exceeded': 'Too many files. Maximum {maxFiles, plural, one {# file} other {# files}} allowed.',
 	'misc.must_have_bot_to_mark_system_user': 'User must be a bot to be marked as a system user.',
 	'misc_limits.max_applications_reached':
@@ -471,11 +409,10 @@ export const ERROR_I18N_MESSAGES = {
 		"You've reached the maximum of {count, plural, one {# category channel} other {# category channels}}.",
 	'misc_limits.max_friends_reached': "You've reached the maximum of {count, plural, one {# friend} other {# friends}}.",
 	'misc_limits.max_invites_reached': "You've reached the maximum of {count, plural, one {# invite} other {# invites}}.",
-	'misc_limits.max_pins_per_channel_reached':
-		"You've reached the maximum of {count, plural, one {# pin} other {# pins}} per channel.",
 	'moderation_and_reports.cannot_report_own_message': "You can't report your own message.",
 	'moderation_and_reports.cannot_report_yourself': "You can't report yourself.",
 	'moderation_and_reports.invalid_dsa_report_target': 'Invalid DSA report target.',
+	'moderation_and_reports.ip_ban_declined': 'This IP address cannot be added to the blocklist.',
 	'moderation_and_reports.invalid_dsa_ticket': 'Invalid DSA ticket.',
 	'moderation_and_reports.invalid_dsa_verification_code': 'Invalid DSA verification code.',
 	'moderation_and_reports.ncmec_attachment_must_be_image_or_video':
@@ -494,7 +431,6 @@ export const ERROR_I18N_MESSAGES = {
 		'Your IP address {ipAddress} has been temporarily blocked from the Fluxer API for 24 hours because of abusive or unusual access patterns. We usually do not provide appeals for temporary API bans. Change IP addresses or wait for the ban to expire, and review the Fluxer API access patterns coming from your client.',
 	'permissions.missing_access': "You don't have access to this resource or feature.",
 	'permissions.missing_permissions': "You don't have the permissions required to perform this action.",
-	'permissions.not_owner_of_admin_api_key': "You don't have permission to modify this admin API key.",
 	'permissions.user_banned_from_guild': 'This user is banned from this community.',
 	'permissions.user_ip_banned_from_guild': "This user's IP is banned from this community.",
 	'permissions.user_not_in_channel': "This user isn't in the channel.",
@@ -529,9 +465,6 @@ export const ERROR_I18N_MESSAGES = {
 		"You can't use custom stickers outside their source communities without Premium.",
 	'premium_and_plans.discriminator_change_requires_premium': 'Changing your discriminator requires Premium.',
 	'premium_and_plans.no_active_subscription': 'No active subscription.',
-	'premium_and_plans.no_visionary_slots_available': 'No Visionary slots are available.',
-	'premium_and_plans.visionary_required_for_bot_discriminator':
-		'You must be on the Visionary lifetime plan to customize bot discriminators.',
 	'premium_and_plans.visionary_required_for_discriminator':
 		'You must be on the Visionary lifetime plan to use that discriminator.',
 	'rate_limits.accent_color_changed_too_often':
@@ -555,11 +488,9 @@ export const ERROR_I18N_MESSAGES = {
 		'You can only update your voice activity sharing default once every 24 hours. Please try again in {retry_after, plural, one {# second} other {# seconds}}.',
 	'roles.cannot_reorder_everyone_role': "You can't reorder the @everyone role.",
 	'roles.cannot_set_everyone_hoist': "You can't set hoist position for the @everyone role.",
-	'roles.cannot_use_same_role_as_preceding': "You can't use the same role as a preceding role.",
 	'roles.invalid_role_id': 'Invalid role ID: {roleId}.',
 	'roles.parse_and_users_or_roles_cannot_be_used_together':
 		"You can't use `parse` together with `allowed_mentions.users` or `allowed_mentions.roles`.",
-	'roles.preceding_role_not_in_guild': "Preceding role isn't present in the community.",
 	'stickers_and_emojis.custom_emoji_not_found': "Custom emoji wasn't found.",
 	'stickers_and_emojis.custom_sticker_not_found': "Custom sticker wasn't found.",
 	'stickers_and_emojis.max_reactions_reached':
@@ -570,8 +501,6 @@ export const ERROR_I18N_MESSAGES = {
 	'stickers_and_emojis.unknown_emoji': 'Unknown emoji.',
 	'stickers_and_emojis.unknown_sticker': 'Unknown sticker.',
 	'stripe.error': 'Payment processing encountered an error. Please try again or contact support.',
-	'stripe.eu_withdrawal_waiver_required':
-		'Please confirm the EU/EEA digital content withdrawal waiver before starting checkout.',
 	'stripe.invalid_product_configuration': 'Invalid product configuration.',
 	'stripe.invalid_product_selection': 'Invalid product selection.',
 	'stripe.no_active_subscription_found': 'No active subscription found.',
@@ -583,7 +512,6 @@ export const ERROR_I18N_MESSAGES = {
 	'stripe.refund_outside_window': 'This purchase is outside the 3-day self-serve refund window.',
 	'stripe.subscription_already_canceling': 'Subscription is already set to cancel at period end.',
 	'stripe.subscription_not_canceling': "Subscription isn't set to cancel.",
-	'stripe.subscription_period_end_missing': 'Subscription current_period_end is missing.',
 	'stripe.webhook_not_available': "Webhook processing isn't available.",
 	'stripe.webhook_signature_invalid': 'Stripe webhook signature is invalid.',
 	'stripe.webhook_signature_missing': 'Stripe webhook signature is missing.',
@@ -592,7 +520,6 @@ export const ERROR_I18N_MESSAGES = {
 	'tos_and_age.must_agree_to_tos_and_privacy': 'You must agree to the Terms of Service and Privacy Policy.',
 	'tos_and_age.must_be_minimum_age':
 		'You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.',
-	'unknown_entities.unknown_application': "Application wasn't found.",
 	'unknown_entities.unknown_channel': "Channel wasn't found.",
 	'unknown_entities.unknown_guild': "Community wasn't found.",
 	'unknown_entities.unknown_invite': "Invite wasn't found or is no longer valid.",
@@ -605,7 +532,6 @@ export const ERROR_I18N_MESSAGES = {
 	'urls.invalid_url_or_attachment_reference': 'Invalid URL format or attachment reference.',
 	'urls.url_length_invalid': 'URL must be between {min} and {max} characters.',
 	'urls.url_not_publicly_routable': 'URL must resolve to a publicly routable address.',
-	'urls.unfurl_stream_too_large': 'The link preview response is too large to process.',
 	'usernames_and_tags.discriminator_invalid_format': 'Discriminator must be {min}–{max} digits.',
 	'usernames_and_tags.discriminator_out_of_range': 'Discriminator must be between {min} and {max}.',
 	'usernames_and_tags.discriminator_required': 'Discriminator is required.',
@@ -637,7 +563,6 @@ export const ERROR_I18N_MESSAGES = {
 		"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per channel.",
 	'webhooks.max_webhooks_per_guild_reached':
 		"You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}} per community.",
-	'webhooks.max_webhooks_reached': "You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}}.",
 	'webhooks.unknown_webhook': 'Unknown webhook.',
 	'webhooks.webhook_name_length_invalid': 'Webhook name must be between {min} and {max} characters.',
 	'entrance_sounds.invalid_format': 'Entrance sounds must be MP3, OGG, M4A, or WAV audio.',

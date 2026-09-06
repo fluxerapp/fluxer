@@ -129,6 +129,7 @@ export class StickerService {
 		const {animated, imageBuffer} = await this.avatarService.processSticker({
 			errorPath: 'image',
 			base64Image: image,
+			guildFeatures,
 		});
 		const stickerId = createStickerID(await this.snowflakeService.generate());
 		await this.avatarService.uploadSticker({prefix: 'stickers', stickerId, imageBuffer});
@@ -272,6 +273,7 @@ export class StickerService {
 				const {animated, imageBuffer} = await this.avatarService.processSticker({
 					errorPath: `stickers[${success.length + failed.length}].image`,
 					base64Image: stickerData.image,
+					guildFeatures,
 				});
 				const stickerId = createStickerID(await this.snowflakeService.generate());
 				await this.avatarService.uploadSticker({prefix: 'stickers', stickerId, imageBuffer});

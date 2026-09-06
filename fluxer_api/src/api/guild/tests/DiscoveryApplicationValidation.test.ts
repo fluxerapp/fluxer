@@ -2,6 +2,7 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {
 	DiscoveryApplicationResponse,
 	DiscoveryStatusResponse,
@@ -12,6 +13,21 @@ import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarne
 import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {createGuild, setupTestGuildWithMembers} from './GuildTestUtils';
+
+type FormBodyError = {
+	code: string;
+	errors: Array<{
+		path: string;
+		code: string;
+	}>;
+};
+
+function expectCategoryTypeFormatError(json: FormBodyError): void {
+	expect(json.code).toBe(APIErrorCodes.INVALID_FORM_BODY);
+	const categoryError = json.errors.find((entry) => entry.path.includes('category_type'));
+	expect(categoryError).toBeDefined();
+	expect(categoryError?.code).toBe(ValidationErrorCodes.INVALID_FORMAT);
+}
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
 	await createBuilder(harness, '')
@@ -56,21 +72,23 @@ describe('Discovery Application Validation', () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Bad Category Guild');
 			await setGuildMemberCount(harness, guild.id, 1);
-			await createBuilder(harness, owner.token)
+			const {json} = await createBuilder<FormBodyError>(harness, owner.token)
 				.post(`/guilds/${guild.id}/discovery`)
 				.body({description: 'Valid description here', category_type: 99})
 				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
+				.executeWithResponse();
+			expectCategoryTypeFormatError(json);
 		});
 		test('should reject negative category ID', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Negative Cat Guild');
 			await setGuildMemberCount(harness, guild.id, 1);
-			await createBuilder(harness, owner.token)
+			const {json} = await createBuilder<FormBodyError>(harness, owner.token)
 				.post(`/guilds/${guild.id}/discovery`)
 				.body({description: 'Valid description here', category_type: -1})
 				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
+				.executeWithResponse();
+			expectCategoryTypeFormatError(json);
 		});
 		test('should reject invalid category on edit', async () => {
 			const owner = await createTestAccount(harness);
@@ -81,11 +99,12 @@ describe('Discovery Application Validation', () => {
 				.body({description: 'Valid description here', category_type: DiscoveryCategories.GAMING})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			await createBuilder(harness, owner.token)
+			const {json} = await createBuilder<FormBodyError>(harness, owner.token)
 				.patch(`/guilds/${guild.id}/discovery`)
 				.body({category_type: 99})
 				.expect(HTTP_STATUS.BAD_REQUEST)
-				.execute();
+				.executeWithResponse();
+			expectCategoryTypeFormatError(json);
 		});
 	});
 	describe('description validation', () => {

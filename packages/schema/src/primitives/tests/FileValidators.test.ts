@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AVATAR_MAX_SIZE, EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {createBase64StringType, FilenameType} from '@fluxer/schema/src/primitives/FileValidators';
+import {base64LengthForBytes, createBase64StringType, FilenameType} from '@fluxer/schema/src/primitives/FileValidators';
 import {describe, expect, it} from 'vitest';
 
 describe('FilenameType', () => {
@@ -162,5 +163,29 @@ describe('createBase64StringType', () => {
 		if (result.success) {
 			expect(result.data).toBe('SGVsbG8gV29ybGQ=');
 		}
+	});
+});
+
+describe('base64LengthForBytes', () => {
+	it('returns the exact encoded length of the byte ceiling', () => {
+		expect(base64LengthForBytes(EMOJI_MAX_SIZE)).toBe(699052);
+		expect(base64LengthForBytes(AVATAR_MAX_SIZE)).toBe(13981016);
+	});
+	it('returns a multiple of four so isValidBase64 can accept the bound', () => {
+		for (const bytes of [1, 2, 3, 255, 256, EMOJI_MAX_SIZE, STICKER_MAX_SIZE, AVATAR_MAX_SIZE]) {
+			expect(base64LengthForBytes(bytes) % 4).toBe(0);
+		}
+	});
+	it('accepts an encoding of the full byte ceiling', () => {
+		const Base64Type = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
+		const encoded = Buffer.alloc(EMOJI_MAX_SIZE, 1).toString('base64');
+		expect(encoded.length).toBeLessThanOrEqual(base64LengthForBytes(EMOJI_MAX_SIZE));
+		expect(Base64Type.safeParse(encoded).success).toBe(true);
+	});
+	it('accepts an encoding one byte over the ceiling so the byte check stays authoritative', () => {
+		const Base64Type = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
+		const encoded = Buffer.alloc(EMOJI_MAX_SIZE + 1, 1).toString('base64');
+		expect(encoded.length).toBe(base64LengthForBytes(EMOJI_MAX_SIZE));
+		expect(Base64Type.safeParse(encoded).success).toBe(true);
 	});
 });

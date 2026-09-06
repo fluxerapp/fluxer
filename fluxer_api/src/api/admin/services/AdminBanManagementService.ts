@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
@@ -91,7 +92,10 @@ export class AdminBanManagementService {
 				auditLogReason,
 				metadata: new Map([['ip', data.ip]]),
 			});
-			return;
+			throw new BadRequestError({
+				code: APIErrorCodes.IP_BAN_DECLINED,
+				message: 'This IP address is on the instance exemption list',
+			});
 		}
 		if (await this.shouldSkipIpBanForCgnat(data.ip)) {
 			await auditService.createAuditLog({
@@ -102,7 +106,10 @@ export class AdminBanManagementService {
 				auditLogReason,
 				metadata: new Map([['ip', data.ip]]),
 			});
-			return;
+			throw new BadRequestError({
+				code: APIErrorCodes.IP_BAN_DECLINED,
+				message: 'This IP address is a high blast-radius carrier network',
+			});
 		}
 		await adminRepository.banIp(data.ip);
 		ipBanCache.ban(data.ip);

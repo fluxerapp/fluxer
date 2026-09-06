@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {create, equals} from '@bufbuild/protobuf';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	decodeSyncedPreferences,
+	encodedSyncedPreferencesByteLength,
 	encodeSyncedPreferences,
 	SYNCED_PREFERENCES_MAX_BYTES,
+	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
 	SyncedPreferencesSchema,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {AccessibilitySettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/accessibility_pb';
@@ -104,11 +107,53 @@ describe('User Settings synced_preferences', () => {
 			localSpamOverrides: create(LocalUserSpamOverridesSchema, {spammerUserIds: ids}),
 		});
 		const encoded = encodeSyncedPreferences(big);
-		await createBuilder(harness, account.token)
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+				message: string;
+			}>;
+		}>(harness, account.token)
 			.patch('/users/@me/settings')
 			.body({synced_preferences: encoded})
 			.expect(HTTP_STATUS.BAD_REQUEST)
 			.execute();
+		expect(response.code).toBe('INVALID_FORM_BODY');
+		expect(response.errors[0]?.path).toBe('synced_preferences');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH);
+	});
+	test('reports TOO_LARGE for a snapshot inside the encoded-length bound but over the byte cap', async () => {
+		const account = await createTestAccount(harness);
+		const build = (tailLength: number) =>
+			encodeSyncedPreferences(
+				create(SyncedPreferencesSchema, {
+					localSpamOverrides: create(LocalUserSpamOverridesSchema, {
+						spammerUserIds: [
+							...Array.from({length: 260}, (_, i) => `${i}-${'x'.repeat(1000)}`),
+							'y'.repeat(tailLength),
+						],
+					}),
+				}),
+			);
+		let tail = 1;
+		let encoded = build(tail);
+		while (encodedSyncedPreferencesByteLength(encoded) < SYNCED_PREFERENCES_MAX_BYTES + 1 && tail < 8000) {
+			tail += 1;
+			encoded = build(tail);
+		}
+		expect(encodedSyncedPreferencesByteLength(encoded)).toBeGreaterThan(SYNCED_PREFERENCES_MAX_BYTES);
+		expect(encoded.length).toBeLessThanOrEqual(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH);
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{path: string; code: string; message: string}>;
+		}>(harness, account.token)
+			.patch('/users/@me/settings')
+			.body({synced_preferences: encoded})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		expect(response.errors[0]?.path).toBe('synced_preferences');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.TOO_LARGE);
 	});
 	test('omitting the field leaves the existing snapshot intact', async () => {
 		const account = await createTestAccount(harness);

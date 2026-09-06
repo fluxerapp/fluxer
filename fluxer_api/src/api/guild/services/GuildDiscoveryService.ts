@@ -4,7 +4,6 @@ import {
 	DISCOVERY_DEFAULT_LANGUAGE,
 	DISCOVERY_MAX_TAGS,
 	DiscoveryApplicationStatus,
-	DiscoveryCategories,
 	type DiscoveryCategory,
 	isValidDiscoveryLanguage,
 	isValidDiscoveryTag,
@@ -16,7 +15,6 @@ import {DiscoveryAlreadyAppliedError} from '@fluxer/errors/src/domains/discovery
 import {DiscoveryApplicationAlreadyReviewedError} from '@fluxer/errors/src/domains/discovery/DiscoveryApplicationAlreadyReviewedError';
 import {DiscoveryApplicationNotFoundError} from '@fluxer/errors/src/domains/discovery/DiscoveryApplicationNotFoundError';
 import {DiscoveryInsufficientMembersError} from '@fluxer/errors/src/domains/discovery/DiscoveryInsufficientMembersError';
-import {DiscoveryInvalidCategoryError} from '@fluxer/errors/src/domains/discovery/DiscoveryInvalidCategoryError';
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes.jsx';
 import type {DiscoveryApplicationPatchRequest} from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
@@ -30,8 +28,6 @@ import type {IGuildSearchService} from '../../search/IGuildSearchService';
 import {mapGuildToGuildResponse} from '../GuildModel';
 import type {IGuildDiscoveryRepository} from '../repositories/GuildDiscoveryRepository';
 import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-
-const VALID_CATEGORY_TYPES = new Set<number>(Object.values(DiscoveryCategories));
 
 function sanitizeTags(tags: ReadonlyArray<string> | null | undefined): Array<string> {
 	if (!tags || tags.length === 0) return [];
@@ -169,9 +165,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			messageId: null,
 			surface: 'profile_field',
 		});
-		if (!VALID_CATEGORY_TYPES.has(categoryId)) {
-			throw new DiscoveryInvalidCategoryError();
-		}
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) {
 			throw new DiscoveryApplicationNotFoundError();
@@ -250,9 +243,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			existing.status !== DiscoveryApplicationStatus.APPROVED
 		) {
 			throw new DiscoveryApplicationAlreadyReviewedError();
-		}
-		if (data.category_type !== undefined && !VALID_CATEGORY_TYPES.has(data.category_type)) {
-			throw new DiscoveryInvalidCategoryError();
 		}
 		const updatedRow: GuildDiscoveryRow = {
 			...existing,

@@ -64,9 +64,11 @@ export class AvatarService {
 		}
 	}
 
-	private resolveSizeLimit(key: LimitKey, fallback: number): number {
-		const ctx = createLimitMatchContext({user: null});
-		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, key);
+	private resolveSizeLimit(key: LimitKey, fallback: number, guildFeatures: Iterable<string> | null = null): number {
+		const ctx = createLimitMatchContext({user: null, guildFeatures});
+		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, key, {
+			evaluationContext: guildFeatures ? 'guild' : 'user',
+		});
 		if (!Number.isFinite(resolved) || resolved < 0) {
 			return fallback;
 		}
@@ -93,12 +95,7 @@ export class AvatarService {
 			return null;
 		}
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
 		if (imageBuffer.length > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
@@ -154,12 +151,7 @@ export class AvatarService {
 			return null;
 		}
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
 		if (imageBuffer.length > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
@@ -199,21 +191,16 @@ export class AvatarService {
 		return storedHash;
 	}
 
-	async processEmoji(params: {errorPath: string; base64Image: string}): Promise<{
+	async processEmoji(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
 		contentType: string;
 	}> {
-		const {errorPath, base64Image} = params;
+		const {errorPath, base64Image, guildFeatures} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
-		const maxEmojiSize = this.resolveSizeLimit('emoji_max_size', EMOJI_MAX_SIZE);
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
+		const maxEmojiSize = this.resolveSizeLimit('emoji_max_size', EMOJI_MAX_SIZE, guildFeatures);
 		if (imageBuffer.length > maxEmojiSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxEmojiSize,
@@ -266,21 +253,16 @@ export class AvatarService {
 		});
 	}
 
-	async processSticker(params: {errorPath: string; base64Image: string}): Promise<{
+	async processSticker(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
 		contentType: string;
 	}> {
-		const {errorPath, base64Image} = params;
+		const {errorPath, base64Image, guildFeatures} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
-		const maxStickerSize = this.resolveSizeLimit('sticker_max_size', STICKER_MAX_SIZE);
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
+		const maxStickerSize = this.resolveSizeLimit('sticker_max_size', STICKER_MAX_SIZE, guildFeatures);
 		if (imageBuffer.length > maxStickerSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxStickerSize,
