@@ -610,7 +610,7 @@ msgstr "{desktopChannel} 電腦版 {desktopVersion}"
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:73
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
-msgstr "{deviceCount, plural, one {# 已選取 1 個裝置以供登出} other {# 已選取 {deviceCount} 個裝置以供登出}}"
+msgstr "{deviceCount, plural, one {# 已選取 1 個裝置以供登出} other {已選取 # 個裝置以供登出}}"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
 #: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:49
@@ -1673,7 +1673,7 @@ msgstr "12 個月 (1 年)"
 #. Short label in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "12-hour"
-msgstr "12-hour"
+msgstr "12 小時制"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:241
@@ -1716,7 +1716,7 @@ msgstr "2-32 個字元，限英數字、底線。"
 #. Short label in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "24-hour"
-msgstr "24-hour"
+msgstr "24 小時制"
 
 #. Invite max-uses dropdown option for 25 uses.
 #: src/features/invite/components/modals/InviteModal.tsx:72
@@ -7847,7 +7847,7 @@ msgstr "社群語音"
 #. Permission category for permissions that affect the whole community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
 msgid "Community-wide"
-msgstr "Community-wide"
+msgstr "社群範圍"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:276
@@ -11757,7 +11757,7 @@ msgstr "點兩下"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:386
 msgid "Double-click"
-msgstr "Double-click"
+msgstr "點兩下"
 
 #. Empty / hint text on the screen-share hover card explaining how to start watching a remote stream.
 #: src/features/voice/components/StreamWatchHoverCard.tsx:33
@@ -13503,7 +13503,7 @@ msgstr "實驗性功能"
 #. Compact badge shown beside settings that enable experimental behavior.
 #: src/features/user/components/settings_utils/SettingsStatusBadge.tsx:18
 msgid "EXPERIMENTAL"
-msgstr "EXPERIMENTAL"
+msgstr "實驗性"
 
 #. Label above the expiration duration dropdown in the invite link settings.
 #: src/features/invite/components/modals/InviteModal.tsx:102
@@ -20383,7 +20383,7 @@ msgstr "多重認證"
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:57
 msgid "Multi-line"
-msgstr "Multi-line"
+msgstr "多行"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
@@ -20931,7 +20931,7 @@ msgstr "新"
 #. Compact badge shown beside recently added settings.
 #: src/features/user/components/settings_utils/SettingsStatusBadge.tsx:14
 msgid "NEW"
-msgstr "NEW"
+msgstr "新"
 
 #. Description text in the new account guild limit modal.
 #: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:12
@@ -24700,7 +24700,7 @@ msgstr "已重新啟用 {0}。"
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:72
 msgid "Re-record"
-msgstr "Re-record"
+msgstr "重新錄音"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:14
@@ -31396,13 +31396,13 @@ msgstr "用您的手機傳送簡訊給我們"
 #. Feature label / section heading for the text-to-speech feature.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:414
 msgid "Text-to-speech"
-msgstr "Text-to-speech"
+msgstr "文字轉語音"
 
 #. Accessibility settings section for reading messages aloud.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:333
 msgctxt "accessibility-settings-section"
 msgid "Text-to-speech"
-msgstr "Text-to-speech"
+msgstr "文字轉語音"
 
 #. Body of the TTS-unsupported modal. Mentions specific browsers; keep Chrome, Firefox, Edge, and Brave as literal proper nouns.
 #: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:12

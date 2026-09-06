@@ -1673,7 +1673,7 @@ msgstr "12 kuukautta (1 vuosi)"
 #. Short label in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:51
 msgid "12-hour"
-msgstr "12-hour"
+msgstr "12 tuntia"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:241
@@ -1716,7 +1716,7 @@ msgstr "2–32 merkkiä, kirjaimia, numeroita, alaviivoja."
 #. Short label in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:55
 msgid "24-hour"
-msgstr "24-hour"
+msgstr "24 tuntia"
 
 #. Invite max-uses dropdown option for 25 uses.
 #: src/features/invite/components/modals/InviteModal.tsx:72
@@ -7847,7 +7847,7 @@ msgstr "Yhteisöääni"
 #. Permission category for permissions that affect the whole community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
 msgid "Community-wide"
-msgstr "Community-wide"
+msgstr "Koko yhteisö"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:276
@@ -11757,7 +11757,7 @@ msgstr "Kaksoisnapsautus"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:386
 msgid "Double-click"
-msgstr "Double-click"
+msgstr "Kaksoisnapsautus"
 
 #. Empty / hint text on the screen-share hover card explaining how to start watching a remote stream.
 #: src/features/voice/components/StreamWatchHoverCard.tsx:33
@@ -13503,7 +13503,7 @@ msgstr "Kokeellinen"
 #. Compact badge shown beside settings that enable experimental behavior.
 #: src/features/user/components/settings_utils/SettingsStatusBadge.tsx:18
 msgid "EXPERIMENTAL"
-msgstr "EXPERIMENTAL"
+msgstr "KOKEELLINEN"
 
 #. Label above the expiration duration dropdown in the invite link settings.
 #: src/features/invite/components/modals/InviteModal.tsx:102
@@ -20383,7 +20383,7 @@ msgstr "Monivaiheinen todennus"
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:57
 msgid "Multi-line"
-msgstr "Multi-line"
+msgstr "Useita rivejä"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
@@ -20931,7 +20931,7 @@ msgstr "Uusi"
 #. Compact badge shown beside recently added settings.
 #: src/features/user/components/settings_utils/SettingsStatusBadge.tsx:14
 msgid "NEW"
-msgstr "NEW"
+msgstr "UUSI"
 
 #. Description text in the new account guild limit modal.
 #: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:12
@@ -24700,7 +24700,7 @@ msgstr "Käyttäjä {0} otettiin uudelleen käyttöön."
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:72
 msgid "Re-record"
-msgstr "Re-record"
+msgstr "Nauhoita uudelleen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:14
@@ -31396,13 +31396,13 @@ msgstr "Lähetä meille tekstiviesti puhelimestasi"
 #. Feature label / section heading for the text-to-speech feature.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:414
 msgid "Text-to-speech"
-msgstr "Text-to-speech"
+msgstr "Tekstistä puheeksi"
 
 #. Accessibility settings section for reading messages aloud.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:333
 msgctxt "accessibility-settings-section"
 msgid "Text-to-speech"
-msgstr "Text-to-speech"
+msgstr "Tekstistä puheeksi"
 
 #. Body of the TTS-unsupported modal. Mentions specific browsers; keep Chrome, Firefox, Edge, and Brave as literal proper nouns.
 #: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:12

@@ -20,6 +20,7 @@
 		"hono": "catalog:"
 	},
 	"devDependencies": {
+		"@messageformat/parser": "catalog:",
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"vite-tsconfig-paths": "catalog:",

@@ -286,7 +286,7 @@
 	"email.verification_code_not_issued": "No verification code has been issued.",
 	"embeds.embed_index_out_of_bounds": "Embed index {embedIndex} is out of bounds (message has {embedCount} {embedCount, plural, one {embed} other {embeds}}).",
 	"embeds.embed_splash_requires_feature": "Embed splash requires INVITE_SPLASH feature.",
-	"embeds.embeds_exceed_max_characters": "Embeds must not exceed {maxCharacters} {maxCharacters, plural, one {character} other {characters}} characters in total.",
+	"embeds.embeds_exceed_max_characters": "Embeds must not exceed {maxCharacters} {maxCharacters, plural, one {character} other {characters}} in total.",
 	"embeds.too_many_embeds": "Too many embeds. Maximum {maxEmbeds} {maxEmbeds, plural, one {embed} other {embeds}} allowed.",
 	"entrance_sounds.duration_exceeds_limit": "Entrance sounds can be at most {max_ms, number}ms long.",
 	"entrance_sounds.invalid_format": "Entrance sounds must be MP3, OGG, M4A, or WAV audio.",

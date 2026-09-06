@@ -42,9 +42,7 @@ export function buildPhoneGateEscapeConfirmCopy(i18n: I18n, plan: PhoneGateEscap
 		bodyLines.push(i18n._(ESCAPE_CONFIRM_LEAVE_DESCRIPTOR, {guildNames: plan.guildNames.join(', ')}));
 	}
 	if (plan.ownedGuildNames.length > 0) {
-		bodyLines.push(
-			i18n._(ESCAPE_CONFIRM_OWNED_DESCRIPTOR, {ownedNames: plan.ownedGuildNames.join(', ')}),
-		);
+		bodyLines.push(i18n._(ESCAPE_CONFIRM_OWNED_DESCRIPTOR, {ownedNames: plan.ownedGuildNames.join(', ')}));
 	}
 	if (plan.emailStepRemains) {
 		bodyLines.push(i18n._(ESCAPE_CONFIRM_EMAIL_REMAINS_DESCRIPTOR));

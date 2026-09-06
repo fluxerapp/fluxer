@@ -10,8 +10,7 @@ export const ERROR_I18N_MESSAGES = {
 	'account.guild_verification_required': 'Community verification is required.',
 	'account.ip_authorization_required': 'IP authorization is required.',
 	'account.locked_suspicious_activity': 'Your account is locked due to suspicious activity.',
-	'account.phone_gate_escape_unavailable':
-		'Setting the phone verification check aside is not available for this account.',
+	'account.phone_gate_escape_unavailable': 'This account cannot postpone the phone verification check.',
 	'account.phone_required_for_guild': 'You need to add a phone number to send messages in this community.',
 	'account.scheduled_for_deletion': 'This account is scheduled for deletion.',
 	'account.session_timeout': 'Session timed out. Refresh the page and log in again.',

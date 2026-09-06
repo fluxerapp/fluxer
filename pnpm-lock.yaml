@@ -1916,6 +1916,9 @@ importers:
         specifier: 'catalog:'
         version: 4.13.5
     devDependencies:
+      '@messageformat/parser':
+        specifier: 'catalog:'
+        version: 5.1.1
       '@types/node':
         specifier: 'catalog:'
         version: 25.3.0
