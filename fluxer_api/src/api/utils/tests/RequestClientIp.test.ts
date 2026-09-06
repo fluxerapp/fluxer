@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {MissingClientIpError} from '@fluxer/ip_utils/src/ClientIp';
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
@@ -124,5 +125,16 @@ describe('RequestClientIp', () => {
 		});
 		await app.request('http://localhost/v1/messages', {headers: {'x-forwarded-for': '203.0.113.10'}});
 		expect(seen).toEqual(['203.0.113.10', null, '203.0.113.10']);
+	});
+	it('a missing client ip surfaces as 403 FORBIDDEN through AppErrorHandler', async () => {
+		const app = new Hono<HonoEnv>();
+		app.get('/v1/messages', (ctx) => {
+			requireRequestClientIp(ctx);
+			return ctx.text('ok');
+		});
+		app.onError(AppErrorHandler);
+		const response = await app.request('http://localhost/v1/messages');
+		expect(response.status).toBe(403);
+		expect(await response.json()).toMatchObject({code: 'FORBIDDEN'});
 	});
 });

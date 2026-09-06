@@ -2,16 +2,15 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
-import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
 import {createMiddleware} from 'hono/factory';
 import {Config} from '../Config';
 import {Logger} from '../Logger';
 import type {HonoEnv} from '../types/HonoEnv';
+import {getRequestClientIp} from '../utils/RequestClientIp';
 import {stripApiPrefix} from '../utils/RequestPathUtils';
 
 interface RequireClientIpOptions {
 	exemptPaths?: Array<string>;
-	requiredHeaders?: Array<string>;
 }
 
 const defaultExemptPaths: Array<string> = [
@@ -22,10 +21,7 @@ const defaultExemptPaths: Array<string> = [
 	'/connections/bluesky/jwks.json',
 ];
 
-export function RequireClientIpMiddleware({
-	exemptPaths = defaultExemptPaths,
-	requiredHeaders = [resolveClientIpHeaderName(Config.proxy.client_ip_header)],
-}: RequireClientIpOptions = {}) {
+export function RequireClientIpMiddleware({exemptPaths = defaultExemptPaths}: RequireClientIpOptions = {}) {
 	return createMiddleware<HonoEnv>(async (ctx, next) => {
 		if (Config.dev.testModeEnabled) {
 			await next();
@@ -36,12 +32,8 @@ export function RequireClientIpMiddleware({
 			await next();
 			return;
 		}
-		const hasRequiredHeader = requiredHeaders.some((header) => {
-			const value = ctx.req.header(header);
-			return value != null && value.trim() !== '';
-		});
-		if (!hasRequiredHeader) {
-			Logger.warn({path}, 'Rejected request without required proxy headers');
+		if (getRequestClientIp(ctx) === null) {
+			Logger.warn({path}, 'Rejected request without a resolvable client IP');
 			throw new ForbiddenError({code: APIErrorCodes.FORBIDDEN});
 		}
 		await next();

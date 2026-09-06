@@ -21,6 +21,9 @@ interface HeadersLike {
 }
 
 export class MissingClientIpError extends Error {
+	readonly code = 'FORBIDDEN';
+	readonly status = 403;
+
 	constructor() {
 		super('Client IP header is required');
 		this.name = 'MissingClientIpError';

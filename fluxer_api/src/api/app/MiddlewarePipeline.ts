@@ -91,11 +91,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	}
 	routes.use(TorExitMiddleware);
 	routes.use(AuditLogMiddleware);
-	routes.use(
-		RequireClientIpMiddleware({
-			requiredHeaders: [resolvedHeader],
-		}),
-	);
+	routes.use(RequireClientIpMiddleware());
 	routes.use(ServiceMiddleware);
 	routes.use(UserMiddleware);
 	routes.use(ContentFilterMiddleware);
