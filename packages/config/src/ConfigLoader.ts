@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createPrivateKey, createPublicKey} from 'node:crypto';
+import {createECDH} from 'node:crypto';
 import {buildNamedFluxerEnvOverrides} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {
 	type DerivedEndpoints,
@@ -381,20 +381,15 @@ function validateVapidConfig(config: MasterConfig): void {
 	if (priv.length !== 32) {
 		throw new Error('FLUXER_VAPID_PRIVATE_KEY must be the base64url 32-byte P-256 scalar');
 	}
-	const jwk = {
-		kty: 'EC',
-		crv: 'P-256',
-		x: pub.subarray(1, 33).toString('base64url'),
-		y: pub.subarray(33, 65).toString('base64url'),
-		d: priv.toString('base64url'),
-	};
-	let derived: {x?: string; y?: string};
+	let derived: Buffer;
 	try {
-		derived = createPublicKey(createPrivateKey({key: jwk, format: 'jwk'})).export({format: 'jwk'});
+		const curve = createECDH('prime256v1');
+		curve.setPrivateKey(priv);
+		derived = curve.getPublicKey();
 	} catch {
 		throw new Error('FLUXER_VAPID_PRIVATE_KEY does not match FLUXER_VAPID_PUBLIC_KEY');
 	}
-	if (derived.x !== jwk.x || derived.y !== jwk.y) {
+	if (!derived.equals(pub)) {
 		throw new Error('FLUXER_VAPID_PRIVATE_KEY does not match FLUXER_VAPID_PUBLIC_KEY');
 	}
 }
