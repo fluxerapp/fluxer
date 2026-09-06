@@ -23,6 +23,7 @@ import ReadStates from '@app/features/read_state/state/ReadStates';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
+import UserProfile from '@app/features/user/state/UserProfile';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 
@@ -51,6 +52,7 @@ export function handleGuildCreate(data: GuildReadyData, _context: GatewayHandler
 	GuildCount.handleGuildCreate(data);
 	if (!isSync) {
 		MemberSidebar.handleGuildCreate(data.id);
+		UserProfile.handleGuildCreate();
 	}
 	if (!data.unavailable) {
 		Channels.handleGuildCreate(data);

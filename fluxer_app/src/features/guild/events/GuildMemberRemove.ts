@@ -5,6 +5,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch from '@app/features/member/state/MemberSearch';
 import Permission from '@app/features/permissions/state/Permission';
 import Presence from '@app/features/presence/state/Presence';
+import UserProfile from '@app/features/user/state/UserProfile';
 import Users from '@app/features/user/state/Users';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
@@ -19,4 +20,5 @@ export function handleGuildMemberRemove(data: GuildMemberRemovePayload, _context
 	GuildMembers.handleMemberRemove(data.guild_id, data.user.id);
 	Permission.handleGuildMemberUpdate(data.user.id);
 	Presence.handleGuildMemberRemove(data.guild_id, data.user.id);
+	UserProfile.handleGuildMemberRemove(data.user.id);
 }
