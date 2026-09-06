@@ -115,6 +115,48 @@ fn parses_upload_relay_secret() {
 }
 
 #[test]
+fn rejects_a_body_limit_above_the_spool_budget() {
+    let err = Config::load_from_iter([
+        ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+        ("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES", "2"),
+        ("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES", "1"),
+    ])
+    .unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("must not exceed FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES")
+    );
+}
+
+#[test]
+fn rejects_a_zero_spool_budget() {
+    let err = Config::load_from_iter([
+        ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+        ("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES", "0"),
+    ])
+    .unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES")
+    );
+}
+
+#[test]
+fn accepts_a_body_limit_equal_to_the_spool_budget() {
+    let cfg = Config::load_from_iter([
+        ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+        ("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES", "4096"),
+        (
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
+            "4096",
+        ),
+    ])
+    .unwrap();
+    assert_eq!(4096, cfg.upload_relay.max_body_bytes);
+    assert_eq!(4096, cfg.upload_relay.spool_max_total_bytes);
+}
+
+#[test]
 fn rejects_invalid_mode_env() {
     let err = Config::load_from_iter([
         ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
@@ -382,7 +424,6 @@ fn upload_relay_spool_and_bunny_ip_gate_keys_apply() {
             "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
             "1073741824",
         ),
-        ("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS", "600"),
         ("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED", "yes"),
         (
             "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES",
@@ -398,7 +439,6 @@ fn upload_relay_spool_and_bunny_ip_gate_keys_apply() {
     );
     assert_eq!(2 << 20, cfg.upload_relay.spool_chunk_bytes);
     assert_eq!(1 << 30, cfg.upload_relay.spool_max_total_bytes);
-    assert_eq!(600, cfg.upload_relay.token_ttl_secs);
     assert!(cfg.bunny_ip_gate_enabled);
     assert_eq!(
         vec![

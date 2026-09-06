@@ -70,7 +70,6 @@ pub struct MediaServingConfig {
 pub struct UploadRelayConfig {
     pub(crate) secret: SecretBytes,
     pub max_body_bytes: u64,
-    pub token_ttl_secs: u64,
     pub s3_timeout_ms: u64,
     pub buffered_retry_max_bytes: u64,
     pub buffered_retry_total_bytes: u64,
@@ -329,25 +328,30 @@ impl MediaServingConfig {
 
 impl UploadRelayConfig {
     fn load(env: &EnvMap, mode: DeploymentMode) -> anyhow::Result<Self> {
+        let max_body_bytes = parse_u64(
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES",
+            env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES"),
+            500 * 1024 * 1024,
+            1,
+            5 * 1024 * 1024 * 1024,
+        )?;
+        let spool_max_total_bytes = parse_u64(
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
+            env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"),
+            8 * 1024 * 1024 * 1024,
+            0,
+            256 * 1024 * 1024 * 1024,
+        )?;
+        anyhow::ensure!(
+            max_body_bytes <= spool_max_total_bytes,
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES must not exceed FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"
+        );
         Ok(Self {
             secret: decode_upload_relay_secret(
                 env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64"),
                 mode,
             )?,
-            max_body_bytes: parse_u64(
-                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES",
-                env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES"),
-                500 * 1024 * 1024,
-                1,
-                5 * 1024 * 1024 * 1024,
-            )?,
-            token_ttl_secs: parse_u64(
-                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS",
-                env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS"),
-                3_600,
-                1,
-                7 * 24 * 60 * 60,
-            )?,
+            max_body_bytes,
             s3_timeout_ms: parse_u64(
                 "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS",
                 env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS"),
@@ -380,13 +384,7 @@ impl UploadRelayConfig {
                 64 * 1024,
                 64 * 1024 * 1024,
             )?,
-            spool_max_total_bytes: parse_u64(
-                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
-                env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"),
-                8 * 1024 * 1024 * 1024,
-                0,
-                256 * 1024 * 1024 * 1024,
-            )?,
+            spool_max_total_bytes,
         })
     }
 }

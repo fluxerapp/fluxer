@@ -68,7 +68,6 @@ fn test_config(root: &Path) -> Config {
         upload_relay: UploadRelayConfig {
             secret: SecretBytes::new(Vec::new()),
             max_body_bytes: 1024,
-            token_ttl_secs: 3600,
             s3_timeout_ms: 1000,
             buffered_retry_max_bytes: 0,
             buffered_retry_total_bytes: 0,
