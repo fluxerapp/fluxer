@@ -1831,7 +1831,7 @@ msgid "7 days"
 msgstr "7 days"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:525
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:560
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 
@@ -22826,6 +22826,11 @@ msgstr "Other reaction…"
 msgid "OTP"
 msgstr "OTP"
 
+#. Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:537
+msgid "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
+msgstr "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
+
 #. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:122
 msgid "Our safety team is reviewing it. We'll send you a DM and email once we've reached a verdict."
@@ -29795,7 +29800,7 @@ msgstr "Something went wrong. Try again later."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:529
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:564
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Something went wrong. Try again."
@@ -32283,6 +32288,11 @@ msgstr "This is the second option description"
 msgid "This is the third option description"
 msgstr "This is the third option description"
 
+#. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:549
+msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
+msgstr "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
+
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
@@ -32353,6 +32363,11 @@ msgstr "This message no longer exists."
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "This nickname will only be visible in this community"
+
+#. Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:531
+msgid "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
+msgstr "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
 
 #. Required-action modal explanation for an inbound phone verification challenge.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:425
@@ -36497,6 +36512,16 @@ msgstr "We couldn't read this theme. It may be corrupted or invalid."
 msgid "We couldn't remove that account. Try again."
 msgstr "We couldn't remove that account. Try again."
 
+#. Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:555
+msgid "We couldn't verify this number automatically. Contact support and a person will review your account."
+msgstr "We couldn't verify this number automatically. Contact support and a person will review your account."
+
+#. Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:525
+msgid "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
+msgstr "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
+
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
@@ -38128,6 +38153,11 @@ msgstr "Your card is being checked for localized pricing. This usually takes a m
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:183
 msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "Your card is eligible. Redirecting you to the payment page now."
+
+#. Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:543
+msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
+msgstr "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:128
 msgid "Your code"

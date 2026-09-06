@@ -6,10 +6,17 @@ import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/a
 import {InvalidPhoneNumberError} from '@fluxer/errors/src/domains/auth/InvalidPhoneNumberError';
 import {InvalidPhoneVerificationCodeError} from '@fluxer/errors/src/domains/auth/InvalidPhoneVerificationCodeError';
 import {PhoneAlreadyUsedError} from '@fluxer/errors/src/domains/auth/PhoneAlreadyUsedError';
+import {PhoneCountryNotSupportedError} from '@fluxer/errors/src/domains/auth/PhoneCountryNotSupportedError';
+import {PhoneInboundVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneInboundVerificationRequiredError';
+import {PhoneLookupUnavailableError} from '@fluxer/errors/src/domains/auth/PhoneLookupUnavailableError';
+import {PhoneNumberNotInServiceError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotInServiceError';
+import {PhoneNumberNotMobileError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotMobileError';
+import {PhoneVerificationNeedsReviewError} from '@fluxer/errors/src/domains/auth/PhoneVerificationNeedsReviewError';
 import {PhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneVerificationRequiredError';
 import {SmsVerificationUnavailableError} from '@fluxer/errors/src/domains/auth/SmsVerificationUnavailableError';
 import {CaptchaVerificationRequiredError} from '@fluxer/errors/src/domains/core/CaptchaVerificationRequiredError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
+import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {PHONE_E164_REGEX} from '@fluxer/schema/src/primitives/UserValidators';
 import type {RateLimitResult, RateLimitScope} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {PhoneLookupResult} from '@pkgs/sms/src/PhoneLookupTypes';
@@ -126,7 +133,7 @@ async function validatePhoneOrThrow(ctx: ApiContext, phone: string, options: Val
 				'Phone verification rejected at gate',
 			);
 		}
-		throw new InvalidPhoneNumberError();
+		throw errorForPhoneRejectReason(verdict.rejectReason);
 	}
 	if (verdict.verdict === 'require_inbound') {
 		Logger.info(
@@ -141,7 +148,7 @@ async function validatePhoneOrThrow(ctx: ApiContext, phone: string, options: Val
 		if (options.inboundCapable) {
 			throw new PhoneInboundChallengeRequiredError(verdict.inboundReason);
 		}
-		throw new InvalidPhoneNumberError();
+		throw new PhoneInboundVerificationRequiredError();
 	}
 }
 
@@ -150,7 +157,7 @@ function assertPhoneFormatOrThrow(phone: string): void {
 		throw new InvalidPhoneNumberError();
 	}
 	if (phonePrefixBanCache.isBlocked(phone)) {
-		throw new InvalidPhoneNumberError();
+		throw new PhoneCountryNotSupportedError();
 	}
 }
 
@@ -235,7 +242,7 @@ export async function sendPhoneVerificationCode(
 				await ctx.services.phoneAttemptRisk.record({...riskInput, rejected: false});
 				return await issueInboundChallengeOrThrow(ctx, userId, phone, error.reason);
 			}
-			rejectedAttempt = true;
+			rejectedAttempt = !(error instanceof PhoneLookupUnavailableError);
 			throw error;
 		}
 		const cached = await ctx.services.phoneLookup?.getCachedLookup(phone);
@@ -515,6 +522,25 @@ type PhoneVerdictResult =
 	| {verdict: 'accept'; rejectReason: null}
 	| {verdict: 'reject'; rejectReason: PhoneAttemptRejectReason}
 	| {verdict: 'require_inbound'; inboundReason: PhoneAttemptInboundReason};
+
+export function errorForPhoneRejectReason(reason: PhoneAttemptRejectReason): FluxerError {
+	switch (reason) {
+		case 'invalid_format':
+			return new InvalidPhoneNumberError();
+		case 'banned_prefix':
+			return new PhoneCountryNotSupportedError();
+		case 'lookup_unavailable':
+			return new PhoneLookupUnavailableError();
+		case 'invalid_number':
+			return new PhoneNumberNotInServiceError();
+		case 'line_type_not_mobile':
+		case 'line_type_hard_rejected':
+			return new PhoneNumberNotMobileError();
+		case 'sms_pumping_risk_high':
+		case 'behavioural_risk_blocked':
+			return new PhoneVerificationNeedsReviewError();
+	}
+}
 
 function computePhoneVerdict(lookup: PhoneLookupResult | null, phone: string): PhoneVerdictResult {
 	if (lookup == null) {

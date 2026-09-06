@@ -1660,6 +1660,9 @@
         "msgid": "Ordered upload"
       },
       {
+        "msgid": "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
+      },
+      {
         "msgid": "Pause preview when Fluxer isn’t focused"
       },
       {
@@ -1993,6 +1996,9 @@
         "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
       },
       {
+        "msgid": "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
+      },
+      {
         "msgid": "This option is required. Please provide a value."
       },
       {
@@ -2029,6 +2035,12 @@
         "msgid": "Volume sliders"
       },
       {
+        "msgid": "We couldn't verify this number automatically. Contact support and a person will review your account."
+      },
+      {
+        "msgid": "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
+      },
+      {
         "msgid": "We'll send a verification code to your email before you can view your backup codes."
       },
       {
@@ -2060,6 +2072,9 @@
       },
       {
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+      },
+      {
+        "msgid": "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
       },
       {
         "msgid": "Your new nickname, or leave blank to reset it."

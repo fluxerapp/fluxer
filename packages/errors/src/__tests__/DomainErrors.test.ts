@@ -4,6 +4,12 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InvalidPhoneNumberError} from '@fluxer/errors/src/domains/auth/InvalidPhoneNumberError';
+import {PhoneCountryNotSupportedError} from '@fluxer/errors/src/domains/auth/PhoneCountryNotSupportedError';
+import {PhoneInboundVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneInboundVerificationRequiredError';
+import {PhoneLookupUnavailableError} from '@fluxer/errors/src/domains/auth/PhoneLookupUnavailableError';
+import {PhoneNumberNotInServiceError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotInServiceError';
+import {PhoneNumberNotMobileError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotMobileError';
+import {PhoneVerificationNeedsReviewError} from '@fluxer/errors/src/domains/auth/PhoneVerificationNeedsReviewError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
@@ -175,6 +181,31 @@ describe('Domain Errors', () => {
 			it('should be instance of FluxerError', () => {
 				const error = new InvalidPhoneNumberError();
 				expect(error).toBeInstanceOf(FluxerError);
+			});
+		});
+		describe.each([
+			[PhoneCountryNotSupportedError, APIErrorCodes.PHONE_COUNTRY_NOT_SUPPORTED],
+			[PhoneInboundVerificationRequiredError, APIErrorCodes.PHONE_INBOUND_VERIFICATION_REQUIRED],
+			[PhoneLookupUnavailableError, APIErrorCodes.PHONE_LOOKUP_UNAVAILABLE],
+			[PhoneNumberNotInServiceError, APIErrorCodes.PHONE_NUMBER_NOT_IN_SERVICE],
+			[PhoneNumberNotMobileError, APIErrorCodes.PHONE_NUMBER_NOT_MOBILE],
+			[PhoneVerificationNeedsReviewError, APIErrorCodes.PHONE_VERIFICATION_NEEDS_REVIEW],
+		] as const)('%p', (ErrorClass, code) => {
+			it('should have correct code from APIErrorCodes', () => {
+				const error = new ErrorClass();
+				expect(error.code).toBe(code);
+				expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+			});
+			it('should be instance of BadRequestError', () => {
+				const error = new ErrorClass();
+				expect(error).toBeInstanceOf(BadRequestError);
+			});
+			it('should generate a response body carrying the code', async () => {
+				const error = new ErrorClass();
+				const response = error.getResponse();
+				expect(response.status).toBe(400);
+				const body = (await response.json()) as ErrorResponse;
+				expect(body).toEqual({code, message: code});
 			});
 		});
 	});

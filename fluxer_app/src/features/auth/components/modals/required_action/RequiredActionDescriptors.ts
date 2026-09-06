@@ -522,6 +522,41 @@ export const PHONE_NOT_ELIGIBLE_DESCRIPTOR = msg({
 	message: 'Phone verification is not available for this account. Use another method or contact support.',
 	comment: 'Required-action error when the account is not eligible to add phone verification.',
 });
+export const PHONE_COUNTRY_NOT_SUPPORTED_DESCRIPTOR = msg({
+	message:
+		"We don't send verification texts to this country. Try a mobile number from another country, or contact support.",
+	comment:
+		"Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.",
+});
+export const PHONE_INBOUND_REQUIRED_DESCRIPTOR = msg({
+	message:
+		'This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text.',
+	comment:
+		'Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.',
+});
+export const PHONE_LOOKUP_UNAVAILABLE_DESCRIPTOR = msg({
+	message:
+		'Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again.',
+	comment:
+		'Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.',
+});
+export const PHONE_NOT_IN_SERVICE_DESCRIPTOR = msg({
+	message:
+		"Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct.",
+	comment:
+		'Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.',
+});
+export const PHONE_NOT_MOBILE_DESCRIPTOR = msg({
+	message:
+		"This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong.",
+	comment:
+		'Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.',
+});
+export const PHONE_NEEDS_REVIEW_DESCRIPTOR = msg({
+	message: "We couldn't verify this number automatically. Contact support and a person will review your account.",
+	comment:
+		'Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.',
+});
 export const CAPTCHA_REQUIRED_DESCRIPTOR = msg({
 	message: 'A browser check is required before phone verification. Try again from the sign-in page or contact support.',
 	comment: 'Required-action error when the API requires a captcha for phone verification.',

@@ -140,4 +140,68 @@ describe('ErrorI18n', () => {
 			}
 		});
 	});
+	describe('phone rejection messages', () => {
+		it.each([
+			[
+				'PHONE_COUNTRY_NOT_SUPPORTED',
+				"We don't send verification texts to this country. Use a mobile number from another country, or email support@fluxer.app and a person will review your account.",
+			],
+			[
+				'PHONE_INBOUND_VERIFICATION_REQUIRED',
+				'This number is verified by texting us instead of us texting you. Start phone verification again to get the code and the number to text.',
+			],
+			[
+				'PHONE_LOOKUP_UNAVAILABLE',
+				'Our phone number check is down right now, so we stopped before sending your code. This is on us, not your number. Wait a few minutes and try the same number again.',
+			],
+			[
+				'PHONE_NUMBER_NOT_IN_SERVICE',
+				"Your carrier says this number isn't in service. Check the number and try again, or email support@fluxer.app if it's correct.",
+			],
+			[
+				'PHONE_NUMBER_NOT_MOBILE',
+				"This isn't a mobile number, so it can't receive our text. Use a mobile number, or email support@fluxer.app if you think that's wrong.",
+			],
+			[
+				'PHONE_VERIFICATION_NEEDS_REVIEW',
+				"We couldn't verify this number automatically. Email support@fluxer.app and a person will review your account.",
+			],
+		])('resolves %s to its own message', (code, expected) => {
+			const message = getErrorMessageUnsafe(code, 'en-US');
+			expect(message).toBe(expected);
+			expect(consoleWarnSpy).not.toHaveBeenCalled();
+		});
+		it.each([
+			'PHONE_COUNTRY_NOT_SUPPORTED',
+			'PHONE_NUMBER_NOT_IN_SERVICE',
+			'PHONE_NUMBER_NOT_MOBILE',
+			'PHONE_VERIFICATION_NEEDS_REVIEW',
+		])('routes %s to support', (code) => {
+			expect(getErrorMessageUnsafe(code, 'en-US')).toContain('support@fluxer.app');
+		});
+		it('blames us for a lookup outage and invites the same number again', () => {
+			const message = getErrorMessage('phone.lookup_unavailable', 'en-US');
+			expect(message).toContain('This is on us, not your number.');
+			expect(message).toContain('try the same number again');
+			expect(message.toLowerCase()).not.toContain('invalid');
+		});
+		it('leaves the two fraud reasons indistinguishable', () => {
+			expect(getErrorMessageUnsafe('PHONE_VERIFICATION_NEEDS_REVIEW', 'en-US')).toBe(
+				getErrorMessage('phone.verification_needs_review', 'en-US'),
+			);
+		});
+		it('falls back to the source message when the locale has no catalog', () => {
+			expect(getErrorMessage('phone.lookup_unavailable', 'zz-ZZ')).toBe(
+				getErrorMessage('phone.lookup_unavailable', 'en-US'),
+			);
+		});
+
+		it('serves a real translation for a locale that has one', () => {
+			for (const locale of ['fr', 'de', 'ja', 'pt-BR']) {
+				expect(getErrorMessage('phone.lookup_unavailable', locale)).not.toBe(
+					getErrorMessage('phone.lookup_unavailable', 'en-US'),
+				);
+			}
+		});
+	});
 });
