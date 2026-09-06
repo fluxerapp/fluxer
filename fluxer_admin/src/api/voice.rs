@@ -102,6 +102,7 @@ impl AdminApiClient {
         params: &serde_json::Value,
     ) -> ApiResult<CreateVoiceServerResponse> {
         let region_id = required_field(params, "region_id")?;
+        paired_coordinates(params)?;
         let body =
             serde_json::from_value::<generated_types::CreateVoiceServerRequest>(params.clone())
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
@@ -119,6 +120,7 @@ impl AdminApiClient {
     ) -> ApiResult<UpdateVoiceServerResponse> {
         let region_id = required_field(params, "region_id")?;
         let server_id = required_field(params, "server_id")?;
+        paired_coordinates(params)?;
         let body =
             serde_json::from_value::<generated_types::UpdateVoiceServerRequest>(params.clone())
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
@@ -146,6 +148,17 @@ impl AdminApiClient {
 
 fn bool_param(value: bool) -> &'static str {
     if value { "true" } else { "false" }
+}
+
+fn paired_coordinates(params: &serde_json::Value) -> ApiResult<()> {
+    let has_coordinate = |field: &str| params.get(field).is_some_and(|value| !value.is_null());
+    if has_coordinate("latitude") == has_coordinate("longitude") {
+        Ok(())
+    } else {
+        Err(ApiError::Parse(
+            "latitude and longitude must both be set or both be left empty".to_owned(),
+        ))
+    }
 }
 
 fn required_field(params: &serde_json::Value, field: &str) -> ApiResult<String> {
