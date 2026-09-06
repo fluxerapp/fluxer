@@ -502,7 +502,7 @@ Fluxer decides the single community refusal first, so it precedes the email, bot
 
 A `name` that satisfies the 1 to 100 character bound only before normalisation is rejected with the field code `STRING_LENGTH_INVALID`. The normalised name is scanned against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`.
 
-The `icon` base64 payload is bounded to 1 to 13981016 characters and is otherwise rejected with `BASE64_LENGTH_INVALID`, and a payload that is not valid base64 with `INVALID_BASE64_FORMAT`. The decoded image must fit within the instance `avatar_max_size` limit, which defaults to the 10 MiB ceiling, and a larger image is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted. An animated AVIF is rejected with `INVALID_IMAGE_FORMAT`. An image the media classifier marks as explicit is rejected with 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT`.
+The `icon` base64 payload is bounded to 1 to 13981016 characters and is otherwise rejected with `BASE64_LENGTH_INVALID`, and a payload that is not valid base64 with `INVALID_BASE64_FORMAT`. The decoded image must fit within the instance `avatar_max_size` limit, which defaults to the 10 MiB ceiling, and a larger image is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JXL, and SVG are accepted. An animated AVIF is rejected with `INVALID_IMAGE_FORMAT`.
 
 Without a template the guild is created with a `Text Channels` category holding a text channel named `general`, a `Voice Channels` category holding a voice channel named `General`, and an everyone role with the default permission set. The `general` channel becomes the system channel.
 
@@ -518,7 +518,7 @@ The creation response has none of them. Read [Get guild](#get-guild) afterwards 
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Body, image, template, bot or unclaimed credential, configured guild limit, or single community policy rejects creation |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Email address is unverified, or the name is blocked |
 
-<sup>1</sup> The [error code](/http-api/errors/) is `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS` while the single community policy is active, `BOTS_CANNOT_CREATE_GUILDS` for a bot credential, `UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS` for an unclaimed account, `MAX_GUILDS` at the configured guild limit, `GUILD_TEMPLATE_INVALID` for a rejected template, `EXPLICIT_CONTENT_CANNOT_BE_SENT` for an explicit icon, and `INVALID_FORM_BODY` otherwise
+<sup>1</sup> The [error code](/http-api/errors/) is `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS` while the single community policy is active, `BOTS_CANNOT_CREATE_GUILDS` for a bot credential, `UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS` for an unclaimed account, `MAX_GUILDS` at the configured guild limit, `GUILD_TEMPLATE_INVALID` for a rejected template, and `INVALID_FORM_BODY` otherwise
 
 <sup>2</sup> The [error code](/http-api/errors/) is `GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED` for an unverified email address and `CONTENT_BLOCKED` for a blocked name or body string
 
@@ -652,7 +652,7 @@ Every field is optional. An omitted field preserves its current value, and a fie
 
 <sup>1</sup> The value is normalised and trimmed before its length is measured, and the normalised name is scanned against the instance phrase and URL blocklists, so a match returns 403 `CONTENT_BLOCKED`
 
-<sup>2</sup> The accepted encoding, byte ceiling, and format set are the ones listed by [Create guild](#create-guild), and an image the media classifier marks as explicit is rejected with 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT`. No guild feature gates an animated icon on write, but the `a_` prefix is stripped from the returned hash while the guild lacks `ANIMATED_ICON`
+<sup>2</sup> The accepted encoding, byte ceiling, and format set are the ones listed by [Create guild](#create-guild). No guild feature gates an animated icon on write, but the `a_` prefix is stripped from the returned hash while the guild lacks `ANIMATED_ICON`
 
 <sup>3</sup> The channel must exist in this guild and be a text channel, and is otherwise rejected with `SYSTEM_CHANNEL_MUST_BE_IN_GUILD` or `SYSTEM_CHANNEL_MUST_BE_TEXT`
 
@@ -694,7 +694,7 @@ Send the current array with the intended changes applied. A feature without the 
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the name is blocked, `MANAGE_GUILD` or ownership is absent, or sudo mode is required |
 | 404<sup>3</sup> | [error response](/http-api/#error-response) | Guild does not exist |
 
-<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot exercise it, `EXPLICIT_CONTENT_CANNOT_BE_SENT` for an explicit image, and `INVALID_FORM_BODY` otherwise
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot exercise it, and `INVALID_FORM_BODY` otherwise
 
 <sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked name or body string, `SUDO_MODE_REQUIRED` when an MFA level change is unproven, and `MISSING_PERMISSIONS` for a non-member, a missing `MANAGE_GUILD`, or a non-owner changing the MFA level
 

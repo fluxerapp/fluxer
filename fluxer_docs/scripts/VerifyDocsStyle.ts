@@ -344,7 +344,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/unfurl.mdx', {'table-cell': 2, 'table-parallel': 1}],
 	['http-api/users.mdx', {'table-fit': 1, 'table-identifier': 4}],
 	['http-api/users/content.mdx', {'table-cell': 4}],
-	['http-api/users/current-user.mdx', {'table-cell': 1, 'table-identifier': 1}],
+	['http-api/users/current-user.mdx', {'table-identifier': 1}],
 	['http-api/users/data-harvest.mdx', {'table-cell': 2}],
 	['http-api/users/email-and-password.mdx', {'table-identifier': 1}],
 	['http-api/users/mfa.mdx', {'table-cell': 3, 'table-parallel': 1}],

@@ -829,8 +829,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 | --- | --- | --- |
 | 200 | [webhook](#webhook-object) object | Webhook was created |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Body or avatar is invalid |
-| 400<sup>2</sup> | [error response](/http-api/#error-response) | The avatar is blocked as explicit media |
-| 400<sup>3</sup> | [error response](/http-api/#error-response) | The guild or channel webhook allowance is already reached |
+| 400<sup>2</sup> | [error response](/http-api/#error-response) | The guild or channel webhook allowance is already reached |
 | 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
 | 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
@@ -845,15 +844,12 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 
 <sup>1</sup> An avatar failure names the `avatar` path with `BASE64_LENGTH_INVALID`, `INVALID_BASE64_FORMAT`, `IMAGE_SIZE_EXCEEDS_LIMIT`, or `INVALID_IMAGE_FORMAT`
 
-<sup>2</sup> The classifier block has its score in `probability`
-
-<sup>3</sup> The reached allowance is in a top-level member named after its limit key
+<sup>2</sup> The reached allowance is in a top-level member named after its limit key
 
 | Condition | Error |
 | --- | --- |
 | Guild or channel webhook allowance reached | 400 `MAX_WEBHOOKS_PER_GUILD` or 400 `MAX_WEBHOOKS_PER_CHANNEL` |
 | Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
-| Explicit media classifier blocks the avatar | 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
 | Schema or image failure | 400 `INVALID_FORM_BODY` |
 | Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
 | Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
@@ -946,7 +942,6 @@ The returned webhook object has the destination channel.
 | --- | --- | --- |
 | 200 | [webhook](#webhook-object) object | Webhook was updated |
 | 400 | [error response](/http-api/#error-response) | Body or avatar is invalid |
-| 400 | [error response](/http-api/#error-response) | The avatar is blocked as explicit media |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The destination channel already holds its maximum webhooks |
 | 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` without an enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
@@ -969,7 +964,6 @@ The returned webhook object has the destination channel.
 | --- | --- |
 | Destination channel already holds its maximum webhooks | 400 `MAX_WEBHOOKS_PER_CHANNEL` |
 | Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
-| Explicit media classifier blocks the avatar | 400 `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
 | Schema or image failure | 400 `INVALID_FORM_BODY` |
 | Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
 | Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
@@ -1094,7 +1088,6 @@ Unlike [update webhook](#update-webhook), this body rejects any field it does no
 | 200 | [token webhook](#token-webhook-object) object | Webhook was updated |
 | 400 | [error response](/http-api/#error-response) | Path, body, or avatar is invalid |
 | 400 | [error response](/http-api/#error-response) | The body has an unknown field |
-| 400 | [error response](/http-api/#error-response) | The avatar is blocked as explicit media, returning `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
 | 403 | [error response](/http-api/#error-response) | Name is blocked or the avatar hash is banned, each returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
 
@@ -1220,7 +1213,7 @@ An attachment metadata entry whose `id` matches a supplied file index supplies t
 
 The operation creates one webhook-authored message, attaches direct multipart files, and resolves forward snapshots and mentions under the allowed mentions policy.
 
-A supplied `username` replaces the author name on this message. A supplied `avatar_url` is fetched for this message, and the webhook's stored name and avatar do not change. When the avatar cannot be fetched, or the explicit media classifier blocks it, Fluxer creates the message without the override.
+A supplied `username` replaces the author name on this message. A supplied `avatar_url` is fetched for this message, and the webhook's stored name and avatar do not change. When the avatar cannot be fetched, Fluxer creates the message without the override.
 
 The operation updates channel state and search results and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
 
@@ -1454,7 +1447,7 @@ The success body is the literal string `ok` under the `text/html` content type. 
 
 The converted callback creates one webhook-authored message with the converted content and embeds, and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
 
-A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the media boundary and stored as the message avatar, and the stored webhook name and avatar do not change. When the URL cannot be fetched, or the explicit media classifier blocks the image, the callback still succeeds and the message has no avatar override.
+A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the media boundary and stored as the message avatar, and the stored webhook name and avatar do not change. When the URL cannot be fetched, the callback still succeeds and the message has no avatar override.
 
 The webhook execution default applies, and every mention in the converted content is suppressed. The callback has no nonce, so a repeated callback creates a second message.
 

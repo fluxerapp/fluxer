@@ -403,7 +403,7 @@ export class EntityAssetService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'block',
+				nsfw: 'allow',
 			}),
 			kind,
 			errorPath,

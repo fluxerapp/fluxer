@@ -586,7 +586,7 @@ export class WebhookService {
 				type: 'external',
 				url: avatarUrl,
 				with_base64: true,
-				nsfw: 'block',
+				nsfw: 'allow',
 			});
 			if (!metadata?.base64) {
 				await this.cacheService.set(cacheKey, WEBHOOK_AVATAR_MISSING_CACHE_VALUE, seconds('5 minutes'));

@@ -139,7 +139,7 @@ An account is unclaimed while it holds no password credential, is not a bot, and
 
 Decoded avatar and banner content stays within the resolved `avatar_max_size` limit, which defaults to 10485760 bytes, and a larger payload is rejected with `IMAGE_SIZE_EXCEEDS_LIMIT`. Accepted formats are PNG, JPEG, WebP, GIF, APNG, AVIF, HEIC, HEIF, JPEG XL, and SVG. Anything else, animated AVIF included, is rejected with `INVALID_IMAGE_FORMAT`, and so is content the Media Proxy cannot identify.
 
-Content the explicit media classifier marks is rejected with 400 [`EXPLICIT_CONTENT_CANNOT_BE_SENT`](/http-api/errors/), whose body has the classifier score in a top-level `probability` member. An animated avatar requires the animated avatar entitlement and is otherwise rejected with `ANIMATED_AVATARS_REQUIRE_PREMIUM`. A successfully decoded avatar or non-null banner derives its dominant colour and returns it later as `avatar_color` or `banner_color`.
+An animated avatar requires the animated avatar entitlement and is otherwise rejected with `ANIMATED_AVATARS_REQUIRE_PREMIUM`. A successfully decoded avatar or non-null banner derives its dominant colour and returns it later as `avatar_color` or `banner_color`.
 
 ### Content blocklists
 
@@ -175,7 +175,7 @@ Supplying `new_password` on a claimed account deletes every other authentication
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [user](/http-api/users/#user-object) object | Account was returned after applying every permitted field |
-| 400 | [error response](/http-api/#error-response) | Body, image, tag, password, entitlement, secondary control, or sudo proof is invalid, or the image returns `EXPLICIT_CONTENT_CANNOT_BE_SENT` |
+| 400 | [error response](/http-api/#error-response) | Body, image, tag, password, entitlement, secondary control, or sudo proof is invalid |
 | 403 | [error response](/http-api/#error-response) | Email verification, sudo verification, or a staff-only field is required, or content is blocked |
 
 ### Side effects
