@@ -84,7 +84,6 @@ interface AuthLoginMfaRequest {
 }
 
 interface AuthLogoutRequest {
-	authorizationHeader?: string;
 	authToken?: string;
 }
 
@@ -187,10 +186,9 @@ export class AuthRequestService {
 		return await this.toAuthTokenResponse(result);
 	}
 
-	async logout({authorizationHeader, authToken}: AuthLogoutRequest): Promise<void> {
-		const token = authToken ?? authorizationHeader;
-		if (token) {
-			await AuthSession.revokeToken(this.apiContext, token);
+	async logout({authToken}: AuthLogoutRequest): Promise<void> {
+		if (authToken) {
+			await AuthSession.revokeToken(this.apiContext, authToken);
 		}
 	}
 

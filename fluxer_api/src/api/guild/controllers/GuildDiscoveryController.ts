@@ -60,7 +60,7 @@ export function GuildDiscoveryController(app: HonoApp) {
 			description: 'Search for guilds listed in the discovery directory.',
 			responseSchema: DiscoveryGuildListResponse,
 			statusCode: 200,
-			security: ['sessionToken', 'bearerToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Discovery'],
 		}),
 		async (ctx) => {
@@ -89,7 +89,7 @@ export function GuildDiscoveryController(app: HonoApp) {
 			description: 'Returns the list of available discovery categories.',
 			responseSchema: DiscoveryCategoryListResponse,
 			statusCode: 200,
-			security: ['sessionToken', 'bearerToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Discovery'],
 		}),
 		async (ctx) => {

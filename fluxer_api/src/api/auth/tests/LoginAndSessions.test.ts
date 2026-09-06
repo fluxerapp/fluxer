@@ -101,6 +101,18 @@ describe('Auth login and sessions', () => {
 		await createBuilder(harness, account.token).post('/auth/logout').expect(204).execute();
 		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
 	});
+	it('logout requires a live session', async () => {
+		await createBuilderWithoutAuth(harness).post('/auth/logout').expect(401).execute();
+		await createBuilder(harness, createFakeAuthToken()).post('/auth/logout').expect(401).execute();
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token).post('/auth/logout').expect(204).execute();
+		await createBuilder(harness, account.token).post('/auth/logout').expect(401).execute();
+	});
+	it('logout with a Bearer-prefixed session token revokes it', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, `Bearer ${account.token}`).post('/auth/logout').expect(204).execute();
+		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
+	});
 	it('treats /auth/sessions/logout as idempotent and removes targeted sessions', async () => {
 		let account: TestAccount = await createTestAccount(harness);
 		await createBuilder(harness, account.token)

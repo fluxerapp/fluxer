@@ -40,7 +40,7 @@ export function GuildBaseController(app: HonoApp) {
 			description: 'Only claimed, email-verified non-bot users can create guilds.',
 			responseSchema: GuildResponse,
 			statusCode: 200,
-			security: ['botToken', 'bearerToken', 'sessionToken'],
+			security: ['bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
 		}),
 		async (ctx) => {

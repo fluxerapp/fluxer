@@ -181,21 +181,19 @@ export function AuthController(app: HonoApp) {
 	app.post(
 		'/auth/logout',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_LOGOUT),
+		LoginRequiredAllowSuspicious,
 		OpenAPI({
 			operationId: 'logout_user',
 			summary: 'Logout account',
 			responseSchema: null,
 			statusCode: 204,
-			security: ['bearerToken', 'sessionToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Auth'],
 			description:
-				'Invalidate the current authentication token and end the session. The auth token in the Authorization header will no longer be valid.',
+				'Invalidate the current authentication token and end the session. The auth token in the Authorization header will no longer be valid. A bot token has no session to end, so the call answers 204 and the token stays valid.',
 		}),
 		async (ctx) => {
-			await ctx.get('authRequestService').logout({
-				authorizationHeader: ctx.req.header('Authorization') ?? undefined,
-				authToken: ctx.get('authToken') ?? undefined,
-			});
+			await ctx.get('authRequestService').logout({authToken: ctx.get('authToken')});
 			return ctx.body(null, 204);
 		},
 	);

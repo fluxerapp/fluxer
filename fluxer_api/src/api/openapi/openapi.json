@@ -1064,6 +1064,14 @@
 						"description": "Bad Request - The request was malformed or contained invalid data",
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
 					"429": {
 						"description": "Too Many Requests - You are being rate limited",
 						"content": {
@@ -1105,8 +1113,8 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Logout account"}},
-				"description": "Invalidate the current authentication token and end the session. The auth token in the Authorization header will no longer be valid.",
-				"security": [{"sessionToken": []}]
+				"description": "Invalidate the current authentication token and end the session. The auth token in the Authorization header will no longer be valid. A bot token has no session to end, so the call answers 204 and the token stays valid.",
+				"security": [{"botToken": []}, {"sessionToken": []}]
 			}
 		},
 		"/auth/register": {
@@ -5674,7 +5682,7 @@
 				},
 				"x-mint": {"metadata": {"title": "List discovery categories"}},
 				"description": "Returns the list of available discovery categories.",
-				"security": [{"sessionToken": []}]
+				"security": [{"botToken": []}, {"sessionToken": []}]
 			}
 		},
 		"/discovery/guilds": {
@@ -5741,7 +5749,7 @@
 				},
 				"x-mint": {"metadata": {"title": "Search discoverable guilds"}},
 				"description": "Search for guilds listed in the discovery directory.",
-				"security": [{"sessionToken": []}],
+				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
 						"name": "query",
@@ -7110,7 +7118,7 @@
 				},
 				"x-mint": {"metadata": {"title": "Create guild"}},
 				"description": "Only claimed, email-verified non-bot users can create guilds.",
-				"security": [{"botToken": []}, {"sessionToken": []}],
+				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GuildCreateRequest"}}}
@@ -14748,7 +14756,7 @@
 				},
 				"x-mint": {"metadata": {"title": "Search messages"}},
 				"description": "Searches for messages across guilds and channels accessible to the authenticated user. Bots must supply a context guild or channel and may only use the current scope.",
-				"security": [{"sessionToken": []}],
+				"security": [{"botToken": []}, {"sessionToken": []}],
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/GlobalSearchMessagesRequest"}}}

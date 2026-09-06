@@ -23,7 +23,7 @@ export function SearchController(app: HonoApp) {
 				'Searches for messages across guilds and channels accessible to the authenticated user. Bots must supply a context guild or channel and may only use the current scope.',
 			responseSchema: MessageSearchResponse,
 			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: 'Search',
 		}),
 		Validator('json', GlobalSearchMessagesRequest),

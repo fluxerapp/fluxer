@@ -237,9 +237,9 @@ export function StripeController(app: HonoApp) {
 	app.post(
 		'/gifts/:code/redeem',
 		RateLimitMiddleware(RateLimitConfigs.GIFT_CODE_REDEEM),
-		CaptchaMiddleware,
 		LoginRequired,
 		DefaultUserOnly,
+		CaptchaMiddleware,
 		OpenAPI({
 			operationId: 'redeem_gift_code',
 			summary: 'Redeem gift code',

@@ -218,6 +218,7 @@ export function OAuth2Controller(app: HonoApp) {
 	);
 	app.get(
 		'/oauth2/@me',
+		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
 		requireOAuth2BearerToken(),
 		LoginRequiredAllowSuspicious,
 		DefaultUserOnly,
@@ -259,6 +260,7 @@ export function OAuth2Controller(app: HonoApp) {
 	);
 	app.get(
 		'/applications/@me',
+		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENTS_LIST),
 		OpenAPI({
 			operationId: 'get_current_user_applications',
 			summary: 'List current user applications',

@@ -28,4 +28,12 @@ export const ConnectionRateLimitConfigs = {
 		bucket: 'connection:verify_and_create',
 		config: {limit: 5, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	BLUESKY_CLIENT_DOCUMENT: {
+		bucket: 'connection:bluesky:client_document',
+		config: {limit: 60, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	BLUESKY_CALLBACK: {
+		bucket: 'connection:bluesky:callback',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 } as const;
