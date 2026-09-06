@@ -3,6 +3,8 @@
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
 		"target": "ES2023",
+		"jsx": "react-jsx",
+		"jsxImportSource": "react",
 		"lib": ["DOM", "DOM.Iterable", "DOM.AsyncIterable", "ES2023"],
 		"moduleDetection": "force",
 		"verbatimModuleSyntax": true,
