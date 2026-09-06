@@ -632,6 +632,8 @@ describe('Deferred phone verification gate', () => {
 			await configurePhoneGate({deferred_phone_gate_window_hours: 0.0001});
 			const outsideWindow = await createGuildWithInvite(harness);
 			await addFillerMember(outsideWindow.inviteCode);
+			const beforeJoin = await readFlags(subject.userId);
+			expect(beforeJoin & DEFERRED_PHONE_ON_COMMUNITY_JOIN).not.toBe(0);
 			await createBuilder(harness, subject.token).post(`/invites/${outsideWindow.inviteCode}`).expect(200).execute();
 
 			const flags = await readFlags(subject.userId);
