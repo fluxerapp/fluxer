@@ -7,7 +7,7 @@ use crate::{
     config::Config,
     secret::SecretBytes,
     server::{
-        routes::relay::{relay_cors, relay_put},
+        routes::relay::{relay_cors, relay_error, relay_put},
         state::AppState,
     },
     upload_relay::{
@@ -16,7 +16,7 @@ use crate::{
     },
 };
 use axum::{
-    body::Body,
+    body::{Body, to_bytes},
     extract::{Path, Query, State},
     http::{HeaderMap, HeaderValue, Method, Request, StatusCode, header},
 };
@@ -276,6 +276,103 @@ fn relay_test_token(key: &str, relay_secret: &[u8]) -> String {
         relay_secret,
     )
     .unwrap()
+}
+
+#[test]
+fn relay_capability_mismatches_are_forbidden() {
+    for err in [
+        RelayError::WrongBucket,
+        RelayError::KeyMismatch,
+        RelayError::MethodMismatch,
+        RelayError::PartNumberMismatch,
+        RelayError::UploadIdMismatch,
+    ] {
+        assert_eq!(
+            StatusCode::FORBIDDEN,
+            relay_error(err).status(),
+            "{err} must answer 403"
+        );
+    }
+
+    assert_eq!(
+        StatusCode::BAD_REQUEST,
+        relay_error(RelayError::BadQuery).status()
+    );
+    assert_eq!(
+        StatusCode::UNAUTHORIZED,
+        relay_error(RelayError::InvalidToken).status()
+    );
+    assert_eq!(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        relay_error(RelayError::InternalError).status()
+    );
+}
+
+#[tokio::test]
+async fn relay_put_rejects_a_capability_issued_for_another_key() {
+    let tmp = tempfile::tempdir().unwrap();
+    let tmp_root = tmp.path().canonicalize().unwrap();
+    let storage_root = tmp_root.join("storage");
+    let spool_dir = tmp_root.join("spool");
+    tokio::fs::create_dir_all(&spool_dir).await.unwrap();
+    let relay_secret = [7u8; 32];
+    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let token = relay_test_token("guild/a.bin", &relay_secret);
+    let requested_key = "guild/b.bin";
+
+    let response = relay_put(
+        State(test_app_state(cfg)),
+        Path(requested_key.to_owned()),
+        Query(HashMap::from([("t".to_owned(), token)])),
+        HeaderMap::new(),
+        Request::builder()
+            .method(Method::PUT)
+            .body(Body::from(Bytes::from_static(b"not mine to write")))
+            .unwrap(),
+    )
+    .await;
+
+    assert_eq!(StatusCode::FORBIDDEN, response.status());
+    assert!(
+        response
+            .headers()
+            .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+    );
+    assert!(
+        !tokio::fs::try_exists(storage_root.join("uploads").join(requested_key))
+            .await
+            .unwrap_or(false)
+    );
+}
+
+#[tokio::test]
+async fn relay_put_answers_500_when_the_spool_write_fails() {
+    let tmp = tempfile::tempdir().unwrap();
+    let tmp_root = tmp.path().canonicalize().unwrap();
+    let storage_root = tmp_root.join("storage");
+    let spool_dir = tmp_root.join("missing-spool");
+    let relay_secret = [7u8; 32];
+    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let key = "guild/unspoolable.bin";
+    let token = relay_test_token(key, &relay_secret);
+    let request = Request::builder()
+        .method(Method::PUT)
+        .body(Body::from(Bytes::from_static(b"unspoolable")))
+        .unwrap();
+    assert!(request.headers().get(header::CONTENT_LENGTH).is_none());
+
+    let response = relay_put(
+        State(test_app_state(cfg)),
+        Path(key.to_owned()),
+        Query(HashMap::from([("t".to_owned(), token)])),
+        HeaderMap::new(),
+        request,
+    )
+    .await;
+
+    assert_eq!(StatusCode::INTERNAL_SERVER_ERROR, response.status());
+    let body = to_bytes(response.into_body(), 64).await.unwrap();
+    assert_eq!(b"Internal Server Error", body.as_ref());
 }
 
 fn content_length_headers(declared: u64) -> HeaderMap {

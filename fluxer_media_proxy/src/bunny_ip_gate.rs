@@ -25,12 +25,12 @@ pub struct Allowlist {
 }
 
 impl Allowlist {
-    pub fn len(&self) -> usize {
-        self.ips.len()
+    fn is_empty(&self) -> bool {
+        self.ips.is_empty()
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.ips.is_empty()
+    fn len(&self) -> usize {
+        self.ips.len()
     }
 
     pub fn contains(&self, ip: &IpAddr) -> bool {
@@ -225,7 +225,9 @@ pub fn build_refresh_client() -> reqwest::Result<reqwest::Client> {
 mod tests {
     use super::*;
     use crate::test_fixtures::ADVERSARIAL_TEXT_INPUTS;
+    use axum::{Router, middleware, routing::get};
     use std::net::{Ipv4Addr, Ipv6Addr};
+    use tower::ServiceExt;
 
     fn ip4(a: u8, b: u8, c: u8, d: u8) -> IpAddr {
         IpAddr::V4(Ipv4Addr::new(a, b, c, d))
@@ -412,5 +414,56 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[tokio::test]
+    async fn gate_after_successful_refresh_never_returns_503() {
+        let gate = Arc::new(BunnyIpGate::new(reqwest::Client::new(), vec![]));
+        gate.install_for_test(Allowlist::from_ips([ip4(89, 187, 188, 227)]));
+        let app = Router::new()
+            .route("/asset.png", get(|| async { "ok" }))
+            .layer(middleware::from_fn_with_state(gate, gate_middleware));
+        let allowed = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/asset.png")
+                    .extension(ConnectInfo(sock(ip4(89, 187, 188, 227))))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::OK, allowed.status());
+        let foreign = app
+            .oneshot(
+                Request::builder()
+                    .uri("/asset.png")
+                    .extension(ConnectInfo(sock(ip4(1, 1, 1, 1))))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::FORBIDDEN, foreign.status());
+    }
+
+    #[tokio::test]
+    async fn an_empty_allowlist_refuses_a_public_request() {
+        let gate = Arc::new(BunnyIpGate::new(reqwest::Client::new(), vec![]));
+        let app = Router::new()
+            .route("/asset.png", get(|| async { "ok" }))
+            .layer(middleware::from_fn_with_state(gate, gate_middleware));
+        let refused = app
+            .oneshot(
+                Request::builder()
+                    .uri("/asset.png")
+                    .extension(ConnectInfo(sock(ip4(89, 187, 188, 227))))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(StatusCode::SERVICE_UNAVAILABLE, refused.status());
     }
 }

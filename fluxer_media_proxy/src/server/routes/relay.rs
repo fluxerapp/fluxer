@@ -234,9 +234,15 @@ pub(in crate::server) fn relay_error(err: RelayError) -> Response {
         RelayError::MissingToken | RelayError::InvalidToken | RelayError::RelayTokenExpired => {
             StatusCode::UNAUTHORIZED
         }
+        RelayError::WrongBucket
+        | RelayError::KeyMismatch
+        | RelayError::MethodMismatch
+        | RelayError::PartNumberMismatch
+        | RelayError::UploadIdMismatch => StatusCode::FORBIDDEN,
         RelayError::PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
         RelayError::UpstreamRetryable => StatusCode::SERVICE_UNAVAILABLE,
         RelayError::UpstreamS3Error => StatusCode::BAD_GATEWAY,
+        RelayError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
         _ => StatusCode::BAD_REQUEST,
     };
     let mut response = text(status, status.canonical_reason().unwrap_or("Bad Request"));
