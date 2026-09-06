@@ -2,7 +2,10 @@
 
 use crate::{
     acl,
-    api::client::{AdminApiClient, ApiResultExt},
+    api::{
+        client::{AdminApiClient, ApiResult, ApiResultExt},
+        types::AdminUser,
+    },
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
     state::AppState,
@@ -17,6 +20,8 @@ use axum::{
     routing::get,
 };
 use serde::Deserialize;
+
+const USER_ID_LOOKUP_BATCH: usize = 100;
 
 #[derive(Deserialize)]
 struct UserListQuery {
@@ -83,14 +88,10 @@ async fn users_list(
     let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let results = if params.has_id_lookup() {
-        let users = client
-            .lookup_users_by_ids(&params.requested_ids)
+        lookup_users_in_batches(&client, &params.requested_ids)
             .await
-            .map_err(
-                |error| tracing::warn!(%error, "admin API request failed: lookup users by ids"),
-            )
-            .unwrap_or_default();
-        Some((users, false))
+            .log_error("lookup users by ids")
+            .map(|users| (users, false))
     } else if params.has_search() {
         let offset = params.page.saturating_mul(params.limit);
         client
@@ -122,6 +123,17 @@ async fn users_list(
         is_results_fragment,
     );
     Html(markup.into_string()).into_response()
+}
+
+async fn lookup_users_in_batches(
+    client: &AdminApiClient,
+    user_ids: &[String],
+) -> ApiResult<Vec<AdminUser>> {
+    let mut users = Vec::new();
+    for batch in user_ids.chunks(USER_ID_LOOKUP_BATCH) {
+        users.extend(client.lookup_users_by_ids(batch).await?);
+    }
+    Ok(users)
 }
 
 async fn user_detail(
