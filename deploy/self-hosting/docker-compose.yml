@@ -44,8 +44,8 @@ x-fluxer-env: &fluxer-env
   FLUXER_S3_BUCKET_DOWNLOADS: fluxer-downloads
   FLUXER_S3_BUCKET_REPORTS: fluxer-reports
   FLUXER_S3_BUCKET_HARVESTS: fluxer-harvests
-  AWS_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:?}
-  AWS_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:?}
+  AWS_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:?set FLUXER_S3_ACCESS_KEY in .env}
+  AWS_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:?set FLUXER_S3_SECRET_KEY in .env}
   AWS_DEFAULT_REGION: us-east-1
   AWS_EC2_METADATA_DISABLED: "true"
 
@@ -73,6 +73,10 @@ x-fluxer-env: &fluxer-env
   FLUXER_SMS_ENABLED: "false"
   FLUXER_CAPTCHA_ENABLED: ${FLUXER_CAPTCHA_ENABLED:-false}
   FLUXER_CAPTCHA_PROVIDER: ${FLUXER_CAPTCHA_PROVIDER:-none}
+  FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY: ${FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY:-}
+  FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY: ${FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY:-}
+  FLUXER_CAPTCHA_TURNSTILE_SITE_KEY: ${FLUXER_CAPTCHA_TURNSTILE_SITE_KEY:-}
+  FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY: ${FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY:-}
   FLUXER_STRIPE_ENABLED: "false"
   FLUXER_NCMEC_ENABLED: "false"
   FLUXER_CLAMAV_ENABLED: "false"
@@ -114,7 +118,7 @@ x-fluxer-svc-healthcheck: &fluxer-svc-healthcheck
   start_interval: 1s
 
 services:
-  caddy:
+  edge:
     image: caddy:2.10-alpine
     deploy:
       resources:
@@ -127,11 +131,12 @@ services:
       - "${FLUXER_HTTPS_PORT:-443}:443"
       - "${FLUXER_HTTPS_PORT:-443}:443/udp"
     environment:
-      FLUXER_CADDY_SITE_ADDRESS: ${FLUXER_CADDY_SITE_ADDRESS:?set FLUXER_CADDY_SITE_ADDRESS in .env}
+      FLUXER_EDGE_SITE_ADDRESS: ${FLUXER_EDGE_SITE_ADDRESS:-${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_DOMAIN:?set FLUXER_DOMAIN in .env}}}
+      FLUXER_EDGE_TRUSTED_PROXIES: ${FLUXER_EDGE_TRUSTED_PROXIES:-private_ranges}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
+      - edge-data:/data
+      - edge-config:/config
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
       interval: 10s
@@ -160,8 +165,8 @@ services:
       -c shared_buffers=${FLUXER_POSTGRES_SHARED_BUFFERS:-512MB}
       -c effective_cache_size=${FLUXER_POSTGRES_EFFECTIVE_CACHE_SIZE:-2GB}
       -c work_mem=${FLUXER_POSTGRES_WORK_MEM:-8MB}
-      -c maintenance_work_mem=256MB
-      -c autovacuum_work_mem=128MB
+      -c maintenance_work_mem=${FLUXER_POSTGRES_MAINTENANCE_WORK_MEM:-256MB}
+      -c autovacuum_work_mem=${FLUXER_POSTGRES_AUTOVACUUM_WORK_MEM:-128MB}
       -c random_page_cost=1.1
       -c effective_io_concurrency=200
       -c default_statistics_target=200
@@ -238,7 +243,7 @@ services:
     environment:
       MEILI_ENV: production
       MEILI_NO_ANALYTICS: "true"
-      MEILI_MAX_INDEXING_MEMORY: 384mb
+      MEILI_MAX_INDEXING_MEMORY: ${FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY:-384mb}
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
     volumes:
       - meilisearch-data:/meili_data
@@ -276,6 +281,9 @@ services:
     depends_on:
       seaweedfs: {condition: service_healthy}
     restart: "no"
+    environment:
+      FLUXER_S3_ACCESS_KEY: ${FLUXER_S3_ACCESS_KEY:?set FLUXER_S3_ACCESS_KEY in .env}
+      FLUXER_S3_SECRET_KEY: ${FLUXER_S3_SECRET_KEY:?set FLUXER_S3_SECRET_KEY in .env}
     entrypoint:
       - /bin/sh
       - -c
@@ -293,6 +301,10 @@ services:
             echo "$$listed" | grep -q "^[[:space:]]*$$b[[:space:]]" || missing="$${missing:+$$missing }$$b";
           done;
           if [ -z "$$missing" ]; then
+            if ! echo "s3.configure -user=fluxer -access_key=$$FLUXER_S3_ACCESS_KEY -secret_key=$$FLUXER_S3_SECRET_KEY -actions=Admin,Read,Write,List,Tagging -apply" | timeout 10 weed shell -master=seaweedfs:9333 >/dev/null 2>&1; then
+              echo "seaweedfs-init could not configure the S3 identity" >&2;
+              exit 1;
+            fi;
             echo "buckets ready";
             exit 0;
           fi;
@@ -312,14 +324,25 @@ services:
           memory: ${FLUXER_LIVEKIT_MEMORY_LIMIT:-512mb}
     restart: unless-stopped
     networks: [fluxer]
-    command: ["--config", "/etc/livekit.yaml"]
     environment:
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}: ${LIVEKIT_API_SECRET:?set LIVEKIT_API_SECRET in .env}"
-    volumes:
-      - ./livekit.yaml:/etc/livekit.yaml:ro
+      LIVEKIT_CONFIG: |
+        port: 7880
+        log_level: info
+        rtc:
+          tcp_port: ${FLUXER_LIVEKIT_TCP_PORT:-7881}
+          udp_port: ${FLUXER_LIVEKIT_UDP_PORT:-7882}
+          use_external_ip: true
+          stun_servers:
+            - stun.l.google.com:19302
+            - stun1.l.google.com:19302
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}
+          urls:
+            - http://api:8080/webhooks/livekit
     ports:
-      - "${FLUXER_LIVEKIT_TCP_PORT:-7881}:7881"
-      - "${FLUXER_LIVEKIT_UDP_PORT:-7882}:7882/udp"
+      - "${FLUXER_LIVEKIT_TCP_PORT:-7881}:${FLUXER_LIVEKIT_TCP_PORT:-7881}"
+      - "${FLUXER_LIVEKIT_UDP_PORT:-7882}:${FLUXER_LIVEKIT_UDP_PORT:-7882}/udp"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:7880/"]
       interval: 10s
@@ -373,7 +396,7 @@ services:
         reservations:
           memory: ${FLUXER_WORKER_MEMORY_RESERVATION:-1gb}
     working_dir: /usr/src/app/fluxer_api
-    command: ["node", "dist/WorkerEntrypoint.js"]
+    command: ["sh", "-c", "if [ -f dist/WorkerEntrypoint.js ]; then exec node dist/WorkerEntrypoint.js; else exec ./node_modules/.bin/tsx src/WorkerEntrypoint.ts; fi"]
     environment:
       <<: *fluxer-env
       NODE_OPTIONS: --enable-source-maps${FLUXER_WORKER_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_WORKER_NODE_HEAP_MB}
@@ -412,6 +435,9 @@ services:
       FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
       FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
       FLUXER_GATEWAY_LOGGER_LEVEL: info
+      FLUXER_ERLANG_COOKIE: ${FLUXER_ERLANG_COOKIE:?set FLUXER_ERLANG_COOKIE in .env}
+      FLUXER_ERLANG_SCHEDULERS_MIN: "${FLUXER_ERLANG_SCHEDULERS_MIN:-2}"
+      FLUXER_ERLANG_SCHEDULERS_MAX: "${FLUXER_ERLANG_SCHEDULERS_MAX:-16}"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8080/_health/ready"]
       interval: 10s
@@ -436,6 +462,7 @@ services:
       FLUXER_MEDIA_PROXY_MODE: upload
       FLUXER_MEDIA_PROXY_STORAGE_BACKEND: s3
       FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+      FLUXER_S3_READ_SIGNED: "true"
     depends_on:
       seaweedfs-init: {condition: service_completed_successfully}
       nats: {condition: service_healthy}
@@ -463,7 +490,7 @@ services:
     environment:
       FLUXER_APP_PROXY_HOST: 0.0.0.0
       FLUXER_APP_PROXY_PORT: "8080"
-      DISCOVERY_UPSTREAM_URL: http://caddy:8088/api/.well-known/fluxer
+      DISCOVERY_UPSTREAM_URL: http://edge:8088/.well-known/fluxer
       PUBLIC_BOOTSTRAP_API_ENDPOINT: /api
       PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/api
       FLUXER_CSP_EXTRA_DEFAULT_SRC: ${FLUXER_CSP_EXTRA_DEFAULT_SRC:-}
@@ -479,7 +506,7 @@ services:
       FLUXER_CSP_REPORT_URI: ${FLUXER_CSP_REPORT_URI:-}
     depends_on:
       api: {condition: service_healthy}
-      caddy: {condition: service_healthy}
+      edge: {condition: service_healthy}
 
   snowflakes:
     <<: *fluxer-service
@@ -521,6 +548,7 @@ services:
           memory: ${FLUXER_USERS_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: users
       FLUXER_SVC_MODE: router
       FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-20}"
     healthcheck: *fluxer-svc-healthcheck
@@ -536,10 +564,11 @@ services:
           memory: ${FLUXER_USERS_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: users
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
-      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "20"
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-20}"
     healthcheck: *fluxer-svc-healthcheck
     depends_on:
       nats: {condition: service_healthy}
@@ -607,7 +636,7 @@ services:
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
-      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "20"
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-20}"
     healthcheck: *fluxer-svc-healthcheck
     depends_on:
       nats: {condition: service_healthy}
@@ -622,6 +651,7 @@ services:
           memory: ${FLUXER_UNFURL_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: unfurl
       FLUXER_SVC_MODE: router
       FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
       FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
@@ -638,6 +668,7 @@ services:
           memory: ${FLUXER_UNFURL_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: unfurl
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
@@ -679,8 +710,8 @@ networks:
     driver: bridge
 
 volumes:
-  caddy-data:
-  caddy-config:
+  edge-data:
+  edge-config:
   postgres-data:
   valkey-data:
   nats-data:

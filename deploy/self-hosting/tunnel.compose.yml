@@ -1,4 +1,4 @@
 services:
-  caddy:
+  edge:
     ports: !override
       - "${FLUXER_HTTP_PORT:-127.0.0.1:80}:80"
