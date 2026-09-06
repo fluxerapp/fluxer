@@ -230,7 +230,7 @@ export class MessageEditService {
 		if (!lockToken) {
 			throw new ThrottledError({
 				code: APIErrorCodes.RESOURCE_LOCKED,
-				headers: {'Retry-After': '1'},
+				retryAfterSeconds: 1,
 				data: {retry_after: 1},
 			});
 		}
