@@ -229,8 +229,16 @@ export class UserContentService {
 		);
 	}
 
-	async getSavedMessages({userId, limit}: {userId: UserID; limit: number}): Promise<Array<SavedMessageEntry>> {
-		const savedMessages = await this.userRepository.listSavedMessages(userId, limit);
+	async getSavedMessages({
+		userId,
+		limit,
+		before,
+	}: {
+		userId: UserID;
+		limit: number;
+		before?: MessageID;
+	}): Promise<Array<SavedMessageEntry>> {
+		const savedMessages = await this.userRepository.listSavedMessages(userId, limit, before);
 		const messagesByChannel = await this.readMessagesByChannel(userId, savedMessages);
 		const results: Array<SavedMessageEntry> = [];
 		const staleMessageIds: Array<MessageID> = [];

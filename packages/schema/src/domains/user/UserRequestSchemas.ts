@@ -590,6 +590,7 @@ export const UserSavedMessagesQueryRequest = z.object({
 	limit: createQueryIntegerType({minValue: 1, maxValue: 100, defaultValue: 25}).describe(
 		'Maximum number of saved messages to return (1-100, default 25)',
 	),
+	before: SnowflakeType.optional().describe('Get saved messages before this message ID'),
 });
 
 export type UserSavedMessagesQueryRequest = z.infer<typeof UserSavedMessagesQueryRequest>;

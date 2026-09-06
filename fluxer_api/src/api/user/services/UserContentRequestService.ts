@@ -46,6 +46,7 @@ interface UserMentionsReadParams {
 interface SavedMessagesParams {
 	userId: UserID;
 	limit: number;
+	before?: MessageID;
 	requestCache: RequestCache;
 }
 
@@ -108,7 +109,11 @@ export class UserContentRequestService {
 	}
 
 	async listSavedMessages(params: SavedMessagesParams): Promise<SavedMessageEntryListResponse> {
-		const entries = await this.userContentService.getSavedMessages({userId: params.userId, limit: params.limit});
+		const entries = await this.userContentService.getSavedMessages({
+			userId: params.userId,
+			limit: params.limit,
+			before: params.before,
+		});
 		const messages = entries.map((entry) => entry.message).filter((message): message is Message => message != null);
 		const responses = await this.userContentService.buildMessageResponsesForUser(params.userId, messages);
 		const responseByMessageId = new Map(responses.map((response) => [response.id, response] as const));

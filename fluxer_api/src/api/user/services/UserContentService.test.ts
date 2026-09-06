@@ -100,6 +100,7 @@ function createUserContentService({
 }) {
 	const batchCalls: Array<ChannelBatchCall> = [];
 	const deletedSavedMessageIds: Array<string> = [];
+	const savedMessageListCalls: Array<{limit?: number; before?: MessageID}> = [];
 	const readableByChannel = new Map<string, Map<string, Message>>();
 	for (const entry of readable) {
 		const key = entry.channelId.toString();
@@ -109,7 +110,10 @@ function createUserContentService({
 	}
 	const userRepository = {
 		listRecentMentions: async () => entries,
-		listSavedMessages: async () => entries,
+		listSavedMessages: async (_userId: UserID, limit?: number, before?: MessageID) => {
+			savedMessageListCalls.push({limit, before});
+			return entries;
+		},
 		deleteSavedMessage: async (_userId: UserID, messageId: MessageID) => {
 			deletedSavedMessageIds.push(messageId.toString());
 		},
@@ -146,7 +150,7 @@ function createUserContentService({
 		{} as unknown as KVBulkMessageDeletionQueueService,
 		{} as unknown as LimitConfigService,
 	);
-	return {service, batchCalls, deletedSavedMessageIds};
+	return {service, batchCalls, deletedSavedMessageIds, savedMessageListCalls};
 }
 
 const CHANNEL_A = createChannelID(100n);
@@ -238,6 +242,15 @@ describe('getRecentMentions', () => {
 });
 
 describe('getSavedMessages', () => {
+	it('passes the page cursor to the repository', async () => {
+		const entries = [{channelId: CHANNEL_A, messageId: createMessageID(11n)}];
+		const {service, savedMessageListCalls} = createUserContentService({entries, readable: entries});
+
+		await service.getSavedMessages({userId: VIEWER_ID, limit: 50, before: createMessageID(20n)});
+
+		expect(savedMessageListCalls).toEqual([{limit: 50, before: createMessageID(20n)}]);
+	});
+
 	it('marks every entry of an unreachable channel as missing permissions without deleting it', async () => {
 		const entries = [
 			{channelId: CHANNEL_A, messageId: createMessageID(11n)},

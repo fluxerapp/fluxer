@@ -178,13 +178,14 @@ A matching entry is deleted and [Recent Mention Delete](/gateway/events/#recent-
 
 Lists the caller's saved message collection. Returns an array of [saved message](#saved-message-object) objects in descending message ID order.
 
-The response is a bare array with no cursor metadata, so `limit` is the only control and an account holding more than 100 entries cannot page past the first 100. An entry whose channel the caller can no longer reach, or whose message the caller can no longer read, comes back with status `missing_permissions` and a null message. An entry whose message no longer exists is deleted and omitted. The array can hold fewer entries than `limit`.
+The response is a bare array with no cursor metadata, so `before` and `limit` are the only pagination controls. An entry whose channel the caller can no longer reach, or whose message the caller can no longer read, comes back with status `missing_permissions` and a null message. An entry whose message no longer exists is deleted and omitted. The array can hold fewer entries than `limit`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
 | limit?<sup>1</sup> <sup>2</sup> | integer | The maximum number of entries read from the collection (1-100, default 25) |
+| before?<sup>2</sup> | snowflake | The upper bound on entry message ID, exclusive |
 
 <sup>1</sup> A value outside the range fails with `VALUE_MUST_BE_INTEGER_IN_RANGE` at the `limit` path
 

@@ -41,6 +41,13 @@
 	padding: 0 1rem 1rem;
 }
 
+.loadingState {
+	display: flex;
+	height: 5rem;
+	align-items: center;
+	justify-content: center;
+}
+
 .messagePreviewCard {
 	position: relative;
 	cursor: pointer;

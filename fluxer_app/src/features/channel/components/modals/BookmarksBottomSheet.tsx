@@ -17,6 +17,7 @@ import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {Spinner} from '@app/features/ui/components/Spinner';
 import type {MenuGroupType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
@@ -44,6 +45,8 @@ export const BookmarksBottomSheet = observer(({isOpen, onClose}: BookmarksBottom
 	const {i18n} = useLingui();
 	const {savedMessages, missingSavedMessages, fetched} = SavedMessages;
 	const hasBookmarks = savedMessages.length > 0 || missingSavedMessages.length > 0;
+	const hasMore = SavedMessages.getHasMore();
+	const isLoadingMore = SavedMessages.getIsLoadingMore();
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
 	const resolveBookmarksScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 	const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
@@ -61,6 +64,13 @@ export const BookmarksBottomSheet = observer(({isOpen, onClose}: BookmarksBottom
 	useMessageListKeyboardNavigation({
 		containerRef: scrollerRef,
 	});
+	const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+		const target = event.currentTarget;
+		const scrollPercentage = (target.scrollTop + target.offsetHeight) / target.scrollHeight;
+		if (scrollPercentage > 0.8 && hasMore && !isLoadingMore) {
+			SavedMessageCommands.loadMore();
+		}
+	};
 	const handleLongPress = (message: Message) => {
 		setSelectedMessage(message);
 		setMenuOpen(true);
@@ -127,6 +137,7 @@ export const BookmarksBottomSheet = observer(({isOpen, onClose}: BookmarksBottom
 					<NearViewportSurfaceContext.Provider value={resolveBookmarksScrollSurface}>
 						<Scroller
 							className={styles.messageList}
+							onScroll={handleScroll}
 							key="bookmarks-bottom-sheet-scroller"
 							ref={scrollerRef}
 							onCopy={onCopySelectedMessages}
@@ -157,6 +168,11 @@ export const BookmarksBottomSheet = observer(({isOpen, onClose}: BookmarksBottom
 									/>
 								))}
 							</div>
+							{isLoadingMore && (
+								<div className={styles.loadingState} data-flx="channel.bookmarks-bottom-sheet.loading-state">
+									<Spinner data-flx="channel.bookmarks-bottom-sheet.spinner" />
+								</div>
+							)}
 						</Scroller>
 					</NearViewportSurfaceContext.Provider>
 				) : (

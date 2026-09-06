@@ -123,9 +123,11 @@ export function UserContentController(app: HonoApp) {
 				'Retrieves all messages saved by the current user. Messages are saved privately for easy reference. Returns paginated list of saved messages with metadata.',
 		}),
 		async (ctx) => {
+			const {limit, before} = ctx.req.valid('query');
 			const response = await ctx.get('userContentRequestService').listSavedMessages({
 				userId: ctx.get('user').id,
-				limit: ctx.req.valid('query').limit,
+				limit,
+				before: before ? createMessageID(before) : undefined,
 				requestCache: ctx.get('requestCache'),
 			});
 			return ctx.json(response, 200);
