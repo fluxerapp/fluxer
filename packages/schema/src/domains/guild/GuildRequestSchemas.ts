@@ -10,6 +10,8 @@ import {
 import {
 	AVATAR_MAX_SIZE,
 	EMOJI_MAX_SIZE,
+	MAX_GUILD_ROLES,
+	MAX_GUILD_STICKER_TAGS,
 	MAX_TEMP_BAN_DURATION_SECONDS,
 	MIN_TEMP_BAN_DURATION_SECONDS,
 	STICKER_MAX_SIZE,
@@ -142,10 +144,10 @@ export const GuildMemberUpdateRequest = z.object({
 		.describe('The nickname to set for the member (1-32 characters)'),
 	roles: z
 		.array(SnowflakeType)
-		.max(100, 'Maximum 100 roles allowed')
+		.max(MAX_GUILD_ROLES, `Maximum ${MAX_GUILD_ROLES} roles allowed`)
 		.optional()
 		.transform((ids) => (ids ? new Set(ids) : undefined))
-		.describe('Array of role IDs to assign to the member (max 100)'),
+		.describe(`Array of role IDs to assign to the member (max ${MAX_GUILD_ROLES})`),
 	avatar: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
 		.nullish()
 		.describe('Base64-encoded image data for the member guild avatar'),
@@ -241,10 +243,10 @@ export const GuildStickerCreateRequest = z.object({
 	tags: z
 		.array(createStringType(1, 30))
 		.min(0)
-		.max(10)
+		.max(MAX_GUILD_STICKER_TAGS)
 		.optional()
 		.default([])
-		.describe('Array of autocomplete/suggestion tags (max 10 tags, each 1-30 characters)'),
+		.describe(`Array of autocomplete/suggestion tags (max ${MAX_GUILD_STICKER_TAGS} tags, each 1-30 characters)`),
 	image: createBase64StringType(1, Math.ceil(STICKER_MAX_SIZE * (4 / 3))).describe(
 		'Base64-encoded image data for the sticker',
 	),
