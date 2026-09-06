@@ -88,12 +88,12 @@ export function ReportAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const query = ctx.req.valid('query');
-			if (usesReportSearchIndex(query)) {
+			if (query.status === undefined || usesReportSearchIndex(query)) {
 				return ctx.json(
 					await adminService.reportServiceAggregate.searchReports(toSearchReportsRequest(query), adminUserAcls),
 				);
 			}
-			const status = query.status === undefined ? 0 : REPORT_STATUS_BY_FILTER[query.status];
+			const status = REPORT_STATUS_BY_FILTER[query.status];
 			return ctx.json(
 				await adminService.reportServiceAggregate.listReports(status, adminUserAcls, query.limit, query.offset),
 			);
