@@ -77,7 +77,7 @@ describe('Auth IP Authorization Resend', () => {
 				.execute();
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_COOLDOWN);
 		});
-		it('returns resend_available_in when rate limited', async () => {
+		it('returns resend_available_in and a matching Retry-After header when rate limited', async () => {
 			const email = createUniqueEmail('ip-resend-cooldown');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -90,15 +90,17 @@ describe('Auth IP Authorization Resend', () => {
 			});
 			const newIP = '10.230.240.250';
 			const ipAuthResp = await triggerIpAuthorization(email, password, newIP);
-			const errorResp = await createBuilderWithoutAuth<ResendErrorResponse>(harness)
+			const {response, json: errorResp} = await createBuilderWithoutAuth<ResendErrorResponse>(harness)
 				.post('/auth/ip-authorization/resend')
 				.body({ticket: ipAuthResp.ticket})
 				.header('x-forwarded-for', newIP)
 				.expect(HTTP_TOO_MANY_REQUESTS)
-				.execute();
+				.executeWithResponse();
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_COOLDOWN);
 			expect(typeof errorResp.resend_available_in).toBe('number');
 			expect(errorResp.resend_available_in).toBeGreaterThan(0);
+			expect(response.headers.get('Retry-After')).toBe(String(errorResp.resend_available_in));
+			expect(errorResp.retry_after).toBe(errorResp.resend_available_in);
 		});
 	});
 	describe('Multiple resend attempts handling', () => {
@@ -126,7 +128,7 @@ describe('Auth IP Authorization Resend', () => {
 		});
 	});
 	describe('Resend with already-used ticket', () => {
-		it('returns 429 when resend flag is already set on the ticket', async () => {
+		it('returns 400 when resend flag is already set on the ticket', async () => {
 			const email = createUniqueEmail('ip-resend-used');
 			const password = 'a-strong-password';
 			const reg = await registerUser(harness, {
@@ -155,14 +157,15 @@ describe('Auth IP Authorization Resend', () => {
 					ttl_seconds: 900,
 				})
 				.execute();
-			const errorResp = await createBuilderWithoutAuth<ResendErrorResponse>(harness)
+			const {response, json: errorResp} = await createBuilderWithoutAuth<ResendErrorResponse>(harness)
 				.post('/auth/ip-authorization/resend')
 				.body({ticket})
-				.expect(HTTP_TOO_MANY_REQUESTS)
-				.execute();
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.executeWithResponse();
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED);
+			expect(response.headers.get('Retry-After')).toBeNull();
 		});
-		it('returns 429 after IP has already been authorized', async () => {
+		it('returns 400 after IP has already been authorized', async () => {
 			const email = createUniqueEmail('ip-resend-after-auth');
 			const password = 'a-strong-password';
 			await registerUser(harness, {
@@ -304,7 +307,7 @@ describe('Auth IP Authorization Resend', () => {
 			const errorResp = await createBuilderWithoutAuth<ResendErrorResponse>(harness)
 				.post('/auth/ip-authorization/resend')
 				.body({ticket})
-				.expect(HTTP_TOO_MANY_REQUESTS)
+				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
 			expect(errorResp.code).toBe(APIErrorCodes.IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED);
 			expect(typeof errorResp.message).toBe('string');

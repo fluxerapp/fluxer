@@ -68,7 +68,6 @@ export class RateLimitError extends ThrottledError {
 			retry_after: safeRetryAfterDecimal,
 		};
 		const headers: Record<string, string> = {
-			'Retry-After': safeRetryAfter.toString(),
 			'X-RateLimit-Scope': safeScope,
 		};
 		if (global) {
@@ -82,6 +81,6 @@ export class RateLimitError extends ThrottledError {
 				headers['X-RateLimit-Bucket'] = bucketHash;
 			}
 		}
-		super({code, message, data, headers});
+		super({code, message, retryAfterSeconds: safeRetryAfter, data, headers});
 	}
 }
