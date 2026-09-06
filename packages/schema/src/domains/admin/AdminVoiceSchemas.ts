@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {createStringType, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
@@ -278,3 +279,32 @@ export const DeleteVoiceResponse = z.object({
 });
 
 export type DeleteVoiceResponse = z.infer<typeof DeleteVoiceResponse>;
+
+export const VoiceRegionIdParam = z.object({
+	region_id: createStringType(1, 64).describe('ID of the voice region'),
+});
+
+export type VoiceRegionIdParam = z.infer<typeof VoiceRegionIdParam>;
+
+export const VoiceServerIdParam = z.object({
+	region_id: createStringType(1, 64).describe('ID of the region the server belongs to'),
+	server_id: createStringType(1, 64).describe('ID of the voice server'),
+});
+
+export type VoiceServerIdParam = z.infer<typeof VoiceServerIdParam>;
+
+export const ListVoiceRegionsQuery = z.object({
+	include_servers: QueryBooleanType.optional()
+		.default(false)
+		.describe('Whether to include voice servers in the response'),
+});
+
+export type ListVoiceRegionsQuery = z.infer<typeof ListVoiceRegionsQuery>;
+
+export const GetVoiceRegionQuery = z.object({
+	include_servers: QueryBooleanType.optional()
+		.default(true)
+		.describe('Whether to include voice servers in the response'),
+});
+
+export type GetVoiceRegionQuery = z.infer<typeof GetVoiceRegionQuery>;

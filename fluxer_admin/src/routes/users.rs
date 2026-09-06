@@ -55,7 +55,6 @@ pub fn router() -> Router<AppState> {
         .route("/users", get(users_list))
         .route("/users/{user_id}", get(user_detail).post(user_detail_post))
         .route("/users/{user_id}/tabs/{tab}", get(user_tab))
-        .route("/users/{user_id}/peek", get(user_peek))
         .route("/users/{user_id}/fragment", get(user_peek))
 }
 

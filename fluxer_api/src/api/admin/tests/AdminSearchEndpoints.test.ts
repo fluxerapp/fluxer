@@ -25,13 +25,12 @@ describe('Admin Search Endpoints', () => {
 	afterEach(async () => {
 		await harness.shutdown();
 	});
-	describe('/admin/users/search', () => {
+	describe('GET /admin/users', () => {
 		test('requires user:lookup ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/search')
-				.body({query: 'test', limit: 10, offset: 0})
+				.get(`/admin/users?q=${encodeURIComponent('test')}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -42,8 +41,7 @@ describe('Admin Search Endpoints', () => {
 				users: Array<unknown>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/search')
-				.body({query: 'nonexistent-user-query-xyz', limit: 10, offset: 0})
+				.get(`/admin/users?q=${encodeURIComponent('nonexistent-user-query-xyz')}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.users).toEqual([]);
@@ -62,8 +60,7 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/search')
-				.body({query: targetUser.username, limit: 10, offset: 0})
+				.get(`/admin/users?q=${encodeURIComponent(targetUser.username ?? '')}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.total).toBeGreaterThanOrEqual(1);
@@ -78,15 +75,14 @@ describe('Admin Search Endpoints', () => {
 				users: Array<unknown>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/search')
-				.body({limit: 1, offset: 0})
+				.get(`/admin/users?limit=1&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.users.length).toBeLessThanOrEqual(1);
 		});
 		test('supports searching by last active IP', async () => {
 			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'user:view:ip']);
 			const targetUser = await createTestAccount(harness);
 			await setLastActiveIp(harness, targetUser.token, '198.51.100.91');
 			const result = await createBuilder<{
@@ -95,21 +91,19 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/search')
-				.body({last_active_ip: '198.51.100.91', limit: 10, offset: 0})
+				.get(`/admin/users?last_active_ip=${encodeURIComponent('198.51.100.91')}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.total).toBeGreaterThanOrEqual(1);
 			expect(result.users.find((user) => user.id === targetUser.userId)).toBeDefined();
 		});
 	});
-	describe('/admin/users/list-dm-channels', () => {
+	describe('GET /admin/users/{user_id}/dm-channels', () => {
 		test('requires user:list:dm_channels ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/list-dm-channels')
-				.body({user_id: admin.userId, limit: 10})
+				.get(`/admin/users/${admin.userId}/dm-channels?limit=10`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -135,8 +129,7 @@ describe('Admin Search Endpoints', () => {
 					is_open: boolean;
 				}>;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/list-dm-channels')
-				.body({user_id: subjectUser.userId, limit: 2})
+				.get(`/admin/users/${subjectUser.userId}/dm-channels?limit=2`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(firstPage.channels).toHaveLength(2);
@@ -155,8 +148,7 @@ describe('Admin Search Endpoints', () => {
 					is_open: boolean;
 				}>;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/list-dm-channels')
-				.body({user_id: subjectUser.userId, limit: 2, before: firstPage.channels[1]!.channel_id})
+				.get(`/admin/users/${subjectUser.userId}/dm-channels?limit=2&before=${firstPage.channels[1]!.channel_id}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(secondPage.channels).toHaveLength(1);
@@ -171,8 +163,7 @@ describe('Admin Search Endpoints', () => {
 					is_open: boolean;
 				}>;
 			}>(harness, `${admin.token}`)
-				.post('/admin/users/list-dm-channels')
-				.body({user_id: subjectUser.userId, limit: 2, after: secondPage.channels[0]!.channel_id})
+				.get(`/admin/users/${subjectUser.userId}/dm-channels?limit=2&after=${secondPage.channels[0]!.channel_id}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(previousPage.channels.map((channel) => channel.channel_id)).toEqual(
@@ -184,19 +175,17 @@ describe('Admin Search Endpoints', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:list:dm_channels']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/list-dm-channels')
-				.body({user_id: admin.userId, limit: 10, before: '1', after: '2'})
+				.get(`/admin/users/${admin.userId}/dm-channels?limit=10&before=1&after=2`)
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
 		});
 	});
-	describe('/admin/guilds/search', () => {
+	describe('GET /admin/guilds', () => {
 		test('requires guild:lookup ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/guilds/search')
-				.body({query: 'test', limit: 10, offset: 0})
+				.get('/admin/guilds?q=test&limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -207,8 +196,7 @@ describe('Admin Search Endpoints', () => {
 				guilds: Array<unknown>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/guilds/search')
-				.body({query: 'nonexistent-guild-query-xyz', limit: 10, offset: 0})
+				.get('/admin/guilds?q=nonexistent-guild-query-xyz&limit=10&offset=0')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.guilds).toEqual([]);
@@ -226,8 +214,7 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/guilds/search')
-				.body({query: guildName, limit: 10, offset: 0})
+				.get(`/admin/guilds?q=${encodeURIComponent(guildName)}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.total).toBeGreaterThanOrEqual(1);
@@ -236,38 +223,46 @@ describe('Admin Search Endpoints', () => {
 			expect(foundGuild?.name).toBe(guildName);
 		});
 	});
-	describe('/admin/reports/search', () => {
+	describe('/admin/reports', () => {
 		test('requires report:view ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/reports/search')
-				.body({limit: 10, offset: 0})
+				.get('/admin/reports?q=example&limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('returns report list response', async () => {
+		test('returns report list response when searching the report index', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
 			const result = await createBuilder<{
 				reports: Array<unknown>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/reports/search')
-				.body({limit: 10, offset: 0})
+				.get('/admin/reports?q=example&limit=10&offset=0')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(Array.isArray(result.reports)).toBe(true);
 			expect(result.total).toBeGreaterThanOrEqual(result.reports.length);
 		});
+		test('returns report list response without search filters', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
+			const result = await createBuilder<{
+				reports: Array<unknown>;
+			}>(harness, `${admin.token}`)
+				.get('/admin/reports?status=pending&limit=10&offset=0')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(Array.isArray(result.reports)).toBe(true);
+		});
 	});
-	describe('/admin/audit-logs/search', () => {
+	describe('/admin/audit-logs (search)', () => {
 		test('requires audit_log:view ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({limit: 10, offset: 0})
+				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -278,8 +273,7 @@ describe('Admin Search Endpoints', () => {
 				logs: Array<unknown>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({limit: 10, offset: 0})
+				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result).toHaveProperty('logs');
@@ -292,8 +286,8 @@ describe('Admin Search Endpoints', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view', 'user:update_acls', 'acl:set:user']);
 			const targetUser = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/set-acls')
-				.body({user_id: targetUser.userId, acls: ['admin:authenticate']})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const result = await createBuilder<{
@@ -303,8 +297,7 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({admin_user_id: admin.userId, limit: 50, offset: 0})
+				.get(`/admin/audit-logs?admin_user_id=${admin.userId}&limit=50&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.total).toBeGreaterThanOrEqual(1);
@@ -317,8 +310,8 @@ describe('Admin Search Endpoints', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view', 'user:update_acls', 'acl:set:user']);
 			const targetUser = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/set-acls')
-				.body({user_id: targetUser.userId, acls: ['admin:authenticate']})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const result = await createBuilder<{
@@ -328,8 +321,7 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({target_id: targetUser.userId, limit: 50, offset: 0})
+				.get(`/admin/audit-logs?target_id=${targetUser.userId}&limit=50&offset=0`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.total).toBeGreaterThanOrEqual(1);
@@ -342,8 +334,8 @@ describe('Admin Search Endpoints', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view', 'user:update_acls', 'acl:set:user']);
 			const targetUser = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/set-acls')
-				.body({user_id: targetUser.userId, acls: ['admin:authenticate']})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.header('X-Audit-Log-Reason', 'unique-test-reason-xyz')
 				.expect(HTTP_STATUS.OK)
 				.execute();
@@ -353,8 +345,7 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({query: 'set_acls', limit: 50, offset: 0})
+				.get('/admin/audit-logs?q=set_acls&limit=50&offset=0')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result).toHaveProperty('logs');
@@ -369,8 +360,7 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({limit: 10, offset: 0, sort_by: 'createdAt', sort_order: 'desc'})
+				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0&sort_by=createdAt&sort_order=desc')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const resultAsc = await createBuilder<{
@@ -379,12 +369,29 @@ describe('Admin Search Endpoints', () => {
 				}>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs/search')
-				.body({limit: 10, offset: 0, sort_by: 'createdAt', sort_order: 'asc'})
+				.get('/admin/audit-logs?q=set_acls&limit=10&offset=0&sort_by=createdAt&sort_order=asc')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(resultDesc).toHaveProperty('logs');
 			expect(resultAsc).toHaveProperty('logs');
+		});
+	});
+	describe('/admin/audit-logs/{log_id}', () => {
+		test('requires audit_log:view ACL', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate']);
+			await createBuilder(harness, `${admin.token}`)
+				.get('/admin/audit-logs/999999999999999999')
+				.expect(HTTP_STATUS.FORBIDDEN)
+				.execute();
+		});
+		test('returns 404 for an unknown entry', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'audit_log:view']);
+			await createBuilder(harness, `${admin.token}`)
+				.get('/admin/audit-logs/999999999999999999')
+				.expect(HTTP_STATUS.NOT_FOUND)
+				.execute();
 		});
 	});
 	describe('/admin/audit-logs (list)', () => {
@@ -392,8 +399,7 @@ describe('Admin Search Endpoints', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/audit-logs')
-				.body({limit: 10, offset: 0})
+				.get('/admin/audit-logs?limit=10&offset=0')
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -404,13 +410,101 @@ describe('Admin Search Endpoints', () => {
 				logs: Array<unknown>;
 				total: number;
 			}>(harness, `${admin.token}`)
-				.post('/admin/audit-logs')
-				.body({limit: 10, offset: 0})
+				.get('/admin/audit-logs?limit=10&offset=0')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result).toHaveProperty('logs');
 			expect(result).toHaveProperty('total');
 			expect(Array.isArray(result.logs)).toBe(true);
 		});
+	});
+	describe('POST /admin/search/indexes/{index_name}/refreshes', () => {
+		test('rejects a channel_messages refresh without guild_id', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
+			const response = await createBuilder<{
+				code: string;
+				errors: Array<{
+					path: string;
+				}>;
+			}>(harness, `${admin.token}`)
+				.post('/admin/search/indexes/channel_messages/refreshes')
+				.body({})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.execute();
+			expect(response.errors[0]?.path).toBe('guild_id');
+		});
+		test('rejects a guild_members refresh without guild_id', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
+			const response = await createBuilder<{
+				code: string;
+				errors: Array<{
+					path: string;
+				}>;
+			}>(harness, `${admin.token}`)
+				.post('/admin/search/indexes/guild_members/refreshes')
+				.body({})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.execute();
+			expect(response.errors[0]?.path).toBe('guild_id');
+		});
+		test('rejects a favorite_memes refresh without user_id', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
+			const response = await createBuilder<{
+				code: string;
+				errors: Array<{
+					path: string;
+				}>;
+			}>(harness, `${admin.token}`)
+				.post('/admin/search/indexes/favorite_memes/refreshes')
+				.body({})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.execute();
+			expect(response.errors[0]?.path).toBe('user_id');
+		});
+	});
+});
+
+describe('Admin Search Endpoints without a search backend', () => {
+	let harness: ApiTestHarness;
+	beforeEach(async () => {
+		harness = await createApiTestHarness({search: 'disabled'});
+	});
+	afterEach(async () => {
+		await harness.shutdown();
+	});
+	test('GET /admin/guilds answers 403 FEATURE_TEMPORARILY_DISABLED', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'guild:lookup']);
+		await createBuilder(harness, `${admin.token}`)
+			.get('/admin/guilds?q=test&limit=10&offset=0')
+			.expect(HTTP_STATUS.FORBIDDEN, 'FEATURE_TEMPORARILY_DISABLED')
+			.execute();
+	});
+	test('GET /admin/users with q answers 403 FEATURE_TEMPORARILY_DISABLED', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
+		await createBuilder(harness, `${admin.token}`)
+			.get('/admin/users?q=test&limit=10&offset=0')
+			.expect(HTTP_STATUS.FORBIDDEN, 'FEATURE_TEMPORARILY_DISABLED')
+			.execute();
+	});
+	test('GET /admin/reports answers 403 FEATURE_TEMPORARILY_DISABLED on the status branch', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
+		await createBuilder(harness, `${admin.token}`)
+			.get('/admin/reports?status=pending&limit=10&offset=0')
+			.expect(HTTP_STATUS.FORBIDDEN, 'FEATURE_TEMPORARILY_DISABLED')
+			.execute();
+	});
+	test('GET /admin/reports answers 403 FEATURE_TEMPORARILY_DISABLED on the search branch', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'report:view']);
+		await createBuilder(harness, `${admin.token}`)
+			.get('/admin/reports?q=example&limit=10&offset=0')
+			.expect(HTTP_STATUS.FORBIDDEN, 'FEATURE_TEMPORARILY_DISABLED')
+			.execute();
 	});
 });

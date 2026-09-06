@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/AdminBlocklistSchemas';
 import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {ApiContext} from '../../ApiContext';
 import {createUserID, type UserID} from '../../BrandedTypes';
@@ -45,6 +48,59 @@ interface AdminBanManagementServiceDeps {
 	auditService: AdminAuditService;
 	ipInfoService: IpInfoService;
 	suspiciousIpRepository: ISuspiciousIpRepository;
+}
+
+interface AdminBlocklistEntry {
+	list_type: AdminBlocklistListType;
+	value: string;
+	scope: string | null;
+	category: string | null;
+	severity: number | null;
+	source_url: string | null;
+	notes: string | null;
+	content_type: string | null;
+	match_subdomains: boolean | null;
+	reason: string | null;
+	expires_at: string | null;
+	created_at: string | null;
+	created_by_user_id: string | null;
+}
+
+interface AdminBlocklistEntryPage {
+	items: Array<AdminBlocklistEntry>;
+	has_more: boolean;
+	next_after: string | null;
+}
+
+function createBlocklistEntry(
+	listType: AdminBlocklistListType,
+	value: string,
+	overrides: Partial<Omit<AdminBlocklistEntry, 'list_type' | 'value'>> = {},
+): AdminBlocklistEntry {
+	return {
+		list_type: listType,
+		value,
+		scope: null,
+		category: null,
+		severity: null,
+		source_url: null,
+		notes: null,
+		content_type: null,
+		match_subdomains: null,
+		reason: null,
+		expires_at: null,
+		created_at: null,
+		created_by_user_id: null,
+		...overrides,
+	};
+}
+
+function toIsoString(value: Date | null | undefined): string | null {
+	return value ? value.toISOString() : null;
+}
+
+function toSnowflakeString(value: bigint | null | undefined): string | null {
+	return value == null ? null : value.toString();
 }
 
 interface AdminBlocklistAuditParams {
@@ -400,7 +456,7 @@ export class AdminBanManagementService {
 		const {adminRepository} = this.deps;
 		const {cache: cacheService} = this.deps.apiContext.services;
 		const canonical = canonicalizeUrl(data.url);
-		if (!canonical) throw new Error('URL could not be canonicalized');
+		if (!canonical) throw InputValidationError.fromCode('url', ValidationErrorCodes.INVALID_URL_FORMAT);
 		await adminRepository.banUrl({
 			url_canonical: canonical,
 			category: data.category ?? ContentBlocklistCategory.MANUAL,
@@ -434,7 +490,7 @@ export class AdminBanManagementService {
 		const {adminRepository} = this.deps;
 		const {cache: cacheService} = this.deps.apiContext.services;
 		const canonical = canonicalizeUrl(data.url);
-		if (!canonical) throw new Error('URL could not be canonicalized');
+		if (!canonical) throw InputValidationError.fromCode('url', ValidationErrorCodes.INVALID_URL_FORMAT);
 		await adminRepository.unbanUrl(canonical);
 		urlBlocklistCache.removeExactUrl(canonical);
 		await cacheService.publish(BANNED_URLS_REFRESH_CHANNEL, 'refresh');
@@ -767,6 +823,124 @@ export class AdminBanManagementService {
 			}
 		}
 		return {banned: false};
+	}
+
+	async listBlocklistEntries(params: {
+		listType: AdminBlocklistListType;
+		limit: number;
+		after: string | null;
+		scope: BannedProfileSubstringScope | null;
+	}): Promise<AdminBlocklistEntryPage> {
+		const entries = await this.loadBlocklistEntries(params.listType, params.scope);
+		entries.sort((left, right) => (left.value < right.value ? -1 : left.value > right.value ? 1 : 0));
+		const after = params.after;
+		const remaining = after == null ? entries : entries.filter((entry) => entry.value > after);
+		const page = remaining.slice(0, params.limit);
+		const hasMore = remaining.length > page.length;
+		const lastEntry = page.at(-1);
+		return {
+			items: page,
+			has_more: hasMore,
+			next_after: hasMore && lastEntry ? lastEntry.value : null,
+		};
+	}
+
+	private async loadBlocklistEntries(
+		listType: AdminBlocklistListType,
+		scope: BannedProfileSubstringScope | null,
+	): Promise<Array<AdminBlocklistEntry>> {
+		const {adminRepository} = this.deps;
+		switch (listType) {
+			case 'ip': {
+				const rows = await adminRepository.loadAllBannedIpEntries();
+				return rows.map((row) =>
+					createBlocklistEntry(listType, row.ip, {
+						reason: row.reason,
+						expires_at: toIsoString(row.expiresAt),
+						created_at: toIsoString(row.createdAt),
+					}),
+				);
+			}
+			case 'email': {
+				const rows = await adminRepository.loadAllBannedEmails();
+				return rows.map((value) => createBlocklistEntry(listType, value));
+			}
+			case 'email-domain-suspicious': {
+				const rows = await adminRepository.loadAllSuspiciousEmailDomains();
+				return rows.map((value) => createBlocklistEntry(listType, value));
+			}
+			case 'phrase': {
+				const rows = await adminRepository.loadAllBannedPhrases();
+				return rows.map((value) => createBlocklistEntry(listType, value));
+			}
+			case 'url': {
+				const rows = await adminRepository.loadAllBannedUrls();
+				return rows.map((row) =>
+					createBlocklistEntry(listType, row.url_canonical, {
+						category: row.category,
+						severity: row.severity,
+						source_url: row.source_url,
+						notes: row.notes,
+						created_at: toIsoString(row.added_at),
+						created_by_user_id: toSnowflakeString(row.added_by),
+					}),
+				);
+			}
+			case 'url-domain': {
+				const rows = await adminRepository.loadAllBannedUrlDomains();
+				return rows.map((row) =>
+					createBlocklistEntry(listType, row.domain, {
+						category: row.category,
+						severity: row.severity,
+						source_url: row.source_url,
+						notes: row.notes,
+						match_subdomains: row.match_subdomains,
+						created_at: toIsoString(row.added_at),
+						created_by_user_id: toSnowflakeString(row.added_by),
+					}),
+				);
+			}
+			case 'file-sha': {
+				const rows = await adminRepository.loadAllBannedFileShas();
+				return rows.map((row) =>
+					createBlocklistEntry(listType, row.sha256_hex, {
+						category: row.category,
+						severity: row.severity,
+						source_url: row.source_url,
+						notes: row.notes,
+						content_type: row.content_type,
+						created_at: toIsoString(row.added_at),
+						created_by_user_id: toSnowflakeString(row.added_by),
+					}),
+				);
+			}
+			case 'avatar-hash': {
+				const rows = await adminRepository.loadAllBannedAvatarHashes();
+				return rows.map((row) =>
+					createBlocklistEntry(listType, row.hash_short, {
+						category: row.category,
+						severity: row.severity,
+						source_url: row.source_url,
+						notes: row.notes,
+						created_at: toIsoString(row.added_at),
+						created_by_user_id: toSnowflakeString(row.added_by),
+					}),
+				);
+			}
+			case 'profile-substring': {
+				const rows = await adminRepository.loadAllBannedProfileSubstrings();
+				return rows
+					.filter((row) => scope == null || row.scope === scope)
+					.map((row) =>
+						createBlocklistEntry(listType, row.substring, {
+							scope: row.scope,
+							notes: row.notes,
+							created_at: toIsoString(row.added_at),
+							created_by_user_id: toSnowflakeString(row.added_by),
+						}),
+					);
+			}
+		}
 	}
 
 	private async createBlocklistAuditLog({

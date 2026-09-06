@@ -17,15 +17,15 @@ function trimTrailingSlash(value: string): string {
 
 export function CodesAdminController(app: HonoApp) {
 	app.post(
-		'/admin/codes/gift',
+		'/admin/gift-codes',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_CODE_GENERATION),
 		requireAdminACL(AdminACLs.GIFT_CODES_GENERATE),
 		Validator('json', GenerateGiftCodesRequest),
 		OpenAPI({
-			operationId: 'generate_gift_codes',
-			summary: 'Generate gift codes',
+			operationId: 'create_admin_gift_codes',
+			summary: 'Issue gift codes',
 			description:
-				'Create one-use Plutonium gift codes with an explicit positive duration. Lifetime gifts are not supported.',
+				'Create one-use Plutonium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. Not available on self-hosted instances. Requires GIFT_CODES_GENERATE permission.',
 			responseSchema: CodesResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

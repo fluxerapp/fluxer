@@ -415,7 +415,7 @@ async fn dispatch_guild_action(
                 return FlashData::error("Emoji ID is required");
             };
             action_result(
-                client.purge_assets(&[emoji_id]).await,
+                client.purge_assets(guild_id, &[emoji_id]).await,
                 "Emoji deleted",
                 "Failed to delete emoji",
             )
@@ -425,7 +425,7 @@ async fn dispatch_guild_action(
                 return FlashData::error("Sticker ID is required");
             };
             action_result(
-                client.purge_assets(&[sticker_id]).await,
+                client.purge_assets(guild_id, &[sticker_id]).await,
                 "Sticker deleted",
                 "Failed to delete sticker",
             )

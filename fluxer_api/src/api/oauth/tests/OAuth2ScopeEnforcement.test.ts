@@ -411,10 +411,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				ADMIN_OAUTH2_APPLICATION_ID.toString(),
 			);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -423,10 +420,7 @@ describe('OAuth2 Scope Enforcement', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			const oauth2Token = await createOAuth2Token(harness, admin.userId, ['identify', 'email']);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 		});
@@ -434,10 +428,7 @@ describe('OAuth2 Scope Enforcement', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -445,13 +436,7 @@ describe('OAuth2 Scope Enforcement', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 			const apiKey = await createAdminApiKey(harness, admin, 'Test Key', ['user:lookup'], null);
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		});
 		test('built-in admin OAuth2 token still requires proper user ACLs', async () => {
 			const admin = await createTestAccount(harness);
@@ -463,10 +448,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				ADMIN_OAUTH2_APPLICATION_ID.toString(),
 			);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
@@ -479,10 +461,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				ADMIN_OAUTH2_APPLICATION_ID.toString(),
 			);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [user.userId],
-				})
+				.get(`/admin/users/${user.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
 				.execute();
 		});
@@ -509,8 +488,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				code: string;
 				message: string;
 			}>(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 			expect(json.code).toBe('ACCESS_DENIED');
@@ -528,8 +506,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				code: string;
 				message: string;
 			}>(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 			expect(json.code).toBe('MISSING_ACL');

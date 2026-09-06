@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
+import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
+	DiscoveryAdminApplicationUpdateRequest,
+	DiscoveryAdminCategoryListingQuery,
 	DiscoveryAdminListedGuildResponse,
+	DiscoveryAdminListingBulkCategoryRequest,
+	DiscoveryAdminListingBulkCategoryResponse,
 	DiscoveryAdminPendingApplicationResponse,
-	DiscoveryAdminRejectRequest,
 	DiscoveryAdminRemoveRequest,
-	DiscoveryAdminReviewRequest,
+	DiscoveryApplicationPatchRequest,
 	DiscoveryApplicationResponse,
+	DiscoveryCategoryIdParam,
+	DiscoveryCategoryListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import {z} from 'zod';
 import {createGuildID} from '../../BrandedTypes';
@@ -40,8 +45,6 @@ function mapRowToApplicationResponse(row: GuildDiscoveryRow) {
 		removal_reason: row.removal_reason ?? null,
 	};
 }
-
-const ADMIN_LIST_HARD_CAP = 1000;
 
 interface GuildEnrichment {
 	name: string;
@@ -131,8 +134,8 @@ export function DiscoveryAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_LIST),
 		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
 		OpenAPI({
-			operationId: 'list_pending_discovery_applications',
-			summary: 'List all pending discovery applications',
+			operationId: 'list_admin_discovery_applications',
+			summary: 'List discovery applications',
 			description:
 				'Returns every pending discovery application, enriched with guild metadata. No pagination. Requires DISCOVERY_REVIEW permission.',
 			responseSchema: z.array(DiscoveryAdminPendingApplicationResponse),
@@ -144,21 +147,106 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const discoveryService = ctx.get('discoveryService');
 			const guildService = ctx.get('guildService');
 			const userRepository = ctx.get('userRepository');
-			const rows = await discoveryService.listByStatus({
-				status: DiscoveryApplicationStatus.PENDING,
-				limit: ADMIN_LIST_HARD_CAP,
-			});
+			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.PENDING});
 			const enrichment = await enrichGuilds(rows, guildService, userRepository);
 			return ctx.json(rows.map((row) => mapPendingResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
+	app.patch(
+		'/admin/discovery/applications/:guild_id',
+		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_ACTION),
+		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
+		Validator('param', GuildIdParam),
+		Validator('json', DiscoveryAdminApplicationUpdateRequest),
+		OpenAPI({
+			operationId: 'update_admin_discovery_application',
+			summary: 'Review discovery application',
+			description: 'Approve or reject a pending discovery application. Requires DISCOVERY_REVIEW permission.',
+			responseSchema: DiscoveryApplicationResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {guild_id} = ctx.req.valid('param');
+			const guildId = createGuildID(guild_id);
+			const data = ctx.req.valid('json');
+			const adminUserId = ctx.get('adminUserId');
+			const discoveryService = ctx.get('discoveryService');
+			const row =
+				data.status === DiscoveryApplicationStatus.APPROVED
+					? await discoveryService.approve({guildId, adminUserId, reason: data.reason})
+					: await discoveryService.reject({guildId, adminUserId, reason: data.reason});
+			return ctx.json(mapRowToApplicationResponse(row));
+		},
+	);
 	app.get(
-		'/admin/discovery/listed',
+		'/admin/discovery/categories',
 		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_LIST),
 		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
 		OpenAPI({
-			operationId: 'list_discovery_listed_guilds',
-			summary: 'List all guilds currently listed in discovery',
+			operationId: 'list_admin_discovery_categories',
+			summary: 'List discovery categories',
+			description:
+				'Returns every discovery category a listing can be filed under. Requires DISCOVERY_REVIEW permission.',
+			responseSchema: DiscoveryCategoryListResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			return ctx.json(
+				Object.entries(DiscoveryCategoryLabels).map(([id, name]) => ({
+					id: Number(id),
+					name,
+				})),
+			);
+		},
+	);
+	app.get(
+		'/admin/discovery/categories/:category_id/listings',
+		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_LIST),
+		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
+		Validator('param', DiscoveryCategoryIdParam),
+		Validator('query', DiscoveryAdminCategoryListingQuery),
+		OpenAPI({
+			operationId: 'list_admin_discovery_category_listings',
+			summary: 'List guilds in a discovery category',
+			description:
+				'Returns an offset page of the guilds listed under one discovery category, most members first, enriched with guild metadata. Requires DISCOVERY_REVIEW permission.',
+			responseSchema: z.array(DiscoveryAdminListedGuildResponse),
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const {category_id} = ctx.req.valid('param');
+			const {limit, offset} = ctx.req.valid('query');
+			const discoveryService = ctx.get('discoveryService');
+			const guildService = ctx.get('guildService');
+			const userRepository = ctx.get('userRepository');
+			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.APPROVED});
+			const inCategory = rows.filter((row) => row.category_type === category_id);
+			const enrichment = await enrichGuilds(inCategory, guildService, userRepository);
+			const sorted = [...inCategory].sort(
+				(left, right) =>
+					(enrichment.get(right.guild_id.toString())?.member_count ?? 0) -
+					(enrichment.get(left.guild_id.toString())?.member_count ?? 0),
+			);
+			return ctx.json(
+				sorted
+					.slice(offset, offset + limit)
+					.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))),
+			);
+		},
+	);
+	app.get(
+		'/admin/discovery/listings',
+		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_LIST),
+		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
+		OpenAPI({
+			operationId: 'list_admin_discovery_listings',
+			summary: 'List discovery listings',
 			description:
 				'Returns every approved/listed discovery guild, enriched with guild metadata. No pagination. Requires DISCOVERY_REVIEW permission.',
 			responseSchema: z.array(DiscoveryAdminListedGuildResponse),
@@ -170,24 +258,59 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const discoveryService = ctx.get('discoveryService');
 			const guildService = ctx.get('guildService');
 			const userRepository = ctx.get('userRepository');
-			const rows = await discoveryService.listByStatus({
-				status: DiscoveryApplicationStatus.APPROVED,
-				limit: ADMIN_LIST_HARD_CAP,
-			});
+			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.APPROVED});
 			const enrichment = await enrichGuilds(rows, guildService, userRepository);
 			return ctx.json(rows.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
-	app.post(
-		'/admin/discovery/applications/:guild_id/approve',
+	app.patch(
+		'/admin/discovery/listings',
+		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_ACTION),
+		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
+		Validator('json', DiscoveryAdminListingBulkCategoryRequest),
+		OpenAPI({
+			operationId: 'bulk_update_admin_discovery_listing_category',
+			summary: 'Move discovery listings to a category',
+			description:
+				'Files every named discovery listing under one category. Every guild is attempted and the ones that could not be moved are reported. Requires DISCOVERY_REVIEW permission.',
+			responseSchema: DiscoveryAdminListingBulkCategoryResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const data = ctx.req.valid('json');
+			const adminUserId = ctx.get('adminUserId');
+			const discoveryService = ctx.get('discoveryService');
+			const guildIds = [...new Set(data.guild_ids)];
+			const failed: Array<string> = [];
+			let updated = 0;
+			for (const rawGuildId of guildIds) {
+				try {
+					await discoveryService.editApplication({
+						guildId: createGuildID(rawGuildId),
+						userId: adminUserId,
+						data: {category_type: data.category_type},
+					});
+					updated += 1;
+				} catch {
+					failed.push(rawGuildId.toString());
+				}
+			}
+			return ctx.json({updated, failed_guild_ids: failed});
+		},
+	);
+	app.patch(
+		'/admin/discovery/listings/:guild_id',
 		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_ACTION),
 		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
 		Validator('param', GuildIdParam),
-		Validator('json', DiscoveryAdminReviewRequest),
+		Validator('json', DiscoveryApplicationPatchRequest),
 		OpenAPI({
-			operationId: 'approve_discovery_application',
-			summary: 'Approve discovery application',
-			description: 'Approve a pending discovery application. Requires DISCOVERY_REVIEW permission.',
+			operationId: 'update_admin_discovery_listing',
+			summary: 'Update discovery listing',
+			description:
+				'Edit the description, category, language, or tags of a discovery listing without delisting the guild. Requires DISCOVERY_REVIEW permission.',
 			responseSchema: DiscoveryApplicationResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -199,44 +322,19 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const data = ctx.req.valid('json');
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
-			const row = await discoveryService.approve({guildId, adminUserId, reason: data.reason});
+			const row = await discoveryService.editApplication({guildId, userId: adminUserId, data});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);
-	app.post(
-		'/admin/discovery/applications/:guild_id/reject',
-		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_ACTION),
-		requireAdminACL(AdminACLs.DISCOVERY_REVIEW),
-		Validator('param', GuildIdParam),
-		Validator('json', DiscoveryAdminRejectRequest),
-		OpenAPI({
-			operationId: 'reject_discovery_application',
-			summary: 'Reject discovery application',
-			description: 'Reject a pending discovery application. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: DiscoveryApplicationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const {guild_id} = ctx.req.valid('param');
-			const guildId = createGuildID(guild_id);
-			const data = ctx.req.valid('json');
-			const adminUserId = ctx.get('adminUserId');
-			const discoveryService = ctx.get('discoveryService');
-			const row = await discoveryService.reject({guildId, adminUserId, reason: data.reason});
-			return ctx.json(mapRowToApplicationResponse(row));
-		},
-	);
-	app.post(
-		'/admin/discovery/guilds/:guild_id/remove',
+	app.delete(
+		'/admin/discovery/listings/:guild_id',
 		RateLimitMiddleware(RateLimitConfigs.DISCOVERY_ADMIN_ACTION),
 		requireAdminACL(AdminACLs.DISCOVERY_REMOVE),
 		Validator('param', GuildIdParam),
 		Validator('json', DiscoveryAdminRemoveRequest),
 		OpenAPI({
-			operationId: 'remove_from_discovery',
-			summary: 'Remove guild from discovery',
+			operationId: 'delete_admin_discovery_listing',
+			summary: 'Remove discovery listing',
 			description: 'Remove an approved guild from discovery. Requires DISCOVERY_REMOVE permission.',
 			responseSchema: DiscoveryApplicationResponse,
 			statusCode: 200,

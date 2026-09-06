@@ -22,7 +22,7 @@ impl AdminApiClient {
         };
         let response = self
             .generated()
-            .send_system_dm(&body)
+            .create_admin_system_dm(&body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

@@ -135,7 +135,7 @@ async fn fetch_admin_user(
     config: &crate::config::AdminConfig,
     session: &Session,
 ) -> AdminFetchResult {
-    let url = format!("{}/admin/users/me", config.api_endpoint);
+    let url = format!("{}/admin/users/@me", config.api_endpoint);
     let response =
         match crate::api::client::with_proxy_client_ip_header(http_client.get(&url), config)
             .header("Authorization", format!("Bearer {}", session.access_token))

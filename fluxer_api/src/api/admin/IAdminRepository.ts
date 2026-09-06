@@ -57,11 +57,15 @@ export abstract class IAdminRepository {
 
 	abstract unbanEmail(email: string): Promise<void>;
 
+	abstract loadAllBannedEmails(): Promise<Array<string>>;
+
 	abstract isEmailDomainSuspicious(domain: string): Promise<boolean>;
 
 	abstract addSuspiciousEmailDomain(domain: string): Promise<void>;
 
 	abstract removeSuspiciousEmailDomain(domain: string): Promise<void>;
+
+	abstract loadAllSuspiciousEmailDomains(): Promise<Array<string>>;
 
 	abstract isEmailDomainDisposable(domain: string): Promise<boolean>;
 

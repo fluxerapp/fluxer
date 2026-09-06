@@ -55,6 +55,15 @@ export class AdminAuditService {
 		}
 	}
 
+	async getAuditLog(logId: bigint): Promise<AdminAuditLogResponse | null> {
+		const log = await this.adminRepository.getAuditLog(logId);
+		if (!log) {
+			return null;
+		}
+		const [response] = await this.toResponses([log]);
+		return response;
+	}
+
 	async listAuditLogs(data: {
 		admin_user_id?: bigint;
 		target_type?: string;

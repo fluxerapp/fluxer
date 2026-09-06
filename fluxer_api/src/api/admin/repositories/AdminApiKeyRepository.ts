@@ -7,7 +7,7 @@ import type {AdminApiKeyRow} from '../../database/types/AdminAuthTypes';
 import {AdminApiKey} from '../../models/AdminApiKey';
 import {AdminApiKeys, AdminApiKeysByCreator} from '../../Tables';
 import {hashPassword} from '../../utils/PasswordUtils';
-import type {CreateAdminApiKeyData, IAdminApiKeyRepository} from './IAdminApiKeyRepository';
+import type {CreateAdminApiKeyData, IAdminApiKeyRepository, UpdateAdminApiKeyData} from './IAdminApiKeyRepository';
 
 function computeTtlSeconds(expiresAt: Date): number {
 	const diffSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);
@@ -77,6 +77,38 @@ export class AdminApiKeyRepository implements IAdminApiKeyRepository {
 			return null;
 		}
 		return new AdminApiKey(row);
+	}
+
+	async update(apiKey: AdminApiKey, data: UpdateAdminApiKeyData): Promise<AdminApiKey> {
+		const row = apiKey.toRow();
+		const updatedRow: AdminApiKeyRow = {
+			...row,
+			name: data.name ?? row.name,
+			acls: data.acls ?? row.acls,
+		};
+		const patch = {
+			name: Db.set(updatedRow.name),
+			acls: Db.set(updatedRow.acls ?? new Set<string>()),
+		};
+		const batch = new BatchBuilder();
+		if (apiKey.expiresAt) {
+			const ttlSeconds = computeTtlSeconds(apiKey.expiresAt);
+			batch.addPrepared(AdminApiKeys.patchByPkWithTtl({key_id: apiKey.keyId}, patch, ttlSeconds));
+			batch.addPrepared(
+				AdminApiKeysByCreator.patchByPkWithTtl(
+					{created_by_user_id: apiKey.createdById, key_id: apiKey.keyId},
+					patch,
+					ttlSeconds,
+				),
+			);
+		} else {
+			batch.addPrepared(AdminApiKeys.patchByPk({key_id: apiKey.keyId}, patch));
+			batch.addPrepared(
+				AdminApiKeysByCreator.patchByPk({created_by_user_id: apiKey.createdById, key_id: apiKey.keyId}, patch),
+			);
+		}
+		await batch.execute();
+		return new AdminApiKey(updatedRow);
 	}
 
 	async listByCreator(createdBy: UserID): Promise<Array<AdminApiKey>> {

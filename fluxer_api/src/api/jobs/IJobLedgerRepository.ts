@@ -40,8 +40,6 @@ export abstract class IJobLedgerRepository {
 
 	abstract markSucceeded(jobId: bigint, result: Record<string, unknown> | null): Promise<void>;
 
-	abstract markFailed(jobId: bigint, errorMessage: string): Promise<void>;
-
 	abstract markCancelled(jobId: bigint): Promise<void>;
 
 	abstract markDeadletter(jobId: bigint, errorMessage: string): Promise<void>;
@@ -49,6 +47,8 @@ export abstract class IJobLedgerRepository {
 	abstract reportProgress(jobId: bigint, current: number, total: number | null, message: string | null): Promise<void>;
 
 	abstract setContextLink(jobId: bigint, link: string): Promise<void>;
+
+	abstract setJetStreamSeq(jobId: bigint, seq: string): Promise<void>;
 
 	abstract requestCancel(jobId: bigint): Promise<void>;
 

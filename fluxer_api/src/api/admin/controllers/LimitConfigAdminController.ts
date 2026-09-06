@@ -91,12 +91,12 @@ function findModifiedLimits(
 }
 
 export function LimitConfigAdminController(app: HonoApp) {
-	app.post(
-		'/admin/limit-config/get',
+	app.get(
+		'/admin/limit-config',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.INSTANCE_LIMIT_CONFIG_VIEW),
 		OpenAPI({
-			operationId: 'get_limit_config',
+			operationId: 'get_admin_limit_config',
 			summary: 'Get limit configuration',
 			description:
 				'Retrieves rate limit configuration including message limits, upload limits, and request throttles. Shows defaults, metadata, and any modifications from defaults. Requires INSTANCE_LIMIT_CONFIG_VIEW permission.',
@@ -111,16 +111,16 @@ export function LimitConfigAdminController(app: HonoApp) {
 			return ctx.json(formatConfig(snapshot));
 		},
 	);
-	app.post(
-		'/admin/limit-config/update',
+	app.put(
+		'/admin/limit-config',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.INSTANCE_LIMIT_CONFIG_UPDATE),
 		Validator('json', LimitConfigUpdateRequest),
 		OpenAPI({
-			operationId: 'update_limit_config',
-			summary: 'Update limit configuration',
+			operationId: 'replace_admin_limit_config',
+			summary: 'Replace limit configuration',
 			description:
-				'Updates rate limit configuration including message throughput, upload sizes, and request throttles. Changes apply immediately to all new operations. Requires INSTANCE_LIMIT_CONFIG_UPDATE permission.',
+				'Replaces the stored limit configuration, which covers message throughput, upload sizes, and request throttles, with the supplied document. Changes apply immediately to all new operations. Requires INSTANCE_LIMIT_CONFIG_UPDATE permission.',
 			responseSchema: LimitConfigGetResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

@@ -5,14 +5,14 @@ use super::types::{LimitConfigResponse, LimitConfigUpdateRequest};
 
 impl AdminApiClient {
     pub async fn get_limit_config(&self) -> ApiResult<LimitConfigResponse> {
-        self.post("/admin/limit-config/get", Some(&serde_json::json!({})))
-            .await
+        self.get("/admin/limit-config", None).await
     }
 
     pub async fn update_limit_config(
         &self,
         request: &LimitConfigUpdateRequest,
     ) -> ApiResult<LimitConfigResponse> {
-        self.post_typed("/admin/limit-config/update", request).await
+        self.put_typed_with_reason("/admin/limit-config", request, None)
+            .await
     }
 }

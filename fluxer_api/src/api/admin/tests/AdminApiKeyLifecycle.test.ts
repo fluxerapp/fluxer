@@ -235,6 +235,64 @@ describe('Admin API Key Lifecycle', () => {
 		expect(keys).toHaveLength(1);
 		expect('key' in keys[0]!).toBe(false);
 	});
+	test('get API key by id', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
+		const apiKey = await createAdminApiKey(harness, admin, 'Readable Key', ['audit_log:view'], null);
+		const key = await createBuilder<Record<string, unknown>>(harness, `${admin.token}`)
+			.get(`/admin/api-keys/${apiKey.keyId}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(key.key_id).toBe(apiKey.keyId);
+		expect(key.name).toBe('Readable Key');
+		expect(key.acls).toEqual(['audit_log:view']);
+		expect('key' in key).toBe(false);
+	});
+	test('get non-existent API key', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
+		await createBuilder(harness, `${admin.token}`)
+			.get('/admin/api-keys/999999999999999999')
+			.expect(HTTP_STATUS.NOT_FOUND)
+			.executeWithResponse();
+	});
+	test('update API key name and acls', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view', 'guild:lookup']);
+		const apiKey = await createAdminApiKey(harness, admin, 'Old Name', ['audit_log:view'], null);
+		const updated = await createBuilder<Record<string, unknown>>(harness, `${admin.token}`)
+			.patch(`/admin/api-keys/${apiKey.keyId}`)
+			.body({name: 'New Name', acls: ['guild:lookup']})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(updated.name).toBe('New Name');
+		expect(updated.acls).toEqual(['guild:lookup']);
+		const keys = await listAdminApiKeys(harness, admin.token);
+		expect(keys[0]!.name).toBe('New Name');
+		expect(keys[0]!.acls).toEqual(['guild:lookup']);
+	});
+	test('update API key leaves omitted fields unchanged', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
+		const apiKey = await createAdminApiKey(harness, admin, 'Stable Name', ['audit_log:view'], null);
+		const updated = await createBuilder<Record<string, unknown>>(harness, `${admin.token}`)
+			.patch(`/admin/api-keys/${apiKey.keyId}`)
+			.body({name: 'Renamed'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(updated.name).toBe('Renamed');
+		expect(updated.acls).toEqual(['audit_log:view']);
+	});
+	test('update API key cannot grant acls the admin does not hold', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
+		const apiKey = await createAdminApiKey(harness, admin, 'Escalation Key', ['audit_log:view'], null);
+		await createBuilder(harness, `${admin.token}`)
+			.patch(`/admin/api-keys/${apiKey.keyId}`)
+			.body({acls: ['guild:delete']})
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.executeWithResponse();
+	});
 	test('revoke API key', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, [
@@ -255,7 +313,7 @@ describe('Admin API Key Lifecycle', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
 		await createBuilder(harness, `${admin.token}`)
-			.delete('/admin/api-keys/nonexistent-key-id')
+			.delete('/admin/api-keys/999999999999999999')
 			.body(null)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.executeWithResponse();
@@ -265,18 +323,12 @@ describe('Admin API Key Lifecycle', () => {
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 		const apiKey = await createAdminApiKey(harness, admin, 'Key to Test', ['user:lookup'], null);
 		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.OK)
 			.executeWithResponse();
 		await revokeAdminApiKey(harness, admin.token, apiKey.keyId);
 		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.executeWithResponse();
 	});

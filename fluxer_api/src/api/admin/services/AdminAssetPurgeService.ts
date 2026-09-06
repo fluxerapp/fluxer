@@ -29,11 +29,12 @@ export class AdminAssetPurgeService {
 	}
 
 	async purgeGuildAssets(args: {
+		guildId: GuildID;
 		ids: Array<string>;
 		adminUserId: UserID;
 		auditLogReason: string | null;
 	}): Promise<PurgeGuildAssetsResponse> {
-		const {ids, adminUserId, auditLogReason} = args;
+		const {guildId, ids, adminUserId, auditLogReason} = args;
 		const processed: Array<PurgeGuildAssetResult> = [];
 		const errors: Array<PurgeGuildAssetError> = [];
 		const seen = new Set<string>();
@@ -51,7 +52,11 @@ export class AdminAssetPurgeService {
 				continue;
 			}
 			try {
-				const result = await this.processAssetId(numericId, trimmedId, adminUserId, auditLogReason);
+				const result = await this.processAssetId(guildId, numericId, trimmedId, adminUserId, auditLogReason);
+				if (result === null) {
+					errors.push({id: trimmedId, error: 'Asset belongs to another guild'});
+					continue;
+				}
 				processed.push(result);
 			} catch (error) {
 				const message = error instanceof Error && error.message !== '' ? error.message : 'Failed to purge asset';
@@ -62,15 +67,19 @@ export class AdminAssetPurgeService {
 	}
 
 	private async processAssetId(
+		guildId: GuildID,
 		numericId: bigint,
 		idString: string,
 		adminUserId: UserID,
 		auditLogReason: string | null,
-	): Promise<PurgeGuildAssetResult> {
+	): Promise<PurgeGuildAssetResult | null> {
 		const {guildRepository} = this.deps;
 		const emojiId = createEmojiID(numericId);
 		const emoji = await guildRepository.getEmojiById(emojiId);
 		if (emoji) {
+			if (emoji.guildId !== guildId) {
+				return null;
+			}
 			await guildRepository.deleteEmoji(emoji.guildId, emojiId);
 			await this.dispatchGuildEmojisUpdate(emoji.guildId);
 			await this.assetPurger.purgeEmoji(idString);
@@ -97,6 +106,9 @@ export class AdminAssetPurgeService {
 		const stickerId = createStickerID(numericId);
 		const sticker = await guildRepository.getStickerById(stickerId);
 		if (sticker) {
+			if (sticker.guildId !== guildId) {
+				return null;
+			}
 			await guildRepository.deleteSticker(sticker.guildId, stickerId);
 			await this.dispatchGuildStickersUpdate(sticker.guildId);
 			await this.assetPurger.purgeSticker(idString);

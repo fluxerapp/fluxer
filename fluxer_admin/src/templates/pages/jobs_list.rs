@@ -25,8 +25,8 @@ fn filter_bar(base: &str, p: &JobsListParams) -> Markup {
                 div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" {
                     (select_input("status", "Status", &[
                         ("", "Any"), ("queued", "Queued"), ("running", "Running"),
-                        ("succeeded", "Succeeded"), ("failed", "Failed"),
-                        ("cancelled", "Cancelled"), ("deadletter", "Dead-letter"),
+                        ("succeeded", "Succeeded"), ("cancelled", "Cancelled"),
+                        ("deadletter", "Dead-letter"),
                     ], p.status_filter))
                     div class="flex flex-col gap-2" {
                         label for="task_type" class=(FORM_LABEL_CLASS) { "Task type" }

@@ -4,45 +4,100 @@ import {beforeEach, describe, test} from 'vitest';
 import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {createBuilder, createBuilderWithoutAuth, type TestRequestBuilder} from '../../test/TestRequestBuilder';
 
-const adminEndpoints = [
-	{method: 'POST', path: '/admin/reports/list', requiredACL: 'report:manage'},
-	{method: 'GET', path: '/admin/reports/1', requiredACL: 'report:manage'},
-	{method: 'POST', path: '/admin/reports/resolve', requiredACL: 'report:manage'},
-	{method: 'POST', path: '/admin/bulk/update-user-flags', requiredACL: 'bulk:update'},
-	{method: 'POST', path: '/admin/bulk/update-guild-features', requiredACL: 'bulk:update'},
-	{method: 'POST', path: '/admin/bulk/add-guild-members', requiredACL: 'bulk:update'},
-	{method: 'POST', path: '/admin/guilds/search', requiredACL: 'guild:lookup'},
-	{method: 'POST', path: '/admin/users/search', requiredACL: 'user:lookup'},
-	{method: 'POST', path: '/admin/messages/lookup', requiredACL: 'message:lookup'},
-	{method: 'POST', path: '/admin/messages/delete', requiredACL: 'message:delete'},
-	{method: 'POST', path: '/admin/gateway/memory-stats', requiredACL: 'gateway:manage'},
-	{method: 'POST', path: '/admin/gateway/reload-all', requiredACL: 'gateway:manage'},
+function withMethod(builder: TestRequestBuilder, method: string, path: string, body: unknown = {}): TestRequestBuilder {
+	switch (method) {
+		case 'POST':
+			return builder.post(path).body(body);
+		case 'PATCH':
+			return builder.patch(path).body(body);
+		case 'PUT':
+			return builder.put(path).body(body);
+		case 'DELETE':
+			return builder.delete(path);
+		default:
+			return builder.get(path);
+	}
+}
+
+interface AdminEndpointCase {
+	method: string;
+	path: string;
+	requiredACL: string;
+	body?: unknown;
+}
+
+const adminEndpoints: Array<AdminEndpointCase> = [
+	{method: 'GET', path: '/admin/reports', requiredACL: 'report:view'},
+	{method: 'GET', path: '/admin/reports/1', requiredACL: 'report:view'},
+	{method: 'PATCH', path: '/admin/reports/1', requiredACL: 'report:resolve'},
+	{
+		method: 'POST',
+		path: '/admin/bulk-jobs',
+		requiredACL: 'bulk:update:user_flags',
+		body: {task: 'update_user_flags', user_ids: ['1']},
+	},
+	{
+		method: 'POST',
+		path: '/admin/bulk-jobs',
+		requiredACL: 'bulk:update:guild_features',
+		body: {task: 'update_guild_features', guild_ids: ['1']},
+	},
+	{
+		method: 'POST',
+		path: '/admin/bulk-jobs',
+		requiredACL: 'bulk:add:guild_members',
+		body: {task: 'add_guild_members', guild_id: '1', user_ids: ['2']},
+	},
+	{method: 'GET', path: '/admin/guilds', requiredACL: 'guild:lookup'},
+	{method: 'GET', path: '/admin/users', requiredACL: 'user:lookup'},
+	{method: 'GET', path: '/admin/messages?channel_id=1', requiredACL: 'message:lookup'},
+	{method: 'DELETE', path: '/admin/channels/1/messages/1', requiredACL: 'message:delete'},
+	{method: 'GET', path: '/admin/gateway/memory-stats', requiredACL: 'gateway:manage'},
+	{method: 'POST', path: '/admin/gateway/reloads', requiredACL: 'gateway:manage'},
 	{method: 'GET', path: '/admin/gateway/stats', requiredACL: 'gateway:manage'},
 	{method: 'GET', path: '/admin/gateway/voice-state-counts', requiredACL: 'gateway:manage'},
-	{method: 'POST', path: '/admin/audit-logs', requiredACL: 'audit_log:view'},
-	{method: 'POST', path: '/admin/audit-logs/search', requiredACL: 'audit_log:view'},
-	{method: 'POST', path: '/admin/guilds/lookup', requiredACL: 'guild:lookup'},
-	{method: 'POST', path: '/admin/guilds/list-members', requiredACL: 'guild:lookup'},
-	{method: 'POST', path: '/admin/guilds/update-features', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/update-name', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/update-settings', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/transfer-ownership', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/update-vanity', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/force-add-user', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/reload', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/guilds/shutdown', requiredACL: 'guild:update'},
-	{method: 'POST', path: '/admin/users/lookup', requiredACL: 'user:lookup'},
-	{method: 'POST', path: '/admin/users/list-guilds', requiredACL: 'user:lookup'},
-	{method: 'POST', path: '/admin/users/list-dm-channels', requiredACL: 'user:list:dm_channels'},
-	{method: 'POST', path: '/admin/users/disable-mfa', requiredACL: 'user:update'},
-	{method: 'POST', path: '/admin/users/list-webauthn-credentials', requiredACL: 'user:update:mfa'},
-	{method: 'POST', path: '/admin/users/delete-webauthn-credential', requiredACL: 'user:update:mfa'},
-	{method: 'POST', path: '/admin/users/clear-fields', requiredACL: 'user:update'},
-	{method: 'POST', path: '/admin/users/set-bot-status', requiredACL: 'user:update'},
-	{method: 'POST', path: '/admin/users/set-acls', requiredACL: 'acl:set:user'},
-	{method: 'POST', path: '/admin/users/schedule-deletion', requiredACL: 'user:delete'},
+	{method: 'GET', path: '/admin/audit-logs', requiredACL: 'audit_log:view'},
+	{method: 'GET', path: '/admin/audit-logs?q=example', requiredACL: 'audit_log:view'},
+	{method: 'GET', path: '/admin/guilds/1', requiredACL: 'guild:lookup'},
+	{method: 'GET', path: '/admin/guilds/1/members', requiredACL: 'guild:list:members'},
+	{method: 'PATCH', path: '/admin/guilds/1', requiredACL: 'guild:update'},
+	{method: 'DELETE', path: '/admin/guilds/1', requiredACL: 'guild:delete'},
+	{method: 'PUT', path: '/admin/guilds/1/members/2', requiredACL: 'guild:force_add_member'},
+	{method: 'DELETE', path: '/admin/guilds/1/members/2', requiredACL: 'guild:kick_member'},
+	{method: 'PUT', path: '/admin/guilds/1/bans/2', requiredACL: 'guild:ban_member'},
+	{method: 'GET', path: '/admin/guilds/1/audit-logs', requiredACL: 'guild:audit_log:view'},
+	{method: 'DELETE', path: '/admin/guilds/1/assets', requiredACL: 'asset:purge'},
+	{method: 'POST', path: '/admin/guilds/1/reloads', requiredACL: 'guild:reload'},
+	{method: 'POST', path: '/admin/guilds/1/shutdowns', requiredACL: 'guild:shutdown'},
+	{method: 'GET', path: '/admin/users/1', requiredACL: 'user:lookup'},
+	{method: 'GET', path: '/admin/users/1/guilds', requiredACL: 'user:list:guilds'},
+	{method: 'GET', path: '/admin/users/1/dm-channels', requiredACL: 'user:list:dm_channels'},
+	{method: 'DELETE', path: '/admin/users/1/mfa', requiredACL: 'user:update:mfa'},
+	{method: 'GET', path: '/admin/users/1/webauthn-credentials', requiredACL: 'user:update:mfa'},
+	{method: 'DELETE', path: '/admin/users/1/webauthn-credentials/credential', requiredACL: 'user:update:mfa'},
+	{method: 'DELETE', path: '/admin/users/1/profile-fields', requiredACL: 'user:update:profile'},
+	{method: 'PUT', path: '/admin/users/1/bot-status', requiredACL: 'user:update:bot_status'},
+	{method: 'PUT', path: '/admin/users/1/acls', requiredACL: 'acl:set:user'},
+	{method: 'PUT', path: '/admin/users/1/deletion', requiredACL: 'user:delete'},
+	{method: 'POST', path: '/admin/users/1/avatar-block', requiredACL: 'ban:avatar_hash:add'},
+	{method: 'GET', path: '/admin/guilds/1/emojis', requiredACL: 'asset:purge'},
+	{method: 'GET', path: '/admin/guilds/1/stickers', requiredACL: 'asset:purge'},
+	{method: 'GET', path: '/admin/blocklists', requiredACL: 'ban:ip:check'},
+	{method: 'GET', path: '/admin/blocklists/ip/entries', requiredACL: 'ban:ip:check'},
+	{method: 'POST', path: '/admin/blocklists/ip/entries', requiredACL: 'ban:ip:add', body: {ip: '198.51.100.9'}},
+	{method: 'GET', path: '/admin/discovery/applications', requiredACL: 'discovery:review'},
+	{method: 'GET', path: '/admin/discovery/listings', requiredACL: 'discovery:review'},
+	{method: 'PATCH', path: '/admin/discovery/listings/1', requiredACL: 'discovery:review'},
+	{method: 'DELETE', path: '/admin/discovery/listings/1', requiredACL: 'discovery:remove'},
+	{method: 'GET', path: '/admin/search/index-refreshes/1', requiredACL: 'guild:lookup'},
+	{
+		method: 'POST',
+		path: '/admin/search/indexes/users/refreshes',
+		requiredACL: 'guild:lookup',
+		body: {},
+	},
 ];
 
 describe('Admin Endpoints Authorization', () => {
@@ -52,51 +107,34 @@ describe('Admin Endpoints Authorization', () => {
 	});
 	test('admin endpoints require authentication', async () => {
 		for (const endpoint of adminEndpoints.slice(0, 5)) {
-			if (endpoint.method === 'POST') {
-				await createBuilderWithoutAuth(harness).post(endpoint.path).expect(HTTP_STATUS.UNAUTHORIZED).execute();
-			} else {
-				await createBuilderWithoutAuth(harness).get(endpoint.path).expect(HTTP_STATUS.UNAUTHORIZED).execute();
-			}
+			await withMethod(createBuilderWithoutAuth(harness), endpoint.method, endpoint.path, endpoint.body)
+				.expect(HTTP_STATUS.UNAUTHORIZED)
+				.execute();
 		}
 	});
 	test('admin endpoints require proper ACLs', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate']);
 		for (const endpoint of adminEndpoints.slice(0, 10)) {
-			if (endpoint.method === 'POST') {
-				await createBuilder(harness, `${admin.token}`)
-					.post(endpoint.path)
-					.body({})
-					.expect(HTTP_STATUS.FORBIDDEN)
-					.execute();
-			} else {
-				await createBuilder(harness, `${admin.token}`).get(endpoint.path).expect(HTTP_STATUS.FORBIDDEN).execute();
-			}
+			await withMethod(createBuilder(harness, `${admin.token}`), endpoint.method, endpoint.path, endpoint.body)
+				.expect(HTTP_STATUS.FORBIDDEN)
+				.execute();
 		}
 	});
 	test('admin endpoints succeed with proper ACLs', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup', 'guild:lookup']);
-		const endpointsToTest = [
-			{path: '/admin/users/lookup', body: {user_ids: ['123']}},
-			{path: '/admin/guilds/lookup', body: {guild_id: '123'}},
-		];
-		for (const endpoint of endpointsToTest) {
-			await createBuilder(harness, `${admin.token}`)
-				.post(endpoint.path)
-				.body(endpoint.body)
-				.expect(HTTP_STATUS.OK)
-				.execute();
+		const endpointsToTest = ['/admin/users/123'];
+		for (const path of endpointsToTest) {
+			await createBuilder(harness, `${admin.token}`).get(path).expect(HTTP_STATUS.OK).execute();
 		}
+		await createBuilder(harness, `${admin.token}`).get('/admin/guilds/123').expect(HTTP_STATUS.OK).execute();
 	});
 	test('user lookup endpoint requires user:lookup ACL', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
@@ -104,10 +142,7 @@ describe('Admin Endpoints Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/guilds/lookup')
-			.body({
-				guild_ids: ['123456789'],
-			})
+			.get('/admin/guilds/123456789')
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
@@ -115,10 +150,7 @@ describe('Admin Endpoints Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/audit-logs')
-			.body({
-				limit: 10,
-			})
+			.get('/admin/audit-logs?limit=10')
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});

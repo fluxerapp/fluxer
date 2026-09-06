@@ -17,28 +17,20 @@ impl AdminApiClient {
         limit: u32,
         offset: u32,
     ) -> ApiResult<SearchGuildsResponse> {
-        let body = generated_types::SearchGuildsRequest {
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit, "limit").map_err(ApiError::Parse)?,
-            ),
-            offset: Some(i64::from(offset)),
-            query: Some(query.to_owned()),
-        };
+        let limit = limit.to_string();
+        let offset = offset.to_string();
         let response = self
             .generated()
-            .search_guilds(&body)
+            .list_admin_guilds(Some(limit.as_str()), Some(offset.as_str()), Some(query))
             .await
             .map_err(|e| self.generated_error(e))?;
         search_guilds_response(response.into_inner())
     }
 
     pub async fn get_guild_by_id(&self, guild_id: &str) -> ApiResult<GuildInfo> {
-        let body = generated_types::LookupGuildRequest {
-            guild_id: snowflake(guild_id),
-        };
         let response = self
             .generated()
-            .lookup_guild(&body)
+            .get_admin_guild(&snowflake(guild_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: LookupGuildResponse = self.generated_value(response.into_inner())?;
@@ -51,12 +43,9 @@ impl AdminApiClient {
     }
 
     pub async fn lookup_guild(&self, guild_id: &str) -> ApiResult<Option<GuildDetailInfo>> {
-        let body = generated_types::LookupGuildRequest {
-            guild_id: snowflake(guild_id),
-        };
         let response = self
             .generated()
-            .lookup_guild(&body)
+            .get_admin_guild(&snowflake(guild_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: LookupGuildResponse = self.generated_value(response.into_inner())?;
@@ -69,26 +58,23 @@ impl AdminApiClient {
         add_features: &[String],
         remove_features: &[String],
     ) -> ApiResult<GuildUpdateResponse> {
-        let body = generated_types::UpdateGuildFeaturesRequest {
+        let body = generated_types::UpdateGuildRequest {
             add_features: guild_features(add_features),
-            guild_id: snowflake(guild_id),
             remove_features: guild_features(remove_features),
+            ..Default::default()
         };
         let response = self
             .generated()
-            .update_guild_features(&body)
+            .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
 
     pub async fn delete_guild(&self, guild_id: &str) -> ApiResult<SuccessResponse> {
-        let body = generated_types::DeleteGuildRequest {
-            guild_id: snowflake(guild_id),
-        };
         let response = self
             .generated()
-            .admin_delete_guild(&body)
+            .delete_admin_guild(&snowflake(guild_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -99,13 +85,13 @@ impl AdminApiClient {
         guild_id: &str,
         new_owner_id: &str,
     ) -> ApiResult<GuildUpdateResponse> {
-        let body = generated_types::TransferGuildOwnershipRequest {
-            guild_id: snowflake(guild_id),
-            new_owner_id: snowflake(new_owner_id),
+        let body = generated_types::UpdateGuildRequest {
+            new_owner_id: Some(snowflake(new_owner_id)),
+            ..Default::default()
         };
         let response = self
             .generated()
-            .admin_transfer_guild_ownership(&body)
+            .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -117,44 +103,32 @@ impl AdminApiClient {
         limit: u32,
         offset: u32,
     ) -> ApiResult<ListGuildMembersResponse> {
-        let body = generated_types::ListGuildMembersRequest {
-            guild_id: snowflake(guild_id),
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit, "limit").map_err(ApiError::Parse)?,
-            ),
-            offset: Some(i64::from(offset)),
-        };
+        let limit = limit.to_string();
+        let offset = offset.to_string();
         let response = self
             .generated()
-            .admin_list_guild_members(&body)
+            .list_admin_guild_members(
+                &snowflake(guild_id),
+                Some(limit.as_str()),
+                Some(offset.as_str()),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
 
     pub async fn ban_guild_member(&self, guild_id: &str, user_id: &str) -> ApiResult<()> {
-        let body = generated_types::BanGuildMemberRequest {
-            ban_duration_seconds: None,
-            delete_message_days: None,
-            delete_message_seconds: None,
-            guild_id: snowflake(guild_id),
-            reason: None,
-            user_id: snowflake(user_id),
-        };
+        let body = generated_types::BanGuildMemberBody::default();
         self.generated()
-            .admin_ban_guild_member(&body)
+            .ban_admin_guild_member(&snowflake(guild_id), &snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
     }
 
     pub async fn kick_guild_member(&self, guild_id: &str, user_id: &str) -> ApiResult<()> {
-        let body = generated_types::KickGuildMemberRequest {
-            guild_id: snowflake(guild_id),
-            user_id: snowflake(user_id),
-        };
         self.generated()
-            .kick_guild_member(&body)
+            .kick_admin_guild_member(&snowflake(guild_id), &snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
@@ -166,21 +140,22 @@ impl AdminApiClient {
         limit: Option<u32>,
         before: Option<&str>,
     ) -> ApiResult<GuildAuditLogResponse> {
-        let body = generated_types::ListGuildAuditLogsRequest {
-            action_type: None,
-            after: None,
-            before: before.map(snowflake),
-            guild_id: snowflake(guild_id),
-            limit: limit
-                .map(i32::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?
-                .map(generated_types::Int32Type::from),
-            user_id: None,
-        };
+        let before = before.map(snowflake);
+        let limit = limit
+            .map(i32::try_from)
+            .transpose()
+            .map_err(|e| ApiError::Parse(e.to_string()))?
+            .map(generated_types::Int32Type::from);
         let response = self
             .generated()
-            .list_guild_audit_logs_admin(&body)
+            .list_admin_guild_audit_logs(
+                &snowflake(guild_id),
+                None,
+                None,
+                before.as_ref(),
+                limit.as_ref(),
+                None,
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -189,15 +164,15 @@ impl AdminApiClient {
     pub async fn clear_guild_fields(&self, guild_id: &str, fields: &[String]) -> ApiResult<()> {
         let fields = fields
             .iter()
-            .map(generated_types::ClearGuildFieldsRequestFieldsItem::try_from)
+            .map(|field| generated_types::UpdateGuildRequestFieldsItem::try_from(field.as_str()))
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| ApiError::Parse(e.to_string()))?;
-        let body = generated_types::ClearGuildFieldsRequest {
+        let body = generated_types::UpdateGuildRequest {
             fields,
-            guild_id: snowflake(guild_id),
+            ..Default::default()
         };
         self.generated()
-            .clear_guild_fields(&body)
+            .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
@@ -208,10 +183,10 @@ impl AdminApiClient {
         guild_id: &str,
         settings: &serde_json::Value,
     ) -> ApiResult<GuildUpdateResponse> {
-        let body = guild_settings_request(guild_id, settings)?;
+        let body = guild_settings_request(settings)?;
         let response = self
             .generated()
-            .update_guild_settings(&body)
+            .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         guild_update_response(response.into_inner())
@@ -222,13 +197,13 @@ impl AdminApiClient {
         guild_id: &str,
         name: &str,
     ) -> ApiResult<GuildUpdateResponse> {
-        let body = generated_types::UpdateGuildNameRequest {
-            guild_id: snowflake(guild_id),
-            name: name.to_owned(),
+        let body = generated_types::UpdateGuildRequest {
+            name: Some(name.to_owned()),
+            ..Default::default()
         };
         let response = self
             .generated()
-            .update_guild_name(&body)
+            .update_admin_guild(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -239,37 +214,27 @@ impl AdminApiClient {
         guild_id: &str,
         vanity: Option<&str>,
     ) -> ApiResult<GuildUpdateResponse> {
-        let body = generated_types::UpdateGuildVanityRequest {
-            guild_id: snowflake(guild_id),
-            vanity_url_code: vanity.map(std::borrow::ToOwned::to_owned),
-        };
-        let response = self
-            .generated()
-            .update_guild_vanity(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        let body = serde_json::json!({"vanity_url_code": vanity});
+        self.patch(
+            &format!("/admin/guilds/{}", urlencoding::encode(guild_id)),
+            Some(&body),
+        )
+        .await
     }
 
     pub async fn reload_guild(&self, guild_id: &str) -> ApiResult<SuccessResponse> {
-        let body = generated_types::ReloadGuildRequest {
-            guild_id: snowflake(guild_id),
-        };
         let response = self
             .generated()
-            .reload_guild(&body)
+            .create_admin_guild_reload(&snowflake(guild_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
 
     pub async fn shutdown_guild(&self, guild_id: &str) -> ApiResult<SuccessResponse> {
-        let body = generated_types::ShutdownGuildRequest {
-            guild_id: snowflake(guild_id),
-        };
         let response = self
             .generated()
-            .shutdown_guild(&body)
+            .create_admin_guild_shutdown(&snowflake(guild_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -280,13 +245,9 @@ impl AdminApiClient {
         user_id: &str,
         guild_id: &str,
     ) -> ApiResult<SuccessResponse> {
-        let body = generated_types::ForceAddUserToGuildRequest {
-            guild_id: snowflake(guild_id),
-            user_id: snowflake(user_id),
-        };
         let response = self
             .generated()
-            .force_add_user_to_guild(&body)
+            .add_admin_guild_member(&snowflake(guild_id), &snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -298,39 +259,23 @@ impl AdminApiClient {
         limit: u32,
         offset: u32,
     ) -> ApiResult<SearchReportsResponse> {
-        let body = generated_types::SearchReportsRequest {
-            category: None,
-            guild_context_id: None,
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit, "limit").map_err(ApiError::Parse)?,
-            ),
-            offset: Some(i64::from(offset)),
-            query: None,
-            report_type: None,
-            reported_channel_id: None,
-            reported_guild_id: Some(snowflake(guild_id)),
-            reported_user_id: None,
-            reporter_id: None,
-            resolved_by_admin_id: None,
-            sort_by: None,
-            sort_order: None,
-            status: None,
-        };
-        let response = self
-            .generated()
-            .search_reports(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let response = response.into_inner();
-        Ok(SearchReportsResponse {
-            reports: self.generated_value(response.reports)?,
-            total: crate::api::generated::number_to_u64(response.total, "total")
-                .map_err(ApiError::Parse)?,
-            offset: crate::api::generated::number_to_u64(response.offset, "offset")
-                .map_err(ApiError::Parse)?,
-            limit: crate::api::generated::number_to_u64(response.limit, "limit")
-                .map_err(ApiError::Parse)?,
-        })
+        self.search_reports(
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(guild_id),
+            None,
+            None,
+            None,
+            None,
+            None,
+            limit,
+            offset,
+        )
+        .await
     }
 }
 
@@ -417,22 +362,21 @@ fn guild_update_response(
 }
 
 fn guild_settings_request(
-    guild_id: &str,
     settings: &serde_json::Value,
-) -> ApiResult<generated_types::UpdateGuildSettingsRequest> {
+) -> ApiResult<generated_types::UpdateGuildRequest> {
     let patch = serde_json::from_value::<GuildSettingsPatch>(settings.clone())
         .map_err(|e| ApiError::Parse(e.to_string()))?;
-    Ok(generated_types::UpdateGuildSettingsRequest {
+    Ok(generated_types::UpdateGuildRequest {
         content_warning_level: patch.content_warning_level,
         content_warning_text: patch.content_warning_text,
         default_message_notifications: patch.default_message_notifications,
         disabled_operations: patch.disabled_operations,
         explicit_content_filter: patch.explicit_content_filter,
-        guild_id: snowflake(guild_id),
         mfa_level: patch.mfa_level,
         nsfw: patch.nsfw,
         nsfw_level: patch.nsfw_level,
         verification_level: patch.verification_level,
+        ..Default::default()
     })
 }
 
@@ -459,9 +403,8 @@ mod tests {
             "nsfw": true,
             "verification_level": 2,
         });
-        let request = guild_settings_request("123", &settings).unwrap();
+        let request = guild_settings_request(&settings).unwrap();
         let json = serde_json::to_value(request).unwrap();
-        assert_eq!(json["guild_id"], "123");
         assert_eq!(json["disabled_operations"], 5);
         assert_eq!(json["nsfw"], true);
         assert_eq!(json["verification_level"], 2);

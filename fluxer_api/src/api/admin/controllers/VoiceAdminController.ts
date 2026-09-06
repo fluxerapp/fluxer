@@ -6,37 +6,40 @@ import {
 	CreateVoiceRegionResponse,
 	CreateVoiceServerRequest,
 	CreateVoiceServerResponse,
-	DeleteVoiceRegionRequest,
 	DeleteVoiceResponse,
-	DeleteVoiceServerRequest,
-	GetVoiceRegionRequest,
+	GetVoiceRegionQuery,
 	GetVoiceRegionResponse,
-	GetVoiceServerRequest,
 	GetVoiceServerResponse,
-	ListVoiceRegionsRequest,
+	ListVoiceRegionsQuery,
 	ListVoiceRegionsResponse,
-	ListVoiceServersRequest,
 	ListVoiceServersResponse,
 	UpdateVoiceRegionRequest,
 	UpdateVoiceRegionResponse,
 	UpdateVoiceServerRequest,
 	UpdateVoiceServerResponse,
+	VoiceRegionIdParam,
+	VoiceServerIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
+import type {Context} from 'hono';
 import {requireAdminACL} from '../../middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
+import type {HonoApp, HonoEnv} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 export function VoiceAdminController(app: HonoApp) {
-	app.post(
-		'/admin/voice/regions/list',
+	app.get(
+		'/admin/voice/regions',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.VOICE_REGION_LIST),
-		Validator('json', ListVoiceRegionsRequest),
+		Validator('query', ListVoiceRegionsQuery),
 		OpenAPI({
-			operationId: 'list_voice_regions',
+			operationId: 'list_admin_voice_regions',
 			summary: 'List voice regions',
 			responseSchema: ListVoiceRegionsResponse,
 			statusCode: 200,
@@ -47,36 +50,16 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.listVoiceRegions(ctx.req.valid('json')));
+			return ctx.json(await adminService.voiceService.listVoiceRegions(ctx.req.valid('query')));
 		},
 	);
 	app.post(
-		'/admin/voice/regions/get',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireAdminACL(AdminACLs.VOICE_REGION_LIST),
-		Validator('json', GetVoiceRegionRequest),
-		OpenAPI({
-			operationId: 'get_voice_region',
-			summary: 'Get voice region',
-			responseSchema: GetVoiceRegionResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Gets detailed information about a voice region including assigned servers, capacity, and server details. Requires VOICE_REGION_LIST permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.getVoiceRegion(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/voice/regions/create',
+		'/admin/voice/regions',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.VOICE_REGION_CREATE),
 		Validator('json', CreateVoiceRegionRequest),
 		OpenAPI({
-			operationId: 'create_voice_region',
+			operationId: 'create_admin_voice_region',
 			summary: 'Create voice region',
 			responseSchema: CreateVoiceRegionResponse,
 			statusCode: 200,
@@ -94,13 +77,45 @@ export function VoiceAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.post(
-		'/admin/voice/regions/update',
+	app.get(
+		'/admin/voice/regions/:region_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.VOICE_REGION_LIST),
+		Validator('param', VoiceRegionIdParam),
+		Validator('query', GetVoiceRegionQuery),
+		OpenAPI({
+			operationId: 'get_admin_voice_region',
+			summary: 'Get voice region',
+			responseSchema: GetVoiceRegionResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Gets detailed information about a voice region including assigned servers, capacity, and server details. Requires VOICE_REGION_LIST permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			return ctx.json(
+				await adminService.voiceService.getVoiceRegion({
+					id: ctx.req.valid('param').region_id,
+					include_servers: ctx.req.valid('query').include_servers,
+				}),
+			);
+		},
+	);
+	app.patch(
+		'/admin/voice/regions/:region_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.VOICE_REGION_UPDATE),
-		Validator('json', UpdateVoiceRegionRequest),
+		Validator('param', VoiceRegionIdParam),
+		Validator('json', UpdateVoiceRegionRequest, {
+			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
+				...(isPlainObject(value) ? value : {}),
+				id: ctx.req.param('region_id'),
+			}),
+		}),
 		OpenAPI({
-			operationId: 'update_voice_region',
+			operationId: 'update_admin_voice_region',
 			summary: 'Update voice region',
 			responseSchema: UpdateVoiceRegionResponse,
 			statusCode: 200,
@@ -118,13 +133,13 @@ export function VoiceAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.post(
-		'/admin/voice/regions/delete',
+	app.delete(
+		'/admin/voice/regions/:region_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.VOICE_REGION_DELETE),
-		Validator('json', DeleteVoiceRegionRequest),
+		Validator('param', VoiceRegionIdParam),
 		OpenAPI({
-			operationId: 'delete_voice_region',
+			operationId: 'delete_admin_voice_region',
 			summary: 'Delete voice region',
 			responseSchema: DeleteVoiceResponse,
 			statusCode: 200,
@@ -138,57 +153,47 @@ export function VoiceAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
 			return ctx.json(
-				await adminService.voiceService.deleteVoiceRegion(ctx.req.valid('json'), adminUserId, auditLogReason),
+				await adminService.voiceService.deleteVoiceRegion(
+					{id: ctx.req.valid('param').region_id},
+					adminUserId,
+					auditLogReason,
+				),
 			);
 		},
 	);
-	app.post(
-		'/admin/voice/servers/list',
+	app.get(
+		'/admin/voice/regions/:region_id/servers',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.VOICE_SERVER_LIST),
-		Validator('json', ListVoiceServersRequest),
+		Validator('param', VoiceRegionIdParam),
 		OpenAPI({
-			operationId: 'list_voice_servers',
+			operationId: 'list_admin_voice_servers',
 			summary: 'List voice servers',
 			responseSchema: ListVoiceServersResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Lists all voice servers with connection counts and capacity. Shows server status, region assignment, and load information. Supports filtering and pagination. Requires VOICE_SERVER_LIST permission.',
+				'Lists all voice servers in a region with connection counts and capacity. Shows server status, region assignment, and load information. Requires VOICE_SERVER_LIST permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.listVoiceServers(ctx.req.valid('json')));
+			return ctx.json(await adminService.voiceService.listVoiceServers({region_id: ctx.req.valid('param').region_id}));
 		},
 	);
 	app.post(
-		'/admin/voice/servers/get',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireAdminACL(AdminACLs.VOICE_SERVER_LIST),
-		Validator('json', GetVoiceServerRequest),
-		OpenAPI({
-			operationId: 'get_voice_server',
-			summary: 'Get voice server',
-			responseSchema: GetVoiceServerResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Gets detailed voice server information including active connections and configuration. Requires VOICE_SERVER_LIST permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.getVoiceServer(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/voice/servers/create',
+		'/admin/voice/regions/:region_id/servers',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.VOICE_SERVER_CREATE),
-		Validator('json', CreateVoiceServerRequest),
+		Validator('param', VoiceRegionIdParam),
+		Validator('json', CreateVoiceServerRequest, {
+			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
+				...(isPlainObject(value) ? value : {}),
+				region_id: ctx.req.param('region_id'),
+			}),
+		}),
 		OpenAPI({
-			operationId: 'create_voice_server',
+			operationId: 'create_admin_voice_server',
 			summary: 'Create voice server',
 			responseSchema: CreateVoiceServerResponse,
 			statusCode: 200,
@@ -206,13 +211,41 @@ export function VoiceAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.post(
-		'/admin/voice/servers/update',
+	app.get(
+		'/admin/voice/regions/:region_id/servers/:server_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.VOICE_SERVER_LIST),
+		Validator('param', VoiceServerIdParam),
+		OpenAPI({
+			operationId: 'get_admin_voice_server',
+			summary: 'Get voice server',
+			responseSchema: GetVoiceServerResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Gets detailed voice server information including active connections and configuration. Requires VOICE_SERVER_LIST permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {region_id, server_id} = ctx.req.valid('param');
+			return ctx.json(await adminService.voiceService.getVoiceServer({region_id, server_id}));
+		},
+	);
+	app.patch(
+		'/admin/voice/regions/:region_id/servers/:server_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.VOICE_SERVER_UPDATE),
-		Validator('json', UpdateVoiceServerRequest),
+		Validator('param', VoiceServerIdParam),
+		Validator('json', UpdateVoiceServerRequest, {
+			pre: (value: unknown, ctx: Context<HonoEnv>) => ({
+				...(isPlainObject(value) ? value : {}),
+				region_id: ctx.req.param('region_id'),
+				server_id: ctx.req.param('server_id'),
+			}),
+		}),
 		OpenAPI({
-			operationId: 'update_voice_server',
+			operationId: 'update_admin_voice_server',
 			summary: 'Update voice server',
 			responseSchema: UpdateVoiceServerResponse,
 			statusCode: 200,
@@ -230,13 +263,13 @@ export function VoiceAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.post(
-		'/admin/voice/servers/delete',
+	app.delete(
+		'/admin/voice/regions/:region_id/servers/:server_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.VOICE_SERVER_DELETE),
-		Validator('json', DeleteVoiceServerRequest),
+		Validator('param', VoiceServerIdParam),
 		OpenAPI({
-			operationId: 'delete_voice_server',
+			operationId: 'delete_admin_voice_server',
 			summary: 'Delete voice server',
 			responseSchema: DeleteVoiceResponse,
 			statusCode: 200,
@@ -249,8 +282,9 @@ export function VoiceAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
+			const {region_id, server_id} = ctx.req.valid('param');
 			return ctx.json(
-				await adminService.voiceService.deleteVoiceServer(ctx.req.valid('json'), adminUserId, auditLogReason),
+				await adminService.voiceService.deleteVoiceServer({region_id, server_id}, adminUserId, auditLogReason),
 			);
 		},
 	);

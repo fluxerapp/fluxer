@@ -226,6 +226,10 @@ export class AdminVoiceService {
 
 	async createVoiceServer(data: CreateVoiceServerRequest, adminUserId: UserID, auditLogReason: string | null) {
 		const {voiceRepository} = this.deps;
+		const region = await voiceRepository.getRegion(data.region_id);
+		if (!region) {
+			throw new UnknownVoiceRegionError();
+		}
 		const server = await voiceRepository.createServer({
 			regionId: data.region_id,
 			serverId: data.server_id,

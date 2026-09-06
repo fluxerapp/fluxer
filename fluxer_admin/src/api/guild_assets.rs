@@ -10,7 +10,7 @@ impl AdminApiClient {
         let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
         let response = self
             .generated()
-            .admin_list_guild_emojis(&guild_id)
+            .list_admin_guild_emojis(&guild_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -23,7 +23,7 @@ impl AdminApiClient {
         let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
         let response = self
             .generated()
-            .admin_list_guild_stickers(&guild_id)
+            .list_admin_guild_stickers(&guild_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

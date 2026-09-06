@@ -40,9 +40,9 @@ describe('pending registration audit logs', () => {
 	});
 
 	it.each([
-		['approve', 'approve_registration'],
-		['reject', 'reject_registration'],
-	] as const)('logs a pending registration %s decision', async (decision, action) => {
+		['approved', 'approve_registration'],
+		['rejected', 'reject_registration'],
+	] as const)('logs a pending registration %s decision', async (status, action) => {
 		const admin = await setUserACLs(harness, await createTestAccount(harness), [
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
@@ -54,8 +54,8 @@ describe('pending registration audit logs', () => {
 		const pending = await createBuilderWithoutAuth<PendingRegistrationResponse>(harness)
 			.post('/auth/register')
 			.body({
-				email: createUniqueEmail(decision),
-				username: createUniqueUsername(decision),
+				email: createUniqueEmail(status),
+				username: createUniqueUsername(status),
 				global_name: 'The register man',
 				password: 'approving-since-1999',
 				date_of_birth: '2000-01-01',
@@ -64,14 +64,13 @@ describe('pending registration audit logs', () => {
 			.execute();
 
 		await createBuilder(harness, admin.token)
-			.post(`/admin/instance-config/pending-registrations/${decision}`)
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
 			.header('X-Audit-Log-Reason', 'Registration review')
-			.body({user_id: pending.user_id})
+			.body({status})
 			.execute();
 
 		const result = await createBuilder<AuditLogsResponse>(harness, admin.token)
-			.post('/admin/audit-logs')
-			.body({target_type: 'user', target_id: pending.user_id})
+			.get(`/admin/audit-logs?target_type=user&target_id=${pending.user_id}`)
 			.execute();
 
 		expect(result.logs).toEqual([

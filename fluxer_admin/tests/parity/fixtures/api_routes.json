@@ -2,7 +2,7 @@
 	"routes": [
 		{
 			"method": "GET",
-			"path": "/admin/users/me",
+			"path": "/admin/users/@me",
 			"body_file": "admin_user_me.json"
 		},
 		{
@@ -21,28 +21,28 @@
 			"body": "{}"
 		},
 		{
-			"method": "POST",
-			"path": "/admin/users/search",
+			"method": "GET",
+			"path": "/admin/users",
 			"body_file": "search_users.json"
 		},
 		{
-			"method": "POST",
-			"path": "/admin/users/lookup",
+			"method": "GET",
+			"path": "/admin/users/1508576042312688531",
 			"body_file": "lookup_user.json"
 		},
 		{
-			"method": "POST",
-			"path": "/admin/guilds/search",
+			"method": "GET",
+			"path": "/admin/guilds",
 			"body_file": "search_guilds.json"
 		},
 		{
-			"method": "POST",
-			"path": "/admin/guilds/lookup",
+			"method": "GET",
+			"path": "/admin/guilds/1600000000000000001",
 			"body_file": "lookup_guild.json"
 		},
 		{
-			"method": "POST",
-			"path": "/admin/reports/search",
+			"method": "GET",
+			"path": "/admin/reports",
 			"body_file": "search_reports.json"
 		},
 		{

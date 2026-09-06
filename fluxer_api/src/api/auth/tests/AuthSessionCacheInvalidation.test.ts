@@ -95,8 +95,8 @@ describe('Auth session cache invalidation', () => {
 			expect(await readCachedSession(harness, token)).not.toBeNull();
 		}
 		await createBuilder(harness, admin.token)
-			.post('/admin/users/temp-ban')
-			.body({user_id: target.userId, duration_hours: 24, reason: 'cache invalidation coverage'})
+			.put(`/admin/users/${target.userId}/ban`)
+			.body({duration_hours: 24, reason: 'cache invalidation coverage'})
 			.execute();
 		for (const token of [target.token, targetSecond.token]) {
 			expect(await readCachedSession(harness, token)).toBeNull();

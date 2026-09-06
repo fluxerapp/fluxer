@@ -26,7 +26,7 @@ impl AdminApiClient {
         };
         let response = self
             .generated()
-            .generate_gift_codes(&body)
+            .create_admin_gift_codes(&body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

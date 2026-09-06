@@ -2,7 +2,7 @@
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {ListGuildApplicationsResponse} from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
+import type {ListApplicationsResponse} from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
 import {createGuild} from '../../channel/tests/ChannelTestUtils';
@@ -42,9 +42,8 @@ describe('Admin guild applications', () => {
 			.execute();
 		await setUserACLs(harness, owner, [AdminACLs.AUTHENTICATE, AdminACLs.APPLICATION_LOOKUP]);
 
-		const response = await createBuilder<ListGuildApplicationsResponse>(harness, `${owner.token}`)
-			.post('/admin/applications/list-by-guild')
-			.body({guild_id: guild.id})
+		const response = await createBuilder<ListApplicationsResponse>(harness, `${owner.token}`)
+			.get(`/admin/applications?guild_id=${guild.id}`)
 			.expect(HTTP_STATUS.OK)
 			.execute();
 

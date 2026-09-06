@@ -229,9 +229,9 @@ describe('Content Reporting', () => {
 				resolved_at: string | null;
 				public_comment: string | null;
 			}>(harness, `${admin.token}`)
-				.post('/admin/reports/resolve')
+				.patch(`/admin/reports/${report.report_id}`)
 				.body({
-					report_id: report.report_id,
+					status: 'resolved',
 					public_comment: publicComment,
 				})
 				.expect(HTTP_STATUS.OK)

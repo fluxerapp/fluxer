@@ -6,14 +6,17 @@ import {
 	DISCOVERY_MAX_TAGS,
 	DISCOVERY_TAG_MAX_LENGTH,
 	DISCOVERY_TAG_MIN_LENGTH,
+	DiscoveryApplicationStatus,
+	DiscoveryCategories,
 	isValidDiscoveryLanguage,
 	isValidDiscoveryTag,
 	normalizeDiscoveryTag,
 } from '@fluxer/constants/src/DiscoveryConstants';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
-import {SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
+const DISCOVERY_CATEGORY_MAX = Math.max(...Object.values(DiscoveryCategories));
 const DiscoveryTagSchema = z
 	.string()
 	.min(DISCOVERY_TAG_MIN_LENGTH)
@@ -39,7 +42,7 @@ export const DiscoveryApplicationRequest = z.object({
 		.min(DISCOVERY_DESCRIPTION_MIN_LENGTH)
 		.max(DISCOVERY_DESCRIPTION_MAX_LENGTH)
 		.describe('Description for discovery listing'),
-	category_type: z.number().int().min(0).max(8).describe('Discovery category type'),
+	category_type: z.number().int().min(0).max(DISCOVERY_CATEGORY_MAX).describe('Discovery category type'),
 	primary_language: DiscoveryLanguageSchema.optional(),
 	custom_tags: DiscoveryTagsSchema.optional(),
 });
@@ -53,7 +56,13 @@ export const DiscoveryApplicationPatchRequest = z.object({
 		.max(DISCOVERY_DESCRIPTION_MAX_LENGTH)
 		.optional()
 		.describe('Updated description for discovery listing'),
-	category_type: z.number().int().min(0).max(8).optional().describe('Updated discovery category type'),
+	category_type: z
+		.number()
+		.int()
+		.min(0)
+		.max(DISCOVERY_CATEGORY_MAX)
+		.optional()
+		.describe('Updated discovery category type'),
 	primary_language: DiscoveryLanguageSchema.optional(),
 	custom_tags: DiscoveryTagsSchema.optional(),
 });
@@ -62,7 +71,7 @@ export type DiscoveryApplicationPatchRequest = z.infer<typeof DiscoveryApplicati
 
 export const DiscoverySearchQuery = z.object({
 	query: z.string().max(100).optional().describe('Search query'),
-	category: z.coerce.number().int().min(0).max(8).optional().describe('Filter by category'),
+	category: z.coerce.number().int().min(0).max(DISCOVERY_CATEGORY_MAX).optional().describe('Filter by category'),
 	language: z
 		.string()
 		.refine((value) => isValidDiscoveryLanguage(value), {message: 'Unsupported language code'})
@@ -183,20 +192,59 @@ export const DiscoveryCategoryListResponse = z.array(DiscoveryCategoryResponse);
 
 export type DiscoveryCategoryListResponse = z.infer<typeof DiscoveryCategoryListResponse>;
 
-export const DiscoveryAdminReviewRequest = z.object({
+const DiscoveryAdminReviewRequest = z.object({
 	reason: z.string().max(500).optional().describe('Review reason'),
 });
 
-export type DiscoveryAdminReviewRequest = z.infer<typeof DiscoveryAdminReviewRequest>;
-
-export const DiscoveryAdminRejectRequest = z.object({
+const DiscoveryAdminRejectRequest = z.object({
 	reason: z.string().min(1).max(500).describe('Rejection reason'),
 });
-
-export type DiscoveryAdminRejectRequest = z.infer<typeof DiscoveryAdminRejectRequest>;
 
 export const DiscoveryAdminRemoveRequest = z.object({
 	reason: z.string().min(1).max(500).describe('Removal reason'),
 });
 
 export type DiscoveryAdminRemoveRequest = z.infer<typeof DiscoveryAdminRemoveRequest>;
+
+export const DiscoveryAdminApplicationUpdateRequest = z.discriminatedUnion('status', [
+	DiscoveryAdminReviewRequest.extend({
+		status: z.literal(DiscoveryApplicationStatus.APPROVED).describe('Approve the pending application'),
+	}),
+	DiscoveryAdminRejectRequest.extend({
+		status: z.literal(DiscoveryApplicationStatus.REJECTED).describe('Reject the pending application'),
+	}),
+]);
+
+export type DiscoveryAdminApplicationUpdateRequest = z.infer<typeof DiscoveryAdminApplicationUpdateRequest>;
+
+export const DiscoveryCategoryIdParam = z.object({
+	category_id: z.coerce.number().int().min(0).max(DISCOVERY_CATEGORY_MAX).describe('The ID of the discovery category'),
+});
+
+export type DiscoveryCategoryIdParam = z.infer<typeof DiscoveryCategoryIdParam>;
+
+export const DiscoveryAdminCategoryListingQuery = z.object({
+	limit: z.coerce.number().int().min(1).max(100).optional().default(50).describe('Number of listings to return'),
+	offset: z.coerce.number().int().min(0).max(10000).optional().default(0).describe('Pagination offset'),
+});
+
+export type DiscoveryAdminCategoryListingQuery = z.infer<typeof DiscoveryAdminCategoryListingQuery>;
+
+export const DiscoveryAdminListingBulkCategoryRequest = z.object({
+	guild_ids: z.array(SnowflakeType).min(1).max(100).describe('Listed guilds to move'),
+	category_type: z
+		.number()
+		.int()
+		.min(0)
+		.max(DISCOVERY_CATEGORY_MAX)
+		.describe('Discovery category to file every named guild under'),
+});
+
+export type DiscoveryAdminListingBulkCategoryRequest = z.infer<typeof DiscoveryAdminListingBulkCategoryRequest>;
+
+export const DiscoveryAdminListingBulkCategoryResponse = z.object({
+	updated: z.number().describe('Number of listings moved'),
+	failed_guild_ids: z.array(SnowflakeStringType).describe('Guilds that could not be moved'),
+});
+
+export type DiscoveryAdminListingBulkCategoryResponse = z.infer<typeof DiscoveryAdminListingBulkCategoryResponse>;

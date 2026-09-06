@@ -83,21 +83,12 @@ describe('Admin API Key Authentication', () => {
 			'guild:lookup',
 		]);
 		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Auth Test Key');
-		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
+		await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 	});
 	test('invalid key is rejected', async () => {
 		await createTestAccount(harness);
 		await createBuilder(harness, 'Admin invalid_key_12345')
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: ['123456789'],
-			})
+			.get('/admin/users/123456789')
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
@@ -113,10 +104,7 @@ describe('Admin API Key Authentication', () => {
 		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Revoke Test Key');
 		await revokeAdminApiKey(harness, admin.token, apiKey.keyId);
 		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
@@ -131,10 +119,7 @@ describe('Admin API Key Authentication', () => {
 		]);
 		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Prefix Test Key');
 		await createBuilder(harness, `Bearer ${apiKey.key}`)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
@@ -149,10 +134,7 @@ describe('Admin API Key Authentication', () => {
 		]);
 		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'No Prefix Test Key');
 		await createBuilder(harness, apiKey.key)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
@@ -167,22 +149,13 @@ describe('Admin API Key Authentication', () => {
 		]);
 		const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Case Test Key');
 		await createBuilder(harness, `admin ${apiKey.key}`)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 	});
 	test('empty key is rejected', async () => {
 		await createTestAccount(harness);
-		await createBuilder(harness, 'Admin ')
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: ['123456789'],
-			})
-			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
+		await createBuilder(harness, 'Admin ').get('/admin/users/123456789').expect(HTTP_STATUS.UNAUTHORIZED).execute();
 	});
 	test('cannot authenticate to user endpoints', async () => {
 		const admin = await createTestAccount(harness);
@@ -221,12 +194,7 @@ describe('Admin API Key Authentication', () => {
 		const keys = await listAdminApiKeys(harness, admin.token);
 		expect(keys).toHaveLength(1);
 		expect(keys[0]!.last_used_at).toBeNull();
-		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
-			.execute();
+		await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).execute();
 		const keysAfter = await listAdminApiKeys(harness, admin.token);
 		expect(keysAfter).toHaveLength(1);
 		expect(keysAfter[0]!.last_used_at).not.toBeNull();
@@ -238,13 +206,7 @@ describe('Admin API Key Authentication', () => {
 		const key2 = await createAdminApiKey(harness, admin, 'Key 2', ['admin:authenticate', 'user:lookup'], null);
 		const key3 = await createAdminApiKey(harness, admin, 'Key 3', ['admin:authenticate', 'user:lookup'], null);
 		for (const key of [key1, key2, key3]) {
-			await createBuilder(harness, key.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, key.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		}
 		const keys = await listAdminApiKeys(harness, admin.token);
 		expect(keys).toHaveLength(3);
@@ -255,12 +217,6 @@ describe('Admin API Key Authentication', () => {
 		await setUserACLs(harness, admin1, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 		await setUserACLs(harness, admin2, ['admin:authenticate', 'user:lookup']);
 		const key1 = await createAdminApiKey(harness, admin1, 'Admin 1 Key', ['admin:authenticate', 'user:lookup'], null);
-		await createBuilder(harness, key1.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin2.userId],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
+		await createBuilder(harness, key1.token).get(`/admin/users/${admin2.userId}`).expect(HTTP_STATUS.OK).execute();
 	});
 });

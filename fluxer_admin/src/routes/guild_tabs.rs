@@ -158,7 +158,7 @@ pub async fn render(
                 return None;
             }
             let apps = client
-                .list_user_applications(guild_id)
+                .list_guild_applications(guild_id)
                 .await
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild applications"))
                 .unwrap_or_default();

@@ -5,34 +5,35 @@ use super::types::{Application, ApplicationUpdateResponse, LookupApplicationResp
 use serde::Serialize;
 
 #[derive(Serialize)]
-struct LookupApplicationRequest<'a> {
-    application_id: &'a str,
-}
-
-#[derive(Serialize)]
-struct ListUserApplicationsRequest<'a> {
-    user_id: &'a str,
-}
-
-#[derive(Serialize)]
 struct TransferApplicationOwnershipRequest<'a> {
-    application_id: &'a str,
     new_owner_id: &'a str,
 }
 
 impl AdminApiClient {
     pub async fn lookup_application(&self, application_id: &str) -> ApiResult<Option<Application>> {
-        let body = LookupApplicationRequest { application_id };
-        let resp: LookupApplicationResponse =
-            self.post_typed("/admin/applications/lookup", &body).await?;
+        let resp: LookupApplicationResponse = self
+            .get(
+                &format!(
+                    "/admin/applications/{}",
+                    urlencoding::encode(application_id)
+                ),
+                None,
+            )
+            .await?;
         Ok(resp.application)
     }
 
     pub async fn list_user_applications(&self, user_id: &str) -> ApiResult<Vec<Application>> {
-        let body = ListUserApplicationsRequest { user_id };
-        let resp: super::types::ListUserApplicationsResponse = self
-            .post_typed("/admin/applications/list-by-owner", &body)
-            .await?;
+        let query_params = [("owner_id", user_id)];
+        let resp: super::types::ListUserApplicationsResponse =
+            self.get("/admin/applications", Some(&query_params)).await?;
+        Ok(resp.applications)
+    }
+
+    pub async fn list_guild_applications(&self, guild_id: &str) -> ApiResult<Vec<Application>> {
+        let query_params = [("guild_id", guild_id)];
+        let resp: super::types::ListUserApplicationsResponse =
+            self.get("/admin/applications", Some(&query_params)).await?;
         Ok(resp.applications)
     }
 
@@ -41,11 +42,15 @@ impl AdminApiClient {
         application_id: &str,
         new_owner_id: &str,
     ) -> ApiResult<ApplicationUpdateResponse> {
-        let body = TransferApplicationOwnershipRequest {
-            application_id,
-            new_owner_id,
-        };
-        self.post_typed("/admin/applications/transfer-ownership", &body)
-            .await
+        let body = TransferApplicationOwnershipRequest { new_owner_id };
+        self.patch_typed_with_reason(
+            &format!(
+                "/admin/applications/{}",
+                urlencoding::encode(application_id)
+            ),
+            &body,
+            None,
+        )
+        .await
     }
 }

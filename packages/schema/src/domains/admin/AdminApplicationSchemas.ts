@@ -39,11 +39,20 @@ export const ApplicationAdminResponse = z.object({
 
 export type ApplicationAdminResponse = z.infer<typeof ApplicationAdminResponse>;
 
-export const LookupApplicationRequest = z.object({
-	application_id: SnowflakeType.describe('ID of the application to look up'),
+export const AdminApplicationIdParam = z.object({
+	application_id: SnowflakeType.describe('The ID of the OAuth2 application'),
 });
 
-export type LookupApplicationRequest = z.infer<typeof LookupApplicationRequest>;
+export type AdminApplicationIdParam = z.infer<typeof AdminApplicationIdParam>;
+
+export const ListApplicationsQuery = z.object({
+	owner_id: SnowflakeType.optional().describe('Restrict the results to the applications owned by this user'),
+	guild_id: SnowflakeType.optional().describe(
+		'Restrict the results to the applications whose bot users are members of this guild',
+	),
+});
+
+export type ListApplicationsQuery = z.infer<typeof ListApplicationsQuery>;
 
 export const LookupApplicationResponse = z.object({
 	application: ApplicationAdminResponse.nullable(),
@@ -51,32 +60,13 @@ export const LookupApplicationResponse = z.object({
 
 export type LookupApplicationResponse = z.infer<typeof LookupApplicationResponse>;
 
-export const ListUserApplicationsRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user whose applications to list'),
-});
-
-export type ListUserApplicationsRequest = z.infer<typeof ListUserApplicationsRequest>;
-
-export const ListUserApplicationsResponse = z.object({
+export const ListApplicationsResponse = z.object({
 	applications: z.array(ApplicationAdminResponse),
 });
 
-export type ListUserApplicationsResponse = z.infer<typeof ListUserApplicationsResponse>;
-
-export const ListGuildApplicationsRequest = z.object({
-	guild_id: SnowflakeType.describe('ID of the guild whose installed bot applications to list'),
-});
-
-export type ListGuildApplicationsRequest = z.infer<typeof ListGuildApplicationsRequest>;
-
-export const ListGuildApplicationsResponse = z.object({
-	applications: z.array(ApplicationAdminResponse),
-});
-
-export type ListGuildApplicationsResponse = z.infer<typeof ListGuildApplicationsResponse>;
+export type ListApplicationsResponse = z.infer<typeof ListApplicationsResponse>;
 
 export const TransferApplicationOwnershipRequest = z.object({
-	application_id: SnowflakeType.describe('ID of the application to transfer'),
 	new_owner_id: SnowflakeType.describe('ID of the user to transfer ownership to'),
 });
 

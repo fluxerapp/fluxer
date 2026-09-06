@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {SearchReportsRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
@@ -200,7 +201,7 @@ export class AdminReportService {
 	async searchReports(data: SearchReportsRequest, acls: ReadonlySet<string>) {
 		const reportSearchService = getReportSearchService();
 		if (!reportSearchService) {
-			throw new Error('Search is not enabled');
+			throw new FeatureTemporarilyDisabledError();
 		}
 		const filters: Record<string, string | number> = {};
 		if (data.reporter_id !== undefined) {

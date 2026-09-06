@@ -12,6 +12,20 @@ import {
 	revokeAdminApiKey,
 } from './AdminTestUtils';
 
+interface ValidationErrorResponse {
+	errors: Array<{
+		path: string;
+		code: string;
+		message: string;
+	}>;
+}
+
+function expectInvalidKeyIdFormat(json: ValidationErrorResponse): void {
+	const keyIdError = json.errors.find((error) => error.path === 'key_id');
+	expect(keyIdError).toBeDefined();
+	expect(keyIdError?.code).toBe('INVALID_SNOWFLAKE_FORMAT');
+}
+
 describe('Admin API Key Management', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
@@ -110,21 +124,12 @@ describe('Admin API Key Management', () => {
 				'guild:lookup',
 			]);
 			const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Auth Test Key');
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		});
 		test('invalid API key is rejected', async () => {
 			await createTestAccount(harness);
 			await createBuilder(harness, 'Admin invalid_key_12345')
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: ['123456789'],
-				})
+				.get('/admin/users/123456789')
 				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
@@ -139,10 +144,7 @@ describe('Admin API Key Management', () => {
 			]);
 			const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Prefix Test Key');
 			await createBuilder(harness, `Bearer ${apiKey.key}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
@@ -157,10 +159,7 @@ describe('Admin API Key Management', () => {
 			]);
 			const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Case Test Key');
 			await createBuilder(harness, `admin ${apiKey.key}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
@@ -189,12 +188,7 @@ describe('Admin API Key Management', () => {
 			const keysBefore = await listAdminApiKeys(harness, admin.token);
 			expect(keysBefore).toHaveLength(1);
 			expect(keysBefore[0]!.last_used_at).toBeNull();
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).execute();
 			const keysAfter = await listAdminApiKeys(harness, admin.token);
 			expect(keysAfter).toHaveLength(1);
 			expect(keysAfter[0]!.last_used_at).not.toBeNull();
@@ -210,13 +204,7 @@ describe('Admin API Key Management', () => {
 				'user:lookup',
 			]);
 			const apiKey = await createAdminApiKey(harness, admin, 'Test Key', ['audit_log:view', 'user:lookup'], null);
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		});
 		test('key cannot access endpoints without required ACLs', async () => {
 			const admin = await createTestAccount(harness);
@@ -228,10 +216,7 @@ describe('Admin API Key Management', () => {
 			]);
 			const apiKey = await createAdminApiKey(harness, admin, 'Limited Key', ['audit_log:view'], null);
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -239,13 +224,7 @@ describe('Admin API Key Management', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['*']);
 			const apiKey = await createAdminApiKey(harness, admin, 'Wildcard Key', ['*'], null);
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		});
 		test('multiple keys with different ACLs work independently', async () => {
 			const admin = await createTestAccount(harness);
@@ -258,18 +237,9 @@ describe('Admin API Key Management', () => {
 			]);
 			const auditKey = await createAdminApiKey(harness, admin, 'Audit Log Key', ['audit_log:view'], null);
 			const userKey = await createAdminApiKey(harness, admin, 'Users Key', ['user:lookup'], null);
-			await createBuilder(harness, userKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, userKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 			await createBuilder(harness, auditKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -335,19 +305,10 @@ describe('Admin API Key Management', () => {
 				'guild:lookup',
 			]);
 			const apiKey = await createAdminApiKeyWithDefaultACLs(harness, admin, 'Revoke Auth Test');
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 			await revokeAdminApiKey(harness, admin.token, apiKey.keyId);
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
@@ -361,10 +322,39 @@ describe('Admin API Key Management', () => {
 				'guild:lookup',
 			]);
 			await createBuilder(harness, `${admin.token}`)
-				.delete('/admin/api-keys/nonexistent-id')
+				.delete('/admin/api-keys/999999999999999999')
 				.body(null)
 				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
+		});
+		test('get rejects a non-snowflake key id', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
+			const {json} = await createBuilder<ValidationErrorResponse>(harness, `${admin.token}`)
+				.get('/admin/api-keys/nonexistent-id')
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.executeWithResponse();
+			expectInvalidKeyIdFormat(json);
+		});
+		test('update rejects a non-snowflake key id', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
+			const {json} = await createBuilder<ValidationErrorResponse>(harness, `${admin.token}`)
+				.patch('/admin/api-keys/nonexistent-id')
+				.body({name: 'Renamed'})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.executeWithResponse();
+			expectInvalidKeyIdFormat(json);
+		});
+		test('revocation rejects a non-snowflake key id', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
+			const {json} = await createBuilder<ValidationErrorResponse>(harness, `${admin.token}`)
+				.delete('/admin/api-keys/nonexistent-id')
+				.body(null)
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.executeWithResponse();
+			expectInvalidKeyIdFormat(json);
 		});
 		test('revocation requires admin_api_key:manage ACL', async () => {
 			const admin1 = await createTestAccount(harness);
@@ -413,11 +403,8 @@ describe('Admin API Key Management', () => {
 			const targetUser = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'acl:set:user']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/set-acls')
-				.body({
-					user_id: targetUser.userId,
-					acls: ['admin:authenticate'],
-				})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -426,11 +413,8 @@ describe('Admin API Key Management', () => {
 			const targetUser = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/set-acls')
-				.body({
-					user_id: targetUser.userId,
-					acls: ['admin:authenticate'],
-				})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -446,11 +430,8 @@ describe('Admin API Key Management', () => {
 				null,
 			);
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/set-acls')
-				.body({
-					user_id: targetUser.userId,
-					acls: ['admin:authenticate'],
-				})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -460,11 +441,8 @@ describe('Admin API Key Management', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 			const apiKey = await createAdminApiKey(harness, admin, 'No ACL Setter Key', ['user:lookup'], null);
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/set-acls')
-				.body({
-					user_id: targetUser.userId,
-					acls: ['admin:authenticate'],
-				})
+				.put(`/admin/users/${targetUser.userId}/acls`)
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -472,11 +450,8 @@ describe('Admin API Key Management', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'acl:set:user']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/set-acls')
-				.body({
-					user_id: '999999999999999999',
-					acls: ['admin:authenticate'],
-				})
+				.put('/admin/users/999999999999999999/acls')
+				.body({acls: ['admin:authenticate']})
 				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
 		});
@@ -487,12 +462,8 @@ describe('Admin API Key Management', () => {
 			const targetUser = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: targetUser.userId,
-					reason_code: 1,
-					days_until_deletion: 60,
-				})
+				.put(`/admin/users/${targetUser.userId}/deletion`)
+				.body({reason_code: 1, days_until_deletion: 60})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -501,12 +472,8 @@ describe('Admin API Key Management', () => {
 			const targetUser = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: targetUser.userId,
-					reason_code: 1,
-					days_until_deletion: 60,
-				})
+				.put(`/admin/users/${targetUser.userId}/deletion`)
+				.body({reason_code: 1, days_until_deletion: 60})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -515,12 +482,8 @@ describe('Admin API Key Management', () => {
 			const targetUser = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: targetUser.userId,
-					reason_code: 0,
-					days_until_deletion: 1,
-				})
+				.put(`/admin/users/${targetUser.userId}/deletion`)
+				.body({reason_code: 1, days_until_deletion: 1})
 				.expect(HTTP_STATUS.OK)
 				.executeWithResponse();
 		});
@@ -529,12 +492,8 @@ describe('Admin API Key Management', () => {
 			const targetUser = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: targetUser.userId,
-					reason_code: 1,
-					days_until_deletion: 1,
-				})
+				.put(`/admin/users/${targetUser.userId}/deletion`)
+				.body({reason_code: 2, days_until_deletion: 1})
 				.expect(HTTP_STATUS.OK)
 				.executeWithResponse();
 		});
@@ -544,12 +503,8 @@ describe('Admin API Key Management', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:delete']);
 			const apiKey = await createAdminApiKey(harness, admin, 'Deletion Key', ['user:delete'], null);
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: targetUser.userId,
-					reason_code: 1,
-					days_until_deletion: 60,
-				})
+				.put(`/admin/users/${targetUser.userId}/deletion`)
+				.body({reason_code: 1, days_until_deletion: 60})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -559,12 +514,8 @@ describe('Admin API Key Management', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 			const apiKey = await createAdminApiKey(harness, admin, 'No Deletion Key', ['user:lookup'], null);
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: targetUser.userId,
-					reason_code: 1,
-					days_until_deletion: 60,
-				})
+				.put(`/admin/users/${targetUser.userId}/deletion`)
+				.body({reason_code: 1, days_until_deletion: 60})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -572,12 +523,8 @@ describe('Admin API Key Management', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/schedule-deletion')
-				.body({
-					user_id: '999999999999999999',
-					reason_code: 1,
-					days_until_deletion: 60,
-				})
+				.put('/admin/users/999999999999999999/deletion')
+				.body({reason_code: 1, days_until_deletion: 60})
 				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
 		});

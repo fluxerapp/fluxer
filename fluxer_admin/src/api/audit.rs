@@ -23,26 +23,47 @@ impl AdminApiClient {
         &self,
         params: &SearchAuditLogsParams,
     ) -> ApiResult<AuditLogsListResponse> {
-        let body = generated_types::SearchAuditLogsRequest {
-            admin_user_id: nonempty_string(params.admin_user_id.as_deref())
-                .map(generated_types::SnowflakeType::from),
-            limit: Some(
-                crate::api::generated::nonzero_u32(params.limit, "limit")
-                    .map_err(ApiError::Parse)?,
+        let sort_by = params
+            .sort_by
+            .as_deref()
+            .map(audit_sort_by)
+            .transpose()?
+            .map(|value| value.to_string());
+        let sort_order = params
+            .sort_order
+            .as_deref()
+            .map(audit_sort_order)
+            .transpose()?
+            .map(|value| value.to_string());
+        let limit = params.limit.to_string();
+        let offset = params.offset.to_string();
+        let query_params = [
+            (
+                "q",
+                nonempty_string(params.query.as_deref()).unwrap_or_default(),
             ),
-            offset: Some(i64::from(params.offset)),
-            query: nonempty_string(params.query.as_deref()),
-            sort_by: params.sort_by.as_deref().map(audit_sort_by).transpose()?,
-            sort_order: params
-                .sort_order
-                .as_deref()
-                .map(audit_sort_order)
-                .transpose()?,
-            target_id: nonempty_string(params.target_id.as_deref()),
-            target_type: nonempty_string(params.target_type.as_deref()),
-        };
-        let body = serde_json::to_value(&body).map_err(|e| ApiError::Parse(e.to_string()))?;
-        self.post("/admin/audit-logs/search", Some(&body)).await
+            (
+                "admin_user_id",
+                nonempty_string(params.admin_user_id.as_deref()).unwrap_or_default(),
+            ),
+            (
+                "target_type",
+                nonempty_string(params.target_type.as_deref()).unwrap_or_default(),
+            ),
+            (
+                "target_id",
+                nonempty_string(params.target_id.as_deref()).unwrap_or_default(),
+            ),
+            ("sort_by", sort_by.unwrap_or_default()),
+            ("sort_order", sort_order.unwrap_or_default()),
+            ("limit", limit),
+            ("offset", offset),
+        ];
+        let query_params: Vec<(&str, &str)> = query_params
+            .iter()
+            .map(|(key, value)| (*key, value.as_str()))
+            .collect();
+        self.get("/admin/audit-logs", Some(&query_params)).await
     }
 }
 
@@ -58,7 +79,7 @@ fn audit_logs_response(
 }
 
 #[cfg(test)]
-fn audit_log_entry(entry: generated_types::AuditLogsListResponseSchemaLogsItem) -> AuditLogEntry {
+fn audit_log_entry(entry: generated_types::AdminAuditLogResponseSchema) -> AuditLogEntry {
     AuditLogEntry {
         log_id: String::from(entry.log_id),
         admin_user_id: String::from(entry.admin_user_id),
@@ -78,17 +99,17 @@ fn audit_log_entry(entry: generated_types::AuditLogsListResponseSchemaLogsItem) 
     }
 }
 
-fn audit_sort_by(value: &str) -> ApiResult<generated_types::SearchAuditLogsRequestSortBy> {
+fn audit_sort_by(value: &str) -> ApiResult<generated_types::ListAdminAuditLogsSortBy> {
     let value = match value {
         "created_at" => "createdAt",
         value => value,
     };
-    generated_types::SearchAuditLogsRequestSortBy::try_from(value)
+    generated_types::ListAdminAuditLogsSortBy::try_from(value)
         .map_err(|e| ApiError::Parse(e.to_string()))
 }
 
-fn audit_sort_order(value: &str) -> ApiResult<generated_types::SearchAuditLogsRequestSortOrder> {
-    generated_types::SearchAuditLogsRequestSortOrder::try_from(value)
+fn audit_sort_order(value: &str) -> ApiResult<generated_types::ListAdminAuditLogsSortOrder> {
+    generated_types::ListAdminAuditLogsSortOrder::try_from(value)
         .map_err(|e| ApiError::Parse(e.to_string()))
 }
 

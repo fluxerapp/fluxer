@@ -32,6 +32,14 @@ pub(crate) fn nonzero_u32(value: u32, field: &str) -> Result<std::num::NonZeroU3
     std::num::NonZeroU32::new(value).ok_or_else(|| format!("{field} must be greater than zero"))
 }
 
+pub(crate) fn deletion_reason_code(
+    value: i32,
+    field: &str,
+) -> Result<types::DeletionReasonCode, String> {
+    types::DeletionReasonCode::try_from(value)
+        .map_err(|_| format!("{field} is not a deletion reason code: {value}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{number_to_u64, types::*};

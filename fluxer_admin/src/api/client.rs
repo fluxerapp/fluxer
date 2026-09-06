@@ -188,15 +188,103 @@ impl AdminApiClient {
         path: &str,
         body: Option<&serde_json::Value>,
     ) -> ApiResult<T> {
-        let builder = Self::with_json_body(self.request(Method::PATCH, path, None), body);
-        let response = Self::send_request(builder).await?;
+        self.patch_with_reason(path, body, None).await
+    }
+
+    pub async fn patch_with_reason<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: Option<&serde_json::Value>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<T> {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
+        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
         self.parse_response(response).await
     }
 
-    pub async fn delete_void(&self, path: &str, body: Option<&serde_json::Value>) -> ApiResult<()> {
-        let builder = Self::with_json_body(self.request(Method::DELETE, path, None), body);
-        let response = Self::send_request(builder).await?;
+    pub async fn patch_typed_with_reason<T, B>(
+        &self,
+        path: &str,
+        body: &B,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<T>
+    where
+        T: DeserializeOwned,
+        B: Serialize + ?Sized,
+    {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
+        let response = Self::send_request(builder.json(body)).await?;
+        self.parse_response(response).await
+    }
+
+    pub async fn put_with_reason<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: Option<&serde_json::Value>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<T> {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
+        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        self.parse_response(response).await
+    }
+
+    pub async fn put_typed_with_reason<T, B>(
+        &self,
+        path: &str,
+        body: &B,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<T>
+    where
+        T: DeserializeOwned,
+        B: Serialize + ?Sized,
+    {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
+        let response = Self::send_request(builder.json(body)).await?;
+        self.parse_response(response).await
+    }
+
+    pub async fn put_void_with_reason(
+        &self,
+        path: &str,
+        body: Option<&serde_json::Value>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
+        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
         Self::parse_void_response(response).await
+    }
+
+    pub async fn delete_void(&self, path: &str, body: Option<&serde_json::Value>) -> ApiResult<()> {
+        self.delete_void_with_reason(path, body, None).await
+    }
+
+    pub async fn delete_void_with_reason(
+        &self,
+        path: &str,
+        body: Option<&serde_json::Value>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
+        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        Self::parse_void_response(response).await
+    }
+
+    pub async fn delete_with_reason<T: DeserializeOwned>(
+        &self,
+        path: &str,
+        body: Option<&serde_json::Value>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<T> {
+        let builder =
+            Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
+        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        self.parse_response(response).await
     }
 
     async fn parse_void_response(response: reqwest::Response) -> ApiResult<()> {

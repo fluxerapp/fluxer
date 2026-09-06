@@ -38,8 +38,8 @@ async function applyAndApprove(
 		.expect(HTTP_STATUS.OK)
 		.execute();
 	await createBuilder(harness, `${adminToken}`)
-		.post(`/admin/discovery/applications/${guildId}/approve`)
-		.body({})
+		.patch(`/admin/discovery/applications/${guildId}`)
+		.body({status: 'approved'})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 }

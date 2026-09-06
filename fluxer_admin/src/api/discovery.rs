@@ -13,7 +13,7 @@ impl AdminApiClient {
     ) -> ApiResult<Vec<DiscoveryPendingApplication>> {
         let response = self
             .generated()
-            .list_pending_discovery_applications()
+            .list_admin_discovery_applications()
             .await
             .map_err(|e| self.generated_error(e))?;
         response
@@ -26,7 +26,7 @@ impl AdminApiClient {
     pub async fn list_discovery_listed_guilds(&self) -> ApiResult<Vec<DiscoveryListedGuild>> {
         let response = self
             .generated()
-            .list_discovery_listed_guilds()
+            .list_admin_discovery_listings()
             .await
             .map_err(|e| self.generated_error(e))?;
         response
@@ -42,15 +42,18 @@ impl AdminApiClient {
         reason: Option<&str>,
     ) -> ApiResult<DiscoveryApplicationResponse> {
         let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
-        let body = generated_types::DiscoveryAdminReviewRequest {
-            reason: reason
-                .map(generated_types::DiscoveryAdminReviewRequestReason::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-        };
+        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::from(
+            generated_types::ApprovedDiscoveryAdminApplicationUpdateRequest {
+                reason: reason
+                    .map(generated_types::ApprovedDiscoveryAdminApplicationUpdateRequestReason::try_from)
+                    .transpose()
+                    .map_err(|e| ApiError::Parse(e.to_string()))?,
+                status: generated_types::ApprovedDiscoveryAdminApplicationUpdateRequestStatus::Approved,
+            },
+        );
         let response = self
             .generated()
-            .approve_discovery_application(&guild_id, &body)
+            .update_admin_discovery_application(&guild_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -62,13 +65,20 @@ impl AdminApiClient {
         reason: &str,
     ) -> ApiResult<DiscoveryApplicationResponse> {
         let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
-        let body = generated_types::DiscoveryAdminRejectRequest {
-            reason: generated_types::DiscoveryAdminRejectRequestReason::try_from(reason)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-        };
+        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::from(
+            generated_types::RejectedDiscoveryAdminApplicationUpdateRequest {
+                reason:
+                    generated_types::RejectedDiscoveryAdminApplicationUpdateRequestReason::try_from(
+                        reason,
+                    )
+                    .map_err(|e| ApiError::Parse(e.to_string()))?,
+                status:
+                    generated_types::RejectedDiscoveryAdminApplicationUpdateRequestStatus::Rejected,
+            },
+        );
         let response = self
             .generated()
-            .reject_discovery_application(&guild_id, &body)
+            .update_admin_discovery_application(&guild_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -86,7 +96,7 @@ impl AdminApiClient {
         };
         let response = self
             .generated()
-            .remove_from_discovery(&guild_id, &body)
+            .delete_admin_discovery_listing(&guild_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

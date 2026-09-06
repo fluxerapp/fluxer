@@ -16,20 +16,8 @@ describe('Admin API Key Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view', 'user:lookup']);
 		const apiKey = await createAdminApiKey(harness, admin, 'Test Key', ['audit_log:view', 'user:lookup'], null);
-		await createBuilder(harness, apiKey.token)
-			.post('/admin/audit-logs')
-			.body({
-				limit: 10,
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
+		await createBuilder(harness, apiKey.token).get('/admin/audit-logs?limit=10').expect(HTTP_STATUS.OK).execute();
+		await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 	});
 	test('key fails if owner loses admin access', async () => {
 		const admin = await createTestAccount(harness);
@@ -37,10 +25,7 @@ describe('Admin API Key Authorization', () => {
 		const apiKey = await createAdminApiKey(harness, admin, 'Owner Check', ['user:lookup'], null);
 		await setUserACLs(harness, admin, ['admin_api_key:manage', 'user:lookup']);
 		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
 			.execute();
 	});
@@ -50,10 +35,7 @@ describe('Admin API Key Authorization', () => {
 		const apiKey = await createAdminApiKey(harness, admin, 'Owner ACL Check', ['user:lookup'], null);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
 		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 			.execute();
 	});
@@ -62,10 +44,7 @@ describe('Admin API Key Authorization', () => {
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view', 'user:lookup']);
 		const apiKey = await createAdminApiKey(harness, admin, 'Limited Key', ['audit_log:view'], null);
 		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
@@ -73,13 +52,7 @@ describe('Admin API Key Authorization', () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['*']);
 		const apiKey = await createAdminApiKey(harness, admin, 'Wildcard Key', ['*'], null);
-		await createBuilder(harness, apiKey.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
+		await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 	});
 	test('multiple keys with different ACLs work independently', async () => {
 		const admin = await createTestAccount(harness);
@@ -93,35 +66,17 @@ describe('Admin API Key Authorization', () => {
 		const key1 = await createAdminApiKey(harness, admin, 'Audit Log Key', ['audit_log:view'], null);
 		const key2 = await createAdminApiKey(harness, admin, 'Users Key', ['user:lookup'], null);
 		const key3 = await createAdminApiKey(harness, admin, 'Guilds Key', ['guild:lookup'], null);
-		await createBuilder(harness, key1.token)
-			.post('/admin/audit-logs')
-			.body({
-				limit: 10,
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
-		await createBuilder(harness, key2.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
-			.expect(HTTP_STATUS.OK)
-			.execute();
+		await createBuilder(harness, key1.token).get('/admin/audit-logs?limit=10').expect(HTTP_STATUS.OK).execute();
+		await createBuilder(harness, key2.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		const guildJson = await createBuilder<{
 			guild: unknown;
 		}>(harness, key3.token)
-			.post('/admin/guilds/lookup')
-			.body({
-				guild_id: '123',
-			})
+			.get('/admin/guilds/123')
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(guildJson.guild).toBeNull();
 		await createBuilder(harness, key1.token)
-			.post('/admin/users/lookup')
-			.body({
-				user_ids: [admin.userId],
-			})
+			.get(`/admin/users/${admin.userId}`)
 			.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 			.execute();
 	});
@@ -137,7 +92,7 @@ describe('Admin API Key Authorization', () => {
 		const apiKey = await createAdminApiKey(harness, admin, 'List Test No ACL', [], null);
 		await createBuilder(harness, apiKey.token).get('/admin/api-keys').expect(HTTP_STATUS.FORBIDDEN).execute();
 	});
-	test('DELETE /admin/api-keys/:keyId requires admin_api_key:manage', async () => {
+	test('DELETE /admin/api-keys/:key_id requires admin_api_key:manage', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
 		const keyToDelete = await createAdminApiKey(harness, admin, 'To Delete', [], null);
@@ -148,7 +103,7 @@ describe('Admin API Key Authorization', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 	});
-	test('DELETE /admin/api-keys/:keyId fails without admin_api_key:manage', async () => {
+	test('DELETE /admin/api-keys/:key_id fails without admin_api_key:manage', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage']);
 		const keyToDelete = await createAdminApiKey(harness, admin, 'To Delete 2', [], null);

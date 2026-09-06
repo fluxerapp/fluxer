@@ -11,19 +11,19 @@ import {Validator} from '../../Validator';
 
 export function SystemDmAdminController(app: HonoApp) {
 	app.post(
-		'/admin/system-dm/send',
+		'/admin/system-dms',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
 		requireAdminACL(AdminACLs.SYSTEM_DM_SEND),
 		Validator('json', SendSystemDmRequest),
 		OpenAPI({
-			operationId: 'send_system_dm',
-			summary: 'Send system DM',
+			operationId: 'create_admin_system_dm',
+			summary: 'Send a system direct message',
 			responseSchema: SendSystemDmResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Queue a worker job that sends the same system DM content to each provided user ID. Progress is observable via the Jobs admin page (task_type=sendSystemDm). Requires SYSTEM_DM_SEND permission.',
+				'Queue a worker job that delivers the same content to every listed user as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Requires SYSTEM_DM_SEND permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

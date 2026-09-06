@@ -48,14 +48,13 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	describe('POST /admin/users/change-log', () => {
+	describe('GET /admin/users/{user_id}/change-log', () => {
 		test('returns empty entries for user with no changes', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			const result = await createBuilder<ChangeLogResponse>(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId, limit: 50})
+				.get(`/admin/users/${target.userId}/change-log?limit=50`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.entries).toBeInstanceOf(Array);
@@ -71,8 +70,7 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const result = await createBuilder<ChangeLogResponse>(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId, limit: 50})
+				.get(`/admin/users/${target.userId}/change-log?limit=50`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.entries).toBeInstanceOf(Array);
@@ -83,26 +81,15 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder<ChangeLogResponse>(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId})
+				.get(`/admin/users/${target.userId}/change-log`)
 				.expect(HTTP_STATUS.OK)
-				.execute();
-		});
-		test('rejects missing user_id', async () => {
-			const admin = await createTestAccount(harness);
-			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
-			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({limit: 50})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
 		test('rejects invalid user_id format', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: 'not-a-snowflake', limit: 50})
+				.get('/admin/users/not-a-snowflake/change-log?limit=50')
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
@@ -111,8 +98,7 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId, limit: 0})
+				.get(`/admin/users/${target.userId}/change-log?limit=0`)
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
@@ -121,42 +107,38 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId, limit: 201})
+				.get(`/admin/users/${target.userId}/change-log?limit=201`)
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
-		test('requires USER_LOOKUP ACL', async () => {
+		test('requires USER_VIEW_CONTACT_LOG ACL', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId, limit: 50})
+				.get(`/admin/users/${target.userId}/change-log?limit=50`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
-		test('returns empty entries when admin lacks USER_VIEW_CONTACT_LOG ACL', async () => {
+		test('rejects an admin holding USER_LOOKUP but not USER_VIEW_CONTACT_LOG', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
 			const target = await createTestAccount(harness);
-			const result = await createBuilder<ChangeLogResponse>(harness, `${admin.token}`)
-				.post('/admin/users/change-log')
-				.body({user_id: target.userId, limit: 50})
-				.expect(HTTP_STATUS.OK)
+			await createBuilder(harness, `${admin.token}`)
+				.get(`/admin/users/${target.userId}/change-log?limit=50`)
+				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
-			expect(result.entries).toEqual([]);
 		});
 	});
-	describe('POST /admin/users/update-suspicious-activity-flags', () => {
+	describe('PUT /admin/users/{user_id}/suspicious-activity-flags', () => {
 		test('sets suspicious activity flags', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
 			const result = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.user.suspicious_activity_flags).toBe(flags);
@@ -166,22 +148,22 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const result = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags: 0})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags: 0})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.user.suspicious_activity_flags).toBe(0);
 		});
-		test('rejects missing user_id', async () => {
+		test('rejects invalid user_id format', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
+				.put('/admin/users/not-a-snowflake/suspicious-activity-flags')
 				.body({flags: 1})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
@@ -191,8 +173,8 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
@@ -201,8 +183,8 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags: -1})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags: -1})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
@@ -210,8 +192,8 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: '999999999999999999', flags: 1})
+				.put('/admin/users/999999999999999999/suspicious-activity-flags')
+				.body({flags: 1})
 				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
 		});
@@ -220,8 +202,8 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags: 1})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags: 1})
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -230,38 +212,36 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			const result1 = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result1.user.suspicious_activity_flags).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
 			const combined =
 				SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL;
 			const result2 = await createBuilder<UserMutationResponse>(harness, `${admin.token}`)
-				.post('/admin/users/update-suspicious-activity-flags')
-				.body({user_id: target.userId, flags: combined})
+				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
+				.body({flags: combined})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result2.user.suspicious_activity_flags).toBe(combined);
 		});
 	});
-	describe('POST /admin/users/disable-mfa', () => {
+	describe('DELETE /admin/users/{user_id}/mfa', () => {
 		test('succeeds for user without MFA', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/disable-mfa')
-				.body({user_id: target.userId})
+				.delete(`/admin/users/${target.userId}/mfa`)
 				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 		});
-		test('rejects missing user_id', async () => {
+		test('rejects invalid user_id format', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/disable-mfa')
-				.body({})
+				.delete('/admin/users/not-a-snowflake/mfa')
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
@@ -270,13 +250,12 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/disable-mfa')
-				.body({user_id: target.userId})
+				.delete(`/admin/users/${target.userId}/mfa`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
 	});
-	describe('POST /admin/users/verify-email', () => {
+	describe('PUT /admin/users/{user_id}/email-verification', () => {
 		test('verifying email clears email_bounced and only email-related suspicious flags', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
@@ -291,8 +270,7 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			const result = await createBuilder<VerifyEmailMutationResponse>(harness, `${admin.token}`)
-				.post('/admin/users/verify-email')
-				.body({user_id: target.userId})
+				.put(`/admin/users/${target.userId}/email-verification`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(result.user.email_verified).toBe(true);
@@ -300,23 +278,21 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			expect(result.user.suspicious_activity_flags).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE);
 		});
 	});
-	describe('POST /admin/users/resend-verification-email', () => {
+	describe('POST /admin/users/{user_id}/verification-email', () => {
 		test('sends verification email for unverified user', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/resend-verification-email')
-				.body({user_id: target.userId})
+				.post(`/admin/users/${target.userId}/verification-email`)
 				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 		});
-		test('rejects missing user_id', async () => {
+		test('rejects invalid user_id format', async () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/resend-verification-email')
-				.body({})
+				.post('/admin/users/not-a-snowflake/verification-email')
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 				.execute();
 		});
@@ -325,8 +301,7 @@ describe('Admin User Change Log and Suspicious Flags', () => {
 			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
 			const target = await createTestAccount(harness);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/resend-verification-email')
-				.body({user_id: target.userId})
+				.post(`/admin/users/${target.userId}/verification-email`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});

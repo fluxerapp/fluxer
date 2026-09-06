@@ -188,10 +188,14 @@ export class AdminService {
 		adminUserId: UserID,
 		auditLogReason: string | null,
 	): Promise<SendSystemDmResponse> {
-		await this.apiContext.services.worker.addJob('sendSystemDm', {
-			content: data.content,
-			user_ids: data.userIds,
-		});
+		await this.apiContext.services.worker.addJob(
+			'sendSystemDm',
+			{
+				content: data.content,
+				user_ids: data.userIds,
+			},
+			{requireLedger: true},
+		);
 		const metadata = new Map<string, string>([
 			['recipient_count', data.userIds.length.toString()],
 			['content_length', data.content.length.toString()],

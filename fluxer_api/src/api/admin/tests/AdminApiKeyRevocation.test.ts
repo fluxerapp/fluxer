@@ -63,7 +63,7 @@ describe('Admin API Key Revocation', () => {
 			'guild:lookup',
 		]);
 		await createBuilder(harness, `${admin.token}`)
-			.delete('/admin/api-keys/nonexistent-id')
+			.delete('/admin/api-keys/999999999999999999')
 			.body(null)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();

@@ -81,7 +81,7 @@ export abstract class IGuildDiscoveryService {
 		min_member_count: number;
 	}>;
 
-	abstract listByStatus(params: {status: string; limit: number}): Promise<Array<GuildDiscoveryRow>>;
+	abstract listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>>;
 
 	abstract searchDiscoverable(params: {
 		query?: string;
@@ -378,8 +378,8 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		return updatedRow;
 	}
 
-	async listByStatus(params: {status: string; limit: number}): Promise<Array<GuildDiscoveryRow>> {
-		return this.discoveryRepository.listFullByStatus(params.status, params.limit);
+	async listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>> {
+		return this.discoveryRepository.listFullByStatus(params.status);
 	}
 
 	async searchDiscoverable(params: {

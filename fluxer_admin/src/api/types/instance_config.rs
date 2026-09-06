@@ -826,13 +826,3 @@ pub struct CreateRegistrationUrlResponse {
     pub code: String,
     pub url: String,
 }
-
-#[derive(Clone, Debug, Serialize)]
-pub struct RegistrationUrlActionRequest {
-    pub id: String,
-}
-
-#[derive(Clone, Debug, Serialize)]
-pub struct PendingRegistrationActionRequest {
-    pub user_id: String,
-}

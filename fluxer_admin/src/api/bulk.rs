@@ -13,12 +13,16 @@ impl AdminApiClient {
         remove_flags: &[String],
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::BulkUpdateUserFlagsRequest {
-            add_flags: user_flags(add_flags),
-            remove_flags: user_flags(remove_flags),
-            user_ids: snowflakes(user_ids),
-        };
-        self.post_typed_with_reason("/admin/bulk/update-user-flags", &body, audit_log_reason)
+        let body = generated_types::AdminBulkJobCreateRequest::from(
+            generated_types::UpdateUserFlagsAdminBulkJobCreateRequest {
+                add_flags: user_flags(add_flags),
+                remove_flags: user_flags(remove_flags),
+                task:
+                    generated_types::UpdateUserFlagsAdminBulkJobCreateRequestTask::UpdateUserFlags,
+                user_ids: snowflakes(user_ids),
+            },
+        );
+        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
             .await
     }
 
@@ -29,17 +33,16 @@ impl AdminApiClient {
         remove_flags: &[String],
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::BulkUpdateSuspiciousActivityFlagsRequest {
-            add_flags: add_flags.to_vec(),
-            remove_flags: remove_flags.to_vec(),
-            user_ids: snowflakes(user_ids),
-        };
-        self.post_typed_with_reason(
-            "/admin/bulk/update-suspicious-activity-flags",
-            &body,
-            audit_log_reason,
-        )
-        .await
+        let body = generated_types::AdminBulkJobCreateRequest::from(
+            generated_types::UpdateSuspiciousActivityFlagsAdminBulkJobCreateRequest {
+                add_flags: add_flags.to_vec(),
+                remove_flags: remove_flags.to_vec(),
+                task: generated_types::UpdateSuspiciousActivityFlagsAdminBulkJobCreateRequestTask::UpdateSuspiciousActivityFlags,
+                user_ids: snowflakes(user_ids),
+            },
+        );
+        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
+            .await
     }
 
     pub async fn bulk_update_guild_features(
@@ -49,12 +52,15 @@ impl AdminApiClient {
         remove_features: &[String],
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::BulkUpdateGuildFeaturesRequest {
-            add_features: guild_features(add_features),
-            guild_ids: snowflakes(guild_ids),
-            remove_features: guild_features(remove_features),
-        };
-        self.post_typed_with_reason("/admin/bulk/update-guild-features", &body, audit_log_reason)
+        let body = generated_types::AdminBulkJobCreateRequest::from(
+            generated_types::UpdateGuildFeaturesAdminBulkJobCreateRequest {
+                add_features: guild_features(add_features),
+                guild_ids: snowflakes(guild_ids),
+                remove_features: guild_features(remove_features),
+                task: generated_types::UpdateGuildFeaturesAdminBulkJobCreateRequestTask::UpdateGuildFeatures,
+            },
+        );
+        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
             .await
     }
 
@@ -64,11 +70,15 @@ impl AdminApiClient {
         user_ids: &[String],
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::BulkAddGuildMembersRequest {
-            guild_id: snowflake(guild_id),
-            user_ids: snowflakes(user_ids),
-        };
-        self.post_typed_with_reason("/admin/bulk/add-guild-members", &body, audit_log_reason)
+        let body = generated_types::AdminBulkJobCreateRequest::from(
+            generated_types::AddGuildMembersAdminBulkJobCreateRequest {
+                guild_id: snowflake(guild_id),
+                task:
+                    generated_types::AddGuildMembersAdminBulkJobCreateRequestTask::AddGuildMembers,
+                user_ids: snowflakes(user_ids),
+            },
+        );
+        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
             .await
     }
 
@@ -77,10 +87,14 @@ impl AdminApiClient {
         user_ids: &[String],
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::BulkDeleteUserMessagesRequest {
-            user_ids: snowflakes(user_ids),
-        };
-        self.post_typed_with_reason("/admin/bulk/delete-user-messages", &body, audit_log_reason)
+        let body = generated_types::AdminBulkJobCreateRequest::from(
+            generated_types::DeleteUserMessagesAdminBulkJobCreateRequest {
+                task:
+                    generated_types::DeleteUserMessagesAdminBulkJobCreateRequestTask::DeleteUserMessages,
+                user_ids: snowflakes(user_ids),
+            },
+        );
+        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
             .await
     }
 
@@ -92,21 +106,24 @@ impl AdminApiClient {
         public_reason: Option<&str>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::BulkScheduleUserDeletionRequest {
-            days_until_deletion: Some(
-                crate::api::generated::nonzero_u32(days_until_deletion, "days_until_deletion")
-                    .map_err(ApiError::Parse)?,
-            ),
-            public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
-            reason_code: i32::try_from(reason_code).map_err(|e| ApiError::Parse(e.to_string()))?,
-            user_ids: snowflakes(user_ids),
-        };
-        self.post_typed_with_reason(
-            "/admin/bulk/schedule-user-deletion",
-            &body,
-            audit_log_reason,
-        )
-        .await
+        let body = generated_types::AdminBulkJobCreateRequest::from(
+            generated_types::ScheduleUserDeletionAdminBulkJobCreateRequest {
+                days_until_deletion: Some(
+                    crate::api::generated::nonzero_u32(days_until_deletion, "days_until_deletion")
+                        .map_err(ApiError::Parse)?,
+                ),
+                public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
+                reason_code: crate::api::generated::deletion_reason_code(
+                    i32::try_from(reason_code).map_err(|e| ApiError::Parse(e.to_string()))?,
+                    "reason_code",
+                )
+                .map_err(ApiError::Parse)?,
+                task: generated_types::ScheduleUserDeletionAdminBulkJobCreateRequestTask::ScheduleUserDeletion,
+                user_ids: snowflakes(user_ids),
+            },
+        );
+        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
+            .await
     }
 }
 

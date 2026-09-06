@@ -14,14 +14,14 @@ import type {HonoApp} from '../../types/HonoEnv';
 
 export function SystemAdminController(app: HonoApp) {
 	app.post(
-		'/admin/system/heap-snapshot',
+		'/admin/system/heap-snapshots',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_SYSTEM_HEAP_SNAPSHOT),
 		requireAdminACL(AdminACLs.SYSTEM_HEAP_SNAPSHOT),
 		OpenAPI({
-			operationId: 'take_heap_snapshot',
-			summary: 'Take a V8 heap snapshot',
+			operationId: 'create_admin_system_heap_snapshot',
+			summary: 'Create a V8 heap snapshot',
 			description:
-				'Triggers a V8 heap snapshot of the current process and returns the snapshot file. Used for diagnosing memory leaks. Requires SYSTEM_HEAP_SNAPSHOT permission.',
+				'Writes a V8 heap snapshot of the current process and returns the snapshot file. Used for diagnosing memory leaks. Requires SYSTEM_HEAP_SNAPSHOT permission.',
 			responseSchema: HeapSnapshotResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

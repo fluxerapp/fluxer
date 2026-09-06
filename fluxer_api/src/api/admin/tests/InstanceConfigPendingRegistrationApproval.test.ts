@@ -60,8 +60,8 @@ describe('pending registration approval and the stock community', () => {
 			.execute();
 
 		await createBuilder(harness, admin.token)
-			.post('/admin/instance-config/pending-registrations/approve')
-			.body({user_id: pending.user_id})
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'approved'})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 
@@ -84,8 +84,8 @@ describe('pending registration approval and the stock community', () => {
 		});
 
 		await createBuilder(harness, admin.token)
-			.post('/admin/instance-config/pending-registrations/approve')
-			.body({user_id: outsider.userId})
+			.patch(`/admin/instance/pending-registrations/${outsider.userId}`)
+			.body({status: 'approved'})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 

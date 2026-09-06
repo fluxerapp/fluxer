@@ -18,6 +18,7 @@ import {
 	GuildVerificationLevelSchema,
 	NSFWLevelSchema,
 } from '@fluxer/schema/src/primitives/GuildValidators';
+import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
 	createBitflagInt32Type,
 	createNamedStringLiteralUnion,
@@ -101,39 +102,19 @@ export const KickGuildMemberRequest = z.object({
 
 export type KickGuildMemberRequest = z.infer<typeof KickGuildMemberRequest>;
 
-export const SearchGuildsRequest = z.object({
-	query: createStringType(1, 1024).optional(),
-	limit: z.number().int().min(1).max(200).default(50),
-	offset: z.number().int().min(0).default(0),
+export const GetProcessMemoryStatsQuery = z.object({
+	limit: createQueryIntegerType({defaultValue: 100, minValue: 100, maxValue: 1000}).describe(
+		'Maximum number of guild processes to return (100-1000, default 100)',
+	),
 });
 
-export type SearchGuildsRequest = z.infer<typeof SearchGuildsRequest>;
+export type GetProcessMemoryStatsQuery = z.infer<typeof GetProcessMemoryStatsQuery>;
 
-export const ReloadGuildRequest = z.object({
-	guild_id: SnowflakeType,
-});
-
-export type ReloadGuildRequest = z.infer<typeof ReloadGuildRequest>;
-
-export const ShutdownGuildRequest = z.object({
-	guild_id: SnowflakeType,
-});
-
-export type ShutdownGuildRequest = z.infer<typeof ShutdownGuildRequest>;
-
-export const GetProcessMemoryStatsRequest = z.object({
-	limit: z.number().int().min(100).max(1000).default(100),
-});
-
-export type GetProcessMemoryStatsRequest = z.infer<typeof GetProcessMemoryStatsRequest>;
-
-export const UpdateGuildFeaturesRequest = z.object({
+const UpdateGuildFeaturesRequest = z.object({
 	guild_id: SnowflakeType.describe('ID of the guild to update'),
 	add_features: z.array(GuildFeatureSchema).max(100).default([]).describe('Guild features to add'),
 	remove_features: z.array(GuildFeatureSchema).max(100).default([]).describe('Guild features to remove'),
 });
-
-export type UpdateGuildFeaturesRequest = z.infer<typeof UpdateGuildFeaturesRequest>;
 
 export const ForceAddUserToGuildRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to add to the guild'),
@@ -157,12 +138,6 @@ export const ClearGuildFieldsRequest = z.object({
 });
 
 export type ClearGuildFieldsRequest = z.infer<typeof ClearGuildFieldsRequest>;
-
-export const DeleteGuildRequest = z.object({
-	guild_id: SnowflakeType.describe('ID of the guild to delete'),
-});
-
-export type DeleteGuildRequest = z.infer<typeof DeleteGuildRequest>;
 
 export const UpdateGuildVanityRequest = z.object({
 	guild_id: SnowflakeType.describe('ID of the guild to update'),
@@ -254,3 +229,43 @@ export type ListGuildAuditLogsRequest = z.infer<typeof ListGuildAuditLogsRequest
 export const ListGuildAuditLogsResponse = GuildAuditLogListResponse;
 
 export type ListGuildAuditLogsResponse = z.infer<typeof ListGuildAuditLogsResponse>;
+
+export const ListGuildsQuery = z.object({
+	q: createStringType(1, 1024)
+		.optional()
+		.describe('Free-text query matched against the guild name and vanity URL code'),
+	limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
+		'Maximum guilds to return (1-200, default 50)',
+	),
+	offset: createQueryIntegerType({defaultValue: 0, minValue: 0, maxValue: 10000}).describe(
+		'Guilds to skip before returning results (default 0)',
+	),
+});
+
+export type ListGuildsQuery = z.infer<typeof ListGuildsQuery>;
+
+export const ListGuildMembersQuery = z.object({
+	limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
+		'Maximum members to return (1-200, default 50)',
+	),
+	offset: createQueryIntegerType({defaultValue: 0, minValue: 0, maxValue: 2147483647}).describe(
+		'Members to skip before returning results (default 0)',
+	),
+});
+
+export type ListGuildMembersQuery = z.infer<typeof ListGuildMembersQuery>;
+
+export const UpdateGuildRequest = UpdateGuildSettingsRequest.omit({guild_id: true}).extend({
+	name: UpdateGuildNameRequest.shape.name.optional(),
+	vanity_url_code: UpdateGuildVanityRequest.shape.vanity_url_code.optional(),
+	new_owner_id: TransferGuildOwnershipRequest.shape.new_owner_id.optional(),
+	add_features: UpdateGuildFeaturesRequest.shape.add_features.removeDefault().optional(),
+	remove_features: UpdateGuildFeaturesRequest.shape.remove_features.removeDefault().optional(),
+	fields: ClearGuildFieldsRequest.shape.fields.optional(),
+});
+
+export type UpdateGuildRequest = z.infer<typeof UpdateGuildRequest>;
+
+export const BanGuildMemberBody = BanGuildMemberRequest.omit({guild_id: true, user_id: true});
+
+export type BanGuildMemberBody = z.infer<typeof BanGuildMemberBody>;

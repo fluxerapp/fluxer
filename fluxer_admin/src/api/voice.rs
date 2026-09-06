@@ -14,12 +14,9 @@ impl AdminApiClient {
         &self,
         include_servers: bool,
     ) -> ApiResult<ListVoiceRegionsResponse> {
-        let body = generated_types::ListVoiceRegionsRequest {
-            include_servers: Some(include_servers),
-        };
         let response = self
             .generated()
-            .list_voice_regions(&body)
+            .list_admin_voice_regions(Some(bool_param(include_servers)))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -30,13 +27,9 @@ impl AdminApiClient {
         id: &str,
         include_servers: bool,
     ) -> ApiResult<GetVoiceRegionResponse> {
-        let body = generated_types::GetVoiceRegionRequest {
-            id: id.to_owned(),
-            include_servers: Some(include_servers),
-        };
         let response = self
             .generated()
-            .get_voice_region(&body)
+            .get_admin_voice_region(id, Some(bool_param(include_servers)))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -51,7 +44,7 @@ impl AdminApiClient {
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
-            .create_voice_region(&body)
+            .create_admin_voice_region(&body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -61,34 +54,31 @@ impl AdminApiClient {
         &self,
         params: &serde_json::Value,
     ) -> ApiResult<UpdateVoiceRegionResponse> {
+        let region_id = required_field(params, "id")?;
         let body =
             serde_json::from_value::<generated_types::UpdateVoiceRegionRequest>(params.clone())
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
-            .update_voice_region(&body)
+            .update_admin_voice_region(&region_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
 
     pub async fn delete_voice_region(&self, id: &str) -> ApiResult<DeleteVoiceResponse> {
-        let body = generated_types::DeleteVoiceRegionRequest { id: id.to_owned() };
         let response = self
             .generated()
-            .delete_voice_region(&body)
+            .delete_admin_voice_region(id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
 
     pub async fn list_voice_servers(&self, region_id: &str) -> ApiResult<ListVoiceServersResponse> {
-        let body = generated_types::ListVoiceServersRequest {
-            region_id: region_id.to_owned(),
-        };
         let response = self
             .generated()
-            .list_voice_servers(&body)
+            .list_admin_voice_servers(region_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -99,13 +89,9 @@ impl AdminApiClient {
         region_id: &str,
         server_id: &str,
     ) -> ApiResult<GetVoiceServerResponse> {
-        let body = generated_types::GetVoiceServerRequest {
-            region_id: region_id.to_owned(),
-            server_id: server_id.to_owned(),
-        };
         let response = self
             .generated()
-            .get_voice_server(&body)
+            .get_admin_voice_server(region_id, server_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -115,12 +101,13 @@ impl AdminApiClient {
         &self,
         params: &serde_json::Value,
     ) -> ApiResult<CreateVoiceServerResponse> {
+        let region_id = required_field(params, "region_id")?;
         let body =
             serde_json::from_value::<generated_types::CreateVoiceServerRequest>(params.clone())
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
-            .create_voice_server(&body)
+            .create_admin_voice_server(&region_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -130,12 +117,14 @@ impl AdminApiClient {
         &self,
         params: &serde_json::Value,
     ) -> ApiResult<UpdateVoiceServerResponse> {
+        let region_id = required_field(params, "region_id")?;
+        let server_id = required_field(params, "server_id")?;
         let body =
             serde_json::from_value::<generated_types::UpdateVoiceServerRequest>(params.clone())
                 .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
-            .update_voice_server(&body)
+            .update_admin_voice_server(&region_id, &server_id, &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -146,15 +135,23 @@ impl AdminApiClient {
         region_id: &str,
         server_id: &str,
     ) -> ApiResult<DeleteVoiceResponse> {
-        let body = generated_types::DeleteVoiceServerRequest {
-            region_id: region_id.to_owned(),
-            server_id: server_id.to_owned(),
-        };
         let response = self
             .generated()
-            .delete_voice_server(&body)
+            .delete_admin_voice_server(region_id, server_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
+}
+
+fn bool_param(value: bool) -> &'static str {
+    if value { "true" } else { "false" }
+}
+
+fn required_field(params: &serde_json::Value, field: &str) -> ApiResult<String> {
+    params
+        .get(field)
+        .and_then(serde_json::Value::as_str)
+        .map(std::borrow::ToOwned::to_owned)
+        .ok_or_else(|| ApiError::Parse(format!("{field} is required")))
 }

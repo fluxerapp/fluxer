@@ -52,8 +52,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const oauth2Token = await createOAuth2Token(harness, admin.userId, ['identify', 'email']);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 		});
@@ -69,8 +68,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			]);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/guilds/lookup')
-				.body({guild_id: '123'})
+				.get('/admin/guilds/123')
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 		});
@@ -81,18 +79,15 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const oauth2Token = await createOAuth2Token(harness, admin.userId, ['identify', 'email']);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/guilds/lookup')
-				.body({guild_id: '123'})
+				.get('/admin/guilds/123')
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/audit-logs')
-				.body({limit: 10})
+				.get('/admin/audit-logs?limit=10')
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 		});
@@ -105,8 +100,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const oauth2Token = await createAdminOAuth2Token(harness, admin.userId);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -117,18 +111,15 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const oauth2Token = await createAdminOAuth2Token(harness, admin.userId);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/guilds/lookup')
-				.body({guild_id: '123'})
+				.get('/admin/guilds/123')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/audit-logs')
-				.body({limit: 10})
+				.get('/admin/audit-logs?limit=10')
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -139,8 +130,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const oauth2Token = await createAdminOAuth2Token(harness, admin.userId);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
@@ -150,8 +140,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const oauth2Token = await createAdminOAuth2Token(harness, user.userId);
 
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [user.userId]})
+				.get(`/admin/users/${user.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
 				.execute();
 		});
@@ -163,8 +152,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -173,8 +161,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const user = await createTestAccount(harness);
 
 			await createBuilder(harness, `${user.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [user.userId]})
+				.get(`/admin/users/${user.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
 				.execute();
 		});
@@ -184,11 +171,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 			const apiKey = await createAdminApiKey(harness, admin, 'Test Key', ['user:lookup'], null);
 
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		});
 
 		test('admin API key without required ACL cannot access endpoint', async () => {
@@ -197,8 +180,7 @@ describe('Admin OAuth2 Application Requirement', () => {
 			const apiKey = await createAdminApiKey(harness, admin, 'Limited Key', ['audit_log:view'], null);
 
 			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});

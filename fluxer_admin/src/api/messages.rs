@@ -16,12 +16,16 @@ impl AdminApiClient {
         message_id: &str,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let body = generated_types::DeleteMessageRequest {
-            channel_id: snowflake(channel_id),
-            message_id: snowflake(message_id),
-        };
         let _: serde_json::Value = self
-            .post_typed_with_reason("/admin/messages/delete", &body, audit_log_reason)
+            .delete_with_reason(
+                &format!(
+                    "/admin/channels/{}/messages/{}",
+                    urlencoding::encode(channel_id),
+                    urlencoding::encode(message_id)
+                ),
+                None,
+                audit_log_reason,
+            )
             .await?;
         Ok(())
     }
@@ -50,7 +54,7 @@ impl AdminApiClient {
         };
         let response = self
             .generated()
-            .report_message_attachment_to_ncmec(&body)
+            .create_admin_ncmec_report(&body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -62,17 +66,14 @@ impl AdminApiClient {
         message_id: &str,
         context_limit: u32,
     ) -> ApiResult<LookupMessageResponse> {
-        let body = generated_types::LookupMessageRequest {
-            channel_id: snowflake(channel_id),
-            context_limit: Some(
-                crate::api::generated::nonzero_u32(context_limit, "context_limit")
-                    .map_err(ApiError::Parse)?,
-            ),
-            message_id: snowflake(message_id),
-        };
+        let context_limit = context_limit.to_string();
         let response = self
             .generated()
-            .lookup_message(&body)
+            .get_admin_message(
+                &snowflake(channel_id),
+                &snowflake(message_id),
+                Some(context_limit.as_str()),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -86,16 +87,13 @@ impl AdminApiClient {
         let entries = entries
             .iter()
             .cloned()
-            .map(serde_json::from_value::<generated_types::MessageShredRequestEntriesItem>)
+            .map(serde_json::from_value::<generated_types::AdminUserMessageShredRequestEntriesItem>)
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| ApiError::Parse(e.to_string()))?;
-        let body = generated_types::MessageShredRequest {
-            entries,
-            user_id: snowflake(user_id),
-        };
+        let body = generated_types::AdminUserMessageShredRequest { entries };
         let response = self
             .generated()
-            .queue_message_shred(&body)
+            .shred_admin_user_messages(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -106,13 +104,10 @@ impl AdminApiClient {
         user_id: &str,
         dry_run: bool,
     ) -> ApiResult<DeleteAllUserMessagesResponse> {
-        let body = generated_types::DeleteAllUserMessagesRequest {
-            dry_run: Some(dry_run),
-            user_id: snowflake(user_id),
-        };
+        let dry_run = if dry_run { "true" } else { "false" };
         let response = self
             .generated()
-            .delete_all_user_messages(&body)
+            .delete_admin_user_messages(&snowflake(user_id), Some(dry_run))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -122,12 +117,9 @@ impl AdminApiClient {
         &self,
         job_id: &str,
     ) -> ApiResult<MessageShredStatusResponse> {
-        let body = generated_types::MessageShredStatusRequest {
-            job_id: job_id.to_owned(),
-        };
         let response = self
             .generated()
-            .get_message_shred_status(&body)
+            .get_admin_message_shred(job_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -140,18 +132,18 @@ impl AdminApiClient {
         filename: &str,
         context_limit: u32,
     ) -> ApiResult<LookupMessageResponse> {
-        let body = generated_types::LookupMessageByAttachmentRequest {
-            attachment_id: snowflake(attachment_id),
-            channel_id: snowflake(channel_id),
-            context_limit: Some(
-                crate::api::generated::nonzero_u32(context_limit, "context_limit")
-                    .map_err(ApiError::Parse)?,
-            ),
-            filename: filename.to_owned(),
-        };
+        let context_limit = context_limit.to_string();
         let response = self
             .generated()
-            .lookup_message_by_attachment(&body)
+            .search_admin_messages(
+                Some(&snowflake(attachment_id)),
+                &snowflake(channel_id),
+                Some(context_limit.as_str()),
+                Some(filename),
+                None,
+                None,
+                None,
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -164,18 +156,17 @@ impl AdminApiClient {
         after: Option<&str>,
         limit: Option<u32>,
     ) -> ApiResult<BrowseChannelResponse> {
-        let body = generated_types::BrowseChannelRequest {
-            after: after.map(snowflake),
-            before: before.map(snowflake),
-            channel_id: snowflake(channel_id),
-            limit: limit
-                .map(|value| crate::api::generated::nonzero_u32(value, "limit"))
-                .transpose()
-                .map_err(ApiError::Parse)?,
-        };
+        let after = after.map(snowflake);
+        let before = before.map(snowflake);
+        let limit = limit.map(|value| value.to_string());
         let response = self
             .generated()
-            .browse_channel_messages(&body)
+            .list_admin_channel_messages(
+                &snowflake(channel_id),
+                after.as_ref(),
+                before.as_ref(),
+                limit.as_deref(),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -187,18 +178,18 @@ impl AdminApiClient {
         query: &str,
         limit: Option<u32>,
     ) -> ApiResult<SearchChannelMessagesResponse> {
-        let body = generated_types::SearchChannelMessagesRequest {
-            channel_id: snowflake(channel_id),
-            limit: limit
-                .map(|value| crate::api::generated::nonzero_u32(value, "limit"))
-                .transpose()
-                .map_err(ApiError::Parse)?,
-            query: generated_types::SearchChannelMessagesRequestQuery::try_from(query)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-        };
+        let limit = limit.map(|value| value.to_string());
         let response = self
             .generated()
-            .search_channel_messages(&body)
+            .search_admin_messages(
+                None,
+                &snowflake(channel_id),
+                None,
+                None,
+                limit.as_deref(),
+                None,
+                Some(query),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

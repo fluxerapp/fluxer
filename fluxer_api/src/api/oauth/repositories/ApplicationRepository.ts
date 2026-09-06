@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
+import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import {type ApplicationID, createApplicationID, type UserID} from '../../BrandedTypes';
 import {Config} from '../../Config';
 import {SYSTEM_USER_ID} from '../../constants/Core';
@@ -93,7 +95,10 @@ export class ApplicationRepository implements IApplicationRepository {
 	async upsertApplication(data: ApplicationRow, oldData?: ApplicationRow | null): Promise<Application> {
 		const applicationId = data.application_id;
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
-			throw new Error('Cannot modify the built-in admin OAuth2 application');
+			throw new ForbiddenError({
+				code: APIErrorCodes.FORBIDDEN,
+				message: 'Cannot modify the built-in admin OAuth2 application',
+			});
 		}
 		const result = await executeVersionedUpdate<ApplicationRow, 'application_id'>(
 			async () => fetchOne<ApplicationRow>(SELECT_APPLICATION_CQL, {application_id: applicationId}),
@@ -125,7 +130,10 @@ export class ApplicationRepository implements IApplicationRepository {
 
 	async deleteApplication(applicationId: ApplicationID): Promise<void> {
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
-			throw new Error('Cannot delete the built-in admin OAuth2 application');
+			throw new ForbiddenError({
+				code: APIErrorCodes.FORBIDDEN,
+				message: 'Cannot delete the built-in admin OAuth2 application',
+			});
 		}
 		const applicationRow = await fetchOne<ApplicationRow>(SELECT_APPLICATION_CQL, {application_id: applicationId});
 		const application = applicationRow ? new Application(applicationRow) : null;

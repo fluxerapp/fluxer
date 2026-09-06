@@ -102,10 +102,7 @@ describe('Security Access Control', () => {
 		test('admin endpoints require admin authentication', async () => {
 			const regularUser = await createTestAccount(harness);
 			await createBuilder(harness, `${regularUser.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [regularUser.userId],
-				})
+				.get(`/admin/users/${regularUser.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -113,10 +110,7 @@ describe('Security Access Control', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
 		});
@@ -124,10 +118,7 @@ describe('Security Access Control', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});

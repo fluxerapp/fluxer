@@ -52,8 +52,8 @@ async function adminApprove(
 	reason?: string,
 ): Promise<DiscoveryApplicationResponse> {
 	return createBuilder<DiscoveryApplicationResponse>(harness, `${adminToken}`)
-		.post(`/admin/discovery/applications/${guildId}/approve`)
-		.body({reason})
+		.patch(`/admin/discovery/applications/${guildId}`)
+		.body({status: 'approved', reason})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 }
@@ -65,8 +65,8 @@ async function adminReject(
 	reason: string,
 ): Promise<DiscoveryApplicationResponse> {
 	return createBuilder<DiscoveryApplicationResponse>(harness, `${adminToken}`)
-		.post(`/admin/discovery/applications/${guildId}/reject`)
-		.body({reason})
+		.patch(`/admin/discovery/applications/${guildId}`)
+		.body({status: 'rejected', reason})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 }

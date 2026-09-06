@@ -257,7 +257,7 @@ const refreshDiscovery: IndexHandler = async (_payload, _helpers, kvClient, prog
 	const {guildRepository} = getWorkerDependencies();
 	const searchService = requireSearchService(getGuildSearchService());
 	const discoveryRepository = new GuildDiscoveryRepository();
-	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED, 1000);
+	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED);
 	if (approvedRows.length === 0) {
 		return 0;
 	}

@@ -10,6 +10,7 @@ import {CannotReportOwnMessageError} from '@fluxer/errors/src/domains/channel/Ca
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
+import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {CannotReportGuildError} from '@fluxer/errors/src/domains/guild/CannotReportGuildError';
@@ -804,7 +805,7 @@ export class ReportService {
 
 	async listMyReports(reporterId: UserID, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
 		if (!this.reportSearchService) {
-			throw new Error('Search service not available');
+			throw new FeatureTemporarilyDisabledError();
 		}
 		const {hits} = await this.reportSearchService.listReportsByReporter(reporterId, limit, offset);
 		const reportIds = hits.map((hit) => createReportID(BigInt(hit.id)));
@@ -814,7 +815,7 @@ export class ReportService {
 
 	async listReportsByStatus(status: number, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
 		if (!this.reportSearchService) {
-			throw new Error('Search service not available');
+			throw new FeatureTemporarilyDisabledError();
 		}
 		const {hits} = await this.reportSearchService.listReportsByStatus(status, limit, offset);
 		const reportIds = hits.map((hit) => createReportID(BigInt(hit.id)));

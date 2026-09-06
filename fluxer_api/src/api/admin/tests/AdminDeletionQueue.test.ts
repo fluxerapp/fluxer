@@ -8,6 +8,7 @@ import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
 import {setInjectedIpInfoService} from '../../middleware/ServiceMiddleware';
 import {CassandraSuspiciousIpRepository} from '../../risk/SuspiciousIpRepository';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
 import {UserRepository} from '../../user/repositories/UserRepository';
 
@@ -92,13 +93,9 @@ describe('Admin Deletion Queue', () => {
 				pending_deletion_at: string;
 			};
 		}>(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: 2,
-				days_until_deletion: 60,
-			})
+			.body({reason_code: 2, days_until_deletion: 60})
 			.execute();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);
 		const secondSchedule = await createBuilder<{
@@ -106,13 +103,9 @@ describe('Admin Deletion Queue', () => {
 				pending_deletion_at: string;
 			};
 		}>(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: 2,
-				days_until_deletion: 62,
-			})
+			.body({reason_code: 2, days_until_deletion: 62})
 			.execute();
 		const firstDate = firstSchedule.user.pending_deletion_at.slice(0, 10);
 		const secondDate = secondSchedule.user.pending_deletion_at.slice(0, 10);
@@ -139,13 +132,9 @@ describe('Admin Deletion Queue', () => {
 				pending_deletion_at: string;
 			};
 		}>(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: 1,
-				days_until_deletion: 60,
-			})
+			.body({reason_code: 1, days_until_deletion: 60})
 			.execute();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);
 		await createBuilder<{
@@ -153,11 +142,8 @@ describe('Admin Deletion Queue', () => {
 				pending_deletion_at: string | null;
 			};
 		}>(harness, `${admin.token}`)
-			.post('/admin/users/cancel-deletion')
+			.delete(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-			})
 			.execute();
 		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(0);
 		expect(
@@ -173,21 +159,15 @@ describe('Admin Deletion Queue', () => {
 		const targetUser = await createTestAccount(harness, {ipAddress: targetIp});
 		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: DeletionReasons.USER_REQUESTED,
-				days_until_deletion: 14,
-			})
+			.body({reason_code: DeletionReasons.USER_REQUESTED, days_until_deletion: 14})
 			.execute();
 		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.post('/admin/bans/ip/check')
-			.body({ip: targetIp})
+			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
 		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.post('/admin/bans/email/check')
-			.body({email: targetUser.email})
+			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email)}`)
 			.execute();
 		expect(ipBan.banned).toBe(false);
 		expect(emailBan.banned).toBe(false);
@@ -199,21 +179,15 @@ describe('Admin Deletion Queue', () => {
 		const targetUser = await createTestAccount(harness, {ipAddress: targetIp});
 		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: DeletionReasons.SPAM,
-				days_until_deletion: 60,
-			})
+			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
 			.execute();
 		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.post('/admin/bans/ip/check')
-			.body({ip: targetIp})
+			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
 		const emailBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.post('/admin/bans/email/check')
-			.body({email: targetUser.email})
+			.get(`/admin/blocklists/email/entries/${encodeURIComponent(targetUser.email)}`)
 			.execute();
 		const suspiciousIp = await new CassandraSuspiciousIpRepository().findActiveByIp(targetIp);
 		expect(ipBan.banned).toBe(false);
@@ -242,19 +216,14 @@ describe('Admin Deletion Queue', () => {
 				});
 			},
 		});
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check']);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: DeletionReasons.SPAM,
-				days_until_deletion: 60,
-			})
+			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
 			.execute();
 		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.post('/admin/bans/ip/check')
-			.body({ip: targetIp})
+			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
 		const suspiciousIp = await new CassandraSuspiciousIpRepository().findActiveByIp(targetIp);
 		expect(ipBan.banned).toBe(false);
@@ -289,22 +258,63 @@ describe('Admin Deletion Queue', () => {
 				});
 			},
 		});
-		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check']);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete', 'ban:ip:check', 'ban:email:check']);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/schedule-deletion')
+			.put(`/admin/users/${targetUser.userId}/deletion`)
 			.header('x-forwarded-for', adminIp)
-			.body({
-				user_id: targetUser.userId,
-				reason_code: DeletionReasons.SPAM,
-				days_until_deletion: 60,
-			})
+			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 60})
 			.execute();
 		const ipBan = await createBuilder<{banned: boolean}>(harness, `${admin.token}`)
-			.post('/admin/bans/ip/check')
-			.body({ip: targetIp})
+			.get(`/admin/blocklists/ip/entries/${encodeURIComponent(targetIp)}`)
 			.execute();
 		const suspiciousIp = await new CassandraSuspiciousIpRepository().findActiveByIp(targetIp);
 		expect(ipBan.banned).toBe(false);
 		expect(suspiciousIp).toBeNull();
+	});
+	test('rejects a scheduled deletion reason code outside the registry', async () => {
+		const admin = await createTestAccount(harness);
+		const targetUser = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
+		const {json} = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+			}>;
+		}>(harness, `${admin.token}`)
+			.put(`/admin/users/${targetUser.userId}/deletion`)
+			.body({reason_code: 999, days_until_deletion: 60})
+			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+			.executeWithResponse();
+		expect(json.errors.some((entry) => entry.path === 'reason_code')).toBe(true);
+		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(0);
+	});
+	test('accepts the highest scheduled deletion reason code of the registry', async () => {
+		const admin = await createTestAccount(harness);
+		const targetUser = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'user:delete']);
+		await createBuilder(harness, `${admin.token}`)
+			.put(`/admin/users/${targetUser.userId}/deletion`)
+			.body({reason_code: DeletionReasons.IMPERSONATION_OR_FAKE_IDENTITY, days_until_deletion: 60})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(await harness.kvProvider.zcard('deletion_queue')).toBe(1);
+	});
+	test('rejects a bulk schedule_user_deletion job with a reason code outside the registry', async () => {
+		const admin = await createTestAccount(harness);
+		const targetUser = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const {json} = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+			}>;
+		}>(harness, `${admin.token}`)
+			.post('/admin/bulk-jobs')
+			.body({task: 'schedule_user_deletion', user_ids: [targetUser.userId], reason_code: 0})
+			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+			.executeWithResponse();
+		expect(json.errors.some((entry) => entry.path === 'reason_code')).toBe(true);
 	});
 });

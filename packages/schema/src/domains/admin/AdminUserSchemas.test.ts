@@ -11,6 +11,11 @@ describe('SetUserAclsRequest', () => {
 		expect(result.success).toBe(true);
 	});
 
+	test('rejects an ACL outside the registry', () => {
+		const result = SetUserAclsRequest.safeParse({user_id: '1', acls: ['user:veiw']});
+		expect(result.success).toBe(false);
+	});
+
 	test('rejects more entries than there are ACLs', () => {
 		const acls = [...Object.values(AdminACLs), 'overflow:one'];
 		const result = SetUserAclsRequest.safeParse({user_id: '1', acls});

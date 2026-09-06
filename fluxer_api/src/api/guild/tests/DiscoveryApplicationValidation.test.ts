@@ -177,8 +177,8 @@ describe('Discovery Application Validation', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/approve`)
-				.body({})
+				.patch(`/admin/discovery/applications/${guild.id}`)
+				.body({status: 'approved'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, owner.token)
@@ -307,8 +307,8 @@ describe('Discovery Application Validation', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, `${admin.token}`)
-				.post(`/admin/discovery/applications/${guild.id}/reject`)
-				.body({reason: 'Not suitable'})
+				.patch(`/admin/discovery/applications/${guild.id}`)
+				.body({status: 'rejected', reason: 'Not suitable'})
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			await createBuilder(harness, owner.token)

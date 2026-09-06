@@ -23,9 +23,9 @@ const FETCH_ALL_DISCOVERY_PAGINATED = (limit: number) =>
 export abstract class IGuildDiscoveryRepository {
 	abstract findByGuildId(guildId: GuildID): Promise<GuildDiscoveryRow | null>;
 
-	abstract listByStatus(status: string, limit: number): Promise<Array<GuildDiscoveryByStatusRow>>;
+	abstract listByStatus(status: string): Promise<Array<GuildDiscoveryByStatusRow>>;
 
-	abstract listFullByStatus(status: string, limit: number): Promise<Array<GuildDiscoveryRow>>;
+	abstract listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>>;
 
 	abstract listAllPaginated(limit: number, lastGuildId?: GuildID): Promise<Array<GuildDiscoveryRow>>;
 
@@ -54,15 +54,14 @@ export class GuildDiscoveryRepository extends IGuildDiscoveryRepository {
 		return row;
 	}
 
-	async listByStatus(status: string, limit: number): Promise<Array<GuildDiscoveryByStatusRow>> {
-		const rows = await fetchMany<GuildDiscoveryByStatusRow>(FETCH_DISCOVERY_BY_STATUS, {
+	async listByStatus(status: string): Promise<Array<GuildDiscoveryByStatusRow>> {
+		return fetchMany<GuildDiscoveryByStatusRow>(FETCH_DISCOVERY_BY_STATUS, {
 			status,
 		});
-		return rows.slice(0, limit);
 	}
 
-	async listFullByStatus(status: string, limit: number): Promise<Array<GuildDiscoveryRow>> {
-		const indexRows = await this.listByStatus(status, limit);
+	async listFullByStatus(status: string): Promise<Array<GuildDiscoveryRow>> {
+		const indexRows = await this.listByStatus(status);
 		const fullRows = await Promise.all(indexRows.map((indexRow) => this.findByGuildId(indexRow.guild_id)));
 		return fullRows.filter((row): row is GuildDiscoveryRow => row !== null);
 	}

@@ -62,4 +62,5 @@ export interface WorkerJobOptions {
 	requestedByUserId?: bigint | undefined;
 	auditLogReason?: string | undefined;
 	skipLedger?: boolean | undefined;
+	requireLedger?: boolean | undefined;
 }

@@ -19,7 +19,7 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 	}
 	const {guildRepository, gatewayService} = getWorkerDependencies();
 	const discoveryRepository = new GuildDiscoveryRepository();
-	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED, 1000);
+	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED);
 	if (approvedRows.length === 0) {
 		helpers.logger.info('No discoverable guilds to sync');
 		return;

@@ -13,12 +13,12 @@ import type {
 export type SetupBrandingAssetKind = BrandingAssetUploadRequest['kind'];
 
 export async function fetchInstanceConfig(): Promise<InstanceConfigResponse> {
-	const response = await http.post<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_GET);
+	const response = await http.get<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG);
 	return response.body;
 }
 
 export async function updateInstanceConfig(body: InstanceConfigUpdateRequest): Promise<InstanceConfigResponse> {
-	const response = await http.post<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_UPDATE, {body});
+	const response = await http.patch<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG, {body});
 	return response.body;
 }
 
@@ -27,11 +27,11 @@ export async function uploadBrandingAsset(
 	image: string | null,
 ): Promise<InstanceConfigResponse> {
 	const body: BrandingAssetUploadRequest = {kind, image};
-	const response = await http.post<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_BRANDING_ASSET, {body});
+	const response = await http.post<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_BRANDING_ASSETS, {body});
 	return response.body;
 }
 
 export async function testSmtpConfig(body: InstanceEmailSmtpTestRequest): Promise<InstanceEmailSmtpTestResponse> {
-	const response = await http.post<InstanceEmailSmtpTestResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_SMTP_TEST, {body});
+	const response = await http.post<InstanceEmailSmtpTestResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_SMTP_TESTS, {body});
 	return response.body;
 }

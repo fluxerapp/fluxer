@@ -2,7 +2,7 @@
 
 use crate::api::generated::types as generated_types;
 
-use super::client::{AdminApiClient, ApiError, ApiResult};
+use super::client::{AdminApiClient, ApiResult};
 use super::types::{Archive, ArchiveDownloadUrlResponse, ListArchivesResponse};
 
 impl AdminApiClient {
@@ -11,13 +11,12 @@ impl AdminApiClient {
         user_id: &str,
         include_attachments: bool,
     ) -> ApiResult<Archive> {
-        let body = generated_types::TriggerUserArchiveRequest {
+        let body = generated_types::AdminArchiveCreateRequest {
             include_attachments: include_attachments.then_some(true),
-            user_id: snowflake(user_id),
         };
         let response = self
             .generated()
-            .trigger_user_archive(&body)
+            .create_admin_user_archive(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -28,13 +27,12 @@ impl AdminApiClient {
         guild_id: &str,
         include_attachments: bool,
     ) -> ApiResult<Archive> {
-        let body = generated_types::TriggerGuildArchiveRequest {
-            guild_id: snowflake(guild_id),
+        let body = generated_types::AdminArchiveCreateRequest {
             include_attachments: include_attachments.then_some(true),
         };
         let response = self
             .generated()
-            .trigger_guild_archive(&body)
+            .create_admin_guild_archive(&snowflake(guild_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -47,22 +45,16 @@ impl AdminApiClient {
         include_expired: bool,
         requested_by: Option<&str>,
     ) -> ApiResult<ListArchivesResponse> {
-        let body = generated_types::ListArchivesRequest {
-            include_expired: Some(include_expired),
-            limit: None,
-            requested_by: requested_by.map(snowflake),
-            subject_id: subject_id.map(snowflake),
-            subject_type: Some(
-                generated_types::ListArchivesRequestSubjectType::try_from(subject_type)
-                    .map_err(|e| ApiError::Parse(e.to_string()))?,
+        let query_params = [
+            ("subject_type", subject_type),
+            ("subject_id", subject_id.unwrap_or_default()),
+            ("requested_by", requested_by.unwrap_or_default()),
+            (
+                "include_expired",
+                if include_expired { "true" } else { "false" },
             ),
-        };
-        let response = self
-            .generated()
-            .list_archives(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        ];
+        self.get("/admin/archives", Some(&query_params)).await
     }
 
     pub async fn get_archive_download_url(
@@ -73,7 +65,7 @@ impl AdminApiClient {
     ) -> ApiResult<ArchiveDownloadUrlResponse> {
         let response = self
             .generated()
-            .get_archive_download_url(subject_type, subject_id, archive_id)
+            .get_admin_archive_download(subject_type, subject_id, archive_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

@@ -106,18 +106,6 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 		await deleteOneOrMany(JobsActive.deleteByPk({job_id: jobId}));
 	}
 
-	async markFailed(jobId: bigint, errorMessage: string): Promise<void> {
-		const completedAt = new Date();
-		const status: JobStatus = 'failed';
-		await upsertOne(
-			JobsById.patchByPk(
-				{job_id: jobId},
-				{status: Db.set(status), completed_at: Db.set(completedAt), error_message: Db.set(errorMessage)},
-			),
-		);
-		await deleteOneOrMany(JobsActive.deleteByPk({job_id: jobId}));
-	}
-
 	async markCancelled(jobId: bigint): Promise<void> {
 		const completedAt = new Date();
 		const status: JobStatus = 'cancelled';
@@ -154,6 +142,10 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 		await upsertOne(JobsById.patchByPk({job_id: jobId}, {context_link: Db.set(link)}));
 	}
 
+	async setJetStreamSeq(jobId: bigint, seq: string): Promise<void> {
+		await upsertOne(JobsById.patchByPk({job_id: jobId}, {jet_stream_seq: Db.set(seq)}));
+	}
+
 	async requestCancel(jobId: bigint): Promise<void> {
 		await upsertOne(JobsById.patchByPk({job_id: jobId}, {cancel_requested: Db.set(true)}));
 	}
@@ -179,6 +171,11 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 	}): Promise<ListJobsResult> {
 		const {limit, cursor, filters, maxLookbackDays} = opts;
 		const startBucket = cursor ? new Date(`${cursor.bucketDay}T00:00:00Z`) : new Date();
+		const hasFilters = Boolean(
+			filters.status ||
+				filters.taskType ||
+				(filters.requestedByUserId !== undefined && filters.requestedByUserId !== null),
+		);
 		const collected: Array<JobByIdRow> = [];
 		let nextCursor: ListJobsCursor | null = null;
 		for (let dayOffset = 0; dayOffset <= maxLookbackDays && collected.length < limit; dayOffset++) {
@@ -186,12 +183,13 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 			bucketDate.setUTCDate(bucketDate.getUTCDate() - dayOffset);
 			const bucketDay = bucketDayFor(bucketDate);
 			const remaining = limit - collected.length + 1;
+			const bucketLimit = hasFilters ? {} : {limit: remaining};
 			const useCursor = dayOffset === 0 && cursor !== null;
 			let bucketRows: Array<JobByDayBucketRow>;
 			if (useCursor && cursor) {
 				const query = JobsByDayBucket.select({
 					where: [JobsByDayBucket.where.eq('bucket_day'), JobsByDayBucket.where.lt('created_at')],
-					limit: remaining,
+					...bucketLimit,
 				});
 				bucketRows = await fetchMany<JobByDayBucketRow>(
 					query.bind({bucket_day: bucketDay, created_at: cursor.createdAt}),
@@ -199,24 +197,29 @@ export class JobLedgerRepository extends IJobLedgerRepository {
 			} else {
 				const query = JobsByDayBucket.select({
 					where: JobsByDayBucket.where.eq('bucket_day'),
-					limit: remaining,
+					...bucketLimit,
 				});
 				bucketRows = await fetchMany<JobByDayBucketRow>(query.bind({bucket_day: bucketDay}));
 			}
 			for (const r of bucketRows) {
-				if (filters.status && r.status !== filters.status) continue;
 				if (filters.taskType && r.task_type !== filters.taskType) continue;
 				if (filters.requestedByUserId !== undefined && filters.requestedByUserId !== null) {
 					if (r.requested_by_user_id !== filters.requestedByUserId) continue;
 				}
+				const fullRow = await this.getJob(r.job_id);
+				if (!fullRow) continue;
+				if (filters.status && fullRow.status !== filters.status) continue;
 				if (collected.length >= limit) {
 					nextCursor = {bucketDay, createdAt: r.created_at, jobId: r.job_id};
 					break;
 				}
-				const fullRow = await this.getJob(r.job_id);
-				if (fullRow) collected.push(fullRow);
+				collected.push(fullRow);
 			}
 			if (nextCursor) break;
+		}
+		if (nextCursor === null && collected.length >= limit) {
+			const last = collected[collected.length - 1];
+			nextCursor = {bucketDay: bucketDayFor(last.created_at), createdAt: last.created_at, jobId: last.job_id};
 		}
 		return {jobs: collected, nextCursor};
 	}

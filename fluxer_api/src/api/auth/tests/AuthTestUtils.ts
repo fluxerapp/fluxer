@@ -336,12 +336,12 @@ export async function enableSso(
 		redirect_uri: '',
 		...overrides,
 	};
-	await createBuilder(harness, token).post('/admin/instance-config/update').body({sso: ssoConfig}).execute();
+	await createBuilder(harness, token).patch('/admin/instance/config').body({sso: ssoConfig}).execute();
 }
 
 export async function disableSso(harness: ApiTestHarness, token: string): Promise<void> {
 	await createBuilder(harness, token)
-		.post('/admin/instance-config/update')
+		.patch('/admin/instance/config')
 		.body({
 			sso: {
 				enabled: false,

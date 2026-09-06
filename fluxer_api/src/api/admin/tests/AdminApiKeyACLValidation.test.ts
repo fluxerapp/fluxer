@@ -113,6 +113,32 @@ describe('Admin API Key ACL Validation', () => {
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
+	test('rejects an ACL outside the registry with 400', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['*']);
+		await createBuilder(harness, `${admin.token}`)
+			.post('/admin/api-keys')
+			.body({
+				name: 'Typo Key',
+				acls: ['user:veiw'],
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.executeWithResponse();
+		const keys = await listAdminApiKeys(harness, admin.token);
+		expect(keys).toHaveLength(0);
+	});
+	test('update rejects an ACL outside the registry with 400 and leaves the stored set unchanged', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['*']);
+		const apiKey = await createAdminApiKey(harness, admin, 'Typo Update Key', ['audit_log:view'], null);
+		await createBuilder(harness, `${admin.token}`)
+			.patch(`/admin/api-keys/${apiKey.keyId}`)
+			.body({acls: ['user:veiw']})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.executeWithResponse();
+		const keys = await listAdminApiKeys(harness, admin.token);
+		expect(keys[0]!.acls).toEqual(['audit_log:view']);
+	});
 	test('empty ACL list is valid', async () => {
 		const admin = await createTestAccount(harness);
 		await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'audit_log:view']);

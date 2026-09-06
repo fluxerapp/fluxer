@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {HarvestExpiredError} from '@fluxer/errors/src/domains/moderation/HarvestExpiredError';
 import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestFailedError';
@@ -130,7 +131,10 @@ export class AdminArchiveService {
 	async listArchives(params: ListArchivesParams): Promise<Array<AdminArchiveResponse>> {
 		const {subjectType = 'all', subjectId, requestedBy, limit = 50, includeExpired = false} = params;
 		if (subjectId !== undefined && subjectType === 'all') {
-			throw new Error('subject_type must be specified when subject_id is provided');
+			throw InputValidationError.create(
+				'subject_type',
+				'subject_type must name user or guild when subject_id is supplied',
+			);
 		}
 		if (subjectId !== undefined) {
 			const archives = await this.adminArchiveRepository.listBySubject(
@@ -175,11 +179,11 @@ export class AdminArchiveService {
 		if (!archive) {
 			throw new UnknownHarvestError();
 		}
-		if (!archive.completedAt || !archive.storageKey) {
-			throw new HarvestNotReadyError();
-		}
 		if (archive.failedAt) {
 			throw new HarvestFailedError();
+		}
+		if (!archive.completedAt || !archive.storageKey) {
+			throw new HarvestNotReadyError();
 		}
 		if (archive.expiresAt && archive.expiresAt < new Date()) {
 			throw new HarvestExpiredError();

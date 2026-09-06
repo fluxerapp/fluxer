@@ -12,7 +12,7 @@ impl AdminApiClient {
         acls: &[String],
     ) -> ApiResult<CreateAdminApiKeyResponse> {
         let body = generated_types::CreateAdminApiKeyRequest {
-            acls: acls.to_vec(),
+            acls: parse_acls(acls)?,
             expires_in_days: None,
             name: generated_types::CreateAdminApiKeyRequestName::try_from(name)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
@@ -35,10 +35,20 @@ impl AdminApiClient {
     }
 
     pub async fn revoke_api_key(&self, key_id: &str) -> ApiResult<()> {
+        let key_id = generated_types::SnowflakeType::from(key_id.to_owned());
         self.generated()
-            .delete_admin_api_key(key_id)
+            .delete_admin_api_key(&key_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
     }
+}
+
+pub(super) fn parse_acls(acls: &[String]) -> ApiResult<Vec<generated_types::AdminAclType>> {
+    acls.iter()
+        .map(|acl| {
+            generated_types::AdminAclType::try_from(acl.as_str())
+                .map_err(|e| ApiError::Parse(e.to_string()))
+        })
+        .collect()
 }
