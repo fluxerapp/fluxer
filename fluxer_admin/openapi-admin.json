@@ -9327,7 +9327,7 @@
 					"oauth2_redirect_uris": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 10,
 						"description": "Registered OAuth2 redirect URIs"
 					},
 					"has_client_secret": {

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MAX_APPLICATION_REDIRECT_URIS} from '@fluxer/constants/src/LimitConstants';
 import {
 	createStringType,
 	Int32Type,
@@ -21,7 +22,10 @@ export const ApplicationAdminResponse = z.object({
 	bot_discriminator: z.string().nullable().describe('The discriminator of the bot user, if any'),
 	bot_is_public: z.boolean().describe('Whether the bot is publicly joinable'),
 	bot_require_code_grant: z.boolean().describe('Whether an OAuth2 code grant is required for this bot'),
-	oauth2_redirect_uris: z.array(z.string()).max(100).describe('Registered OAuth2 redirect URIs'),
+	oauth2_redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.describe('Registered OAuth2 redirect URIs'),
 	has_client_secret: z.boolean().describe('Whether a hashed client secret is stored for this application'),
 	has_bot_token: z.boolean().describe('Whether a hashed bot token is stored for this application'),
 	bot_token_preview: z.string().nullable().describe('The preview (last few characters) of the bot token, if any'),

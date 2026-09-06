@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {CONTENT_WARNING_TEXT_MAX_LENGTH} from '@fluxer/constants/src/GuildConstants';
-import {MAX_GROUP_DM_OTHER_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GROUP_DM_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ChannelOverwriteTypeSchema, ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {ContentWarningLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
@@ -71,7 +71,6 @@ export const ChannelResponse = z.object({
 		.describe('The ISO 8601 timestamp of when the last pinned message was pinned'),
 	permission_overwrites: z
 		.array(ChannelOverwriteResponse)
-		.max(500)
 		.optional()
 		.describe('The permission overwrites for this channel'),
 	recipients: z
@@ -125,7 +124,7 @@ export const ChannelPartialResponse = z.object({
 	type: ChannelTypeSchema.describe('The type of the channel'),
 	recipients: z
 		.array(ChannelPartialRecipientResponse)
-		.max(MAX_GROUP_DM_OTHER_RECIPIENTS)
+		.max(MAX_GROUP_DM_RECIPIENTS)
 		.optional()
 		.describe('The recipients of the DM channel'),
 });
