@@ -40,7 +40,21 @@ apply_voice_permissions_to_flags(Flags, VoicePermissions) ->
             false -> true;
             _ -> false
         end,
-    Flags#{suppress => Suppress}.
+    SelfStream =
+        case maps:get(can_stream, VoicePermissions, true) of
+            false -> false;
+            _ -> maps:get(self_stream, Flags, false) =:= true
+        end,
+    SelfVideo =
+        case maps:get(can_video, VoicePermissions, true) of
+            false -> false;
+            _ -> maps:get(self_video, Flags, false) =:= true
+        end,
+    Flags#{
+        suppress => Suppress,
+        self_stream => SelfStream,
+        self_video => SelfVideo
+    }.
 
 -spec build_voice_token_rpc_request(
     integer() | null,

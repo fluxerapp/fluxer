@@ -55,6 +55,30 @@ voice_state_update_invalid_channel_id_test() ->
             #{user_id => 10, channel_id => undefined}, State
         ).
 
+voice_state_update_guild_leave_null_connection_id_test() ->
+    State = connected_state(<<"10">>),
+    {reply, {error, validation_error, voice_missing_connection_id}, NewState} =
+        guild_voice_connection:voice_state_update(
+            #{user_id => 10, channel_id => null, connection_id => null}, State
+        ),
+    ?assertEqual(connected_voice_states(<<"10">>), maps:get(voice_states, NewState)).
+
+voice_state_update_guild_leave_omitted_connection_id_test() ->
+    State = connected_state(<<"10">>),
+    {reply, {error, validation_error, voice_missing_connection_id}, NewState} =
+        guild_voice_connection:voice_state_update(
+            #{user_id => 10, channel_id => null}, State
+        ),
+    ?assertEqual(connected_voice_states(<<"10">>), maps:get(voice_states, NewState)).
+
+voice_state_update_guild_leave_blank_connection_id_test() ->
+    State = connected_state(<<"10">>),
+    assert_voice_state_update_error(
+        #{user_id => 10, channel_id => null, connection_id => <<>>},
+        State,
+        {error, validation_error, voice_missing_connection_id}
+    ).
+
 voice_state_update_channel_not_found_test() ->
     State = replace_channels(base_test_state(), []),
     {reply, {error, not_found, voice_channel_not_found}, _} =
@@ -300,6 +324,28 @@ voice_state_update_stress_many_watch_unwatch_updates_test() ->
     ),
     ?assertMatch(#{<<"conn-1">> := #{}}, maps:get(voice_states, FinalState)).
 
+voice_state_update_clears_self_stream_without_stream_permission_test() ->
+    State = connected_state(<<"10">>),
+    {reply, #{success := true}, NewState} = guild_voice_connection:voice_state_update(
+        update_request(#{self_stream => true, self_video => true}), State
+    ),
+    Updated = updated_voice_state(NewState),
+    ?assertEqual(false, maps:get(<<"self_stream">>, Updated)),
+    ?assertEqual(false, maps:get(<<"self_video">>, Updated)).
+
+voice_state_update_keeps_self_stream_with_stream_permission_test() ->
+    State = maps:put(
+        voice_states,
+        connected_voice_states(<<"10">>),
+        with_stream_permission(base_test_state())
+    ),
+    {reply, #{success := true}, NewState} = guild_voice_connection:voice_state_update(
+        update_request(#{self_stream => true, self_video => true}), State
+    ),
+    Updated = updated_voice_state(NewState),
+    ?assertEqual(true, maps:get(<<"self_stream">>, Updated)),
+    ?assertEqual(true, maps:get(<<"self_video">>, Updated)).
+
 voice_state_update_allows_twenty_fifth_camera_sharer_test() ->
     State = camera_state(24),
     {reply, #{success := true}, NewState} = guild_voice_connection:voice_state_update(
@@ -379,9 +425,19 @@ camera_base_state(SharerCount) ->
     Members = [
         base_test_member(10) | [base_test_member(200 + N) || N <- lists:seq(1, SharerCount)]
     ],
-    State = base_test_state(),
+    State = with_stream_permission(base_test_state()),
     Data0 = maps:get(data, State, #{}),
     maps:put(data, maps:put(<<"members">>, Members, Data0), State).
+
+with_stream_permission(State) ->
+    Roles = [
+        #{
+            <<"id">> => <<"999">>,
+            <<"permissions">> => integer_to_binary(constants:stream_permission())
+        }
+    ],
+    Data0 = maps:get(data, State, #{}),
+    maps:put(data, maps:put(<<"roles">>, Roles, Data0), State).
 
 camera_state(SharerCount) ->
     maps:put(

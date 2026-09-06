@@ -102,6 +102,15 @@ build_context_normalizes_fields_test() ->
     ?assertEqual(false, maps:get(self_stream, Context)),
     ?assertEqual(false, maps:get(is_mobile, Context)).
 
+build_context_normalizes_null_connection_id_test() ->
+    Context = guild_voice_connection_util:build_context(#{
+        user_id => 42,
+        channel_id => null,
+        connection_id => null
+    }),
+    ?assertEqual(undefined, maps:get(connection_id, Context)),
+    ?assertNot(maps:is_key(raw_connection_id, Context)).
+
 build_context_does_not_accept_zero_ids_test() ->
     Context = guild_voice_connection_util:build_context(#{
         user_id => 0,

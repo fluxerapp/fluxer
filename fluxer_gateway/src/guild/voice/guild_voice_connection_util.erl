@@ -43,7 +43,6 @@ build_context(Request0) ->
     Request = map_utils:ensure_map(Request0),
     Norm = fun guild_voice_connection_normalize:normalize_boolean/1,
     Coord = fun guild_voice_connection_normalize:normalize_coordinate/1,
-    RawConnectionId = maps:get(connection_id, Request, undefined),
     #{
         user_id => guild_voice_connection_normalize:normalize_user_id(
             maps:get(user_id, Request, undefined)
@@ -53,9 +52,8 @@ build_context(Request0) ->
         ),
         session_id => maps:get(session_id, Request, undefined),
         connection_id => guild_voice_connection_normalize:normalize_connection_id(
-            RawConnectionId
+            maps:get(connection_id, Request, undefined)
         ),
-        raw_connection_id => RawConnectionId,
         self_mute => Norm(maps:get(self_mute, Request, false)),
         self_deaf => Norm(maps:get(self_deaf, Request, false)),
         self_video => Norm(maps:get(self_video, Request, false)),

@@ -104,7 +104,7 @@ handle_member_voice(Context, Member, VoiceStates, State) ->
     voice_reply().
 handle_disconnect(Context, VoiceStates, State) ->
     guild_voice_disconnect:handle_voice_disconnect(
-        maps:get(raw_connection_id, Context),
+        maps:get(connection_id, Context),
         maps:get(session_id, Context),
         maps:get(user_id, Context),
         VoiceStates,

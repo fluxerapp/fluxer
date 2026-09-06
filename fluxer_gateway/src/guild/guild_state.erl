@@ -96,6 +96,7 @@ handle_post_update(guild_member_update, EventData, OldState, NewState) ->
     guild_state_member:sync_member(EventData, NewState),
     UserId = guild_state_member:extract_user_id(EventData),
     State1 = dispatch_member_update_visibility(UserId, OldState, NewState),
+    ok = guild_voice_permission_sync:maybe_sync_permissions_on_member_update(EventData, State1),
     refresh_member_session_cache(UserId, State1);
 handle_post_update(Event, EventData, OldState, NewState) when
     Event =:= guild_role_create;
@@ -122,15 +123,25 @@ post_update_role(guild_role_create, _EventData, _OldState, NewState) ->
 post_update_role(guild_role_update, EventData, OldState, NewState) ->
     NewState1 = guild_state_roles:sync_hoisted_roles(NewState),
     RoleIds = guild_state_roles:extract_role_ids_from_role_update(EventData),
-    guild_state_roles:recompute_visibility_for_roles(RoleIds, OldState, NewState1);
+    resync_roles_after_permission_change(RoleIds, OldState, NewState1);
 post_update_role(guild_role_update_bulk, EventData, OldState, NewState) ->
     NewState1 = guild_state_roles:sync_hoisted_roles(NewState),
     RoleIds = guild_state_roles:extract_role_ids_from_role_update_bulk(EventData),
-    guild_state_roles:recompute_visibility_for_roles(RoleIds, OldState, NewState1);
+    resync_roles_after_permission_change(RoleIds, OldState, NewState1);
 post_update_role(guild_role_delete, EventData, OldState, NewState) ->
     NewState1 = guild_state_roles:sync_hoisted_roles(NewState),
     RoleIds = guild_state_roles:extract_role_ids_from_role_delete(EventData),
-    guild_state_roles:recompute_visibility_for_roles(RoleIds, OldState, NewState1).
+    resync_roles_after_permission_change(RoleIds, OldState, NewState1).
+
+-spec resync_roles_after_permission_change([integer()], guild_state(), guild_state()) ->
+    guild_state().
+resync_roles_after_permission_change(RoleIds, OldState, NewState) ->
+    Recomputed = guild_state_roles:recompute_visibility_for_roles(RoleIds, OldState, NewState),
+    lists:foreach(
+        fun(RoleId) -> guild_voice_permission_sync:sync_users_with_role(RoleId, Recomputed) end,
+        RoleIds
+    ),
+    Recomputed.
 
 -spec post_update_channel(event(), event_data(), guild_state(), guild_state()) -> guild_state().
 post_update_channel(channel_create, _EventData, _OldState, NewState) ->
@@ -138,23 +149,30 @@ post_update_channel(channel_create, _EventData, _OldState, NewState) ->
     NewState;
 post_update_channel(channel_update, EventData, OldState, NewState) ->
     ChanIds = guild_state_channels:extract_channel_ids_from_channel_update(EventData),
-    NewState1 = guild_member_list_write:rebuild_channels_for_permission_change(
-        ChanIds, NewState
-    ),
-    guild_visibility:compute_and_dispatch_visibility_changes_for_channels(
-        ChanIds, OldState, NewState1
-    );
+    resync_channels_after_permission_change(ChanIds, OldState, NewState);
 post_update_channel(channel_update_bulk, EventData, OldState, NewState) ->
     ChanIds = guild_state_channels:extract_channel_ids_from_channel_update_bulk(EventData),
-    NewState1 = guild_member_list_write:rebuild_channels_for_permission_change(
-        ChanIds, NewState
-    ),
-    guild_visibility:compute_and_dispatch_visibility_changes_for_channels(
-        ChanIds, OldState, NewState1
-    );
+    resync_channels_after_permission_change(ChanIds, OldState, NewState);
 post_update_channel(channel_delete, _EventData, _OldState, NewState) ->
     maybe_sync_member_list_permission_state(NewState),
     NewState.
+
+-spec resync_channels_after_permission_change([integer()], guild_state(), guild_state()) ->
+    guild_state().
+resync_channels_after_permission_change(ChanIds, OldState, NewState) ->
+    Rebuilt = guild_member_list_write:rebuild_channels_for_permission_change(ChanIds, NewState),
+    Dispatched = guild_visibility:compute_and_dispatch_visibility_changes_for_channels(
+        ChanIds, OldState, Rebuilt
+    ),
+    lists:foreach(
+        fun(ChanId) ->
+            guild_voice_permission_sync:sync_all_voice_permissions_for_channel(
+                ChanId, Dispatched
+            )
+        end,
+        ChanIds
+    ),
+    Dispatched.
 
 -spec post_update_member_remove(event_data(), guild_state()) -> guild_state().
 post_update_member_remove(EventData, NewState) ->
