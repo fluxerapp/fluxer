@@ -46,7 +46,7 @@ import {resolveAssetPath} from '../utils/AssetPaths';
 import * as RandomUtils from '../utils/RandomUtils';
 import type {IWebhookRepository} from './IWebhookRepository';
 import {transform as GitHubTransform} from './transformers/GitHubTransformer';
-import {transformInstatusWebhook} from './transformers/InstatusTransformer';
+import {instatusDeliveryKey, transformInstatusWebhook} from './transformers/InstatusTransformer';
 
 export interface WebhookExecuteMessageData extends Omit<WebhookMessageRequest, 'attachments'> {
 	attachments?: WebhookMessageRequest['attachments'] | MessageRequest['attachments'];
@@ -430,6 +430,11 @@ export class WebhookService {
 		const {webhookId, token, data, requestCache} = params;
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
 		await this.assertWebhookGuildChannel(webhook);
+		const delivery = instatusDeliveryKey(data);
+		if (delivery) {
+			const isCached = await this.cacheService.get<number>(`instatus:${webhookId}:${delivery}`);
+			if (isCached) return;
+		}
 		const embed = transformInstatusWebhook(data);
 		if (!embed) return;
 		await this.channelService.messages.send.sendWebhookMessage({
@@ -439,6 +444,7 @@ export class WebhookService {
 			avatar: await this.getInstatusWebhookAvatar(webhook.id),
 			requestCache,
 		});
+		if (delivery) await this.cacheService.set(`instatus:${webhookId}:${delivery}`, 1, seconds('1 day'));
 	}
 
 	async dispatchWebhooksUpdate({

@@ -1088,6 +1088,15 @@ export class MessageSendService {
 			embeds: data.embeds,
 			attachments: data.attachments,
 		});
+		const webhookActorId = createUserID(BigInt(webhook.id));
+		const existingMessage = await this.deps.operationsHelpers.findExistingMessage({
+			userId: webhookActorId,
+			nonce: data.nonce,
+			expectedChannelId: channelId,
+		});
+		if (existingMessage) {
+			return existingMessage;
+		}
 		let referencedMessage: Message | null = null;
 		let messageSnapshots: Array<MessageSnapshot> | undefined;
 		if (data.message_reference) {
@@ -1194,15 +1203,17 @@ export class MessageSendService {
 		await this.deps.mentionService.handleMentionTasks({
 			guildId: channel.guildId,
 			message,
-			authorId: createUserID(BigInt(webhook.id)),
+			authorId: webhookActorId,
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
 		await this.deps.dispatchService.dispatchMessageCreate({
 			channel,
 			message,
 			requestCache,
+			nonce: data.nonce,
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
+		await this.cacheMessageNonceIfPresent({userId: webhookActorId, nonce: data.nonce, channelId, messageId});
 		void enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
 		});

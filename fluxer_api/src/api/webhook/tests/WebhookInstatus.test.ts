@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {createGuild} from '../../guild/tests/GuildTestUtils';
+import {getMessages} from '../../message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
@@ -23,6 +24,41 @@ function createInstatusMeta() {
 	return {unsubscribe: 'https://status.fluxer.app/unsubscribe?id=1&token=abc', documentation: ''};
 }
 
+function createInstatusIncident(overrides: Record<string, unknown> = {}) {
+	return {
+		id: 'inc_1',
+		name: 'Elevated API latency',
+		url: 'https://status.fluxer.app/incident/inc_1',
+		status: 'Investigating',
+		backfilled: false,
+		resolved_at: null,
+		created_at: '2026-07-06T10:00:00.000Z',
+		updated_at: '2026-07-06T10:00:00.000Z',
+		incident_updates: [
+			{
+				id: 'u_1',
+				incident_id: 'inc_1',
+				markdown: 'We are currently investigating this incident.',
+				status: 'Investigating',
+				created_at: '2026-07-06T10:00:00.000Z',
+				updated_at: '2026-07-06T10:00:00.000Z',
+			},
+		],
+		affected_components: [],
+		...overrides,
+	};
+}
+
+async function countWebhookMessages(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	webhookId: string,
+): Promise<number> {
+	const messages = await getMessages(harness, token, channelId);
+	return messages.filter((message) => message.webhook_id === webhookId).length;
+}
+
 describe('Webhook Instatus integration', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
@@ -39,33 +75,45 @@ describe('Webhook Instatus integration', () => {
 			const webhook = await createWebhook(harness, channelId, owner.token, 'Instatus Webhook');
 			await createBuilderWithoutAuth(harness)
 				.post(`/webhooks/${webhook.id}/${webhook.token}/instatus`)
-				.body({
-					meta: createInstatusMeta(),
-					page: createInstatusPage(),
-					incident: {
-						id: 'inc_1',
-						name: 'Elevated API latency',
-						url: 'https://status.fluxer.app/incident/inc_1',
-						status: 'Investigating',
-						backfilled: false,
-						resolved_at: null,
-						created_at: '2026-07-06T10:00:00.000Z',
-						updated_at: '2026-07-06T10:00:00.000Z',
-						incident_updates: [
-							{
-								id: 'u_1',
-								incident_id: 'inc_1',
-								markdown: 'We are currently investigating this incident.',
-								status: 'Investigating',
-								created_at: '2026-07-06T10:00:00.000Z',
-								updated_at: '2026-07-06T10:00:00.000Z',
-							},
-						],
-						affected_components: [],
-					},
-				})
+				.body({meta: createInstatusMeta(), page: createInstatusPage(), incident: createInstatusIncident()})
 				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
+			await deleteWebhook(harness, webhook.id, owner.token);
+		});
+		it('suppresses a repeated incident callback within the deduplication window', async () => {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Instatus Duplicate Guild');
+			const channelId = guild.system_channel_id!;
+			const webhook = await createWebhook(harness, channelId, owner.token, 'Instatus Duplicate Webhook');
+			const body = {meta: createInstatusMeta(), page: createInstatusPage(), incident: createInstatusIncident()};
+			for (let attempt = 0; attempt < 2; attempt++) {
+				await createBuilderWithoutAuth(harness)
+					.post(`/webhooks/${webhook.id}/${webhook.token}/instatus`)
+					.body(body)
+					.expect(HTTP_STATUS.NO_CONTENT)
+					.execute();
+			}
+			expect(await countWebhookMessages(harness, owner.token, channelId, webhook.id)).toBe(1);
+			await deleteWebhook(harness, webhook.id, owner.token);
+		});
+		it('processes a callback carrying no identifier every time', async () => {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Instatus Unidentified Guild');
+			const channelId = guild.system_channel_id!;
+			const webhook = await createWebhook(harness, channelId, owner.token, 'Instatus Unidentified Webhook');
+			const body = {
+				meta: createInstatusMeta(),
+				page: createInstatusPage(),
+				incident: createInstatusIncident({id: null}),
+			};
+			for (let attempt = 0; attempt < 2; attempt++) {
+				await createBuilderWithoutAuth(harness)
+					.post(`/webhooks/${webhook.id}/${webhook.token}/instatus`)
+					.body(body)
+					.expect(HTTP_STATUS.NO_CONTENT)
+					.execute();
+			}
+			expect(await countWebhookMessages(harness, owner.token, channelId, webhook.id)).toBe(2);
 			await deleteWebhook(harness, webhook.id, owner.token);
 		});
 		it('accepts a component status update', async () => {
