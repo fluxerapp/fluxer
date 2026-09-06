@@ -129,18 +129,6 @@ export const SuccessResponse = z.object({
 
 export type SuccessResponse = z.infer<typeof SuccessResponse>;
 
-export const EnabledToggleRequest = z.object({
-	enabled: z.boolean().describe('Whether to enable or disable the feature'),
-});
-
-export type EnabledToggleRequest = z.infer<typeof EnabledToggleRequest>;
-
-export const DisabledToggleRequest = z.object({
-	disabled: z.boolean().describe('Whether the feature should be in the disabled state'),
-});
-
-export type DisabledToggleRequest = z.infer<typeof DisabledToggleRequest>;
-
 export const EmojiIdParam = z.object({
 	emoji_id: SnowflakeType.describe('The ID of the emoji'),
 });

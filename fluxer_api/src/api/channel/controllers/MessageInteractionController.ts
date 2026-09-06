@@ -171,6 +171,10 @@ export function MessageInteractionController(app: HonoApp) {
 			const result = await ctx
 				.get('channelService')
 				.interactions.getUsersForReaction({userId, channelId, messageId, emoji, limit, after: afterUserId});
+			ctx.header('X-Has-More', result.has_more ? 'true' : 'false');
+			if (result.next_after !== null) {
+				ctx.header('X-Next-After', result.next_after);
+			}
 			return ctx.json(result.users, 200);
 		},
 	);

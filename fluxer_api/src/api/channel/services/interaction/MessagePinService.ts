@@ -79,21 +79,31 @@ export class MessagePinService extends MessageInteractionBase {
 			}
 		}
 		const pageSize = Math.min(limit ?? 50, 50);
-		const effectiveBefore = beforeTimestamp ?? new Date();
-		const messages = await this.channelRepository.messageInteractions.listChannelPins(
-			channel.id,
-			effectiveBefore,
-			pageSize + 1,
-		);
-		const sorted = messages.sort((a, b) => (b.pinnedTimestamp?.getTime() ?? 0) - (a.pinnedTimestamp?.getTime() ?? 0));
-		let filtered = sorted;
-		if (!hasReadHistory) {
-			const cutoff = authChannel.guild!.message_history_cutoff!;
-			const cutoffTimestamp = new Date(cutoff).getTime();
-			filtered = sorted.filter((message) => snowflakeToDate(message.id).getTime() >= cutoffTimestamp);
+		const cutoffTimestamp = hasReadHistory ? null : new Date(authChannel.guild!.message_history_cutoff!).getTime();
+		const filtered: Array<Message> = [];
+		let before = beforeTimestamp ?? new Date();
+		let exhausted = false;
+		while (filtered.length <= pageSize && !exhausted) {
+			const messages = await this.channelRepository.messageInteractions.listChannelPins(
+				channel.id,
+				before,
+				pageSize + 1,
+			);
+			const sorted = messages.sort((a, b) => (b.pinnedTimestamp?.getTime() ?? 0) - (a.pinnedTimestamp?.getTime() ?? 0));
+			exhausted = messages.length <= pageSize;
+			for (const message of sorted) {
+				if (cutoffTimestamp === null || snowflakeToDate(message.id).getTime() >= cutoffTimestamp) {
+					filtered.push(message);
+				}
+			}
+			const last = sorted[sorted.length - 1];
+			if (!last?.pinnedTimestamp) {
+				break;
+			}
+			before = last.pinnedTimestamp;
 		}
 		const hasMore = filtered.length > pageSize;
-		const trimmed = hasMore ? filtered.slice(0, pageSize) : filtered;
+		const trimmed = filtered.slice(0, pageSize);
 		const access = {
 			sourceGuildId: channel.guildId,
 			messageHistoryCutoff: hasReadHistory ? null : (authChannel.guild?.message_history_cutoff ?? null),

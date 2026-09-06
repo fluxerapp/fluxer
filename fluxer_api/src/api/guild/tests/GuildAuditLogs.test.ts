@@ -5,6 +5,7 @@ import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
+import {deleteMessage, sendMessage} from '../../message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
@@ -217,6 +218,27 @@ describe('Guild audit log endpoint', () => {
 		const userIds = response.users.map((user) => user.id);
 		expect(userIds).toContain(owner.userId);
 		expect(userIds).toContain(member.userId);
+	});
+	test('fills a page from behind a long run of batched message deletes', async () => {
+		const {owner, guild, channels} = await setupTestGuildWithMembers(harness, 0);
+		const channel = channels[0];
+		await createRole(harness, owner.token, guild.id, {
+			name: 'Older Role',
+			permissions: Permissions.VIEW_CHANNEL.toString(),
+		});
+		for (let index = 0; index < 60; index++) {
+			const message = await sendMessage(harness, owner.token, channel.id, `delete me ${index}`);
+			await deleteMessage(harness, owner.token, channel.id, message.id);
+		}
+		const response = await createBuilder<AuditLogResponse>(harness, owner.token)
+			.get(`/guilds/${guild.id}/audit-logs?limit=6`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(response.audit_log_entries).toHaveLength(6);
+		expect(response.audit_log_entries.slice(0, 5).map((entry) => entry.action_type)).toEqual(
+			Array.from({length: 5}, () => AuditLogActionType.MESSAGE_BULK_DELETE),
+		);
+		expect(response.audit_log_entries[5]?.action_type).toBe(AuditLogActionType.ROLE_CREATE);
 	});
 	test('rejects specifying before and after together', async () => {
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
