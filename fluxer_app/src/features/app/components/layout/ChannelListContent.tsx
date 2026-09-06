@@ -338,9 +338,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		const unreadCount = ReadStates.getUnreadCount(channelId);
 		const hasUnread = ReadStates.hasUnread(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
-		const isMuted =
-			UserGuildSettings.isParentCategoryMuted(guild.id, channelId) ||
-			UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
+		const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
 		const channel = Channels.getChannel(channelId);
 		const unreadBadgesLevel = channel
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
@@ -364,9 +362,6 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	for (const group of channelGroups) {
 		const isCollapsed = group.category ? (collapsedCategories?.has(group.category.id) ?? false) : false;
 		const isNullSpace = !group.category;
-		const isCategoryMuted = group.category
-			? UserGuildSettings.isChannelDirectlyMuted(guild.id, group.category.id)
-			: false;
 		let filteredTextChannels: Array<Channel>;
 		let filteredVoiceChannels: Array<Channel>;
 		if (hideMutedChannels) {
@@ -411,8 +406,8 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			for (const ch of filteredTextChannels) {
 				if (
 					shouldShowChannelInCollapsedCategory({
-						isCategoryMuted,
 						isSelected: ch.id === showTextSelected,
+						isConnected: false,
 						hasVisibleUnread: hasVisibleUnreadInChannel(ch.id),
 					})
 				) {
@@ -442,8 +437,8 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			for (const ch of filteredVoiceChannels) {
 				if (
 					shouldShowChannelInCollapsedCategory({
-						isCategoryMuted,
 						isSelected: ch.id === selectedChannelInGuildId,
+						isConnected: ch.id === connectedChannelId,
 						hasVisibleUnread: hasVisibleUnreadInChannel(ch.id),
 					})
 				) {
