@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/0, trigger/1, drain_async/0, undrain/0, diagnostic_info/0]).
+-export([start_link/0, drain_async/0, undrain/0, diagnostic_info/0]).
 -export([
     init/1,
     handle_call/3,
@@ -43,11 +43,6 @@
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
-
--spec trigger([node()]) -> ok.
-trigger(Members) when is_list(Members) ->
-    shard_utils:safe_apply(fun() -> gen_server:cast(?MODULE, {trigger, Members}) end, ok),
-    ok.
 
 -spec drain_async() -> ok.
 drain_async() ->
@@ -98,9 +93,6 @@ handle_call(_Request, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast({trigger, Members}, State) ->
-    Normalized = gateway_cluster_handoff_transfer:normalize_members(Members),
-    {noreply, schedule_if_changed(Normalized, State)};
 handle_cast(drain, State) ->
     cancel_timer(maps:get(timer, State, undefined)),
     DrainMembers = gateway_cluster_membership:members(),

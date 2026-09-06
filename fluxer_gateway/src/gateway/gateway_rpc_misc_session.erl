@@ -196,8 +196,6 @@ aggregate_node_stats(NodeStats) ->
     }.
 
 -spec aggregate_status([map()]) -> binary().
-aggregate_status([]) ->
-    <<"unavailable">>;
 aggregate_status(NodeStats) ->
     AllHealthy = lists:all(
         fun(N) -> maps:get(<<"status">>, N, <<"healthy">>) =:= <<"healthy">> end,
@@ -359,5 +357,11 @@ aggregate_node_stats_ignores_unknown_uptime_test() ->
 
 safe_node_call_catches_local_errors_test() ->
     ?assertEqual(error, safe_node_call(node(), definitely_missing_function, [], 100)).
+
+collect_and_aggregate_node_stats_with_empty_node_list_reports_local_node_test() ->
+    A = collect_and_aggregate_node_stats([]),
+    ?assertEqual(1, maps:get(<<"node_count">>, A)),
+    ?assertEqual(<<"healthy">>, maps:get(<<"status">>, A)),
+    ?assertEqual(1, length(maps:get(<<"nodes">>, A))).
 
 -endif.

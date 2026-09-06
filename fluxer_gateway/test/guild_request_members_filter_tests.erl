@@ -62,23 +62,53 @@ check_full_list_bot_rate_limit_allows_first_test() ->
     clear_full_list_bot_rate_limit(UserId, GuildId).
 
 check_full_list_bot_rate_limit_blocks_second_within_window_test() ->
-    UserId = 111111003,
-    GuildId = 111111004,
-    clear_full_list_bot_rate_limit(UserId, GuildId),
-    ?assertEqual(
-        ok,
-        guild_request_members_filter:check_full_list_bot_rate_limit(true, true, UserId, GuildId)
-    ),
-    case
-        guild_request_members_filter:check_full_list_bot_rate_limit(true, true, UserId, GuildId)
-    of
-        {rate_limited, RetryAfter} ->
-            ?assert(RetryAfter > 0),
-            ?assert(RetryAfter =< ?FULL_LIST_BOT_RATE_LIMIT_WINDOW_MS);
-        Other ->
-            ?assertEqual({rate_limited, expected}, Other)
-    end,
-    clear_full_list_bot_rate_limit(UserId, GuildId).
+    with_rate_limits_enabled(fun() ->
+        UserId = 111111003,
+        GuildId = 111111004,
+        clear_full_list_bot_rate_limit(UserId, GuildId),
+        ?assertEqual(
+            ok,
+            guild_request_members_filter:check_full_list_bot_rate_limit(
+                true, true, UserId, GuildId
+            )
+        ),
+        case
+            guild_request_members_filter:check_full_list_bot_rate_limit(
+                true, true, UserId, GuildId
+            )
+        of
+            {rate_limited, RetryAfter} ->
+                ?assert(RetryAfter > 0),
+                ?assert(RetryAfter =< ?FULL_LIST_BOT_RATE_LIMIT_WINDOW_MS);
+            Other ->
+                ?assertEqual({rate_limited, expected}, Other)
+        end,
+        clear_full_list_bot_rate_limit(UserId, GuildId)
+    end).
+
+check_full_list_bot_rate_limit_disabled_by_env_test() ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:putenv("FLUXER_DISABLE_RATE_LIMITS", "true"),
+    try
+        UserId = 111111011,
+        GuildId = 111111012,
+        clear_full_list_bot_rate_limit(UserId, GuildId),
+        ?assertEqual(
+            ok,
+            guild_request_members_filter:check_full_list_bot_rate_limit(
+                true, true, UserId, GuildId
+            )
+        ),
+        ?assertEqual(
+            ok,
+            guild_request_members_filter:check_full_list_bot_rate_limit(
+                true, true, UserId, GuildId
+            )
+        ),
+        clear_full_list_bot_rate_limit(UserId, GuildId)
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
 
 check_full_list_bot_rate_limit_per_guild_isolation_test() ->
     UserId = 111111005,
@@ -179,6 +209,20 @@ check_guild_request_rate_limit_invalid_guild_test() ->
         {error, invalid_guild_id},
         guild_request_members_filter:check_guild_request_rate_limit(invalid_guild_id())
     ).
+
+restore_env(Key, false) ->
+    os:unsetenv(Key);
+restore_env(Key, Value) ->
+    os:putenv(Key, Value).
+
+with_rate_limits_enabled(Fun) ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:unsetenv("FLUXER_DISABLE_RATE_LIMITS"),
+    try
+        Fun()
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
 
 clear_full_list_bot_rate_limit(UserId, GuildId) ->
     ensure_ets_table(?FULL_LIST_BOT_RATE_LIMIT_TABLE),

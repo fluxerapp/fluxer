@@ -8,6 +8,7 @@
     new/2,
     push/2,
     push/3,
+    push_trimmed/3,
     push_front/2,
     pop/1,
     pop_front/1,
@@ -51,9 +52,15 @@ push(Item, D) ->
     push(Item, entry_bytes(Item), D).
 
 -spec push(term(), non_neg_integer(), deque()) -> deque().
-push(Item, ItemBytes, #{rear := Rear, count := Count, bytes := Bytes} = D) ->
+push(Item, ItemBytes, D) ->
+    {D1, _Dropped} = push_trimmed(Item, ItemBytes, D),
+    D1.
+
+-spec push_trimmed(term(), non_neg_integer(), deque()) -> {deque(), [term()]}.
+push_trimmed(Item, ItemBytes, #{rear := Rear, count := Count, bytes := Bytes} = D) ->
     D1 = D#{rear := [Item | Rear], count := Count + 1, bytes := Bytes + ItemBytes},
-    trim_front(D1).
+    {D2, Dropped} = trim_front_collect(D1, []),
+    {D2, lists:reverse(Dropped)}.
 
 -spec push_front(term(), deque()) -> deque().
 push_front(Item, #{front := Front, count := Count, bytes := Bytes} = D) ->
@@ -162,6 +169,25 @@ trim_front(D) ->
         {_, D2} -> trim_front(D2)
     end.
 
+-spec trim_front_collect(deque(), [term()]) -> {deque(), [term()]}.
+trim_front_collect(
+    #{count := Count, max_count := MaxCount, max_bytes := MaxBytes} = D, Acc
+) when
+    Count =< MaxCount, MaxBytes =:= 0
+->
+    {D, Acc};
+trim_front_collect(
+    #{count := Count, max_count := MaxCount, bytes := Bytes, max_bytes := MaxBytes} = D, Acc
+) when
+    Count =< MaxCount, Bytes =< MaxBytes
+->
+    {D, Acc};
+trim_front_collect(D, Acc) ->
+    case pop_front(D) of
+        empty -> {D, Acc};
+        {Item, D2} -> trim_front_collect(D2, [Item | Acc])
+    end.
+
 -spec trim_rear(deque()) -> deque().
 trim_rear(
     #{count := Count, max_count := MaxCount, max_bytes := MaxBytes} = D
@@ -220,6 +246,27 @@ push_trims_at_bound_test() ->
     ?assertEqual(3, size(D1)),
     List = to_list(D1),
     ?assertEqual([b, c, d], List).
+
+push_trimmed_returns_dropped_items_test() ->
+    D0 = new(3, 0),
+    D1 = lists:foldl(fun push/2, D0, [a, b, c]),
+    {D2, Dropped} = push_trimmed(d, entry_bytes(d), D1),
+    ?assertEqual([a], Dropped),
+    ?assertEqual([b, c, d], to_list(D2)).
+
+push_trimmed_returns_no_dropped_items_below_bound_test() ->
+    {D1, Dropped} = push_trimmed(a, entry_bytes(a), new(3, 0)),
+    ?assertEqual([], Dropped),
+    ?assertEqual([a], to_list(D1)).
+
+push_trimmed_returns_dropped_items_oldest_first_test() ->
+    Big = lists:seq(1, 100),
+    Smalls = [[1], [2], [3]],
+    D0 = new(1000, entry_bytes(Big)),
+    D1 = lists:foldl(fun push/2, D0, Smalls),
+    {D2, Dropped} = push_trimmed(Big, entry_bytes(Big), D1),
+    ?assertEqual(Smalls, Dropped),
+    ?assertEqual([Big], to_list(D2)).
 
 pop_front_test() ->
     assert_pop_sequence(fun pop_front/1, [1, 2, 3]).

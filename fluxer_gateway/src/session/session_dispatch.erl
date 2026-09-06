@@ -6,7 +6,8 @@
 -export([
     handle_dispatch/3,
     flush_all_pending_presences/1,
-    flush_reaction_buffer/1
+    flush_reaction_buffer/1,
+    replay_floor_after_eviction/2
 ]).
 
 -export_type([session_state/0, event/0]).
@@ -18,7 +19,7 @@
 -type session_state() :: session:session_state().
 -type event() :: atom() | binary().
 
--spec handle_dispatch(event(), map() | {pre_encoded, binary()}, session_state()) ->
+-spec handle_dispatch(event(), map() | list() | {pre_encoded, binary()}, session_state()) ->
     {noreply, session_state()}.
 handle_dispatch(Event, {pre_encoded, _} = Data, State) ->
     case
@@ -35,7 +36,9 @@ handle_dispatch(Event, Data, State) ->
         false -> route_dispatch(Event, Data, State)
     end.
 
--spec should_skip_for_shard(event(), map() | {pre_encoded, binary()}, session_state()) ->
+-spec should_skip_for_shard(
+    event(), map() | list() | {pre_encoded, binary()}, session_state()
+) ->
     boolean().
 should_skip_for_shard(Event, {pre_encoded, EncodedData}, State) ->
     case shard_filter_active(State) of
@@ -46,7 +49,9 @@ should_skip_for_shard(Event, Data, State) when is_map(Data) ->
     case shard_filter_active(State) of
         true -> not has_guild_context(Event, Data);
         false -> false
-    end.
+    end;
+should_skip_for_shard(_Event, Data, State) when is_list(Data) ->
+    shard_filter_active(State).
 
 -spec should_skip_pre_encoded_for_shard(event(), binary()) -> boolean().
 should_skip_pre_encoded_for_shard(Event, EncodedData) ->
@@ -74,9 +79,18 @@ decode_pre_encoded_data(EncodedData) ->
 
 -spec has_guild_context(event(), map()) -> boolean().
 has_guild_context(Event, Data) ->
-    case has_nonempty_field(<<"guild_id">>, Data) of
+    case session_reply_event(Event) orelse has_nonempty_field(<<"guild_id">>, Data) of
         true -> true;
         false -> guild_id_event(Event) andalso has_nonempty_field(<<"id">>, Data)
+    end.
+
+-spec session_reply_event(event()) -> boolean().
+session_reply_event(Event) ->
+    case event_name(Event) of
+        <<"RATE_LIMITED">> -> true;
+        <<"GUILD_COUNTS_UPDATE">> -> true;
+        <<"CHANNEL_MEMBER_COUNTS_UPDATE">> -> true;
+        _Other -> false
     end.
 
 -spec has_nonempty_field(binary(), map()) -> boolean().
@@ -97,7 +111,7 @@ guild_id_event(Event) ->
         _Other -> false
     end.
 
--spec route_dispatch(event(), map(), session_state()) -> {noreply, session_state()}.
+-spec route_dispatch(event(), map() | list(), session_state()) -> {noreply, session_state()}.
 route_dispatch(Event, Data, State) ->
     case session_dispatch_voice:should_buffer_reaction(Event, State) of
         true ->
@@ -106,7 +120,8 @@ route_dispatch(Event, Data, State) ->
             route_after_reaction(Event, Data, State)
     end.
 
--spec route_after_reaction(event(), map(), session_state()) -> {noreply, session_state()}.
+-spec route_after_reaction(event(), map() | list(), session_state()) ->
+    {noreply, session_state()}.
 route_after_reaction(Event, Data, State) ->
     case session_dispatch_voice:maybe_cancel_buffered_reaction(Event, Data, State) of
         {cancelled, NewState} ->
@@ -115,7 +130,8 @@ route_after_reaction(Event, Data, State) ->
             route_after_cancel(Event, Data, State)
     end.
 
--spec route_after_cancel(event(), map(), session_state()) -> {noreply, session_state()}.
+-spec route_after_cancel(event(), map() | list(), session_state()) ->
+    {noreply, session_state()}.
 route_after_cancel(Event, Data, State) ->
     case session_dispatch_presence:should_buffer_presence(Event, Data, State) of
         true ->
@@ -124,7 +140,8 @@ route_after_cancel(Event, Data, State) ->
             do_handle_dispatch(Event, Data, State)
     end.
 
--spec do_handle_dispatch(event(), map(), session_state()) -> {noreply, session_state()}.
+-spec do_handle_dispatch(event(), map() | list(), session_state()) ->
+    {noreply, session_state()}.
 do_handle_dispatch(Event, Data, State) ->
     Seq = maps:get(seq, State),
     NewSeq = Seq + 1,
@@ -135,55 +152,59 @@ do_handle_dispatch(Event, Data, State) ->
             dispatch_replayable_event(Event, Data, NewSeq, State)
     end.
 
--spec dispatch_replayable_event(event(), map(), non_neg_integer(), session_state()) ->
+-spec dispatch_replayable_event(event(), map() | list(), non_neg_integer(), session_state()) ->
     {noreply, session_state()}.
 dispatch_replayable_event(Event, Data, NewSeq, State) ->
     Request = #{event => Event, data => Data, seq => NewSeq},
     RequestBytes = buffer_entry_bytes(Request),
     case is_oversized_event(RequestBytes) of
         true ->
-            dispatch_without_replay(Event, Data, NewSeq, State);
+            dispatch_without_replay(Event, Data, NewSeq, State#{replay_floor => NewSeq});
         false ->
             dispatch_with_replay(Event, Data, NewSeq, Request, RequestBytes, State)
     end.
 
 -spec dispatch_with_replay(
-    event(), map(), non_neg_integer(), map(), non_neg_integer(), session_state()
+    event(), map() | list(), non_neg_integer(), map(), non_neg_integer(), session_state()
 ) ->
     {noreply, session_state()}.
 dispatch_with_replay(Event, Data, NewSeq, Request, RequestBytes, State) ->
     Buffer = maps:get(buffer, State),
-    NewBuffer =
+    Deque =
         case is_list(Buffer) of
             true ->
-                D = limited_deque:from_list(
+                limited_deque:from_list(
                     Buffer, ?MAX_EVENT_BUFFER_SIZE, ?MAX_TOTAL_BUFFER_BYTES
-                ),
-                limited_deque:push(Request, RequestBytes, D);
+                );
             false ->
-                limited_deque:push(Request, RequestBytes, Buffer)
+                Buffer
         end,
+    {NewBuffer, Dropped} = limited_deque:push_trimmed(Request, RequestBytes, Deque),
     send_to_socket(maps:get(socket_pid, State, undefined), Event, Data, NewSeq),
     StateAfterMain = apply_state_updates(Event, Data, State, #{
-        seq => NewSeq, buffer => NewBuffer, buffer_bytes => limited_deque:bytes(NewBuffer)
+        seq => NewSeq,
+        buffer => NewBuffer,
+        buffer_bytes => limited_deque:bytes(NewBuffer),
+        replay_floor => replay_floor_after_eviction(Dropped, maps:get(replay_floor, State, 0))
     }),
     finalize_dispatch(Event, Data, StateAfterMain).
 
--spec dispatch_without_replay(event(), map(), non_neg_integer(), session_state()) ->
+-spec dispatch_without_replay(event(), map() | list(), non_neg_integer(), session_state()) ->
     {noreply, session_state()}.
 dispatch_without_replay(Event, Data, NewSeq, State) ->
     send_to_socket(maps:get(socket_pid, State, undefined), Event, Data, NewSeq),
     StateAfterMain = apply_state_updates(Event, Data, State, #{seq => NewSeq}),
     finalize_dispatch(Event, Data, StateAfterMain).
 
--spec apply_state_updates(event(), map(), session_state(), map()) -> session_state().
+-spec apply_state_updates(event(), map() | list(), session_state(), map()) -> session_state().
 apply_state_updates(Event, Data, State, Extra) ->
     S1 = session_dispatch_guild:update_channels_map(Event, Data, State),
     S2 = session_dispatch_guild:update_dm_voice_states_map(Event, Data, S1),
     S3 = session_dispatch_guild:update_relationships_map(Event, Data, S2),
     maps:merge(S3, Extra).
 
--spec finalize_dispatch(event(), map(), session_state()) -> {noreply, session_state()}.
+-spec finalize_dispatch(event(), map() | list(), session_state()) ->
+    {noreply, session_state()}.
 finalize_dispatch(Event, Data, State) ->
     {S1, FlushedIds} = session_dispatch_presence:maybe_flush_pending_presences(
         Event, Data, State
@@ -217,7 +238,7 @@ buffer_pre_encoded_event(Event, Data, NewSeq, State) ->
             RequestBytes = buffer_entry_bytes(Request),
             case is_oversized_event(RequestBytes) of
                 true ->
-                    State;
+                    State#{replay_floor => NewSeq};
                 false ->
                     Buffer = maps:get(buffer, State),
                     Deque =
@@ -229,8 +250,16 @@ buffer_pre_encoded_event(Event, Data, NewSeq, State) ->
                             false ->
                                 Buffer
                         end,
-                    NewBuffer = limited_deque:push(Request, RequestBytes, Deque),
-                    State#{buffer => NewBuffer, buffer_bytes => limited_deque:bytes(NewBuffer)}
+                    {NewBuffer, Dropped} = limited_deque:push_trimmed(
+                        Request, RequestBytes, Deque
+                    ),
+                    State#{
+                        buffer => NewBuffer,
+                        buffer_bytes => limited_deque:bytes(NewBuffer),
+                        replay_floor => replay_floor_after_eviction(
+                            Dropped, maps:get(replay_floor, State, 0)
+                        )
+                    }
             end
     end.
 
@@ -265,15 +294,33 @@ is_oversized_event(RequestBytes) ->
 
 -spec should_buffer_pre_encoded(event()) -> boolean().
 should_buffer_pre_encoded(Event) ->
-    event_name(Event) =:= <<"VOICE_STATE_UPDATE">>.
+    not should_skip_replay_buffer(Event).
 
 -spec should_skip_replay_buffer(event()) -> boolean().
 should_skip_replay_buffer(Event) ->
-    event_name(Event) =:= <<"GUILD_MEMBERS_CHUNK">>.
+    case event_name(Event) of
+        <<"GUILD_MEMBERS_CHUNK">> -> true;
+        <<"GUILD_MEMBER_LIST_UPDATE">> -> true;
+        <<"GUILD_SYNC">> -> true;
+        _Other -> false
+    end.
 
 -spec buffer_entry_bytes(term()) -> non_neg_integer().
 buffer_entry_bytes(Request) ->
     limited_deque:entry_bytes(Request).
+
+-spec replay_floor_after_eviction([term()], non_neg_integer()) -> non_neg_integer().
+replay_floor_after_eviction(Dropped, Floor) ->
+    lists:foldl(fun evicted_seq_max/2, Floor, Dropped).
+
+-spec evicted_seq_max(term(), non_neg_integer()) -> non_neg_integer().
+evicted_seq_max(Event, Floor) when is_map(Event) ->
+    case maps:get(seq, Event, undefined) of
+        Seq when is_integer(Seq), Seq > Floor -> Seq;
+        _Other -> Floor
+    end;
+evicted_seq_max(_Event, Floor) ->
+    Floor.
 
 -spec send_to_socket(pid() | undefined, event(), term(), non_neg_integer()) -> ok.
 send_to_socket(undefined, _Event, _Data, _Seq) ->
@@ -282,7 +329,7 @@ send_to_socket(Pid, Event, Data, Seq) when is_pid(Pid) ->
     Pid ! {dispatch, Event, guild_data_wire:payload(Data), Seq},
     ok.
 
--spec should_ignore_event(event(), map() | {pre_encoded, binary()}, session_state()) ->
+-spec should_ignore_event(event(), map() | list() | {pre_encoded, binary()}, session_state()) ->
     boolean().
 should_ignore_event(Event, Data, State) ->
     IgnoredEvents = maps:get(ignored_events, State, #{}),
@@ -306,7 +353,9 @@ event_name(Event) when is_atom(Event) ->
 event_name(_) ->
     undefined.
 
--spec ignored_event_must_dispatch(event(), map() | {pre_encoded, binary()}, session_state()) ->
+-spec ignored_event_must_dispatch(
+    event(), map() | list() | {pre_encoded, binary()}, session_state()
+) ->
     boolean().
 ignored_event_must_dispatch(message_create, {pre_encoded, EncodedData}, State) ->
     case decode_pre_encoded_data(EncodedData) of
@@ -378,7 +427,8 @@ oversized_event_sent_but_not_buffered_test() ->
     LargeData = make_large_data(),
     {noreply, S1} = do_handle_dispatch(guild_create, LargeData, base_state(#{})),
     ?assertEqual([], maps:get(buffer, S1, [])),
-    ?assertEqual(1, maps:get(seq, S1)).
+    ?assertEqual(1, maps:get(seq, S1)),
+    ?assertEqual(1, maps:get(replay_floor, S1)).
 
 guild_members_chunk_sent_but_not_buffered_test() ->
     ChunkData = #{
@@ -435,7 +485,50 @@ normal_event_buffered_test() ->
 should_skip_replay_buffer_test() ->
     ?assertEqual(true, should_skip_replay_buffer(guild_members_chunk)),
     ?assertEqual(true, should_skip_replay_buffer(<<"GUILD_MEMBERS_CHUNK">>)),
+    ?assertEqual(true, should_skip_replay_buffer(guild_member_list_update)),
+    ?assertEqual(true, should_skip_replay_buffer(guild_sync)),
     ?assertEqual(false, should_skip_replay_buffer(message_create)).
+
+should_buffer_pre_encoded_test() ->
+    ?assertEqual(false, should_buffer_pre_encoded(guild_members_chunk)),
+    ?assertEqual(false, should_buffer_pre_encoded(guild_member_list_update)),
+    ?assertEqual(false, should_buffer_pre_encoded(guild_sync)),
+    ?assertEqual(true, should_buffer_pre_encoded(voice_state_update)),
+    ?assertEqual(true, should_buffer_pre_encoded(message_create)),
+    ?assertEqual(true, should_buffer_pre_encoded(channel_update)).
+
+guild_member_list_update_map_form_not_buffered_test() ->
+    Data = #{<<"guild_id">> => <<"123">>, <<"ops">> => []},
+    {noreply, S1} = do_handle_dispatch(
+        guild_member_list_update, Data, base_state(#{replay_floor => 0})
+    ),
+    ?assertEqual([], maps:get(buffer, S1, [])),
+    ?assertEqual(1, maps:get(seq, S1)),
+    ?assertEqual(0, maps:get(replay_floor, S1)).
+
+replay_floor_stays_zero_without_eviction_test() ->
+    {noreply, S1} = do_handle_dispatch(
+        message_create, #{<<"content">> => <<"hello">>}, base_state(#{})
+    ),
+    ?assertEqual(0, maps:get(replay_floor, S1)).
+
+replay_floor_tracks_evicted_seq_test() ->
+    State0 = base_state(#{buffer => limited_deque:new(2, 0)}),
+    State3 = lists:foldl(
+        fun(_N, S) ->
+            {noreply, Next} = do_handle_dispatch(
+                message_create, #{<<"content">> => <<"hello">>}, S
+            ),
+            Next
+        end,
+        State0,
+        lists:seq(1, 3)
+    ),
+    ?assertEqual(1, maps:get(replay_floor, State3)),
+    ?assertEqual(
+        [2, 3],
+        [maps:get(seq, E) || E <- limited_deque:to_list(maps:get(buffer, State3))]
+    ).
 
 needs_state_update_test() ->
     lists:foreach(
@@ -493,6 +586,26 @@ guildless_dispatch_allowed_for_shard_zero_test() ->
     after 100 ->
         ?assert(false, dispatch_not_received)
     end.
+
+list_payload_dispatch_reaches_socket_test() ->
+    drain_mailbox(),
+    Data = [<<"1">>, <<"2">>],
+    BaseState = base_state(#{socket_pid => self()}),
+    {noreply, S1} = handle_dispatch(user_pinned_dms_update, Data, BaseState),
+    ?assertEqual(1, maps:get(seq, S1)),
+    receive
+        {dispatch, user_pinned_dms_update, ReceivedData, 1} ->
+            ?assertEqual(Data, ReceivedData)
+    after 100 ->
+        ?assert(false, dispatch_not_received)
+    end.
+
+list_payload_dispatch_skipped_for_nonzero_shard_test() ->
+    drain_mailbox(),
+    BaseState = base_state(#{socket_pid => self(), shard => {1, 2}}),
+    {noreply, S1} = handle_dispatch(user_pinned_dms_update, [<<"1">>], BaseState),
+    ?assertEqual(0, maps:get(seq, S1)),
+    assert_no_dispatch().
 
 pre_encoded_guildless_dispatch_skipped_for_nonzero_shard_test() ->
     drain_mailbox(),

@@ -16,8 +16,7 @@
     get_field/2,
     get_field/3,
     get_required_field/3,
-    get_optional_field/3,
-    error_category_to_close_code/1
+    get_optional_field/3
 ]).
 
 -spec validate_snowflake(term()) -> {ok, pos_integer()} | {error, atom(), atom()}.
@@ -144,14 +143,6 @@ get_optional_field(FieldName, Map, Validator) ->
             Validator(Value)
     end.
 
--spec error_category_to_close_code(atom()) -> integer().
-error_category_to_close_code(rate_limited) ->
-    constants:close_code_to_num(rate_limited);
-error_category_to_close_code(auth_failed) ->
-    constants:close_code_to_num(authentication_failed);
-error_category_to_close_code(_) ->
-    constants:close_code_to_num(unknown_error).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
@@ -220,10 +211,5 @@ get_optional_field_test() ->
     Validator = fun validation:validate_snowflake/1,
     ?assertEqual({ok, 123}, get_optional_field(<<"id">>, Map, Validator)),
     ?assertEqual({ok, undefined}, get_optional_field(<<"missing">>, Map, Validator)).
-
-error_category_to_close_code_test() ->
-    ?assertEqual(4008, error_category_to_close_code(rate_limited)),
-    ?assertEqual(4004, error_category_to_close_code(auth_failed)),
-    ?assertEqual(4000, error_category_to_close_code(unknown)).
 
 -endif.

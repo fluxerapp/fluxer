@@ -132,11 +132,13 @@ handle_cast({dispatch, Event, {pre_encoded, EncodedData} = Data}, State) when
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({dispatch, Event, Data}, State) when
-    is_atom(Event), is_map(Data)
+    is_atom(Event), is_map(Data);
+    is_atom(Event), is_list(Data)
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({dispatch, Event, Data}, State) when
-    is_binary(Event), is_map(Data)
+    is_binary(Event), is_map(Data);
+    is_binary(Event), is_list(Data)
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({initial_global_presences, Presences}, State) ->

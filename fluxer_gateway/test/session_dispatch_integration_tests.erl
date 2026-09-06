@@ -148,6 +148,40 @@ pre_encoded_voice_state_is_buffered_for_replay_test() ->
     ?assertEqual(Data, maps:get(data, Entry)),
     ?assertEqual(1, maps:get(seq, Entry)).
 
+pre_encoded_message_create_is_buffered_for_replay_test() ->
+    State0 = base_state(#{}),
+    Data = {pre_encoded, <<"{\"id\":\"9\",\"content\":\"hi\"}">>},
+    {noreply, State1} = session_dispatch:handle_dispatch(message_create, Data, State0),
+    ?assertEqual(1, limited_deque:size(maps:get(buffer, State1))),
+    [Entry] = limited_deque:to_list(maps:get(buffer, State1)),
+    ?assertEqual(message_create, maps:get(event, Entry)),
+    ?assertEqual(Data, maps:get(data, Entry)),
+    ?assertEqual(1, maps:get(seq, Entry)).
+
+pre_encoded_guild_sync_stays_out_of_replay_test() ->
+    State0 = base_state(#{}),
+    Data = {pre_encoded, <<"{\"id\":\"123\"}">>},
+    {noreply, State1} = session_dispatch:handle_dispatch(guild_sync, Data, State0),
+    ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))),
+    ?assertEqual(1, maps:get(seq, State1)).
+
+pre_encoded_eviction_raises_replay_floor_test() ->
+    State0 = base_state(#{buffer => limited_deque:new(2, 0)}),
+    Data = {pre_encoded, <<"{\"content\":\"hi\"}">>},
+    State3 = lists:foldl(
+        fun(_N, S) ->
+            {noreply, Next} = session_dispatch:handle_dispatch(message_create, Data, S),
+            Next
+        end,
+        State0,
+        lists:seq(1, 3)
+    ),
+    ?assertEqual(1, maps:get(replay_floor, State3)),
+    ?assertEqual(
+        [2, 3],
+        [maps:get(seq, E) || E <- limited_deque:to_list(maps:get(buffer, State3))]
+    ).
+
 pre_encoded_member_list_stays_out_of_replay_test() ->
     State0 = base_state(#{}),
     Data = {pre_encoded, <<"[{\"test\":true}]">>},
@@ -174,7 +208,11 @@ pre_encoded_multiple_events_seq_test() ->
         message_create, {pre_encoded, <<"{\"c\":3}">>}, S2
     ),
     ?assertEqual(3, maps:get(seq, S3)),
-    ?assertEqual(0, limited_deque:size(maps:get(buffer, S3))).
+    ?assertEqual(3, limited_deque:size(maps:get(buffer, S3))),
+    ?assertEqual(
+        [1, 2, 3],
+        [maps:get(seq, E) || E <- limited_deque:to_list(maps:get(buffer, S3))]
+    ).
 
 pre_encoded_sends_to_socket_test() ->
     State0 = base_state(#{socket_pid => self()}),
@@ -234,6 +272,59 @@ pre_encoded_roundtrip_integrity_test() ->
         <<"ops">> => [#{<<"op">> => <<"SYNC">>, <<"range">> => [0, 99]}]
     },
     ?assertEqual(OriginalData, json:decode(iolist_to_binary(json:encode(OriginalData)))).
+
+guild_counts_update_reaches_nonzero_shard_test() ->
+    drain_mailbox(),
+    State0 = base_state(#{socket_pid => self(), shard => {1, 2}}),
+    Data = #{counts => [], nonce => <<"n">>},
+    {noreply, State1} = session_dispatch:handle_dispatch(guild_counts_update, Data, State0),
+    ?assertEqual(1, maps:get(seq, State1)),
+    receive
+        {dispatch, guild_counts_update, _Payload, 1} -> ok
+    after 100 -> ?assert(false, dispatch_not_received)
+    end.
+
+rate_limited_reaches_nonzero_shard_test() ->
+    drain_mailbox(),
+    State0 = base_state(#{socket_pid => self(), shard => {1, 2}}),
+    Data = #{opcode => 8, retry_after => 12.5, meta => #{guild_id => <<"1">>}},
+    {noreply, State1} = session_dispatch:handle_dispatch(rate_limited, Data, State0),
+    ?assertEqual(1, maps:get(seq, State1)),
+    receive
+        {dispatch, rate_limited, _Payload, 1} -> ok
+    after 100 -> ?assert(false, dispatch_not_received)
+    end.
+
+channel_member_counts_update_reaches_nonzero_shard_test() ->
+    drain_mailbox(),
+    State0 = base_state(#{socket_pid => self(), shard => {1, 2}}),
+    Data = #{counts => [], nonce => <<"n">>},
+    {noreply, State1} = session_dispatch:handle_dispatch(
+        channel_member_counts_update, Data, State0
+    ),
+    ?assertEqual(1, maps:get(seq, State1)),
+    receive
+        {dispatch, channel_member_counts_update, _Payload, 1} -> ok
+    after 100 -> ?assert(false, dispatch_not_received)
+    end.
+
+guildless_presence_still_skipped_for_nonzero_shard_test() ->
+    drain_mailbox(),
+    State0 = base_state(#{socket_pid => self(), shard => {1, 2}}),
+    {noreply, State1} = session_dispatch:handle_dispatch(
+        presence_update, #{<<"user_id">> => <<"5">>}, State0
+    ),
+    ?assertEqual(0, maps:get(seq, State1)),
+    receive
+        {dispatch, _Event, _Data, _Seq} -> ?assert(false, unexpected_dispatch)
+    after 100 -> ok
+    end.
+
+drain_mailbox() ->
+    receive
+        _Message -> drain_mailbox()
+    after 0 -> ok
+    end.
 
 dispatch_pre_encoded(Event, Json, State) ->
     session_dispatch:handle_dispatch(Event, {pre_encoded, Json}, State).

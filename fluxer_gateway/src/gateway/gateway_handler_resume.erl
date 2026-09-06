@@ -134,6 +134,8 @@ handle_resume_call_result({ok, MissedEvents, CurrentSeq}, Pid, GwTimings, State)
     finalize_resume(Pid, CurrentSeq, MissedEvents, GwTimings, State);
 handle_resume_call_result(invalid_seq, _Pid, _GwTimings, State) ->
     gateway_handler_encode:close_with_reason(invalid_seq, <<"Invalid sequence">>, State);
+handle_resume_call_result(not_resumable, _Pid, _GwTimings, State) ->
+    send_invalid_session(State);
 handle_resume_call_result(_ResumeResult, _Pid, _GwTimings, State) ->
     gateway_handler_encode:close_with_reason(
         unknown_error,

@@ -96,7 +96,10 @@ check_full_list_bot_rate_limit(true, false, _UserId, _GuildId) ->
 check_full_list_bot_rate_limit(true, true, UserId, GuildId) when
     is_integer(UserId), UserId > 0, is_integer(GuildId), GuildId > 0
 ->
-    check_bot_rate_limit_window(UserId, GuildId);
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true -> ok;
+        false -> check_bot_rate_limit_window(UserId, GuildId)
+    end;
 check_full_list_bot_rate_limit(true, true, _UserId, _GuildId) ->
     ok.
 

@@ -108,7 +108,7 @@ cleanup_session_table(TableName, SessionPid) ->
 
 -spec should_queue_voice_update(pid()) -> boolean().
 should_queue_voice_update(SessionPid) ->
-    case rate_limits_disabled() of
+    case gateway_handler_rate_limit:rate_limits_disabled() of
         true -> false;
         false -> should_queue_voice_update_limited(SessionPid)
     end.
@@ -139,15 +139,6 @@ check_voice_rate(SessionPid, Timestamps, Now) ->
         false ->
             ets:insert(?VOICE_RATE_LIMIT_TABLE, {SessionPid, [Now | Filtered]}),
             false
-    end.
-
--spec rate_limits_disabled() -> boolean().
-rate_limits_disabled() ->
-    case os:getenv("FLUXER_DISABLE_RATE_LIMITS") of
-        "1" -> true;
-        "true" -> true;
-        "TRUE" -> true;
-        _ -> false
     end.
 
 -spec queue_voice_update(pid(), map()) -> ok.

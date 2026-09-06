@@ -22,7 +22,6 @@
     connect_permission/0,
     speak_permission/0,
     stream_permission/0,
-    use_vad_permission/0,
     read_message_history_permission/0,
     kick_members_permission/0,
     ban_members_permission/0,
@@ -79,8 +78,7 @@ close_code_to_num(rate_limited) -> 4008;
 close_code_to_num(session_timeout) -> 4009;
 close_code_to_num(invalid_shard) -> 4010;
 close_code_to_num(sharding_required) -> 4011;
-close_code_to_num(invalid_api_version) -> 4012;
-close_code_to_num(ack_backpressure) -> 4013.
+close_code_to_num(invalid_api_version) -> 4012.
 
 -spec dispatch_event_atom(atom() | binary()) -> atom() | binary().
 dispatch_event_atom(Event) when is_atom(Event) ->
@@ -142,9 +140,6 @@ speak_permission() -> 2097152.
 -spec stream_permission() -> pos_integer().
 stream_permission() -> 512.
 
--spec use_vad_permission() -> pos_integer().
-use_vad_permission() -> 33554432.
-
 -spec read_message_history_permission() -> pos_integer().
 read_message_history_permission() -> 65536.
 
@@ -178,7 +173,8 @@ close_code_to_num_test() ->
     ?assertEqual(4000, close_code_to_num(unknown_error)),
     ?assertEqual(4004, close_code_to_num(authentication_failed)),
     ?assertEqual(4008, close_code_to_num(rate_limited)),
-    ?assertEqual(4013, close_code_to_num(ack_backpressure)).
+    ?assertEqual(4012, close_code_to_num(invalid_api_version)),
+    ?assertError(function_clause, close_code_to_num(ack_backpressure)).
 
 status_type_atom_binary_to_atom_test() ->
     ?assertEqual(online, status_type_atom(<<>>)),

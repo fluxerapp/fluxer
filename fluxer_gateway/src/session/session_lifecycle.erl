@@ -324,13 +324,17 @@ buffer_event_acked(_Seq, _Event) ->
     false.
 
 -spec handle_resume(seq(), pid(), session_state()) ->
-    {reply, invalid_seq | {ok, [map()], seq()}, session_state()}.
+    {reply, invalid_seq | not_resumable | {ok, [map()], seq()}, session_state()}.
 handle_resume(Seq, _SocketPid, #{seq := CurrentSeq} = State) when Seq > CurrentSeq ->
     {reply, invalid_seq, State};
 handle_resume(Seq, _SocketPid, #{ack_seq := AckSeq} = State) when
     is_integer(AckSeq), Seq < AckSeq
 ->
     {reply, invalid_seq, State};
+handle_resume(Seq, _SocketPid, #{replay_floor := Floor} = State) when
+    is_integer(Floor), Seq < Floor
+->
+    {reply, not_resumable, State};
 handle_resume(Seq, SocketPid, #{seq := CurrentSeq} = State) ->
     #{buffer := Buffer, id := SessionId, status := Status, afk := Afk, mobile := Mobile} =
         State,
@@ -552,6 +556,7 @@ serialize_state(State) ->
         version => maps:get(version, State),
         seq => maps:get(seq, State),
         ack_seq => maps:get(ack_seq, State),
+        replay_floor => maps:get(replay_floor, State, 0),
         properties => maps:get(properties, State),
         status => maps:get(status, State),
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
@@ -610,6 +615,7 @@ serialize_transfer_runtime(State) ->
         relationships => maps:get(relationships, State, #{}),
         seq => maps:get(seq, State, 0),
         ack_seq => AckSeq,
+        replay_floor => max(maps:get(replay_floor, State, 0), AckSeq),
         buffer => Buffer,
         collected_guild_states => maps:get(collected_guild_states, State, []),
         collected_sessions => maps:get(collected_sessions, State, []),

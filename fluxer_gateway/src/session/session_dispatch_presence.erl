@@ -27,7 +27,7 @@
 -type event() :: atom() | binary().
 -type user_id() :: session:user_id().
 
--spec should_buffer_presence(event(), map(), session_state()) -> boolean().
+-spec should_buffer_presence(event(), map() | list(), session_state()) -> boolean().
 should_buffer_presence(presence_update, Data, State) ->
     case maps:get(suppress_presence_updates, State, true) of
         true ->
@@ -98,7 +98,7 @@ buffer_presence(Event, Data, State) ->
     NewPending = queue:in(Entry, Trimmed),
     State#{pending_presences => NewPending}.
 
--spec maybe_flush_pending_presences(event(), map(), session_state()) ->
+-spec maybe_flush_pending_presences(event(), map() | list(), session_state()) ->
     {session_state(), [user_id()]}.
 maybe_flush_pending_presences(relationship_add, Data, State) ->
     maybe_flush_relationship_pending_presences(Data, State);
@@ -187,12 +187,17 @@ dispatch_presence_now(P, State) ->
             false ->
                 Buffer
         end,
-    NewBuffer = limited_deque:push(Request, Deque),
+    {NewBuffer, Dropped} = limited_deque:push_trimmed(
+        Request, limited_deque:entry_bytes(Request), Deque
+    ),
     send_to_socket(SocketPid, Event, Data, NewSeq),
     State#{
         seq => NewSeq,
         buffer => NewBuffer,
-        buffer_bytes => limited_deque:bytes(NewBuffer)
+        buffer_bytes => limited_deque:bytes(NewBuffer),
+        replay_floor => session_dispatch:replay_floor_after_eviction(
+            Dropped, maps:get(replay_floor, State, 0)
+        )
     }.
 
 -spec flush_all_pending_presences(session_state()) -> session_state().
@@ -268,7 +273,7 @@ trim_queue_from_front(Queue, MaxLen) ->
         false -> Queue
     end.
 
--spec send_to_socket(pid() | undefined, event(), map(), non_neg_integer()) -> ok.
+-spec send_to_socket(pid() | undefined, event(), map() | list(), non_neg_integer()) -> ok.
 send_to_socket(undefined, _Event, _Data, _Seq) ->
     ok;
 send_to_socket(Pid, Event, Data, Seq) when is_pid(Pid) ->
@@ -472,6 +477,33 @@ pending_presence_buffer_drops_oldest_when_full_test() ->
     ?assertEqual(?MAX_PENDING_PRESENCE_BUFFER_SIZE, length(Pending)),
     ?assertEqual(3, maps:get(user_id, hd(Pending))),
     ?assertEqual(Total, maps:get(user_id, lists:last(Pending))).
+
+presence_flush_eviction_raises_replay_floor_test() ->
+    Base = #{
+        user_id => 1,
+        seq => 0,
+        buffer => limited_deque:new(2, 0),
+        socket_pid => undefined,
+        pending_presences => queue:new()
+    },
+    Filled = lists:foldl(
+        fun(N, Acc) ->
+            buffer_presence(
+                presence_update,
+                presence_status_data(integer_to_binary(N), <<"online">>),
+                Acc
+            )
+        end,
+        Base,
+        lists:seq(2, 4)
+    ),
+    Flushed = flush_all_pending_presences(Filled),
+    ?assertEqual(3, maps:get(seq, Flushed)),
+    ?assertEqual(1, maps:get(replay_floor, Flushed)),
+    ?assertEqual(
+        [2, 3],
+        [maps:get(seq, E) || E <- limited_deque:to_list(maps:get(buffer, Flushed))]
+    ).
 
 collect_dispatched_statuses(0) ->
     [];

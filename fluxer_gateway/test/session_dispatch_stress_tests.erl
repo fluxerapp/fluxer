@@ -12,11 +12,14 @@
 message_create_flood_keeps_replay_buffer_bounded_test_() ->
     {timeout, 30, fun message_create_flood_keeps_replay_buffer_bounded/0}.
 
-pre_encoded_flood_does_not_fill_replay_buffer_test_() ->
-    {timeout, 30, fun pre_encoded_flood_does_not_fill_replay_buffer/0}.
+pre_encoded_flood_keeps_replay_buffer_bounded_test_() ->
+    {timeout, 30, fun pre_encoded_flood_keeps_replay_buffer_bounded/0}.
 
 guild_members_chunk_flood_does_not_fill_replay_buffer_test_() ->
     {timeout, 30, fun guild_members_chunk_flood_does_not_fill_replay_buffer/0}.
+
+guild_member_list_update_flood_does_not_fill_replay_buffer_test_() ->
+    {timeout, 30, fun guild_member_list_update_flood_does_not_fill_replay_buffer/0}.
 
 message_create_flood_keeps_replay_buffer_bounded() ->
     State0 = base_state(),
@@ -40,14 +43,36 @@ message_create_flood_keeps_replay_buffer_bounded() ->
     ?assertEqual(?MAX_EVENT_BUFFER_SIZE, limited_deque:size(Buffer)),
     ?assert(limited_deque:bytes(Buffer) =< ?MAX_TOTAL_BUFFER_BYTES),
     ?assertEqual(?EVENT_COUNT - ?MAX_EVENT_BUFFER_SIZE + 1, first_buffered_seq(BufferedEvents)),
-    ?assertEqual(?EVENT_COUNT, last_buffered_seq(BufferedEvents)).
+    ?assertEqual(?EVENT_COUNT, last_buffered_seq(BufferedEvents)),
+    ?assertEqual(?EVENT_COUNT - ?MAX_EVENT_BUFFER_SIZE, maps:get(replay_floor, State1)).
 
-pre_encoded_flood_does_not_fill_replay_buffer() ->
+pre_encoded_flood_keeps_replay_buffer_bounded() ->
     Encoded = iolist_to_binary(json:encode(#{<<"content">> => <<"preencoded stress">>})),
     State1 = lists:foldl(
         fun(_Seq, State) ->
             {noreply, NextState} = session_dispatch:handle_dispatch(
                 message_create, {pre_encoded, Encoded}, State
+            ),
+            NextState
+        end,
+        base_state(),
+        lists:seq(1, ?EVENT_COUNT)
+    ),
+    Buffer = maps:get(buffer, State1),
+    BufferedEvents = limited_deque:to_list(Buffer),
+    ?assertEqual(?EVENT_COUNT, maps:get(seq, State1)),
+    ?assertEqual(?MAX_EVENT_BUFFER_SIZE, limited_deque:size(Buffer)),
+    ?assert(limited_deque:bytes(Buffer) =< ?MAX_TOTAL_BUFFER_BYTES),
+    ?assertEqual(?EVENT_COUNT - ?MAX_EVENT_BUFFER_SIZE + 1, first_buffered_seq(BufferedEvents)),
+    ?assertEqual(?EVENT_COUNT, last_buffered_seq(BufferedEvents)),
+    ?assertEqual(?EVENT_COUNT - ?MAX_EVENT_BUFFER_SIZE, maps:get(replay_floor, State1)).
+
+guild_member_list_update_flood_does_not_fill_replay_buffer() ->
+    Encoded = iolist_to_binary(json:encode(#{<<"ops">> => []})),
+    State1 = lists:foldl(
+        fun(_Seq, State) ->
+            {noreply, NextState} = session_dispatch:handle_dispatch(
+                guild_member_list_update, {pre_encoded, Encoded}, State
             ),
             NextState
         end,
