@@ -8,6 +8,7 @@
 	},
 	"scripts": {
 		"generate": "tsx src/scripts/GenerateSpec.ts",
+		"test": "vitest run",
 		"typecheck": "tsgo --noEmit",
 		"validate": "tsx src/scripts/GenerateSpec.ts --validate-only"
 	},
@@ -21,6 +22,8 @@
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"prettier": "^3.8.3",
-		"tsx": "catalog:"
+		"tsx": "catalog:",
+		"vite-tsconfig-paths": "catalog:",
+		"vitest": "catalog:"
 	}
 }

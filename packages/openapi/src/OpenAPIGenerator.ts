@@ -8,6 +8,7 @@ import type {
 	OpenAPIGenerationResult,
 	OpenAPIGeneratorOptions,
 	OpenAPIRouteScope,
+	SkippedRoute,
 } from '@fluxer/openapi/src/OpenAPIGenerationTypes';
 import type {ExtractedRoute, OpenAPIDocument, OpenAPIPathItem, OpenAPISchema} from '@fluxer/openapi/src/OpenAPITypes';
 import {convertPathToOpenAPI} from '@fluxer/openapi/src/registry/ParameterRegistry';
@@ -16,7 +17,11 @@ import {SchemaRegistry} from '@fluxer/openapi/src/registry/SchemaRegistry';
 interface PathBuildResult {
 	readonly paths: Record<string, OpenAPIPathItem>;
 	readonly operationCount: number;
-	readonly skippedRouteCount: number;
+	readonly skippedRoutes: ReadonlyArray<SkippedRoute>;
+	readonly untemplatableRoutes: ReadonlyArray<SkippedRoute>;
+}
+function hasOpenAPIPathTemplate(routePath: string): boolean {
+	return !routePath.includes('*') && !routePath.includes('{');
 }
 interface GeneratorSettings {
 	readonly basePath: string;
@@ -34,6 +39,14 @@ function createGeneratorSettings(options: OpenAPIGeneratorOptions): GeneratorSet
 		description: options.description ?? 'The Fluxer API',
 		serverUrl: options.serverUrl ?? 'https://api.fluxer.app',
 		routeScope: options.routeScope ?? 'public',
+	};
+}
+function describeRoute(route: ExtractedRoute, reason: string): SkippedRoute {
+	return {
+		method: route.method.toUpperCase(),
+		path: route.path,
+		source: `${route.controllerFile}:${route.lineNumber.toString()}`,
+		reason,
 	};
 }
 function isAdminRoute(route: ExtractedRoute): boolean {
@@ -102,7 +115,9 @@ export class OpenAPIGenerator {
 				controllerCount: controllerFiles.length,
 				routeCount: routes.length,
 				operationCount: pathBuildResult.operationCount,
-				skippedRouteCount: pathBuildResult.skippedRouteCount,
+				skippedRouteCount: pathBuildResult.skippedRoutes.length,
+				skippedRoutes: pathBuildResult.skippedRoutes,
+				untemplatableRoutes: pathBuildResult.untemplatableRoutes,
 				registeredSchemaCount,
 				publishedSchemaCount: Object.keys(publishedSchemas).length,
 				tagCount: tags.length,
@@ -122,13 +137,18 @@ export class OpenAPIGenerator {
 	private buildPaths(routes: Array<ExtractedRoute>, operationBuilder: OpenAPIOperationBuilder): PathBuildResult {
 		const paths: Record<string, OpenAPIPathItem> = {};
 		let operationCount = 0;
-		let skippedRouteCount = 0;
+		const skippedRoutes: Array<SkippedRoute> = [];
+		const untemplatableRoutes: Array<SkippedRoute> = [];
 		for (const route of routes) {
 			if (isExcludedRoutePath(route.path)) {
 				continue;
 			}
 			if (!route.responseSchemaName && !route.hasNoContent) {
-				skippedRouteCount++;
+				skippedRoutes.push(describeRoute(route, 'no responseSchema and no NoContent()'));
+				continue;
+			}
+			if (!hasOpenAPIPathTemplate(route.path)) {
+				untemplatableRoutes.push(describeRoute(route, 'the Hono path has no OpenAPI path template'));
 				continue;
 			}
 			const openApiPath = convertPathToOpenAPI(route.path);
@@ -143,7 +163,8 @@ export class OpenAPIGenerator {
 		return {
 			paths: sortedPaths,
 			operationCount,
-			skippedRouteCount,
+			skippedRoutes,
+			untemplatableRoutes,
 		};
 	}
 	private filterPublishedSchemas(

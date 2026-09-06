@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import {
+	EMPTY_SCOPE,
+	type Scope,
+	StaticPathResolver,
+	type StaticValue,
+	UNRESOLVED,
+} from '@fluxer/openapi/src/extractors/StaticPathResolver';
 import type {ExtractedRoute, ExtractedValidator, HttpMethod, ValidatorTarget} from '@fluxer/openapi/src/Types';
-import {type CallExpression, Node, Project, type SourceFile} from 'ts-morph';
+import {type CallExpression, type FunctionDeclaration, Node, Project, type SourceFile} from 'ts-morph';
 
 const HTTP_METHODS: ReadonlySet<string> = new Set(['get', 'post', 'put', 'patch', 'delete']);
 function isHttpMethod(method: string): method is HttpMethod {
@@ -45,9 +52,23 @@ function extractOAuth2ScopeArgs(args: ReadonlyArray<Node>): Array<string> | null
 	}
 	return scopes.length > 0 ? scopes : null;
 }
-function extractObjectLiteralValue(node: Node): unknown {
+interface MetadataContext {
+	readonly resolver: StaticPathResolver;
+	readonly scope: Scope;
+}
+function resolveMetadataText(node: Node, context: MetadataContext | null): string | null {
+	if (context == null) {
+		return null;
+	}
+	const value = context.resolver.resolve(node, context.scope);
+	return typeof value === 'string' ? value : null;
+}
+function extractObjectLiteralValue(node: Node, context: MetadataContext | null): unknown {
 	if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
 		return node.getLiteralValue();
+	}
+	if (Node.isTemplateExpression(node) || Node.isConditionalExpression(node)) {
+		return resolveMetadataText(node, context);
 	}
 	if (Node.isNumericLiteral(node)) {
 		return Number.parseFloat(node.getText());
@@ -65,13 +86,26 @@ function extractObjectLiteralValue(node: Node): unknown {
 		return node.getText();
 	}
 	if (Node.isPropertyAccessExpression(node)) {
-		return node.getText();
+		return resolveMetadataText(node, context) ?? node.getText();
 	}
 	if (Node.isCallExpression(node)) {
 		return node.getText();
 	}
 	if (Node.isArrayLiteralExpression(node)) {
-		return node.getElements().map((el) => extractObjectLiteralValue(el));
+		const values: Array<unknown> = [];
+		for (const element of node.getElements()) {
+			if (Node.isSpreadElement(element)) {
+				const spread = context?.resolver.resolve(element.getExpression(), context.scope);
+				if (spread == null || spread === UNRESOLVED || !Array.isArray(spread)) {
+					values.push(null);
+					continue;
+				}
+				values.push(...spread);
+				continue;
+			}
+			values.push(extractObjectLiteralValue(element, context));
+		}
+		return values;
 	}
 	if (Node.isObjectLiteralExpression(node)) {
 		const result: Record<string, unknown> = {};
@@ -80,7 +114,7 @@ function extractObjectLiteralValue(node: Node): unknown {
 				const key = prop.getName();
 				const initializer = prop.getInitializer();
 				if (initializer) {
-					result[key] = extractObjectLiteralValue(initializer);
+					result[key] = extractObjectLiteralValue(initializer, context);
 				}
 			}
 		}
@@ -88,9 +122,9 @@ function extractObjectLiteralValue(node: Node): unknown {
 	}
 	return null;
 }
-function parseObjectLiteralMetadata(objLiteral: Node): Record<string, unknown> {
+function parseObjectLiteralMetadata(objLiteral: Node, context: MetadataContext | null): Record<string, unknown> {
 	if (!Node.isObjectLiteralExpression(objLiteral)) return {};
-	return extractObjectLiteralValue(objLiteral) as Record<string, unknown>;
+	return extractObjectLiteralValue(objLiteral, context) as Record<string, unknown>;
 }
 function extractValidatorInfo(callExpr: CallExpression): ExtractedValidator | null {
 	const expression = callExpr.getExpression();
@@ -162,7 +196,7 @@ interface MiddlewareInfo {
 		description?: string;
 	} | null;
 }
-function extractMiddlewareInfo(callExpr: CallExpression): MiddlewareInfo | null {
+function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContext | null): MiddlewareInfo | null {
 	const expression = callExpr.getExpression();
 	if (Node.isIdentifier(expression)) {
 		const name = expression.getText();
@@ -245,7 +279,7 @@ function extractMiddlewareInfo(callExpr: CallExpression): MiddlewareInfo | null 
 			if (args.length === 0) return null;
 			const firstArg = args[0];
 			if (Node.isObjectLiteralExpression(firstArg)) {
-				const metadata = parseObjectLiteralMetadata(firstArg);
+				const metadata = parseObjectLiteralMetadata(firstArg, context);
 				const operationId = typeof metadata.operationId === 'string' ? metadata.operationId : null;
 				const summary = typeof metadata.summary === 'string' ? metadata.summary : null;
 				const description = typeof metadata.description === 'string' ? metadata.description : null;
@@ -479,24 +513,142 @@ function extractSuccessStatusCodes(handler: Node): Array<number> {
 	});
 	return Array.from(codes).sort((a, b) => a - b);
 }
-function extractRouteFromCall(callExpr: CallExpression, sourceFile: SourceFile): ExtractedRoute | null {
+interface RegistrationCall {
+	readonly call: CallExpression;
+	readonly methods: ReadonlyArray<HttpMethod>;
+	readonly pathArgument: Node;
+	readonly middlewareArguments: ReadonlyArray<Node>;
+}
+interface UnresolvedRegistration {
+	readonly filePath: string;
+	readonly lineNumber: number;
+	readonly methods: string;
+	readonly expression: string;
+}
+function methodsFromOnArgument(node: Node, resolver: StaticPathResolver, scope: Scope): Array<HttpMethod> | null {
+	const value = resolver.resolve(node, scope);
+	if (value === UNRESOLVED) {
+		return null;
+	}
+	const entries: Array<StaticValue> = Array.isArray(value) ? [...value] : [value];
+	const methods: Array<HttpMethod> = [];
+	for (const entry of entries) {
+		if (typeof entry !== 'string') {
+			return null;
+		}
+		const lowered = entry.toLowerCase();
+		if (lowered === 'head') {
+			continue;
+		}
+		if (!isHttpMethod(lowered)) {
+			return null;
+		}
+		methods.push(lowered);
+	}
+	return methods.length > 0 ? methods : null;
+}
+const HONO_TYPE_PATTERN = /\bHono(App|Env)?\b/u;
+function isHonoReceiver(receiver: Node): boolean {
+	if (!Node.isIdentifier(receiver)) {
+		return false;
+	}
+	const name = receiver.getText();
+	for (const ancestor of receiver.getAncestors()) {
+		if (
+			Node.isFunctionDeclaration(ancestor) ||
+			Node.isArrowFunction(ancestor) ||
+			Node.isFunctionExpression(ancestor) ||
+			Node.isMethodDeclaration(ancestor)
+		) {
+			for (const parameter of ancestor.getParameters()) {
+				const nameNode = parameter.getNameNode();
+				if (Node.isIdentifier(nameNode) && nameNode.getText() === name) {
+					return HONO_TYPE_PATTERN.test(parameter.getTypeNode()?.getText() ?? '');
+				}
+			}
+		}
+		if (Node.isBlock(ancestor) || Node.isSourceFile(ancestor)) {
+			for (const statement of ancestor.getStatements()) {
+				if (!Node.isVariableStatement(statement)) {
+					continue;
+				}
+				for (const declaration of statement.getDeclarations()) {
+					const nameNode = declaration.getNameNode();
+					if (Node.isIdentifier(nameNode) && nameNode.getText() === name) {
+						const annotation = declaration.getTypeNode()?.getText() ?? '';
+						const initializer = declaration.getInitializer()?.getText() ?? '';
+						return HONO_TYPE_PATTERN.test(`${annotation} ${initializer}`);
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+function isRegistrationCall(callExpr: CallExpression): boolean {
+	const expression = callExpr.getExpression();
+	if (!Node.isPropertyAccessExpression(expression)) {
+		return false;
+	}
+	if (!isHonoReceiver(expression.getExpression())) {
+		return false;
+	}
+	const name = expression.getName().toLowerCase();
+	const args = callExpr.getArguments();
+	if (isHttpMethod(name)) {
+		return args.length >= 2;
+	}
+	return name === 'on' && args.length >= 3;
+}
+function pathArgumentOf(callExpr: CallExpression): Node | null {
 	const expression = callExpr.getExpression();
 	if (!Node.isPropertyAccessExpression(expression)) {
 		return null;
 	}
-	const method = expression.getName().toLowerCase();
-	if (!isHttpMethod(method)) {
-		return null;
-	}
 	const args = callExpr.getArguments();
-	if (args.length < 2) {
+	return expression.getName().toLowerCase() === 'on' ? (args[1] ?? null) : (args[0] ?? null);
+}
+function readRegistrationCall(
+	callExpr: CallExpression,
+	resolver: StaticPathResolver,
+	scope: Scope,
+): RegistrationCall | null {
+	if (!isRegistrationCall(callExpr)) {
 		return null;
 	}
-	const pathArg = args[0];
-	const path = extractStringLiteral(pathArg);
-	if (!path) {
+	const expression = callExpr.getExpression();
+	if (!Node.isPropertyAccessExpression(expression)) {
 		return null;
 	}
+	const name = expression.getName().toLowerCase();
+	const args = callExpr.getArguments();
+	if (isHttpMethod(name)) {
+		return {
+			call: callExpr,
+			methods: [name],
+			pathArgument: args[0],
+			middlewareArguments: args.slice(1),
+		};
+	}
+	const methods = methodsFromOnArgument(args[0], resolver, scope);
+	if (methods == null) {
+		return null;
+	}
+	return {
+		call: callExpr,
+		methods,
+		pathArgument: args[1],
+		middlewareArguments: args.slice(2),
+	};
+}
+function buildRoute(
+	registration: RegistrationCall,
+	method: HttpMethod,
+	routePath: string,
+	sourceFile: SourceFile,
+	resolver: StaticPathResolver,
+	scope: Scope,
+): ExtractedRoute {
 	const validators: Array<ExtractedValidator> = [];
 	const middlewares: Array<string> = [];
 	let hasLoginRequired = false;
@@ -525,8 +677,7 @@ function extractRouteFromCall(callExpr: CallExpression, sourceFile: SourceFile):
 		url: string;
 		description?: string;
 	} | null = null;
-	for (let i = 1; i < args.length; i++) {
-		const arg = args[i];
+	for (const arg of registration.middlewareArguments) {
 		if (Node.isIdentifier(arg)) {
 			const name = arg.getText();
 			middlewares.push(name);
@@ -544,7 +695,7 @@ function extractRouteFromCall(callExpr: CallExpression, sourceFile: SourceFile):
 			if (validatorInfo) {
 				validators.push(validatorInfo);
 			} else {
-				const middlewareInfo = extractMiddlewareInfo(arg);
+				const middlewareInfo = extractMiddlewareInfo(arg, {resolver, scope});
 				if (middlewareInfo) {
 					middlewares.push(middlewareInfo.middlewareName);
 					if (middlewareInfo.rateLimitConfig) {
@@ -580,7 +731,7 @@ function extractRouteFromCall(callExpr: CallExpression, sourceFile: SourceFile):
 					if (middlewareInfo.oauth2RequiredScopes && middlewareInfo.oauth2ScopeMode) {
 						if (oauth2ScopeMode && oauth2ScopeMode !== middlewareInfo.oauth2ScopeMode) {
 							throw new Error(
-								`Cannot combine OAuth2 scope middleware modes on ${method.toUpperCase()} ${path} in ${sourceFile.getFilePath()}:${callExpr.getStartLineNumber()}`,
+								`Cannot combine OAuth2 scope middleware modes on ${method.toUpperCase()} ${routePath} in ${sourceFile.getFilePath()}:${registration.call.getStartLineNumber()}`,
 							);
 						}
 						oauth2ScopeMode = middlewareInfo.oauth2ScopeMode;
@@ -615,9 +766,9 @@ function extractRouteFromCall(callExpr: CallExpression, sourceFile: SourceFile):
 	}
 	return {
 		method,
-		path,
+		path: routePath,
 		controllerFile: sourceFile.getFilePath(),
-		lineNumber: callExpr.getStartLineNumber(),
+		lineNumber: registration.call.getStartLineNumber(),
 		validators,
 		middlewares,
 		hasLoginRequired,
@@ -645,16 +796,194 @@ function extractRouteFromCall(callExpr: CallExpression, sourceFile: SourceFile):
 		explicitExternalDocs,
 	};
 }
-function findRoutesInSourceFile(sourceFile: SourceFile): Array<ExtractedRoute> {
-	const routes: Array<ExtractedRoute> = [];
-	sourceFile.forEachDescendant((node) => {
-		if (Node.isCallExpression(node)) {
-			const route = extractRouteFromCall(node, sourceFile);
-			if (route) {
-				routes.push(route);
+function owningFunction(node: Node): FunctionDeclaration | null {
+	for (const ancestor of node.getAncestors()) {
+		if (Node.isFunctionDeclaration(ancestor)) {
+			return ancestor;
+		}
+	}
+	return null;
+}
+function bindParameters(
+	fn: FunctionDeclaration,
+	args: ReadonlyArray<Node>,
+	callerScope: Scope,
+	resolver: StaticPathResolver,
+): Scope {
+	const scope = new Map<string, StaticValue>();
+	fn.getParameters().forEach((parameter, index) => {
+		const arg = args[index];
+		if (arg == null) {
+			return;
+		}
+		const value = resolver.resolve(arg, callerScope);
+		if (value === UNRESOLVED) {
+			return;
+		}
+		const nameNode = parameter.getNameNode();
+		if (Node.isIdentifier(nameNode)) {
+			scope.set(nameNode.getText(), value);
+			return;
+		}
+		if (Node.isObjectBindingPattern(nameNode) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+			const record = value as {readonly [key: string]: StaticValue};
+			for (const element of nameNode.getElements()) {
+				const key = element.getPropertyNameNode()?.getText() ?? element.getName();
+				if (key in record) {
+					scope.set(element.getName(), record[key]);
+				}
 			}
 		}
 	});
+	return scope;
+}
+function scopesForFunction(
+	fn: FunctionDeclaration,
+	sourceFile: SourceFile,
+	resolver: StaticPathResolver,
+	visiting: Set<FunctionDeclaration>,
+): Array<Scope> {
+	if (visiting.has(fn)) {
+		return [EMPTY_SCOPE];
+	}
+	const name = fn.getName();
+	if (name == null) {
+		return [EMPTY_SCOPE];
+	}
+	visiting.add(fn);
+	try {
+		const scopes: Array<Scope> = [];
+		sourceFile.forEachDescendant((node) => {
+			if (!Node.isCallExpression(node)) {
+				return;
+			}
+			const callee = node.getExpression();
+			if (!Node.isIdentifier(callee) || callee.getText() !== name) {
+				return;
+			}
+			const enclosing = owningFunction(node);
+			const outerScopes =
+				enclosing == null || enclosing === fn
+					? [EMPTY_SCOPE]
+					: scopesForFunction(enclosing, sourceFile, resolver, visiting);
+			for (const outerScope of outerScopes) {
+				for (const loopScope of expandLoops(node, enclosing, outerScope, resolver)) {
+					scopes.push(bindParameters(fn, node.getArguments(), loopScope, resolver));
+				}
+			}
+		});
+		return scopes.length > 0 ? scopes : [EMPTY_SCOPE];
+	} finally {
+		visiting.delete(fn);
+	}
+}
+function expandLoops(
+	node: Node,
+	stopAt: FunctionDeclaration | null,
+	baseScope: Scope,
+	resolver: StaticPathResolver,
+): Array<Scope> {
+	const loops: Array<Node> = [];
+	for (const ancestor of node.getAncestors()) {
+		if (ancestor === stopAt || Node.isSourceFile(ancestor)) {
+			break;
+		}
+		if (Node.isForOfStatement(ancestor)) {
+			loops.push(ancestor);
+		}
+	}
+	let scopes: Array<Scope> = [baseScope];
+	for (const loop of loops.reverse()) {
+		if (!Node.isForOfStatement(loop)) {
+			continue;
+		}
+		const initializer = loop.getInitializer();
+		if (!Node.isVariableDeclarationList(initializer)) {
+			return scopes;
+		}
+		const declaration = initializer.getDeclarations()[0];
+		const nameNode = declaration?.getNameNode();
+		if (nameNode == null || !Node.isIdentifier(nameNode)) {
+			return scopes;
+		}
+		const expanded: Array<Scope> = [];
+		for (const scope of scopes) {
+			const iterated = resolver.resolve(loop.getExpression(), scope);
+			if (!Array.isArray(iterated)) {
+				return scopes;
+			}
+			for (const element of iterated) {
+				const next = new Map(scope);
+				next.set(nameNode.getText(), element);
+				expanded.push(next);
+			}
+		}
+		scopes = expanded;
+	}
+	return scopes;
+}
+function findRoutesInSourceFile(
+	sourceFile: SourceFile,
+	resolver: StaticPathResolver,
+	unresolved: Array<UnresolvedRegistration>,
+): Array<ExtractedRoute> {
+	const registrations: Array<CallExpression> = [];
+	sourceFile.forEachDescendant((node) => {
+		if (Node.isCallExpression(node)) {
+			registrations.push(node);
+		}
+	});
+	const byOwner = new Map<FunctionDeclaration | null, Array<CallExpression>>();
+	for (const call of registrations) {
+		if (!isRegistrationCall(call)) {
+			continue;
+		}
+		const owner = owningFunction(call);
+		const bucket = byOwner.get(owner);
+		if (bucket == null) {
+			byOwner.set(owner, [call]);
+		} else {
+			bucket.push(call);
+		}
+	}
+	const routes: Array<ExtractedRoute> = [];
+	for (const [owner, calls] of byOwner) {
+		const scopes = owner == null ? [EMPTY_SCOPE] : scopesForFunction(owner, sourceFile, resolver, new Set());
+		for (const call of calls) {
+			const seen = new Set<string>();
+			let resolvedAny = false;
+			for (const scope of scopes) {
+				const registration = readRegistrationCall(call, resolver, scope);
+				if (registration == null) {
+					continue;
+				}
+				const routePath = resolver.resolveString(registration.pathArgument, scope);
+				if (routePath == null) {
+					continue;
+				}
+				resolvedAny = true;
+				for (const method of registration.methods) {
+					const key = `${method} ${routePath}`;
+					if (seen.has(key)) {
+						continue;
+					}
+					seen.add(key);
+					routes.push(buildRoute(registration, method, routePath, sourceFile, resolver, scope));
+				}
+			}
+			if (!resolvedAny) {
+				const expression = call.getExpression();
+				const methodName = Node.isPropertyAccessExpression(expression) ? expression.getName().toUpperCase() : '?';
+				const pathArgument = pathArgumentOf(call);
+				unresolved.push({
+					filePath: sourceFile.getFilePath(),
+					lineNumber: call.getStartLineNumber(),
+					methods: methodName === 'ON' ? `ON ${call.getArguments()[0].getText()}` : methodName,
+					expression: (pathArgument ?? call).getText().replace(/\s+/gu, ' '),
+				});
+			}
+		}
+	}
 	return routes;
 }
 export function extractRoutesFromControllers(controllerPaths: Array<string>): Array<ExtractedRoute> {
@@ -662,15 +991,31 @@ export function extractRoutesFromControllers(controllerPaths: Array<string>): Ar
 		skipAddingFilesFromTsConfig: true,
 		skipFileDependencyResolution: true,
 	});
+	const resolver = new StaticPathResolver(project);
 	const routes: Array<ExtractedRoute> = [];
+	const unresolved: Array<UnresolvedRegistration> = [];
 	for (const controllerPath of controllerPaths) {
 		try {
 			const sourceFile = project.addSourceFileAtPath(controllerPath);
-			const fileRoutes = findRoutesInSourceFile(sourceFile);
+			const fileRoutes = findRoutesInSourceFile(sourceFile, resolver, unresolved);
 			routes.push(...fileRoutes);
 		} catch (error) {
 			console.warn(`Warning: Could not parse ${controllerPath}:`, error);
 		}
+	}
+	if (unresolved.length > 0) {
+		const lines = unresolved.map(
+			(entry) => `  ${entry.filePath}:${entry.lineNumber.toString()}  ${entry.methods}  ${entry.expression}`,
+		);
+		throw new Error(
+			[
+				`The route extractor could not read ${unresolved.length.toString()} route path(s). A path it cannot read is a route`,
+				'that would vanish from openapi.json and from the docs coverage gate without a trace, so extraction',
+				'stops here instead. Give the path a literal, or a const the resolver can follow, or teach',
+				'packages/openapi/src/extractors/StaticPathResolver.ts to read the expression.',
+				...lines,
+			].join('\n'),
+		);
 	}
 	return routes;
 }
@@ -679,6 +1024,10 @@ export function discoverControllerFiles(apiPackagePath: string): Array<string> {
 		tsConfigFilePath: `${apiPackagePath}/tsconfig.json`,
 		skipAddingFilesFromTsConfig: true,
 	});
-	const sourceFiles = project.addSourceFilesAtPaths([`${apiPackagePath}/src/**/*Controller.ts`]);
+	const sourceFiles = project.addSourceFilesAtPaths([
+		`${apiPackagePath}/src/**/*.ts`,
+		`!${apiPackagePath}/src/**/*.test.ts`,
+		`!${apiPackagePath}/src/**/tests/**`,
+	]);
 	return sourceFiles.map((sf) => sf.getFilePath());
 }

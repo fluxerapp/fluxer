@@ -9,11 +9,19 @@ export interface OpenAPIGeneratorOptions {
 	readonly serverUrl?: string;
 	readonly routeScope?: OpenAPIRouteScope;
 }
+export interface SkippedRoute {
+	readonly method: string;
+	readonly path: string;
+	readonly source: string;
+	readonly reason: string;
+}
 export interface OpenAPIGenerationStats {
 	readonly controllerCount: number;
 	readonly routeCount: number;
 	readonly operationCount: number;
 	readonly skippedRouteCount: number;
+	readonly skippedRoutes: ReadonlyArray<SkippedRoute>;
+	readonly untemplatableRoutes: ReadonlyArray<SkippedRoute>;
 	readonly registeredSchemaCount: number;
 	readonly publishedSchemaCount: number;
 	readonly tagCount: number;
