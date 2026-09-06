@@ -428,6 +428,7 @@
 	max-inline-size: none;
 	overflow: visible;
 	white-space: nowrap;
+	unicode-bidi: plaintext;
 	user-select: text;
 	-webkit-user-select: text;
 }
@@ -505,6 +506,7 @@
 	font-weight: 400;
 	color: var(--message-timestamp-color);
 	line-height: var(--message-line-height);
+	unicode-bidi: isolate;
 }
 
 .messageTimestamp {
@@ -557,6 +559,7 @@
 	font-size: var(--message-timestamp-compact-font-size);
 	font-weight: 500;
 	line-height: var(--message-line-height);
+	unicode-bidi: isolate;
 }
 
 .messageTimestampHover {
@@ -948,6 +951,7 @@
 	white-space: nowrap;
 	max-width: 30%;
 	vertical-align: baseline;
+	unicode-bidi: plaintext;
 	font-weight: 500;
 	color: color-mix(
 		in srgb,
