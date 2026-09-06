@@ -17,7 +17,7 @@ import {
 	StorageObjectRangeNotSatisfiableError,
 } from '../infrastructure/IStorageService';
 import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonUnknown} from '../utils/JsonBoundaryUtils';
+import {isJsonRecord, parseJsonRecord, parseJsonUnknown} from '../utils/JsonBoundaryUtils';
 import {
 	parseDesktopArtifactScope,
 	parseDesktopReleaseDescriptor,
@@ -731,7 +731,7 @@ export class DownloadService {
 
 	private async readJsonObjectFromStorage(key: string): Promise<unknown | null> {
 		const text = await this.readTextFromStorage(key);
-		return text == null ? null : parseJsonUnknown(text);
+		return text == null ? null : parseJsonRecord(text);
 	}
 
 	private async readTextFromStorage(key: string): Promise<string | null> {

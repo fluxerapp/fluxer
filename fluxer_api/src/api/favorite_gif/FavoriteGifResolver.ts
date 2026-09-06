@@ -4,7 +4,7 @@ import {Logger} from '@fluxer/logger/src/Logger';
 import type {ResolvedGifEntrySchema} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 import type {GifMediaFormat, GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
-import type {EmbedMediaResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import type {EmbedMediaResponse, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {tryExtractGifProviderSlug} from '../gif/GifProviderUtils';
 import type {GifService} from '../gif/GifService';
 import type {IGifProvider} from '../gif/IGifProvider';
@@ -130,7 +130,10 @@ async function resolveUnfurledFavoriteGifEntry({
 	unfurlerService: IUnfurlerService;
 	mediaService: IMediaService;
 }): Promise<ResolvedGifEntrySchema | null> {
-	const embeds = await unfurlerService.unfurl(url, 'allow');
+	const embeds = await unfurlerService.unfurl(url, 'allow').catch((error: unknown) => {
+		logger.warn({error, url}, 'Failed to unfurl favorite GIF URL');
+		return [] as Array<MessageEmbedResponse>;
+	});
 	for (const embed of embeds) {
 		const media = [embed.video, embed.image, embed.thumbnail].find((candidate) =>
 			isRenderableMediaType(candidate?.content_type),

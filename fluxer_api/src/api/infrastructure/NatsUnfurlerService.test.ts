@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
@@ -11,11 +14,22 @@ interface FakeRequest {
 	timeout: number | undefined;
 }
 
+const RESOLVED_REPLY = JSON.stringify({Resolved: {embeds: [], cache_ttl_seconds: null}});
+
+function natsErrorWithCode(code: string): Error {
+	return Object.assign(new Error('nats request failed'), {code});
+}
+
 class FakeNatsConnectionManager implements INatsConnectionManager {
 	private readonly codec = StringCodec();
 	private closed = true;
 	readonly requests: Array<FakeRequest> = [];
 	connectCalls = 0;
+
+	constructor(
+		private readonly replyText: string = RESOLVED_REPLY,
+		private readonly requestError: Error | null = null,
+	) {}
 
 	async connect(): Promise<void> {
 		this.connectCalls += 1;
@@ -33,8 +47,11 @@ class FakeNatsConnectionManager implements INatsConnectionManager {
 					body: JSON.parse(this.codec.decode(data)) as Record<string, unknown>,
 					timeout: options?.timeout,
 				});
+				if (this.requestError) {
+					throw this.requestError;
+				}
 				return {
-					data: this.codec.encode(JSON.stringify({Resolved: {embeds: [], cache_ttl_seconds: null}})),
+					data: this.codec.encode(this.replyText),
 				};
 			},
 		} as unknown as NatsConnection;
@@ -78,5 +95,40 @@ describe('NatsUnfurlerService', () => {
 		expect(manager.requests[0]?.body).not.toHaveProperty('media_endpoint');
 		expect(manager.requests[0]?.body).not.toHaveProperty('media_proxy_endpoint');
 		expect(manager.requests[0]?.body).not.toHaveProperty('media_proxy_secret_key');
+	});
+
+	it('rejects with a bad gateway error when the unfurl service reports a failure', async () => {
+		const manager = new FakeNatsConnectionManager(JSON.stringify({Failed: {message: 'upstream exploded'}}));
+		const service = new NatsUnfurlerService(manager);
+
+		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(BadGatewayError);
+	});
+
+	it('rejects with a bad gateway error when the reply payload is unreadable', async () => {
+		const manager = new FakeNatsConnectionManager('not json');
+		const service = new NatsUnfurlerService(manager);
+
+		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(BadGatewayError);
+	});
+
+	it('rejects with a gateway timeout error when the request times out', async () => {
+		const manager = new FakeNatsConnectionManager(RESOLVED_REPLY, natsErrorWithCode('TIMEOUT'));
+		const service = new NatsUnfurlerService(manager);
+
+		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(GatewayTimeoutError);
+	});
+
+	it('rejects with a service unavailable error when no responders answer', async () => {
+		const manager = new FakeNatsConnectionManager(RESOLVED_REPLY, natsErrorWithCode('503'));
+		const service = new NatsUnfurlerService(manager);
+
+		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(ServiceUnavailableError);
+	});
+
+	it('rejects with a service unavailable error when the shard rejects the request', async () => {
+		const manager = new FakeNatsConnectionManager(JSON.stringify({error: 'overloaded'}));
+		const service = new NatsUnfurlerService(manager);
+
+		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(ServiceUnavailableError);
 	});
 });

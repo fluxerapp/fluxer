@@ -45,6 +45,7 @@ interface Http2Response {
 }
 
 const providerTokenCache = new Map<string, CachedProviderToken>();
+const apnsSigningKeys = new Map<string, ReturnType<typeof importPKCS8>>();
 const apnsSessions = new Map<string, ClientHttp2Session>();
 
 export async function sendApnsPush(params: SendApnsPushParams): Promise<SendApnsPushResult> {
@@ -105,7 +106,7 @@ async function getProviderToken(): Promise<string | null> {
 	if (cached && cached.expiresAtSeconds > nowSeconds) {
 		return cached.token;
 	}
-	const key = await importPKCS8(privateKey, 'ES256');
+	const key = await apnsSigningKey(privateKey);
 	const token = await new SignJWT({})
 		.setProtectedHeader({alg: 'ES256', kid: cfg.keyId})
 		.setIssuer(cfg.teamId)
@@ -123,6 +124,27 @@ async function resolveApnsPrivateKey(): Promise<string | null> {
 	if (!cfg.privateKeyPath) return null;
 	const pem = await readFile(cfg.privateKeyPath, 'utf8');
 	return normalizePem(pem);
+}
+
+export async function ensureApnsSigningKey(): Promise<void> {
+	if (!Config.push.apns.enabled) return;
+	const privateKey = await resolveApnsPrivateKey();
+	if (!privateKey) return;
+	await apnsSigningKey(privateKey);
+	Logger.info('APNs signing key loaded');
+}
+
+async function apnsSigningKey(privateKey: string): Promise<Awaited<ReturnType<typeof importPKCS8>>> {
+	const cached = apnsSigningKeys.get(privateKey);
+	if (cached) return await cached;
+	const pending = importPKCS8(privateKey, 'ES256');
+	apnsSigningKeys.set(privateKey, pending);
+	try {
+		return await pending;
+	} catch (error) {
+		apnsSigningKeys.delete(privateKey);
+		throw error;
+	}
 }
 
 function normalizePem(value: string): string {
@@ -316,4 +338,5 @@ export const ApnsPushServiceTestHooks = {
 	buildApnsPayload,
 	buildApnsHeaders,
 	isPermanentApnsFailure,
+	apnsSigningKey,
 };

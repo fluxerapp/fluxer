@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {generateKeyPairSync} from 'node:crypto';
 import {describe, expect, it} from 'vitest';
-import {ApnsPushServiceTestHooks} from '../ApnsPushService';
+import {ApnsPushServiceTestHooks, ensureApnsSigningKey} from '../ApnsPushService';
+
+function pkcs8Pem(der: Buffer): string {
+	const base64 = der.toString('base64');
+	const lines: Array<string> = [];
+	for (let index = 0; index < base64.length; index += 64) {
+		lines.push(base64.slice(index, index + 64));
+	}
+	return `-----BEGIN PRIVATE KEY-----\n${lines.join('\n')}\n-----END PRIVATE KEY-----\n`;
+}
 
 describe('ApnsPushService', () => {
 	it('builds modern APNs alert payloads for chat messages', () => {
@@ -132,6 +142,21 @@ describe('ApnsPushService', () => {
 		expect(payload.aps).not.toHaveProperty('mutable-content');
 		expect(payload.author_avatar_url).toBe('https://cdn.example/avatar.png');
 	});
+	it('imports the APNs signing key once per PEM and rejects a truncated one every time', async () => {
+		const {privateKey} = generateKeyPairSync('ec', {namedCurve: 'prime256v1'});
+		const der = privateKey.export({type: 'pkcs8', format: 'der'});
+		const pem = privateKey.export({type: 'pkcs8', format: 'pem'}).toString();
+		const truncated = pkcs8Pem(der.subarray(0, der.length - 8));
+		const first = await ApnsPushServiceTestHooks.apnsSigningKey(pem);
+		expect(await ApnsPushServiceTestHooks.apnsSigningKey(pem)).toBe(first);
+		await expect(ApnsPushServiceTestHooks.apnsSigningKey(truncated)).rejects.toThrow();
+		await expect(ApnsPushServiceTestHooks.apnsSigningKey(truncated)).rejects.toThrow();
+	});
+
+	it('loads no APNs signing key at startup while APNs is disabled', async () => {
+		await expect(ensureApnsSigningKey()).resolves.toBeUndefined();
+	});
+
 	it('marks only permanent APNs token failures as subscription deletion signals', () => {
 		expect(ApnsPushServiceTestHooks.isPermanentApnsFailure(410, 'Unregistered')).toBe(true);
 		expect(ApnsPushServiceTestHooks.isPermanentApnsFailure(400, 'BadDeviceToken')).toBe(true);

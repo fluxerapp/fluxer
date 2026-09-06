@@ -28,6 +28,7 @@ import {
 	getUserRepository,
 } from '../middleware/ServiceSingletons';
 import {torExitListCache} from '../middleware/TorExitListCache';
+import {ensureApnsSigningKey} from '../push/ApnsPushService';
 import {initializeSearch, shutdownSearch} from '../SearchFactory';
 import {warmupAdminSearchIndexes} from '../search/SearchWarmup';
 import {VisionarySlotInitializer} from '../stripe/VisionarySlotInitializer';
@@ -46,6 +47,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 	return async (): Promise<void> => {
 		try {
 			logger.info('Initializing API service...');
+			await ensureApnsSigningKey();
 			const geoipStartupResult = await ensureGeoipDatabaseOnStartup({
 				geoip: config.geoip,
 				s3Config: {

@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {StringCodec} from 'nats';
@@ -12,6 +16,8 @@ import {throwForSvcErrorReply} from './SvcErrorReply';
 const NATS_UNFURL_SUBJECT = 'svc.unfurl';
 const NATS_UNFURL_TIMEOUT_MS = 12000;
 const NATS_UNFURL_CACHE_ONLY_TIMEOUT_MS = 1000;
+const NATS_NO_RESPONDERS_CODE = '503';
+const NATS_TIMEOUT_CODE = 'TIMEOUT';
 
 interface NatsUnfurlRequest {
 	op: 'Unfurl';
@@ -54,6 +60,23 @@ function isNatsUnfurlResponse(value: unknown): value is NatsUnfurlResponse {
 	return false;
 }
 
+function mapUnfurlTransportError(error: unknown): Error {
+	if (error instanceof FluxerError) {
+		return error;
+	}
+	if (!(error instanceof Error)) {
+		return new BadGatewayError({message: '[nats-unfurl] request failed'});
+	}
+	const code = 'code' in error && typeof error.code === 'string' ? error.code : null;
+	if (code === NATS_NO_RESPONDERS_CODE || error.message === 'NO_RESPONDERS' || error.name === 'NoRespondersError') {
+		return new ServiceUnavailableError({message: '[nats-unfurl] no unfurl service is answering'});
+	}
+	if (code === NATS_TIMEOUT_CODE || error.message === 'TIMEOUT' || error.name === 'TimeoutError') {
+		return new GatewayTimeoutError({message: '[nats-unfurl] unfurl service did not answer in time'});
+	}
+	return new BadGatewayError({message: '[nats-unfurl] request failed'});
+}
+
 export class NatsUnfurlerService extends IUnfurlerService {
 	private readonly connectionManager: INatsConnectionManager;
 	private readonly codec = StringCodec();
@@ -94,7 +117,7 @@ export class NatsUnfurlerService extends IUnfurlerService {
 			const response = parseJsonWithGuard(responseText, isNatsUnfurlResponse);
 			if (!response) {
 				throwForSvcErrorReply('nats-unfurl', parseJsonRecord(responseText));
-				throw new Error(`[nats-unfurl] invalid response payload: ${responseText}`);
+				throw new BadGatewayError({message: '[nats-unfurl] invalid response payload'});
 			}
 			if ('Resolved' in response) {
 				return {
@@ -103,16 +126,16 @@ export class NatsUnfurlerService extends IUnfurlerService {
 				};
 			}
 			if ('Failed' in response) {
-				throw new Error(`[nats-unfurl] service error: ${response.Failed.message}`);
+				throw new BadGatewayError({message: `[nats-unfurl] service error: ${response.Failed.message}`});
 			}
-			throw new Error(`[nats-unfurl] unexpected response variant: ${responseText}`);
+			throw new BadGatewayError({message: '[nats-unfurl] unexpected response variant'});
 		} catch (error) {
 			if (options.signal?.aborted) {
 				Logger.warn({url}, '[nats-unfurl] request aborted');
 			} else {
 				Logger.error({error, url}, '[nats-unfurl] failed to unfurl URL');
 			}
-			throw error;
+			throw mapUnfurlTransportError(error);
 		}
 	}
 }
