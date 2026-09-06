@@ -1444,9 +1444,6 @@ export const ReportAdminResponseSchema = z.object({
 	message_context: z.array(ReportMessageContextSchema).optional(),
 	message_responses: z.array(MessageResponseSchema).optional(),
 });
-const ListReportsResponse = z.object({
-	reports: z.array(ReportAdminResponseSchema),
-});
 export const ResolveReportResponse = z.object({
 	report_id: SnowflakeStringType,
 	status: ReportStatusSchema,
@@ -1459,7 +1456,7 @@ const SearchReportsResponse = z.object({
 	offset: z.number(),
 	limit: z.number(),
 });
-export const AdminReportListResponse = z.union([SearchReportsResponse, ListReportsResponse]);
+export const AdminReportListResponse = SearchReportsResponse;
 const LimitKeyMetadataSchema = z.object({
 	key: z.string(),
 	label: z.string(),

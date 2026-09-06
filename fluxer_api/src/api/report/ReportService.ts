@@ -813,14 +813,19 @@ export class ReportService {
 		return reports.filter((report): report is IARSubmission => report !== null);
 	}
 
-	async listReportsByStatus(status: number, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
+	async listReportsByStatus(
+		status: number,
+		limit?: number,
+		offset?: number,
+	): Promise<{reports: Array<IARSubmission>; total: number}> {
 		if (!this.reportSearchService) {
 			throw new FeatureTemporarilyDisabledError();
 		}
-		const {hits} = await this.reportSearchService.listReportsByStatus(status, limit, offset);
+		const {hits, total} = await this.reportSearchService.listReportsByStatus(status, limit, offset);
 		const reportIds = hits.map((hit) => createReportID(BigInt(hit.id)));
-		const reports = await Promise.all(reportIds.map((id) => this.reportRepository.getReport(id)));
-		return reports.filter((report): report is IARSubmission => report !== null);
+		const loaded = await Promise.all(reportIds.map((id) => this.reportRepository.getReport(id)));
+		const reports = loaded.filter((report): report is IARSubmission => report !== null);
+		return {reports, total: Math.max(0, total - (hits.length - reports.length))};
 	}
 
 	async resolveReport(

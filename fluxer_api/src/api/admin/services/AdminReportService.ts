@@ -74,7 +74,7 @@ export class AdminReportService {
 		const {reportService} = this.deps;
 		const requestedLimit = limit || 50;
 		const currentOffset = offset || 0;
-		const reports = await reportService.listReportsByStatus(status, requestedLimit, currentOffset);
+		const {reports, total} = await reportService.listReportsByStatus(status, requestedLimit, currentOffset);
 		const requestCache = createRequestCache();
 		const reportNsfwLookupCache = createReportNsfwLookupCache();
 		const reportResponses = await Promise.all(
@@ -84,6 +84,9 @@ export class AdminReportService {
 		);
 		return {
 			reports: reportResponses,
+			total,
+			offset: currentOffset,
+			limit: requestedLimit,
 		};
 	}
 

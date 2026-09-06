@@ -12923,25 +12923,14 @@
 				]
 			},
 			"AdminReportListResponse": {
-				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"reports": {"type": "array", "items": {"$ref": "#/components/schemas/ReportAdminResponseSchema"}},
-							"total": {"type": "number"},
-							"offset": {"type": "number"},
-							"limit": {"type": "number"}
-						},
-						"required": ["reports", "total", "offset", "limit"]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"reports": {"type": "array", "items": {"$ref": "#/components/schemas/ReportAdminResponseSchema"}}
-						},
-						"required": ["reports"]
-					}
-				]
+				"type": "object",
+				"properties": {
+					"reports": {"type": "array", "items": {"$ref": "#/components/schemas/ReportAdminResponseSchema"}},
+					"total": {"type": "number"},
+					"offset": {"type": "number"},
+					"limit": {"type": "number"}
+				},
+				"required": ["reports", "total", "offset", "limit"]
 			},
 			"ReportAdminResponseSchema": {
 				"type": "object",
