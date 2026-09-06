@@ -10,7 +10,7 @@ import type {ValidationError} from '@fluxer/errors/src/domains/core/ValidationEr
 import type {Context, Env, Input, MiddlewareHandler, TypedResponse, ValidationTargets} from 'hono';
 import {getCookie} from 'hono/cookie';
 import type {ZodError, ZodTypeAny} from 'zod';
-import {readRequestJsonBody} from './utils/RequestJsonBody';
+import {requireRequestJsonBody} from './utils/RequestJsonBody';
 import {initializeFluxerErrorMap} from './ZodErrorMap';
 
 initializeFluxerErrorMap();
@@ -200,7 +200,7 @@ export const Validator = <
 		let value: unknown;
 		switch (target) {
 			case 'json':
-				value = (await readRequestJsonBody(c.req)).value;
+				value = await requireRequestJsonBody(c.req);
 				break;
 			case 'form': {
 				const formData = await c.req.formData();

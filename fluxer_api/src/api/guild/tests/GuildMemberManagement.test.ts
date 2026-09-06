@@ -2,6 +2,7 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
@@ -194,6 +195,30 @@ describe('Guild Member Management', () => {
 			.body({})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
+	});
+	test('should reject a ban body that is not valid JSON', async () => {
+		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0];
+		const {json} = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+			}>;
+		}>(harness, owner.token)
+			.put(`/guilds/${guild.id}/bans/${member.userId}`)
+			.body('{not json')
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.executeWithResponse();
+		expect(json.code).toBe(APIErrorCodes.INVALID_FORM_BODY);
+		const bodyError = json.errors.find((entry) => entry.path === 'body');
+		expect(bodyError).toBeDefined();
+		expect(bodyError?.code).toBe(ValidationErrorCodes.INVALID_FORMAT);
+		const bans = await createBuilder<Array<GuildBanResponse>>(harness, owner.token)
+			.get(`/guilds/${guild.id}/bans`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(bans.find((entry) => entry.user.id === member.userId)).toBeUndefined();
 	});
 	test('should disallow banning nonexistent user from guild', async () => {
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);

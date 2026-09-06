@@ -4,7 +4,9 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import {createTestAccount, createUniqueEmail} from '../../auth/tests/AuthTestUtils';
+import {sendMessageWithAttachments, setupTestGuildAndChannel} from '../../channel/tests/AttachmentTestUtils';
 import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
+import {phraseBlocklistCache} from '../../middleware/PhraseBlocklistCache';
 import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS, TEST_CREDENTIALS, TEST_USER_DATA} from '../../test/TestConstants';
@@ -32,6 +34,7 @@ describe('User profile text validation', () => {
 		for (const scope of ['username', 'global_name', 'bio', 'pronouns'] as const) {
 			profileSubstringBlocklistCache.remove(scope, 'blockedslug');
 		}
+		phraseBlocklistCache.remove('blockedphrase');
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -75,6 +78,37 @@ describe('User profile text validation', () => {
 			.body({pronouns: 'blockedslug'})
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.CONTENT_BLOCKED)
 			.execute();
+	});
+	it('screens a JSON body declared under a non-JSON content type', async () => {
+		const account = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		await ensureSessionStarted(harness, account.token);
+		phraseBlocklistCache.add('blockedphrase');
+		await createBuilder(harness, account.token)
+			.put(`/users/@me/notes/${target.userId}`)
+			.header('content-type', 'text/plain')
+			.body({note: 'note carrying a blockedphrase value'})
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.CONTENT_BLOCKED)
+			.execute();
+		await createBuilder(harness, account.token)
+			.post('/users/@me/themes')
+			.header('content-type', 'text/plain')
+			.body({css: 'body { content: "blockedphrase"; }'})
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.CONTENT_BLOCKED)
+			.execute();
+	});
+	it('leaves a multipart body for the route to parse', async () => {
+		const account = await createTestAccount(harness);
+		const {guild, channel} = await setupTestGuildAndChannel(harness, account);
+		const channelId = guild.system_channel_id ?? channel.id;
+		const {response} = await sendMessageWithAttachments(
+			harness,
+			account.token,
+			channelId,
+			{content: 'multipart message body', attachments: [{id: 0, filename: 'upload.txt'}]},
+			[{index: 0, filename: 'upload.txt', data: Buffer.from('uploaded through multipart')}],
+		);
+		expect(response.status).toBe(HTTP_STATUS.OK);
 	});
 	it('blocks banned substrings during account registration', async () => {
 		profileSubstringBlocklistCache.add('username', 'blockedslug');

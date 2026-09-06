@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {HonoRequest} from 'hono';
 import {parseJsonPreservingLargeIntegers} from './LosslessJsonParser';
 
@@ -23,4 +25,12 @@ export async function readRequestJsonBody(req: HonoRequest): Promise<RequestJson
 	}
 	bodyCache.set(raw, body);
 	return body;
+}
+
+export async function requireRequestJsonBody(req: HonoRequest): Promise<unknown> {
+	const body = await readRequestJsonBody(req);
+	if (!body.parsed) {
+		throw InputValidationError.fromCode('body', ValidationErrorCodes.INVALID_FORMAT);
+	}
+	return body.value;
 }

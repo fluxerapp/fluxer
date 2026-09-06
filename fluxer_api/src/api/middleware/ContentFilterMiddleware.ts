@@ -134,7 +134,7 @@ const ContentFilterMiddleware = createMiddleware(async (ctx, next) => {
 		return next();
 	}
 	const contentType = ctx.req.header('content-type') ?? '';
-	if (!contentType.includes('application/json')) {
+	if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
 		return next();
 	}
 	const body = await readRequestJsonBody(ctx.req);
