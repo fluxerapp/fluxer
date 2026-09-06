@@ -11,7 +11,8 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('keeps muted channels with visible unread state so mentions are findable', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: false,
+				isChannelMuted: true,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: true,
@@ -22,7 +23,8 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('hides muted channels without visible unread state', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: false,
+				isChannelMuted: true,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: false,
@@ -30,10 +32,35 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 		).toBe(false);
 	});
 
+	it('inherits the mute from a muted category', () => {
+		expect(
+			shouldShowChannelWhenHidingMutedChannels({
+				isCategoryMuted: true,
+				isChannelMuted: false,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: false,
+			}),
+		).toBe(false);
+	});
+
+	it('keeps channels of a muted category that have visible unread state', () => {
+		expect(
+			shouldShowChannelWhenHidingMutedChannels({
+				isCategoryMuted: true,
+				isChannelMuted: false,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: true,
+			}),
+		).toBe(true);
+	});
+
 	it('keeps selected and connected muted channels visible', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: true,
+				isChannelMuted: true,
 				isSelected: true,
 				isConnected: false,
 				hasVisibleUnread: false,
@@ -41,7 +68,8 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 		).toBe(true);
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: true,
+				isChannelMuted: false,
 				isSelected: false,
 				isConnected: true,
 				hasVisibleUnread: false,
@@ -52,7 +80,8 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('keeps unmuted channels visible', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: false,
+				isCategoryMuted: false,
+				isChannelMuted: false,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: false,

@@ -362,15 +362,21 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	for (const group of channelGroups) {
 		const isCollapsed = group.category ? (collapsedCategories?.has(group.category.id) ?? false) : false;
 		const isNullSpace = !group.category;
+		const isCategoryMuted =
+			hideMutedChannels && group.category
+				? UserGuildSettings.isChannelDirectlyMuted(guild.id, group.category.id)
+				: false;
 		let filteredTextChannels: Array<Channel>;
 		let filteredVoiceChannels: Array<Channel>;
 		if (hideMutedChannels) {
 			filteredTextChannels = [];
 			for (const ch of group.textChannels) {
-				const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isChannelMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isMuted = isCategoryMuted || isChannelMuted;
 				if (
 					shouldShowChannelWhenHidingMutedChannels({
-						isMuted,
+						isCategoryMuted,
+						isChannelMuted,
 						isSelected: ch.id === selectedChannelInGuildId,
 						isConnected: false,
 						hasVisibleUnread: isMuted && hasVisibleUnreadInChannel(ch.id),
@@ -381,10 +387,12 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			}
 			filteredVoiceChannels = [];
 			for (const ch of group.voiceChannels) {
-				const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isChannelMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isMuted = isCategoryMuted || isChannelMuted;
 				if (
 					shouldShowChannelWhenHidingMutedChannels({
-						isMuted,
+						isCategoryMuted,
+						isChannelMuted,
 						isSelected: ch.id === selectedChannelInGuildId,
 						isConnected: ch.id === connectedChannelId,
 						hasVisibleUnread: isMuted && hasVisibleUnreadInChannel(ch.id),
