@@ -9,8 +9,8 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import type {ApiContext} from '../../ApiContext';
 import * as AuthMfa from '../../auth/AuthMfa';
 import * as AuthUtility from '../../auth/AuthUtility';
+import {deriveSudoMethods, userHasMfa} from '../../auth/services/SudoMethods';
 import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
-import {deriveSudoMethods, userHasMfa} from '../../auth/services/SudoVerificationService';
 import type {MfaBackupCode} from '../../models/MfaBackupCode';
 import type {User} from '../../models/User';
 import {mapUserToPrivateResponse} from '../UserMappers';

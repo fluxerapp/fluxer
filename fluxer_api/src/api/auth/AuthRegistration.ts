@@ -69,11 +69,18 @@ function throwRegistrationRateLimit(result: RateLimitResult): never {
 }
 
 function parseDobLocalDate(dateOfBirth: string): types.LocalDate {
-	try {
-		return types.LocalDate.fromString(dateOfBirth);
-	} catch {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOfBirth);
+	if (!match) {
 		throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
 	}
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const probe = new Date(Date.UTC(year, month - 1, day));
+	if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day) {
+		throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
+	}
+	return new types.LocalDate(year, month, day);
 }
 
 interface RegisterParams {
@@ -156,11 +163,11 @@ export async function register(
 		if (!dateOfBirthInput) {
 			throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
 		}
+		dateOfBirth = parseDobLocalDate(dateOfBirthInput);
 		const minAge = accountPolicyEvaluator.getMinimumAgeForRegion(countryCode, DEFAULT_MINIMUM_AGE);
 		if (!AuthUtility.validateAge(ctx, {dateOfBirth: dateOfBirthInput, minAge})) {
 			throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.MUST_BE_MINIMUM_AGE, {minAge});
 		}
-		dateOfBirth = parseDobLocalDate(dateOfBirthInput);
 		isAdult = AgeUtils.isUserAdult(dateOfBirthInput);
 	}
 	if (data.password && (await AuthPassword.isPasswordPwned(ctx, data.password))) {

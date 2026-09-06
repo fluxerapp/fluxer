@@ -388,7 +388,7 @@ export async function loginMfaTotp(
 	const {users, cache, rateLimit} = ctx.services;
 	const userId = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userId) {
-		throw InputValidationError.fromCode('code', ValidationErrorCodes.SESSION_TIMEOUT);
+		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
 	}
 	const user = await users.findUnique(createUserID(BigInt(userId)));
 	if (!user) {

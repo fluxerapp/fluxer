@@ -5,7 +5,8 @@ import {describe, expect, it} from 'vitest';
 import {createUserID} from '../../BrandedTypes';
 import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
 import {User} from '../../models/User';
-import {hasNoVerifiableCredential, userHasMfa} from '../services/SudoVerificationService';
+import {userHasMfa} from '../services/SudoMethods';
+import {hasNoVerifiableCredential} from '../services/SudoVerificationService';
 
 function createUser(overrides: Partial<UserRow> = {}): User {
 	return new User({

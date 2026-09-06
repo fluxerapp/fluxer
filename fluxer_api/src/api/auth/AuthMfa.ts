@@ -30,6 +30,7 @@ import type {WebAuthnCredential} from '../models/WebAuthnCredential';
 import {getUserSearchService} from '../SearchFactory';
 import {mapUserToPrivateResponse} from '../user/UserMappers';
 import {TotpGenerator} from '../utils/TotpGenerator';
+import {deriveSudoMethods, userHasMfa} from './services/SudoMethods';
 
 type WebAuthnChallengeContext = 'registration' | 'discoverable' | 'mfa' | 'sudo';
 
@@ -481,10 +482,11 @@ export async function getAvailableMfaMethods(ctx: ApiContext, userId: UserID): P
 	if (!user) {
 		return {totp: false, webauthn: false, has_mfa: false};
 	}
+	const methods = deriveSudoMethods(user);
 	return {
-		totp: user.totpSecret !== null,
-		webauthn: user.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false,
-		has_mfa: (user.authenticatorTypes?.size ?? 0) > 0,
+		totp: methods.totp,
+		webauthn: methods.webauthn,
+		has_mfa: userHasMfa(user),
 	};
 }
 

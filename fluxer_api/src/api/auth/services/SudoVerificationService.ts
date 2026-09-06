@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {type SudoModeMethods, SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
+import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import type {Context} from 'hono';
@@ -11,6 +10,7 @@ import * as AuthPassword from '../../auth/AuthPassword';
 import {SUDO_MODE_HEADER} from '../../middleware/SudoModeMiddleware';
 import type {User} from '../../models/User';
 import type {HonoEnv} from '../../types/HonoEnv';
+import {deriveSudoMethods, userHasMfa} from './SudoMethods';
 import {getSudoModeService} from './SudoModeService';
 
 export interface SudoVerificationBody {
@@ -23,13 +23,6 @@ export interface SudoVerificationBody {
 
 type SudoVerificationMethod = 'password' | 'mfa' | 'sudo_token';
 
-export function userHasMfa(user: {authenticatorTypes?: Set<number> | null}): boolean {
-	return (
-		(user.authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false) ||
-		(user.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false)
-	);
-}
-
 export function hasNoVerifiableCredential(
 	user: {passwordHash: string | null; isBot: boolean},
 	hasMfa: boolean,
@@ -38,17 +31,6 @@ export function hasNoVerifiableCredential(
 		return false;
 	}
 	return user.passwordHash === null;
-}
-
-export function deriveSudoMethods(user: {
-	totpSecret?: string | null;
-	authenticatorTypes?: Set<number> | null;
-}): SudoModeMethods {
-	const authenticatorTypes = user.authenticatorTypes ?? null;
-	return {
-		totp: (user.totpSecret ?? null) !== null && (authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false),
-		webauthn: authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false,
-	};
 }
 
 export interface SudoVerificationResult {
