@@ -2,6 +2,7 @@
 
 use crate::{
     api::client::{AdminApiClient, ApiResultExt},
+    config::AdminConfig,
     middleware::{
         auth::AuthContext,
         csrf,
@@ -21,6 +22,8 @@ use axum::{
     routing::get,
 };
 use serde::Deserialize;
+
+const MAX_REPORT_OFFSET: u32 = 10_000;
 
 #[derive(Deserialize)]
 struct ReportsQuery {
@@ -70,6 +73,14 @@ async fn reports_list(
     let page = query.page.unwrap_or(0);
     let limit = query.limit.unwrap_or(25).clamp(1, 200);
     let offset = page.saturating_mul(limit);
+    if offset > MAX_REPORT_OFFSET {
+        return reports_error_page(
+            config,
+            &auth.0,
+            "That page is out of range. The reports search returns at most the first 10000 reports, so narrow the filters and start again.",
+        );
+    }
+    let search_query = query.q.as_deref().and_then(clean_string);
     let (sort_by, sort_order) = decode_sort(query.sort.as_deref());
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let status = query.status.as_deref().and_then(|s| s.parse::<i32>().ok());
@@ -79,7 +90,7 @@ async fn reports_list(
         .and_then(|s| s.parse::<i32>().ok());
     let reports = client
         .search_reports(
-            query.q.as_deref(),
+            search_query.as_deref(),
             status,
             report_type,
             query.category.as_deref(),
@@ -102,7 +113,7 @@ async fn reports_list(
         &auth.0,
         reports.as_ref(),
         &templates::pages::reports_list::ReportFilters {
-            query: query.q.as_deref(),
+            query: search_query.as_deref(),
             status: query.status.as_deref(),
             report_type: query.report_type.as_deref(),
             category: query.category.as_deref(),
@@ -116,6 +127,18 @@ async fn reports_list(
         },
         page,
         limit,
+    );
+    Html(markup.into_string()).into_response()
+}
+
+fn reports_error_page(config: &AdminConfig, auth: &AuthContext, message: &str) -> Response {
+    let markup = templates::layout::admin_layout(
+        config,
+        auth,
+        "Reports",
+        "reports",
+        None,
+        templates::components::error_display::error_alert(message),
     );
     Html(markup.into_string()).into_response()
 }
