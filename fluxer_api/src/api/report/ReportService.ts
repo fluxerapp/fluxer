@@ -24,6 +24,7 @@ import {ReportBannedError} from '@fluxer/errors/src/domains/moderation/ReportBan
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {DsaReportRequest} from '@fluxer/schema/src/domains/report/ReportSchemas';
+import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -170,7 +171,6 @@ export class ReportService {
 			reported_guild_invite_code: null,
 			...contentWarningSnapshot,
 		};
-		await this.consumeMessageReportRateLimits({reporter, channel, message});
 		let duplicateReservationCreated = false;
 		if (reporter.id) {
 			duplicateReservationCreated = await this.reportRepository.reserveMessageReportByReporter({
@@ -185,6 +185,7 @@ export class ReportService {
 			}
 		}
 		try {
+			await this.consumeMessageReportRateLimits({reporter, channel, message});
 			const report = await this.reportRepository.createReport(reportData);
 			if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 				await this.reportSearchService.indexReport(report).catch((error) => {
@@ -221,6 +222,9 @@ export class ReportService {
 		}
 		const reportId = createReportID(await this.snowflakeService.generate());
 		const guild = guildId ? await this.guildRepository.findUnique(guildId) : null;
+		if (guildId && !guild) {
+			throw new UnknownGuildError();
+		}
 		const contentWarningSnapshot = await this.buildContentWarningSnapshot(guild, null);
 		const reportData: IARSubmissionRow = {
 			report_id: reportId,
@@ -372,7 +376,7 @@ export class ReportService {
 	}
 
 	async createDsaReport(report: DsaReportRequest): Promise<IARSubmission> {
-		const ticket = await this.consumeDsaTicket(report.ticket);
+		const ticket = await this.readDsaTicket(report.ticket);
 		const reporterMeta: ReporterMetadata = {
 			id: null,
 			email: ticket.email_lower,
@@ -385,6 +389,7 @@ export class ReportService {
 		const reportId = createReportID(await this.snowflakeService.generate());
 		const reportRow = await this.buildDsaReportRow(reportId, report, reporterMeta);
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
+		await this.reportRepository.deleteDsaTicket(report.ticket);
 		const createdReport = await this.reportRepository.createReport(reportRow);
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(createdReport).catch((error) => {
@@ -706,12 +711,11 @@ export class ReportService {
 		return user;
 	}
 
-	private async consumeDsaTicket(ticket: string): Promise<DSAReportTicketRow> {
+	private async readDsaTicket(ticket: string): Promise<DSAReportTicketRow> {
 		const ticketRow = await this.reportRepository.getDsaTicket(ticket);
 		if (!ticketRow || ticketRow.expires_at.getTime() < Date.now()) {
 			throw new InvalidDsaTicketError();
 		}
-		await this.reportRepository.deleteDsaTicket(ticket);
 		return ticketRow;
 	}
 
@@ -762,11 +766,14 @@ export class ReportService {
 		if (segments.length < 4 || segments[0] !== 'channels') {
 			throw new UnknownMessageError();
 		}
-		const channelIdSegment = segments[2];
-		const messageIdSegment = segments[3];
+		const channelId = SnowflakeType.safeParse(segments[2]);
+		const messageId = SnowflakeType.safeParse(segments[3]);
+		if (!channelId.success || !messageId.success) {
+			throw new UnknownMessageError();
+		}
 		return {
-			channelId: createChannelID(BigInt(channelIdSegment)),
-			messageId: createMessageID(BigInt(messageIdSegment)),
+			channelId: createChannelID(channelId.data),
+			messageId: createMessageID(messageId.data),
 		};
 	}
 

@@ -61,7 +61,7 @@ export class SearchService {
 		const {channel_id, channel_ids, context_channel_id, context_guild_id, ...searchParams} = data;
 		const contextChannelId = context_channel_id ? createChannelID(context_channel_id) : null;
 		const contextGuildId = context_guild_id ? createGuildID(context_guild_id) : null;
-		const channelIds = channel_ids?.map((id) => createChannelID(id)) ?? [];
+		const channelIds = (channel_ids ?? channel_id)?.map((id) => createChannelID(id)) ?? [];
 		const scope = searchParams.scope ?? 'current';
 		let result: MessageSearchResponse;
 		switch (scope) {
