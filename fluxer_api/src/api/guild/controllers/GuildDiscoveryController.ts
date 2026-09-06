@@ -3,7 +3,6 @@
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {DiscoveryDisabledError} from '@fluxer/errors/src/domains/discovery/DiscoveryDisabledError';
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import {InvitesDisabledError} from '@fluxer/errors/src/domains/invite/InvitesDisabledError';
@@ -160,14 +159,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
 			const data = ctx.req.valid('json');
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			const row = await ctx.get('discoveryService').apply({
 				guildId,
 				userId: user.id,
@@ -201,14 +194,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
 			const data = ctx.req.valid('json');
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			const row = await ctx.get('discoveryService').editApplication({
 				guildId,
 				userId: user.id,
@@ -237,14 +224,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			await ctx.get('discoveryService').withdraw({guildId, userId: user.id});
 			return ctx.body(null, 204);
 		},
@@ -267,14 +248,8 @@ export function GuildDiscoveryController(app: HonoApp) {
 			const user = ctx.get('user');
 			const {guild_id} = ctx.req.valid('param');
 			const guildId = createGuildID(guild_id);
-			const hasPermission = await ctx.get('gatewayService').checkPermission({
-				guildId,
-				userId: user.id,
-				permission: Permissions.MANAGE_GUILD,
-			});
-			if (!hasPermission) {
-				throw new MissingPermissionsError();
-			}
+			const {checkPermission} = await ctx.get('guildService').getGuildAuthenticated({userId: user.id, guildId});
+			await checkPermission(Permissions.MANAGE_GUILD);
 			const discoveryService = ctx.get('discoveryService');
 			const row = await discoveryService.getStatus(guildId);
 			const eligibility = await discoveryService.getEligibility(guildId);

@@ -62,6 +62,7 @@ export const DEFAULT_VOICE_PERMISSION_STATE: VoiceChannelPermissions = {
 	canUseVideo: true,
 	canConnect: true,
 	canPrioritySpeaker: false,
+	canUseVad: true,
 };
 
 const EMPTY_COMMANDS: ReadonlyArray<VoicePermissionCommand> = [];
@@ -86,7 +87,8 @@ function permissionsEqual(left: VoiceChannelPermissions, right: VoiceChannelPerm
 		left.canStream === right.canStream &&
 		left.canUseVideo === right.canUseVideo &&
 		left.canConnect === right.canConnect &&
-		left.canPrioritySpeaker === right.canPrioritySpeaker
+		left.canPrioritySpeaker === right.canPrioritySpeaker &&
+		left.canUseVad === right.canUseVad
 	);
 }
 

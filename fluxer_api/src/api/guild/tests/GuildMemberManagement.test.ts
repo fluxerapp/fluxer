@@ -530,6 +530,66 @@ describe('Guild Member Management', () => {
 				.execute();
 		});
 	});
+	describe('Voice Mute and Deafen Permission Checks', () => {
+		test('should not allow member with MUTE_MEMBERS only to deafen a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Muter',
+				permissions: Permissions.MUTE_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			await createBuilder(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({deaf: true})
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+				.execute();
+		});
+		test('should not allow member with DEAFEN_MEMBERS only to mute a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Deafener',
+				permissions: Permissions.DEAFEN_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			await createBuilder(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({mute: true})
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+				.execute();
+		});
+		test('should allow member with DEAFEN_MEMBERS only to deafen a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Deafener',
+				permissions: Permissions.DEAFEN_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			const updatedMember = await createBuilder<GuildMemberResponse>(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({deaf: true})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(updatedMember.deaf).toBe(true);
+		});
+		test('should allow member with MUTE_MEMBERS only to mute a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Muter',
+				permissions: Permissions.MUTE_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			const updatedMember = await createBuilder<GuildMemberResponse>(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({mute: true})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(updatedMember.mute).toBe(true);
+		});
+	});
 	describe('Member Avatar Upload Validation', () => {
 		test('should reject member avatar upload without premium', async () => {
 			const {members, guild} = await setupTestGuildWithMembers(harness, 1);

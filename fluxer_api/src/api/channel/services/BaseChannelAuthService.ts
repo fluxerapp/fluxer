@@ -174,7 +174,7 @@ export abstract class BaseChannelAuthService {
 		const guildId = channel.guildId!;
 		const [authContextResult, guildMemberResult] = await Promise.all([
 			this.fetchGuildAuthContextOrThrow({guildId, userId, channelId: this.parentLookupChannelId(channel)}),
-			this.gatewayService.getGuildMember({guildId, userId}),
+			this.fetchGuildMemberOrThrow({guildId, userId}),
 		]);
 		if (!authContextResult) {
 			this.throwGuildAccessError();
@@ -282,6 +282,18 @@ export abstract class BaseChannelAuthService {
 		} catch (error) {
 			await this.handleGuildAccessError(error, guildId);
 			return null;
+		}
+	}
+
+	private async fetchGuildMemberOrThrow(params: {guildId: GuildID; userId: UserID}): Promise<{
+		success: boolean;
+		memberData?: GuildMemberResponse;
+	}> {
+		try {
+			return await this.gatewayService.getGuildMember(params);
+		} catch (error) {
+			await this.handleGuildAccessError(error, params.guildId);
+			throw error;
 		}
 	}
 

@@ -17,6 +17,7 @@ const DEFAULT_PERMISSIONS: VoiceChannelPermissions = {
 	canUseVideo: true,
 	canConnect: true,
 	canPrioritySpeaker: false,
+	canUseVad: true,
 };
 
 function permissions(overrides: Partial<VoiceChannelPermissions> = {}): VoiceChannelPermissions {

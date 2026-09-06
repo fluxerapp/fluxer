@@ -2,6 +2,7 @@
 
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
@@ -9,7 +10,7 @@ import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
 import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
 import {getGatewayService} from '../../middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
+import {HTTP_STATUS, TEST_TIMEOUTS, wait} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
 import {ChannelDataRepository} from '../repositories/ChannelDataRepository';
 import {
@@ -166,6 +167,34 @@ describe('Message send permissions', () => {
 			expect(channelReads).toBe(2);
 		} finally {
 			findUnique.mockRestore();
+		}
+	});
+
+	it('returns ACCESS_DENIED not UNKNOWN_GUILD when the Gateway has dropped a guild whose record survives', async () => {
+		const {owner, systemChannel} = await setupTestGuildWithMembers(harness, 0);
+		await ensureSessionStarted(harness, owner.token);
+		const gatewayService = getGatewayService();
+
+		for (const memberSettlesFirst of [true, false]) {
+			const getGuildAuthContext = vi.spyOn(gatewayService, 'getGuildAuthContext').mockImplementation(async () => {
+				if (memberSettlesFirst) await wait(TEST_TIMEOUTS.IMMEDIATE);
+				throw new UnknownGuildError();
+			});
+			const getGuildMember = vi.spyOn(gatewayService, 'getGuildMember').mockImplementation(async () => {
+				if (!memberSettlesFirst) await wait(TEST_TIMEOUTS.IMMEDIATE);
+				throw new UnknownGuildError();
+			});
+
+			try {
+				await createBuilder(harness, owner.token)
+					.post(`/channels/${systemChannel.id}/messages`)
+					.body({content: 'the gateway forgot this guild'})
+					.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
+					.execute();
+			} finally {
+				getGuildAuthContext.mockRestore();
+				getGuildMember.mockRestore();
+			}
 		}
 	});
 

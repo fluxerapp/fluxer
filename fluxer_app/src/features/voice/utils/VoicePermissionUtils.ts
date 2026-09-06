@@ -11,6 +11,7 @@ export interface VoiceChannelPermissions {
 	canUseVideo: boolean;
 	canConnect: boolean;
 	canPrioritySpeaker: boolean;
+	canUseVad: boolean;
 }
 
 export const DEFAULT_VOICE_CHANNEL_PERMISSIONS: VoiceChannelPermissions = {
@@ -19,6 +20,7 @@ export const DEFAULT_VOICE_CHANNEL_PERMISSIONS: VoiceChannelPermissions = {
 	canUseVideo: true,
 	canConnect: true,
 	canPrioritySpeaker: false,
+	canUseVad: true,
 };
 
 export type VoicePermissionMuteReason = 'server_suppress' | 'missing_speak_permission' | null;
@@ -38,6 +40,7 @@ export function getVoiceChannelPermissions(channelId: string | null | undefined)
 		canUseVideo: (permissions & Permissions.STREAM) === Permissions.STREAM,
 		canConnect: (permissions & Permissions.CONNECT) === Permissions.CONNECT,
 		canPrioritySpeaker: (permissions & Permissions.PRIORITY_SPEAKER) === Permissions.PRIORITY_SPEAKER,
+		canUseVad: (permissions & Permissions.USE_VAD) === Permissions.USE_VAD,
 	};
 }
 

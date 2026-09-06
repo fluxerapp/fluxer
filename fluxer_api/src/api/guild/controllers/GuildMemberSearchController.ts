@@ -20,6 +20,7 @@ import {guildMembersNeedReindexing} from '../../search/GuildMemberIndexingUtils'
 import type {HonoApp} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
 import {GuildRepository} from '../repositories/GuildRepository';
+import {createGuildMfaEnforcer} from '../services/GuildMfaEnforcement';
 
 const MEMBERS_PAGE_PERMISSIONS =
 	Permissions.MANAGE_GUILD |
@@ -81,11 +82,17 @@ export function GuildMemberSearchController(app: HonoApp) {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const guildIdString = guildId.toString();
 			const body = ctx.req.valid('json');
-			const {getMyPermissions} = await ctx.get('guildService').getGuildAuthenticated({userId, guildId});
+			const {getMyPermissions, guildData} = await ctx.get('guildService').getGuildAuthenticated({userId, guildId});
 			const permissions = await getMyPermissions();
 			if ((permissions & MEMBERS_PAGE_PERMISSIONS) === 0n) {
 				throw new MissingPermissionsError();
 			}
+			const enforceGuildMfa = await createGuildMfaEnforcer({
+				userRepository: ctx.get('userRepository'),
+				guildData,
+				userId,
+			});
+			enforceGuildMfa(permissions & MEMBERS_PAGE_PERMISSIONS);
 			const canViewInvites = (permissions & Permissions.MANAGE_GUILD) !== 0n;
 			const guild = await guildRepository.findUnique(guildId);
 			if (!guild) {

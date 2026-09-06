@@ -914,8 +914,13 @@ export class GuildMemberOperationsService {
 			if (userId !== targetId) {
 				await checkTargetMember(targetId);
 			}
-			if (data.mute !== undefined || data.deaf !== undefined) {
+			if (data.mute !== undefined) {
 				if (!(await hasPermission(Permissions.MUTE_MEMBERS))) {
+					throw new MissingPermissionsError();
+				}
+			}
+			if (data.deaf !== undefined) {
+				if (!(await hasPermission(Permissions.DEAFEN_MEMBERS))) {
 					throw new MissingPermissionsError();
 				}
 			}

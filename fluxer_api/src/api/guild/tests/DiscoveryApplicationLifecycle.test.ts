@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryCategories, type DiscoveryCategory} from '@fluxer/constants/src/DiscoveryConstants';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {GuildFeatures, GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import type {
 	DiscoveryApplicationResponse,
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount, setUserACLs, type TestAccount, totpCodeNow} from '../../auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createGuild, getGuild} from './GuildTestUtils';
+import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {addMemberRole, createGuild, createRole, getGuild, setupTestGuildWithMembers} from './GuildTestUtils';
+
+const TOTP_SECRET = 'JBSWY3DPEHPK3PXP';
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
 	await createBuilder(harness, '')
@@ -65,6 +69,33 @@ async function adminReject(
 		.body({reason})
 		.expect(HTTP_STATUS.OK)
 		.execute();
+}
+
+async function enableTotp(harness: ApiTestHarness, account: TestAccount): Promise<void> {
+	await createBuilder(harness, account.token)
+		.post('/users/@me/mfa/totp/enable')
+		.body({secret: TOTP_SECRET, code: totpCodeNow(TOTP_SECRET), password: account.password})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+}
+
+async function loginWithTotp(harness: ApiTestHarness, account: TestAccount): Promise<TestAccount> {
+	const loginResp = await createBuilderWithoutAuth<{
+		mfa: true;
+		ticket: string;
+	}>(harness)
+		.post('/auth/login')
+		.body({email: account.email, password: account.password})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	const mfaResp = await createBuilderWithoutAuth<{
+		token: string;
+	}>(harness)
+		.post('/auth/login/mfa/totp')
+		.body({code: totpCodeNow(TOTP_SECRET), ticket: loginResp.ticket})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	return {...account, token: mfaResp.token};
 }
 
 async function createAdminAccount(harness: ApiTestHarness) {
@@ -250,6 +281,28 @@ describe('Discovery Application Lifecycle', () => {
 		await setGuildMemberCount(harness, guild.id, 1);
 		const application = await applyForDiscovery(harness, owner.token, guild.id, 'Short desc');
 		expect(application.description).toBe('Short desc');
+	});
+	test('rejects apply with TWO_FACTOR_REQUIRED for a non-owner without MFA in an elevated guild', async () => {
+		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0]!;
+		const manageGuildRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Manage Guild',
+			permissions: Permissions.MANAGE_GUILD.toString(),
+		});
+		await addMemberRole(harness, owner.token, guild.id, member.userId, manageGuildRole.id);
+		await enableTotp(harness, owner);
+		const elevatedOwner = await loginWithTotp(harness, owner);
+		await createBuilder(harness, elevatedOwner.token)
+			.patch(`/guilds/${guild.id}`)
+			.body({mfa_level: GuildMFALevel.ELEVATED, mfa_method: 'totp', mfa_code: totpCodeNow(TOTP_SECRET)})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await setGuildMemberCount(harness, guild.id, 1);
+		await createBuilder(harness, member.token)
+			.post(`/guilds/${guild.id}/discovery`)
+			.body({description: 'Moderator without an authenticator', category_type: DiscoveryCategories.GAMING})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.TWO_FACTOR_REQUIRED)
+			.execute();
 	});
 	test('should allow applying with maximum description length', async () => {
 		const owner = await createTestAccount(harness);
