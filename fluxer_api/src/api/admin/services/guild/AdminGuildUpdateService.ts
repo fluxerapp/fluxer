@@ -196,6 +196,18 @@ export class AdminGuildUpdateService {
 			patch.nsfw_level = data.nsfw_level;
 			metadata.set('nsfw_level', data.nsfw_level.toString());
 		}
+		if (data.nsfw !== undefined) {
+			patch.nsfw = data.nsfw;
+			metadata.set('nsfw', data.nsfw.toString());
+		}
+		if (data.content_warning_level !== undefined) {
+			patch.content_warning_level = data.content_warning_level;
+			metadata.set('content_warning_level', data.content_warning_level.toString());
+		}
+		if (data.content_warning_text !== undefined) {
+			patch.content_warning_text = data.content_warning_text;
+			metadata.set('content_warning_text', data.content_warning_text ?? '');
+		}
 		if (data.explicit_content_filter !== undefined) {
 			patch.explicit_content_filter = data.explicit_content_filter;
 			metadata.set('explicit_content_filter', data.explicit_content_filter.toString());
