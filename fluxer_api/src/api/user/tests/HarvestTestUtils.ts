@@ -5,6 +5,7 @@ import {expect} from 'vitest';
 import {createUserID} from '../../BrandedTypes';
 import type {ApiTestHarness} from '../../test/ApiTestHarness';
 import {createBuilder} from '../../test/TestRequestBuilder';
+import type {UserHarvest} from '../UserHarvestModel';
 import {UserHarvestRepository} from '../UserHarvestRepository';
 
 interface HarvestRequestResponse {
@@ -47,4 +48,19 @@ export async function markHarvestCompleted(userId: string, harvestId: string, ex
 	const userIdTyped = createUserID(BigInt(userId));
 	const harvestIdTyped = BigInt(harvestId);
 	await harvestRepository.markAsCompleted(userIdTyped, harvestIdTyped, `test/${harvestId}.zip`, 1024n, expiresAt);
+}
+
+export async function markHarvestFailed(userId: string, harvestId: string, errorMessage: string): Promise<void> {
+	const harvestRepository = new UserHarvestRepository();
+	await harvestRepository.markAsFailed(createUserID(BigInt(userId)), BigInt(harvestId), errorMessage);
+}
+
+export async function markHarvestStarted(userId: string, harvestId: string): Promise<void> {
+	const harvestRepository = new UserHarvestRepository();
+	await harvestRepository.markAsStarted(createUserID(BigInt(userId)), BigInt(harvestId));
+}
+
+export async function findHarvest(userId: string, harvestId: string): Promise<UserHarvest | null> {
+	const harvestRepository = new UserHarvestRepository();
+	return harvestRepository.findByUserAndHarvestId(createUserID(BigInt(userId)), BigInt(harvestId));
 }

@@ -96,6 +96,8 @@ export class UserHarvestRepository {
 				{user_id: userId, harvest_id: harvestId},
 				{
 					started_at: Db.set(new Date()),
+					failed_at: Db.clear(),
+					error_message: Db.clear(),
 					progress_percent: Db.set(0),
 					progress_step: Db.set('Starting harvest'),
 				},

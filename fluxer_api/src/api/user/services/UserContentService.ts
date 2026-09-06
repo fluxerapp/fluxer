@@ -6,6 +6,7 @@ import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -13,6 +14,7 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {HarvestExpiredError} from '@fluxer/errors/src/domains/moderation/HarvestExpiredError';
 import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestFailedError';
 import {HarvestNotReadyError} from '@fluxer/errors/src/domains/moderation/HarvestNotReadyError';
+import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -116,7 +118,9 @@ function normalizeProviderEnvironment(
 const isUnreachableEntityError = (error: unknown): boolean =>
 	error instanceof MissingPermissionsError ||
 	error instanceof UnknownChannelError ||
-	error instanceof UnknownGuildError;
+	error instanceof UnknownGuildError ||
+	error instanceof AccessDeniedError ||
+	error instanceof NsfwContentRequiresAgeVerificationError;
 
 export const UserContentServiceTestHooks = {isUnreachableEntityError};
 
@@ -243,7 +247,17 @@ export class UserContentService {
 			}
 			const message = this.pickMessage(messagesByChannel, savedMessage);
 			if (!message) {
-				staleMessageIds.push(savedMessage.messageId);
+				const stored = await this.channelRepository.messages.getMessage(savedMessage.channelId, savedMessage.messageId);
+				if (!stored) {
+					staleMessageIds.push(savedMessage.messageId);
+					continue;
+				}
+				results.push({
+					channelId: savedMessage.channelId,
+					messageId: savedMessage.messageId,
+					status: 'missing_permissions',
+					message: null,
+				});
 				continue;
 			}
 			results.push({
@@ -274,7 +288,7 @@ export class UserContentService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const savedMessages = await this.userRepository.listSavedMessages(userId, 1000);
+		const savedMessageCount = await this.userRepository.countSavedMessages(userId);
 		const ctx = createLimitMatchContext({user});
 		const maxBookmarks = resolveLimitSafe(
 			this.limitConfigService.getConfigSnapshot(),
@@ -282,7 +296,7 @@ export class UserContentService {
 			'max_bookmarks',
 			MAX_BOOKMARKS_NON_PREMIUM,
 		);
-		if (savedMessages.length >= maxBookmarks) {
+		if (savedMessageCount >= maxBookmarks) {
 			throw new MaxBookmarksError({maxBookmarks});
 		}
 		await this.channelService.channelData.auth.getChannelAuthenticated({userId, channelId});
@@ -514,11 +528,11 @@ export class UserContentService {
 		if (!harvest) {
 			throw new UnknownHarvestError();
 		}
-		if (!harvest.completedAt || !harvest.storageKey) {
-			throw new HarvestNotReadyError();
-		}
 		if (harvest.failedAt) {
 			throw new HarvestFailedError();
+		}
+		if (!harvest.completedAt || !harvest.storageKey) {
+			throw new HarvestNotReadyError();
 		}
 		if (harvest.downloadUrlExpiresAt && harvest.downloadUrlExpiresAt < new Date()) {
 			throw new HarvestExpiredError();
@@ -696,11 +710,19 @@ export class UserContentService {
 	}
 
 	async dispatchRecentMentionDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'RECENT_MENTION_DELETE',
-			data: {message_id: messageId.toString()},
-		});
+		await this.gatewayService
+			.dispatchPresence({
+				userId,
+				event: 'RECENT_MENTION_DELETE',
+				data: {message_id: messageId.toString()},
+			})
+			.catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), messageId: messageId.toString(), error},
+					'Failed to dispatch RECENT_MENTION_DELETE',
+				);
+				return null;
+			});
 	}
 
 	async dispatchSavedMessageCreate({
@@ -712,11 +734,20 @@ export class UserContentService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'SAVED_MESSAGE_CREATE',
-			data: (await this.buildMessageResponsesForUser(userId, [message]))[0],
-		});
+		const data = (await this.buildMessageResponsesForUser(userId, [message]))[0];
+		await this.gatewayService
+			.dispatchPresence({
+				userId,
+				event: 'SAVED_MESSAGE_CREATE',
+				data,
+			})
+			.catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), messageId: message.id.toString(), error},
+					'Failed to dispatch SAVED_MESSAGE_CREATE',
+				);
+				return null;
+			});
 	}
 
 	async buildMessageResponsesForUser(userId: UserID, messages: Array<Message>): Promise<Array<MessageResponse>> {
@@ -734,10 +765,18 @@ export class UserContentService {
 	}
 
 	async dispatchSavedMessageDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'SAVED_MESSAGE_DELETE',
-			data: {message_id: messageId.toString()},
-		});
+		await this.gatewayService
+			.dispatchPresence({
+				userId,
+				event: 'SAVED_MESSAGE_DELETE',
+				data: {message_id: messageId.toString()},
+			})
+			.catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), messageId: messageId.toString(), error},
+					'Failed to dispatch SAVED_MESSAGE_DELETE',
+				);
+				return null;
+			});
 	}
 }

@@ -27,6 +27,7 @@ export interface IUserContentRepository {
 	deleteRecentMentions(mentions: Array<RecentMention>): Promise<void>;
 	deleteAllRecentMentions(userId: UserID): Promise<void>;
 	listSavedMessages(userId: UserID, limit?: number, before?: MessageID): Promise<Array<SavedMessage>>;
+	countSavedMessages(userId: UserID): Promise<number>;
 	createSavedMessage(userId: UserID, channelId: ChannelID, messageId: MessageID): Promise<SavedMessage>;
 	deleteSavedMessage(userId: UserID, messageId: MessageID): Promise<void>;
 	deleteAllSavedMessages(userId: UserID): Promise<void>;

@@ -2,7 +2,7 @@
 
 import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
 import {type ChannelID, createMessageID, type MessageID, type UserID} from '../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, upsertOne} from '../../database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import type {SavedMessageRow} from '../../database/types/UserTypes';
 import {SavedMessage} from '../../models/SavedMessage';
 import {SavedMessages} from '../../Tables';
@@ -13,7 +13,18 @@ const createFetchSavedMessagesQuery = (limit: number) =>
 		limit,
 	});
 
+const COUNT_SAVED_MESSAGES_CQL = SavedMessages.selectCountCql({
+	where: SavedMessages.where.eq('user_id'),
+});
+
 export class SavedMessageRepository {
+	async countSavedMessages(userId: UserID): Promise<number> {
+		const result = await fetchOne<{
+			count: bigint;
+		}>(COUNT_SAVED_MESSAGES_CQL, {user_id: userId});
+		return result ? Number(result.count) : 0;
+	}
+
 	async listSavedMessages(
 		userId: UserID,
 		limit: number = 25,

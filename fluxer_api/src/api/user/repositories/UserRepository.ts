@@ -605,6 +605,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.contentRepo.listSavedMessages(userId, limit, before);
 	}
 
+	async countSavedMessages(userId: UserID): Promise<number> {
+		return this.contentRepo.countSavedMessages(userId);
+	}
+
 	async createSavedMessage(userId: UserID, channelId: ChannelID, messageId: MessageID): Promise<SavedMessage> {
 		return this.contentRepo.createSavedMessage(userId, channelId, messageId);
 	}

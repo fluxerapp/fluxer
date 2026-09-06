@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {describe, expect, it} from 'vitest';
+import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
+import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
+import {describe, expect, it, vi} from 'vitest';
 import type {ApiContext} from '../../ApiContext';
 import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
 import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
@@ -14,6 +20,7 @@ import type {ChannelService} from '../../channel/services/ChannelService';
 import type {KVBulkMessageDeletionQueueService} from '../../infrastructure/KVBulkMessageDeletionQueueService';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import type {LimitConfigService} from '../../limits/LimitConfigService';
+import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import {Message} from '../../models/Message';
 import {UserContentService, UserContentServiceTestHooks} from './UserContentService';
 
@@ -27,6 +34,11 @@ describe('isUnreachableEntityError', () => {
 	it('treats a gone channel and a lost permission as unreachable', () => {
 		expect(isUnreachableEntityError(new UnknownChannelError())).toBe(true);
 		expect(isUnreachableEntityError(new MissingPermissionsError())).toBe(true);
+	});
+
+	it('treats an age gate and an unresolved membership as unreachable', () => {
+		expect(isUnreachableEntityError(new AccessDeniedError())).toBe(true);
+		expect(isUnreachableEntityError(new NsfwContentRequiresAgeVerificationError())).toBe(true);
 	});
 
 	it('leaves a deleted message to the delete path instead of marking it unavailable', () => {
@@ -78,10 +90,12 @@ function makeMessage(channelId: ChannelID, messageId: MessageID): Message {
 function createUserContentService({
 	entries,
 	readable,
+	stored,
 	failures = new Map<string, Error>(),
 }: {
 	entries: Array<{channelId: ChannelID; messageId: MessageID}>;
 	readable: Array<{channelId: ChannelID; messageId: MessageID}>;
+	stored?: Array<{channelId: ChannelID; messageId: MessageID}>;
 	failures?: Map<string, Error>;
 }) {
 	const batchCalls: Array<ChannelBatchCall> = [];
@@ -115,11 +129,20 @@ function createUserContentService({
 			},
 		},
 	};
+	const storedKeys = new Set(
+		(stored ?? readable).map((entry) => `${entry.channelId.toString()}:${entry.messageId.toString()}`),
+	);
+	const channelRepository = {
+		messages: {
+			getMessage: async (channelId: ChannelID, messageId: MessageID) =>
+				storedKeys.has(`${channelId.toString()}:${messageId.toString()}`) ? makeMessage(channelId, messageId) : null,
+		},
+	};
 	const service = new UserContentService(
 		{services: {users: userRepository, gateway: {}, worker: {}, snowflake: {}}} as unknown as ApiContext,
 		{} as unknown as UserCacheService,
 		channelService as unknown as ChannelService,
-		{} as unknown as IChannelRepository,
+		channelRepository as unknown as IChannelRepository,
 		{} as unknown as KVBulkMessageDeletionQueueService,
 		{} as unknown as LimitConfigService,
 	);
@@ -243,16 +266,231 @@ describe('getSavedMessages', () => {
 		]);
 	});
 
-	it('deletes and drops a saved message the batch read could not return', async () => {
+	it('keeps a saved message the batch read could not return while the message still exists', async () => {
 		const entries = [
 			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
 			{channelId: CHANNEL_A, messageId: createMessageID(12n)},
 		];
-		const {service, deletedSavedMessageIds} = createUserContentService({entries, readable: [entries[0]]});
+		const {service, deletedSavedMessageIds} = createUserContentService({
+			entries,
+			readable: [entries[0]],
+			stored: entries,
+		});
+
+		const saved = await service.getSavedMessages({userId: VIEWER_ID, limit: 50});
+
+		expect(
+			saved.map((entry) => ({id: entry.messageId.toString(), status: entry.status, hasMessage: entry.message != null})),
+		).toEqual([
+			{id: '12', status: 'missing_permissions', hasMessage: false},
+			{id: '11', status: 'available', hasMessage: true},
+		]);
+		expect(deletedSavedMessageIds).toEqual([]);
+	});
+
+	it('deletes a saved message the repository no longer holds', async () => {
+		const entries = [
+			{channelId: CHANNEL_A, messageId: createMessageID(11n)},
+			{channelId: CHANNEL_A, messageId: createMessageID(12n)},
+		];
+		const {service, deletedSavedMessageIds} = createUserContentService({
+			entries,
+			readable: [entries[0]],
+			stored: [entries[0]],
+		});
 
 		const saved = await service.getSavedMessages({userId: VIEWER_ID, limit: 50});
 
 		expect(saved.map((entry) => entry.messageId.toString())).toEqual(['11']);
 		expect(deletedSavedMessageIds).toEqual(['12']);
+	});
+});
+
+describe('gateway dispatches after the write', () => {
+	function createDispatchingService(dispatchPresence: () => Promise<void>) {
+		const createdSavedMessageIds: Array<string> = [];
+		const deletedSavedMessageIds: Array<string> = [];
+		const deletedRecentMentionIds: Array<string> = [];
+		const message = makeMessage(CHANNEL_A, createMessageID(31n));
+		const userRepository = {
+			findUnique: async () => ({
+				isBot: false,
+				premiumType: 0,
+				premiumUntil: null,
+				premiumGiftExtensionEndsAt: null,
+				premiumWillCancel: false,
+				premiumGraceEndsAt: null,
+				flags: 0n,
+				premiumFlags: 0,
+				traits: null,
+			}),
+			listSavedMessages: async () => [],
+			countSavedMessages: async () => 0,
+			createSavedMessage: async (_userId: UserID, _channelId: ChannelID, messageId: MessageID) => {
+				createdSavedMessageIds.push(messageId.toString());
+			},
+			deleteSavedMessage: async (_userId: UserID, messageId: MessageID) => {
+				deletedSavedMessageIds.push(messageId.toString());
+			},
+			getRecentMention: async (_userId: UserID, messageId: MessageID) => ({messageId}),
+			deleteRecentMention: async (mention: {messageId: MessageID}) => {
+				deletedRecentMentionIds.push(mention.messageId.toString());
+			},
+		};
+		const channelService = {
+			channelData: {auth: {getChannelAuthenticated: async () => ({})}},
+			messages: {retrieval: {getMessage: async () => message}},
+		};
+		const service = new UserContentService(
+			{
+				services: {users: userRepository, gateway: {dispatchPresence}, worker: {}, snowflake: {}},
+			} as unknown as ApiContext,
+			{} as unknown as UserCacheService,
+			channelService as unknown as ChannelService,
+			{} as unknown as IChannelRepository,
+			{} as unknown as KVBulkMessageDeletionQueueService,
+			{getConfigSnapshot: () => null} as unknown as LimitConfigService,
+		);
+		return {service, message, createdSavedMessageIds, deletedSavedMessageIds, deletedRecentMentionIds};
+	}
+
+	function saveMessageArgs(messageId: MessageID) {
+		return {
+			userId: VIEWER_ID,
+			channelId: CHANNEL_A,
+			messageId,
+			userCacheService: {} as unknown as UserCacheService,
+			requestCache: {} as unknown as RequestCache,
+		};
+	}
+
+	it('keeps the saved message when SAVED_MESSAGE_CREATE fails to publish', async () => {
+		const {service, message, createdSavedMessageIds} = createDispatchingService(async () => {
+			throw new BadGatewayError();
+		});
+		vi.spyOn(service, 'buildMessageResponsesForUser').mockResolvedValue([]);
+
+		await expect(service.saveMessage(saveMessageArgs(message.id))).resolves.toBeUndefined();
+
+		expect(createdSavedMessageIds).toEqual([message.id.toString()]);
+	});
+
+	it('still surfaces a failure of the message response build', async () => {
+		const {service, message} = createDispatchingService(async () => {});
+		vi.spyOn(service, 'buildMessageResponsesForUser').mockRejectedValue(new Error('database is on fire'));
+
+		await expect(service.saveMessage(saveMessageArgs(message.id))).rejects.toThrow('database is on fire');
+	});
+
+	it('keeps the deletion when SAVED_MESSAGE_DELETE fails to publish', async () => {
+		const {service, deletedSavedMessageIds} = createDispatchingService(async () => {
+			throw new BadGatewayError();
+		});
+
+		await expect(service.unsaveMessage({userId: VIEWER_ID, messageId: createMessageID(31n)})).resolves.toBeUndefined();
+
+		expect(deletedSavedMessageIds).toEqual(['31']);
+	});
+
+	it('keeps the deletion when RECENT_MENTION_DELETE fails to publish', async () => {
+		const {service, deletedRecentMentionIds} = createDispatchingService(async () => {
+			throw new BadGatewayError();
+		});
+
+		await expect(
+			service.deleteRecentMention({userId: VIEWER_ID, messageId: createMessageID(31n)}),
+		).resolves.toBeUndefined();
+
+		expect(deletedRecentMentionIds).toEqual(['31']);
+	});
+});
+
+describe('bookmark ceiling', () => {
+	function createBookmarkLimitedService({
+		savedMessageCount,
+		maxBookmarks,
+	}: {
+		savedMessageCount: number;
+		maxBookmarks: number;
+	}) {
+		const createdSavedMessageIds: Array<string> = [];
+		const message = makeMessage(CHANNEL_A, createMessageID(41n));
+		const userRepository = {
+			findUnique: async () => ({
+				isBot: false,
+				premiumType: 0,
+				premiumUntil: null,
+				premiumGiftExtensionEndsAt: null,
+				premiumWillCancel: false,
+				premiumGraceEndsAt: null,
+				flags: 0n,
+				premiumFlags: 0,
+				traits: null,
+			}),
+			countSavedMessages: async () => savedMessageCount,
+			listSavedMessages: async () => {
+				throw new Error('the ceiling check must not page through saved messages');
+			},
+			createSavedMessage: async (_userId: UserID, _channelId: ChannelID, messageId: MessageID) => {
+				createdSavedMessageIds.push(messageId.toString());
+			},
+		};
+		const channelService = {
+			channelData: {auth: {getChannelAuthenticated: async () => ({})}},
+			messages: {retrieval: {getMessage: async () => message}},
+		};
+		const snapshot: LimitConfigSnapshot = {
+			traitDefinitions: [],
+			rules: [{id: 'default', limits: {max_bookmarks: maxBookmarks}}],
+		};
+		const service = new UserContentService(
+			{
+				services: {users: userRepository, gateway: {dispatchPresence: async () => {}}, worker: {}, snowflake: {}},
+			} as unknown as ApiContext,
+			{} as unknown as UserCacheService,
+			channelService as unknown as ChannelService,
+			{} as unknown as IChannelRepository,
+			{} as unknown as KVBulkMessageDeletionQueueService,
+			{getConfigSnapshot: () => snapshot} as unknown as LimitConfigService,
+		);
+		return {service, message, createdSavedMessageIds};
+	}
+
+	function saveMessageArgs(messageId: MessageID) {
+		return {
+			userId: VIEWER_ID,
+			channelId: CHANNEL_A,
+			messageId,
+			userCacheService: {} as unknown as UserCacheService,
+			requestCache: {} as unknown as RequestCache,
+		};
+	}
+
+	it('enforces a configured max_bookmarks above 1000', async () => {
+		const {service, message, createdSavedMessageIds} = createBookmarkLimitedService({
+			savedMessageCount: 1002,
+			maxBookmarks: 1002,
+		});
+		vi.spyOn(service, 'buildMessageResponsesForUser').mockResolvedValue([]);
+
+		const error = await service.saveMessage(saveMessageArgs(message.id)).catch((thrown: unknown) => thrown);
+
+		expect(error).toBeInstanceOf(MaxBookmarksError);
+		expect((error as MaxBookmarksError).status).toBe(400);
+		expect((error as MaxBookmarksError).code).toBe(APIErrorCodes.MAX_BOOKMARKS);
+		expect((error as MaxBookmarksError).data?.max_bookmarks).toBe(1002);
+		expect(createdSavedMessageIds).toEqual([]);
+	});
+
+	it('still saves below a configured max_bookmarks above 1000', async () => {
+		const {service, message, createdSavedMessageIds} = createBookmarkLimitedService({
+			savedMessageCount: 1001,
+			maxBookmarks: 1002,
+		});
+		vi.spyOn(service, 'buildMessageResponsesForUser').mockResolvedValue([]);
+
+		await expect(service.saveMessage(saveMessageArgs(message.id))).resolves.toBeUndefined();
+
+		expect(createdSavedMessageIds).toEqual([message.id.toString()]);
 	});
 });

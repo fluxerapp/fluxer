@@ -34,7 +34,7 @@ export class ReadStateService {
 			undefined,
 			manual ?? false,
 		);
-		await this.gatewayService.invalidatePushBadgeCount({userId});
+		await this.invalidatePushBadgeCount(userId);
 		if (!silent) {
 			await this.clearPushChannelNotifications({userId, channelId, messageId});
 		}
@@ -115,7 +115,7 @@ export class ReadStateService {
 		try {
 			const updatedReadStates = await this.repository.bulkAckMessages(userId, readStates);
 			const readStatesByChannel = new Map(updatedReadStates.map((readState) => [readState.channelId, readState]));
-			await this.gatewayService.invalidatePushBadgeCount({userId});
+			await this.invalidatePushBadgeCount(userId);
 			await Promise.all(
 				readStates.map(({channelId, messageId}) =>
 					Promise.all([
@@ -145,7 +145,7 @@ export class ReadStateService {
 
 	async deleteReadState({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
 		await this.repository.deleteReadState(userId, channelId);
-		await this.gatewayService.invalidatePushBadgeCount({userId});
+		await this.invalidatePushBadgeCount(userId);
 	}
 
 	async incrementMentionCount({
@@ -161,7 +161,7 @@ export class ReadStateService {
 		if (readState == null) {
 			return;
 		}
-		await this.gatewayService.invalidatePushBadgeCount({userId});
+		await this.invalidatePushBadgeCount(userId);
 	}
 
 	async bulkIncrementMentionCounts(
@@ -194,6 +194,13 @@ export class ReadStateService {
 		const {userId, channelId, timestamp} = params;
 		await this.repository.upsertPinAck(userId, channelId, timestamp);
 		await this.dispatchPinsAck({userId, channelId, timestamp});
+	}
+
+	private async invalidatePushBadgeCount(userId: UserID): Promise<void> {
+		await this.gatewayService.invalidatePushBadgeCount({userId}).catch((error) => {
+			Logger.error({userId: userId.toString(), error}, 'Failed to invalidate push badge count');
+			return null;
+		});
 	}
 
 	private async dispatchMessageAck(params: {

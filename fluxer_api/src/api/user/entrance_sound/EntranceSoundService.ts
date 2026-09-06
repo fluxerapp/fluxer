@@ -65,6 +65,18 @@ export class EntranceSoundService {
 		return `${SOUND_PATH_PREFIX}/${userId}/${hash}.${extension}`;
 	}
 
+	private async objectIsReferenced(
+		userId: UserID,
+		hash: string,
+		extension: string,
+		excludeSoundId?: EntranceSoundID,
+	): Promise<boolean> {
+		const sounds = await this.repository.listSounds(userId);
+		return sounds.some(
+			(sound) => sound.hash === hash && sound.extension === extension && sound.soundId !== excludeSoundId,
+		);
+	}
+
 	async listLibrary(userId: UserID): Promise<Array<EntranceSoundLibraryEntry>> {
 		const sounds = await this.repository.listSounds(userId);
 		return sounds.map((sound) => ({sound, url: this.cdnUrlFor(sound)}));
@@ -165,7 +177,9 @@ export class EntranceSoundService {
 			await this.repository.upsertSound(sound);
 		} catch (error) {
 			Logger.error({error, userId: userId.toString(), s3Key}, 'Failed to persist entrance sound; rolling back S3');
-			await this.storageService.deleteObject(Config.s3.buckets.cdn, s3Key).catch(() => {});
+			if (!(await this.objectIsReferenced(userId, hash, extension).catch(() => true))) {
+				await this.storageService.deleteObject(Config.s3.buckets.cdn, s3Key).catch(() => {});
+			}
 			throw error;
 		}
 		return {sound, url: this.cdnUrlFor(sound)};
@@ -191,6 +205,9 @@ export class EntranceSoundService {
 		if (!existing) return;
 		await this.repository.deleteSelectionsForSound(userId, soundId);
 		await this.repository.deleteSound(userId, soundId);
+		if (await this.objectIsReferenced(userId, existing.hash, existing.extension, soundId).catch(() => true)) {
+			return;
+		}
 		const s3Key = this.s3KeyFor(userId, existing.hash, existing.extension as EntranceSoundExtension);
 		await this.storageService.deleteObject(Config.s3.buckets.cdn, s3Key).catch((error) => {
 			Logger.error({error, userId: userId.toString(), s3Key}, 'Failed to delete entrance sound from S3');
