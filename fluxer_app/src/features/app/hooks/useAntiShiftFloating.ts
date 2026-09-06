@@ -279,6 +279,11 @@ export function useAntiShiftFloating(
 		constrainHeight = false,
 	} = options;
 	const floatingRef = useRef<HTMLElement>(null);
+	const [floatingElement, setFloatingElement] = useState<HTMLElement | null>(null);
+	const setFloating = useCallback((element: HTMLElement | null) => {
+		floatingRef.current = element;
+		setFloatingElement(element);
+	}, []);
 	const [state, setState] = useState<FloatingState>(() => {
 		const {x, y} = target ? getInitialGuess(target, placement, offsetMainAxis, offsetCrossAxis) : {x: -9999, y: -9999};
 		return {x, y, isReady: false, offsetX: 0, offsetY: 0, placement};
@@ -481,7 +486,7 @@ export function useAntiShiftFloating(
 		};
 	}, []);
 	useLayoutEffect(() => {
-		if (!enabled || target == null || floatingRef.current == null) {
+		if (!enabled || target == null || floatingElement == null) {
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
@@ -489,7 +494,7 @@ export function useAntiShiftFloating(
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
-		const floating = floatingRef.current;
+		const floating = floatingElement;
 		updatePosition();
 		if (shouldAutoUpdate) {
 			const cleanupCallbacks = [
@@ -502,7 +507,7 @@ export function useAntiShiftFloating(
 				}
 			};
 		} else if (shouldObserveFloatingResize) {
-			cleanupRef.current = observeFloatingResize(floatingRef.current, updatePosition);
+			cleanupRef.current = observeFloatingResize(floating, updatePosition);
 		}
 		return () => {
 			positionRevisionRef.current += 1;
@@ -519,9 +524,18 @@ export function useAntiShiftFloating(
 			}
 			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 		};
-	}, [enabled, target, shouldAutoUpdate, shouldObserveFloatingResize, updatePosition, updatePositionNow]);
+	}, [
+		enabled,
+		target,
+		floatingElement,
+		shouldAutoUpdate,
+		shouldObserveFloatingResize,
+		updatePosition,
+		updatePositionNow,
+	]);
 	return {
 		ref: floatingRef,
+		setFloating,
 		state,
 		style: {
 			position: 'fixed' as const,

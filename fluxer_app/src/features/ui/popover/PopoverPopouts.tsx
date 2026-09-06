@@ -186,6 +186,7 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		);
 		const {
 			ref: popoutRef,
+			setFloating,
 			state,
 			style,
 			beginManualPositioning,
@@ -206,7 +207,7 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		useLayoutEffect(() => {
 			focusRefs.setReference(target);
 		}, [focusRefs, target]);
-		const mergedPopoutRef = useMergeRefs([popoutRef, focusRefs.setFloating]);
+		const mergedPopoutRef = useMergeRefs([setFloating, focusRefs.setFloating]);
 		const prefersReducedMotion = Accessibility.useReducedMotion;
 		const [isVisible, setIsVisible] = useState(true);
 		const [targetInDOM, setTargetInDOM] = useState(() => ownerDocument.contains(target));
