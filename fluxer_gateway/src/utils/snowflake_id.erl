@@ -35,8 +35,10 @@
 -type role_id() :: t().
 -type message_id() :: t().
 
+-define(MAX_SNOWFLAKE, 16#7FFFFFFFFFFFFFFF).
+
 -spec parse(term()) -> t().
-parse(Value) when is_integer(Value), Value > 0 ->
+parse(Value) when is_integer(Value), Value > 0, Value =< ?MAX_SNOWFLAKE ->
     Value;
 parse(Value) when is_binary(Value) ->
     require_parsed(parse_binary(Value), Value);
@@ -130,7 +132,7 @@ get(_Id, _Map, Default) ->
 -spec parse_binary(binary()) -> t() | undefined.
 parse_binary(<<First, Rest/binary>> = Value) when First >= $1, First =< $9 ->
     case all_digits(Rest) of
-        true -> binary_to_integer(Value);
+        true -> bounded(binary_to_integer(Value));
         false -> undefined
     end;
 parse_binary(_) ->
@@ -144,10 +146,16 @@ parse_list_value(_) ->
 
 -spec parse_digits_list([term()], pos_integer()) -> t() | undefined.
 parse_digits_list([], Acc) ->
-    Acc;
+    bounded(Acc);
 parse_digits_list([Digit | Rest], Acc) when is_integer(Digit), Digit >= $0, Digit =< $9 ->
     parse_digits_list(Rest, Acc * 10 + Digit - $0);
 parse_digits_list(_, _Acc) ->
+    undefined.
+
+-spec bounded(pos_integer()) -> t() | undefined.
+bounded(Id) when Id =< ?MAX_SNOWFLAKE ->
+    Id;
+bounded(_) ->
     undefined.
 
 -spec require_parsed(t() | undefined, term()) -> t().
@@ -179,6 +187,16 @@ parse_rejects_non_canonical_values_test() ->
     ?assertError({invalid_snowflake, <<"001">>}, parse(<<"001">>)),
     ?assertError({invalid_snowflake, <<"+1">>}, parse(<<"+1">>)),
     ?assertError({invalid_snowflake, <<"abc">>}, parse(<<"abc">>)).
+
+parse_rejects_values_above_int64_test() ->
+    ?assertEqual(9223372036854775807, parse(9223372036854775807)),
+    ?assertEqual(9223372036854775807, parse(<<"9223372036854775807">>)),
+    ?assertEqual(9223372036854775807, parse("9223372036854775807")),
+    ?assertError({invalid_snowflake, 9223372036854775808}, parse(9223372036854775808)),
+    ?assertError(
+        {invalid_snowflake, <<"9223372036854775808">>}, parse(<<"9223372036854775808">>)
+    ),
+    ?assertError({invalid_snowflake, "9223372036854775808"}, parse("9223372036854775808")).
 
 member_handles_mixed_edge_values_test() ->
     ?assertEqual(true, member(123, [<<"123">>, 456])),
