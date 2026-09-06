@@ -251,7 +251,7 @@ pub(crate) async fn bulk_actions_post(
                 .bulk_add_guild_members(&guild_id, &user_ids, audit_log_reason.as_deref())
                 .await
         }
-        "bulk-schedule-user-deletion" => {
+        "bulk-schedule-user-deletion" | "bulk_delete_users" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
             let reason_code = form.parse_u32("reason_code").unwrap_or(2);
             let days = form.parse_u32("days_until_deletion").unwrap_or(14);
@@ -270,12 +270,6 @@ pub(crate) async fn bulk_actions_post(
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
             client
                 .bulk_delete_user_messages(&user_ids, audit_log_reason.as_deref())
-                .await
-        }
-        "bulk_delete_users" => {
-            let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            client
-                .bulk_schedule_user_deletion(&user_ids, 0, 30, None, audit_log_reason.as_deref())
                 .await
         }
         _ => {
@@ -302,7 +296,7 @@ pub(crate) async fn bulk_actions_post(
             tracing::warn!(%error, action, "admin API request failed: submit bulk action");
             flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
-                FlashData::error("Failed to submit bulk action"),
+                FlashData::error(format!("Failed to submit bulk action: {error}")),
                 config.secure_cookies(),
             )
         }
