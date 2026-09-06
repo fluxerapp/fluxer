@@ -54,6 +54,8 @@ The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data`
 
 The refreshed `docker-compose.yml` requires `FLUXER_ERLANG_COOKIE`. An `.env` written by an earlier installer has no such line, so add `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` to it before you upgrade. The value is 64 hex characters, which is what a fresh install writes. Until `.env` sets it, every Compose command against the stack stops with `set FLUXER_ERLANG_COOKIE in .env`.
 
+`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. The line has been in `.env.example` for a while as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. Set it with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=$(openssl rand -base64 32)` before you upgrade. Both services read the same value, so give them one secret rather than two. A fresh install writes it for you. Without it `api` stops at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
+
 ## The script is the reference
 
 Every step above sits in the script beside a comment holding the command that does that step alone and the reason the step exists. Read [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1) for Windows.
