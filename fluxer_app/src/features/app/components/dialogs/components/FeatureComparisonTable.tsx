@@ -28,10 +28,6 @@ const PER_COMMUNITY_PROFILES_DESCRIPTOR = msg({
 	message: 'Per-community profiles',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
 });
-const MESSAGE_SCHEDULING_DESCRIPTOR = msg({
-	message: 'Message scheduling',
-	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
-});
 const PROFILE_BADGE_DESCRIPTOR = msg({
 	message: 'Profile badge',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
@@ -96,7 +92,6 @@ export const FeatureComparisonTable = observer(() => {
 		() => ({
 			custom_4_digit_username_tag: i18n._(CUSTOM_USERNAME_TAG_DESCRIPTOR),
 			per_community_profiles: i18n._(PER_COMMUNITY_PROFILES_DESCRIPTOR),
-			message_scheduling: i18n._(MESSAGE_SCHEDULING_DESCRIPTOR),
 			profile_badge: i18n._(PROFILE_BADGE_DESCRIPTOR),
 			custom_video_backgrounds: i18n._(CUSTOM_VIDEO_BACKGROUNDS_DESCRIPTOR),
 			entrance_sounds: i18n._(ENTRANCE_SOUNDS_DESCRIPTOR),

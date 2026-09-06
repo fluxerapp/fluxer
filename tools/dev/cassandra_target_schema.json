@@ -7785,57 +7785,6 @@
 			"options": "CLUSTERING ORDER BY (message_id DESC)"
 		},
 		{
-			"name": "scheduled_messages",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "scheduled_message_id",
-					"type": "bigint"
-				},
-				{
-					"name": "channel_id",
-					"type": "bigint"
-				},
-				{
-					"name": "payload",
-					"type": "text"
-				},
-				{
-					"name": "scheduled_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "scheduled_local_at",
-					"type": "text"
-				},
-				{
-					"name": "timezone",
-					"type": "text"
-				},
-				{
-					"name": "status",
-					"type": "text"
-				},
-				{
-					"name": "status_reason",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "invalidated_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "((user_id), scheduled_message_id)",
-			"options": "CLUSTERING ORDER BY (scheduled_message_id DESC)"
-		},
-		{
 			"name": "suspicious_email_domains",
 			"columns": [
 				{

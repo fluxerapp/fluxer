@@ -21,16 +21,3 @@ export const OPEN_MENU_DESCRIPTOR = msg({
 	message: 'Open menu',
 	comment: 'Accessible label for the plus button that opens the textarea attachment and customization menu.',
 });
-export const RESCHEDULE_MESSAGE_DESCRIPTOR = msg({
-	message: 'Reschedule message',
-	comment: 'Title of the confirmation alert shown when editing a scheduled message to change the scheduled time.',
-});
-export const UPDATE_DESCRIPTOR = msg({
-	message: 'Update',
-	comment: 'Confirm button label on the reschedule scheduled-message alert.',
-});
-export const THIS_WILL_MODIFY_THE_EXISTING_SCHEDULED_MESSAGE_RATHER_DESCRIPTOR = msg({
-	message: 'This will modify the existing scheduled message rather than sending immediately.',
-	comment:
-		'Body of the reschedule scheduled-message alert clarifying that the update modifies the scheduled message instead of sending it now.',
-});

@@ -59,7 +59,6 @@ export const Endpoints = {
 	CHANNEL_RECIPIENT: (channelId: string, userId: string) => `/channels/${channelId}/recipients/${userId}`,
 	CHANNEL_MESSAGES: (channelId: string) => `/channels/${channelId}/messages`,
 	CHANNEL_MESSAGES_BULK: '/channels/messages/bulk',
-	CHANNEL_MESSAGE_SCHEDULE: (channelId: string) => `/channels/${channelId}/messages/schedule`,
 	CHANNEL_MESSAGE: (channelId: string, messageId: string) => `/channels/${channelId}/messages/${messageId}`,
 	CHANNEL_MESSAGE_ATTACHMENT: (channelId: string, messageId: string, attachmentId: string) =>
 		`/channels/${channelId}/messages/${messageId}/attachments/${attachmentId}`,
@@ -210,8 +209,6 @@ export const Endpoints = {
 	USER_ENTRANCE_SOUND: (soundId: string) => `/users/@me/entrance-sounds/${soundId}`,
 	USER_ENTRANCE_SOUND_SELECTIONS: '/users/@me/entrance-sound-selections',
 	VOICE_CHANNEL_ENTRANCE_SOUND: (channelId: string) => `/voice/channels/${channelId}/entrance-sound`,
-	USER_SCHEDULED_MESSAGES: '/users/@me/scheduled-messages',
-	USER_SCHEDULED_MESSAGE: (messageId: string) => `/users/@me/scheduled-messages/${messageId}`,
 	USER_FAVORITE_MEMES: (query = ME) => `/users/${query}/memes`,
 	USER_FAVORITE_MEME: (query = ME, memeId: string) => `/users/${query}/memes/${memeId}`,
 	USER_FAVORITE_GIFS_RESOLVE: (query = ME) => `/users/${query}/favorite-gifs/resolve`,

@@ -3,10 +3,6 @@
 import {getDateFormatter} from '@fluxer/date_utils/src/DateFormatterCache';
 import type {DateFieldType} from '@fluxer/date_utils/src/DateTypes';
 
-export function getSystemTimeZone(): string {
-	return Intl.DateTimeFormat().resolvedOptions().timeZone;
-}
-
 export function getDateFieldOrder(locale: string): Array<DateFieldType> {
 	const formatter = getDateFormatter(locale, {
 		year: 'numeric',

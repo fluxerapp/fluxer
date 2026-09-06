@@ -648,10 +648,6 @@ export const NEVER_DESCRIPTOR = msg({
 	message: 'Never',
 	comment: 'Generic short option label for "never" in time / frequency dropdowns.',
 });
-export const NO_DESCRIPTION_PROVIDED_DESCRIPTOR = msg({
-	message: 'No description provided.',
-	comment: 'Generic short empty-state body shown when an entity has no description set.',
-});
 export const PINNED_DM_DESCRIPTOR = msg({
 	message: 'Pinned DM',
 	comment: 'Generic short toast / status label confirming a DM was pinned.',
