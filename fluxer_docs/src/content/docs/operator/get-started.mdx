@@ -17,7 +17,7 @@ By the end you have a Fluxer instance on a hostname you own, with the web app, H
 | Requirement | Value |
 | --- | --- |
 | Host | Any machine that runs Docker with Linux containers. A Linux server, or a Mac or Windows PC with Docker Desktop |
-| Runtime | Docker Engine 24 or newer with the Compose plugin v2.20.2 or newer. Docker Desktop ships both |
+| Runtime | Docker Engine 24 or newer, or Podman 5 or newer, with the Compose plugin v2.20.2 or newer |
 | Processor | Intel, AMD and Apple Silicon all work. Every image ships for `amd64` and `arm64`, and Docker pulls the matching one |
 | CPU | 2 vCPU minimum, 4 vCPU for a small active community. No service sets a CPU limit, so every container sees all of them |
 | RAM | 8 GB minimum with the shipped defaults, 16 GB for a small active community. 4 GB needs the [low-memory overrides](/operator/configuration/#resources) |
@@ -159,6 +159,7 @@ The run prints one line per phase and ends with the URL to open. It takes severa
 | `--update` | Upgrade: record, back up, refresh, pull, recreate, verify |
 | `--rollback` | Put back the images and stack files of the newest record |
 | `--allow-root` | Permit running as root |
+| `--engine <command>` | Container engine to drive. Default `docker`, or `podman` when `docker` is absent |
 
 Run `--dry-run` first to see what a set of flags does. The PowerShell script takes the same flags as `-Domain`, `-Email` and so on, and has no `-AllowRoot`. [Upgrading](/operator/upgrading/#run-the-upgrade) has the flags that only `--update` and `--rollback` read, and the exit codes.
 

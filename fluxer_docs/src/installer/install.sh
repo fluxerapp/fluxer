@@ -53,6 +53,10 @@ export LC_ALL
 FLUXER_RAW_BASE='https://raw.githubusercontent.com/fluxerapp/fluxer'
 FLUXER_STACK_PATH='deploy/self-hosting'
 FLUXER_MIN_ENGINE='24.0.0'
+# Podman numbers its releases on its own scale, so the Docker Engine floor says
+# nothing about it. 5.0 is the first release that runs this stack's compose file
+# as written, healthcheck conditions and all.
+FLUXER_MIN_PODMAN='5.0.0'
 FLUXER_MIN_COMPOSE='2.20.2'
 # Both overlays this script downloads use the !override tag, which Compose learned
 # in 2.24.4. A stack that loads neither runs on the lower minimum, so the higher
@@ -174,6 +178,8 @@ Usage: sh install.sh --domain <host> --email <address> [options]
 Options:
   --domain <host>          Hostname the instance answers on. Prompted when absent.
   --email <address>        Address the operator reads. Prompted when absent.
+  --engine <command>       Container engine to drive. Default docker, or podman
+                           when docker is absent.
   --dir <path>             Working directory. Default ~/fluxer, or the working
                            directory itself when --update or --rollback is given
                            and it holds an instance.
@@ -184,7 +190,7 @@ Options:
   --edge-bind <addr:port>  Plain HTTP bind under --tls proxy. Default 127.0.0.1:8080.
   --non-interactive        Never prompt. A missing required value is an error.
   --dry-run                Print the plan. Change nothing.
-  --no-start               Write everything and skip docker compose up -d.
+  --no-start               Write everything and skip $fluxer_engine compose up -d.
   --update                 Upgrade: record, back up, refresh, pull, recreate, verify.
   --rollback               Restore the images and stack files of the last record.
   --backup-dir <path>      Where records go. Default <dir>/backups.
@@ -247,6 +253,9 @@ trap fluxer_on_signal TERM
 opt_domain=''
 opt_email=''
 opt_dir=''
+opt_engine=''
+fluxer_engine='docker'
+fluxer_engine_label='Docker Engine'
 opt_ref=''
 opt_image_tag='v1'
 opt_tls='bundled'
@@ -271,6 +280,11 @@ while [ $# -gt 0 ]; do
 		--email)
 			fluxer_take_value '--email' $# "${2:-}"
 			opt_email=$2
+			shift 2
+			;;
+		--engine)
+			fluxer_take_value '--engine' $# "${2:-}"
+			opt_engine=$2
 			shift 2
 			;;
 		--dir)
@@ -467,29 +481,59 @@ fluxer_version_ge() {
 fluxer_engine_version=''
 fluxer_compose_version=''
 
+# Every engine that speaks the Docker CLI reports itself as "<name> version X".
+# Docker says "Docker version 28.0.0, build ...", Podman says "podman version
+# 5.8.4", and the podman-docker shim answers as Podman under the name docker.
+# Reading the name as well as the number is what lets the floor below belong to
+# the engine actually in use, because Podman's 5.x is not Docker's 5.x.
+fluxer_resolve_engine() {
+	if [ -n "$opt_engine" ]; then
+		fluxer_engine=$opt_engine
+	elif command -v docker >/dev/null 2>&1; then
+		fluxer_engine='docker'
+	elif command -v podman >/dev/null 2>&1; then
+		fluxer_engine='podman'
+	else
+		fluxer_fail 2 "Neither docker nor podman is installed. $(fluxer_docker_hint)"
+	fi
+	if ! command -v "$fluxer_engine" >/dev/null 2>&1; then
+		fluxer_fail 2 "$fluxer_engine is not installed. Pass --engine with the command that drives your containers."
+	fi
+}
+
 fluxer_preflight() {
 	if [ "$opt_allow_root" -eq 0 ] && [ "$(id -u)" -eq 0 ]; then
 		fluxer_fail 2 'Running as root. Use an account in the docker group, or pass --allow-root.'
 	fi
-	if ! command -v docker >/dev/null 2>&1; then
-		fluxer_fail 2 "Docker is not installed. $(fluxer_docker_hint)"
+	fluxer_resolve_engine
+	if ! $fluxer_engine compose version >/dev/null 2>&1; then
+		fluxer_fail 2 "$fluxer_engine has no compose subcommand. $(fluxer_docker_hint)"
 	fi
-	if ! docker compose version >/dev/null 2>&1; then
-		fluxer_fail 2 "The Docker Compose v2 plugin is missing. $(fluxer_docker_hint)"
-	fi
-	fluxer_engine_version=$(docker --version 2>/dev/null | sed -n 's/^Docker version \([0-9][0-9.]*\).*/\1/p')
-	fluxer_compose_version=$(docker compose version --short 2>/dev/null | sed -n 's/^v\{0,1\}\([0-9][0-9.]*\).*/\1/p')
+	fluxer_engine_report=$($fluxer_engine --version 2>/dev/null)
+	fluxer_engine_kind=$(printf '%s\n' "$fluxer_engine_report" | sed -n 's/^\([A-Za-z][A-Za-z]*\) version .*/\1/p' | tr 'A-Z' 'a-z')
+	fluxer_engine_version=$(printf '%s\n' "$fluxer_engine_report" | sed -n 's/^[A-Za-z][A-Za-z]* version v\{0,1\}\([0-9][0-9.]*\).*/\1/p')
+	fluxer_compose_version=$($fluxer_engine compose version --short 2>/dev/null | sed -n 's/^v\{0,1\}\([0-9][0-9.]*\).*/\1/p')
 	if [ -z "$fluxer_engine_version" ] || [ -z "$fluxer_compose_version" ]; then
-		fluxer_fail 2 'Cannot read the Docker Engine and Compose versions.'
+		fluxer_fail 2 "Cannot read the engine and Compose versions from $fluxer_engine. It answered \"$fluxer_engine_report\" to --version."
 	fi
-	if ! fluxer_version_ge "$fluxer_engine_version" "$FLUXER_MIN_ENGINE"; then
-		fluxer_fail 2 "Docker Engine $fluxer_engine_version with Compose $fluxer_compose_version. Fluxer needs Engine $FLUXER_MIN_ENGINE or newer."
+	case $fluxer_engine_kind in
+		podman)
+			fluxer_engine_label='Podman'
+			fluxer_min_engine=$FLUXER_MIN_PODMAN
+			;;
+		*)
+			fluxer_engine_label='Docker Engine'
+			fluxer_min_engine=$FLUXER_MIN_ENGINE
+			;;
+	esac
+	if ! fluxer_version_ge "$fluxer_engine_version" "$fluxer_min_engine"; then
+		fluxer_fail 2 "$fluxer_engine_label $fluxer_engine_version with Compose $fluxer_compose_version. Fluxer needs $fluxer_engine_label $fluxer_min_engine or newer."
 	fi
 	if ! fluxer_version_ge "$fluxer_compose_version" "$FLUXER_MIN_COMPOSE"; then
-		fluxer_fail 2 "Docker Engine $fluxer_engine_version with Compose $fluxer_compose_version. Fluxer needs Compose $FLUXER_MIN_COMPOSE or newer."
+		fluxer_fail 2 "$fluxer_engine_label $fluxer_engine_version with Compose $fluxer_compose_version. Fluxer needs Compose $FLUXER_MIN_COMPOSE or newer."
 	fi
-	if ! docker info >/dev/null 2>&1; then
-		fluxer_fail 2 'The Docker daemon does not answer. Start Docker and run this again.'
+	if ! $fluxer_engine info >/dev/null 2>&1; then
+		fluxer_fail 2 "$fluxer_engine does not answer. Start it and run this again."
 	fi
 	if ! command -v curl >/dev/null 2>&1; then
 		fluxer_fail 2 "curl is not installed. $(fluxer_host_tool_hint curl)"
@@ -497,7 +541,7 @@ fluxer_preflight() {
 	if ! command -v openssl >/dev/null 2>&1; then
 		fluxer_fail 2 "openssl is not installed. $(fluxer_host_tool_hint openssl)"
 	fi
-	fluxer_say "Docker Engine $fluxer_engine_version with Compose $fluxer_compose_version."
+	fluxer_say "$fluxer_engine_label $fluxer_engine_version with Compose $fluxer_compose_version."
 }
 
 fluxer_valid_domain() {
@@ -735,9 +779,9 @@ fluxer_check_volumes() {
 	if [ -z "$fluxer_project" ]; then
 		return 0
 	fi
-	docker volume ls -q --filter "label=com.docker.compose.project=$fluxer_project" > "$fluxer_scratch/volumes" 2>/dev/null || return 0
+	$fluxer_engine volume ls -q --filter "label=com.docker.compose.project=$fluxer_project" > "$fluxer_scratch/volumes" 2>/dev/null || return 0
 	if [ -s "$fluxer_scratch/volumes" ]; then
-		fluxer_fail 3 "Docker already holds volumes for the $fluxer_project project. They hold the secrets of an earlier install, and this .env does not open them. Run install.sh --update in the directory that holds that instance, or remove the volumes with docker volume rm before you install again."
+		fluxer_fail 3 "Docker already holds volumes for the $fluxer_project project. They hold the secrets of an earlier install, and this .env does not open them. Run install.sh --update in the directory that holds that instance, or remove the volumes with $fluxer_engine volume rm before you install again."
 	fi
 }
 
@@ -845,9 +889,9 @@ fluxer_write_env() {
 }
 
 fluxer_stack_ready() {
-	docker compose ps -aq > "$fluxer_scratch/ids" 2>/dev/null || return 1
+	$fluxer_engine compose ps -aq > "$fluxer_scratch/ids" 2>/dev/null || return 1
 	[ -s "$fluxer_scratch/ids" ] || return 1
-	xargs docker inspect --format "$FLUXER_INSPECT_FORMAT" < "$fluxer_scratch/ids" > "$fluxer_scratch/state" 2>/dev/null || return 1
+	xargs $fluxer_engine inspect --format "$FLUXER_INSPECT_FORMAT" < "$fluxer_scratch/ids" > "$fluxer_scratch/state" 2>/dev/null || return 1
 	fluxer_ready=1
 	fluxer_init_done=0
 	while read -r fluxer_service fluxer_status fluxer_health fluxer_code; do
@@ -1078,11 +1122,11 @@ fluxer_require_compose_files() {
 		fluxer_compose_count=$((${fluxer_compose_count:-0} + 1))
 		[ ! -e "$fluxer_path" ] || continue
 		if fluxer_stack_files | grep -qxF "$fluxer_name"; then
-			fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every docker compose command in $opt_dir fails and this run stops before it changes anything. This script downloads $fluxer_name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:
+			fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every $fluxer_engine compose command in $opt_dir fails and this run stops before it changes anything. This script downloads $fluxer_name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:
   curl -fsSL --proto '=https' --tlsv1.2 -o $fluxer_path $FLUXER_RAW_BASE/$opt_ref/$FLUXER_STACK_PATH/$fluxer_name
 Leave the COMPOSE_FILE line as it is. Without $fluxer_name the edge container binds 80 and 443 and requests its own certificate."
 		fi
-		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every docker compose command in $opt_dir fails. This script does not download $fluxer_name. Put that file back, or take it out of the COMPOSE_FILE line."
+		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every $fluxer_engine compose command in $opt_dir fails. This script does not download $fluxer_name. Put that file back, or take it out of the COMPOSE_FILE line."
 	done
 	if [ "$fluxer_compose_count" -gt 1 ] &&
 		! fluxer_version_ge "$fluxer_compose_version" "$FLUXER_MIN_COMPOSE_OVERLAY"; then
@@ -1102,7 +1146,7 @@ Leave the COMPOSE_FILE line as it is. Without $fluxer_name the edge container bi
 # command.
 fluxer_compose_query() {
 	fluxer_query_status=0
-	docker compose config "$1" > "$fluxer_scratch/compose-out" 2> "$fluxer_scratch/compose-err" || fluxer_query_status=$?
+	$fluxer_engine compose config "$1" > "$fluxer_scratch/compose-out" 2> "$fluxer_scratch/compose-err" || fluxer_query_status=$?
 	return "$fluxer_query_status"
 }
 
@@ -1151,14 +1195,14 @@ fluxer_indent_file() {
 }
 
 fluxer_running_image_ids() {
-	if ! docker compose ps -aq > "$fluxer_scratch/containers" 2> "$fluxer_scratch/ps-err"; then
-		fluxer_fail 2 "docker compose ps failed in $opt_dir, so what is running cannot be read and the record would name no image ID at all. Compose printed:
+	if ! $fluxer_engine compose ps -aq > "$fluxer_scratch/containers" 2> "$fluxer_scratch/ps-err"; then
+		fluxer_fail 2 "$fluxer_engine compose ps failed in $opt_dir, so what is running cannot be read and the record would name no image ID at all. Compose printed:
 $(fluxer_indent_file "$fluxer_scratch/ps-err" '  ')"
 	fi
 	[ -s "$fluxer_scratch/containers" ] || return 0
-	if ! xargs docker inspect --format '{{.Config.Image}} {{.Image}}' \
+	if ! xargs $fluxer_engine inspect --format '{{.Config.Image}} {{.Image}}' \
 		< "$fluxer_scratch/containers" > "$fluxer_scratch/inspected" 2> "$fluxer_scratch/inspect-err"; then
-		fluxer_fail 2 "docker inspect failed in $opt_dir, so the image ID under each reference cannot be read and a rollback would have nothing to go back to. Docker printed:
+		fluxer_fail 2 "$fluxer_engine inspect failed in $opt_dir, so the image ID under each reference cannot be read and a rollback would have nothing to go back to. Docker printed:
 $(fluxer_indent_file "$fluxer_scratch/inspect-err" '  ')"
 	fi
 	sort -u "$fluxer_scratch/inspected"
@@ -1187,11 +1231,11 @@ fluxer_recorded_id_for() {
 fluxer_record_state() {
 	fluxer_running_image_ids > "$fluxer_scratch/running"
 	if ! fluxer_compose_images > "$fluxer_scratch/refs"; then
-		fluxer_fail 2 "docker compose config --images failed in $opt_dir, so the running version cannot be recorded. Compose printed:
+		fluxer_fail 2 "$fluxer_engine compose config --images failed in $opt_dir, so the running version cannot be recorded. Compose printed:
 $(fluxer_compose_error '  ')"
 	fi
 	if [ ! -s "$fluxer_scratch/refs" ]; then
-		fluxer_fail 2 "docker compose config --images returned nothing in $opt_dir, so the running version cannot be recorded. The stack files there declare no service with an image."
+		fluxer_fail 2 "$fluxer_engine compose config --images returned nothing in $opt_dir, so the running version cannot be recorded. The stack files there declare no service with an image."
 	fi
 	fluxer_prepare_record
 	printf '%s\n' "$(fluxer_env_value FLUXER_IMAGE_TAG)" > "$fluxer_record/$FLUXER_TAG_FILE"
@@ -1225,9 +1269,9 @@ fluxer_save_current_files() {
 }
 
 fluxer_postgres_running() {
-	fluxer_pg_id=$(docker compose ps -q postgres 2>/dev/null | head -n 1)
+	fluxer_pg_id=$($fluxer_engine compose ps -q postgres 2>/dev/null | head -n 1)
 	[ -n "$fluxer_pg_id" ] || return 1
-	[ "$(docker inspect --format '{{.State.Status}}' "$fluxer_pg_id" 2>/dev/null)" = 'running' ]
+	[ "$($fluxer_engine inspect --format '{{.State.Status}}' "$fluxer_pg_id" 2>/dev/null)" = 'running' ]
 }
 
 # Step 2 of an upgrade, and the part that gates the rest.
@@ -1255,13 +1299,13 @@ fluxer_postgres_running() {
 fluxer_dump_postgres() {
 	if ! fluxer_postgres_running; then
 		fluxer_say 'Postgres is not running. Starting it for the dump.'
-		if ! docker compose up -d --wait postgres; then
+		if ! $fluxer_engine compose up -d --wait postgres; then
 			fluxer_fail 7 "Postgres does not start in $opt_dir, so no dump can be taken."
 		fi
 	fi
 	fluxer_dump_path="$fluxer_record/$FLUXER_DUMP_FILE"
 	fluxer_say 'Dumping the database.'
-	if ! docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > "$fluxer_dump_path"; then
+	if ! $fluxer_engine compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > "$fluxer_dump_path"; then
 		rm -f "$fluxer_dump_path"
 		fluxer_fail 7 'pg_dump failed. The instance is untouched.'
 	fi
@@ -1282,7 +1326,7 @@ fluxer_volume_error() {
 }
 
 fluxer_volume_size_kb() {
-	docker run --rm -v "$1:/data:ro" "$FLUXER_HELPER_IMAGE" du -sk /data 2> "$fluxer_scratch/volume-err" |
+	$fluxer_engine run --rm -v "$1:/data:ro" "$FLUXER_HELPER_IMAGE" du -sk /data 2> "$fluxer_scratch/volume-err" |
 		awk 'NR==1 {print $1}'
 }
 
@@ -1307,7 +1351,7 @@ fluxer_copy_volumes() {
 	while read -r fluxer_volume; do
 		[ -n "$fluxer_volume" ] || continue
 		fluxer_full="${fluxer_project}_${fluxer_volume}"
-		if ! docker volume inspect "$fluxer_full" >/dev/null 2>&1; then
+		if ! $fluxer_engine volume inspect "$fluxer_full" >/dev/null 2>&1; then
 			fluxer_fail 7 "The volume $fluxer_full does not exist, so the uploads cannot be copied. The stack declares that volume, so this is a project name other than $fluxer_project or a volume that was removed. Pass --no-volume-backup to take the database dump alone when the uploads of this instance live somewhere this script cannot reach."
 		fi
 		fluxer_size=$(fluxer_volume_size_kb "$fluxer_full")
@@ -1331,21 +1375,21 @@ $(fluxer_volume_error '  ')" ;;
 		return 0
 	fi
 	fluxer_say 'Stopping the stack for a consistent copy of the uploads.'
-	if ! docker compose stop; then
-		fluxer_fail 7 "docker compose stop failed in $opt_dir."
+	if ! $fluxer_engine compose stop; then
+		fluxer_fail 7 "$fluxer_engine compose stop failed in $opt_dir."
 	fi
 	while read -r fluxer_volume; do
 		[ -n "$fluxer_volume" ] || continue
 		fluxer_full="${fluxer_project}_${fluxer_volume}"
 		fluxer_say "Copying $fluxer_full."
-		if ! docker run --rm -v "$fluxer_full:/data:ro" -v "$fluxer_record:/backup" "$FLUXER_HELPER_IMAGE" tar czf "/backup/$fluxer_volume.tgz" -C /data .; then
-			docker compose up -d --remove-orphans || true
+		if ! $fluxer_engine run --rm -v "$fluxer_full:/data:ro" -v "$fluxer_record:/backup" "$FLUXER_HELPER_IMAGE" tar czf "/backup/$fluxer_volume.tgz" -C /data .; then
+			$fluxer_engine compose up -d --remove-orphans || true
 			fluxer_fail 7 "Copying $fluxer_full failed. The stack is started again on the images it was running."
 		fi
 	done < "$fluxer_scratch/copy-volumes"
 	fluxer_say 'Starting the stack again before the upgrade continues.'
-	if ! docker compose up -d --remove-orphans; then
-		fluxer_fail 7 "docker compose up -d failed in $opt_dir after the copy. Read docker compose logs there."
+	if ! $fluxer_engine compose up -d --remove-orphans; then
+		fluxer_fail 7 "$fluxer_engine compose up -d failed in $opt_dir after the copy. Read $fluxer_engine compose logs there."
 	fi
 }
 
@@ -1420,7 +1464,7 @@ fluxer_compose_services() {
 fluxer_restart_mounted() {
 	[ -s "$fluxer_scratch/restart" ] || return 0
 	if ! fluxer_compose_services > "$fluxer_scratch/services"; then
-		fluxer_fail 6 "docker compose config --services failed in $opt_dir, so the services that mount a refreshed file cannot be restarted. Compose printed:
+		fluxer_fail 6 "$fluxer_engine compose config --services failed in $opt_dir, so the services that mount a refreshed file cannot be restarted. Compose printed:
 $(fluxer_compose_error '  ')"
 	fi
 	while read -r fluxer_file fluxer_service; do
@@ -1430,8 +1474,8 @@ $(fluxer_compose_error '  ')"
 			continue
 		fi
 		fluxer_say "Restarting $fluxer_service, because $fluxer_file is mounted into it and up -d does not reload a mounted file."
-		if ! docker compose restart "$fluxer_service"; then
-			fluxer_fail 6 "docker compose restart $fluxer_service failed in $opt_dir."
+		if ! $fluxer_engine compose restart "$fluxer_service"; then
+			fluxer_fail 6 "$fluxer_engine compose restart $fluxer_service failed in $opt_dir."
 		fi
 	done < "$fluxer_scratch/restart"
 }
@@ -1464,7 +1508,7 @@ fluxer_newest_record() {
 fluxer_verify_stack() {
 	fluxer_say 'Waiting for every service to report ready.'
 	if ! fluxer_wait_ready; then
-		fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read docker compose logs in $opt_dir."
+		fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read $fluxer_engine compose logs in $opt_dir."
 	fi
 	fluxer_domain_value=$(fluxer_env_value FLUXER_DOMAIN)
 	if [ -n "$fluxer_domain_value" ]; then
@@ -1499,7 +1543,7 @@ fluxer_plan_update() {
 	fi
 	fluxer_running_image_ids > "$fluxer_scratch/running"
 	if ! fluxer_compose_images > "$fluxer_scratch/refs"; then
-		fluxer_say '  refusal       docker compose config --images fails here, and step 1 of the upgrade reads that list'
+		fluxer_say '  refusal       $fluxer_engine compose config --images fails here, and step 1 of the upgrade reads that list'
 		fluxer_say '  compose said'
 		fluxer_compose_error '    '
 		if [ -s "$fluxer_scratch/plan-secrets" ]; then
@@ -1560,7 +1604,7 @@ fluxer_plan_update() {
 			fluxer_say "  restart       $fluxer_service, because $fluxer_file changes and a mounted file survives up -d"
 		done < "$fluxer_scratch/restart"
 	fi
-	fluxer_say '  commands      docker compose pull, docker compose up -d'
+	fluxer_say '  commands      $fluxer_engine compose pull, $fluxer_engine compose up -d'
 	fluxer_plan_footer
 	fluxer_say 'Drop --dry-run to run this.'
 }
@@ -1586,7 +1630,7 @@ fluxer_plan_rollback() {
 		[ -n "$fluxer_ref" ] || continue
 		if [ "$fluxer_id" = '-' ]; then
 			fluxer_say "    $fluxer_ref was not recorded with an ID"
-		elif docker image inspect --format '{{.Id}}' "$fluxer_id" >/dev/null 2>&1; then
+		elif $fluxer_engine image inspect --format '{{.Id}}' "$fluxer_id" >/dev/null 2>&1; then
 			fluxer_say "    $fluxer_ref back to $fluxer_id"
 		else
 			fluxer_say "    $fluxer_ref is gone from this host, so $fluxer_id cannot come back"
@@ -1616,8 +1660,8 @@ fluxer_run_update() {
 	# By hand:
 	#   docker compose pull
 	fluxer_say 'Pulling images.'
-	if ! docker compose pull; then
-		fluxer_fail 4 "docker compose pull failed in $opt_dir. The stack files are refreshed and the instance still runs the old images."
+	if ! $fluxer_engine compose pull; then
+		fluxer_fail 4 "$fluxer_engine compose pull failed in $opt_dir. The stack files are refreshed and the instance still runs the old images."
 	fi
 	# Recreates the containers whose image or configuration changed and leaves
 	# the rest running.
@@ -1639,8 +1683,8 @@ fluxer_run_update() {
 	# Gateway, so the hostname returns errors for a minute or two after this
 	# call. The api healthcheck allows 90 seconds before it counts a failure.
 	fluxer_say 'Recreating the stack.'
-	if ! docker compose up -d --remove-orphans; then
-		fluxer_fail 6 "docker compose up -d failed in $opt_dir. Read docker compose logs there."
+	if ! $fluxer_engine compose up -d --remove-orphans; then
+		fluxer_fail 6 "$fluxer_engine compose up -d failed in $opt_dir. Read $fluxer_engine compose logs there."
 	fi
 	fluxer_restart_mounted
 	fluxer_verify_stack
@@ -1721,18 +1765,18 @@ fluxer_run_rollback() {
 		while read -r fluxer_ref fluxer_id; do
 			[ -n "$fluxer_ref" ] || continue
 			[ "$fluxer_id" != '-' ] || continue
-			if ! docker image inspect --format '{{.Id}}' "$fluxer_id" >/dev/null 2>&1; then
+			if ! $fluxer_engine image inspect --format '{{.Id}}' "$fluxer_id" >/dev/null 2>&1; then
 				fluxer_say "$fluxer_ref is gone from this host, so it keeps the image it has now."
 				continue
 			fi
-			if ! docker image tag "$fluxer_id" "$fluxer_ref"; then
+			if ! $fluxer_engine image tag "$fluxer_id" "$fluxer_ref"; then
 				fluxer_fail 3 "Cannot put $fluxer_id back on $fluxer_ref."
 			fi
 			fluxer_moved=1
 		done < "$fluxer_rollback_dir/$FLUXER_IMAGES_FILE"
 	fi
 	if [ "$fluxer_moved" -eq 0 ]; then
-		fluxer_fail 2 "Nothing in $fluxer_rollback_dir can be put back. The recorded tag is the one in .env and every recorded image has been removed from this host, which a docker image prune does."
+		fluxer_fail 2 "Nothing in $fluxer_rollback_dir can be put back. The recorded tag is the one in .env and every recorded image has been removed from this host, which a $fluxer_engine image prune does."
 	fi
 
 	while read -r fluxer_file; do
@@ -1746,8 +1790,8 @@ fluxer_run_rollback() {
 	fluxer_say "Stack files in $opt_dir are the ones the record holds."
 
 	fluxer_say 'Recreating the stack.'
-	if ! docker compose up -d --remove-orphans; then
-		fluxer_fail 6 "docker compose up -d failed in $opt_dir. Read docker compose logs there."
+	if ! $fluxer_engine compose up -d --remove-orphans; then
+		fluxer_fail 6 "$fluxer_engine compose up -d failed in $opt_dir. Read $fluxer_engine compose logs there."
 	fi
 	# The mounted file came back from the record, so its service restarts.
 	# Comparing it first would save one restart and cost the reader a reason.
@@ -1820,19 +1864,19 @@ fluxer_write_env
 fluxer_say "Wrote $opt_dir/.env, readable by you alone."
 
 if [ "$opt_no_start" -eq 1 ]; then
-	fluxer_say "Start the instance with docker compose up -d in $opt_dir."
+	fluxer_say "Start the instance with $fluxer_engine compose up -d in $opt_dir."
 	fluxer_say 'Open it and create the first admin account. Finish the setup wizard in the same sitting.'
 	fluxer_say "Secrets live in $opt_dir/.env. Back that file up."
 	exit 0
 fi
 
 fluxer_say 'Starting the stack.'
-if ! docker compose up -d; then
-	fluxer_fail 6 "docker compose up -d failed in $opt_dir. Read docker compose logs there."
+if ! $fluxer_engine compose up -d; then
+	fluxer_fail 6 "$fluxer_engine compose up -d failed in $opt_dir. Read $fluxer_engine compose logs there."
 fi
 fluxer_say 'Waiting for every service to report ready. This takes several minutes on the first start, which pulls eighteen images.'
 if ! fluxer_wait_ready; then
-	fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read docker compose logs in $opt_dir."
+	fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read $fluxer_engine compose logs in $opt_dir."
 fi
 fluxer_probe "$opt_domain"
 

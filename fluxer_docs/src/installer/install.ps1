@@ -40,6 +40,7 @@ param(
 	[string]$Domain = '',
 	[string]$Email = '',
 	[string]$Dir = '',
+	[string]$Engine = '',
 	[string]$Ref = '',
 	[string]$ImageTag = 'v1',
 	[string]$Tls = 'bundled',
@@ -65,6 +66,7 @@ $FluxerRawBase = 'https://raw.githubusercontent.com/fluxerapp/fluxer'
 $FluxerStackPath = 'deploy/self-hosting'
 $FluxerHealthPath = '/_health'
 $FluxerInitService = 'seaweedfs-init'
+$FluxerMinimumPodmanVersion = '5.0.0'
 $FluxerMinimumEngineVersion = '24.0.0'
 $FluxerMinimumComposeVersion = '2.20.2'
 $FluxerReadyTimeoutSeconds = 600
@@ -194,6 +196,8 @@ function Show-FluxerUsage {
 	Write-FluxerLine 'Options:'
 	Write-FluxerLine '  -Domain <host>          Hostname the instance answers on. Prompted when absent.'
 	Write-FluxerLine '  -Email <address>        Address written as FLUXER_VAPID_EMAIL. Prompted when absent.'
+	Write-FluxerLine '  -Engine <command>       Container engine to drive. Default: docker, or podman when'
+	Write-FluxerLine '                          docker is absent.'
 	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home'
 	Write-FluxerLine '                          directory, or the working directory itself when -Update or'
 	Write-FluxerLine '                          -Rollback is given and it holds an instance.'
@@ -256,6 +260,9 @@ function Test-FluxerVersionAtLeast([string]$Found, [string]$Minimum) {
 # is kept rather than discarded. The two streams stay apart because every caller reads Text as
 # data, and one warning line on stderr would be one more line of JSON, one more image reference or
 # one more container ID.
+$script:FluxerEngine = 'docker'
+$script:FluxerEngineLabel = 'Docker Engine'
+
 function Invoke-FluxerCapture([string[]]$CommandArgs) {
 	$previous = $ErrorActionPreference
 	$ErrorActionPreference = 'Continue'
@@ -263,7 +270,7 @@ function Invoke-FluxerCapture([string[]]$CommandArgs) {
 	$err = @()
 	$code = 0
 	try {
-		$output = & docker @CommandArgs 2>&1
+		$output = & $script:FluxerEngine @CommandArgs 2>&1
 		$code = $LASTEXITCODE
 		foreach ($item in @($output)) {
 			if ($item -is [System.Management.Automation.ErrorRecord]) {
@@ -283,7 +290,7 @@ function Invoke-FluxerDocker([string[]]$CommandArgs) {
 	$ErrorActionPreference = 'Continue'
 	$code = 0
 	try {
-		& docker @CommandArgs
+		& $script:FluxerEngine @CommandArgs
 		$code = $LASTEXITCODE
 	} finally {
 		$ErrorActionPreference = $previous
@@ -295,7 +302,7 @@ function Invoke-FluxerDocker([string[]]$CommandArgs) {
 # it, so the bytes go to the file through the process itself.
 function Invoke-FluxerDockerToFile([string[]]$CommandArgs, [string]$OutFile, [string]$WorkingDir) {
 	$errorFile = "$OutFile.stderr"
-	$process = Start-Process -FilePath 'docker' -ArgumentList $CommandArgs -RedirectStandardOutput $OutFile -RedirectStandardError $errorFile -WorkingDirectory $WorkingDir -NoNewWindow -Wait -PassThru
+	$process = Start-Process -FilePath $script:FluxerEngine -ArgumentList $CommandArgs -RedirectStandardOutput $OutFile -RedirectStandardError $errorFile -WorkingDirectory $WorkingDir -NoNewWindow -Wait -PassThru
 	$code = $process.ExitCode
 	if (Test-Path -LiteralPath $errorFile) {
 		Remove-Item -LiteralPath $errorFile -Force
@@ -330,22 +337,40 @@ function Invoke-FluxerPreflight {
 	if ($PSVersionTable.PSVersion.Major -lt 6) {
 		[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 	}
-	if ($null -eq (Get-Command docker -ErrorAction SilentlyContinue)) {
-		Stop-Fluxer 'docker is not on PATH. Install Docker Desktop with the WSL2 backend.' $FluxerExitPrerequisite
+	if ($Engine.Length -gt 0) {
+		$script:FluxerEngine = $Engine
+	} elseif ($null -ne (Get-Command docker -ErrorAction SilentlyContinue)) {
+		$script:FluxerEngine = 'docker'
+	} elseif ($null -ne (Get-Command podman -ErrorAction SilentlyContinue)) {
+		$script:FluxerEngine = 'podman'
+	} else {
+		Stop-Fluxer 'Neither docker nor podman is on PATH. Install Docker Desktop with the WSL2 backend, or pass -Engine with the command that drives your containers.' $FluxerExitPrerequisite
+	}
+	if ($null -eq (Get-Command $script:FluxerEngine -ErrorAction SilentlyContinue)) {
+		Stop-Fluxer "$($script:FluxerEngine) is not on PATH. Pass -Engine with the command that drives your containers." $FluxerExitPrerequisite
+	}
+	# Every engine that speaks the Docker CLI reports itself as "<name> version X",
+	# and Podman's 5.x is not Docker's 5.x, so the floor has to belong to whichever
+	# one answered.
+	$reported = Invoke-FluxerCapture @('--version')
+	$minimumEngine = $FluxerMinimumEngineVersion
+	if ($reported.Code -eq 0 -and $reported.Text -match '^\s*podman\s+version') {
+		$script:FluxerEngineLabel = 'Podman'
+		$minimumEngine = $FluxerMinimumPodmanVersion
 	}
 	$engine = Invoke-FluxerCapture @('version', '--format', '{{.Server.Version}}')
 	if ($engine.Code -ne 0) {
-		Stop-Fluxer 'The Docker daemon does not answer. Start Docker Desktop and run this script again.' $FluxerExitPrerequisite
+		Stop-Fluxer "$($script:FluxerEngine) does not answer. Start it and run this script again." $FluxerExitPrerequisite
 	}
 	$compose = Invoke-FluxerCapture @('compose', 'version', '--short')
 	if ($compose.Code -ne 0) {
 		Stop-Fluxer 'The Docker Compose v2 plugin is missing. Docker Desktop ships it.' $FluxerExitPrerequisite
 	}
-	if (-not (Test-FluxerVersionAtLeast $engine.Text $FluxerMinimumEngineVersion)) {
-		Stop-Fluxer "Docker Engine $($engine.Text) is older than $FluxerMinimumEngineVersion. Compose is $($compose.Text)." $FluxerExitPrerequisite
+	if (-not (Test-FluxerVersionAtLeast $engine.Text $minimumEngine)) {
+		Stop-Fluxer "$($script:FluxerEngineLabel) $($engine.Text) is older than $minimumEngine. Compose is $($compose.Text)." $FluxerExitPrerequisite
 	}
 	if (-not (Test-FluxerVersionAtLeast $compose.Text $FluxerMinimumComposeVersion)) {
-		Stop-Fluxer "Docker Compose $($compose.Text) is older than $FluxerMinimumComposeVersion. Engine is $($engine.Text)." $FluxerExitPrerequisite
+		Stop-Fluxer "Compose $($compose.Text) is older than $FluxerMinimumComposeVersion. $($script:FluxerEngineLabel) is $($engine.Text)." $FluxerExitPrerequisite
 	}
 	$osType = Invoke-FluxerCapture @('info', '--format', '{{.OSType}}')
 	if ($osType.Code -ne 0) {
@@ -354,7 +379,7 @@ function Invoke-FluxerPreflight {
 	if ($osType.Text -ne 'linux') {
 		Stop-Fluxer "Docker runs $($osType.Text) containers. Switch Docker Desktop to Linux containers." $FluxerExitPrerequisite
 	}
-	Write-FluxerLine "Docker Engine $($engine.Text) and Compose $($compose.Text) are ready."
+	Write-FluxerLine "$($script:FluxerEngineLabel) $($engine.Text) and Compose $($compose.Text) are ready."
 	if (-not (Test-FluxerWsl2)) {
 		Write-FluxerLine 'WSL 2 is not present. Docker Desktop with the WSL2 backend is the supported Windows setup.'
 	}
