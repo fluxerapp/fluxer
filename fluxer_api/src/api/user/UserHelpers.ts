@@ -134,7 +134,7 @@ function suppressDeferredPhoneFlags(rawFlags: number): number {
 	if ((rawFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) === 0) {
 		return rawFlags;
 	}
-	if (!getCachedDeferredPhoneGateEnabled()) {
+	if (getCachedDeferredPhoneGateEnabled() === false) {
 		return rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
 	}
 	return rawFlags & ~DEFERRABLE_PHONE_FLAGS;
