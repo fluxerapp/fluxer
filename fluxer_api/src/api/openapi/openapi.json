@@ -26113,7 +26113,7 @@
 					"redirect_uris": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 20,
+						"maxItems": 10,
 						"description": "The registered redirect URIs for OAuth2"
 					}
 				},
@@ -27745,7 +27745,6 @@
 					"permission_overwrites": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/ChannelOverwriteResponse"},
-						"maxItems": 500,
 						"description": "The permission overwrites for this channel"
 					},
 					"recipients": {
@@ -28608,7 +28607,7 @@
 							"properties": {"username": {"type": "string", "description": "The username of the recipient"}},
 							"required": ["username"]
 						},
-						"maxItems": 49,
+						"maxItems": 50,
 						"description": "The recipients of the DM channel"
 					}
 				},
@@ -30246,7 +30245,7 @@
 					"tags": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 10,
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
 					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
@@ -31585,8 +31584,8 @@
 					"roles": {
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"maxItems": 100,
-						"description": "Array of role IDs to assign to the member (max 100)"
+						"maxItems": 250,
+						"description": "Array of role IDs to assign to the member (max 250)"
 					},
 					"avatar": {
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}],
@@ -31738,7 +31737,7 @@
 					"tags": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 10,
 						"description": "Autocomplete/suggestion tags for the sticker"
 					},
 					"animated": {"type": "boolean", "description": "Whether this sticker is animated"},
@@ -32164,7 +32163,7 @@
 					"redirect_uris": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 20,
+						"maxItems": 10,
 						"description": "The registered redirect URIs for OAuth2"
 					},
 					"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"},
@@ -32322,7 +32321,7 @@
 					"redirect_uris": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 20,
+						"maxItems": 10,
 						"description": "The registered redirect URIs for OAuth2"
 					},
 					"scopes": {
@@ -32357,13 +32356,6 @@
 										"description": "The bio or description of the bot"
 									},
 									"token": {"type": "string", "description": "The bot token for authentication"},
-									"mfa_enabled": {"type": "boolean", "description": "Whether the bot has MFA enabled"},
-									"authenticator_types": {
-										"type": "array",
-										"items": {"$ref": "#/components/schemas/AuthenticatorType"},
-										"maxItems": 10,
-										"description": "The types of authenticators enabled"
-									},
 									"flags": {"$ref": "#/components/schemas/BotFlags"}
 								},
 								"required": ["id", "username", "discriminator", "bio", "flags"],
