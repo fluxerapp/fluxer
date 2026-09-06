@@ -120,6 +120,10 @@ impl AdminConfig {
     pub fn is_production(&self) -> bool {
         self.env == RuntimeEnv::Production
     }
+
+    pub fn secure_cookies(&self) -> bool {
+        self.admin_endpoint.starts_with("https://")
+    }
 }
 
 impl RuntimeEnv {

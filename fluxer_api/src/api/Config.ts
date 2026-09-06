@@ -113,17 +113,18 @@ function mapPushProviderApps(
 				project_id?: string;
 		  }>
 		| undefined,
+	configName: string,
 ): APIConfig['push']['apns']['apps'] {
-	return (apps ?? []).flatMap((app) => {
-		if (!app.app_id) return [];
-		return [
-			{
-				appId: app.app_id,
-				topic: app.topic,
-				environment: app.environment,
-				projectId: app.project_id,
-			},
-		];
+	return (apps ?? []).map((app) => {
+		if (!app.app_id) {
+			throw new Error(`${configName} contains an entry with no app_id`);
+		}
+		return {
+			appId: app.app_id,
+			topic: app.topic,
+			environment: app.environment,
+			projectId: app.project_id,
+		};
 	});
 }
 
@@ -139,7 +140,13 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		serviceName: 'api',
 	});
 	const uploadRelayConfig = master.services.media_proxy.upload_relay;
-	const uploadRelaySecretBase64 = process.env.FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 ?? '';
+	const uploadRelaySecretBase64 = uploadRelayConfig.secret_base64;
+	if (uploadRelaySecretBase64.length === 0) {
+		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API');
+	}
+	if (Buffer.from(uploadRelaySecretBase64, 'base64').length < 32) {
+		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes');
+	}
 	if (!s3Config) {
 		throw new Error('S3 configuration is required for the API');
 	}
@@ -149,7 +156,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		downloads: '',
 		reports: '',
 		harvests: '',
-		static: '',
 	};
 	if (master.database.backend === 'cassandra' && !cassandraSource) {
 		throw new Error('Cassandra configuration is required.');
@@ -494,7 +500,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				privateKey: master.integrations.push.apns.private_key,
 				privateKeyPath: master.integrations.push.apns.private_key_path,
 				defaultEnvironment: master.integrations.push.apns.default_environment ?? 'production',
-				apps: mapPushProviderApps(master.integrations.push.apns.apps),
+				apps: mapPushProviderApps(master.integrations.push.apns.apps, 'FLUXER_PUSH_APNS_APPS'),
 			},
 			fcm: {
 				enabled: master.integrations.push.fcm.enabled,
@@ -504,7 +510,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				privateKeyPath: master.integrations.push.fcm.private_key_path,
 				serviceAccountJsonPath: master.integrations.push.fcm.service_account_json_path,
 				tokenUri: master.integrations.push.fcm.token_uri ?? 'https://oauth2.googleapis.com/token',
-				apps: mapPushProviderApps(master.integrations.push.fcm.apps),
+				apps: mapPushProviderApps(master.integrations.push.fcm.apps, 'FLUXER_PUSH_FCM_APPS'),
 			},
 		},
 		worker: {

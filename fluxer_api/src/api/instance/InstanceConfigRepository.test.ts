@@ -115,6 +115,38 @@ describe('InstanceConfigRepository', () => {
 		});
 	});
 
+	it('reports the effective captcha provider as none while the selected pair is incomplete', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setInstanceIntegrationsConfig({
+			captcha: {
+				provider: 'turnstile',
+				hcaptcha_site_key: 'hcaptcha-site-key',
+				hcaptcha_secret_key: 'hcaptcha-secret-key',
+			},
+		});
+
+		await expect(repository.getEffectiveCaptchaConfig()).resolves.toMatchObject({
+			enabled: false,
+			provider: 'none',
+		});
+
+		await repository.setInstanceIntegrationsConfig({
+			captcha: {
+				turnstile_site_key: 'turnstile-site-key',
+				turnstile_secret_key: 'turnstile-secret-key',
+			},
+		});
+
+		await expect(repository.getEffectiveCaptchaConfig()).resolves.toMatchObject({
+			enabled: true,
+			provider: 'turnstile',
+		});
+	});
+
 	it('uses the registration URL id as the admin-visible registration code', async () => {
 		const executor = new CountingInMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);

@@ -1262,8 +1262,8 @@ export class InstanceConfigRepository {
 					? Boolean(turnstileSiteKey && turnstileSecretKey)
 					: false;
 		return {
-			enabled: provider !== 'none' && providerReady,
-			provider,
+			enabled: providerReady,
+			provider: providerReady ? provider : 'none',
 			hcaptcha_site_key: hcaptchaSiteKey,
 			hcaptcha_secret_key: hcaptchaSecretKey,
 			turnstile_site_key: turnstileSiteKey,

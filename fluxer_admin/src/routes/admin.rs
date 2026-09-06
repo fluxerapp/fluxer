@@ -119,7 +119,7 @@ async fn admin_api_keys_post(
                 return flash::redirect_with_flash(
                     &format!("{base}/admin-api-keys"),
                     flash,
-                    config.is_production(),
+                    config.secure_cookies(),
                 );
             }
         }
@@ -128,7 +128,7 @@ async fn admin_api_keys_post(
     flash::redirect_with_flash(
         &format!("{base}/admin-api-keys"),
         FlashData::success(format!("API key action '{action}' completed.")),
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 
@@ -143,7 +143,7 @@ fn admin_api_key_flash_response(
         flash::redirect_with_flash(
             &format!("{}/admin-api-keys", config.base_path),
             flash_data,
-            config.is_production(),
+            config.secure_cookies(),
         )
     }
 }

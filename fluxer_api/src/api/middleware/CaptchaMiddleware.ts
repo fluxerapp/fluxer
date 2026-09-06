@@ -45,7 +45,7 @@ function resolveCaptchaProvider(
 	}
 	const secretKey = resolveProviderSecret(config, requestedProvider);
 	if (!secretKey) {
-		throw new Error(`Captcha provider ${requestedProvider} is enabled but has no configured secret key`);
+		throw new InvalidCaptchaError();
 	}
 	return createCaptchaProvider({mode: requestedProvider, secretKey});
 }

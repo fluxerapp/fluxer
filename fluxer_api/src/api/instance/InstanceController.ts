@@ -57,8 +57,8 @@ function buildDiscoveryStaticInput(
 		},
 		captcha: {
 			provider: runtime.captcha.provider,
-			hcaptcha_site_key: runtime.captcha.hcaptcha_site_key,
-			turnstile_site_key: runtime.captcha.turnstile_site_key,
+			hcaptcha_site_key: runtime.captcha.provider === 'hcaptcha' ? runtime.captcha.hcaptcha_site_key : null,
+			turnstile_site_key: runtime.captcha.provider === 'turnstile' ? runtime.captcha.turnstile_site_key : null,
 		},
 		features: {
 			voice_enabled: Config.voice.enabled,

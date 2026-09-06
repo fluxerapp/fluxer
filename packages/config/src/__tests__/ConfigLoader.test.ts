@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {generateKeyPairSync} from 'node:crypto';
 import {getConfig, loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
@@ -18,6 +19,7 @@ const MINIMAL_ENV: Record<string, string> = {
 	FLUXER_S3_ACCESS_KEY_ID: 'test-key',
 	FLUXER_S3_SECRET_ACCESS_KEY: 'test-secret',
 	FLUXER_MEDIA_PROXY_SECRET_KEY: 'test-media-secret',
+	FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 	FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 	FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
 	FLUXER_MARKETING_SECRET_KEY_BASE: 'test-marketing-secret',
@@ -26,9 +28,21 @@ const MINIMAL_ENV: Record<string, string> = {
 	FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-token',
 	FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 	FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',
-	FLUXER_VAPID_PUBLIC_KEY: 'test-vapid-public-key',
-	FLUXER_VAPID_PRIVATE_KEY: 'test-vapid-private-key',
+	FLUXER_VAPID_PUBLIC_KEY: 'BB76bTFIuoqmxJtTfZX0yGTn1f_qu9H03B_nkj8OyExJFkN7Y-HBZZzShnHZoEhXKc5ZRy3jFu7OkBbnaQG-4aw',
+	FLUXER_VAPID_PRIVATE_KEY: 'Xgi-3P8J-I3Q6U1HlCcXMuc_tKLGAM9nIfznX3Hz68o',
 };
+
+function generateVapidPair(): {publicKey: string; privateKey: string} {
+	const {privateKey} = generateKeyPairSync('ec', {namedCurve: 'prime256v1'});
+	const jwk = privateKey.export({format: 'jwk'});
+	const x = Buffer.from(jwk.x ?? '', 'base64url');
+	const y = Buffer.from(jwk.y ?? '', 'base64url');
+	const d = Buffer.from(jwk.d ?? '', 'base64url');
+	return {
+		publicKey: Buffer.concat([Buffer.from([0x04]), x, y]).toString('base64url'),
+		privateKey: d.toString('base64url'),
+	};
+}
 
 function stubMinimalEnv(overrides: Record<string, string> = {}): void {
 	for (const [key, value] of Object.entries({...MINIMAL_ENV, ...overrides})) {
@@ -201,6 +215,51 @@ describe('ConfigLoader', () => {
 		]);
 	});
 
+	test('rejects an empty client API endpoint override', async () => {
+		stubMinimalEnv({FLUXER_API_CLIENT_ENDPOINT: ''});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_CLIENT_ENDPOINT is required');
+	});
+
+	test('defaults the passkey relying party to the deployment domain', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '443',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.auth.passkeys.rp_id).toBe('chat.example.com');
+	});
+
+	test('derives the passkey origin only when the operator clears the default list', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '443',
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: '',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['https://chat.example.com']);
+	});
+
+	test('keeps explicit passkey relying party values', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '443',
+			FLUXER_PASSKEY_RP_ID: 'example.com',
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: 'https://example.com,https://app.example.com',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.auth.passkeys.rp_id).toBe('example.com');
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['https://example.com', 'https://app.example.com']);
+	});
+
 	test('parses typed named environment variables', async () => {
 		stubMinimalEnv({
 			FLUXER_API_PORT: '9090',
@@ -212,7 +271,6 @@ describe('ConfigLoader', () => {
 			FLUXER_POSTGRES_PREPARED_STATEMENTS: 'false',
 			FLUXER_API_WORKER_MODE: 'single_task',
 			FLUXER_API_WORKER_TASK: 'processStripeWebhook',
-			FLUXER_GATEWAY_PUSH_ENABLED: 'false',
 			FLUXER_ACCOUNT_POLICY_DSL: '{"version":1,"id":"env_policy","rules":[]}',
 			FLUXER_LIVEKIT_ENABLED: 'true',
 			FLUXER_LIVEKIT_DEFAULT_REGION:
@@ -230,13 +288,20 @@ describe('ConfigLoader', () => {
 		expect(config.database.postgres.prepared_statements).toBe(false);
 		expect(config.services.api.worker?.mode).toBe('single_task');
 		expect(config.services.api.worker?.task).toBe('processStripeWebhook');
-		expect(config.services.gateway.push_enabled).toBe(false);
 		expect(config.integrations.risk_integration.account_policy_dsl).toEqual({
 			version: 1,
 			id: 'env_policy',
 			rules: [],
 		});
 		expect(config.integrations.voice.default_region?.id).toBe('local');
+	});
+
+	test('ignores FLUXER_GATEWAY_PUSH_ENABLED, which only the gateway reads', async () => {
+		stubMinimalEnv({FLUXER_GATEWAY_PUSH_ENABLED: 'false'});
+
+		const config = await loadConfig();
+
+		expect(config.services.gateway).not.toHaveProperty('push_enabled');
 	});
 
 	test('rejects single task worker mode without task env', async () => {
@@ -247,6 +312,16 @@ describe('ConfigLoader', () => {
 	test('rejects invalid Postgres typed environment values', async () => {
 		stubMinimalEnv({FLUXER_POSTGRES_PORT: 'abc'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PORT');
+	});
+
+	test('rejects a non-integer port', async () => {
+		stubMinimalEnv({FLUXER_API_PORT: '80a'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_PORT must be an integer, got "80a"');
+	});
+
+	test('rejects malformed JSON for a JSON-shaped variable', async () => {
+		stubMinimalEnv({FLUXER_LIVEKIT_DEFAULT_REGION: '{bad'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_LIVEKIT_DEFAULT_REGION must be valid JSON');
 	});
 
 	test('keeps Postgres prepared statements on by default', async () => {
@@ -281,6 +356,16 @@ describe('ConfigLoader', () => {
 	test('rejects a non-numeric api request timeout', async () => {
 		stubMinimalEnv({FLUXER_API_REQUEST_TIMEOUT_MS: 'soon'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_API_REQUEST_TIMEOUT_MS');
+	});
+
+	test('applies the KV mode from the environment', async () => {
+		stubMinimalEnv({FLUXER_KV_MODE: 'cluster'});
+		expect((await loadConfig()).internal.kv_mode).toBe('cluster');
+	});
+
+	test('rejects an unknown KV mode', async () => {
+		stubMinimalEnv({FLUXER_KV_MODE: 'sentinel'});
+		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_KV_MODE: sentinel');
 	});
 
 	test('rejects unsafe production Postgres defaults', async () => {
@@ -403,6 +488,158 @@ describe('ConfigLoader', () => {
 				action: 'suppress_delivery',
 			},
 		});
+	});
+
+	test('rejects an enabled captcha with no keys for the selected provider', async () => {
+		stubMinimalEnv({FLUXER_CAPTCHA_ENABLED: 'true', FLUXER_CAPTCHA_PROVIDER: 'hcaptcha'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY is required');
+	});
+
+	test('rejects an enabled captcha with a site key but no secret key', async () => {
+		stubMinimalEnv({
+			FLUXER_CAPTCHA_ENABLED: 'true',
+			FLUXER_CAPTCHA_PROVIDER: 'turnstile',
+			FLUXER_CAPTCHA_TURNSTILE_SITE_KEY: 'turnstile-site-key',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY is required');
+	});
+
+	test('rejects an enabled captcha with no provider', async () => {
+		stubMinimalEnv({FLUXER_CAPTCHA_ENABLED: 'true'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_CAPTCHA_PROVIDER must be hcaptcha or turnstile when FLUXER_CAPTCHA_ENABLED is true',
+		);
+	});
+
+	test('accepts an enabled captcha with both keys for the selected provider', async () => {
+		stubMinimalEnv({
+			FLUXER_CAPTCHA_ENABLED: 'true',
+			FLUXER_CAPTCHA_PROVIDER: 'hcaptcha',
+			FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY: 'hcaptcha-site-key',
+			FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY: 'hcaptcha-secret-key',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.captcha.enabled).toBe(true);
+		expect(config.integrations.captcha.hcaptcha?.secret_key).toBe('hcaptcha-secret-key');
+	});
+
+	test('leaves a disabled captcha unvalidated', async () => {
+		stubMinimalEnv({FLUXER_CAPTCHA_PROVIDER: 'hcaptcha'});
+		expect((await loadConfig()).integrations.captcha.enabled).toBe(false);
+	});
+
+	test('leaves Bluesky login off with no legal URLs by default', async () => {
+		stubMinimalEnv();
+
+		const config = await loadConfig();
+
+		expect(config.auth.bluesky.enabled).toBe(false);
+		expect(config.auth.bluesky.tos_uri).toBe('');
+		expect(config.auth.bluesky.policy_uri).toBe('');
+		expect(config.auth.bluesky.keys).toEqual([]);
+	});
+
+	test('applies explicit Bluesky legal URLs from the environment', async () => {
+		stubMinimalEnv({
+			FLUXER_AUTH_BLUESKY_ENABLED: 'true',
+			FLUXER_AUTH_BLUESKY_TOS_URI: 'https://chat.example.com/terms',
+			FLUXER_AUTH_BLUESKY_POLICY_URI: 'https://chat.example.com/privacy',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.auth.bluesky.enabled).toBe(true);
+		expect(config.auth.bluesky.tos_uri).toBe('https://chat.example.com/terms');
+		expect(config.auth.bluesky.policy_uri).toBe('https://chat.example.com/privacy');
+	});
+
+	test('reads the upload relay secret through the override table', async () => {
+		const secret = Buffer.alloc(32, 9).toString('base64');
+		stubMinimalEnv({FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: secret});
+
+		const config = await loadConfig();
+
+		expect(config.services.media_proxy.upload_relay.secret_base64).toBe(secret);
+	});
+
+	test('defaults the upload relay body limit to the media proxy ceiling', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).services.media_proxy.upload_relay.max_body_bytes).toBe(524_288_000);
+	});
+
+	test('rejects a missing upload relay secret in upload mode', async () => {
+		stubMinimalEnv();
+		vi.stubEnv('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64', '');
+
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload mode',
+		);
+	});
+
+	test('rejects a non-base64 upload relay secret', async () => {
+		stubMinimalEnv({FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: 'not base64!'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must be base64');
+	});
+
+	test('rejects an upload relay secret shorter than 32 bytes', async () => {
+		stubMinimalEnv({FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: Buffer.alloc(16, 7).toString('base64')});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes',
+		);
+	});
+
+	test('leaves the upload relay secret optional outside upload mode', async () => {
+		stubMinimalEnv({FLUXER_MEDIA_PROXY_MODE: 'mp'});
+		vi.stubEnv('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64', '');
+
+		const config = await loadConfig();
+
+		expect(config.services.media_proxy.upload_relay.secret_base64).toBe('');
+	});
+
+	test('rejects a VAPID public key that is not a 65-byte uncompressed point', async () => {
+		const {privateKey} = generateVapidPair();
+		stubMinimalEnv({
+			FLUXER_VAPID_PUBLIC_KEY: Buffer.alloc(64, 4).toString('base64url'),
+			FLUXER_VAPID_PRIVATE_KEY: privateKey,
+		});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_VAPID_PUBLIC_KEY must be the base64url 65-byte uncompressed P-256 point',
+		);
+	});
+
+	test('rejects a VAPID private key that is not a 32-byte scalar', async () => {
+		const {publicKey} = generateVapidPair();
+		stubMinimalEnv({
+			FLUXER_VAPID_PUBLIC_KEY: publicKey,
+			FLUXER_VAPID_PRIVATE_KEY: Buffer.alloc(31, 9).toString('base64url'),
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_VAPID_PRIVATE_KEY must be the base64url 32-byte P-256 scalar');
+	});
+
+	test('rejects a well formed VAPID scalar that does not derive the public point', async () => {
+		const {publicKey} = generateVapidPair();
+		const other = generateVapidPair();
+		stubMinimalEnv({
+			FLUXER_VAPID_PUBLIC_KEY: publicKey,
+			FLUXER_VAPID_PRIVATE_KEY: other.privateKey,
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_VAPID_PRIVATE_KEY does not match FLUXER_VAPID_PUBLIC_KEY');
+	});
+
+	test('accepts a generated VAPID pair', async () => {
+		const pair = generateVapidPair();
+		stubMinimalEnv({
+			FLUXER_VAPID_PUBLIC_KEY: pair.publicKey,
+			FLUXER_VAPID_PRIVATE_KEY: pair.privateKey,
+		});
+
+		const config = await loadConfig();
+
+		expect(config.auth.vapid.public_key).toBe(pair.publicKey);
+		expect(config.auth.vapid.private_key).toBe(pair.privateKey);
 	});
 
 	test('requires a complete environment', async () => {

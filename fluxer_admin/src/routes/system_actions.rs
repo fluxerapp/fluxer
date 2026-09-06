@@ -44,8 +44,8 @@ pub struct ActionQuery {
     pub rule: Option<String>,
 }
 
-pub fn redirect_back_with_flash(base: &str, path: &str, fd: FlashData, prod: bool) -> Response {
-    flash::redirect_with_flash(&format!("{base}{path}"), fd, prod)
+pub fn redirect_back_with_flash(base: &str, path: &str, fd: FlashData, secure: bool) -> Response {
+    flash::redirect_with_flash(&format!("{base}{path}"), fd, secure)
 }
 
 pub async fn gateway_post(
@@ -63,7 +63,7 @@ pub async fn gateway_post(
                 base,
                 "/gateway",
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -80,7 +80,7 @@ pub async fn gateway_post(
     } else {
         FlashData::error("Unknown gateway action")
     };
-    redirect_back_with_flash(base, "/gateway", flash, config.is_production())
+    redirect_back_with_flash(base, "/gateway", flash, config.secure_cookies())
 }
 
 pub async fn search_index_post(
@@ -97,7 +97,7 @@ pub async fn search_index_post(
                 base,
                 "/search-index",
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -114,7 +114,7 @@ pub async fn search_index_post(
                 flash::redirect_with_flash(
                     &format!("{base}/search-index?job_id={job_id}"),
                     FlashData::success("Search index refresh started"),
-                    config.is_production(),
+                    config.secure_cookies(),
                 )
             }
             Err(error) => {
@@ -123,7 +123,7 @@ pub async fn search_index_post(
                     base,
                     "/search-index",
                     FlashData::error("Failed to start search index refresh"),
-                    config.is_production(),
+                    config.secure_cookies(),
                 )
             }
         };
@@ -132,7 +132,7 @@ pub async fn search_index_post(
         base,
         "/search-index",
         FlashData::error("Index type is required"),
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 
@@ -157,7 +157,7 @@ pub async fn instance_config_post(
                 base,
                 "/instance-config",
                 flash,
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -320,7 +320,7 @@ pub async fn instance_config_post(
     if htmx::is_htmx_request(&headers) {
         return htmx::toast_response(&flash);
     }
-    redirect_back_with_flash(base, "/instance-config", flash, config.is_production())
+    redirect_back_with_flash(base, "/instance-config", flash, config.secure_cookies())
 }
 
 fn render_registration_url_list_response(
@@ -866,13 +866,13 @@ pub async fn limit_config_post(
                 base,
                 "/limit-config",
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let action = aq.action.as_deref().unwrap_or("");
-    let is_prod = config.is_production();
+    let secure_cookies = config.secure_cookies();
     let current = match client.get_limit_config().await {
         Ok(current) => current,
         Err(error) => {
@@ -881,7 +881,7 @@ pub async fn limit_config_post(
                 base,
                 "/limit-config",
                 FlashData::error("Failed to fetch current limit configuration"),
-                is_prod,
+                secure_cookies,
             );
         }
     };
@@ -895,7 +895,7 @@ pub async fn limit_config_post(
                         base,
                         "/limit-config",
                         FlashData::error("Rule not found"),
-                        is_prod,
+                        secure_cookies,
                     );
                 }
             };
@@ -908,7 +908,7 @@ pub async fn limit_config_post(
                     base,
                     "/limit-config",
                     FlashData::error("Rule not found"),
-                    is_prod,
+                    secure_cookies,
                 );
             };
             let fallback = current
@@ -923,7 +923,7 @@ pub async fn limit_config_post(
                 "Limit configuration updated",
                 "Failed to update limit configuration",
             );
-            return redirect_back_with_flash(base, "/limit-config", flash, is_prod);
+            return redirect_back_with_flash(base, "/limit-config", flash, secure_cookies);
         }
         "delete" => {
             let rule_id = match aq.rule.as_deref().and_then(clean_string) {
@@ -933,7 +933,7 @@ pub async fn limit_config_post(
                         base,
                         "/limit-config",
                         FlashData::error("Rule not found"),
-                        is_prod,
+                        secure_cookies,
                     );
                 }
             };
@@ -942,7 +942,7 @@ pub async fn limit_config_post(
                     base,
                     "/limit-config",
                     FlashData::error("The default rule cannot be deleted"),
-                    is_prod,
+                    secure_cookies,
                 );
             }
             let old_len = limit_config.rules.len();
@@ -952,14 +952,14 @@ pub async fn limit_config_post(
                     base,
                     "/limit-config",
                     FlashData::error("Rule not found"),
-                    is_prod,
+                    secure_cookies,
                 );
             }
             let request = LimitConfigUpdateRequest { limit_config };
             let result = client.update_limit_config(&request).await;
             let flash =
                 limit_config_result(result, "Limit rule deleted", "Failed to delete limit rule");
-            return redirect_back_with_flash(base, "/limit-config", flash, is_prod);
+            return redirect_back_with_flash(base, "/limit-config", flash, secure_cookies);
         }
         "create" => {
             let rule_id = match form.clean("rule_id") {
@@ -969,7 +969,7 @@ pub async fn limit_config_post(
                         base,
                         "/limit-config",
                         FlashData::error("Rule ID is required"),
-                        is_prod,
+                        secure_cookies,
                     );
                 }
             };
@@ -978,7 +978,7 @@ pub async fn limit_config_post(
                     base,
                     "/limit-config",
                     FlashData::error("The default rule ID is reserved"),
-                    is_prod,
+                    secure_cookies,
                 );
             }
             if limit_config.rules.iter().any(|rule| rule.id == rule_id) {
@@ -986,7 +986,7 @@ pub async fn limit_config_post(
                     base,
                     "/limit-config",
                     FlashData::error("Rule ID already exists"),
-                    is_prod,
+                    secure_cookies,
                 );
             }
             let limits = current.defaults.get("default").cloned().unwrap_or_default();
@@ -1000,7 +1000,7 @@ pub async fn limit_config_post(
             let result = client.update_limit_config(&request).await;
             let flash =
                 limit_config_result(result, "Limit rule created", "Failed to create limit rule");
-            return redirect_back_with_flash(base, "/limit-config", flash, is_prod);
+            return redirect_back_with_flash(base, "/limit-config", flash, secure_cookies);
         }
         _ => {}
     }
@@ -1008,7 +1008,7 @@ pub async fn limit_config_post(
         base,
         "/limit-config",
         FlashData::success("Limit config updated"),
-        is_prod,
+        secure_cookies,
     )
 }
 

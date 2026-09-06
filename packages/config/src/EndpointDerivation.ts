@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+const DOCS_ENDPOINT = 'https://fluxer.dev';
+
 export interface DomainConfig {
 	base_domain: string;
 	public_scheme: 'http' | 'https';
@@ -19,6 +21,7 @@ export interface DerivedEndpoints {
 	media: string;
 	static_cdn: string;
 	admin: string;
+	docs: string;
 	marketing: string;
 	invite: string;
 	gift: string;
@@ -83,6 +86,7 @@ export function deriveDomain(
 		| 'media'
 		| 'static_cdn'
 		| 'admin'
+		| 'docs'
 		| 'marketing'
 		| 'invite'
 		| 'gift',
@@ -113,6 +117,7 @@ export function deriveEndpointsFromDomain(config: DomainConfig): DerivedEndpoint
 			? buildUrl('https', deriveDomain('static_cdn', config), undefined)
 			: buildUrl(public_scheme, deriveDomain('static_cdn', config), public_port),
 		admin: buildUrl(public_scheme, deriveDomain('admin', config), public_port, '/admin'),
+		docs: DOCS_ENDPOINT,
 		marketing: buildUrl(public_scheme, deriveDomain('marketing', config), public_port, '/marketing'),
 		invite: buildUrl(public_scheme, deriveDomain('invite', config), public_port, '/invite'),
 		gift: buildUrl(public_scheme, deriveDomain('gift', config), public_port, '/gift'),

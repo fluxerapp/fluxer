@@ -48,7 +48,7 @@ pub(crate) async fn messages_post(
             return flash::redirect_with_flash(
                 &format!("{base}/messages"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -164,7 +164,7 @@ pub(crate) async fn system_dms_post(
             return flash::redirect_with_flash(
                 &format!("{base}/system-dms"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -184,7 +184,11 @@ pub(crate) async fn system_dms_post(
     } else {
         FlashData::error("Recipients and content are required")
     };
-    flash::redirect_with_flash(&format!("{base}/system-dms"), flash, config.is_production())
+    flash::redirect_with_flash(
+        &format!("{base}/system-dms"),
+        flash,
+        config.secure_cookies(),
+    )
 }
 
 pub(crate) async fn bulk_actions_post(
@@ -201,7 +205,7 @@ pub(crate) async fn bulk_actions_post(
             return flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -278,7 +282,7 @@ pub(crate) async fn bulk_actions_post(
             return flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
                 FlashData::error("Unknown bulk action"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -290,7 +294,7 @@ pub(crate) async fn bulk_actions_post(
                 flash::redirect_with_flash(
                     &format!("{base}/bulk-actions"),
                     FlashData::success("Bulk action submitted"),
-                    config.is_production(),
+                    config.secure_cookies(),
                 )
             }
         }
@@ -299,7 +303,7 @@ pub(crate) async fn bulk_actions_post(
             flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
                 FlashData::error("Failed to submit bulk action"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
     }
@@ -405,14 +409,14 @@ pub(crate) async fn archives_download(
         Ok(_) => flash::redirect_with_flash(
             &format!("{base}/archives"),
             FlashData::error("Archive download URL was empty"),
-            config.is_production(),
+            config.secure_cookies(),
         ),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: get archive download URL");
             flash::redirect_with_flash(
                 &format!("{base}/archives"),
                 FlashData::error("Failed to create archive download URL"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
     }

@@ -44,7 +44,6 @@ interface S3BucketConfigOverrides {
 	downloads?: string;
 	reports?: string;
 	harvests?: string;
-	static?: string;
 }
 
 interface S3ConfigOverrides {
