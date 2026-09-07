@@ -9,7 +9,7 @@ import type {GatewayChannelMention, IGatewayService} from '../../../infrastructu
 import type {UserCacheService} from '../../../infrastructure/UserCacheService';
 import {Logger} from '../../../Logger';
 import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
+import {Channel} from '../../../models/Channel';
 import type {Message} from '../../../models/Message';
 import type {User} from '../../../models/User';
 import type {ReadStateService} from '../../../read_state/ReadStateService';
@@ -31,6 +31,13 @@ interface RecipientOpenState {
 interface MentionProcessingResult {
 	message: Message;
 	mentionChannels: Array<GatewayChannelMention>;
+}
+
+function channelWithLastMessageId(channel: Channel, messageId: MessageID): Channel {
+	if (channel.lastMessageId != null && channel.lastMessageId >= messageId) {
+		return channel;
+	}
+	return new Channel({...channel.toRow(), last_message_id: messageId});
 }
 
 export class MessageProcessingService {
@@ -64,10 +71,12 @@ export class MessageProcessingService {
 	async updateDMRecipients({
 		channel,
 		channelId,
+		messageId,
 		requestCache,
 	}: {
 		channel: Channel;
 		channelId: ChannelID;
+		messageId: MessageID;
 		requestCache: RequestCache;
 	}): Promise<void> {
 		if (channel.guildId || channel.type !== ChannelTypes.DM) return;
@@ -76,11 +85,12 @@ export class MessageProcessingService {
 		const openStates = await this.batchCheckDmChannelOpen(recipientIds, channelId);
 		const closedRecipients = openStates.filter((state) => !state.isOpen);
 		if (closedRecipients.length === 0) return;
+		const snapshotChannel = channelWithLastMessageId(channel, messageId);
 		await Promise.all(
 			closedRecipients.map((state) =>
 				this.openDmAndDispatch({
 					recipientId: state.recipientId,
-					channel,
+					channel: snapshotChannel,
 					requestCache,
 				}),
 			),

@@ -980,7 +980,7 @@ export class MessageSendService {
 			await this.settlePostCreateWork(messageId, [
 				{
 					step: 'update_dm_recipients',
-					promise: this.deps.processingService.updateDMRecipients({channel, channelId, requestCache}),
+					promise: this.deps.processingService.updateDMRecipients({channel, channelId, messageId, requestCache}),
 				},
 				{
 					step: 'process_message_after_creation',
