@@ -4,6 +4,7 @@ import {create} from '@bufbuild/protobuf';
 import {MAX_GROUP_DM_OTHER_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
 import {encodeSyncedPreferences, SyncedPreferencesSchema} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {
+	BulkDeleteSelfMessagesFilter,
 	CreatePrivateChannelRequest,
 	CustomStatusPayload,
 	UserSettingsUpdateRequest,
@@ -85,5 +86,22 @@ describe('CreatePrivateChannelRequest', () => {
 		if (parsed.success) {
 			expect(parsed.data.recipient_id).toBe(0n);
 		}
+	});
+});
+
+describe('BulkDeleteSelfMessagesFilter', () => {
+	it('accepts ISO8601 timestamps with Z, +00:00, and -00:00', () => {
+		expect(
+			BulkDeleteSelfMessagesFilter.safeParse({
+				start_date: '2026-09-01T00:00:00Z',
+				end_date: '2026-09-07T12:00:00+00:00',
+			}).success,
+		).toBe(true);
+		expect(
+			BulkDeleteSelfMessagesFilter.safeParse({
+				start_date: '2026-09-01T00:00:00-00:00',
+				end_date: '2026-09-07T12:00:00.000Z',
+			}).success,
+		).toBe(true);
 	});
 });

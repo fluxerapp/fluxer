@@ -704,13 +704,13 @@ const BulkDeleteSelfMessagesFilterShape = z.object({
 		),
 	start_date: z
 		.string()
-		.datetime()
+		.datetime({offset: true})
 		.nullable()
 		.optional()
 		.describe('Inclusive ISO8601 lower bound for message timestamps. Null/omitted means unbounded in the past.'),
 	end_date: z
 		.string()
-		.datetime()
+		.datetime({offset: true})
 		.nullable()
 		.optional()
 		.describe('Exclusive ISO8601 upper bound for message timestamps. Null/omitted means unbounded in the future.'),

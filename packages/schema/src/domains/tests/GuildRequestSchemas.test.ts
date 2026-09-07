@@ -40,6 +40,33 @@ describe('GuildMemberUpdateRequest', () => {
 	it('rejects one role beyond the guild role limit', () => {
 		expect(GuildMemberUpdateRequest.safeParse({roles: buildRoleIds(MAX_GUILD_ROLES + 1)}).success).toBe(false);
 	});
+	it('accepts ISO8601 timestamp with Z, +00:00, and -00:00 for communication_disabled_until', () => {
+		expect(
+			GuildMemberUpdateRequest.safeParse({
+				communication_disabled_until: '2026-09-07T12:00:00Z',
+			}).success,
+		).toBe(true);
+		expect(
+			GuildMemberUpdateRequest.safeParse({
+				communication_disabled_until: '2026-09-07T12:00:00+00:00',
+			}).success,
+		).toBe(true);
+		expect(
+			GuildMemberUpdateRequest.safeParse({
+				communication_disabled_until: '2026-09-07T12:00:00-00:00',
+			}).success,
+		).toBe(true);
+		expect(
+			GuildMemberUpdateRequest.safeParse({
+				communication_disabled_until: '2026-09-07T12:00:00.123+00:00',
+			}).success,
+		).toBe(true);
+		expect(
+			GuildMemberUpdateRequest.safeParse({
+				communication_disabled_until: 'not-a-timestamp',
+			}).success,
+		).toBe(false);
+	});
 });
 
 describe('GuildStickerCreateRequest', () => {
