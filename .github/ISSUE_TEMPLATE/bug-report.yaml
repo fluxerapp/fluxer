@@ -36,8 +36,7 @@ body:
       label: Build information
       description: >-
         Open User Settings, scroll to the bottom of the left sidebar, and select
-        the build information. Fluxer copies it to the clipboard. On mobile,
-        select the build information at the bottom of the settings list.
+        the build information. Fluxer copies it to the clipboard.
     validations:
       required: true
 
