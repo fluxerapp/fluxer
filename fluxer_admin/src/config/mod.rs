@@ -129,6 +129,11 @@ impl AdminConfig {
     pub fn secure_cookies(&self) -> bool {
         self.admin_endpoint.starts_with("https://")
     }
+
+    pub fn admin_origin(&self) -> Option<String> {
+        let origin = url::Url::parse(&self.admin_endpoint).ok()?.origin();
+        origin.is_tuple().then(|| origin.ascii_serialization())
+    }
 }
 
 impl RuntimeEnv {
@@ -202,6 +207,7 @@ mod tests {
             unsafe { env::remove_var(name) };
         }
         unsafe { env::remove_var("FLUXER_PUBLIC_PORT") };
+        unsafe { env::remove_var("FLUXER_PUBLIC_ORIGIN") };
         unsafe { env::set_var("FLUXER_ADMIN_SECRET_KEY_BASE", "test-secret") };
         for (name, value) in vars {
             unsafe { env::set_var(name, value) };
@@ -350,7 +356,7 @@ mod tests {
             ("FLUXER_BASE_DOMAIN", "fluxer.example"),
             ("FLUXER_PUBLIC_PORT", "19080"),
             ("FLUXER_ADMIN_ENDPOINT", "http://fluxer.example/admin"),
-            ("FLUXER_APP_ENDPOINT", "http://fluxer.example:19080"),
+            ("FLUXER_APP_ENDPOINT", "http://fluxer.example"),
             ("FLUXER_MEDIA_ENDPOINT", "http://fluxer.example/media"),
             ("FLUXER_STATIC_CDN_ENDPOINT", "https://cdn.example.net"),
             (
