@@ -134,7 +134,7 @@ Every route-produced error response uses `Cache-Control: no-store`, and a succes
 
 ## Range response headers
 
-A complete media response has `Accept-Ranges: bytes`, the representation `Content-Type`, and an exact `Content-Length`<sup>1</sup>. A 206 additionally sets `Content-Range` to the complete size and `Content-Length` to the selected byte count. A 416 has `Content-Range: bytes */{size}` and `Accept-Ranges: bytes` with an empty body.
+A complete media response has `Accept-Ranges: bytes`, the representation `Content-Type`, and an exact `Content-Length`<sup>1</sup>. A 206 additionally sets `Content-Range` to the selected interval over the complete size and `Content-Length` to the selected byte count. A 416 has `Content-Range: bytes */{size}` and `Accept-Ranges: bytes` with an empty body.
 
 <sup>1</sup> A streamed signed external response omits `Content-Length` when the origin declared none
 

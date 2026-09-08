@@ -190,4 +190,4 @@ A held or discarded Identify, an over-budget Presence Update, a dropped bounded 
 
 ## Ordinary WebSocket closes
 
-A transport can end with no Fluxer application close code, as happens on a network failure, an intermediary reset, and an ordinary `1000` or `1001` close. An established session remains available for 60,000 ms after the transport ends. Ending the transport does not extend that window or its bounded replay history.
+A transport can end with no Fluxer application close code, as happens on a network failure, an intermediary reset, and an ordinary `1000` or `1001` close. An established session remains available for 60,000 ms after the transport ends. A later transport end starts a new 60,000 ms window, and neither the window length nor the bounded replay history grows.

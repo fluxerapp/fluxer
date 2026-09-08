@@ -94,7 +94,7 @@ Lazy Request accepts at most 10 member list ranges per channel, each with `end` 
 
 Request Guild Counts accepts at most 100 guild IDs after deduplication. Request Channel Member Counts accepts at most 25 channel IDs after deduplication. Both nonces run from 1 through 64 bytes, and a nonce outside that bound is omitted from the result.
 
-Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Every other bound on this page coerces or drops. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
+Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Every other command payload bound coerces or drops. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
 
 ## Voice admission
 

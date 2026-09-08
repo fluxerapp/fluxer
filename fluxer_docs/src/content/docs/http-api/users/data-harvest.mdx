@@ -310,7 +310,7 @@ The operation is active only while the instance has presigned harvest downloads 
 The token binds the account, the harvest ID, the stored object key, and an expiry.
 
 :::note[Every rejection looks identical]
-A missing, malformed, forged, or expired token, a token for another harvest, a harvest that never completed or recorded a failure, a harvest past its deadline, and a stale object key all return 404 with the plain text body `Not Found`.
+A missing, malformed, forged, or expired token, a token for another harvest, a harvest that never completed, a harvest that recorded a failure, a harvest past its deadline, and a stale object key all return 404 with the plain text body `Not Found`.
 :::
 
 ### Path parameters

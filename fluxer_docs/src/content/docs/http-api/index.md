@@ -81,7 +81,7 @@ An empty string stays an empty string and an empty nested object stays an empty 
 
 [Authentication](/authentication/) defines the accepted `Authorization` schemes, their exact token forms, and the OAuth2 scope registry. An operation that requires a credential states the scheme on its resource page. The [sudo verification object](/http-api/users/mfa/#sudo-verification-object) defines the sudo mode credential that guards sensitive account operations.
 
-An OAuth2 bearer access token is accepted only where a route opts in, and the resource page says so. Everywhere else a bearer credential is refused with 403 `ACCESS_DENIED`, and an account with a suspicious activity flag is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+An OAuth2 bearer access token is accepted only where a route opts in, and the resource page says so. Everywhere else a bearer credential is refused with 403 `ACCESS_DENIED`. An account with a suspicious activity flag is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
 ## Standard request headers
 

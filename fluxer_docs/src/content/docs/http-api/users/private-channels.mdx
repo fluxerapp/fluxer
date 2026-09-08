@@ -80,7 +80,7 @@ Opens a direct message with one account, or creates a group DM. Returns a [chann
 
 One body field selects the channel type. `recipient_id` opens a direct message. `recipients` always creates a group DM whatever its length, so a single-element array creates a two-participant group DM, and an empty array creates a group DM whose only participant is the caller.
 
-A request supplying `recipients` additionally consumes the `user:group_dm:create` bucket and passes the CAPTCHA check below, whatever the resulting participant count.
+A request supplying `recipients` additionally consumes the `user:group_dm:create` bucket and is subject to the CAPTCHA check below, whatever the resulting participant count.
 
 Instance policy can disable private channel creation entirely, in which case every request returns 400 `DIRECT_MESSAGES_DISABLED` after the body has been validated and the group DM bucket and CAPTCHA have been applied.
 

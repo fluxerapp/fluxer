@@ -128,7 +128,7 @@ The response body has this member alongside `code` and `message`.
 
 ## Admin API keys
 
-An Admin API key is read only on a route below `/v1/admin`, and an unknown, expired, or invalid key leaves the request unauthenticated. A valid key authenticates as the user who created it and has the ACLs stored on the key.
+An Admin API key is read only on a route below `/v1/admin`, and an unknown, expired, or invalid key leaves the request unauthenticated. A valid key authenticates as the user who created it, and the request has the ACLs stored on the key.
 
 An Admin operation also accepts a user session token and an OAuth2 bearer token, and a bearer token is accepted only when it belongs to the built-in Admin OAuth2 application. A bearer token from any other application returns 403 `ACCESS_DENIED`. A request with a bot token returns 401 `UNAUTHORIZED`.
 

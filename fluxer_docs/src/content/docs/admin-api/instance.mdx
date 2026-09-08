@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Instance configuration is everything an operator can change at runtime. It covers single sign-on, Gateway rollout, registration policy, branding and legal links, instance policy, third party integrations, media retention, and the ordered limit configuration. The [Instance](/http-api/instance/) resource serves the subset published to unauthenticated clients.
 
-Every write is a merge over the stored configuration. An omitted key leaves the stored value unchanged.
+Every write is a merge over the stored configuration, and an omitted key leaves the stored value unchanged. The limit configuration write is the one exception, and it replaces the stored document.
 
 Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`. The heap snapshot requires `system:heap_snapshot`.
 

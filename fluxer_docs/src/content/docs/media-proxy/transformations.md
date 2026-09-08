@@ -126,7 +126,7 @@ Quality names are matched exactly and are case-sensitive. An unrecognised value 
 
 An image asset defaults to `high`. An attachment or signed external image defaults to `lossless`, except that a JPEG, HEIC, or HEIF source defaults to `high`. Animated WebP output defaults to `auto` on every route that reads `quality`. A video thumbnail is extracted at `high`, and `quality` then applies only to the resize step that `width` or `height` requests. A non-transforming SVG rasterisation always uses `lossless`.
 
-Encoder effort defaults to 2 for animated output or `low` quality and 4 otherwise, and it applies to WebP output only. JPEG and PNG have fixed encoder settings, and GIF always encodes at effort 7. The attachment-only `effort` parameter replaces the default and is clamped to 9. Still WebP output clamps it again to 6, and so does lossy animated WebP. Only lossless animated WebP uses 7 through 9.
+Encoder effort defaults to 2 for animated output or `low` quality and 4 otherwise, and it applies to WebP output only. JPEG and PNG have fixed encoder settings, and GIF always encodes at effort 7. The attachment-only `effort` parameter replaces the default and is clamped to 9. Static WebP output clamps it again to 6, and so does lossy animated WebP. Only lossless animated WebP uses 7 through 9.
 
 ## Animation
 

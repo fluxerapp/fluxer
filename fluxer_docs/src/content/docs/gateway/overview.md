@@ -82,7 +82,7 @@ Every logical message uses the Gateway payload.
 
 <sup>1</sup> Heartbeat ACK and Reconnect have no `d` at all, and Invalid Session has the Boolean `false`
 
-A decoded payload that is not a JSON object closes with `4002` and reason `Decode failed`. An object with no `op` closes with `4002` and reason `Invalid payload`. An object with `op` but no `d` closes with `4001` and reason `Unknown opcode`, except for Identify, which closes with `4005`.
+A decoded payload that is not a JSON object closes with `4002` and reason `Decode failed`. An object with no `op` closes with `4002` and reason `Invalid payload`. An object with `op` but no `d` closes with `4001` and reason `Unknown opcode`, except for Identify and Resume, which close with `4005`.
 
 A Dispatch is a server-to-client event payload. Every live Dispatch advances the session sequence by one. A session starts at sequence 0, so the [Ready](/gateway/events/#ready) sequence is 1.
 

@@ -210,7 +210,7 @@ An application that is already approved, rejected, or removed fails with 409 `DI
 
 An approval moves the application to `approved` and records the review time, the reviewing Admin, and the supplied reason. It adds the discoverable feature to the guild and indexes the listing, so the guild appears in [Search discovery guilds](/http-api/discovery/#search-discovery-guilds). [Guild Update](/gateway/events/#guild-update) fires to every session that can observe the guild. Indexing is skipped on an instance with no search backend configured, and the approval still succeeds.
 
-Fluxer moves a rejected application to `rejected` and records the review time, the reviewing Admin, and the required reason. It leaves every guild field as it is and emits no Gateway Dispatch.
+A rejection moves the application to `rejected` and records the review time, the reviewing Admin, and the required reason. It leaves every guild field as it is and emits no Gateway Dispatch.
 
 An approval whose guild can no longer be resolved still succeeds. Fluxer skips the feature grant and the Dispatch.
 
@@ -257,7 +257,7 @@ Returns an offset page of the approved listings filed under one category, most m
 
 <sup>1</sup> Applied after the category filter and the member sort, so raise it to page a category
 
-A rebuild of the discovery search index does not change what it answers. It reports no total, so a page shorter than `limit` is the only end-of-category signal. A listing whose guild could not be resolved sorts as if it had no members and lands at the end.
+A rebuild of the discovery search index does not change what this operation answers. It reports no total, so a page shorter than `limit` is the only end-of-category signal. A listing whose guild could not be resolved sorts as if it had no members and lands at the end.
 
 ### Response
 

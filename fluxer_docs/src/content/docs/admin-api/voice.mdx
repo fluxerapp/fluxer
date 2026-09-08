@@ -64,7 +64,7 @@ The operator supplies `id` on creation, and it is the primary key. It is the val
 | updated_at | ?ISO8601 timestamp | Time the region record last changed, or null when the stored row has none |
 | servers?<sup>4</sup> | array[[Admin voice server](#admin-voice-server-object) object] | The servers registered in the region |
 
-<sup>1</sup> The flag is not exclusive, and setting it on a second region does not clear it on the first. Each node then treats the first region its reload enumerates as the default, and a topology with the flag on no region falls back the same way
+<sup>1</sup> The flag is not exclusive, and setting it on a second region does not clear it on the first. Each node then treats the first flagged region its reload enumerates as the default, and a topology with the flag on no region falls back to the first region its reload enumerates
 
 <sup>2</sup> Setting any of these three makes the region unusable for a private call
 

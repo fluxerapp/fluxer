@@ -174,7 +174,7 @@ The slowmode state combines the channel's configured interval with the authentic
 
 <sup>1</sup> Both report no delay in a private channel, for an interval of `0`, for a bot caller, and for a caller holding `BYPASS_SLOWMODE`
 
-<sup>2</sup> False whenever the delay is not accounted, so a bot caller and a private channel both report `false` even though neither is delayed
+<sup>2</sup> True only for a non-bot caller holding `BYPASS_SLOWMODE` in a guild channel with a non-zero interval, so a bot caller and a private channel both report `false` even though neither is delayed
 
 ### Example
 

@@ -58,7 +58,7 @@ An unrecognised scope value is rejected when the authorisation request is comple
 Scope order has no semantic meaning, so a client MUST compare scopes as a set.
 :::
 
-The `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) is sorted into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) and of an [OAuth2 authorisation](#oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed.
+The `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) is sorted into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed. The `scopes` array of an [OAuth2 authorisation](#oauth2-authorisation-object) is in no defined order, and it can hold `bot` and an unrecognised value once more than one refresh token contributes.
 
 ## OAuth2 error response object
 

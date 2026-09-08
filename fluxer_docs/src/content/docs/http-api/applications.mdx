@@ -257,7 +257,7 @@ Every rejection reports the same `INVALID_TOKEN`, so a caller cannot distinguish
 
 <RouteHeader method="GET" path="/v1/oauth2/applications/{id}/public" unauthenticated />
 
-Returns the [public application](#public-application-object) object for any application. Authentication is not required. A credential that resolves to an account also populates `current_user` and reports the owner's view of `bot_public`.
+Returns the [public application](#public-application-object) object for any application. Authentication is not required. A credential that resolves to an account also populates `current_user`, and one that resolves to the application owner reports `bot_public` as true even when the bot is not public.
 
 ### Path parameters
 

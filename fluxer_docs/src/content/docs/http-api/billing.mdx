@@ -496,7 +496,7 @@ Refunds the account's most recent eligible purchase and returns the [refund](#re
 
 The same invoice selection as [get refund eligibility](#get-refund-eligibility) applies.
 
-Repeating the request returns the same provider refund. After a refund the provider reports as failed or cancelled, the account can attempt the refund again.
+Repeating the request returns the same provider refund. After a refund that the provider reports as failed or cancelled, the account can attempt the refund again.
 
 :::note[A Pix refund is short one minor unit]
 When the resolved charge was paid with Pix and the invoice amount is greater than one minor unit, the requested refund is the invoice amount minus one minor unit.

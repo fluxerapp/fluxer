@@ -856,7 +856,7 @@ The operation creates one 64-character verification token bound to the account a
 
 Accepts a password recovery request for an email address. Authentication is not required. Returns 204 with no body.
 
-This is a local authentication operation and it verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both extra allowances before it validates the address, and exhausting either returns 429.
+This is a local authentication operation and it verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both the client IP address and email address allowances before it validates the address, and exhausting either returns 429.
 
 ### Request headers
 

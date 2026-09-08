@@ -118,7 +118,7 @@ The window length, both thresholds, and the number of windows the score trigger 
 
 ## API error code registry
 
-These codes appear in the top-level `code` field of an error response, transmitted as the exact JSON string shown. The registry is closed and holds exactly 257 codes. Each entry states the leading sentence of the English source message, without its final full stop. Those messages call a [guild](/http-api/guilds/) a community.
+These codes appear in the top-level `code` field of an error response, transmitted as the exact JSON string shown. The registry is closed and holds exactly 264 codes. Each entry states the leading sentence of the English source message, without its final full stop. Those messages call a [guild](/http-api/guilds/) a community.
 
 :::note[The rendered `message` fills in the braced values]
 A description containing a value in braces is an ICU MessageFormat template. `You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}` renders as a complete sentence with the applicable limit.

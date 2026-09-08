@@ -615,7 +615,7 @@ A group whose count is `0` is omitted. The `offline` group is also omitted once 
 | range | array[integer] | Inclusive `[start, end]` range this operation replaces |
 | items | array[[member list item object](#member-list-item-object)] | Replacement items for the range |
 
-`SYNC` is the only operation Fluxer sends. A client MUST ignore an operation whose `op` it does not recognise and whose range fails the bounds in [Lazy Request](/gateway/commands/#lazy-request).
+`SYNC` is the only operation Fluxer sends. A client MUST ignore an operation whose `op` it does not recognise or whose range fails the bounds in [Lazy Request](/gateway/commands/#lazy-request).
 
 #### Member list item object
 
@@ -823,7 +823,7 @@ A session that set the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/comm
 | guild_id?<sup>1</sup> | snowflake | Guild the channel belongs to |
 | reactions | array[[reaction addition object](#reaction-addition-object)] | The coalesced additions, in arrival order |
 
-<sup>1</sup> Taken from the first addition in the window. The window is per session, so a run that spans several messages reports every addition under the first message's channel, message, and guild, and a client MUST read each addition's own identity from that entry
+<sup>1</sup> Taken from the first addition of the group. The window is per session, and the session groups the additions by guild, channel, and message when the window closes. Each group is one Dispatch, so every addition in `reactions` is on the message these fields name
 
 A window that closes holding exactly one addition sends [Message Reaction Add](#message-reaction-add) instead, and a session without the flag receives one Message Reaction Add per addition.
 

@@ -191,7 +191,7 @@ Every field is optional, and an omitted filter is not applied. The route reads a
 
 <sup>7</sup> The sort field is camel-cased `joinedAt`, where the result object names the same value `joined_at`
 
-[Input normalisation](/http-api/#input-normalisation) rewrites `""` to null, which this field rejects with 400 `INVALID_FORM_BODY`. `" "` is accepted.
+[Input normalisation](/http-api/#input-normalisation) rewrites `""` to null, which the `query` field rejects with 400 `INVALID_FORM_BODY`. `" "` is accepted.
 
 With no `sort_by`, the route sorts by join time and defaults `sort_order` to `desc`. Two members with the same join time are ordered by descending `id`. `relevance` ignores `sort_order`. A Meilisearch instance orders `relevance` by its own ranking rules. An Elasticsearch instance orders `relevance` by descending `id`.
 

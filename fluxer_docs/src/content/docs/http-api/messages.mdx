@@ -117,9 +117,9 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 | 7 | USER_JOIN<sup>2</sup> | User-join system message |
 | 19 | REPLY<sup>1</sup> <sup>2</sup> | Message with a reply reference |
 
-<sup>1</sup> Only this type can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with 400 `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
+<sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with 400 `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
 
-<sup>2</sup> Only this type can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
+<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
 
 ## Message flags
 
@@ -1008,7 +1008,7 @@ Fluxer aborts the multipart upload and discards its parts when no part was uploa
 :::
 
 :::caution[An unowned upload is reported as invalid input]
-An upload key the identity does not own, that belongs to another channel, that was planned as singlepart, or that a message already consumed all report 400 `UPLOADED_ATTACHMENT_NOT_FOUND`. A caller cannot tell the four apart, so it cannot probe another identity's upload state.
+Fluxer reports 400 `UPLOADED_ATTACHMENT_NOT_FOUND` for an upload key the identity does not own, one that belongs to another channel, one planned as singlepart, and one a message already consumed. A caller cannot tell the four apart, so it cannot probe another identity's upload state.
 :::
 
 ### Side effects
