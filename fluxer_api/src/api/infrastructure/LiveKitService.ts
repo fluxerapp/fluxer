@@ -324,9 +324,6 @@ export class LiveKitService extends ILiveKitService {
 				participants: participants.map((participant) => ({identity: participant.identity})),
 			};
 		} catch (error) {
-			if (LiveKitService.isHttp404(error)) {
-				return {status: 'ok', participants: []};
-			}
 			Logger.warn({error, regionId, serverId, roomName}, 'LiveKit listParticipants failed');
 			const status = LiveKitService.getHttpStatus(error);
 			const isRetryable = status != null && status >= 500;
