@@ -107,11 +107,15 @@ FLUXER_PUBLIC_PORT=443
 
 They stay `https` on `443` even though the instance itself speaks plain HTTP on `8080`. Clients read every base URL from the discovery document the API builds out of these values.
 
-Serving on a port other than `443` also needs `FLUXER_PUBLIC_ORIGIN`. Several endpoints are built from the scheme and the domain alone, and the port is lost without it:
+Serving on a port other than `443` means changing one of those three:
 
 ```ini
-FLUXER_PUBLIC_ORIGIN=https://chat.example.com:8443
+FLUXER_PUBLIC_PORT=8443
 ```
+
+Your proxy holds the public port, and the overlay pins the edge to plain HTTP on `8080` whatever that port is, so nothing else in `.env` moves with it.
+
+Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states the same address as one string, and an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names puts part of the instance on `chat.example.com:8443` and part on `chat.example.com`, where the web app sends no `Authorization` header across the gap.
 
 ## nginx
 

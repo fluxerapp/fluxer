@@ -775,15 +775,64 @@ function Wait-FluxerStack([string]$Lead) {
 	Stop-Fluxer "The stack did not report healthy within $FluxerReadyTimeoutSeconds seconds. Read docker compose ps and docker compose logs." $FluxerExitUnhealthy
 }
 
+# The origin browsers use. .env states it outright when FLUXER_PUBLIC_ORIGIN is set, and Compose
+# otherwise builds the same string from the scheme, the domain and the port, dropping a port that
+# is the default for its scheme.
+#
+# Compose expands a ${...} reference inside an .env value and this script does not, so a
+# FLUXER_PUBLIC_ORIGIN written that way is skipped rather than printed back with the braces still
+# in it. The three names below say the same address, so the derived string is the right one to
+# fall back to.
+#
+# By hand:
+#   Select-String -Path .env -Pattern '^FLUXER_(PUBLIC_ORIGIN|PUBLIC_SCHEME|DOMAIN|PUBLIC_PORT)='
+function Get-FluxerPublicOrigin([string]$EnvPath) {
+	$origin = Get-FluxerEnvValue $EnvPath 'FLUXER_PUBLIC_ORIGIN'
+	if ($origin.Contains('${')) {
+		Write-FluxerProblem 'FLUXER_PUBLIC_ORIGIN in .env holds a ${...} reference. This script does not expand those, so the address below comes from FLUXER_PUBLIC_SCHEME, FLUXER_DOMAIN and FLUXER_PUBLIC_PORT instead.'
+		$origin = ''
+	}
+	if ($origin.Length -gt 0) {
+		return $origin.TrimEnd('/')
+	}
+	$originHost = Get-FluxerEnvValue $EnvPath 'FLUXER_DOMAIN'
+	if ($originHost.Length -eq 0) {
+		return ''
+	}
+	$scheme = Get-FluxerEnvValue $EnvPath 'FLUXER_PUBLIC_SCHEME'
+	if ($scheme.Length -eq 0) {
+		$scheme = 'https'
+	}
+	$port = Get-FluxerEnvValue $EnvPath 'FLUXER_PUBLIC_PORT'
+	$suffix = ''
+	if ($port.Length -gt 0 -and -not (($scheme -eq 'http' -and $port -eq '80') -or ($scheme -eq 'https' -and $port -eq '443'))) {
+		$suffix = ":$port"
+	}
+	return "${scheme}://${originHost}${suffix}"
+}
+
 # The public probe is informational. A host behind hairpin NAT cannot always reach its own
-# hostname, and a false failure there would be worse than no probe.
-function Test-FluxerPublicHealth([string]$DomainValue) {
-	$url = "https://$DomainValue$FluxerHealthPath"
+# hostname, and a false failure there would be worse than no probe. It asks the origin .env
+# advertises, so an instance on a non-default port is probed where it actually answers.
+function Test-FluxerPublicHealth([string]$Origin) {
+	$url = "$Origin$FluxerHealthPath"
+	$authority = $Origin
+	$separator = $Origin.IndexOf('://')
+	if ($separator -ge 0) {
+		$authority = $Origin.Substring($separator + 3)
+	}
+	$probeHost = $authority
+	$probePort = if ($Origin.StartsWith('http://')) { '80' } else { '443' }
+	$colon = $authority.IndexOf(':')
+	if ($colon -ge 0) {
+		$probeHost = $authority.Substring(0, $colon)
+		$probePort = $authority.Substring($colon + 1)
+	}
 	try {
 		$response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 20
 		Write-FluxerLine "$url returned $([int]$response.StatusCode)."
 	} catch {
-		Write-FluxerLine "$url did not answer with 200. Confirm the DNS record for $DomainValue and that ports 80 and 443 reach this host."
+		Write-FluxerLine "$url did not answer with 200. Confirm the DNS record for $probeHost and that inbound port $probePort reaches this host."
 	}
 }
 
@@ -1558,9 +1607,9 @@ function Invoke-FluxerUpgrade([string]$TargetDir, [string]$EnvPath, [string]$Bac
 	}
 	Restart-FluxerMounts $changedMounts $TargetDir
 	Wait-FluxerStack 'Waiting for every service to report ready.'
-	$domainValue = Get-FluxerEnvValue $EnvPath 'FLUXER_DOMAIN'
-	if ($domainValue.Length -gt 0) {
-		Test-FluxerPublicHealth $domainValue
+	$originValue = Get-FluxerPublicOrigin $EnvPath
+	if ($originValue.Length -gt 0) {
+		Test-FluxerPublicHealth $originValue
 	}
 	Write-FluxerLine "Instance upgraded in $TargetDir."
 	Write-FluxerLine "The record of what it ran before is in $record."
@@ -1647,9 +1696,9 @@ function Invoke-FluxerRollback([string]$TargetDir, [string]$EnvPath, [string]$Ba
 	# would save one restart and cost the reader a reason.
 	Restart-FluxerMounts $FluxerMountedFiles $TargetDir
 	Wait-FluxerStack 'Waiting for every service to report ready.'
-	$domainValue = Get-FluxerEnvValue $EnvPath 'FLUXER_DOMAIN'
-	if ($domainValue.Length -gt 0) {
-		Test-FluxerPublicHealth $domainValue
+	$originValue = Get-FluxerPublicOrigin $EnvPath
+	if ($originValue.Length -gt 0) {
+		Test-FluxerPublicHealth $originValue
 	}
 	Write-FluxerLine "Instance rolled back in $TargetDir."
 	$dumpPath = Join-Path $record $FluxerDumpFile
@@ -1938,8 +1987,12 @@ function Invoke-FluxerInstall {
 			Stop-Fluxer 'docker compose up -d failed.' $FluxerExitUnhealthy
 		}
 		Wait-FluxerStack 'Waiting for the stack to report healthy. The first start pulls images and takes several minutes.'
-		Test-FluxerPublicHealth $domainValue
-		Write-FluxerLine "Instance ready at https://$domainValue"
+		$readyOrigin = Get-FluxerPublicOrigin $envPath
+		if ($readyOrigin.Length -eq 0) {
+			$readyOrigin = "https://$domainValue"
+		}
+		Test-FluxerPublicHealth $readyOrigin
+		Write-FluxerLine "Instance ready at $readyOrigin"
 		Write-FluxerLine 'Open it and create the first admin account. Finish the setup wizard in the same sitting.'
 		Write-FluxerLine "Secrets live in $envPath. Back that file up."
 	} finally {

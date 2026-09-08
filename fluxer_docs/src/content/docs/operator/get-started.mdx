@@ -79,6 +79,8 @@ Open these ports on the host:
 
 A machine behind a home router needs 80, 443 and both LiveKit ports forwarded to it. The certificate is issued from the public internet, and voice media arrives on the LiveKit ports directly. Running your own reverse proxy changes only the first two, which the proxy holds while the stack binds a plain HTTP port on the loopback. 7881 and 7882 have to reach the host either way, because voice media never goes through a proxy.
 
+On another port, open that one in place of 443 and read [Serving on another port](#serving-on-another-port).
+
 On a cloud VM, open them in the provider's firewall or security group. On a Linux host running firewalld:
 
 ```bash
@@ -136,6 +138,25 @@ The run prints one line per phase and ends with the URL to open.
 
 `~/fluxer` then holds `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `Caddyfile` and `.env.example`, plus a `.env` readable only by you. Every value that ships as `CHANGE_ME` in `.env.example` is a fresh random value. Every command from here on runs in that directory.
 
+### Serving on another port
+
+The installer writes an `.env` for `https` on `443` and has no flag for another port. Two lines change it, the port of the public address and the publish that answers on it:
+
+```ini
+FLUXER_PUBLIC_PORT=8443
+FLUXER_HTTPS_PORT=8443
+```
+
+```bash
+docker compose up -d
+```
+
+`FLUXER_PUBLIC_PORT` is where the port of the public address goes, and every endpoint the services advertise follows it. It does not move what the host publishes, so `FLUXER_HTTPS_PORT` has to name the same port. Move `FLUXER_PUBLIC_SCHEME` with them when the new port serves plain HTTP, and set `FLUXER_HTTP_PORT` in place of `FLUXER_HTTPS_PORT`. `.env.example` ships beside `.env` and writes out both complete recipes.
+
+Host 80 stays published on the `https` recipe and still answers the ACME challenge. Let's Encrypt only ever connects to the public 80 or 443, so the certificate is issued if a router in front forwards public 80 to this host. Serve your own certificate from the `Caddyfile` when it cannot.
+
+Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states that same address as one string, so an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names holds two addresses. Part of the instance then answers on one and part on the other, the web app sends no `Authorization` header to an API that is not on its own origin, the API answers 401, and the setup wizard reads that 401 as an expired session and returns to the account form. [The public origin](/operator/configuration/#the-public-origin) has the rest.
+
 ### Installer flags
 
 | Flag | Meaning |
@@ -173,7 +194,7 @@ docker compose logs -f api
 
 Every service reads `running` or `healthy` except `seaweedfs-init`, which creates the upload buckets and then reads `exited (0)`.
 
-Then the public probes. Replace the hostname with your own:
+Then the public probes. Replace the origin with your own, port included when the instance answers on one:
 
 ```bash
 base=https://chat.example.com
@@ -202,6 +223,8 @@ Open the hostname in a browser. A fresh instance is unconfigured, so it serves t
 The wizard runs in two halves. The first is a welcome, a theme choice, an admin introduction and an account form. Once that account exists, the second covers branding, registration mode, community policy, media expiry, the integrations, the service toggles and the premium model. Finishing marks the instance configured and takes the wizard down.
 
 Create the owner account with an email address at a domain you control. The first registration that supplies one receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
+
+Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so setting `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. Its domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
 
 `.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. A forgotten owner password therefore has no email reset. Record it, and register a passkey or a second admin account before you open registration.
 
