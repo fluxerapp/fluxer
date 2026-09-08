@@ -3,6 +3,7 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import styles from '@app/features/app/components/setup/SelfHostedSetupWizardGate.module.css';
 import {
+	classifySetupUnauthorized,
 	fetchInstanceConfig,
 	type SetupBrandingAssetKind,
 	testSmtpConfig,
@@ -55,6 +56,7 @@ import {fileToBase64} from '@app/features/user/utils/AvatarUtils';
 import * as FormUtils from '@app/lib/forms';
 import {type ThemeType, ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon, ArrowRightIcon, CheckIcon, WrenchIcon} from '@phosphor-icons/react';
@@ -91,6 +93,11 @@ const LOADING_DESCRIPTOR = msg({
 const LOAD_ERROR_DESCRIPTOR = msg({
 	message: 'Could not load the instance configuration. Try reloading the page.',
 	comment: 'Error shown when the setup wizard fails to load the instance configuration.',
+});
+const ORIGIN_MISMATCH_DESCRIPTOR = msg({
+	message:
+		'The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload.',
+	comment: 'Error shown when the setup wizard cannot load because the API origin differs from the page origin.',
 });
 const ASSET_UPLOAD_ERROR_DESCRIPTOR = msg({
 	message: 'That image could not be used. Try a different file.',
@@ -425,7 +432,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const stepNavigationUnlockTimerRef = useRef<number | null>(null);
 
 	const [config, setConfig] = useState<InstanceConfigResponse | null>(null);
-	const [loadError, setLoadError] = useState(false);
+	const [loadError, setLoadError] = useState<MessageDescriptor | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [stepNavigationLocked, setStepNavigationLocked] = useState(false);
@@ -531,11 +538,11 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}, [authStoreAuthenticated, forceUnauthenticatedSetup]);
 
 	const resetStaleSetupSession = useCallback(async () => {
-		logger.warn('Instance config fetch returned 401 during setup; clearing stale local setup session');
+		logger.warn('The setup session token was rejected. Clearing the stale local setup session.');
 		setForceUnauthenticatedSetup(true);
 		registerFormDraftsRef.current.clear();
 		setConfig(null);
-		setLoadError(false);
+		setLoadError(null);
 		setSubmitError(null);
 		setSubmitting(false);
 		setWizardSnapshot(createSetupWizardSnapshot());
@@ -605,7 +612,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	useEffect(() => {
 		if (!isAuthenticated || config) return;
 		let cancelled = false;
-		setLoadError(false);
+		setLoadError(null);
 		void (async () => {
 			try {
 				const next = await fetchInstanceConfig();
@@ -613,12 +620,15 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				hydrateFromConfig(next);
 			} catch (error) {
 				if (cancelled) return;
-				if (error instanceof HttpError && error.status === 401) {
+				const cause =
+					error instanceof HttpError && error.status === 401 ? await classifySetupUnauthorized() : 'unknown';
+				if (cancelled) return;
+				if (cause === 'stale_session') {
 					await resetStaleSetupSession();
 					return;
 				}
 				logger.error('Failed to load instance configuration', error);
-				setLoadError(true);
+				setLoadError(cause === 'origin_mismatch' ? ORIGIN_MISMATCH_DESCRIPTOR : LOAD_ERROR_DESCRIPTOR);
 			}
 		})();
 		return () => {
@@ -868,7 +878,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 										role="alert"
 										data-flx="app.self-hosted-setup-wizard-gate.load-error"
 									>
-										{i18n._(LOAD_ERROR_DESCRIPTOR)}
+										{i18n._(loadError)}
 									</p>
 								</div>
 							) : (

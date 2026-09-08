@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {
 	BrandingAssetUploadRequest,
 	InstanceConfigResponse,
@@ -9,6 +11,8 @@ import type {
 	InstanceEmailSmtpTestRequest,
 	InstanceEmailSmtpTestResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+
+const logger = new Logger('SetupWizardClient');
 
 export type SetupBrandingAssetKind = BrandingAssetUploadRequest['kind'];
 
@@ -34,4 +38,18 @@ export async function uploadBrandingAsset(
 export async function testSmtpConfig(body: InstanceEmailSmtpTestRequest): Promise<InstanceEmailSmtpTestResponse> {
 	const response = await http.post<InstanceEmailSmtpTestResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_SMTP_TESTS, {body});
 	return response.body;
+}
+
+export type SetupUnauthorizedCause = 'stale_session' | 'origin_mismatch' | 'unknown';
+
+export async function classifySetupUnauthorized(): Promise<SetupUnauthorizedCause> {
+	if (!SessionManager.token) return 'unknown';
+	if (!http.carriesAuthorization()) return 'origin_mismatch';
+	try {
+		const response = await http.get(Endpoints.USER_ME, {mode: 'silent'});
+		return response.status === 401 ? 'stale_session' : 'unknown';
+	} catch (error) {
+		logger.warn('Could not confirm whether the setup session is still valid', error);
+		return 'unknown';
+	}
 }
