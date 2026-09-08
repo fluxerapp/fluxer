@@ -209,7 +209,7 @@ export async function forgotPassword(ctx: ApiContext, {data, request}: ForgotPas
 	}
 	const hasValidDns = await emailDnsValidation.hasValidDnsRecords(data.email);
 	if (!hasValidDns) {
-		throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 	}
 	const user = await users.findByEmail(data.email);
 	if (!user) {

@@ -254,6 +254,8 @@ export const ERROR_I18N_MESSAGES = {
 	'donation.magic_link_expired': 'Magic link has expired.',
 	'donation.magic_link_invalid': 'Magic link is invalid.',
 	'donation.magic_link_used': 'Magic link has already been used.',
+	'email.domain_cannot_receive_mail':
+		'That email domain cannot receive mail. Use an address on a domain that accepts email.',
 	'email.email_already_in_use': 'Email is already in use.',
 	'email.email_required': 'Email is required.',
 	'email.email_service_not_testable': 'Email service is temporarily unavailable. Please try again later.',
