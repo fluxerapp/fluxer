@@ -13,73 +13,51 @@
 	}
 
 	handle_path /api/* {
-		reverse_proxy api:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy api:8080
 	}
 
 	handle /gateway {
 		rewrite * /
-		reverse_proxy gateway:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy gateway:8080
 	}
 
 	handle_path /gateway/* {
-		reverse_proxy gateway:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy gateway:8080
 	}
 
 	handle_path /media/* {
-		reverse_proxy media-proxy:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy media-proxy:8080
 	}
 
 	handle_path /livekit/* {
-		reverse_proxy livekit:7880 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy livekit:7880
 	}
 
 	handle /admin {
 		rewrite * /
-		reverse_proxy admin:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy admin:8080
 	}
 
 	handle_path /admin/* {
-		reverse_proxy admin:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy admin:8080
 	}
 
 	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/* /embeds/*
 	handle @staticAssets {
-		reverse_proxy static-proxy:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy static-proxy:8080
 	}
 
 	handle /.well-known/fluxer {
-		reverse_proxy api:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy api:8080
 	}
 
 	handle {
-		reverse_proxy app-proxy:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy app-proxy:8080
 	}
 }
 
 :8088 {
 	handle /.well-known/fluxer {
-		reverse_proxy api:8080 {
-			header_up X-Forwarded-For {client_ip}
-		}
+		reverse_proxy api:8080
 	}
 }

@@ -162,17 +162,15 @@ Set `X-Forwarded-For` from `$remote_addr`. `$proxy_add_x_forwarded_for` appends 
 
 ## Caddy
 
-An external Caddy needs one site block. It forwards WebSocket upgrades natively, requests the certificate itself, and applies no request body limit and no read timeout of its own.
+An external Caddy needs one site block. It forwards WebSocket upgrades natively, requests the certificate itself, and applies no request body limit and no read timeout of its own. By default it ignores the inbound `X-Forwarded-*` headers from untrusted clients and writes its own, so there is no header line to add.
 
 ```caddy
 chat.example.com {
-	reverse_proxy 127.0.0.1:8080 {
-		header_up X-Forwarded-For {client_ip}
-	}
+	reverse_proxy 127.0.0.1:8080
 }
 ```
 
-`{client_ip}` resolves to the peer address unless the peer is in this Caddy's own `trusted_proxies`. The `header_up` line replaces `X-Forwarded-For` with that one address.
+Caddy trusts no proxy by default and takes the client address from the connection. Set the global `trusted_proxies` option when another proxy or a CDN sits in front of Caddy, or it records that hop as the client. Caddy appends its own peer to the address list rather than replacing it, and Fluxer reads the first entry.
 
 ## Traefik
 
