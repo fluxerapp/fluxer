@@ -17,6 +17,7 @@ import {resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled} from
 import {InstanceConfiguration} from '../Tables';
 import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '../utils/AttachmentDecay';
 import {isJsonRecord, parseJsonArray, parseJsonRecord} from '../utils/JsonBoundaryUtils';
+import {getDefaultDateOfBirthCollection, setCachedDateOfBirthCollection} from './DateOfBirthCollectionCache';
 import {normalizeSsoAllowedEmailDomains} from './SsoConfigValidation';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
@@ -357,9 +358,19 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			privacy_url: null,
 		},
 		registration: {
-			collect_date_of_birth: !Config.instance.selfHosted,
+			collect_date_of_birth: getDefaultDateOfBirthCollection(),
 		},
 	};
+}
+
+function parseAppPublicConfig(raw: string): InstanceAppPublicConfig {
+	try {
+		const parsed: unknown = JSON.parse(raw);
+		return normalizeAppPublicConfig(parsed);
+	} catch (error) {
+		Logger.warn({error}, 'Invalid app public config JSON, returning defaults');
+		return getDefaultAppPublicConfig();
+	}
 }
 
 function normalizeAppPublicConfig(value: unknown): InstanceAppPublicConfig {
@@ -939,6 +950,7 @@ export class InstanceConfigRepository {
 				this.configCache = await this.fetchAllConfigsFromDatabase();
 			} while (this.refreshRequested);
 			this.syncDeferredPhoneGateCache(this.configCache.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
+			this.syncDateOfBirthCollectionCache(this.configCache.get(APP_PUBLIC_CONFIG_KEY) ?? null);
 		})().finally(() => {
 			this.refreshPromise = null;
 		});
@@ -948,6 +960,11 @@ export class InstanceConfigRepository {
 	private syncDeferredPhoneGateCache(raw: string | null): void {
 		const policy = raw ? normalizeInstancePolicyConfig(parseJsonRecord(raw)) : {...DEFAULT_INSTANCE_POLICY_CONFIG};
 		setCachedDeferredPhoneGateEnabled(resolveDeferredPhoneGateEnabled(policy));
+	}
+
+	private syncDateOfBirthCollectionCache(raw: string | null): void {
+		const appPublic = raw ? normalizeAppPublicConfig(parseJsonRecord(raw)) : getDefaultAppPublicConfig();
+		setCachedDateOfBirthCollection(appPublic.registration.collect_date_of_birth);
 	}
 
 	private updateCachedConfigs(entries: Array<[string, string]>): void {
@@ -1067,16 +1084,9 @@ export class InstanceConfigRepository {
 
 	async getAppPublicConfig(): Promise<InstanceAppPublicConfig> {
 		const raw = await this.getConfig(APP_PUBLIC_CONFIG_KEY);
-		if (!raw) {
-			return getDefaultAppPublicConfig();
-		}
-		try {
-			const parsed: unknown = JSON.parse(raw);
-			return normalizeAppPublicConfig(parsed);
-		} catch (error) {
-			Logger.warn({error}, 'Invalid app public config JSON, returning defaults');
-			return getDefaultAppPublicConfig();
-		}
+		const config = raw ? parseAppPublicConfig(raw) : getDefaultAppPublicConfig();
+		setCachedDateOfBirthCollection(config.registration.collect_date_of_birth);
+		return config;
 	}
 
 	async setAppPublicConfig(config: {
@@ -1105,6 +1115,7 @@ export class InstanceConfigRepository {
 			},
 		});
 		await this.setConfig(APP_PUBLIC_CONFIG_KEY, JSON.stringify(next));
+		setCachedDateOfBirthCollection(next.registration.collect_date_of_birth);
 		return next;
 	}
 
