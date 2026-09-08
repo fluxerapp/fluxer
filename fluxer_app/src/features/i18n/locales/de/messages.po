@@ -2483,6 +2483,11 @@ msgstr "Element hinzufügen"
 msgid "Add local files"
 msgstr "Lokale Dateien hinzufügen"
 
+#. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+msgid "Add new reactions to messages in this channel."
+msgstr "Neue Reaktionen zu Nachrichten in diesem Kanal hinzufügen."
+
 #. Permission description in the role/permission editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:83
 msgid "Add new reactions to messages."
@@ -2512,7 +2517,7 @@ msgid "Add reaction"
 msgstr "Reaktion hinzufügen"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:436
 msgid "Add reactions"
 msgstr "Reaktionen hinzufügen"
 
@@ -2651,7 +2656,7 @@ msgid "Added roles."
 msgstr "Rollen hinzugefügt."
 
 #. Button or menu action label in the messaging commands. Keep it concise.
-#: src/features/messaging/commands/SavedMessageCommands.tsx:19
+#: src/features/messaging/commands/SavedMessageCommands.tsx:20
 msgid "Added to bookmarks"
 msgstr "Zu Lesezeichen hinzugefügt"
 
@@ -2735,7 +2740,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Passe die allgemeine Zoomstufe der App an. Verwende {zoomIn} / {zoomOut}, um schnell anzupassen."
 
 #. Permission name: grants all permissions and bypasses restrictions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:348
 msgid "Administrator"
 msgstr "Administrator"
 
@@ -3160,7 +3165,7 @@ msgid "Already set to cancel"
 msgstr "Kündigung bereits geplant"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Diese Nachricht auch an das {productName}-Sicherheitsteam melden"
 
@@ -3954,7 +3959,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "Mindestens ein Kanal muss die Berechtigung \"{viewChannelPermissionLabel}\" für {EVERYONE_MENTION} aktiviert haben, damit die Vanity-URL funktioniert. Derzeit sind keine Kanäle für {EVERYONE_MENTION} sichtbar."
 
 #. Permission name: allows uploading files to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:229
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:420
 msgid "Attach files"
 msgstr "Dateien anhängen"
 
@@ -4058,7 +4063,7 @@ msgid "Audio"
 msgstr "Audio / Video-Einstellungen"
 
 #. Permission category for voice, video, and streaming permissions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:149
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:340
 msgid "Audio & video"
 msgstr "Audio & Video"
 
@@ -4773,9 +4778,14 @@ msgid "Ban member"
 msgstr "Mitglied bannen"
 
 #. Permission name: allows banning members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:372
 msgid "Ban members"
 msgstr "Mitglieder bannen"
+
+#. Permission description in the role/permission editor for the Ban Members permission. A ban keeps the member out until it is lifted, and the moderator chooses how much recent message history to delete.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+msgid "Ban members from the community, with the option to delete their recent messages."
+msgstr "Mitglieder aus der Community ausschließen, mit der Option, ihre letzten Nachrichten zu löschen."
 
 #. IAR modal: quick-action card title for banning the reported user (moderator-only).
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:121
@@ -4859,6 +4869,16 @@ msgstr "Grundeinstellungen und erlaubte Weiterleitungs-URIs."
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:178
 msgid "Basic text inputs"
 msgstr "Einfache Texteingaben"
+
+#. Permission description in the channel-scoped permissions editor for the Priority Speaker permission. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:300
+msgid "Be heard over other members in this channel while holding the push to talk (priority) keybind."
+msgstr "Gehört werden, auch wenn andere Mitglieder in diesem Kanal sprechen, während du die \"Push-to-Talk (Priorität)\"-Taste gedrückt hältst."
+
+#. Permission description in the role/permission editor for the Priority Speaker permission at community scope. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:176
+msgid "Be heard over other members while holding the push to talk (priority) keybind."
+msgstr "Werde über andere Mitglieder gehört, während du die Push-to-Talk (Priorität)-Taste gedrückt hältst."
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:19
@@ -5099,7 +5119,7 @@ msgstr "Nachricht merken"
 
 #. Description text in the saved messages content popout.
 #. Description text in the saved messages page.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:169
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:185
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:31
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:34
 msgid "Bookmark messages to save them for later."
@@ -5118,7 +5138,7 @@ msgstr "Als Lesezeichen gespeichert."
 #. Short label in the bookmarks bottom sheet. Keep it concise.
 #. Short label in the saved messages page. Keep it concise.
 #. Tab label in the inbox popout listing the user bookmarks.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:33
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:34
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
@@ -5454,7 +5474,7 @@ msgid "Bypass mention suppression"
 msgstr "Erwähnungsunterdrückung umgehen"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:440
 msgid "Bypass slowmode"
 msgstr "Slowmode umgehen"
 
@@ -6031,7 +6051,7 @@ msgid "Change other members' nicknames."
 msgstr "Anzeigename anderer Mitglieder ändern."
 
 #. Permission name: allows a member to edit their own nickname.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:189
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:380
 msgid "Change own nickname"
 msgstr "Eigenen Anzeigename ändern"
 
@@ -6090,6 +6110,16 @@ msgstr "Benutzernamen ändern"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryCutoffSection.tsx:22
 msgid "Change what users without \"{readMessageHistoryPermissionLabel}\" can see"
 msgstr "Ändern, was Benutzer ohne \"{readMessageHistoryPermissionLabel}\" sehen können"
+
+#. Permission description in the role/permission editor for the Set Voice Region permission at community scope. The region is the geographic location of the voice server.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:190
+msgid "Change which voice region a voice channel uses."
+msgstr "Ändere die Sprachregion eines Sprachkanals."
+
+#. Permission description in the channel-scoped permissions editor for the Set Voice Region permission. The region is the geographic location of the voice server.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:319
+msgid "Change which voice region this channel uses."
+msgstr "Ändere die Sprachregion, die dieser Kanal verwendet."
 
 #. IAR modal: quick-action card description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:437
@@ -6185,7 +6215,7 @@ msgid "Channel {id}"
 msgstr "Kanal {id}"
 
 #. Permission category for viewing or entering channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:145
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:336
 msgid "Channel access"
 msgstr "Kanalzugriff"
 
@@ -6243,7 +6273,7 @@ msgstr "Kanalinfo-Abschnitte"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:108
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "Kanal-ID kopiert"
@@ -6261,7 +6291,7 @@ msgid "channel link"
 msgstr "Kanal-Link"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:100
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:98
 msgid "Channel link copied"
 msgstr "Kanallink kopiert"
 
@@ -6285,7 +6315,7 @@ msgid "Channel list typing indicators"
 msgstr "Tipp-Indikatoren in der Kanalliste"
 
 #. Permission category for managing channels and channel settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:153
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:344
 msgid "Channel management"
 msgstr "Kanalverwaltung"
 
@@ -7845,7 +7875,7 @@ msgid "Community voice"
 msgstr "Community-Sprachchat"
 
 #. Permission category for permissions that affect the whole community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:324
 msgid "Community-wide"
 msgstr "Gesamte Community"
 
@@ -8099,7 +8129,7 @@ msgstr "Verbinde ein Mikrofon und versuche es erneut."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:456
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:56
 msgid "Connect to voice"
 msgstr "Mit Sprachkanälen verbinden"
@@ -8530,7 +8560,7 @@ msgstr "Kanal-ID kopieren"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:205
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
 msgid "Copy channel link"
 msgstr "Kanallink kopieren"
 
@@ -8983,7 +9013,7 @@ msgid "Couldn't download the desktop update"
 msgstr "Desktop-Update konnte nicht heruntergeladen werden"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
 msgid "Couldn't duplicate this channel"
 msgstr "Kanal konnte nicht dupliziert werden"
 
@@ -9073,7 +9103,7 @@ msgid "Couldn't open the billing portal"
 msgstr "Das Abrechnungsportal konnte nicht geöffnet werden"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
 msgid "Couldn't pin this conversation"
 msgstr "Konversation konnte nicht angeheftet werden"
 
@@ -9252,7 +9282,7 @@ msgid "Couldn't unblock user"
 msgstr "Nutzer konnte nicht entbannt werden"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
 msgid "Couldn't unpin this conversation"
 msgstr "Konversation konnte nicht entpinnt werden"
 
@@ -9453,7 +9483,7 @@ msgid "Create DM"
 msgstr "Neue Direktnachricht"
 
 #. Permission name: allows uploading custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:388
 msgid "Create emoji & stickers"
 msgstr "Emoji und Sticker erstellen"
 
@@ -9480,7 +9510,7 @@ msgid "Create invite"
 msgstr "Einladung erstellen"
 
 #. Permission name: allows creating invite links.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:185
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:376
 msgid "Create invite links"
 msgstr "Einladungslinks erstellen"
 
@@ -9544,7 +9574,7 @@ msgid "Create, edit, or delete roles below your highest role. Also allows editin
 msgstr "Rollen erstellen, bearbeiten oder löschen, die unter deiner höchsten Rolle liegen. Ermöglicht auch das Bearbeiten von Kanalberechtigungsüberschreibungen."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Webhooks permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:205
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "Webhooks für diesen Kanal erstellen, bearbeiten oder löschen."
 
@@ -10196,9 +10226,19 @@ msgid "Deafen device"
 msgstr "Gerät stummschalten"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:481
 msgid "Deafen members"
 msgstr "Mitglieder stummschalten"
+
+#. Permission description in the channel-scoped permissions editor for the Deafen Members permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:310
+msgid "Deafen other members in this voice channel, so they cannot hear or speak."
+msgstr "Andere Mitglieder in diesem Sprachkanal stumm schalten, damit sie weder hören noch sprechen können."
+
+#. Permission description in the role/permission editor for the Deafen Members permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:186
+msgid "Deafen other members in voice channels, so they cannot hear or speak."
+msgstr "Andere Mitglieder in Sprachkanälen stumm schalten, sodass sie weder hören noch sprechen können."
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:157
@@ -10395,7 +10435,7 @@ msgstr "Standardmäßig auf Mobilgeräten deaktiviert, um Akku und Datenvolumen 
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10427,7 +10467,7 @@ msgstr "\"{stickerName}\" löschen? Kann nicht rückgängig gemacht werden."
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:107
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:104
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:102
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "{channelLabel} löschen? Kann nicht rückgängig gemacht werden."
 
@@ -10555,6 +10595,11 @@ msgstr "Nachrichten löschen"
 msgid "Delete my messages"
 msgstr "Meine Nachrichten löschen"
 
+#. Permission description in the channel-scoped permissions editor for the Manage Messages permission. Notes that pinning has its own permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:229
+msgid "Delete other members' messages in this channel. Pinning is controlled separately."
+msgstr "Nachrichten anderer Mitglieder in diesem Kanal löschen. Pinnen wird separat gesteuert."
+
 #. Permission description in the role/permission editor for the Manage Messages permission. Notes that pinning has its own permission.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:68
 msgid "Delete other members' messages. Pinning is controlled separately."
@@ -10628,7 +10673,7 @@ msgid "Delete this message"
 msgstr "Diese Nachricht löschen"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Delete this message? Can't be undone."
 msgstr "Diese Nachricht löschen? Kann nicht rückgängig gemacht werden."
 
@@ -11913,10 +11958,15 @@ msgstr "Dateien hierher ziehen, um sie hochzuladen"
 msgid "Drag and drop emoji files here"
 msgstr "Emoji-Dateien hierher ziehen"
 
-#. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved.
+#. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
-msgid "Drag members between channels they can access."
-msgstr "Verschiebe Mitglieder zwischen Kanälen, auf die sie zugreifen können."
+msgid "Drag members between voice channels they can access, and disconnect them from voice."
+msgstr "Mitglieder zwischen Sprachkanälen ziehen, auf die sie zugreifen können, und sie aus der Sprachverbindung trennen."
+
+#. Permission description in the channel-scoped permissions editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:314
+msgid "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
+msgstr "Ziehe Mitglieder aus diesem Sprachkanal in Kanäle, auf die sie zugreifen können, und trenne sie von der Sprachverbindung."
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
@@ -12015,7 +12065,7 @@ msgstr "Duplizieren"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
 msgid "Duplicate channel"
 msgstr "Kanal duplizieren"
 
@@ -12122,7 +12172,7 @@ msgstr "Kategorie bearbeiten"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:75
 msgid "Edit channel"
 msgstr "Kanal bearbeiten"
@@ -12202,7 +12252,7 @@ msgid "Edit or delete emoji and stickers created by other members."
 msgstr "Emojis und Sticker bearbeiten oder löschen, die von anderen Mitgliedern erstellt wurden."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Permissions permission. "Overwrites" are per-channel permission overrides.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:200
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Berechtigungen für Rollen und Mitglieder in diesem Kanal bearbeiten."
 
@@ -12424,7 +12474,7 @@ msgid "Embed debugger form"
 msgstr "Formular für den Einbettungs-Debugger"
 
 #. Permission name: allows links to unfurl/embed in messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:225
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:416
 msgid "Embed links"
 msgstr "Links einbetten"
 
@@ -16524,6 +16574,11 @@ msgstr "Spam-Markierung ignorieren"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Freundschaftsanfrage von {displayName} ignorieren?"
 
+#. Permission description in the channel-scoped permissions editor for the Bypass Slowmode permission. Slowmode is the per-channel cooldown between messages.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+msgid "Ignore this channel's slowmode cooldown."
+msgstr "Langsammodus-Cooldowns dieses Kanals ignorieren."
+
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
 msgid "Ignore virtual"
 msgstr "Virtuelle ignorieren"
@@ -17367,6 +17422,16 @@ msgstr "Einladungs-Pop-up"
 msgid "Invite modal preview"
 msgstr "Vorschau der Einladungsmodal"
 
+#. Permission description in the channel-scoped permissions editor for the Create Invite Links permission. The invite drops the new member into this channel.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:215
+msgid "Invite new people to the community with a link to this channel."
+msgstr "Lade neue Leute mit einem Link zu diesem Kanal in die Community ein."
+
+#. Permission description in the role/permission editor for the Create Invite Links permission. Covers links that let someone outside the community join it.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+msgid "Invite new people to the community with an invite link."
+msgstr "Lade neue Leute mit einem Einladungslink zur Community ein."
+
 #. Title for invite errors when the invite code does not exist or cannot be used.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:9
 msgid "Invite not found"
@@ -17680,6 +17745,11 @@ msgstr "Auf diesem Gerät beitreten"
 msgid "Join the call"
 msgstr "Anruf beitreten"
 
+#. Permission description in the channel-scoped permissions editor for the Connect permission. "View channel" is another permission in this same editor, so match the wording used for its name. The placeholder renders the literal @everyone role name and must not be translated.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:279
+msgid "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
+msgstr "Tritt diesem Sprachkanal bei und höre andere. Wenn du dies zusammen mit \"Kanal anzeigen\" für {everyoneMention} verweigerst, wird der Kanal privat."
+
 #. Confirm dialog body shown before joining a voice channel from a context where confirmation is required.
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:16
 msgid "Join this voice channel?"
@@ -17710,6 +17780,11 @@ msgstr "Sprachanruf beitreten"
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "Sprachkanal beitreten"
+
+#. Permission description in the role/permission editor for the Connect permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:162
+msgid "Join voice channels and hear others."
+msgstr "Stimmenkanälen beitreten und andere hören."
 
 #. Community members table column header for the date the account joined Fluxer.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:29
@@ -17757,7 +17832,7 @@ msgid "Jump to first unread message"
 msgstr "Zum ersten ungelesenen Beitrag springen"
 
 #. Short label in the bookmarks bottom sheet. Keep it concise.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:29
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:30
 msgid "Jump to message"
 msgstr "Zur Nachricht springen"
 
@@ -17784,7 +17859,7 @@ msgid "Jump to page"
 msgstr "Gehe zu Seite"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Jump to present"
 msgstr "Zum Ende springen"
 
@@ -17957,7 +18032,7 @@ msgid "Kick member"
 msgstr "Mitglied entfernen"
 
 #. Permission name: allows removing members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:177
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:368
 msgid "Kick members"
 msgstr "Mitglieder entfernen"
 
@@ -18831,17 +18906,17 @@ msgid "Manage blocked users"
 msgstr "Blockierte Nutzer verwalten"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:493
 msgid "Manage channel"
 msgstr "Kanal verwalten"
 
 #. Permission name: allows creating, editing, or deleting channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:173
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:364
 msgid "Manage channels"
 msgstr "Kanäle verwalten"
 
 #. Permission name: allows editing global community settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:165
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:356
 msgid "Manage community"
 msgstr "Community verwalten"
 
@@ -18851,7 +18926,7 @@ msgid "Manage community features"
 msgstr "Community-Funktionen verwalten"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:201
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:392
 msgid "Manage emoji & stickers"
 msgstr "Emoji und Sticker verwalten"
 
@@ -18864,12 +18939,12 @@ msgid "Manage invite links for this channel."
 msgstr "Einladungslinks für diesen Kanal verwalten."
 
 #. Permission name: allows deleting other members' messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:217
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:408
 msgid "Manage messages"
 msgstr "Nachrichten verwalten"
 
 #. Permission name: allows changing other members' nicknames.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:193
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:384
 msgid "Manage nicknames"
 msgstr "Anzeigenamen verwalten"
 
@@ -18879,7 +18954,7 @@ msgid "Manage payment methods"
 msgstr "Zahlungsmethoden verwalten"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:497
 msgid "Manage permissions"
 msgstr "Berechtigungen verwalten"
 
@@ -18889,7 +18964,7 @@ msgid "Manage purchased gift codes and gift URLs"
 msgstr "Gekaufte Geschenkc­odes und Geschenk-URLs verwalten"
 
 #. Permission name: allows role management and permission overwrite editing.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:169
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:360
 msgid "Manage roles"
 msgstr "Rollen verwalten"
 
@@ -18899,7 +18974,7 @@ msgid "Manage subscription"
 msgstr "Abonnement verwalten"
 
 #. Permission name: allows creating, editing, or deleting webhooks.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:205
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:396
 msgid "Manage webhooks"
 msgstr "Webhooks verwalten"
 
@@ -19519,6 +19594,11 @@ msgstr "Erwähnungs-Einstellungen"
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "Alle oder eine beliebige Rolle erwähnen (auch wenn die Rolle nicht als erwähnbar festgelegt ist)."
 
+#. Permission description in the channel-scoped permissions editor for the Mention Everyone permission. Notes that this overrides the per-role "mentionable" flag.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:254
+msgid "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+msgstr "Alle oder jede Rolle in diesem Kanal erwähnen (auch wenn die Rolle nicht als erwähnbar markiert ist)."
+
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
@@ -19750,12 +19830,12 @@ msgid "Message link"
 msgstr "Nachrichtenlink"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "Message list"
 msgstr "Nachrichtenliste"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list for {channelName}"
 msgstr "Nachrichtenliste für {channelName}"
 
@@ -19846,7 +19926,7 @@ msgid "Messages"
 msgstr "Nachrichten"
 
 #. Permission category for chat messages, uploads, embeds, reactions, and media.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:328
 msgid "Messages & media"
 msgstr "Nachrichten & Medien"
 
@@ -19856,7 +19936,7 @@ msgid "Messages deleted"
 msgstr "Nachrichten gelöscht"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:87
+#: src/features/channel/components/ChannelMessages.tsx:93
 msgid "Messages failed to load"
 msgstr "Nachrichten konnten nicht geladen werden"
 
@@ -20116,7 +20196,7 @@ msgid "Mod"
 msgstr "Mod"
 
 #. Permission category for moderation actions against members or messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:332
 msgid "Moderation"
 msgstr "Moderation"
 
@@ -20309,7 +20389,7 @@ msgid "Move item up"
 msgstr "Element nach oben verschieben"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:485
 msgid "Move members"
 msgstr "Mitglieder verschieben"
 
@@ -20493,7 +20573,7 @@ msgid "Mute favourites"
 msgstr "Favoriten stummschalten"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:477
 msgid "Mute members"
 msgstr "Mitglieder stummschalten"
 
@@ -20508,6 +20588,16 @@ msgstr "Mikrofon stummschalten"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:191
 msgid "Mute notifications"
 msgstr "Benachrichtigungen stummschalten"
+
+#. Permission description in the channel-scoped permissions editor for the Mute Members permission. The mute applies for every listener, not only for the moderator.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:305
+msgid "Mute other members in this voice channel for everyone."
+msgstr "Andere Mitglieder in diesem Sprachkanal für alle stummschalten."
+
+#. Permission description in the role/permission editor for the Mute Members permission at community scope. The mute applies for every listener, not only for the moderator.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
+msgid "Mute other members in voice channels for everyone."
+msgstr "Andere Mitglieder in Sprachkanälen für alle stummschalten."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:174
@@ -21173,7 +21263,7 @@ msgstr "Keine blockierten Nutzer"
 
 #. Empty-state text in the saved messages content popout.
 #. Empty-state text in the saved messages page.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:166
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:182
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:27
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:30
 msgid "No bookmarks"
@@ -22303,7 +22393,7 @@ msgstr "Kanaldetails für {channelName} öffnen"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
 msgid "Open chat"
 msgstr "Chat öffnen"
 
@@ -23475,7 +23565,7 @@ msgid "Pin message"
 msgstr "Nachricht anpinnen"
 
 #. Permission name: allows pinning messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:221
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:412
 msgid "Pin messages"
 msgstr "Nachrichten anpinnen"
 
@@ -23483,6 +23573,16 @@ msgstr "Nachrichten anpinnen"
 #: src/features/app/components/shared/ChannelPinsContent.tsx:51
 msgid "Pin messages here for everyone to see."
 msgstr "Heften Sie hier Nachrichten an, damit alle sie sehen können."
+
+#. Permission description in the channel-scoped permissions editor for the Pin Messages permission. Covers messages from anyone, not only their own.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:234
+msgid "Pin or unpin any message in this channel."
+msgstr "Jede Nachricht in diesem Kanal anheften oder lösen."
+
+#. Permission description in the role/permission editor for the Pin Messages permission at community scope. Covers messages from anyone, not only their own.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+msgid "Pin or unpin any message."
+msgstr "Jede Nachricht anheften oder lösen."
 
 #. Body of the confirmation alert shown when pinning a message.
 #: src/features/channel/components/MessageActionUtils.tsx:60
@@ -23530,7 +23630,7 @@ msgstr "Angepinnte Gruppe"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "Angepinnter Gruppenchat"
@@ -24076,7 +24176,7 @@ msgid "Prioritize speakers"
 msgstr "Sprecher priorisieren"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:473
 msgid "Priority speaker"
 msgstr "Prioritätssprecher"
 
@@ -24713,7 +24813,7 @@ msgid "Read message aloud"
 msgstr "Nachricht vorlesen"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:424
 msgid "Read message history"
 msgstr "Nachrichtenverlauf lesen"
 
@@ -24723,6 +24823,16 @@ msgstr "Nachrichtenverlauf lesen"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:126
 msgid "Read messages"
 msgstr "Nachrichten lesen"
+
+#. Permission description in the role/permission editor for the Read Message History permission at community scope. Without the permission the member sees only messages that arrive while the channel is open in front of them.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:151
+msgid "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
+msgstr "Nachrichten lesen, die gesendet wurden, bevor sie einen Kanal geöffnet haben. Ohne diese Berechtigung sehen sie nur Nachrichten, die eintreffen, während der Kanal geöffnet ist."
+
+#. Permission description in the channel-scoped permissions editor for the Read Message History permission. Without the permission the member sees only messages that arrive while the channel is open in front of them.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:248
+msgid "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+msgstr "Nachrichten lesen, die in diesem Kanal gesendet wurden, bevor sie ihn geöffnet haben. Ohne diese Berechtigung sehen sie nur Nachrichten, die eintreffen, während der Kanal geöffnet ist."
 
 #. Permission description in the role/permission editor for the View Activity Log permission. Refers to the per-community audit/activity log.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:18
@@ -25343,6 +25453,11 @@ msgstr "Icon entfernen"
 msgid "Remove it from the channel for everyone."
 msgstr "Nachricht für alle aus dem Kanal entfernen."
 
+#. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+msgid "Remove members from the community. They can rejoin with a new invite."
+msgstr "Mitglieder aus der Community entfernen. Sie können mit einer neuen Einladung wieder beitreten."
+
 #. Button or menu action label in the recent mentions content popout. Keep it concise. Keep the tone plain and specific.
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:52
 msgid "Remove mention"
@@ -25455,7 +25570,7 @@ msgid "Removed deny for {0}."
 msgstr "Verweigerung für {0} entfernt."
 
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/commands/SavedMessageCommands.tsx:23
+#: src/features/messaging/commands/SavedMessageCommands.tsx:24
 msgid "Removed from bookmarks"
 msgstr "Aus Lesezeichen entfernt"
 
@@ -25533,7 +25648,7 @@ msgid "Rename :{emojiName}:"
 msgstr "Umbenennen: {emojiName}:"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Channel permission. "This channel" refers to the channel currently being edited.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:195
 msgid "Rename and edit this channel's settings."
 msgstr "Diesen Kanal umbenennen und seine Einstellungen bearbeiten."
 
@@ -27528,6 +27643,11 @@ msgstr "PIN für Sicherheitsschlüssel"
 msgid "Security key PIN form"
 msgstr "PIN für Sicherheitsschlüssel"
 
+#. Permission description in the role/permission editor for the View Channel permission at community scope. Per-channel overwrites still decide access for individual channels.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+msgid "See channels by default. Channels that deny it stay hidden."
+msgstr "Kanäle standardmäßig anzeigen. Kanäle, die dies verweigern, bleiben verborgen."
+
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:89
 msgid "See how your invite looks to visitors."
 msgstr "So sieht deine Einladung für Besucher aus."
@@ -27538,9 +27658,14 @@ msgid "See the member list for channels in this community."
 msgstr "Die Mitgliederliste für Kanäle in dieser Community ansehen."
 
 #. Permission description in the channel-scoped permissions editor for the View Channel Members permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:210
 msgid "See the member list for this channel."
 msgstr "Mitgliederliste dieses Kanals ansehen."
+
+#. Permission description in the channel-scoped permissions editor for the View Channel permission. The placeholder renders the literal @everyone role name and must not be translated.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:220
+msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
+msgstr "Diesen Kanal sehen. Wenn Sie dies für {everyoneMention} verweigern, wird der Kanal privat."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
@@ -27880,7 +28005,7 @@ msgstr "Nachricht senden"
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:174
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:209
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "Nachrichten senden"
 
@@ -27888,6 +28013,16 @@ msgstr "Nachrichten senden"
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:51
 msgid "Send messages disabled"
 msgstr "Nachrichten senden deaktiviert"
+
+#. Permission description in the role/permission editor for the Send Messages permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+msgid "Send messages in channels."
+msgstr "Nachrichten in Kanälen senden."
+
+#. Permission description in the channel-scoped permissions editor for the Send Messages permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:225
+msgid "Send messages in this channel."
+msgstr "Nachrichten in diesem Kanal senden."
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -27908,10 +28043,10 @@ msgstr "Zurücksetzungslink senden"
 msgid "Send saved media {memeName}"
 msgstr "Gespeichertes Medium \"{memeName}\" senden"
 
-#. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity.
+#. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity. "/tts" is a literal command prefix typed in the message box and must not be translated.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:63
-msgid "Send text-to-speech messages."
-msgstr "Text-to-Speech-Nachrichten senden."
+msgid "Send text-to-speech messages with /tts. Members who turned text-to-speech on hear them read aloud."
+msgstr "Sende Text-to-Speech-Nachrichten mit /tts. Mitglieder, die Text-to-Speech aktiviert haben, hören sie vorgelesen."
 
 #. placeholder {0}: inboundChallenge.challenge_code
 #. placeholder {1}: inboundChallenge.our_number
@@ -27940,7 +28075,7 @@ msgid "Send to"
 msgstr "Senden an"
 
 #. Permission name: allows sending text-to-speech messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:213
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:404
 msgid "Send TTS messages"
 msgstr "TTS-Nachrichten senden"
 
@@ -28310,7 +28445,7 @@ msgid "Set verification level to <0>none</0>."
 msgstr "Verifizierungslevel auf <0>keins</0> gesetzt."
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:489
 msgid "Set voice region"
 msgstr "Sprachregion festlegen"
 
@@ -28708,6 +28843,16 @@ msgstr "Löschen-Button anzeigen"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:73
 msgid "Show download button"
 msgstr "Download-Button anzeigen"
+
+#. Permission description in the channel-scoped permissions editor for the Embed Links permission. The preview is the card rendered under a message that contains a link.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:239
+msgid "Show embedded previews for links they send in this channel."
+msgstr "Eingebettete Vorschauen für Links anzeigen, die sie in diesem Kanal senden."
+
+#. Permission description in the role/permission editor for the Embed Links permission at community scope. The preview is the card rendered under a message that contains a link.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:142
+msgid "Show embedded previews for links they send."
+msgstr "Vorschaubilder für Links anzeigen, die sie senden."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:46
@@ -29712,8 +29857,8 @@ msgstr "Etwas ist schiefgelaufen."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
 msgid "Something went wrong. Please try again in a moment."
 msgstr "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es gleich noch einmal."
 
@@ -29889,7 +30034,7 @@ msgid "Spatial and temporal layers"
 msgstr "Räumliche und zeitliche Ebenen"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:460
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Sprechen"
@@ -30552,7 +30697,7 @@ msgid "Stream settings"
 msgstr "Stream-Einstellungen"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:465
 msgid "Stream video"
 msgstr "Video streamen"
 
@@ -31159,6 +31304,16 @@ msgstr "Tritt sofort in Kraft. Eine anteilige Gebühr kann über {PAYMENT_PROVID
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:40
 msgid "Talk in calls and test your input."
 msgstr "In Anrufen sprechen und deine Eingabe testen."
+
+#. Permission description in the channel-scoped permissions editor for the Speak permission. "Mute members" is another permission in this same editor, so match the wording used for its name.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:285
+msgid "Talk in this voice channel. Without it, members stay muted until someone with Mute members unmutes them."
+msgstr "In diesem Sprachkanal sprechen. Ohne diese Berechtigung bleiben Mitglieder stummgeschaltet, bis sie von jemandem mit der Berechtigung \"Mitglieder stummschalten\" freigeschaltet werden."
+
+#. Permission description in the role/permission editor for the Speak permission at community scope. "Mute members" is another permission in this same editor, so match the wording used for its name.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:166
+msgid "Talk in voice channels. Without it, members stay muted until someone with Mute members unmutes them."
+msgstr "In Sprachkanälen sprechen. Ohne diese Berechtigung bleiben Mitglieder stumm, bis sie von jemandem mit der Berechtigung \"Mitglieder stummschalten\" freigeschaltet werden."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -32647,7 +32802,7 @@ msgid "Time format selection"
 msgstr "Zeitanzeige auswählen"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:444
 msgid "Time out members"
 msgstr "Mitglieder stummschalten"
 
@@ -33316,6 +33471,16 @@ msgstr "Stream beenden"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Deaktiviere den Streaming-Datenschutz, bevor du dich anmeldest oder Accountsicherheitsdetails ansiehst."
+
+#. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+msgid "Turn on a camera or share a screen in this voice channel."
+msgstr "Kamera einschalten oder Bildschirm in diesem Sprachkanal teilen."
+
+#. Permission description in the role/permission editor for the Stream Video permission at community scope. Covers both the webcam and screen sharing.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:171
+msgid "Turn on a camera or share a screen in voice channels."
+msgstr "Kamera in Sprachkanälen einschalten oder Bildschirm teilen."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -34122,7 +34287,7 @@ msgstr "Gruppe losgelöst"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "Gruppen-DM nicht mehr angepinnt"
@@ -34508,6 +34673,16 @@ msgstr "Emoji hochladen"
 msgid "Upload file"
 msgstr "Datei hochladen"
 
+#. Permission description in the role/permission editor for the Attach Files permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:147
+msgid "Upload files and media in messages."
+msgstr "Dateien und Medien in Nachrichten hochladen."
+
+#. Permission description in the channel-scoped permissions editor for the Attach Files permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:244
+msgid "Upload files and media in this channel."
+msgstr "Dateien und Medien in diesem Kanal hochladen."
+
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
@@ -34793,6 +34968,11 @@ msgstr "Andere E-Mail verwenden"
 msgid "Use email"
 msgstr "E-Mail verwenden"
 
+#. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:259
+msgid "Use emoji from other communities in this channel."
+msgstr "Emoji aus anderen Communities in diesem Kanal verwenden."
+
 #. Premium upsell shown when sending external emoji without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:24
 msgid "Use emoji from other communities with {premiumProductName}"
@@ -34804,12 +34984,12 @@ msgid "Use emoji from other communities."
 msgstr "Emojis aus anderen Communitys verwenden."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:428
 msgid "Use external emoji"
 msgstr "Externe Emojis verwenden"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:432
 msgid "Use external stickers"
 msgstr "Externe Sticker verwenden"
 
@@ -34905,10 +35085,20 @@ msgstr "Gespeicherte Medien verwenden"
 msgid "Use selection"
 msgstr "Auswahl verwenden"
 
+#. Permission description in the channel-scoped permissions editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:264
+msgid "Use stickers from other communities in this channel."
+msgstr "Sticker von anderen Communities in diesem Kanal verwenden."
+
 #. Premium upsell shown when sending external stickers without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:36
 msgid "Use stickers from other communities with {premiumProductName}"
 msgstr "Sticker aus anderen Communitys mit {premiumProductName} nutzen"
+
+#. Permission description in the role/permission editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+msgid "Use stickers from other communities."
+msgstr "Sticker von anderen Communities verwenden."
 
 #. Label in the language tab.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:63
@@ -34976,7 +35166,7 @@ msgid "Use video and camera previews."
 msgstr "Vorschau von Videos und Kamera verwenden."
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:469
 msgid "Use voice activity"
 msgstr "Sprachaktivierung nutzen"
 
@@ -35720,7 +35910,7 @@ msgid "View {userName}'s profile"
 msgstr "Profil von {userName} ansehen"
 
 #. Permission name: allows viewing community audit/activity logs.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:161
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:352
 msgid "View activity log"
 msgstr "Aktivitätsprotokoll ansehen"
 
@@ -35776,12 +35966,12 @@ msgid "View call controls"
 msgstr "Anrufsteuerung anzeigen"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:448
 msgid "View channel"
 msgstr "Kanal ansehen"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:452
 msgid "View channel members"
 msgstr "Kanalmitglieder anzeigen"
 
@@ -37029,6 +37219,11 @@ msgstr "Mit Fehler"
 msgid "Withdraw"
 msgstr "Abheben"
 
+#. Permission description in the channel-scoped permissions editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in this voice channel.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:295
+msgid "Without this permission, push-to-talk is required in this channel."
+msgstr "Ohne diese Berechtigung ist in diesem Kanal Push-to-Talk erforderlich."
+
 #. Permission description in the role/permission editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in voice channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:103
 msgid "Without this permission, push-to-talk is required."
@@ -37905,7 +38100,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Sie sind stummgeschaltet. Nachrichten, Reaktionen und Sprachnachrichten sind pausiert, bis die Stummschaltung abläuft."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "You're viewing older messages"
 msgstr "Du siehst dir ältere Nachrichten an"
 
@@ -37950,7 +38145,7 @@ msgstr "Du bist der maximalen Anzahl an Communitys beigetreten"
 #. Label in the saved messages content popout.
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:63
-#: src/features/messaging/components/pages/MessageListPage.tsx:26
+#: src/features/messaging/components/pages/MessageListPage.tsx:27
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:411
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:38
 msgid "You've reached the end"

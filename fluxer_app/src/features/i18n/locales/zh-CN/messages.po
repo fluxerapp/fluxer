@@ -2483,6 +2483,11 @@ msgstr "添加项目"
 msgid "Add local files"
 msgstr "添加本地文件"
 
+#. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+msgid "Add new reactions to messages in this channel."
+msgstr "向此频道中的消息添加新表情符号反应。"
+
 #. Permission description in the role/permission editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:83
 msgid "Add new reactions to messages."
@@ -2512,7 +2517,7 @@ msgid "Add reaction"
 msgstr "添加表情回应"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:436
 msgid "Add reactions"
 msgstr "添加表情回应"
 
@@ -2651,7 +2656,7 @@ msgid "Added roles."
 msgstr "已添加角色."
 
 #. Button or menu action label in the messaging commands. Keep it concise.
-#: src/features/messaging/commands/SavedMessageCommands.tsx:19
+#: src/features/messaging/commands/SavedMessageCommands.tsx:20
 msgid "Added to bookmarks"
 msgstr "已加入收藏"
 
@@ -2735,7 +2740,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "调整应用的整体缩放级别。使用 {zoomIn} / {zoomOut} 可快速调整。"
 
 #. Permission name: grants all permissions and bypasses restrictions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:348
 msgid "Administrator"
 msgstr "管理员"
 
@@ -3160,7 +3165,7 @@ msgid "Already set to cancel"
 msgstr "已设为取消"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "同时将此消息举报给 {productName} 安全团队"
 
@@ -3954,7 +3959,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "要使自定义 URL 生效，至少要有一个频道对 {EVERYONE_MENTION} 启用\"{viewChannelPermissionLabel}\"权限。目前，没有频道对 {EVERYONE_MENTION} 可见。"
 
 #. Permission name: allows uploading files to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:229
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:420
 msgid "Attach files"
 msgstr "附加文件"
 
@@ -4058,7 +4063,7 @@ msgid "Audio"
 msgstr "音频"
 
 #. Permission category for voice, video, and streaming permissions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:149
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:340
 msgid "Audio & video"
 msgstr "音频和视频"
 
@@ -4773,9 +4778,14 @@ msgid "Ban member"
 msgstr "封禁成员"
 
 #. Permission name: allows banning members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:372
 msgid "Ban members"
 msgstr "封禁成员"
+
+#. Permission description in the role/permission editor for the Ban Members permission. A ban keeps the member out until it is lifted, and the moderator chooses how much recent message history to delete.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+msgid "Ban members from the community, with the option to delete their recent messages."
+msgstr "禁止成员加入社群，并可选择删除其近期消息。"
 
 #. IAR modal: quick-action card title for banning the reported user (moderator-only).
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:121
@@ -4859,6 +4869,16 @@ msgstr "基本设置和允许的重定向 URI。"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:178
 msgid "Basic text inputs"
 msgstr "基本文本输入"
+
+#. Permission description in the channel-scoped permissions editor for the Priority Speaker permission. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:300
+msgid "Be heard over other members in this channel while holding the push to talk (priority) keybind."
+msgstr "按住“优先语音”快捷键时，您的声音将盖过此频道中的其他成员。"
+
+#. Permission description in the role/permission editor for the Priority Speaker permission at community scope. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:176
+msgid "Be heard over other members while holding the push to talk (priority) keybind."
+msgstr "按住“优先麦克风”快捷键时，声音会盖过其他成员。"
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:19
@@ -5099,7 +5119,7 @@ msgstr "收藏消息"
 
 #. Description text in the saved messages content popout.
 #. Description text in the saved messages page.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:169
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:185
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:31
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:34
 msgid "Bookmark messages to save them for later."
@@ -5118,7 +5138,7 @@ msgstr "已加入书签。"
 #. Short label in the bookmarks bottom sheet. Keep it concise.
 #. Short label in the saved messages page. Keep it concise.
 #. Tab label in the inbox popout listing the user bookmarks.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:33
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:34
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
@@ -5454,7 +5474,7 @@ msgid "Bypass mention suppression"
 msgstr "绕过提及限制"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:440
 msgid "Bypass slowmode"
 msgstr "忽略慢速模式"
 
@@ -6031,7 +6051,7 @@ msgid "Change other members' nicknames."
 msgstr "修改其他成员的昵称."
 
 #. Permission name: allows a member to edit their own nickname.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:189
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:380
 msgid "Change own nickname"
 msgstr "更改自己的昵称"
 
@@ -6090,6 +6110,16 @@ msgstr "更改用户名表单"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryCutoffSection.tsx:22
 msgid "Change what users without \"{readMessageHistoryPermissionLabel}\" can see"
 msgstr "更改没有\"{readMessageHistoryPermissionLabel}\"权限的用户可见内容"
+
+#. Permission description in the role/permission editor for the Set Voice Region permission at community scope. The region is the geographic location of the voice server.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:190
+msgid "Change which voice region a voice channel uses."
+msgstr "更改语音频道使用的语音区域。"
+
+#. Permission description in the channel-scoped permissions editor for the Set Voice Region permission. The region is the geographic location of the voice server.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:319
+msgid "Change which voice region this channel uses."
+msgstr "更改此频道使用的语音区域。"
 
 #. IAR modal: quick-action card description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:437
@@ -6185,7 +6215,7 @@ msgid "Channel {id}"
 msgstr "频道 {id}"
 
 #. Permission category for viewing or entering channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:145
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:336
 msgid "Channel access"
 msgstr "频道访问"
 
@@ -6243,7 +6273,7 @@ msgstr "频道详情版块"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:108
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "频道 ID 已复制"
@@ -6261,7 +6291,7 @@ msgid "channel link"
 msgstr "频道链接"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:100
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:98
 msgid "Channel link copied"
 msgstr "频道链接已复制"
 
@@ -6285,7 +6315,7 @@ msgid "Channel list typing indicators"
 msgstr "频道列表正在输入提示"
 
 #. Permission category for managing channels and channel settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:153
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:344
 msgid "Channel management"
 msgstr "频道管理"
 
@@ -7845,7 +7875,7 @@ msgid "Community voice"
 msgstr "社群语音"
 
 #. Permission category for permissions that affect the whole community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:324
 msgid "Community-wide"
 msgstr "社群范围"
 
@@ -8099,7 +8129,7 @@ msgstr "请连接麦克风后重试。"
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:456
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:56
 msgid "Connect to voice"
 msgstr "连接语音"
@@ -8530,7 +8560,7 @@ msgstr "复制频道ID"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:205
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
 msgid "Copy channel link"
 msgstr "复制频道链接"
 
@@ -8983,7 +9013,7 @@ msgid "Couldn't download the desktop update"
 msgstr "无法下载桌面版更新"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
 msgid "Couldn't duplicate this channel"
 msgstr "无法复制此频道"
 
@@ -9073,7 +9103,7 @@ msgid "Couldn't open the billing portal"
 msgstr "无法打开账单门户"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
 msgid "Couldn't pin this conversation"
 msgstr "无法置顶此对话"
 
@@ -9252,7 +9282,7 @@ msgid "Couldn't unblock user"
 msgstr "无法解除屏蔽用户"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
 msgid "Couldn't unpin this conversation"
 msgstr "无法取消置顶此对话"
 
@@ -9453,7 +9483,7 @@ msgid "Create DM"
 msgstr "创建私聊"
 
 #. Permission name: allows uploading custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:388
 msgid "Create emoji & stickers"
 msgstr "创建表情和贴纸"
 
@@ -9480,7 +9510,7 @@ msgid "Create invite"
 msgstr "创建邀请"
 
 #. Permission name: allows creating invite links.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:185
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:376
 msgid "Create invite links"
 msgstr "创建邀请链接"
 
@@ -9544,7 +9574,7 @@ msgid "Create, edit, or delete roles below your highest role. Also allows editin
 msgstr "创建、编辑或删除低于您最高角色的角色。也可以编辑频道权限覆盖。"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Webhooks permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:205
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "创建、编辑或删除此频道的网页挂钩。"
 
@@ -10196,9 +10226,19 @@ msgid "Deafen device"
 msgstr "关闭设备语音"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:481
 msgid "Deafen members"
 msgstr "将成员静音"
+
+#. Permission description in the channel-scoped permissions editor for the Deafen Members permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:310
+msgid "Deafen other members in this voice channel, so they cannot hear or speak."
+msgstr "在此语音频道中让其他成员静音，使其无法听到或说话。"
+
+#. Permission description in the role/permission editor for the Deafen Members permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:186
+msgid "Deafen other members in voice channels, so they cannot hear or speak."
+msgstr "让其他成员在语音频道中无法听到或说话。"
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:157
@@ -10395,7 +10435,7 @@ msgstr "移动设备上默认关闭，以节省电量和流量。"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10427,7 +10467,7 @@ msgstr "删除\"{stickerName}\"？此操作无法撤消。"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:107
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:104
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:102
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "删除\"{channelLabel}\"？此操作无法撤消。"
 
@@ -10555,6 +10595,11 @@ msgstr "删除消息"
 msgid "Delete my messages"
 msgstr "删除我的消息"
 
+#. Permission description in the channel-scoped permissions editor for the Manage Messages permission. Notes that pinning has its own permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:229
+msgid "Delete other members' messages in this channel. Pinning is controlled separately."
+msgstr "删除此频道中其他成员的消息。置顶消息有单独的权限控制。"
+
 #. Permission description in the role/permission editor for the Manage Messages permission. Notes that pinning has its own permission.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:68
 msgid "Delete other members' messages. Pinning is controlled separately."
@@ -10628,7 +10673,7 @@ msgid "Delete this message"
 msgstr "删除此消息"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Delete this message? Can't be undone."
 msgstr "删除这条消息？此操作无法撤消。"
 
@@ -11913,10 +11958,15 @@ msgstr "拖放文件到此处上传"
 msgid "Drag and drop emoji files here"
 msgstr "将表情文件拖放到此处"
 
-#. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved.
+#. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
-msgid "Drag members between channels they can access."
-msgstr "拖动成员，调整他们在可访问频道中的位置。"
+msgid "Drag members between voice channels they can access, and disconnect them from voice."
+msgstr "将成员拖动到他们可以访问的语音频道之间，并断开他们的语音连接。"
+
+#. Permission description in the channel-scoped permissions editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:314
+msgid "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
+msgstr "将成员移出此语音频道到他们可以访问的频道，并断开他们的语音连接。"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
@@ -12015,7 +12065,7 @@ msgstr "复制"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
 msgid "Duplicate channel"
 msgstr "复制频道"
 
@@ -12122,7 +12172,7 @@ msgstr "编辑类别"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:75
 msgid "Edit channel"
 msgstr "编辑频道"
@@ -12202,7 +12252,7 @@ msgid "Edit or delete emoji and stickers created by other members."
 msgstr "编辑或删除其他成员创建的表情和贴纸。"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Permissions permission. "Overwrites" are per-channel permission overrides.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:200
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "编辑此频道中角色和成员的覆盖权限。"
 
@@ -12424,7 +12474,7 @@ msgid "Embed debugger form"
 msgstr "嵌入调试器表单"
 
 #. Permission name: allows links to unfurl/embed in messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:225
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:416
 msgid "Embed links"
 msgstr "嵌入链接"
 
@@ -16524,6 +16574,11 @@ msgstr "忽略垃圾信息标记"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "忽略来自 {displayName} 的好友请求？"
 
+#. Permission description in the channel-scoped permissions editor for the Bypass Slowmode permission. Slowmode is the per-channel cooldown between messages.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+msgid "Ignore this channel's slowmode cooldown."
+msgstr "忽略此频道的慢速模式冷却时间。"
+
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
 msgid "Ignore virtual"
 msgstr "忽略虚拟设备"
@@ -17367,6 +17422,16 @@ msgstr "邀请弹窗"
 msgid "Invite modal preview"
 msgstr "邀请弹窗预览"
 
+#. Permission description in the channel-scoped permissions editor for the Create Invite Links permission. The invite drops the new member into this channel.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:215
+msgid "Invite new people to the community with a link to this channel."
+msgstr "邀请新成员加入社群，并将其直接引入此频道。"
+
+#. Permission description in the role/permission editor for the Create Invite Links permission. Covers links that let someone outside the community join it.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+msgid "Invite new people to the community with an invite link."
+msgstr "使用邀请链接邀请新成员加入社群。"
+
 #. Title for invite errors when the invite code does not exist or cannot be used.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:9
 msgid "Invite not found"
@@ -17680,6 +17745,11 @@ msgstr "在此设备上加入"
 msgid "Join the call"
 msgstr "加入通话"
 
+#. Permission description in the channel-scoped permissions editor for the Connect permission. "View channel" is another permission in this same editor, so match the wording used for its name. The placeholder renders the literal @everyone role name and must not be translated.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:279
+msgid "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
+msgstr "加入此语音频道即可听到他人。如果拒绝此权限以及对 {everyoneMention} 的“查看频道”权限，该频道将变为私有。"
+
 #. Confirm dialog body shown before joining a voice channel from a context where confirmation is required.
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:16
 msgid "Join this voice channel?"
@@ -17710,6 +17780,11 @@ msgstr "加入语音通话"
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "加入语音频道"
+
+#. Permission description in the role/permission editor for the Connect permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:162
+msgid "Join voice channels and hear others."
+msgstr "加入语音频道并收听他人。"
 
 #. Community members table column header for the date the account joined Fluxer.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:29
@@ -17757,7 +17832,7 @@ msgid "Jump to first unread message"
 msgstr "跳转到第一条未读消息"
 
 #. Short label in the bookmarks bottom sheet. Keep it concise.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:29
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:30
 msgid "Jump to message"
 msgstr "跳转到消息"
 
@@ -17784,7 +17859,7 @@ msgid "Jump to page"
 msgstr "跳转到页面"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Jump to present"
 msgstr "跳转到最新消息"
 
@@ -17957,7 +18032,7 @@ msgid "Kick member"
 msgstr "踢出成员"
 
 #. Permission name: allows removing members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:177
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:368
 msgid "Kick members"
 msgstr "踢出成员"
 
@@ -18831,17 +18906,17 @@ msgid "Manage blocked users"
 msgstr "管理已屏蔽用户"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:493
 msgid "Manage channel"
 msgstr "管理频道"
 
 #. Permission name: allows creating, editing, or deleting channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:173
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:364
 msgid "Manage channels"
 msgstr "管理频道"
 
 #. Permission name: allows editing global community settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:165
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:356
 msgid "Manage community"
 msgstr "管理社群"
 
@@ -18851,7 +18926,7 @@ msgid "Manage community features"
 msgstr "管理社群功能"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:201
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:392
 msgid "Manage emoji & stickers"
 msgstr "管理表情符号和贴纸"
 
@@ -18864,12 +18939,12 @@ msgid "Manage invite links for this channel."
 msgstr "管理此频道的邀请链接。"
 
 #. Permission name: allows deleting other members' messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:217
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:408
 msgid "Manage messages"
 msgstr "管理消息"
 
 #. Permission name: allows changing other members' nicknames.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:193
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:384
 msgid "Manage nicknames"
 msgstr "管理昵称"
 
@@ -18879,7 +18954,7 @@ msgid "Manage payment methods"
 msgstr "管理付款方式"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:497
 msgid "Manage permissions"
 msgstr "管理权限"
 
@@ -18889,7 +18964,7 @@ msgid "Manage purchased gift codes and gift URLs"
 msgstr "管理已购礼品码和礼品链接"
 
 #. Permission name: allows role management and permission overwrite editing.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:169
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:360
 msgid "Manage roles"
 msgstr "管理角色"
 
@@ -18899,7 +18974,7 @@ msgid "Manage subscription"
 msgstr "管理订阅"
 
 #. Permission name: allows creating, editing, or deleting webhooks.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:205
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:396
 msgid "Manage webhooks"
 msgstr "管理 Webhook"
 
@@ -19519,6 +19594,11 @@ msgstr "提及设置"
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "提及所有人或任何身份组（即使该身份组未设置为可提及）。"
 
+#. Permission description in the channel-scoped permissions editor for the Mention Everyone permission. Notes that this overrides the per-role "mentionable" flag.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:254
+msgid "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+msgstr "在此频道中提及所有人或任何角色（即使该角色未设置为可提及）。"
+
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
@@ -19750,12 +19830,12 @@ msgid "Message link"
 msgstr "消息链接"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "Message list"
 msgstr "消息列表"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list for {channelName}"
 msgstr "{channelName} 的消息列表"
 
@@ -19846,7 +19926,7 @@ msgid "Messages"
 msgstr "消息"
 
 #. Permission category for chat messages, uploads, embeds, reactions, and media.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:328
 msgid "Messages & media"
 msgstr "消息与媒体"
 
@@ -19856,7 +19936,7 @@ msgid "Messages deleted"
 msgstr "消息已删除"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:87
+#: src/features/channel/components/ChannelMessages.tsx:93
 msgid "Messages failed to load"
 msgstr "消息加载失败"
 
@@ -20116,7 +20196,7 @@ msgid "Mod"
 msgstr "版主"
 
 #. Permission category for moderation actions against members or messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:332
 msgid "Moderation"
 msgstr "管理"
 
@@ -20309,7 +20389,7 @@ msgid "Move item up"
 msgstr "上移项目"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:485
 msgid "Move members"
 msgstr "移动成员"
 
@@ -20493,7 +20573,7 @@ msgid "Mute favourites"
 msgstr "将特别关注设为静音"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:477
 msgid "Mute members"
 msgstr "将成员设为静音"
 
@@ -20508,6 +20588,16 @@ msgstr "麦克风静音"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:191
 msgid "Mute notifications"
 msgstr "消息免打扰"
+
+#. Permission description in the channel-scoped permissions editor for the Mute Members permission. The mute applies for every listener, not only for the moderator.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:305
+msgid "Mute other members in this voice channel for everyone."
+msgstr "将此语音频道中的其他成员静音，对所有人生效。"
+
+#. Permission description in the role/permission editor for the Mute Members permission at community scope. The mute applies for every listener, not only for the moderator.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
+msgid "Mute other members in voice channels for everyone."
+msgstr "静音频道中的其他成员，对所有人生效。"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:174
@@ -21173,7 +21263,7 @@ msgstr "暂无屏蔽用户"
 
 #. Empty-state text in the saved messages content popout.
 #. Empty-state text in the saved messages page.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:166
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:182
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:27
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:30
 msgid "No bookmarks"
@@ -22303,7 +22393,7 @@ msgstr "打开\"{channelName}\"的频道详情"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
 msgid "Open chat"
 msgstr "打开聊天"
 
@@ -23475,7 +23565,7 @@ msgid "Pin message"
 msgstr "置顶消息"
 
 #. Permission name: allows pinning messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:221
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:412
 msgid "Pin messages"
 msgstr "置顶消息"
 
@@ -23483,6 +23573,16 @@ msgstr "置顶消息"
 #: src/features/app/components/shared/ChannelPinsContent.tsx:51
 msgid "Pin messages here for everyone to see."
 msgstr "在此置顶消息，所有人都能看到。"
+
+#. Permission description in the channel-scoped permissions editor for the Pin Messages permission. Covers messages from anyone, not only their own.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:234
+msgid "Pin or unpin any message in this channel."
+msgstr "将此频道中的任意消息置顶或取消置顶。"
+
+#. Permission description in the role/permission editor for the Pin Messages permission at community scope. Covers messages from anyone, not only their own.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+msgid "Pin or unpin any message."
+msgstr "置顶或取消置顶任何消息。"
 
 #. Body of the confirmation alert shown when pinning a message.
 #: src/features/channel/components/MessageActionUtils.tsx:60
@@ -23530,7 +23630,7 @@ msgstr "置顶群聊"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "已置顶群聊"
@@ -24076,7 +24176,7 @@ msgid "Prioritize speakers"
 msgstr "优先显示发言者"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:473
 msgid "Priority speaker"
 msgstr "优先发言人"
 
@@ -24713,7 +24813,7 @@ msgid "Read message aloud"
 msgstr "朗读消息"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:424
 msgid "Read message history"
 msgstr "查看消息历史记录"
 
@@ -24723,6 +24823,16 @@ msgstr "查看消息历史记录"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:126
 msgid "Read messages"
 msgstr "已读消息"
+
+#. Permission description in the role/permission editor for the Read Message History permission at community scope. Without the permission the member sees only messages that arrive while the channel is open in front of them.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:151
+msgid "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
+msgstr "读取他们打开频道前发送的消息。没有此权限，他们只能看到在频道打开时收到的消息。"
+
+#. Permission description in the channel-scoped permissions editor for the Read Message History permission. Without the permission the member sees only messages that arrive while the channel is open in front of them.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:248
+msgid "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+msgstr "读取他们打开频道前发送的消息。没有此权限，他们只能看到在频道打开时收到的消息。"
 
 #. Permission description in the role/permission editor for the View Activity Log permission. Refers to the per-community audit/activity log.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:18
@@ -25343,6 +25453,11 @@ msgstr "移除图标"
 msgid "Remove it from the channel for everyone."
 msgstr "从频道中为所有人移除。"
 
+#. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+msgid "Remove members from the community. They can rejoin with a new invite."
+msgstr "将成员移出社群。他们可以通过新的邀请重新加入。"
+
 #. Button or menu action label in the recent mentions content popout. Keep it concise. Keep the tone plain and specific.
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:52
 msgid "Remove mention"
@@ -25455,7 +25570,7 @@ msgid "Removed deny for {0}."
 msgstr "已移除对 {0} 的拒绝."
 
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/commands/SavedMessageCommands.tsx:23
+#: src/features/messaging/commands/SavedMessageCommands.tsx:24
 msgid "Removed from bookmarks"
 msgstr "已从收藏中移除"
 
@@ -25533,7 +25648,7 @@ msgid "Rename :{emojiName}:"
 msgstr "重命名 :{emojiName}:"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Channel permission. "This channel" refers to the channel currently being edited.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:195
 msgid "Rename and edit this channel's settings."
 msgstr "重命名并编辑此频道的设置."
 
@@ -27528,6 +27643,11 @@ msgstr "安全密钥密码"
 msgid "Security key PIN form"
 msgstr "安全密钥 PIN 表单"
 
+#. Permission description in the role/permission editor for the View Channel permission at community scope. Per-channel overwrites still decide access for individual channels.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+msgid "See channels by default. Channels that deny it stay hidden."
+msgstr "默认情况下可见频道。拒绝此权限的频道将保持隐藏。"
+
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:89
 msgid "See how your invite looks to visitors."
 msgstr "查看访客看到的邀请界面。"
@@ -27538,9 +27658,14 @@ msgid "See the member list for channels in this community."
 msgstr "查看社群中频道的成员列表。"
 
 #. Permission description in the channel-scoped permissions editor for the View Channel Members permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:210
 msgid "See the member list for this channel."
 msgstr "查看此频道的成员列表。"
+
+#. Permission description in the channel-scoped permissions editor for the View Channel permission. The placeholder renders the literal @everyone role name and must not be translated.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:220
+msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
+msgstr "查看此频道。拒绝为 {everyoneMention} 授予此权限会使频道设为私有。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
@@ -27880,7 +28005,7 @@ msgstr "发送消息"
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:174
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:209
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "发送消息"
 
@@ -27888,6 +28013,16 @@ msgstr "发送消息"
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:51
 msgid "Send messages disabled"
 msgstr "已禁用发送消息"
+
+#. Permission description in the role/permission editor for the Send Messages permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+msgid "Send messages in channels."
+msgstr "在频道中发送消息。"
+
+#. Permission description in the channel-scoped permissions editor for the Send Messages permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:225
+msgid "Send messages in this channel."
+msgstr "在此频道发送消息。"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -27908,10 +28043,10 @@ msgstr "发送重置链接"
 msgid "Send saved media {memeName}"
 msgstr "发送已保存的媒体 {memeName}"
 
-#. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity.
+#. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity. "/tts" is a literal command prefix typed in the message box and must not be translated.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:63
-msgid "Send text-to-speech messages."
-msgstr "发送文本转语音消息."
+msgid "Send text-to-speech messages with /tts. Members who turned text-to-speech on hear them read aloud."
+msgstr "发送文本转语音消息，使用 /tts 命令。开启了文本转语音的用户会听到朗读。"
 
 #. placeholder {0}: inboundChallenge.challenge_code
 #. placeholder {1}: inboundChallenge.our_number
@@ -27940,7 +28075,7 @@ msgid "Send to"
 msgstr "发送至"
 
 #. Permission name: allows sending text-to-speech messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:213
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:404
 msgid "Send TTS messages"
 msgstr "发送 TTS 消息"
 
@@ -28310,7 +28445,7 @@ msgid "Set verification level to <0>none</0>."
 msgstr "将验证级别设置为<0>无</0>。"
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:489
 msgid "Set voice region"
 msgstr "设置语音区域"
 
@@ -28708,6 +28843,16 @@ msgstr "显示删除按钮"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:73
 msgid "Show download button"
 msgstr "显示下载按钮"
+
+#. Permission description in the channel-scoped permissions editor for the Embed Links permission. The preview is the card rendered under a message that contains a link.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:239
+msgid "Show embedded previews for links they send in this channel."
+msgstr "在此频道中发送的链接显示嵌入式预览。"
+
+#. Permission description in the role/permission editor for the Embed Links permission at community scope. The preview is the card rendered under a message that contains a link.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:142
+msgid "Show embedded previews for links they send."
+msgstr "显示他们发送的链接的嵌入式预览。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:46
@@ -29712,8 +29857,8 @@ msgstr "出错了。"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
 msgid "Something went wrong. Please try again in a moment."
 msgstr "出错了。请稍后重试。"
 
@@ -29889,7 +30034,7 @@ msgid "Spatial and temporal layers"
 msgstr "空间和时间层"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:460
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "发言"
@@ -30552,7 +30697,7 @@ msgid "Stream settings"
 msgstr "直播设置"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:465
 msgid "Stream video"
 msgstr "视频直播"
 
@@ -31159,6 +31304,16 @@ msgstr "立即生效。{PAYMENT_PROVIDER_NAME}可能会收取按比例计算的�
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:40
 msgid "Talk in calls and test your input."
 msgstr "在通话中发言并测试您的输入。"
+
+#. Permission description in the channel-scoped permissions editor for the Speak permission. "Mute members" is another permission in this same editor, so match the wording used for its name.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:285
+msgid "Talk in this voice channel. Without it, members stay muted until someone with Mute members unmutes them."
+msgstr "在此语音频道中发言。没有此权限，成员将保持静音状态，直到拥有“静音成员”权限的人解除静音。"
+
+#. Permission description in the role/permission editor for the Speak permission at community scope. "Mute members" is another permission in this same editor, so match the wording used for its name.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:166
+msgid "Talk in voice channels. Without it, members stay muted until someone with Mute members unmutes them."
+msgstr "在语音频道发言。没有此权限，成员将保持静音状态，直到有人使用“禁言成员”权限解除静音。"
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -32647,7 +32802,7 @@ msgid "Time format selection"
 msgstr "时间格式选择"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:444
 msgid "Time out members"
 msgstr "暂停成员活动"
 
@@ -33316,6 +33471,16 @@ msgstr "关闭直播"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "请先关闭直播隐私模式，然后才能查看登录或账户安全详情。"
+
+#. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+msgid "Turn on a camera or share a screen in this voice channel."
+msgstr "在此语音频道中开启摄像头或共享屏幕。"
+
+#. Permission description in the role/permission editor for the Stream Video permission at community scope. Covers both the webcam and screen sharing.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:171
+msgid "Turn on a camera or share a screen in voice channels."
+msgstr "在语音频道中开启摄像头或共享屏幕。"
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -34122,7 +34287,7 @@ msgstr "取消置顶群组"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "取消置顶群聊"
@@ -34508,6 +34673,16 @@ msgstr "上传表情"
 msgid "Upload file"
 msgstr "上传文件"
 
+#. Permission description in the role/permission editor for the Attach Files permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:147
+msgid "Upload files and media in messages."
+msgstr "在消息中上传文件和媒体。"
+
+#. Permission description in the channel-scoped permissions editor for the Attach Files permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:244
+msgid "Upload files and media in this channel."
+msgstr "在此频道上传文件和媒体。"
+
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
@@ -34793,6 +34968,11 @@ msgstr "使用其他邮箱"
 msgid "Use email"
 msgstr "使用邮箱"
 
+#. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:259
+msgid "Use emoji from other communities in this channel."
+msgstr "在此频道中使用其他社群的表情符号。"
+
 #. Premium upsell shown when sending external emoji without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:24
 msgid "Use emoji from other communities with {premiumProductName}"
@@ -34804,12 +34984,12 @@ msgid "Use emoji from other communities."
 msgstr "使用其他社群的表情符号."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:428
 msgid "Use external emoji"
 msgstr "使用外部表情符号"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:432
 msgid "Use external stickers"
 msgstr "使用外部贴纸"
 
@@ -34905,10 +35085,20 @@ msgstr "使用已保存的媒体"
 msgid "Use selection"
 msgstr "使用所选内容"
 
+#. Permission description in the channel-scoped permissions editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:264
+msgid "Use stickers from other communities in this channel."
+msgstr "在此频道中使用其他社区的表情贴纸。"
+
 #. Premium upsell shown when sending external stickers without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:36
 msgid "Use stickers from other communities with {premiumProductName}"
 msgstr "使用 {premiumProductName} 发送其他社群的贴纸"
+
+#. Permission description in the role/permission editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+msgid "Use stickers from other communities."
+msgstr "使用其他社群的贴纸"
 
 #. Label in the language tab.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:63
@@ -34976,7 +35166,7 @@ msgid "Use video and camera previews."
 msgstr "使用视频和相机预览。"
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:469
 msgid "Use voice activity"
 msgstr "使用语音活动"
 
@@ -35720,7 +35910,7 @@ msgid "View {userName}'s profile"
 msgstr "查看 {userName} 的个人资料"
 
 #. Permission name: allows viewing community audit/activity logs.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:161
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:352
 msgid "View activity log"
 msgstr "查看活动日志"
 
@@ -35776,12 +35966,12 @@ msgid "View call controls"
 msgstr "查看通话控制"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:448
 msgid "View channel"
 msgstr "查看频道"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:452
 msgid "View channel members"
 msgstr "查看频道成员"
 
@@ -37029,6 +37219,11 @@ msgstr "有错误"
 msgid "Withdraw"
 msgstr "退出"
 
+#. Permission description in the channel-scoped permissions editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in this voice channel.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:295
+msgid "Without this permission, push-to-talk is required in this channel."
+msgstr "如果禁用此权限，则在此频道中必须使用按键通话。"
+
 #. Permission description in the role/permission editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in voice channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:103
 msgid "Without this permission, push-to-talk is required."
@@ -37905,7 +38100,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "您已被禁言。在禁言结束前，您无法发送消息、使用反应和语音。"
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "You're viewing older messages"
 msgstr "你正在查看较早的消息"
 
@@ -37950,7 +38145,7 @@ msgstr "您已达到社群数量上限"
 #. Label in the saved messages content popout.
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:63
-#: src/features/messaging/components/pages/MessageListPage.tsx:26
+#: src/features/messaging/components/pages/MessageListPage.tsx:27
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:411
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:38
 msgid "You've reached the end"

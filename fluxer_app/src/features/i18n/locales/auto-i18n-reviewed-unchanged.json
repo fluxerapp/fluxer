@@ -1306,6 +1306,9 @@
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
       },
       {
+        "msgid": "Add new reactions to messages in this channel."
+      },
+      {
         "msgid": "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
       },
       {
@@ -1354,7 +1357,16 @@
         "msgid": "Automatic ({codec})"
       },
       {
+        "msgid": "Ban members from the community, with the option to delete their recent messages."
+      },
+      {
         "msgid": "Banned {targetUserTag} from the community"
+      },
+      {
+        "msgid": "Be heard over other members in this channel while holding the push to talk (priority) keybind."
+      },
+      {
+        "msgid": "Be heard over other members while holding the push to talk (priority) keybind."
       },
       {
         "msgid": "Bluesky connections"
@@ -1376,6 +1388,12 @@
       },
       {
         "msgid": "Change stream"
+      },
+      {
+        "msgid": "Change which voice region a voice channel uses."
+      },
+      {
+        "msgid": "Change which voice region this channel uses."
       },
       {
         "msgid": "Choices"
@@ -1444,7 +1462,13 @@
         "msgid": "Custom emoji {emojiName} from {communityName}"
       },
       {
+        "msgid": "Deafen other members in this voice channel, so they cannot hear or speak."
+      },
+      {
         "msgid": "Decide how premium limits apply to people on this instance."
+      },
+      {
+        "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
       },
       {
         "msgid": "Delete user"
@@ -1466,6 +1490,12 @@
       },
       {
         "msgid": "Disable direct messages and friend requests"
+      },
+      {
+        "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
+      },
+      {
+        "msgid": "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
       },
       {
         "msgid": "Duplicate role"
@@ -1561,6 +1591,9 @@
         "msgid": "If you can't verify by SMS"
       },
       {
+        "msgid": "Ignore this channel's slowmode cooldown."
+      },
+      {
         "msgid": "Image assets"
       },
       {
@@ -1576,7 +1609,19 @@
         "msgid": "Input level"
       },
       {
+        "msgid": "Invite new people to the community with a link to this channel."
+      },
+      {
+        "msgid": "Invite new people to the community with an invite link."
+      },
+      {
         "msgid": "Italic"
+      },
+      {
+        "msgid": "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
+      },
+      {
+        "msgid": "Join voice channels and hear others."
       },
       {
         "msgid": "Keep Neko still"
@@ -1612,10 +1657,19 @@
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
       },
       {
+        "msgid": "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+      },
+      {
         "msgid": "Microphone ({deviceLabel})"
       },
       {
         "msgid": "Mirror tiers"
+      },
+      {
+        "msgid": "Mute other members in this voice channel for everyone."
+      },
+      {
+        "msgid": "Mute other members in voice channels for everyone."
       },
       {
         "msgid": "My community"
@@ -1681,6 +1735,12 @@
         "msgid": "Pin Neko to the top-right of the chat input instead of following your cursor"
       },
       {
+        "msgid": "Pin or unpin any message in this channel."
+      },
+      {
+        "msgid": "Pin or unpin any message."
+      },
+      {
         "msgid": "Pop out user"
       },
       {
@@ -1726,10 +1786,19 @@
         "msgid": "Public registration is closed."
       },
       {
+        "msgid": "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
+      },
+      {
+        "msgid": "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+      },
+      {
         "msgid": "Reason (optional)."
       },
       {
         "msgid": "Registration"
+      },
+      {
+        "msgid": "Remove members from the community. They can rejoin with a new invite."
       },
       {
         "msgid": "Removed timeout from {targetUserTag}"
@@ -1849,10 +1918,19 @@
         "msgid": "Security key PIN form"
       },
       {
+        "msgid": "See this channel. Denying it for {everyoneMention} makes the channel private."
+      },
+      {
         "msgid": "Self-host setup"
       },
       {
         "msgid": "Send file messages in order"
+      },
+      {
+        "msgid": "Send messages in channels."
+      },
+      {
+        "msgid": "Send messages in this channel."
       },
       {
         "msgid": "Sequential send"
@@ -1895,6 +1973,12 @@
       },
       {
         "msgid": "Show connection volume controls"
+      },
+      {
+        "msgid": "Show embedded previews for links they send in this channel."
+      },
+      {
+        "msgid": "Show embedded previews for links they send."
       },
       {
         "msgid": "Show fewer filters"
@@ -2011,10 +2095,28 @@
         "msgid": "Turn off audio sharing for this source or try again in a moment."
       },
       {
+        "msgid": "Turn on a camera or share a screen in this voice channel."
+      },
+      {
         "msgid": "Unable to send verification code"
       },
       {
         "msgid": "Unavailable"
+      },
+      {
+        "msgid": "Upload files and media in messages."
+      },
+      {
+        "msgid": "Upload files and media in this channel."
+      },
+      {
+        "msgid": "Use emoji from other communities in this channel."
+      },
+      {
+        "msgid": "Use stickers from other communities in this channel."
+      },
+      {
+        "msgid": "Use stickers from other communities."
       },
       {
         "msgid": "Use system-wide push-to-talk and shortcuts."
@@ -2054,6 +2156,9 @@
       },
       {
         "msgid": "Who can join"
+      },
+      {
+        "msgid": "Without this permission, push-to-talk is required in this channel."
       },
       {
         "msgid": "Wordmark"

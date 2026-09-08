@@ -2483,6 +2483,11 @@ msgstr "Thêm mục"
 msgid "Add local files"
 msgstr "Thêm tệp cục bộ"
 
+#. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+msgid "Add new reactions to messages in this channel."
+msgstr "Thêm biểu tượng cảm xúc mới vào tin nhắn trong kênh này."
+
 #. Permission description in the role/permission editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:83
 msgid "Add new reactions to messages."
@@ -2512,7 +2517,7 @@ msgid "Add reaction"
 msgstr "Thêm cảm xúc"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:436
 msgid "Add reactions"
 msgstr "Thêm cảm xúc"
 
@@ -2651,7 +2656,7 @@ msgid "Added roles."
 msgstr "Đã thêm vai trò."
 
 #. Button or menu action label in the messaging commands. Keep it concise.
-#: src/features/messaging/commands/SavedMessageCommands.tsx:19
+#: src/features/messaging/commands/SavedMessageCommands.tsx:20
 msgid "Added to bookmarks"
 msgstr "Đã thêm vào mục đánh dấu"
 
@@ -2735,7 +2740,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Điều chỉnh mức thu phóng tổng thể của ứng dụng. Dùng {zoomIn} / {zoomOut} để điều chỉnh nhanh."
 
 #. Permission name: grants all permissions and bypasses restrictions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:348
 msgid "Administrator"
 msgstr "Quản trị viên"
 
@@ -3160,7 +3165,7 @@ msgid "Already set to cancel"
 msgstr "Đã đặt lịch hủy"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Đồng thời báo cáo tin nhắn này cho Đội ngũ an toàn của {productName}"
 
@@ -3954,7 +3959,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "Để URL tùy chỉnh hoạt động, ít nhất một kênh phải bật quyền \"{viewChannelPermissionLabel}\" cho {EVERYONE_MENTION}. Hiện tại, không có kênh nào hiển thị với {EVERYONE_MENTION}."
 
 #. Permission name: allows uploading files to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:229
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:420
 msgid "Attach files"
 msgstr "Đính kèm tệp"
 
@@ -4058,7 +4063,7 @@ msgid "Audio"
 msgstr "Âm thanh"
 
 #. Permission category for voice, video, and streaming permissions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:149
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:340
 msgid "Audio & video"
 msgstr "Âm thanh & video"
 
@@ -4773,9 +4778,14 @@ msgid "Ban member"
 msgstr "Cấm thành viên"
 
 #. Permission name: allows banning members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:372
 msgid "Ban members"
 msgstr "Cấm thành viên"
+
+#. Permission description in the role/permission editor for the Ban Members permission. A ban keeps the member out until it is lifted, and the moderator chooses how much recent message history to delete.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+msgid "Ban members from the community, with the option to delete their recent messages."
+msgstr "Cấm thành viên khỏi cộng đồng, với tùy chọn xóa tin nhắn gần đây của họ."
 
 #. IAR modal: quick-action card title for banning the reported user (moderator-only).
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:121
@@ -4859,6 +4869,16 @@ msgstr "Cài đặt cơ bản và URI chuyển hướng được phép."
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:178
 msgid "Basic text inputs"
 msgstr "Ô nhập văn bản cơ bản"
+
+#. Permission description in the channel-scoped permissions editor for the Priority Speaker permission. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:300
+msgid "Be heard over other members in this channel while holding the push to talk (priority) keybind."
+msgstr "Được nghe rõ hơn những người dùng khác trong kênh này khi bạn giữ phím tắt \"nhấn để nói (ưu tiên)\"."
+
+#. Permission description in the role/permission editor for the Priority Speaker permission at community scope. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:176
+msgid "Be heard over other members while holding the push to talk (priority) keybind."
+msgstr "Được nghe rõ hơn những người khác khi bạn giữ phím tắt \"nhấn để nói (ưu tiên)\"."
 
 #. Short label in the guild members date range modal. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:19
@@ -5099,7 +5119,7 @@ msgstr "Đánh dấu tin nhắn"
 
 #. Description text in the saved messages content popout.
 #. Description text in the saved messages page.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:169
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:185
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:31
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:34
 msgid "Bookmark messages to save them for later."
@@ -5118,7 +5138,7 @@ msgstr "Đã thêm vào dấu trang."
 #. Short label in the bookmarks bottom sheet. Keep it concise.
 #. Short label in the saved messages page. Keep it concise.
 #. Tab label in the inbox popout listing the user bookmarks.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:33
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:34
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:23
 #: src/features/messaging/components/popouts/InboxPopout.tsx:34
 msgid "Bookmarks"
@@ -5454,7 +5474,7 @@ msgid "Bypass mention suppression"
 msgstr "Bỏ qua chặn nhắc đến"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:440
 msgid "Bypass slowmode"
 msgstr "Bỏ qua chế độ chậm"
 
@@ -6031,7 +6051,7 @@ msgid "Change other members' nicknames."
 msgstr "Đổi biệt danh của thành viên khác."
 
 #. Permission name: allows a member to edit their own nickname.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:189
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:380
 msgid "Change own nickname"
 msgstr "Thay đổi biệt danh của chính mình"
 
@@ -6090,6 +6110,16 @@ msgstr "Đổi tên người dùng"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryCutoffSection.tsx:22
 msgid "Change what users without \"{readMessageHistoryPermissionLabel}\" can see"
 msgstr "Thay đổi nội dung người dùng không có quyền \"{readMessageHistoryPermissionLabel}\" có thể xem"
+
+#. Permission description in the role/permission editor for the Set Voice Region permission at community scope. The region is the geographic location of the voice server.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:190
+msgid "Change which voice region a voice channel uses."
+msgstr "Thay đổi khu vực giọng nói mà kênh thoại sử dụng."
+
+#. Permission description in the channel-scoped permissions editor for the Set Voice Region permission. The region is the geographic location of the voice server.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:319
+msgid "Change which voice region this channel uses."
+msgstr "Thay đổi khu vực giọng nói mà kênh này sử dụng."
 
 #. IAR modal: quick-action card description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:437
@@ -6185,7 +6215,7 @@ msgid "Channel {id}"
 msgstr "Kênh {id}"
 
 #. Permission category for viewing or entering channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:145
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:336
 msgid "Channel access"
 msgstr "Quyền truy cập kênh"
 
@@ -6243,7 +6273,7 @@ msgstr "Các mục chi tiết kênh"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:108
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "Đã sao chép ID kênh"
@@ -6261,7 +6291,7 @@ msgid "channel link"
 msgstr "liên kết kênh"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:100
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:98
 msgid "Channel link copied"
 msgstr "Đã sao chép liên kết kênh"
 
@@ -6285,7 +6315,7 @@ msgid "Channel list typing indicators"
 msgstr "Hiển thị trạng thái đang nhập trong danh sách kênh"
 
 #. Permission category for managing channels and channel settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:153
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:344
 msgid "Channel management"
 msgstr "Quản lý kênh"
 
@@ -7845,7 +7875,7 @@ msgid "Community voice"
 msgstr "Giọng nói cộng đồng"
 
 #. Permission category for permissions that affect the whole community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:324
 msgid "Community-wide"
 msgstr "Toàn cộng đồng"
 
@@ -8099,7 +8129,7 @@ msgstr "Kết nối micrô và thử lại."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:456
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:56
 msgid "Connect to voice"
 msgstr "Kết nối với kênh thoại"
@@ -8530,7 +8560,7 @@ msgstr "Sao chép ID kênh"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:205
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
 msgid "Copy channel link"
 msgstr "Sao chép liên kết kênh"
 
@@ -8983,7 +9013,7 @@ msgid "Couldn't download the desktop update"
 msgstr "Không thể tải bản cập nhật cho máy tính để bàn"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
 msgid "Couldn't duplicate this channel"
 msgstr "Không thể sao chép kênh này"
 
@@ -9073,7 +9103,7 @@ msgid "Couldn't open the billing portal"
 msgstr "Không thể mở cổng thanh toán"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
 msgid "Couldn't pin this conversation"
 msgstr "Không thể ghim cuộc trò chuyện này"
 
@@ -9252,7 +9282,7 @@ msgid "Couldn't unblock user"
 msgstr "Không thể bỏ chặn người dùng"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
 msgid "Couldn't unpin this conversation"
 msgstr "Không thể bỏ ghim cuộc trò chuyện này"
 
@@ -9453,7 +9483,7 @@ msgid "Create DM"
 msgstr "Tạo tin nhắn riêng tư"
 
 #. Permission name: allows uploading custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:388
 msgid "Create emoji & stickers"
 msgstr "Tạo biểu tượng cảm xúc và nhãn dán"
 
@@ -9480,7 +9510,7 @@ msgid "Create invite"
 msgstr "Tạo lời mời"
 
 #. Permission name: allows creating invite links.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:185
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:376
 msgid "Create invite links"
 msgstr "Tạo liên kết mời"
 
@@ -9544,7 +9574,7 @@ msgid "Create, edit, or delete roles below your highest role. Also allows editin
 msgstr "Tạo, chỉnh sửa hoặc xóa các vai trò dưới vai trò cao nhất của bạn. Cũng cho phép chỉnh sửa quyền ghi đè kênh."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Webhooks permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:205
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "Tạo, chỉnh sửa hoặc xoá webhook cho kênh này."
 
@@ -10196,9 +10226,19 @@ msgid "Deafen device"
 msgstr "Tắt tiếng thiết bị"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:481
 msgid "Deafen members"
 msgstr "Tắt tiếng thành viên"
+
+#. Permission description in the channel-scoped permissions editor for the Deafen Members permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:310
+msgid "Deafen other members in this voice channel, so they cannot hear or speak."
+msgstr "Tắt tiếng các thành viên khác trong kênh thoại này để họ không thể nghe hoặc nói."
+
+#. Permission description in the role/permission editor for the Deafen Members permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:186
+msgid "Deafen other members in voice channels, so they cannot hear or speak."
+msgstr "Tắt tiếng các thành viên khác trong kênh thoại để họ không thể nghe hoặc nói."
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:157
@@ -10395,7 +10435,7 @@ msgstr "Mặc định tắt trên di động để tiết kiệm pin và dữ li
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10427,7 +10467,7 @@ msgstr "Xóa \"{stickerName}\" ư? Không thể hoàn tác đâu."
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:107
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:104
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:102
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "Xóa {channelLabel} ư? Không thể hoàn tác."
 
@@ -10555,6 +10595,11 @@ msgstr "Xóa tin nhắn"
 msgid "Delete my messages"
 msgstr "Xóa tin nhắn của tôi"
 
+#. Permission description in the channel-scoped permissions editor for the Manage Messages permission. Notes that pinning has its own permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:229
+msgid "Delete other members' messages in this channel. Pinning is controlled separately."
+msgstr "Xóa tin nhắn của thành viên khác trong kênh này. Ghim tin nhắn được kiểm soát riêng."
+
 #. Permission description in the role/permission editor for the Manage Messages permission. Notes that pinning has its own permission.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:68
 msgid "Delete other members' messages. Pinning is controlled separately."
@@ -10628,7 +10673,7 @@ msgid "Delete this message"
 msgstr "Xóa tin nhắn này"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:73
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Delete this message? Can't be undone."
 msgstr "Xóa tin nhắn này? Không thể hoàn tác."
 
@@ -11913,10 +11958,15 @@ msgstr "Kéo và thả tệp vào đây để tải lên"
 msgid "Drag and drop emoji files here"
 msgstr "Kéo và thả tệp biểu tượng cảm xúc vào đây"
 
-#. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved.
+#. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
-msgid "Drag members between channels they can access."
-msgstr "Kéo thả thành viên giữa các kênh họ có quyền truy cập."
+msgid "Drag members between voice channels they can access, and disconnect them from voice."
+msgstr "Kéo thành viên giữa các kênh thoại mà họ có thể truy cập và ngắt kết nối họ khỏi thoại."
+
+#. Permission description in the channel-scoped permissions editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:314
+msgid "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
+msgstr "Kéo thành viên ra khỏi kênh thoại này vào các kênh mà họ có thể truy cập, và ngắt kết nối họ khỏi thoại."
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:140
 msgid "Drag roles to customize the order they appear in the member list."
@@ -12015,7 +12065,7 @@ msgstr "Tạo bản sao"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
 msgid "Duplicate channel"
 msgstr "Nhân bản kênh"
 
@@ -12122,7 +12172,7 @@ msgstr "Sửa danh mục"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:75
 msgid "Edit channel"
 msgstr "Sửa kênh"
@@ -12202,7 +12252,7 @@ msgid "Edit or delete emoji and stickers created by other members."
 msgstr "Chỉnh sửa hoặc xóa biểu tượng cảm xúc và nhãn dán do thành viên khác tạo."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Permissions permission. "Overwrites" are per-channel permission overrides.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:200
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Chỉnh sửa quyền của vai trò và thành viên trong kênh này."
 
@@ -12424,7 +12474,7 @@ msgid "Embed debugger form"
 msgstr "Biểu mẫu gỡ lỗi nhúng"
 
 #. Permission name: allows links to unfurl/embed in messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:225
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:416
 msgid "Embed links"
 msgstr "Nhúng liên kết"
 
@@ -16524,6 +16574,11 @@ msgstr "Bỏ qua báo cáo spam"
 msgid "Ignore the friend request from {displayName}?"
 msgstr "Bỏ qua lời mời kết bạn từ {displayName}?"
 
+#. Permission description in the channel-scoped permissions editor for the Bypass Slowmode permission. Slowmode is the per-channel cooldown between messages.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+msgid "Ignore this channel's slowmode cooldown."
+msgstr "Bỏ qua giới hạn thời gian chờ của kênh này."
+
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
 msgid "Ignore virtual"
 msgstr "Bỏ qua thiết bị ảo"
@@ -17367,6 +17422,16 @@ msgstr "Cửa sổ mời"
 msgid "Invite modal preview"
 msgstr "Xem trước lời mời"
 
+#. Permission description in the channel-scoped permissions editor for the Create Invite Links permission. The invite drops the new member into this channel.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:215
+msgid "Invite new people to the community with a link to this channel."
+msgstr "Mời người mới tham gia cộng đồng bằng liên kết đến kênh này."
+
+#. Permission description in the role/permission editor for the Create Invite Links permission. Covers links that let someone outside the community join it.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+msgid "Invite new people to the community with an invite link."
+msgstr "Mời người mới tham gia cộng đồng bằng liên kết mời."
+
 #. Title for invite errors when the invite code does not exist or cannot be used.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:9
 msgid "Invite not found"
@@ -17680,6 +17745,11 @@ msgstr "Tham gia trên thiết bị này"
 msgid "Join the call"
 msgstr "Tham gia cuộc gọi"
 
+#. Permission description in the channel-scoped permissions editor for the Connect permission. "View channel" is another permission in this same editor, so match the wording used for its name. The placeholder renders the literal @everyone role name and must not be translated.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:279
+msgid "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
+msgstr "Tham gia kênh thoại này và nghe người khác. Từ chối quyền này cùng với Xem kênh cho {everyoneMention} sẽ khiến kênh trở nên riêng tư."
+
 #. Confirm dialog body shown before joining a voice channel from a context where confirmation is required.
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:16
 msgid "Join this voice channel?"
@@ -17710,6 +17780,11 @@ msgstr "Tham gia cuộc gọi thoại"
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "Tham gia kênh thoại"
+
+#. Permission description in the role/permission editor for the Connect permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:162
+msgid "Join voice channels and hear others."
+msgstr "Tham gia các kênh thoại và nghe người khác."
 
 #. Community members table column header for the date the account joined Fluxer.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:29
@@ -17757,7 +17832,7 @@ msgid "Jump to first unread message"
 msgstr "Chuyển đến tin nhắn chưa đọc đầu tiên"
 
 #. Short label in the bookmarks bottom sheet. Keep it concise.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:29
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:30
 msgid "Jump to message"
 msgstr "Đi đến tin nhắn"
 
@@ -17784,7 +17859,7 @@ msgid "Jump to page"
 msgstr "Chuyển đến trang"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Jump to present"
 msgstr "Đến tin nhắn mới nhất"
 
@@ -17957,7 +18032,7 @@ msgid "Kick member"
 msgstr "Đuổi thành viên"
 
 #. Permission name: allows removing members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:177
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:368
 msgid "Kick members"
 msgstr "Đuổi thành viên"
 
@@ -18831,17 +18906,17 @@ msgid "Manage blocked users"
 msgstr "Quản lý người dùng bị chặn"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:493
 msgid "Manage channel"
 msgstr "Quản lý kênh"
 
 #. Permission name: allows creating, editing, or deleting channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:173
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:364
 msgid "Manage channels"
 msgstr "Quản lý kênh"
 
 #. Permission name: allows editing global community settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:165
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:356
 msgid "Manage community"
 msgstr "Quản lý cộng đồng"
 
@@ -18851,7 +18926,7 @@ msgid "Manage community features"
 msgstr "Quản lý tính năng cộng đồng"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:201
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:392
 msgid "Manage emoji & stickers"
 msgstr "Quản lý biểu tượng cảm xúc và nhãn dán"
 
@@ -18864,12 +18939,12 @@ msgid "Manage invite links for this channel."
 msgstr "Quản lý các liên kết mời cho kênh này."
 
 #. Permission name: allows deleting other members' messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:217
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:408
 msgid "Manage messages"
 msgstr "Quản lý tin nhắn"
 
 #. Permission name: allows changing other members' nicknames.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:193
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:384
 msgid "Manage nicknames"
 msgstr "Quản lý biệt danh"
 
@@ -18879,7 +18954,7 @@ msgid "Manage payment methods"
 msgstr "Quản lý phương thức thanh toán"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:306
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:497
 msgid "Manage permissions"
 msgstr "Quản lý quyền"
 
@@ -18889,7 +18964,7 @@ msgid "Manage purchased gift codes and gift URLs"
 msgstr "Quản lý mã quà tặng và URL quà tặng đã mua"
 
 #. Permission name: allows role management and permission overwrite editing.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:169
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:360
 msgid "Manage roles"
 msgstr "Quản lý vai trò"
 
@@ -18899,7 +18974,7 @@ msgid "Manage subscription"
 msgstr "Quản lý gói đăng ký"
 
 #. Permission name: allows creating, editing, or deleting webhooks.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:205
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:396
 msgid "Manage webhooks"
 msgstr "Quản lý webhook"
 
@@ -19519,6 +19594,11 @@ msgstr "Kiểm soát nhắc đến"
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "Đề cập tất cả mọi người hoặc bất kỳ vai trò nào (ngay cả khi vai trò đó không được đặt là có thể đề cập)."
 
+#. Permission description in the channel-scoped permissions editor for the Mention Everyone permission. Notes that this overrides the per-role "mentionable" flag.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:254
+msgid "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+msgstr "Nhắc mọi người hoặc mọi vai trò trong kênh này (ngay cả khi vai trò đó không được đặt thành có thể nhắc)."
+
 #. Notifications settings: section heading for the default reply-mention behavior.
 #. Settings section label. Names the settings section in the settings UI.
 #. Short label in the inline. Keep it concise.
@@ -19750,12 +19830,12 @@ msgid "Message link"
 msgstr "Liên kết tin nhắn"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "Message list"
 msgstr "Danh sách tin nhắn"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list for {channelName}"
 msgstr "Danh sách tin nhắn cho {channelName}"
 
@@ -19846,7 +19926,7 @@ msgid "Messages"
 msgstr "Tin nhắn"
 
 #. Permission category for chat messages, uploads, embeds, reactions, and media.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:328
 msgid "Messages & media"
 msgstr "Tin nhắn & phương tiện"
 
@@ -19856,7 +19936,7 @@ msgid "Messages deleted"
 msgstr "Tin nhắn đã xóa"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:87
+#: src/features/channel/components/ChannelMessages.tsx:93
 msgid "Messages failed to load"
 msgstr "Không tải được tin nhắn"
 
@@ -20116,7 +20196,7 @@ msgid "Mod"
 msgstr "Người điều hành"
 
 #. Permission category for moderation actions against members or messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:141
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:332
 msgid "Moderation"
 msgstr "Kiểm duyệt"
 
@@ -20309,7 +20389,7 @@ msgid "Move item up"
 msgstr "Di chuyển mục lên"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:294
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:485
 msgid "Move members"
 msgstr "Di chuyển thành viên"
 
@@ -20493,7 +20573,7 @@ msgid "Mute favourites"
 msgstr "Tắt thông báo mục yêu thích"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:477
 msgid "Mute members"
 msgstr "Tắt tiếng thành viên"
 
@@ -20508,6 +20588,16 @@ msgstr "Tắt tiếng micrô"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:191
 msgid "Mute notifications"
 msgstr "Tắt thông báo"
+
+#. Permission description in the channel-scoped permissions editor for the Mute Members permission. The mute applies for every listener, not only for the moderator.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:305
+msgid "Mute other members in this voice channel for everyone."
+msgstr "Tắt tiếng các thành viên khác trong kênh thoại này đối với mọi người."
+
+#. Permission description in the role/permission editor for the Mute Members permission at community scope. The mute applies for every listener, not only for the moderator.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
+msgid "Mute other members in voice channels for everyone."
+msgstr "Tắt tiếng các thành viên khác trong kênh thoại cho mọi người."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:174
@@ -21173,7 +21263,7 @@ msgstr "Không có người dùng bị chặn"
 
 #. Empty-state text in the saved messages content popout.
 #. Empty-state text in the saved messages page.
-#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:166
+#: src/features/channel/components/modals/BookmarksBottomSheet.tsx:182
 #: src/features/messaging/components/pages/SavedMessagesPage.tsx:27
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:30
 msgid "No bookmarks"
@@ -22303,7 +22393,7 @@ msgstr "Mở chi tiết kênh {channelName}"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
 msgid "Open chat"
 msgstr "Mở trò chuyện"
 
@@ -23475,7 +23565,7 @@ msgid "Pin message"
 msgstr "Ghim tin nhắn"
 
 #. Permission name: allows pinning messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:221
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:412
 msgid "Pin messages"
 msgstr "Ghim tin nhắn"
 
@@ -23483,6 +23573,16 @@ msgstr "Ghim tin nhắn"
 #: src/features/app/components/shared/ChannelPinsContent.tsx:51
 msgid "Pin messages here for everyone to see."
 msgstr "Ghim tin nhắn tại đây để mọi người cùng xem."
+
+#. Permission description in the channel-scoped permissions editor for the Pin Messages permission. Covers messages from anyone, not only their own.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:234
+msgid "Pin or unpin any message in this channel."
+msgstr "Ghim hoặc bỏ ghim bất kỳ tin nhắn nào trong kênh này."
+
+#. Permission description in the role/permission editor for the Pin Messages permission at community scope. Covers messages from anyone, not only their own.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+msgid "Pin or unpin any message."
+msgstr "Ghim hoặc bỏ ghim bất kỳ tin nhắn nào."
 
 #. Body of the confirmation alert shown when pinning a message.
 #: src/features/channel/components/MessageActionUtils.tsx:60
@@ -23530,7 +23630,7 @@ msgstr "Nhóm đã ghim"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "Tin nhắn nhóm đã ghim"
@@ -24076,7 +24176,7 @@ msgid "Prioritize speakers"
 msgstr "Ưu tiên người nói"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:282
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:473
 msgid "Priority speaker"
 msgstr "Người nói ưu tiên"
 
@@ -24713,7 +24813,7 @@ msgid "Read message aloud"
 msgstr "Đọc tin nhắn thành tiếng"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:233
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:424
 msgid "Read message history"
 msgstr "Đọc lịch sử tin nhắn"
 
@@ -24723,6 +24823,16 @@ msgstr "Đọc lịch sử tin nhắn"
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:126
 msgid "Read messages"
 msgstr "Đọc tin nhắn"
+
+#. Permission description in the role/permission editor for the Read Message History permission at community scope. Without the permission the member sees only messages that arrive while the channel is open in front of them.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:151
+msgid "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
+msgstr "Đọc tin nhắn được gửi trước khi họ mở kênh. Nếu không có quyền này, họ chỉ thấy tin nhắn xuất hiện khi kênh đang mở."
+
+#. Permission description in the channel-scoped permissions editor for the Read Message History permission. Without the permission the member sees only messages that arrive while the channel is open in front of them.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:248
+msgid "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+msgstr "Đọc tin nhắn đã gửi trong kênh này trước khi họ mở nó. Nếu không có quyền này, họ chỉ thấy tin nhắn xuất hiện khi kênh đang mở."
 
 #. Permission description in the role/permission editor for the View Activity Log permission. Refers to the per-community audit/activity log.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:18
@@ -25343,6 +25453,11 @@ msgstr "Xóa biểu tượng"
 msgid "Remove it from the channel for everyone."
 msgstr "Xóa tin nhắn này khỏi kênh đối với mọi người."
 
+#. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+msgid "Remove members from the community. They can rejoin with a new invite."
+msgstr "Xóa thành viên khỏi cộng đồng. Họ có thể tham gia lại bằng lời mời mới."
+
 #. Button or menu action label in the recent mentions content popout. Keep it concise. Keep the tone plain and specific.
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:52
 msgid "Remove mention"
@@ -25455,7 +25570,7 @@ msgid "Removed deny for {0}."
 msgstr "Đã xóa từ chối cho {0}."
 
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/commands/SavedMessageCommands.tsx:23
+#: src/features/messaging/commands/SavedMessageCommands.tsx:24
 msgid "Removed from bookmarks"
 msgstr "Đã xoá khỏi tin nhắn đã lưu"
 
@@ -25533,7 +25648,7 @@ msgid "Rename :{emojiName}:"
 msgstr "Đổi tên :{emojiName}:"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Channel permission. "This channel" refers to the channel currently being edited.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:195
 msgid "Rename and edit this channel's settings."
 msgstr "Đổi tên và chỉnh sửa cài đặt kênh này."
 
@@ -27528,6 +27643,11 @@ msgstr "Mã PIN bảo mật"
 msgid "Security key PIN form"
 msgstr "Mật mã cho khóa bảo mật"
 
+#. Permission description in the role/permission editor for the View Channel permission at community scope. Per-channel overwrites still decide access for individual channels.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+msgid "See channels by default. Channels that deny it stay hidden."
+msgstr "Xem kênh theo mặc định. Các kênh từ chối quyền này sẽ bị ẩn."
+
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:89
 msgid "See how your invite looks to visitors."
 msgstr "Xem trước lời mời của bạn sẽ hiển thị thế nào với khách truy cập."
@@ -27538,9 +27658,14 @@ msgid "See the member list for channels in this community."
 msgstr "Xem danh sách thành viên của các kênh trong cộng đồng này."
 
 #. Permission description in the channel-scoped permissions editor for the View Channel Members permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:210
 msgid "See the member list for this channel."
 msgstr "Xem danh sách thành viên của kênh này."
+
+#. Permission description in the channel-scoped permissions editor for the View Channel permission. The placeholder renders the literal @everyone role name and must not be translated.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:220
+msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
+msgstr "Xem kênh này. Từ chối quyền này cho {everyoneMention} sẽ khiến kênh trở nên riêng tư."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
@@ -27880,7 +28005,7 @@ msgstr "Gửi tin nhắn"
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:174
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:209
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "Gửi tin nhắn"
 
@@ -27888,6 +28013,16 @@ msgstr "Gửi tin nhắn"
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:51
 msgid "Send messages disabled"
 msgstr "Đã tắt gửi tin nhắn"
+
+#. Permission description in the role/permission editor for the Send Messages permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+msgid "Send messages in channels."
+msgstr "Gửi tin nhắn trong các kênh."
+
+#. Permission description in the channel-scoped permissions editor for the Send Messages permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:225
+msgid "Send messages in this channel."
+msgstr "Gửi tin nhắn trong kênh này."
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -27908,10 +28043,10 @@ msgstr "Gửi liên kết đặt lại"
 msgid "Send saved media {memeName}"
 msgstr "Gửi media đã lưu {memeName}"
 
-#. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity.
+#. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity. "/tts" is a literal command prefix typed in the message box and must not be translated.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:63
-msgid "Send text-to-speech messages."
-msgstr "Gửi tin nhắn chuyển văn bản thành giọng nói."
+msgid "Send text-to-speech messages with /tts. Members who turned text-to-speech on hear them read aloud."
+msgstr "Gửi tin nhắn chuyển văn bản thành giọng nói bằng lệnh /tts. Thành viên đã bật tính năng chuyển văn bản thành giọng nói sẽ nghe thấy tin nhắn được đọc to."
 
 #. placeholder {0}: inboundChallenge.challenge_code
 #. placeholder {1}: inboundChallenge.our_number
@@ -27940,7 +28075,7 @@ msgid "Send to"
 msgstr "Gửi đến"
 
 #. Permission name: allows sending text-to-speech messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:213
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:404
 msgid "Send TTS messages"
 msgstr "Gửi tin nhắn TTS"
 
@@ -28310,7 +28445,7 @@ msgid "Set verification level to <0>none</0>."
 msgstr "Đặt cấp độ xác minh thành <0>không</0>."
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:298
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:489
 msgid "Set voice region"
 msgstr "Đặt vùng thoại"
 
@@ -28708,6 +28843,16 @@ msgstr "Hiện nút xoá"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:73
 msgid "Show download button"
 msgstr "Hiện nút tải xuống"
+
+#. Permission description in the channel-scoped permissions editor for the Embed Links permission. The preview is the card rendered under a message that contains a link.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:239
+msgid "Show embedded previews for links they send in this channel."
+msgstr "Hiển thị bản xem trước được nhúng cho các liên kết họ gửi trong kênh này."
+
+#. Permission description in the role/permission editor for the Embed Links permission at community scope. The preview is the card rendered under a message that contains a link.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:142
+msgid "Show embedded previews for links they send."
+msgstr "Hiển thị bản xem trước được nhúng cho các liên kết họ gửi."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:46
@@ -29712,8 +29857,8 @@ msgstr "Đã xảy ra lỗi."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
 msgid "Something went wrong. Please try again in a moment."
 msgstr "Đã xảy ra lỗi. Vui lòng thử lại sau giây lát."
 
@@ -29889,7 +30034,7 @@ msgid "Spatial and temporal layers"
 msgstr "Các lớp không gian và thời gian"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:269
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:460
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Nói"
@@ -30552,7 +30697,7 @@ msgid "Stream settings"
 msgstr "Cài đặt truyền phát"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:274
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:465
 msgid "Stream video"
 msgstr "Truyền phát video"
 
@@ -31159,6 +31304,16 @@ msgstr "Có hiệu lực ngay lập tức. Một khoản phí theo tỷ lệ có
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:40
 msgid "Talk in calls and test your input."
 msgstr "Nói chuyện trong cuộc gọi và kiểm tra đầu vào của bạn."
+
+#. Permission description in the channel-scoped permissions editor for the Speak permission. "Mute members" is another permission in this same editor, so match the wording used for its name.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:285
+msgid "Talk in this voice channel. Without it, members stay muted until someone with Mute members unmutes them."
+msgstr "Nói trong kênh thoại này. Nếu không có quyền này, thành viên sẽ bị tắt tiếng cho đến khi ai đó có quyền Tắt tiếng thành viên bật tiếng cho họ."
+
+#. Permission description in the role/permission editor for the Speak permission at community scope. "Mute members" is another permission in this same editor, so match the wording used for its name.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:166
+msgid "Talk in voice channels. Without it, members stay muted until someone with Mute members unmutes them."
+msgstr "Nói trong các kênh thoại. Nếu không có quyền này, thành viên sẽ bị tắt tiếng cho đến khi ai đó có quyền Tắt tiếng thành viên bỏ tắt tiếng cho họ."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -32647,7 +32802,7 @@ msgid "Time format selection"
 msgstr "Chọn định dạng thời gian"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:253
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:444
 msgid "Time out members"
 msgstr "Tạm dừng thành viên"
 
@@ -33316,6 +33471,16 @@ msgstr "Tắt luồng trực tiếp"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Tắt quyền riêng tư khi phát trực tuyến trước khi xem thông tin đăng nhập hoặc chi tiết bảo mật tài khoản."
+
+#. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
+msgid "Turn on a camera or share a screen in this voice channel."
+msgstr "Bật camera hoặc chia sẻ màn hình trong kênh thoại này."
+
+#. Permission description in the role/permission editor for the Stream Video permission at community scope. Covers both the webcam and screen sharing.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:171
+msgid "Turn on a camera or share a screen in voice channels."
+msgstr "Bật camera hoặc chia sẻ màn hình trong các kênh thoại."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -34122,7 +34287,7 @@ msgstr "Nhóm đã bỏ ghim"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "Gỡ ghim cuộc trò chuyện nhóm"
@@ -34508,6 +34673,16 @@ msgstr "Tải biểu tượng cảm xúc lên"
 msgid "Upload file"
 msgstr "Tải tệp lên"
 
+#. Permission description in the role/permission editor for the Attach Files permission at community scope.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:147
+msgid "Upload files and media in messages."
+msgstr "Tải tệp và phương tiện lên tin nhắn."
+
+#. Permission description in the channel-scoped permissions editor for the Attach Files permission.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:244
+msgid "Upload files and media in this channel."
+msgstr "Tải tệp và phương tiện lên kênh này."
+
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
@@ -34793,6 +34968,11 @@ msgstr "Dùng email khác"
 msgid "Use email"
 msgstr "Dùng email"
 
+#. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:259
+msgid "Use emoji from other communities in this channel."
+msgstr "Sử dụng biểu tượng cảm xúc từ các cộng đồng khác trong kênh này."
+
 #. Premium upsell shown when sending external emoji without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:24
 msgid "Use emoji from other communities with {premiumProductName}"
@@ -34804,12 +34984,12 @@ msgid "Use emoji from other communities."
 msgstr "Dùng biểu tượng cảm xúc từ các cộng đồng khác."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:237
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:428
 msgid "Use external emoji"
 msgstr "Sử dụng biểu tượng cảm xúc bên ngoài"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:241
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:432
 msgid "Use external stickers"
 msgstr "Dùng nhãn dán bên ngoài"
 
@@ -34905,10 +35085,20 @@ msgstr "Dùng ảnh/video đã lưu"
 msgid "Use selection"
 msgstr "Dùng vùng đã chọn"
 
+#. Permission description in the channel-scoped permissions editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:264
+msgid "Use stickers from other communities in this channel."
+msgstr "Sử dụng nhãn dán từ cộng đồng khác trong kênh này."
+
 #. Premium upsell shown when sending external stickers without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:36
 msgid "Use stickers from other communities with {premiumProductName}"
 msgstr "Dùng nhãn dán từ các cộng đồng khác với {premiumProductName}"
+
+#. Permission description in the role/permission editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+msgid "Use stickers from other communities."
+msgstr "Sử dụng nhãn dán từ các cộng đồng khác."
 
 #. Label in the language tab.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:63
@@ -34976,7 +35166,7 @@ msgid "Use video and camera previews."
 msgstr "Sử dụng bản xem trước video và camera."
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:278
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:469
 msgid "Use voice activity"
 msgstr "Sử dụng tính năng kích hoạt bằng giọng nói"
 
@@ -35720,7 +35910,7 @@ msgid "View {userName}'s profile"
 msgstr "Xem hồ sơ của {userName}"
 
 #. Permission name: allows viewing community audit/activity logs.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:161
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:352
 msgid "View activity log"
 msgstr "Xem nhật ký hoạt động"
 
@@ -35776,12 +35966,12 @@ msgid "View call controls"
 msgstr "Xem điều khiển cuộc gọi"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:257
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:448
 msgid "View channel"
 msgstr "Xem kênh"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:452
 msgid "View channel members"
 msgstr "Xem thành viên kênh"
 
@@ -37029,6 +37219,11 @@ msgstr "Có lỗi"
 msgid "Withdraw"
 msgstr "Rút tiền"
 
+#. Permission description in the channel-scoped permissions editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in this voice channel.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:295
+msgid "Without this permission, push-to-talk is required in this channel."
+msgstr "Nếu không có quyền này, bạn sẽ phải dùng chế độ nhấn để nói trong kênh này."
+
 #. Permission description in the role/permission editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in voice channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:103
 msgid "Without this permission, push-to-talk is required."
@@ -37905,7 +38100,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Bạn đã bị tạm dừng. Tính năng nhắn tin, bày tỏ cảm xúc và thoại sẽ tạm dừng cho đến khi hết thời gian chờ."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "You're viewing older messages"
 msgstr "Bạn đang xem tin nhắn cũ hơn"
 
@@ -37950,7 +38145,7 @@ msgstr "Bạn đã đạt đến giới hạn cộng đồng"
 #. Label in the saved messages content popout.
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:63
-#: src/features/messaging/components/pages/MessageListPage.tsx:26
+#: src/features/messaging/components/pages/MessageListPage.tsx:27
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:411
 #: src/features/messaging/components/popouts/SavedMessagesContent.tsx:38
 msgid "You've reached the end"
