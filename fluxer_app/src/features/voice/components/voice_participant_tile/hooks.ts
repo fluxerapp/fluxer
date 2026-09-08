@@ -13,6 +13,7 @@ import {
 } from '@app/features/voice/components/voice_participant_tile/previewEncoding';
 import {
 	getScreenShareVideoSubscriptionRecoveryKey,
+	isScreenShareVideoSubscriptionRecoveryWanted,
 	screenShareVideoSubscriptionRecoveryCoordinator,
 } from '@app/features/voice/components/voice_participant_tile/ScreenShareVideoSubscriptionRecovery';
 import {
@@ -27,7 +28,6 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
 import {
-	selectVoiceMediaGraphHasFailureForStreamKey,
 	selectVoiceMediaGraphViewerStreamKeys,
 	type VoiceMediaGraphSnapshot,
 } from '@app/features/voice/engine/VoiceMediaGraph';
@@ -538,14 +538,8 @@ export function useScreenshareWatchSubscription(opts: {
 			publication: pub,
 			streamKey,
 			participantIdentity,
-			isStillWanted: () => {
-				const currentStreamKey = streamKeyRef.current;
-				if (currentStreamKey == null) return false;
-				const graph = getGraphSnapshotRef.current();
-				if (!selectVoiceMediaGraphViewerStreamKeys(graph).includes(currentStreamKey)) return false;
-				if (selectVoiceMediaGraphHasFailureForStreamKey(graph, currentStreamKey)) return false;
-				return true;
-			},
+			isStillWanted: () =>
+				isScreenShareVideoSubscriptionRecoveryWanted(getGraphSnapshotRef.current(), streamKeyRef.current),
 			onRetry: (retry) => {
 				logger.warn('Retrying stalled screen share video subscription', retry);
 			},

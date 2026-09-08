@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	selectVoiceMediaGraphFailure,
 	selectVoiceMediaGraphViewerStreamKeys,
 	selectVoiceMediaGraphWatchGeneration,
 	type VoiceMediaGraphEvent,
@@ -8,7 +9,10 @@ import {
 } from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import {getScreenShareWatchFailureForPublicationOperation} from '@app/features/voice/state/ScreenShareWatchFailures';
+import {
+	getScreenShareWatchFailureForPublicationOperation,
+	ScreenShareWatchErrorCode,
+} from '@app/features/voice/state/ScreenShareWatchFailures';
 import {
 	refreshScreenSharePublicationSubscription,
 	resubscribeScreenSharePublication,
@@ -58,6 +62,7 @@ interface ScreenShareVideoSubscriptionRecoverySession {
 	key: string;
 	leaseCount: number;
 	attempt: number;
+	firstFrameRecoveries: number;
 	timeoutId: number | null;
 	graphGeneration: number | null;
 	options: ScreenShareVideoSubscriptionRecoveryLeaseOptions;
@@ -67,6 +72,8 @@ const SCREEN_SHARE_VIDEO_SUBSCRIPTION_RETRY_INITIAL_DELAY_MS = 2500;
 const SCREEN_SHARE_VIDEO_SUBSCRIPTION_RETRY_MAX_DELAY_MS = 30_000;
 const SCREEN_SHARE_VIDEO_SUBSCRIPTION_HEALTH_CHECK_DELAY_MS = 2500;
 const SCREEN_SHARE_VIDEO_SUBSCRIPTION_REFRESH_ATTEMPTS = 0;
+const SCREEN_SHARE_VIDEO_SUBSCRIPTION_FIRST_FRAME_RECOVERY_ATTEMPTS = 3;
+const SCREEN_SHARE_VIDEO_SUBSCRIPTION_FIRST_FRAME_RECOVERY_DELAY_MS = 20_000;
 
 const defaultScheduler: ScreenShareVideoSubscriptionRecoveryScheduler = {
 	setTimeout: (callback, delayMs) => window.setTimeout(callback, delayMs),
@@ -104,6 +111,16 @@ function hasReceivableTrack(publication: ScreenShareVideoSubscriptionRecoveryPub
 	const track = asScreenShareRecoveryTrackLike(publication.track);
 	if (track === null) return false;
 	return isTrackReceivable(track);
+}
+
+export function isScreenShareVideoSubscriptionRecoveryWanted(
+	snapshot: VoiceMediaGraphSnapshot,
+	streamKey: string | null | undefined,
+): boolean {
+	if (!streamKey) return false;
+	if (!selectVoiceMediaGraphViewerStreamKeys(snapshot).includes(streamKey)) return false;
+	const failure = selectVoiceMediaGraphFailure(snapshot, {streamKey});
+	return failure == null || failure.code === ScreenShareWatchErrorCode.FirstFrameTimeout;
 }
 
 export function getScreenShareVideoSubscriptionRecoveryKey({
@@ -152,6 +169,7 @@ export class ScreenShareVideoSubscriptionRecoveryCoordinator {
 				key: options.key,
 				leaseCount: 0,
 				attempt: 0,
+				firstFrameRecoveries: 0,
 				timeoutId: null,
 				graphGeneration: null,
 				options,
@@ -225,6 +243,13 @@ export class ScreenShareVideoSubscriptionRecoveryCoordinator {
 		return selectVoiceMediaGraphWatchGeneration(snapshot, streamKey) === session.graphGeneration;
 	}
 
+	private hasFirstFrameTimeoutFailure(session: ScreenShareVideoSubscriptionRecoverySession): boolean {
+		const streamKey = session.options.streamKey ?? null;
+		if (!streamKey) return false;
+		const failure = selectVoiceMediaGraphFailure(this.graph.getGraphSnapshot(), {streamKey});
+		return failure?.code === ScreenShareWatchErrorCode.FirstFrameTimeout;
+	}
+
 	private run(key: string): void {
 		const session = this.sessions.get(key);
 		if (!session) return;
@@ -234,11 +259,20 @@ export class ScreenShareVideoSubscriptionRecoveryCoordinator {
 			this.closeSession(session);
 			return;
 		}
-		if (hasReceivableTrack(options.publication)) {
+		const firstFrameStalled = this.hasFirstFrameTimeoutFailure(session);
+		if (
+			firstFrameStalled &&
+			session.firstFrameRecoveries >= SCREEN_SHARE_VIDEO_SUBSCRIPTION_FIRST_FRAME_RECOVERY_ATTEMPTS
+		) {
+			this.closeSession(session);
+			return;
+		}
+		if (!firstFrameStalled && hasReceivableTrack(options.publication)) {
 			session.attempt = 0;
 			this.schedule(session, SCREEN_SHARE_VIDEO_SUBSCRIPTION_HEALTH_CHECK_DELAY_MS);
 			return;
 		}
+		if (firstFrameStalled) session.firstFrameRecoveries += 1;
 		session.attempt += 1;
 		const mode = selectScreenShareVideoSubscriptionRecoveryMode(session.attempt);
 		const delayMs = getScreenShareVideoSubscriptionRetryDelayMs(session.attempt);
@@ -250,7 +284,12 @@ export class ScreenShareVideoSubscriptionRecoveryCoordinator {
 			mode,
 		});
 		this.recoverPublication(session, mode);
-		this.schedule(session, getScreenShareVideoSubscriptionRetryDelayMs(session.attempt + 1));
+		this.schedule(
+			session,
+			firstFrameStalled
+				? SCREEN_SHARE_VIDEO_SUBSCRIPTION_FIRST_FRAME_RECOVERY_DELAY_MS
+				: getScreenShareVideoSubscriptionRetryDelayMs(session.attempt + 1),
+		);
 	}
 
 	private reportCommandFailed(

@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {isVoiceActivityGateEnabled} from '@app/features/voice/utils/VoiceInputProcessor';
 import {
 	getActiveInputDeviceLabel,
 	resolveVoiceProcessingFromStateForDeviceLabel,
@@ -13,6 +14,8 @@ export interface VoiceEngineV2AppAudioSettingsSnapshot {
 	readonly inputVolume: number;
 	readonly outputVolume: number;
 	readonly vadThreshold: number;
+	readonly vadAutoSensitivity: boolean;
+	readonly voiceActivityGate: boolean;
 	readonly requestedInputDeviceId: string;
 	readonly effectiveInputDeviceId: string;
 	readonly activeInputDeviceLabel: string | null;
@@ -39,6 +42,8 @@ function assertAudioSettingsSnapshot(snapshot: VoiceEngineV2AppAudioSettingsSnap
 	assert.equal(typeof snapshot.inputVolume, 'number', `${name}.inputVolume must be a number`);
 	assert.equal(typeof snapshot.outputVolume, 'number', `${name}.outputVolume must be a number`);
 	assert.equal(typeof snapshot.vadThreshold, 'number', `${name}.vadThreshold must be a number`);
+	assert.equal(typeof snapshot.vadAutoSensitivity, 'boolean', `${name}.vadAutoSensitivity must be a boolean`);
+	assert.equal(typeof snapshot.voiceActivityGate, 'boolean', `${name}.voiceActivityGate must be a boolean`);
 	assert.equal(typeof snapshot.requestedInputDeviceId, 'string', `${name}.requestedInputDeviceId must be a string`);
 	assert.equal(typeof snapshot.effectiveInputDeviceId, 'string', `${name}.effectiveInputDeviceId must be a string`);
 	assert.equal(typeof snapshot.echoCancellation, 'boolean', `${name}.echoCancellation must be a boolean`);
@@ -54,6 +59,8 @@ export function createVoiceEngineV2AppAudioSettingsSnapshot(): VoiceEngineV2AppA
 		inputVolume: VoiceSettings.getInputVolume(),
 		outputVolume: VoiceSettings.getOutputVolume(),
 		vadThreshold: VoiceSettings.getVadThreshold(),
+		vadAutoSensitivity: VoiceSettings.getVadAutoSensitivity(),
+		voiceActivityGate: isVoiceActivityGateEnabled(),
 		requestedInputDeviceId: VoiceSettings.getInputDeviceId(),
 		effectiveInputDeviceId: resolveEffectiveInputDeviceId(),
 		activeInputDeviceLabel,
@@ -90,5 +97,7 @@ export function hasVoiceEngineV2InputProcessorSettingsChanged(
 	assertAudioSettingsSnapshot(current, 'current');
 	if (previous.deepFilter !== current.deepFilter) return true;
 	if (previous.deepFilterNoiseReductionLevel !== current.deepFilterNoiseReductionLevel) return true;
+	if (previous.voiceActivityGate !== current.voiceActivityGate) return true;
+	if (previous.vadAutoSensitivity !== current.vadAutoSensitivity) return true;
 	return false;
 }

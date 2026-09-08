@@ -54,7 +54,16 @@ function buildScreenShare(
 	return {...screenShare, source};
 }
 
-function pickLiveKitScreenShare(room: Room, channelId: string): ScreenSharePiPScreenShare | null {
+function isWatchedScreenShare(guildId: string | null, channelId: string, connectionId: string): boolean {
+	const streamKey = getStreamKey(guildId, channelId, connectionId);
+	return selectVoiceMediaGraphViewerStreamKeys(voiceMediaGraphStore.getGraphSnapshot()).includes(streamKey);
+}
+
+function pickLiveKitScreenShare(
+	room: Room,
+	channelId: string,
+	guildId: string | null,
+): ScreenSharePiPScreenShare | null {
 	const participants = [room.localParticipant, ...Array.from(room.remoteParticipants.values())];
 	for (const participant of participants) {
 		for (const publication of participant.trackPublications.values()) {
@@ -62,6 +71,7 @@ function pickLiveKitScreenShare(room: Room, channelId: string): ScreenSharePiPSc
 			if (publication.isMuted) continue;
 			const parsed = parseVoiceParticipantIdentity(participant.identity);
 			if (!parsed.userId || !parsed.connectionId) continue;
+			if (!isWatchedScreenShare(guildId, channelId, parsed.connectionId)) continue;
 			return buildScreenShare(
 				{
 					participantIdentity: participant.identity,
@@ -72,11 +82,13 @@ function pickLiveKitScreenShare(room: Room, channelId: string): ScreenSharePiPSc
 			);
 		}
 	}
-	void channelId;
 	return null;
 }
 
-function pickRemoteScreenShareFromSnapshots(channelId: string): ScreenSharePiPScreenShare | null {
+function pickRemoteScreenShareFromSnapshots(
+	channelId: string,
+	guildId: string | null,
+): ScreenSharePiPScreenShare | null {
 	const snapshots = MediaEngine.participants;
 	const connectionVoiceStates = MediaEngine.connectionVoiceStates;
 	for (const participantIdentity in snapshots) {
@@ -87,6 +99,7 @@ function pickRemoteScreenShareFromSnapshots(channelId: string): ScreenSharePiPSc
 		if (!parsed.userId || !parsed.connectionId) continue;
 		const voiceState = connectionVoiceStates[parsed.connectionId];
 		if (voiceState && voiceState.channel_id !== channelId) continue;
+		if (!isWatchedScreenShare(guildId, channelId, parsed.connectionId)) continue;
 		return buildScreenShare(
 			{
 				participantIdentity: snapshot.identity,
@@ -116,16 +129,16 @@ function pickLocalSelfShare(channelId: string): ScreenSharePiPScreenShare | null
 	);
 }
 
-function detectActiveScreenShare(channelId: string | null): ScreenSharePiPScreenShare | null {
+function detectActiveScreenShare(channelId: string | null, guildId: string | null): ScreenSharePiPScreenShare | null {
 	if (!channelId) return null;
 	const local = pickLocalSelfShare(channelId);
 	if (local) return local;
 	const room = MediaEngine.room;
 	if (room) {
-		const fromRoom = pickLiveKitScreenShare(room, channelId);
+		const fromRoom = pickLiveKitScreenShare(room, channelId, guildId);
 		if (fromRoom) return fromRoom;
 	}
-	const fromSnapshots = pickRemoteScreenShareFromSnapshots(channelId);
+	const fromSnapshots = pickRemoteScreenShareFromSnapshots(channelId, guildId);
 	if (fromSnapshots) return fromSnapshots;
 	return null;
 }
@@ -150,16 +163,16 @@ function pickWatchedScreenShareFromOpenPiP(
 	);
 }
 
-function detectScreenSharePiPContent(
+export function detectScreenSharePiPContent(
 	channelId: string | null,
 	guildId: string | null,
 ): ScreenSharePiPScreenShare | null {
-	return detectActiveScreenShare(channelId) ?? pickWatchedScreenShareFromOpenPiP(channelId, guildId);
+	return detectActiveScreenShare(channelId, guildId) ?? pickWatchedScreenShareFromOpenPiP(channelId, guildId);
 }
 
 function getClosedReason(conditions: ScreenSharePiPConditions): string | null {
 	if (!conditions.connectedChannelId) return 'not-connected-to-voice';
-	if (!conditions.screenShare) return 'no-active-screen-share';
+	if (!conditions.screenShare) return 'no-watched-screen-share';
 	if (conditions.isMobile) return 'mobile-layout';
 	if (conditions.disabledBySetting) return 'disabled-by-setting';
 	if (conditions.disabledBySession) return 'disabled-for-session';
@@ -272,6 +285,7 @@ class ScreenSharePiPController {
 		);
 		MediaEngine.subscribe(() => this.recompute('media-engine-store'));
 		LocalVoiceState.subscribe(() => this.recompute('local-voice-state'));
+		voiceMediaGraphStore.subscribe(() => this.recompute('voice-media-graph'));
 	}
 
 	private readReactiveInputs(): ReactiveInputs {

@@ -806,7 +806,12 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assertObjectLike<VoiceEngineV2MicrophoneOptions>(options, 'enableMicrophone.options');
 		if (this.microphoneEnablePromise) {
 			await this.microphoneEnablePromise;
-			return;
+			if (this.hasLiveMicrophonePublication(room) || this.microphoneEnablePromise !== null) {
+				return;
+			}
+			logger.warn('Coalesced microphone enable left no live publication for this room; enabling again', {
+				channelId,
+			});
 		}
 		this.microphoneEnablePromise = this.enableMicrophoneNow(room, channelId, options);
 		try {
@@ -1524,6 +1529,9 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		this.syncVoiceState({self_mute: targetMute});
 		this.updateMediaAudioControls();
 		this.syncLocalSpeakingOverride(room);
+		void this.refreshLocalVoiceInputProcessor(room).catch((error) => {
+			logger.warn('Failed to refresh voice input processor after transmit mode change', {error});
+		});
 	}
 
 	getMuteReason(voiceState: VoiceState | null, guildId?: string | null, channelId?: string | null): VoiceMuteReason {

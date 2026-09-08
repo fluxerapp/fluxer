@@ -121,7 +121,7 @@ describe('MediaEngineFacadeStateMachine', () => {
 		expect(snapshot.context.pendingServerDisconnectConnectionId).toBeNull();
 	});
 
-	it('disconnects immediately when the server removes the current local voice state', () => {
+	it('disconnects immediately when the server removes the current local voice state without a live transport', () => {
 		expect(
 			shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval({
 				voiceStateConnectionId: 'connection-1',
@@ -129,6 +129,28 @@ describe('MediaEngineFacadeStateMachine', () => {
 				currentConnectionId: 'connection-1',
 				currentChannelId: 'channel-1',
 				connected: true,
+				connecting: false,
+			}),
+		).toBe(false);
+
+		expect(
+			shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval({
+				voiceStateConnectionId: 'connection-1',
+				voiceStateChannelId: null,
+				currentConnectionId: 'connection-1',
+				currentChannelId: 'channel-1',
+				connected: false,
+				connecting: true,
+			}),
+		).toBe(true);
+
+		expect(
+			shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval({
+				voiceStateConnectionId: 'connection-1',
+				voiceStateChannelId: null,
+				currentConnectionId: 'connection-1',
+				currentChannelId: 'channel-1',
+				connected: false,
 				connecting: false,
 			}),
 		).toBe(true);
@@ -154,6 +176,50 @@ describe('MediaEngineFacadeStateMachine', () => {
 				connecting: false,
 			}),
 		).toBe(false);
+	});
+
+	it('keeps the transport during a server move until the replacement connection arrives', () => {
+		let snapshot = createMediaEngineFacadeSnapshot();
+		expect(
+			shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval({
+				voiceStateConnectionId: 'connection-1',
+				voiceStateChannelId: null,
+				currentConnectionId: 'connection-1',
+				currentChannelId: 'channel-1',
+				connected: true,
+				connecting: false,
+			}),
+		).toBe(false);
+		expect(
+			shouldCancelMediaEngineReconnectForServerVoiceStateRemoval({
+				voiceStateConnectionId: 'connection-1',
+				voiceStateChannelId: null,
+				currentConnectionId: 'connection-1',
+				currentChannelId: 'channel-1',
+				connected: true,
+				connecting: false,
+			}),
+		).toBe(false);
+		snapshot = transitionMediaEngineFacadeSnapshot(snapshot, {
+			type: 'serverDisconnect.schedule',
+			connectionId: 'connection-1',
+		});
+		expect(
+			shouldRunMediaEngineDeferredDisconnect(snapshot, {
+				connectionId: 'connection-1',
+				currentConnectionId: 'connection-2',
+				connected: true,
+				currentVoiceStateChannelId: null,
+			}),
+		).toBe(false);
+		expect(
+			shouldRunMediaEngineDeferredDisconnect(snapshot, {
+				connectionId: 'connection-1',
+				currentConnectionId: 'connection-1',
+				connected: true,
+				currentVoiceStateChannelId: null,
+			}),
+		).toBe(true);
 	});
 
 	it('cancels reconnect when local voice-state removal arrives after transport disconnect', () => {

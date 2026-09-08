@@ -527,7 +527,8 @@ export function shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval
 	input: MediaEngineFacadeServerVoiceStateRemovalInput,
 ): boolean {
 	if (!isCurrentServerVoiceStateRemoval(input)) return false;
-	return input.connected || input.connecting || input.currentChannelId != null;
+	if (input.connected) return false;
+	return input.connecting || input.currentChannelId != null;
 }
 
 export function shouldCancelMediaEngineReconnectForServerVoiceStateRemoval(

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const LOCAL_MIN_RMS = 0.003;
+export const LOCAL_MIN_RMS = 0.003;
 const LOCAL_DEFAULT_RMS = 0.008;
-const LOCAL_MAX_RMS = 0.04;
+export const LOCAL_MAX_RMS = 0.04;
 const REMOTE_MIN_RMS = 0.002;
 const REMOTE_DEFAULT_RMS = 0.006;
 const REMOTE_MAX_RMS = 0.035;
