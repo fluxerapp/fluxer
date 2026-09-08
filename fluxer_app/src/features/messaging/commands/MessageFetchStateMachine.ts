@@ -197,3 +197,15 @@ export function selectMessageFetchExecutionDecision(
 export function resolveMessageFetchExecutionDecision(input: MessageFetchExecutionInput): MessageFetchExecutionDecision {
 	return buildExecutionDecision(input);
 }
+
+export interface MessageFetchWindowTrustInput {
+	connectedAtRequest: boolean;
+	connectedAtResponse: boolean;
+	epochAtRequest: number;
+	epochAtResponse: number;
+}
+
+export function resolveMessageFetchWindowCached(input: MessageFetchWindowTrustInput): boolean {
+	if (!input.connectedAtRequest || !input.connectedAtResponse) return true;
+	return input.epochAtRequest !== input.epochAtResponse;
+}

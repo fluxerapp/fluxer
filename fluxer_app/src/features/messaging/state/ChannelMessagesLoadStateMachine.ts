@@ -301,6 +301,15 @@ export function selectChannelMessagesTailProbeId(input: ChannelMessagesTailInput
 	return selectChannelMessagesTailGapId(input);
 }
 
+export function selectChannelMessagesLoadRestoresTrust(input: {
+	mode: ChannelMessagesLoadMode;
+	isAfter: boolean;
+	hasMoreAfter: boolean;
+}): boolean {
+	if (input.mode === 'replace') return true;
+	return input.isAfter && !input.hasMoreAfter;
+}
+
 export interface ChannelMessagesTailProbeResultInput {
 	probeGeneration: number;
 	currentGeneration: number;

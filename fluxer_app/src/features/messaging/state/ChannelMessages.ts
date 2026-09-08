@@ -3,7 +3,10 @@
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import {resolveChannelIncomingMessageDecision} from '@app/features/messaging/state/ChannelIncomingMessageStateMachine';
-import {resolveChannelMessagesLoadDecision} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
+import {
+	resolveChannelMessagesLoadDecision,
+	selectChannelMessagesLoadRestoresTrust,
+} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import {mergeAscendingById} from '@app/features/messaging/utils/MessagePaginationUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
@@ -356,6 +359,10 @@ export class ChannelMessages {
 
 	static releaseRetainedChannel(channelId: string): void {
 		ChannelMessages.retainedChannelIds.delete(channelId);
+	}
+
+	static isRetained(channelId: string): boolean {
+		return ChannelMessages.retainedChannelIds.has(channelId);
 	}
 
 	static dropBuffers(channelId: string): void {
@@ -900,6 +907,11 @@ export class ChannelMessages {
 					jumpReturnChannelId: jump?.returnToMessageId ? (jump.returnChannelId ?? this.channelId) : null,
 					jumpReturnGuildId: jump?.returnToMessageId ? (jump.returnGuildId ?? null) : null,
 				};
+		const reachesLiveEdge = selectChannelMessagesLoadRestoresTrust({
+			mode: loadDecision.mode,
+			isAfter,
+			hasMoreAfter,
+		});
 		next = next.cloneAnd({
 			ready: true,
 			loadingMore: false,
@@ -907,7 +919,7 @@ export class ChannelMessages {
 			...jumpPatch,
 			hasMoreBefore: loadDecision.preserveHasMoreBefore ? next.hasMoreBefore : hasMoreBefore,
 			hasMoreAfter: loadDecision.preserveHasMoreAfter ? next.hasMoreAfter : hasMoreAfter,
-			cached,
+			cached: reachesLiveEdge ? cached : next.cached || cached,
 			error: false,
 		});
 		return next;

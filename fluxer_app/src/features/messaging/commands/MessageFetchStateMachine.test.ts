@@ -8,6 +8,7 @@ import {
 	type MessageFetchPreflightInput,
 	resolveMessageFetchExecutionDecision,
 	resolveMessageFetchPreflightDecision,
+	resolveMessageFetchWindowCached,
 	selectMessageFetchExecutionDecision,
 	selectMessageFetchPreflightDecision,
 	transitionMessageFetchExecutionSnapshot,
@@ -102,5 +103,33 @@ describe('messageFetchExecutionMachine', () => {
 		});
 
 		expect(selectMessageFetchExecutionDecision(networkSnapshot)).toEqual({type: 'requestNetwork'});
+	});
+});
+
+describe('resolveMessageFetchWindowCached', () => {
+	function trust(overrides: Partial<Parameters<typeof resolveMessageFetchWindowCached>[0]> = {}) {
+		return {
+			connectedAtRequest: true,
+			connectedAtResponse: true,
+			epochAtRequest: 7,
+			epochAtResponse: 7,
+			...overrides,
+		};
+	}
+
+	it('trusts a window loaded inside one uninterrupted connection', () => {
+		expect(resolveMessageFetchWindowCached(trust())).toBe(false);
+	});
+
+	it('distrusts a window whose request left while the socket was down', () => {
+		expect(resolveMessageFetchWindowCached(trust({connectedAtRequest: false}))).toBe(true);
+	});
+
+	it('distrusts a window whose response landed while the socket was down', () => {
+		expect(resolveMessageFetchWindowCached(trust({connectedAtResponse: false}))).toBe(true);
+	});
+
+	it('distrusts a window whose connection epoch moved under it', () => {
+		expect(resolveMessageFetchWindowCached(trust({epochAtResponse: 8}))).toBe(true);
 	});
 });

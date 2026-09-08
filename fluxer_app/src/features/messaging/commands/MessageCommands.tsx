@@ -8,6 +8,7 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -15,6 +16,7 @@ import {
 	type MessageFetchCacheHit,
 	resolveMessageFetchExecutionDecision,
 	resolveMessageFetchPreflightDecision,
+	resolveMessageFetchWindowCached,
 } from '@app/features/messaging/commands/MessageFetchStateMachine';
 import {resolveMessagePageState} from '@app/features/messaging/commands/MessagePageStateMachine';
 import {MessageDeleteFailedModal} from '@app/features/messaging/components/alerts/MessageDeleteFailedModal';
@@ -258,6 +260,7 @@ function handleMessageFetchSuccess(
 	channelId: string,
 	messages: Array<WireMessage>,
 	pageState: MessagePageState,
+	cached: boolean,
 	jump?: JumpOptions,
 	tailProbe?: TailProbeContext,
 ): void {
@@ -268,7 +271,7 @@ function handleMessageFetchSuccess(
 		isAfter: pageState.isAfter,
 		hasMoreBefore: pageState.hasMoreBefore,
 		hasMoreAfter: pageState.hasMoreAfter,
-		cached: false,
+		cached,
 		jump,
 		tailProbe: tailProbe != null,
 	});
@@ -466,17 +469,25 @@ export async function fetchMessages(
 			const started = Messages.getMessages(channelId);
 			probeEpoch = {loadGeneration: started.loadGeneration, jumpTicket: started.jumpTicket};
 		}
+		const connectedAtRequest = GatewayConnection.isConnected;
+		const epochAtRequest = GatewayConnection.connectionEpoch;
 		try {
 			const timeStart = Date.now();
 			logger.debug(`Fetching messages for channel ${channelId}`);
 			const messages = await requestChannelMessages(channelId, before, after, limit, jump);
+			const cached = resolveMessageFetchWindowCached({
+				connectedAtRequest,
+				connectedAtResponse: GatewayConnection.isConnected,
+				epochAtRequest,
+				epochAtResponse: GatewayConnection.connectionEpoch,
+			});
 			if (probeEpoch != null && !isTailProbeApplicable(channelId, probeEpoch, after)) {
 				settleTailProbe(options, 'retry');
 				return [];
 			}
 			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, jump);
 			logger.info(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
-			handleMessageFetchSuccess(channelId, messages, pageState, jump, options?.tailProbe);
+			handleMessageFetchSuccess(channelId, messages, pageState, cached, jump, options?.tailProbe);
 			settleTailProbe(options, 'applied');
 			return messages;
 		} catch (error) {

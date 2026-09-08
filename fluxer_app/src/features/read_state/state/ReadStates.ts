@@ -599,7 +599,7 @@ class ReadStates {
 				changed = state.guildId !== guildId;
 				state.storedGuildId = guildId;
 			}
-			if (lastMessageId !== state.lastMessageId) {
+			if (isNewerMessageId(lastMessageId, state.lastMessageId)) {
 				state.lastMessageId = lastMessageId;
 				changed = true;
 				this.clearUnreadStateIfRead(state);

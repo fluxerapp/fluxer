@@ -201,7 +201,7 @@ class Messages {
 	}
 
 	private hasLoadedPage(messages: ChannelMessages): boolean {
-		return messages.ready && messages.length > 0;
+		return messages.ready && messages.length > 0 && !messages.cached;
 	}
 
 	shouldPreloadLatestPage(channelId: string): boolean {
@@ -209,7 +209,9 @@ class Messages {
 			return false;
 		}
 		const messages = ChannelMessages.get(channelId);
-		return !messages || (messages.length === 0 && !messages.loadingMore && !messages.ready);
+		if (!messages) return true;
+		if (messages.loadingMore || ChannelMessages.isRetained(channelId)) return false;
+		return messages.length === 0 ? !messages.ready : messages.cached;
 	}
 
 	@action
@@ -282,15 +284,6 @@ class Messages {
 		this.indexedAuthorsByChannel.clear();
 		this.pendingJumpDispatches.clear();
 		this.pendingFullHydration = true;
-		this.notifyChange();
-		return true;
-	}
-
-	@action
-	handleResumed(): boolean {
-		ChannelMessages.forEach((messages) => {
-			this.commitMessages(messages.withPatch({ready: true}));
-		});
 		this.notifyChange();
 		return true;
 	}
@@ -386,9 +379,10 @@ class Messages {
 		if (!isNonGuildChannel && !guildExists) {
 			return false;
 		}
+		const distrustedTailId = messages.ready && messages.cached ? (messages.last()?.id ?? null) : null;
 		this.commitMessages(messages.withPatch({loadingMore: true}));
 		this.notifyChange();
-		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL);
+		MessageCommands.fetchMessages(channelId, null, distrustedTailId, MAX_MESSAGES_PER_CHANNEL);
 		return false;
 	}
 

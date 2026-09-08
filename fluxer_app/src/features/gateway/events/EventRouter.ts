@@ -13,7 +13,6 @@ import {handleFavoriteMemeDelete} from '@app/features/expressions/events/Favorit
 import {handleFavoriteMemeUpdate} from '@app/features/expressions/events/FavoriteMemeUpdate';
 import {handleWebhooksUpdate} from '@app/features/expressions/events/WebhooksUpdate';
 import {handleReady} from '@app/features/gateway/events/GatewayReady';
-import {handleResumed} from '@app/features/gateway/events/GatewayResumed';
 import type {GatewaySocket} from '@app/features/gateway/transport/GatewaySocket';
 import {handleChannelMemberCountsUpdate} from '@app/features/guild/events/ChannelMemberCountsUpdate';
 import {handleGuildBanAdd, handleGuildBanRemove} from '@app/features/guild/events/GuildBan';
@@ -92,7 +91,6 @@ export type GatewayHandlerRegistry = Map<string, GatewayEventHandler>;
 export function createHandlerRegistry(): GatewayHandlerRegistry {
 	const registry: GatewayHandlerRegistry = new Map();
 	registry.set('READY', handleReady as GatewayEventHandler);
-	registry.set('RESUMED', handleResumed as GatewayEventHandler);
 	registry.set('AUTH_SESSION_CHANGE', handleAuthSessionChange as GatewayEventHandler);
 	registry.set('USER_UPDATE', handleUserUpdate as GatewayEventHandler);
 	registry.set('USER_SETTINGS_UPDATE', handleUserSettingsUpdate as GatewayEventHandler);

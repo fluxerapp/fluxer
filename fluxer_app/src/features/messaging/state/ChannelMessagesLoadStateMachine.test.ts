@@ -11,6 +11,7 @@ import {
 	resolveChannelMessagesWindowStatus,
 	selectChannelMessagesFillerVisible,
 	selectChannelMessagesLoadDecision,
+	selectChannelMessagesLoadRestoresTrust,
 	selectChannelMessagesSpacerHeight,
 	selectChannelMessagesTailGapId,
 	selectChannelMessagesTailProbeId,
@@ -516,5 +517,25 @@ describe('selectChannelMessagesTailProbeOutcome', () => {
 
 	it('discards a probe whose window a cached jump took over without starting a load', () => {
 		expect(selectChannelMessagesTailProbeOutcome(outcomeInput({currentJumpTicket: 3}))).toBe('discard');
+	});
+});
+
+describe('selectChannelMessagesLoadRestoresTrust', () => {
+	it('trusts a window a replacement load rebuilt from scratch', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'replace', isAfter: false, hasMoreAfter: false})).toBe(true);
+	});
+
+	it('trusts a window whose tail merge caught up to the live edge', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'mergeAfter', isAfter: true, hasMoreAfter: false})).toBe(true);
+	});
+
+	it('keeps distrusting a tail merge that stopped short of the live edge', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'mergeAfter', isAfter: true, hasMoreAfter: true})).toBe(false);
+	});
+
+	it('keeps distrusting a page of older history', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'mergeBefore', isAfter: false, hasMoreAfter: false})).toBe(
+			false,
+		);
 	});
 });

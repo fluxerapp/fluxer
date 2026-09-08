@@ -92,14 +92,22 @@ describe('ReadStates unread invariant', () => {
 		expect(ReadStates.hasUnread(channelId)).toBe(true);
 	});
 
-	it('clears a stale unread once the server walks the last message id back', () => {
+	it('ignores a passive update that walks the last message id back', () => {
 		const {channelId} = seedReadChannel();
 		ReadStates.handlePassiveLastMessageUpdates({[channelId]: ID.newer}, 'guild-1');
 		expect(ReadStates.hasUnread(channelId)).toBe(true);
 		ReadStates.handlePassiveLastMessageUpdates({[channelId]: ID.ack}, 'guild-1');
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.newer);
+		expect(ReadStates.hasUnread(channelId)).toBe(true);
+	});
+
+	it('still lets its own probe lower a watermark a passive update raised', () => {
+		const {channelId} = seedReadChannel();
+		loadedMessages.push({id: ID.ack, author: {id: 'someone'}});
+		ReadStates.handlePassiveLastMessageUpdates({[channelId]: ID.newer}, 'guild-1');
+		ReadStates.handleLoadMessages({channelId, isAfter: true, messages: [], tailProbeWatermarkId: ID.newer});
+		expect(ReadStates.lastMessageId(channelId)).toBe(ID.ack);
 		expect(ReadStates.hasUnread(channelId)).toBe(false);
-		expect(ReadStates.getUnreadCount(channelId)).toBe(0);
-		expect(ReadStates.getVisualUnreadMessageId(channelId)).toBeNull();
 	});
 
 	it('lowers a watermark its own probe finds nothing behind', () => {

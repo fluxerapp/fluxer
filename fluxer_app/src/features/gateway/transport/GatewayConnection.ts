@@ -4,6 +4,7 @@ import GeoIP from '@app/features/app/state/GeoIP';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import Channels from '@app/features/channel/state/Channels';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {
 	createHandlerRegistry,
@@ -23,10 +24,12 @@ import {
 	GatewayState,
 	type GatewayVoiceStateUpdateParams,
 } from '@app/features/gateway/transport/GatewaySocket';
+import {selectGuildActivationTarget} from '@app/features/gateway/transport/GuildActivationTarget';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch from '@app/features/member/state/MemberSearch';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import Permission from '@app/features/permissions/state/Permission';
 import SessionManager from '@app/features/platform/state/AuthSession';
@@ -55,6 +58,7 @@ interface DesiredSession {
 class GatewayConnection {
 	socket: GatewaySocket | null = null;
 	isConnected: boolean = false;
+	connectionEpoch: number = 0;
 	isConnecting: boolean = false;
 	isReady: boolean = false;
 	sessionId: string | null = null;
@@ -166,11 +170,11 @@ class GatewayConnection {
 		deferUntilModulesLoaded(() => {
 			reaction(
 				() => ({
-					guildId: SelectedGuild.selectedGuildId,
+					guildId: this.activationGuildId,
 					nonce: SelectedGuild.selectionNonce,
 				}),
 				({guildId}) => {
-					if (!guildId || guildId === FAVORITES_GUILD_ID) {
+					if (!guildId) {
 						this.pendingGuildSyncId = null;
 						return;
 					}
@@ -339,6 +343,9 @@ class GatewayConnection {
 				if (!isCurrent()) {
 					return;
 				}
+				if (newState === GatewayState.Connected || previousState === GatewayState.Connected) {
+					this.connectionEpoch += 1;
+				}
 				this.isConnected = newState === GatewayState.Connected;
 				this.isConnecting = newState === GatewayState.Connecting || newState === GatewayState.Reconnecting;
 				if (newState === GatewayState.Connected) {
@@ -445,8 +452,17 @@ class GatewayConnection {
 		}
 	}
 
+	private get activationGuildId(): string | null {
+		const channelId = Navigation.channelId;
+		const channel = channelId ? Channels.getChannel(channelId) : undefined;
+		return selectGuildActivationTarget({
+			selectedGuildId: SelectedGuild.selectedGuildId,
+			openChannelGuildId: channel?.guildId ?? null,
+		});
+	}
+
 	private flushPendingGuildSync(): void {
-		const guildId = this.pendingGuildSyncId ?? SelectedGuild.selectedGuildId;
+		const guildId = this.pendingGuildSyncId ?? this.activationGuildId;
 		if (!guildId || guildId === FAVORITES_GUILD_ID) {
 			return;
 		}

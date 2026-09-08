@@ -71,6 +71,8 @@ import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const TAIL_PROBE_MAX_ATTEMPTS = 2;
+const TAIL_PROBE_MIN_INTERVAL_MS = 10_000;
+const tailProbeAttemptedAt = new Map<string, number>();
 
 const MESSAGE_LIST_FOR_DESCRIPTOR = msg({
 	message: 'Message list for {channelName}',
@@ -483,7 +485,12 @@ export const Messages = observer(function Messages({
 		if (selectedChannelId !== channel.id || tailProbeKeyRef.current === tailProbeKey) {
 			return;
 		}
+		const lastAttemptAt = tailProbeAttemptedAt.get(tailProbeKey);
+		if (lastAttemptAt != null && Date.now() - lastAttemptAt < TAIL_PROBE_MIN_INTERVAL_MS) {
+			return;
+		}
 		tailProbeKeyRef.current = tailProbeKey;
+		tailProbeAttemptedAt.set(tailProbeKey, Date.now());
 		void MessageCommands.fetchMessages(channel.id, null, tailProbeMessageId, MAX_MESSAGES_PER_CHANNEL, undefined, {
 			tailProbe: {
 				watermarkMessageId: tailWatermarkMessageId,
