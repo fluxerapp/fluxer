@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Unfurl resolves one URL into the preview a message would show for it. That preview is an array of [embed](/http-api/messages/#embed-object) objects, the same objects the ordinary message path attaches.
 
-The single route here is user-only. Fluxer rejects a bot token and an OAuth2 bearer credential with 403 `ACCESS_DENIED`.
+The route is user-only. Fluxer rejects a bot token and an OAuth2 bearer credential with 403 `ACCESS_DENIED`.
 
 ## Site resolvers
 
@@ -48,7 +48,15 @@ A resolved embed has at most one nested embed in `children`, and a nested embed 
 
 ## Network policy
 
-Fluxer applies its network policy before every fetch and again to every redirect target. It refuses a URL that is empty, exceeds 8192 characters, contains a control character, uses a scheme other than HTTP or HTTPS, or has user information. Fluxer also refuses a URL whose port is `0` or whose host is not a valid public hostname. A host that resolves to a loopback, private, link-local, or otherwise reserved address is refused, and so is a host that resolves to no address at all.
+Fluxer applies its network policy before every fetch and again to every redirect target. It refuses a URL on any of these grounds:
+
+- The URL is empty, exceeds 8192 characters, or contains a control character.
+- The scheme is neither HTTP nor HTTPS.
+- The URL has user information.
+- The port is `0`.
+- The host is not a valid public hostname.
+- The host resolves to a loopback, private, link-local, or otherwise reserved address.
+- The host resolves to no address at all.
 
 Every HTTP request has a timeout of at most 10 seconds. The FxTwitter timeout is 8 seconds, and a Hacker News, Wikipedia, Bluesky, ActivityPub, oEmbed, MediaWiki extract, or media metadata call has 5 seconds. Every fetch identifies itself as `Mozilla/5.0 (compatible; Fluxerbot/1.0; +https://fluxer.app)`.
 

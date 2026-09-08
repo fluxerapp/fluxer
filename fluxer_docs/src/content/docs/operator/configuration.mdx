@@ -8,24 +8,24 @@ description: Every variable a self-hosted instance reads, grouped by concern.
 We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
 :::
 
-Fluxer reads its settings from environment variables. They live in a file named `.env`, in the same directory as `docker-compose.yml`. This page names every variable that file can hold.
+Fluxer reads its settings from environment variables. They live in a file named `.env`, in the same directory as `docker-compose.yml`.
 
-A first run touches two sections. [Core identity and public address](#core-identity-and-public-address) has `FLUXER_DOMAIN`, the hostname people type into a browser. [Secrets you must generate](#secrets-you-must-generate) has the fourteen values that ship as `CHANGE_ME`. Everything after those two is optional and already has a working value, so read it when you want to change something.
+A first run touches two sections. [Core identity and public address](#core-identity-and-public-address) has `FLUXER_DOMAIN`, the hostname people type into a browser. [Secrets you must generate](#secrets-you-must-generate) has the values that ship as `CHANGE_ME`. Everything after those two is optional and already has a working value, so read it when you want to change something.
 
-The installer in [Get started](/operator/get-started/) writes `.env` for you and fills in all fourteen secrets. [Upgrading](/operator/upgrading/) covers moving between releases.
+The installer in [Get started](/operator/get-started/) writes `.env` for you and fills in every secret. [Upgrading](/operator/upgrading/) covers moving between releases.
 
 ## How configuration is loaded
 
 Compose reads `.env` and passes the values it names into containers. A name reaches a container only when `docker-compose.yml` lists it, either in the shared `x-fluxer-env` block or in that service's own `environment` block. No service declares `env_file`, so a name in `.env` that appears in neither block never arrives, whatever it is set to.
 
-A `$` inside a value is a variable reference to Compose, not a character. `POSTGRES_PASSWORD=ab$cd` reaches the container as `ab`, and every command against the stack prints `The "cd" variable is not set. Defaulting to a blank string.` first. Write the `$` as `$$`, or put single quotes around the whole value. Both deliver one literal `$`:
+Compose reads a `$` inside a value as a variable reference. `POSTGRES_PASSWORD=ab$cd` reaches the container as `ab`, and every command against the stack prints `The "cd" variable is not set. Defaulting to a blank string.` first. Write the `$` as `$$`, or put single quotes around the whole value. Both deliver one literal `$`:
 
 ```ini
 POSTGRES_PASSWORD=ab$$cd
 POSTGRES_PASSWORD='ab$cd'
 ```
 
-Double quotes do not escape it. `docker compose config` prints a literal `$` back as `$$`, so a value that reads `ab$$cd` in that output is the correct one. The fourteen secrets the installer generates are hex or base64 and hold no `$`, so this reaches an instance through a password, an API key or an SMTP secret pasted in by hand.
+Double quotes do not escape it. `docker compose config` prints a literal `$` back as `$$`, so a value that reads `ab$$cd` in that output is the correct one. The secrets the installer generates are hex or base64 and hold no `$`, so this reaches an instance through a password, an API key or an SMTP secret pasted in by hand.
 
 A container's environment is fixed when the container is created, and `api` and `worker` cache their configuration at first load. Either way a change needs the process restarted, which `docker compose up -d` does by recreating the service.
 
@@ -78,35 +78,35 @@ Default `http`. The scheme for internal service URLs. Must be `http` or `https`,
 
 ## Secrets you must generate
 
-Every value below ships as `CHANGE_ME`. Replace all fourteen before the first start. Compose refuses to start when one is unset or empty, and names the variable. The installer in [Get started](/operator/get-started/) generates all fourteen, so come here to rotate one value later or to set them up by hand.
+Every value below ships as `CHANGE_ME`. Replace them all before the first start. Compose refuses to start when one is unset or empty, and names the variable. Generate each with `openssl rand -hex 32`, except the relay secret and the VAPID pair, whose own entries name the command. The installer in [Get started](/operator/get-started/) generates them all, so come here to rotate one value later or to set them up by hand.
 
 #### `POSTGRES_PASSWORD`
 
-Generate with `openssl rand -hex 32`. The database login, reused as `FLUXER_POSTGRES_PASSWORD`. Requires changing the stored role password too.
+The database login, reused as `FLUXER_POSTGRES_PASSWORD`. Requires changing the stored role password too.
 
 #### `MEILI_MASTER_KEY`
 
-Generate with `openssl rand -hex 32`. The Meilisearch master key, reused as `FLUXER_SEARCH_API_KEY`. Recreate `meilisearch` and every service that searches.
+The Meilisearch master key, reused as `FLUXER_SEARCH_API_KEY`. Recreate `meilisearch` and every service that searches.
 
 #### `FLUXER_S3_SECRET_KEY`
 
-Generate with `openssl rand -hex 32`. The object-storage secret, reused as `FLUXER_S3_SECRET_ACCESS_KEY`. `seaweedfs-init` installs it as the object store's only S3 identity on every `compose up`, so a changed value takes effect on the next start.
+The object-storage secret, reused as `FLUXER_S3_SECRET_ACCESS_KEY`. `seaweedfs-init` installs it as the object store's only S3 identity on every `compose up`, so a changed value takes effect on the next start.
 
 #### `FLUXER_SUDO_MODE_SECRET`
 
-Generate with `openssl rand -hex 32`. Sudo mode JWTs, as a raw HS256 key. Invalidates every elevated session.
+Sudo mode JWTs, as a raw HS256 key. Invalidates every elevated session.
 
 #### `FLUXER_CONNECTION_INITIATION_SECRET`
 
-Generate with `openssl rand -hex 32`. Connection initiation tokens and harvest download links. Invalidates in-flight authorisations and issued download links.
+Connection initiation tokens and harvest download links. Invalidates in-flight authorisations and issued download links.
 
 #### `FLUXER_GATEWAY_RPC_AUTH_TOKEN`
 
-Generate with `openssl rand -hex 32`. Internal RPC between the API and the Gateway. Must be byte-identical on `api`, `worker`, and `gateway`.
+Internal RPC between the API and the Gateway. Must be byte-identical on `api`, `worker`, and `gateway`.
 
 #### `FLUXER_MEDIA_PROXY_SECRET_KEY`
 
-Generate with `openssl rand -hex 32`. Media Proxy URLs. Must match across `api`, `worker`, `media-proxy`, `gifs`, and `unfurl`.
+Media Proxy URLs. Must match across `api`, `worker`, `media-proxy`, `gifs`, and `unfurl`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64`
 
@@ -114,19 +114,19 @@ Generate with `openssl rand -base64 32`. [Upload relay](/media-proxy/upload-rela
 
 #### `FLUXER_ADMIN_SECRET_KEY_BASE`
 
-Generate with `openssl rand -hex 32`. Admin sessions, CSRF tokens, and OAuth state. Signs every admin out. The admin service refuses to start when it is empty.
+Admin sessions, CSRF tokens, and OAuth state. Signs every admin out. The admin service refuses to start when it is empty.
 
 #### `FLUXER_ADMIN_OAUTH_CLIENT_SECRET`
 
-Generate with `openssl rand -hex 32`. The admin OAuth2 client secret. The API requires a non-empty value to serve the admin application.
+The admin OAuth2 client secret. The API requires a non-empty value to serve the admin application.
 
 #### `FLUXER_ERLANG_COOKIE`
 
-Generate with `openssl rand -hex 32`. The BEAM distribution secret. Only the Gateway reads it. Rotate it on every Gateway node at once when clustering.
+The BEAM distribution secret. Only the Gateway reads it. Rotate it on every Gateway node at once when clustering.
 
 #### `LIVEKIT_API_SECRET`
 
-Generate with `openssl rand -hex 32`. LiveKit access tokens. Must be at least 32 characters.
+LiveKit access tokens. Must be at least 32 characters.
 
 #### `FLUXER_VAPID_PUBLIC_KEY`
 
@@ -148,7 +148,7 @@ Two more values ship with a usable value. Both are required.
 
 ## Endpoint derivation from FLUXER_BASE_DOMAIN
 
-Fluxer builds eleven public endpoints. Ten of them come from the scheme, the base domain, and the port, and the docs endpoint is a fixed value. A port of `443` under `https` or `wss`, or `80` under `http` or `ws`, is omitted.
+Fluxer builds its public endpoints from the scheme, the base domain, and the port. The docs endpoint is a fixed value. A port of `443` under `https` or `wss`, or `80` under `http` or `ws`, is omitted.
 
 | Endpoint | Derived value |
 | --- | --- |
@@ -467,7 +467,7 @@ Default `http://localhost:3900`. The S3 API address. `media-proxy` defaults to e
 
 #### `FLUXER_S3_PUBLIC_ENDPOINT`
 
-No default. The host substituted into presigned URLs. The name misleads. Presigned URLs are the only place it appears.
+No default. The host substituted into presigned URLs, which are the only place it appears.
 
 #### `FLUXER_S3_FORCE_PATH_STYLE`
 
@@ -625,7 +625,11 @@ Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight reques
 
 No default. The shard ordinal source and node identity. Also read by the Gateway and by API RPC timing.
 
-The API tunes its NATS clients through fourteen further names, none of which are in the override table or in `.env.example`: `FLUXER_SNOWFLAKE_SERVICE_SUBJECT`, `FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME`, `FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE`, `FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK`, `FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS`, `FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS`, `FLUXER_USERS_SERVICE_SUBJECT`, `FLUXER_USERS_SERVICE_NATS_CLIENT_NAME`, `FLUXER_USERS_SERVICE_TIMEOUT_MS`, `FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES`, `FLUXER_GIF_SERVICE_SUBJECT`, `FLUXER_GIF_SERVICE_NATS_CLIENT_NAME`, `FLUXER_GIF_SERVICE_TIMEOUT_MS`, and `FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS`. Each falls back to its default when the value is not a positive number.
+The API tunes its NATS clients through these names, none of which are in the override table or in `.env.example`. Each falls back to its default when the value is not a positive number.
+
+- Snowflake service: `FLUXER_SNOWFLAKE_SERVICE_SUBJECT`, `FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME`, `FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE`, `FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK`, `FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS`, and `FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS`.
+- Users service: `FLUXER_USERS_SERVICE_SUBJECT`, `FLUXER_USERS_SERVICE_NATS_CLIENT_NAME`, `FLUXER_USERS_SERVICE_TIMEOUT_MS`, and `FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES`.
+- GIF service: `FLUXER_GIF_SERVICE_SUBJECT`, `FLUXER_GIF_SERVICE_NATS_CLIENT_NAME`, `FLUXER_GIF_SERVICE_TIMEOUT_MS`, and `FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS`.
 
 ## Voice and LiveKit
 
@@ -633,7 +637,7 @@ LiveKit is the media server for voice and video. `FLUXER_LIVEKIT_API_KEY` and `F
 
 #### `FLUXER_LIVEKIT_ENABLED`
 
-Default `false`. The master voice and video switch. The name misleads. It gates all voice. Compose sets `true`.
+Default `false`. The master switch for all voice and video. Compose sets `true`.
 
 #### `FLUXER_LIVEKIT_API_KEY`
 
@@ -1010,11 +1014,25 @@ Defaults to the inverse of `FLUXER_SELF_HOSTED`. External blocklist feeds. Off b
 
 A second family, unrelated to the rules above, tunes the IP auto-banner: `FLUXER_ABUSE_WINDOW_MS`, four `FLUXER_ABUSE_THRESHOLD_` names, four `FLUXER_ABUSE_TOKEN_DIVERSITY_` names, `FLUXER_ABUSE_BAN_TTL_SEC`, `FLUXER_ABUSE_BATCH_FLUSH_MS`, `FLUXER_ABUSE_MAX_BATCH_TICKS`, `FLUXER_ABUSE_MAX_NEW_TOKENS_PER_TICK`, `FLUXER_ABUSE_MAX_TRACKED_IPS`, `FLUXER_ABUSE_MAX_TOKEN_HASHES_PER_IP`, `FLUXER_ABUSE_MIN_SCORE_FOR_LOOKUP`, `FLUXER_ABUSE_MIN_TOKENS_FOR_LOOKUP`, and `FLUXER_ABUSE_REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN`. All are read directly from the environment, none are in `.env.example` or the Compose file, and a non-finite value or one at or below zero falls back to the default.
 
-Five more names in that family limit how often the auto-banner buys an IP classification from ipinfo. Before them, every API replica looked up the same attacking IP at the same moment, so one IP cost one lookup per replica. `FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED` defaults to `1` and gates the shared claim that now lets one replica do the lookup for all of them. `FLUXER_ABUSE_IP_CLASS_CLAIM_TTL_SEC` defaults to `15` and sets how long a replica holds that claim. `FLUXER_ABUSE_IP_CLASS_PENDING_TTL_MS` defaults to `20000` and sets how long a replica that lost the claim waits before it tries again. `FLUXER_ABUSE_IP_CLASS_NEGATIVE_TTL_MS` defaults to `300000` and sets how long a failed classification is remembered. `FLUXER_ABUSE_IP_CLASS_HINT_TTL_MS` defaults to `600000` and sets how long a class sent by another replica stays usable. The claim key is `abuse:ipclass:claim:` plus the ban key, and replicas send classes to each other on the `abuse_tracker:ipclass` key-value channel. The four numeric names are read through the same helper as the names above, so a non-finite value or one at or below zero falls back to the default. `FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED` is read as a string instead, and only `0` turns the claim off.
+Five more names in that family limit how often the auto-banner buys an IP classification from ipinfo. A shared claim lets one replica do the lookup for the others. With the claim off, every API replica looks up the same attacking IP at the same moment, so one IP costs one lookup per replica.
 
-A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXER_IPINFO_BUDGET_ENABLED` defaults to `1`, and `0` turns off all shedding. `FLUXER_IPINFO_BUDGET_MONTHLY_MAX` defaults to `140000` and is the ceiling for one UTC calendar month. Lookups run at three priorities. Admin IP bans and scheduled deletion checks are critical and reach the full ceiling. Registration risk is standard and stops at `FLUXER_IPINFO_BUDGET_STANDARD_MONTHLY_PCT` percent of it, default `90`. The IP auto-banner is background and stops at `FLUXER_IPINFO_BUDGET_BACKGROUND_MONTHLY_PCT` percent, default `60`. The lower ceilings mean background lookups stop first and critical lookups stop last. Each priority also has a token bucket for bursts, sized by `FLUXER_IPINFO_BUDGET_CRITICAL_BURST` (`60`), `FLUXER_IPINFO_BUDGET_STANDARD_BURST` (`240`) and `FLUXER_IPINFO_BUDGET_BACKGROUND_BURST` (`120`), refilled once a minute by `FLUXER_IPINFO_BUDGET_CRITICAL_REFILL_PER_MIN` (`60`), `FLUXER_IPINFO_BUDGET_STANDARD_REFILL_PER_MIN` (`120`) and `FLUXER_IPINFO_BUDGET_BACKGROUND_REFILL_PER_MIN` (`30`). The counters live in the key-value store under `ipinfo:budget:burst:` and `ipinfo:budget:month:`. A shed lookup returns an unavailable result instead of an error, and any key-value failure admits the lookup at every priority, so a cache outage never stops an admin ban or the auto-banner.
+- `FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED` defaults to `1` and gates the shared claim. It is read as a string, and only `0` turns the claim off.
+- `FLUXER_ABUSE_IP_CLASS_CLAIM_TTL_SEC` defaults to `15` seconds and sets how long a replica holds that claim.
+- `FLUXER_ABUSE_IP_CLASS_PENDING_TTL_MS` defaults to `20000` milliseconds and sets how long a replica that lost the claim waits before it tries again.
+- `FLUXER_ABUSE_IP_CLASS_NEGATIVE_TTL_MS` defaults to `300000` milliseconds and sets how long a failed classification is remembered.
+- `FLUXER_ABUSE_IP_CLASS_HINT_TTL_MS` defaults to `600000` milliseconds and sets how long a class sent by another replica stays usable.
 
-Two names let the local MaxMind databases answer the registration risk lookup instead of ipinfo. `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` is off by default and only `1` or `true`, in any letter case, turns it on. `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` is a comma-separated list of ASN numbers, empty by default, and non-numeric entries are dropped. The list is empty out of the box, so the pre-screen does nothing until an operator fills it in. An IP skips ipinfo only when the local city database returns a country, the local ASN database returns a number, that number is in the list, and the ASN organization name is not a commercial privacy provider, an education network or a cellular network. Everything else still goes to ipinfo.
+The claim key is `abuse:ipclass:claim:` plus the ban key, and replicas send classes to each other on the `abuse_tracker:ipclass` key-value channel. The four numeric names are read through the same helper as the names above, so a non-finite value or one at or below zero falls back to the default.
+
+A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXER_IPINFO_BUDGET_ENABLED` defaults to `1`, and `0` turns off all shedding. `FLUXER_IPINFO_BUDGET_MONTHLY_MAX` defaults to `140000` and is the ceiling for one UTC calendar month. Lookups run at three priorities, each with a share of that ceiling and a token bucket for bursts refilled once a minute.
+
+- Admin IP bans and scheduled deletion checks are critical. They reach the full ceiling, with a burst of `60` from `FLUXER_IPINFO_BUDGET_CRITICAL_BURST` refilled at `60` a minute by `FLUXER_IPINFO_BUDGET_CRITICAL_REFILL_PER_MIN`.
+- Registration risk is standard. It stops at `FLUXER_IPINFO_BUDGET_STANDARD_MONTHLY_PCT` percent of the ceiling, default `90`, with a burst of `240` from `FLUXER_IPINFO_BUDGET_STANDARD_BURST` refilled at `120` a minute by `FLUXER_IPINFO_BUDGET_STANDARD_REFILL_PER_MIN`.
+- The IP auto-banner is background. It stops at `FLUXER_IPINFO_BUDGET_BACKGROUND_MONTHLY_PCT` percent, default `60`, with a burst of `120` from `FLUXER_IPINFO_BUDGET_BACKGROUND_BURST` refilled at `30` a minute by `FLUXER_IPINFO_BUDGET_BACKGROUND_REFILL_PER_MIN`.
+
+The lower ceilings mean background lookups stop first and critical lookups stop last. The counters live in the key-value store under `ipinfo:budget:burst:` and `ipinfo:budget:month:`. A shed lookup returns an unavailable result and raises no error, and any key-value failure admits the lookup at every priority, so a cache outage never stops an admin ban or the auto-banner.
+
+Two names let the local MaxMind databases answer the registration risk lookup. `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` is off by default and only `1` or `true`, in any letter case, turns it on. `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` is a comma-separated list of ASN numbers, empty by default, and non-numeric entries are dropped. The list is empty out of the box, so the pre-screen does nothing until an operator fills it in. An IP skips ipinfo only when the local city database returns a country, the local ASN database returns a number, that number is in the list, and the ASN organization name is not a commercial privacy provider, an education network or a cellular network. Everything else still goes to ipinfo.
 
 ## Limits
 
@@ -1508,7 +1526,7 @@ Default `8080`. The listen port. Compose sets it explicitly.
 
 #### `FLUXER_STATIC_DIR`
 
-Default `./static`. Where the client bundle lives. The name misleads. It is the SPA bundle directory, unrelated to `static-proxy`.
+Default `./static`. Where the client's SPA bundle lives, unrelated to `static-proxy`.
 
 #### `FLUXER_APP_PROXY_INDEX_UPSTREAM_URL`
 
@@ -1564,9 +1582,9 @@ Defaults to the crate version. The reported build. `BUILD_VERSION` is preferred 
 
 ## Content Security Policy
 
-`app-proxy` builds a per-request nonce-based policy for the client HTML and the assets it serves. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards all eleven.
+`app-proxy` builds a per-request nonce-based policy for the client HTML and the assets it serves. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards every one.
 
-Every name below goes in `.env`. `app-proxy` reads its environment at container start, so a change takes effect on `docker compose up -d app-proxy` and not on `docker compose restart app-proxy`.
+Every name below goes in `.env`. `app-proxy` reads its environment at container start, so a change takes effect on `docker compose up -d app-proxy`. A `docker compose restart app-proxy` does not apply it.
 
 `FLUXER_CSP_EXTRA_DEFAULT_SRC`, `FLUXER_CSP_EXTRA_CONNECT_SRC`, `FLUXER_CSP_EXTRA_IMG_SRC`, `FLUXER_CSP_EXTRA_MEDIA_SRC`, `FLUXER_CSP_EXTRA_FONT_SRC`, `FLUXER_CSP_EXTRA_SCRIPT_SRC`, `FLUXER_CSP_EXTRA_STYLE_SRC`, `FLUXER_CSP_EXTRA_FRAME_SRC`, `FLUXER_CSP_EXTRA_WORKER_SRC`, and `FLUXER_CSP_EXTRA_MANIFEST_SRC` take one or more sources separated by commas, spaces, tabs, or newlines. Blank entries and sources the directive already lists are dropped. `FLUXER_CSP_REPORT_URI` sets a single `report-uri` value.
 
@@ -1576,7 +1594,7 @@ A front proxy must not add a Content-Security-Policy of its own.
 
 ## Keys in .env.example that no service reads
 
-`.env.example` has names that no Fluxer process ever sees. Docker Compose or the edge container consumes most of them, and each of those reaches a service under a different name. Setting one outside Compose, in Kubernetes or a systemd unit, does nothing. Each entry below says what consumes it.
+Docker Compose or the edge container consumes most of the names below, and each of those reaches a service under a different name. Setting one outside Compose, in Kubernetes or a systemd unit, does nothing.
 
 #### `FLUXER_DOMAIN`
 
@@ -1741,9 +1759,9 @@ The five internal services each run a router, which takes requests and holds no 
 
 ## Resources
 
-Each of the 25 services has a memory limit and four also have a memory reservation, all under `deploy.resources`. Compose reads `gb` as 1024 MiB and `mb` as 1 MiB, so `5gb` is 5368709120 bytes. Plain `docker compose up` applies both keys on a single host, with no Swarm and no `--compatibility` flag. The engine rejects any limit below `6mb`, and rejects a limit lower than the same service's reservation with `Minimum memory limit can not be less than memory reservation limit`.
+Every service has a memory limit and four also have a memory reservation, all under `deploy.resources`. Compose reads `gb` as 1024 MiB and `mb` as 1 MiB, so `5gb` is 5368709120 bytes. Plain `docker compose up` applies both keys on a single host, with no Swarm and no `--compatibility` flag. The engine rejects any limit below `6mb`, and rejects a limit lower than the same service's reservation with `Minimum memory limit can not be less than memory reservation limit`.
 
-A limit is a ceiling. The 25 limits below sum to 16.75 GiB and the stack does not need a host that large, because a container costs what it touches.
+A limit is a ceiling. The limits below sum to 16.75 GiB and the stack does not need a host that large, because a container costs what it touches.
 
 `deploy.resources.reservations.memory` becomes the container's cgroup v2 `memory.low`, which biases kernel reclaim toward other containers under host pressure. It reserves nothing on its own.
 
@@ -1751,7 +1769,7 @@ All are optional.
 
 #### `FLUXER_CADDY_MEMORY_LIMIT`
 
-Default `256mb`. The ceiling for `edge`. The name says Caddy and the service is named `edge`.
+Default `256mb`. The ceiling for `edge`.
 
 #### `FLUXER_POSTGRES_MEMORY_LIMIT`
 
@@ -1857,7 +1875,7 @@ Default `256mb`. The ceiling for `unfurl-shard`. Fetches remote pages, so a slow
 
 Default `256mb`. The ceiling for `admin`. Serves the dashboard and proxies no media.
 
-Four services have a reservation. Losing any of the four takes the instance down, so the kernel reclaims from everything else first. All are optional.
+A reservation goes to the four services whose loss takes the instance down, so the kernel reclaims from everything else first. All are optional.
 
 #### `FLUXER_POSTGRES_MEMORY_RESERVATION`
 

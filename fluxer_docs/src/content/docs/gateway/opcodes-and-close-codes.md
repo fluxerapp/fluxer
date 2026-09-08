@@ -118,7 +118,7 @@ Code 4006 is unassigned, and no code above 4012 is defined. [Event filtering](/g
 | 4011 | No | Closed. No session was created |
 | 4012 | No | Closed before Hello. No session exists |
 
-<sup>1</sup> A session the close leaves without a socket is retained for 60,000 ms measured from the moment the socket ends, so a close begins a fresh window. A session displaced by a Resume from a new socket is already attached to that socket and enters no window
+<sup>1</sup> A close that leaves a session without a socket begins a fresh 60,000 ms retention window, measured from the moment the socket ends. A session displaced by a Resume from a new socket is already attached to that socket and enters no window
 
 <sup>2</sup> A Resume that fails token verification leaves the named session in place for the rest of its retention window, so a later Resume with the owning token still recovers it. An Identify that fails token verification leaves nothing to recover
 

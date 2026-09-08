@@ -10,7 +10,7 @@ A permission grants a member one ability in a guild, such as sending a message o
 
 Only [List guild roles](#list-guild-roles) accepts an OAuth2 bearer credential, and every other route here rejects one with 403 `ACCESS_DENIED`. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) rejects an authenticated request with 403 `MISSING_ACCESS`, and [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag.
 
-Fluxer resolves the guild before any role. A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is visible to any authenticated caller. A route that names a role asserts `MANAGE_ROLES` before it reads the role. A caller without the permission receives 403 `MISSING_PERMISSIONS` even for a role that does not exist.
+Fluxer resolves the guild before any role. A guild that does not exist returns 404 `UNKNOWN_GUILD`. When the guild exists and the caller is not a member, the request returns 403 `MISSING_PERMISSIONS`, so guild existence is visible to any authenticated caller. Every route that names a role asserts `MANAGE_ROLES` before it reads the role. A caller without the permission receives 403 `MISSING_PERMISSIONS` even for a role that does not exist.
 
 ## Permissions
 
@@ -86,7 +86,7 @@ Fluxer discards a bit it does not define. A role mutation intersects the request
 
 ### Feature-gated permission bits
 
-Fluxer gates some bits on a client feature declaration. A client sends the feature set in the `X-Fluxer-Features` request header as a comma-separated list.
+Fluxer gates some permission bits on a feature declaration, which a client sends in the `X-Fluxer-Features` request header as a comma-separated list.
 
 One bit is gated today. `VIEW_CHANNEL_MEMBERS` requires the feature name `view_channel_members_permission`.
 
@@ -94,7 +94,7 @@ On a role or overwrite write that does not declare the matching feature, Fluxer 
 
 Fluxer trims and lowercases each name in the header before matching it. A name that is empty, longer than 64 characters, or containing a character outside `a-z`, `0-9`, and `_` is ignored. Fluxer reads at most 64 names from one header. An absent or empty header declares no features.
 
-A [Create guild role](#create-guild-role) request that supplies `permissions` without declaring the feature always creates the role with `VIEW_CHANNEL_MEMBERS` cleared. A request that omits `permissions` copies the everyone role mask without applying the gate.
+On [Create guild role](#create-guild-role), a request that supplies `permissions` without declaring the feature always creates the role with `VIEW_CHANNEL_MEMBERS` cleared. A request that omits `permissions` copies the everyone role mask without applying the gate.
 
 ## Elevated permissions
 
@@ -116,13 +116,13 @@ The guild owner receives the complete 64-bit mask. A user who is not a member re
 
 Otherwise Fluxer starts from the permissions of the everyone role, whose [snowflake](/snowflakes/) equals the guild snowflake, then adds the permissions of every role assigned to the member with a bitwise union. If the result contains `ADMINISTRATOR` at that point, Fluxer returns the complete 64-bit mask and runs no further step.
 
-When no channel was named, the union is the final result. When a channel was named, Fluxer applies that channel's stored [permission overwrites](/http-api/channels/#permission-overwrite-object) to the union in three steps:
+When no channel was named, the union is the final result. When a channel was named, Fluxer applies that channel's stored [permission overwrites](/http-api/channels/#permission-overwrite-object) to the union in this order:
 
 1. The everyone role overwrite, by removing its denied bits and then adding its allowed bits.
 2. The overwrites targeting roles assigned to the member, accumulated into one union of allowed bits and one union of denied bits and applied as a single step in the same order. An allow on any one of the member's roles defeats a deny on another.
 3. The member overwrite, again denied bits first and allowed bits second.
 
-A named channel that does not exist in the guild leaves the guild-level union unchanged.
+When the named channel does not exist in the guild, Fluxer leaves the guild-level union unchanged.
 
 :::caution[`ADMINISTRATOR` grants every bit and skips overwrites]
 No deny overwrite in any channel restricts a member who holds the bit. Removing `ADMINISTRATOR` from every role they hold is the only remedy.
@@ -134,7 +134,16 @@ A guild channel is visible when its channel-scoped mask contains `VIEW_CHANNEL`,
 
 A communication timeout stops a member from communicating in a guild until it expires. It does not change the computed mask. A member whose [communication_disabled_until](/http-api/guild-members/#guild-member-object) is in the future keeps every permission their roles grant, and Fluxer applies the restriction as a separate precondition on each communicating operation.
 
-Sending a message, editing the caller's own message, adding a reaction, requesting an attachment upload, starting a typing indicator, and changing the caller's own nickname each fail with 403 `COMMUNICATION_DISABLED` while the timeout is in the future. A timeout has no effect in a private channel.
+While the timeout is in the future, these operations fail with 403 `COMMUNICATION_DISABLED`:
+
+- Sending a message
+- Editing the caller's own message
+- Adding a reaction
+- Requesting an attachment upload
+- Starting a typing indicator
+- Changing the caller's own nickname
+
+A timeout has no effect in a private channel.
 
 The order of the timeout precondition and the permission check varies by operation, so a caller who is both timed out and short of the permission can receive either `COMMUNICATION_DISABLED` or `MISSING_PERMISSIONS`.
 

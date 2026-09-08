@@ -8,7 +8,11 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An archive is a snapshot of one user account or one guild, built in the background and downloaded as a file. [Create user archive](/admin-api/users/#create-user-archive) and [Create guild archive](/admin-api/guilds/#create-guild-archive) request one. The operations here read archive state and issue time-limited download URLs.
 
-Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject type it touches. A user archive needs `archive:view_all` or `archive:trigger:user`. A guild archive needs `archive:view_all` or `archive:trigger:guild`. Reading both types at once needs `archive:view_all`, or `archive:trigger:user` and `archive:trigger:guild` together.
+Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject type it touches.
+
+- A user archive needs `archive:view_all` or `archive:trigger:user`.
+- A guild archive needs `archive:view_all` or `archive:trigger:guild`.
+- Reading both types at once needs `archive:view_all`, or `archive:trigger:user` and `archive:trigger:guild` together.
 
 :::note[An expired archive stops being readable]
 `expires_at` is 365 days after the archive is requested and is never extended. The archive record is removed at that instant, and no operation reads the stored file afterwards.
@@ -122,7 +126,7 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 <sup>5</sup> The value counts as true only for `true`, `True`, or `1`. Expired archives are dropped after `limit` rows have been read, so a response can hold fewer than `limit` archives
 
 :::note[The default filter narrows to the account's ACLs]
-`all` is the default, and Fluxer resolves it to the subject types the account's ACLs cover. An account holding only `archive:trigger:user` reads user archives, an account holding only `archive:trigger:guild` reads guild archives, and an account holding `archive:view_all` reads both. An account holding none of the three is refused with 403 `MISSING_ACL`.
+`all` is the default, and Fluxer resolves it to the subject types the account's ACLs cover. An account holding only `archive:trigger:user` reads user archives, one holding only `archive:trigger:guild` reads guild archives, and one holding `archive:view_all` reads both. An account holding none of the three is refused with 403 `MISSING_ACL`.
 :::
 
 ### Response body
@@ -149,8 +153,6 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 
 Returns one [archive](#archive-object) object. Requires an ACL covering the subject type.
 
-An archive is addressed by its subject and its identifier together.
-
 ### Path parameters
 
 | Field | Type | Description |
@@ -176,7 +178,7 @@ An archive is addressed by its subject and its identifier together.
 
 ### Side effects
 
-The read returns archive metadata and issues no download grant.
+The read issues no download grant.
 
 ### Rate limit
 

@@ -22,13 +22,13 @@ Every other route on this reference takes the `/v1` form, and [HTTP API](/http-a
 
 ## Methods
 
-Every route answers `GET`. Five registrations also bind `HEAD`: the two checksum routes, the two artifact routes, and the catch-all. [Get latest desktop version](#get-latest-desktop-version) and [List desktop versions](#list-desktop-versions) bind `GET` alone, and a `HEAD` still reaches them under the [shared rule for HEAD](/http-api/#request-format).
+Every route answers `GET`. The two checksum routes, the two artifact routes, and the catch-all also bind `HEAD`. [Get latest desktop version](#get-latest-desktop-version) and [List desktop versions](#list-desktop-versions) bind `GET` alone, and a `HEAD` still reaches them under the [shared rule for HEAD](/http-api/#request-format).
 
 A `HEAD` on either JSON route runs the same resolution as the `GET` and returns its status and headers with no body. It can therefore answer 404.
 
-On a checksum route, a `HEAD` returns 200 with no body. The headers are `Content-Type`, `Content-Disposition`, `Cache-Control`, and the `Content-Length` of the checksum line.
+A checksum route answers a `HEAD` with 200 and no body. The headers are `Content-Type`, `Content-Disposition`, `Cache-Control`, and the `Content-Length` of the checksum line.
 
-A `HEAD` on an artifact route or the catch-all reads object metadata. It returns 200 with `Content-Type`, `Content-Disposition`, `Accept-Ranges`, `Cache-Control`, `Content-Length`, and, where storage reports them, `ETag` and `Last-Modified`. It ignores `Range` and answers neither 206 nor 416. It never redirects to a [presigned storage URL](#redirects). Fluxer resolves a [country redirect](#redirects) before it reads the method, so a `HEAD` receives that 302 exactly as a `GET` does.
+The artifact routes and the catch-all read object metadata for a `HEAD`. They return 200 with `Content-Type`, `Content-Disposition`, `Accept-Ranges`, `Cache-Control`, `Content-Length`, and, where storage reports them, `ETag` and `Last-Modified`. They ignore `Range`, answer neither 206 nor 416, and never redirect to a [presigned storage URL](#redirects). Fluxer resolves a [country redirect](#redirects) before it reads the method, so a `HEAD` receives that 302 exactly as a `GET` does.
 
 ## Release channels
 
@@ -155,7 +155,7 @@ Fluxer reads the hash from the sibling `.sha256` object or from the manifest ent
 
 Fluxer resolves a coordinate to one storage key before it answers. It reads `manifest.json` under the coordinate prefix first and takes the filename that manifest records for the requested format. Fluxer falls back to a listing when that manifest is absent, is not valid JSON, is not a manifest object, describes another coordinate, or names a file storage does not hold. The fallback lists the objects under the prefix and takes the highest version whose filename parses for the requested format.
 
-The listing skips any name containing `/`, the names `manifest.json`, `RELEASES.json`, and `releases.json`, and any name ending in `.sha256`, `.blockmap`, or `.yml`.
+The listing skips any name containing `/` and any name ending in `.sha256`, `.blockmap`, or `.yml`. It also skips `manifest.json`, `RELEASES.json`, and `releases.json`.
 
 A coordinate that resolves no file returns 404 with the plain text body `Not Found`.
 
@@ -172,7 +172,12 @@ Every artifact response has `Accept-Ranges: bytes` and a `Content-Disposition` o
 | Any `desktop/` artifact on a deployment that configures country redirects | `private, no-store` |
 | A redirect to a presigned storage URL | `no-store` |
 
-A release feed filename is `manifest.json`, a name ending in `.yml` or `.yaml`, a name beginning `RELEASES`, or a name beginning `releases` or `assets` and ending in `.json`.
+A release feed filename is any of these:
+
+- `manifest.json`
+- A name ending in `.yml` or `.yaml`
+- A name beginning `RELEASES`
+- A name beginning `releases` or `assets` and ending in `.json`
 
 ## Redirects
 

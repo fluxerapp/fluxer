@@ -14,7 +14,7 @@ Normative force does not depend on a keyword appearing. A direct statement such 
 
 ## Protocol subjects
 
-These subjects have the meanings below throughout the reference.
+Each subject below has the same meaning on every reference page.
 
 | Subject | Description |
 | --- | --- |
@@ -67,7 +67,7 @@ A state-transition table uses `Event and condition`, `Action`, and `Next state` 
 
 On a request that modifies a stored entity and accepts a subset of its fields, omitting an optional field leaves the stored value unchanged. Sending `null` for a nullable field clears it. A field that is optional but not nullable can be set or left unchanged. A field that is nullable but not optional is always present, even when its value is `null`.
 
-An operation that departs from either default states the departure in the field's description, in a footnote, or beside its body table. A departure can run in either direction, so an operation can accept `null` without clearing and can change a stored value that the request never named. An operation can also define an empty string or an empty array as the clearing value, and a supplied array replaces the stored collection completely.
+Where an operation departs from either default, it states the departure in the field's description, in a footnote, or beside its body table. A departure can run in either direction, so an operation can accept `null` without clearing and can change a stored value that the request never named. An operation can also define an empty string or an empty array as the clearing value, and a supplied array replaces the stored collection completely.
 
 [Modify meme](/http-api/memes/#modify-meme) accepts this body, which leaves the stored tags unchanged, clears the alt text, and sets the name:
 
@@ -111,15 +111,18 @@ Prose then states the contract. The subsections that apply follow it in this ord
 
 A subsection that does not apply is omitted. An object that a page defines has its own field table under `Structure`.
 
-A response table uses `Status`, `Body`, and `Condition` columns. A `Body` cell uses the same type notation as a wire table, names `empty` where the response has no body, and names `response body` where the preceding subsection defines it. A response table has no header column. The shared contract is defined once under [standard response headers](/http-api/#standard-response-headers). A header an operation sets for itself is stated in prose under the operation.
+A response table uses `Status`, `Body`, and `Condition` columns. A `Body` cell uses the same type notation as a wire table, names `empty` where the response has no body, and names `response body` where the preceding subsection defines it. A response table has no header column. The shared contract is defined once under [standard response headers](/http-api/#standard-response-headers), and a header an operation sets for itself is stated in prose under the operation.
 
 ## Describing behaviour
 
 A present-tense statement about Fluxer states an observable contract. An internal storage, service, queue, or worker detail appears only where it determines an observable ordering rule, durability guarantee, limit, timeout, error, or security boundary.
 
-Each failure names the value a client branches on. An HTTP API or Admin API failure names its status and its stable error `code`. An OAuth2 protocol failure answers with the RFC 6749 envelope, which has no Fluxer `code` and is matched on its `error` value. A Media Proxy failure has a plain-text reason phrase and no machine-readable code, so a client branches on its HTTP status. A WebSocket failure names its close code and, where the protocol defines one, the exact close reason.
+Each failure names the value a client branches on. A human-readable message can be localised, so a client matches only the machine-readable value its surface defines.
 
-A human-readable message can be localised, so a client matches only the machine-readable value its surface defines.
+- An HTTP API or Admin API failure names its status and its stable error `code`.
+- An OAuth2 protocol failure answers with the RFC 6749 envelope, which has no Fluxer `code` and is matched on its `error` value.
+- A Media Proxy failure has a plain-text reason phrase and no machine-readable code, so a client branches on its HTTP status.
+- A WebSocket failure names its close code and, where the protocol defines one, the exact close reason.
 
 ## Limits and bounds
 

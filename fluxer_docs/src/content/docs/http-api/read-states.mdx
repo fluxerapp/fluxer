@@ -30,7 +30,7 @@ An account holds at most one read state per channel, keyed by the account and th
 
 <sup>3</sup> Present on every entry the API returns. The value is always `0`
 
-An entry is created by an acknowledgement, by [Acknowledge pins](/http-api/messages/#acknowledge-pins), and by the server when a mention arrives in a channel the account has no entry for. A pin acknowledgement writes only `last_pin_timestamp`, and the entry it creates reports `last_message_id` as null. An entry the server creates for a mention starts from the channel's own baseline watermark, which is the snowflake of the channel ID itself, so every message already in the channel stays unread.
+An acknowledgement creates an entry. So does [Acknowledge pins](/http-api/messages/#acknowledge-pins), and so does the server when a mention arrives in a channel the account has no entry for. A pin acknowledgement writes only `last_pin_timestamp`, and the entry it creates reports `last_message_id` as null. The entry the server creates for a mention starts from the channel's own baseline watermark, which is the snowflake of the channel ID itself, so every message already in the channel stays unread.
 
 [Clear channel read state](/http-api/messages/#clear-channel-read-state) deletes the whole entry, so it drops the watermark and the mention count along with the pin timestamp.
 
@@ -38,7 +38,7 @@ An entry is created by an acknowledgement, by [Acknowledge pins](/http-api/messa
 There is no HTTP read for the read state aggregate. The complete entry array arrives once as `read_states` in the main Gateway [Ready](/gateway/events/#ready) payload.
 :::
 
-Only an acknowledgement produces a later Dispatch. A message acknowledgement emits [Message ACK](/gateway/events/#message-ack), and a pin acknowledgement emits [Channel Pins ACK](/gateway/events/#channel-pins-ack). A server-side mention increment and [Clear channel read state](/http-api/messages/#clear-channel-read-state) both change the stored entry and emit nothing, so the Dispatch stream is not a complete change feed. A client that needs the authoritative aggregate reconciles from a new Ready, or from the entries [Acknowledge read states](#acknowledge-read-states) returns.
+Only an acknowledgement produces a later Dispatch. A message acknowledgement emits [Message ACK](/gateway/events/#message-ack), and a pin acknowledgement emits [Channel Pins ACK](/gateway/events/#channel-pins-ack). Both a server-side mention increment and [Clear channel read state](/http-api/messages/#clear-channel-read-state) change the stored entry and emit nothing, so the Dispatch stream is not a complete change feed. A client that needs the authoritative aggregate reconciles from a new Ready, or from the entries [Acknowledge read states](#acknowledge-read-states) returns.
 
 ### Example
 

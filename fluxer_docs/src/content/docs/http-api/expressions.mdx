@@ -6,18 +6,16 @@ description: Cross-guild lookup of a custom emoji or sticker by its own ID.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An expression is a custom emoji or a sticker that one guild owns. The two routes here resolve an expression from its own identifier, without membership of the owning guild.
+An expression is a custom emoji or a sticker that one guild owns. The routes here resolve an expression from its own identifier, without membership of the owning guild.
 
 | Object | Route | Owning resource |
 | --- | --- | --- |
 | [Emoji metadata](#emoji-metadata-object) | [Get emoji metadata](#get-emoji-metadata) | [Guild emojis](/http-api/guild-emojis/) |
 | [Sticker metadata](#sticker-metadata-object) | [Get sticker metadata](#get-sticker-metadata) | [Guild stickers](/http-api/guild-stickers/) |
 
-Both routes are read-only, and neither writes an audit entry or emits a [Gateway Dispatch](/gateway/events/).
+Both routes are read-only, and neither writes an audit entry or emits a [Gateway Dispatch](/gateway/events/). Each one returns the metadata even when the owning guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features).
 
-An identifier that names no stored expression returns 404 `UNKNOWN_EMOJI` or 404 `UNKNOWN_STICKER`. A stored expression whose guild no longer exists returns 404 `UNKNOWN_GUILD`.
-
-Both routes return the metadata even when the owning guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features).
+When an identifier names no stored expression, Fluxer returns 404 `UNKNOWN_EMOJI` or 404 `UNKNOWN_STICKER`. A stored expression whose guild no longer exists returns 404 `UNKNOWN_GUILD`.
 
 :::note[Tags and the uploader need a guild-scoped operation]
 Tags, the uploader, and the adult content classification come from the guild-scoped operations, which require membership of the owning guild.

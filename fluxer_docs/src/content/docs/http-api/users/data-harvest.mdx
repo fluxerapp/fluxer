@@ -25,7 +25,7 @@ The status is derived from the recorded timestamps in a fixed order, testing `fa
 | completed | The archive was written and is ready for download |
 | failed | The latest attempt recorded a failure |
 
-Fluxer retries the underlying job. A retry clears `failed_at` and `error_message`, sets `started_at` again, resets the reported progress to 0, and reports `processing` while it runs. A retry that succeeds records `completed_at`, `file_size`, and a download deadline, and reports `completed`.
+Fluxer retries the underlying job. A retry clears `failed_at` and `error_message`, sets `started_at` again, resets the reported progress to 0, and reports `processing` while it runs. On success it records `completed_at`, `file_size`, and a download deadline, and reports `completed`.
 
 ## Harvest creation object
 
@@ -144,7 +144,11 @@ The filter chooses which messages a harvest collects. Every non-message section 
 
 <sup>4</sup> Compared against the creation time embedded in the message [snowflake](/snowflakes/), so editing an old message does not move it into a later window
 
-Under the `selected` scope a one-to-one direct message is collected when the conversation is still open and `include_dms` is true, or when it has been closed and `include_dms_closed` is true. A group DM is collected only while the caller is still a recipient and `include_group_dms` is true. A guild channel is collected only while the caller is still a member, `include_guilds` is true, and the guild is admitted by the configured list mode.
+Under the `selected` scope, each context has its own condition:
+
+- A one-to-one direct message is collected when the conversation is still open and `include_dms` is true, or when it has been closed and `include_dms_closed` is true.
+- A group DM is collected only while the caller is still a recipient and `include_group_dms` is true.
+- A guild channel is collected only while the caller is still a member, `include_guilds` is true, and the guild is admitted by the configured list mode.
 
 The `inaccessible_only` scope selects messages in guilds the caller has left or been removed from and in group DMs the caller has left. It never selects one-to-one direct messages, and it ignores the four toggles, the guild filter mode, and both guild lists.
 
@@ -176,9 +180,18 @@ The operation takes no request body and always returns before the archive exists
 
 A harvest record is created with a new [snowflake](/snowflakes/), the request time as `created_at`, progress 0, the step `Queued`, and every other timestamp null. Creating a harvest removes no earlier record and enforces no ceiling on how many an account holds, so the route bucket is the only bound.
 
-Fluxer prepares the archive asynchronously. It contains `user.json` with the account document, one `channels/{channel_id}/messages.json` file for each channel that contributed a message, `payments/payment_history.json`, `integrations/oauth.json` listing the [applications](/http-api/applications/) the account owns rather than the ones it authorised, and `account/security.json`. The account avatar and banner are added under `assets/user/` when present. Messages inside each channel file are ordered oldest first. Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
+Fluxer prepares the archive asynchronously. It contains:
 
-At most 100,000 authored messages are collected. The collector skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was minted.
+- `user.json`, the account document
+- one `channels/{channel_id}/messages.json` file for each channel that contributed a message, with its messages ordered oldest first
+- `payments/payment_history.json`
+- `integrations/oauth.json`, the [applications](/http-api/applications/) the account owns, with no entry for an application it only authorised
+- `account/security.json`
+- the account avatar and banner under `assets/user/` when present
+
+Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
+
+At most 100,000 authored messages are collected. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was minted.
 
 ### Rate limit
 
@@ -303,11 +316,9 @@ The URL takes one of two forms. When the instance has presigned harvest download
 
 Streams the archive of one completed harvest.
 
-The signed `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) is the whole authorisation, so the link stays usable from the harvest completion email and from a plain browser.
+The signed `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) is the whole authorisation, so the link stays usable from the harvest completion email and from a plain browser. It binds the account, the harvest ID, the stored object key, and an expiry.
 
 The operation is active only while the instance has presigned harvest downloads disabled. That setting is enabled by default, so a default deployment answers every request here as 404 without inspecting the token.
-
-The token binds the account, the harvest ID, the stored object key, and an expiry.
 
 :::note[Every rejection looks identical]
 A missing, malformed, forged, or expired token, a token for another harvest, a harvest that never completed, a harvest that recorded a failure, a harvest past its deadline, and a stale object key all return 404 with the plain text body `Not Found`.

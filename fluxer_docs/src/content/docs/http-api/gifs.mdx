@@ -18,13 +18,13 @@ A provider outage, a request that outlives its deadline, and an unreadable provi
 
 ## Locale and country
 
-Every route takes an optional `locale` drawn from the [supported locale registry](/topics/locales/#supported-locales), in the query string on the four GET routes and in the body of [Register a GIF share](#register-a-gif-share). It defaults to `en-US`. A tag outside the registry fails with 400 `INVALID_FORM_BODY`.
+Every route takes an optional `locale` drawn from the [supported locale registry](/topics/locales/#supported-locales), in the query string on the GET routes and in the body of [Register a GIF share](#register-a-gif-share). It defaults to `en-US`. A tag outside the registry fails with 400 `INVALID_FORM_BODY`.
 
 Fluxer also derives a two-letter country from the requesting address by geolocation, and uses `US` when geolocation resolves none. No route accepts the country as a parameter, so a client cannot override it. [Get GIF search suggestions](#get-gif-search-suggestions) is the one route that ignores it.
 
 ## Provider headers
 
-Every response under `/gifs`, `/tenor`, and `/klipy` has these three headers, including error responses and responses to a path no route claims. The three values repeat the [GIF provider](/http-api/instance/#gif-provider-object) object, so a client follows a provider change without refetching `/.well-known/fluxer`.
+Every response under `/gifs`, `/tenor`, and `/klipy` has these headers, including error responses and responses to a path no route claims. The values repeat the [GIF provider](/http-api/instance/#gif-provider-object) object, so a client follows a provider change without refetching `/.well-known/fluxer`.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -126,7 +126,7 @@ To open the category, a client sends `name` as the `q` of [Search GIFs](#search-
 
 ## Deprecated vendor paths
 
-Two vendor-named prefixes serve the same five handlers as `/gifs`. Each answers exactly as its successor does and has the same [provider headers](#provider-headers).
+Two vendor-named prefixes serve the same handlers as `/gifs`. Each answers exactly as its successor does and has the same [provider headers](#provider-headers).
 
 | Method | Deprecated path | Successor |
 | --- | --- | --- |
@@ -142,10 +142,10 @@ Two vendor-named prefixes serve the same five handlers as `/gifs`. Each answers 
 | POST | `/v1/klipy/register-share` | [Register a GIF share](#register-a-gif-share) |
 
 :::caution[The vendor prefixes spell trending differently]
-Trending is `/trending` under `/gifs` and `/trending-gifs` under both vendor prefixes. The other four paths keep the same last segment on all three prefixes.
+Trending is `/trending` under `/gifs` and `/trending-gifs` under both vendor prefixes. The other paths keep the same last segment on all three prefixes.
 :::
 
-A response from one of the ten has three further headers.
+A response from a deprecated path has these further headers.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -223,7 +223,7 @@ Fluxer resolves the category list against the country `US` for every request, wh
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
-Fluxer fetches both halves in one operation. A failure on either one fails the whole request and returns no partial body.
+Fluxer fetches both halves in one operation. A failure on either `gifs` or `categories` fails the whole request and returns no partial body.
 
 ### Rate limit
 

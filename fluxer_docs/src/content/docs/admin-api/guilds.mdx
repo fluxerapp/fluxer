@@ -6,7 +6,7 @@ description: Guild search, detail, mutation, deletion, membership, expressions, 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. Most of them need no membership in the guild and no guild permission, and [Remove guild member](#remove-guild-member) and [Ban guild member](#ban-guild-member) are the two exceptions.
+Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. Most of them need no membership in the guild and no guild permission, and [Remove guild member](#remove-guild-member) and [Ban guild member](#ban-guild-member) are the exceptions.
 
 [Archives](/admin-api/archives/) owns the archive lifecycle and the downloads.
 
@@ -385,7 +385,14 @@ Supplying `add_features` or `remove_features` reconciles an existing discovery a
 
 Every applied group refreshes the guild's entry in the guild search index and fires one [Guild Update](/gateway/events/#guild-update) Dispatch to every session that can see the guild, including when the write changes no value.
 
-Each applied group records one Admin audit entry with the target type `guild` and the guild ID as the target. The actions are `clear_fields` with the cleared field names, `update_settings` with each applied setting, and `update_features` with the added, removed, and resulting feature sets. The remaining actions are `update_name` with the old and new names, `update_vanity` with the old and new codes, and `transfer_ownership` with the old and new owner IDs.
+Each applied group records one Admin audit entry with the target type `guild` and the guild ID as the target.
+
+- `clear_fields` records the cleared field names.
+- `update_settings` records each applied setting.
+- `update_features` records the added, removed, and resulting feature sets.
+- `update_name` records the old and new names.
+- `update_vanity` records the old and new codes.
+- `transfer_ownership` records the old and new owner IDs.
 
 ### Rate limit
 
@@ -512,7 +519,7 @@ Only the Admin ACL is evaluated.
 
 Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not consulted, so a banned user can be admitted. The suspicious activity phone gate does not run. The per-user guild limit and the guild member limit are still enforced.
 
-[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, the user's sessions are joined to the guild on the main Gateway, and the member enters guild member search when the guild has an indexed member set. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no usable system channel. A bot target additionally records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
+[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, the user's sessions are joined to the guild on the main Gateway, and the member enters guild member search when the guild has an indexed member set. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no usable system channel. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
 
 A user who is already a member keeps their existing membership. No membership is created, no counter moves, and no Dispatch is emitted. The Admin audit entry is still written.
 

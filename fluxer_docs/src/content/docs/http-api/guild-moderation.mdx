@@ -50,7 +50,7 @@ A ban also stores the target's last known IP address and the lower-cased address
 
 Accepting an [invite](/http-api/invites/) compares the joining account against the banned account identifier, the stored address, and the stored email. The address comparison uses a normalised decision key: the exact address for IPv4, the mapped IPv4 address for an IPv4-mapped IPv6 address, and the `/64` network for every other IPv6 address. An address match refuses the join with 403 `USER_IP_BANNED_FROM_GUILD`.
 
-Fluxer skips the address match when the joining address is on the instance exemption list, and also when the banned address is a single address and the joining address is reported as high mobile or carrier-grade NAT blast radius. The match runs when that report is unavailable or fails.
+Fluxer skips the address match when the joining address is on the instance exemption list. It also skips the match when the banned address is a single address and the joining address is reported as high mobile or carrier-grade NAT blast radius. The match runs when that report is unavailable or fails.
 
 The email comparison is exact and runs only when an invite is accepted. An email match refuses the join with 403 `USER_BANNED_FROM_GUILD`. Every other path that adds a member compares the account identifier and the address alone, and several compare nothing. [Grant OAuth2 consent](/http-api/oauth2/#grant-oauth2-consent) installing a bot, the admin membership operations, the stock community auto-join, and the premium entitlement guild join all add the member without consulting the ban list.
 

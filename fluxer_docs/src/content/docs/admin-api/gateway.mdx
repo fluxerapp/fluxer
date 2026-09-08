@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Gateway control is the Admin view of the running [main Gateway](/gateway/overview/) cluster. It reads live node state and submits guild reload requests, and it exposes no session, presence, or call payload.
 
-Fluxer answers every operation on this page with one RPC call to the main Gateway. A call that goes unanswered returns 504 `GATEWAY_TIMEOUT`. An overloaded cluster, or one with no responder, returns 503 `SERVICE_UNAVAILABLE`. A reply that cannot be interpreted returns 502 `BAD_GATEWAY`.
+Fluxer answers every operation on this page with one RPC call to the main Gateway. An unanswered call returns 504 `GATEWAY_TIMEOUT`. An overloaded cluster, or one with no responder, returns 503 `SERVICE_UNAVAILABLE`. A reply that cannot be interpreted returns 502 `BAD_GATEWAY`.
 
 :::note[Every value is live state]
 The Gateway cluster answers each read at request time. Two consecutive reads can differ without any Admin action, and a node that is restarting can be absent from one response and present in the next.
@@ -81,13 +81,13 @@ One entry for each node the request polled, including nodes that did not answer 
 
 <sup>1</sup> A node reports its `HOSTNAME` environment value when that value is a non-blank string, and its Erlang node name otherwise
 
-<sup>2</sup> `healthy` for a node that answered and `unavailable` for one that did not. A node that did not answer reports null in place of every counter here and contributes zero to every cluster total
+<sup>2</sup> `healthy` for a node that answered and `unavailable` for one that did not. A node that did not answer reports null for every counter here and contributes zero to every cluster total
 
 A node entry can have further diagnostic members. A client treats a member it does not recognise as absent.
 
 ## Node memory object
 
-Byte counts for one node, or for every polled node summed together. Every value is a decimal string because a JSON number cannot preserve a 64-bit byte count.
+Byte counts for one node, or for every polled node summed together. Each count is a decimal string because a JSON number cannot preserve a 64-bit byte count.
 
 ### Structure
 

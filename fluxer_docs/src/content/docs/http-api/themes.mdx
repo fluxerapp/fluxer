@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A theme is a custom CSS stylesheet stored under a short code, and anyone holding the code can fetch it. The HTTP API exposes one operation, which stores a theme. The [Media Proxy](/media-proxy/overview/) serves the stored stylesheet back through [Get theme CSS](/media-proxy/routes/#get-theme-css).
 
-The single route here is user-only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`.
+The route is user-only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`.
 
 ## Theme identifier
 
@@ -43,11 +43,11 @@ An account holds no theme quota. The route bucket is the only bound on how many 
 
 The instance-wide content filter screens the submitted document before the route runs. It checks a `css` value of at least 3 characters against the instance phrase blocklist and the instance URL blocklist. A match on either returns 403 `CONTENT_BLOCKED`. A shorter value is never screened.
 
-Fluxer scans a body under every content type except `multipart/form-data` and `application/x-www-form-urlencoded`. A body that does not parse as JSON is skipped as well. The route parses the body from the raw request text and reads no content type, so a JSON document sent under either form content type is stored without passing the blocklists.
+Fluxer scans a body under every content type except `multipart/form-data` and `application/x-www-form-urlencoded`. The filter also skips a body that does not parse as JSON. The route parses the body from the raw request text and reads no content type, so a JSON document sent under either form content type is stored without passing the blocklists.
 
 The screen precedes the rate limit bucket, the credential check, and the request schema, so a blocked document returns `CONTENT_BLOCKED` even when the request has no credential.
 
-The screen is the only inspection the document receives. Fluxer stores the CSS verbatim and never parses, validates, minifies, or rewrites it.
+Nothing else inspects the document. Fluxer stores the CSS verbatim and never parses, validates, minifies, or rewrites it.
 
 ## Create theme
 
@@ -93,7 +93,7 @@ The object has the identifier and nothing else.
 
 Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. The identifier addresses the document by the time the caller receives it.
 
-Nothing Fluxer stores links a theme to the account that created it. The [Media Proxy](/media-proxy/overview/) then serves the stored document from `/themes/{id}.css`, and that route accepts no credential.
+Nothing Fluxer stores links a theme to the account that created it. The [Media Proxy](/media-proxy/overview/) serves the stored document from `/themes/{id}.css`, and that route accepts no credential.
 
 :::danger[Theme CSS is public and permanent]
 The identifier is the only thing guarding a stored document, and the read route is unauthenticated. The HTTP API replaces or deletes no stored theme. A caller MUST NOT put a credential, a token, or any other secret in a submitted document.

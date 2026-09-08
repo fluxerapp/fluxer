@@ -11,7 +11,7 @@ A private channel is a conversation outside any guild. It is either a direct mes
 The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
 :::note[Open state is per participant]
-A direct message channel exists once, and each participant holds its own open state. Closing one leaves the channel and its messages in place, so reopening the pair resolves the stored channel.
+A direct message channel exists once, and each participant holds its own open state. Closing one side leaves the channel and its messages in place, so reopening the pair resolves the stored channel.
 :::
 
 ## Preloaded messages object
@@ -56,11 +56,11 @@ One recipient that could not be added to a group DM, and the reason. [Create pri
 
 Returns the caller's open direct message and group DM [channel](/http-api/channels/#channel-object) objects.
 
-The route returns only the channels the caller currently has open, so a closed direct message is absent even though the channel and its history still exist. The response has no ordering guarantee and is unpaginated. The caller's personal notes channel is never returned.
+A closed direct message is absent even though the channel and its history still exist. The response has no ordering guarantee and is unpaginated. The caller's personal notes channel is never returned.
 
 Each returned channel has its recipients with the caller removed, so a direct message holds exactly one recipient and a group DM one fewer than its participant count. A group DM whose only participant is the caller omits the `recipients` key entirely.
 
-An open entry whose channel no longer lists the caller among its recipients is omitted, so leaving a group DM needs no separate cleanup call.
+Fluxer omits an open entry whose channel no longer lists the caller among its recipients, so leaving a group DM needs no separate cleanup call.
 
 ### Response
 
@@ -215,9 +215,9 @@ Adds a direct message or group DM to the caller's pinned order. Returns 204 with
 
 Fluxer resolves the channel with the caller's ordinary channel authorisation first. A private channel the caller is not a recipient of returns 404 `UNKNOWN_CHANNEL`, and a channel that does not exist returns the same. The channel then has to be a direct message or a group DM, so the caller's personal notes channel and a visible guild channel are rejected with 400 `CHANNEL_MUST_BE_DM_OR_GROUP_DM`, a field code on `channel_id` under `INVALID_FORM_BODY`.
 
-A guild channel the caller cannot see fails resolution first and returns 403 `MISSING_PERMISSIONS`. A channel row that outlived its guild returns 404 `UNKNOWN_GUILD`. A guild record that still exists while the caller's membership state cannot be resolved returns 403 `ACCESS_DENIED`.
+A guild channel the caller cannot see fails resolution first and returns 403 `MISSING_PERMISSIONS`. Fluxer returns 404 `UNKNOWN_GUILD` for a channel row that outlived its guild. Where the guild record still exists and the caller's membership state cannot be resolved, the request returns 403 `ACCESS_DENIED`.
 
-A newly pinned channel is appended after every channel already pinned. A channel later closed, left, or deleted stays in the pinned set, and only [Unpin private channel](#unpin-private-channel) or deletion of the caller's account removes an entry.
+Fluxer appends a newly pinned channel after every channel already pinned. A channel later closed, left, or deleted stays in the pinned set, and only [Unpin private channel](#unpin-private-channel) or deletion of the caller's account removes an entry.
 
 :::caution[Unpinning needs the channel to resolve]
 Unpinning resolves the channel first, so an entry whose channel the caller can no longer resolve stays in the pinned set.

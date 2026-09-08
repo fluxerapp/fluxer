@@ -32,7 +32,7 @@ The [global HTTP limit](/topics/rate-limits/) applies to every management route.
 
 ## Origin refusal
 
-Fluxer refuses a call from the official web client on four routes. A request whose `Origin` header is exactly `https://web.fluxer.app` or `https://web.canary.fluxer.app` returns 403 `INVALID_API_ORIGIN` on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message).
+Fluxer refuses a call from the official web client on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message). A request whose `Origin` header is exactly `https://web.fluxer.app` or `https://web.canary.fluxer.app` returns 403 `INVALID_API_ORIGIN`.
 
 A request that sends no `Origin`, or any other `Origin` value, passes the check. It runs after the route rate limit and before path validation.
 
@@ -169,13 +169,13 @@ Every entry supplied in a JSON body is dropped, and it counts towards neither th
 
 ## Message references
 
-A webhook execution accepts the [message reference input](/http-api/messages/#message-reference-input-object) object defined by the Messages resource. Three constraints are specific to webhooks.
+A webhook execution accepts the [message reference input](/http-api/messages/#message-reference-input-object) object defined by the Messages resource. The constraints below are specific to webhooks.
 
 The `channel_id` field is required for a forward reference and must equal the webhook's own channel. A value naming any other channel returns 404 `UNKNOWN_MESSAGE`. A reply reference always resolves in the webhook's own channel and ignores this field.
 
 The referenced message must exist in the webhook's channel, and a missing message returns 404 `UNKNOWN_MESSAGE`. A reply reference additionally requires the referenced message to be an ordinary or reply message. Any other type returns 400 `INVALID_FORM_BODY` with the validation code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`.
 
-A forward reference must not accompany content, embeds, or attachments, and one that does returns 400 `INVALID_FORM_BODY` with the validation code `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT`. A forward reference that omits `channel_id` or `message_id` returns the same status with `FORWARD_REFERENCE_REQUIRES_CHANNEL_AND_MESSAGE`.
+A forward reference must not accompany content, embeds, or attachments, and one that does returns 400 `INVALID_FORM_BODY` with the validation code `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT`. A missing `channel_id` or `message_id` on a forward reference returns the same status with `FORWARD_REFERENCE_REQUIRES_CHANNEL_AND_MESSAGE`.
 
 ## Webhook message edit body
 
@@ -264,7 +264,7 @@ No per-embed title, description, footer, or field maximum applies to a Slack val
 
 The Slack schema bounds only `username`, which must be 1 through 80 characters and rejects a longer value with `WEBHOOK_NAME_LENGTH_INVALID`. Fluxer applies no bound to any other Slack string or to either array.
 
-Three checks do apply. A conversion yielding neither content nor an embed returns 400 `CANNOT_SEND_EMPTY_MESSAGE`. Content longer than the effective maximum returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`, and more converted embeds than the resolved ceiling returns the same status with `TOO_MANY_EMBEDS`. Fluxer discards an attachment that produces no embed property.
+A conversion yielding neither content nor an embed returns 400 `CANNOT_SEND_EMPTY_MESSAGE`. Content longer than the effective maximum returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`, and more converted embeds than the resolved ceiling returns the same status with `TOO_MANY_EMBEDS`. Fluxer discards an attachment that produces no embed property.
 
 ## GitHub callback objects
 
@@ -1301,10 +1301,8 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 | Target message type cannot be edited | 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK` |
 | Stored channel no longer resolves to a guild channel | 400 `CANNOT_EXECUTE_ON_DM` |
 | Body has no visible content, no non-empty embeds, and no `flags` | 400 `CANNOT_SEND_EMPTY_MESSAGE` |
-| Content longer than the effective maximum | 400 `CONTENT_EXCEEDS_MAX_LENGTH` |
+| Content longer than the effective maximum | 400 `INVALID_FORM_BODY` with the field code `CONTENT_EXCEEDS_MAX_LENGTH` |
 | Anything else | 400 `INVALID_FORM_BODY` |
-
-`CONTENT_EXCEEDS_MAX_LENGTH` is a validation code inside a 400 `INVALID_FORM_BODY` body.
 
 ### Side effects
 
@@ -1475,7 +1473,7 @@ A rendered callback emits a [Message Create](/gateway/events/#message-create).
 The body is an [Instatus callback](#instatus-callback-object) object. A body the schema rejects returns 400 `INVALID_FORM_BODY`.
 
 :::note[Deduplication is per webhook and callback]
-Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. A callback with no such identifier is processed every time.
+Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. Fluxer processes every callback that has no such identifier.
 :::
 
 A callback that renders nothing, and one whose message creation fails, both leave the identifier free for a later retry.

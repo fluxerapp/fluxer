@@ -30,7 +30,7 @@ The [instance discovery](/http-api/instance/#limit-keys) document publishes a `f
 
 ## Supported containers
 
-The container is detected from the decoded bytes, so a filename, a `data:` media type, or any other declared type has no effect on the result. The detected container resolves to one of four stored extensions, and every other input fails with `ENTRANCE_SOUND_INVALID_FORMAT`.
+The container is detected from the decoded bytes, so a filename, a `data:` media type, or any other declared type has no effect on the result. The detected container resolves to a stored extension, and every other input fails with `ENTRANCE_SOUND_INVALID_FORMAT`.
 
 | Detected container | Stored extension | Stored content type |
 | --- | --- | --- |
@@ -122,7 +122,7 @@ A scope with no assigned sound has no selection object. Clearing a scope deletes
 | dms | Applies in direct message and group calls |
 | `guild:{guild_id}` | Applies in one named guild, where the ID is 1 through 20 digits |
 
-`scope_id` must match one of the four forms exactly. Any other value fails with the validation code `INVALID_FORMAT` at the `scope_id` path.
+`scope_id` must match one of these forms exactly. Any other value fails with the validation code `INVALID_FORMAT` at the `scope_id` path.
 
 :::note[Fluxer stores scopes but never resolves them]
 A selection records which sound belongs to which scope and nothing more. [Play entrance sound](#play-entrance-sound) names the sound explicitly, so the client decides which selection applies to a channel.
@@ -194,7 +194,7 @@ Every failure below is a 400 `INVALID_FORM_BODY`. One response can report two of
 
 The first four rows are checked before the quota, so an account already holding 8 clips receives `BASE64_LENGTH_INVALID` or `INVALID_BASE64_FORMAT` for a malformed or over-long payload.
 
-Both duration bounds report the same code at the `audio` path, and the entry has no member naming which of the two was crossed.
+The validation entry has no member naming which duration bound the clip crossed.
 
 ### Response
 
@@ -343,7 +343,7 @@ Nothing is published to the media servers. Each recipient receives a Dispatch na
 Fluxer evaluates no channel permission and checks no guild membership.
 :::
 
-An ID naming no channel is refused exactly like a channel the caller is not connected to, so the response tells the two apart in neither direction. The connection check runs before the clip is looked up, so a caller who is not connected never learns whether the named clip exists.
+An ID naming no channel is refused exactly like a channel the caller is not connected to. The connection check runs before the clip is looked up, so a caller who is not connected never learns whether the named clip exists.
 
 ### Side effects
 

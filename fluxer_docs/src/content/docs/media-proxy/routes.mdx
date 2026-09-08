@@ -85,7 +85,13 @@ The [common responses](#common-responses) also apply.
 
 Returns external media through Fluxer, optionally transformed. Fluxer verifies the signature before it decodes or fetches the target.
 
-Fluxer constructs the signed path and exposes it on `proxy_url` of an [embed media object](/http-api/messages/#embed-media-object), `proxy_icon_url` of an [embed author object](/http-api/messages/#embed-author-object), `proxy_icon_url` of an [embed footer object](/http-api/messages/#embed-footer-object), `proxy_url` of a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object), and `proxy_src` of a [GIF media format object](/http-api/memes/#gif-media-format-object).
+Fluxer constructs the signed path and exposes it on these fields:
+
+- `proxy_url` of an [embed media object](/http-api/messages/#embed-media-object)
+- `proxy_icon_url` of an [embed author object](/http-api/messages/#embed-author-object)
+- `proxy_icon_url` of an [embed footer object](/http-api/messages/#embed-footer-object)
+- `proxy_url` of a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object)
+- `proxy_src` of a [GIF media format object](/http-api/memes/#gif-media-format-object)
 
 A field holds a signed path only when its source URL is external. A URL already under the Media Proxy endpoint, and any URL the deployment cannot sign, is returned verbatim, so a client MUST request the value exactly as issued and MUST NOT assume it has the signed shape.
 
@@ -129,7 +135,7 @@ The route follows at most five redirects. A further redirect, a repeated URL, or
 
 A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so it still selects 206 or 416.
 
-A non-transforming request forwards the client range to the origin under the filter [byte ranges](/media-proxy/overview/#byte-ranges) defines, and relays an origin 206 with its `Content-Range` and `Content-Length` unchanged. An origin that ignores the range answers 200, and Fluxer streams that whole body through when the origin names an `image/`, `video/`, or `audio/` media type other than `image/svg+xml`. Fluxer buffers a transforming request, an SVG body, and any body whose declared media type is empty, `application/octet-stream`, or outside those three categories. A buffered response has the range applied to the bytes the route finally serves, so a client range over a buffered origin 200 produces 206.
+A non-transforming request forwards the client range to the origin under the filter [byte ranges](/media-proxy/overview/#byte-ranges) defines, and relays an origin 206 with its `Content-Range` and `Content-Length` unchanged. An origin that ignores the range answers 200, and Fluxer streams that whole body through when the origin names an `image/`, `video/`, or `audio/` media type other than `image/svg+xml`. Fluxer buffers a transforming request, an SVG body, and any body whose declared media type is empty, `application/octet-stream`, or outside those categories. A buffered response has the range applied to the bytes the route finally serves, so a client range over a buffered origin 200 produces 206.
 
 Buffering reserves the whole body from a process-wide external buffer budget of 500 MiB for each configured transform slot and queue slot, plus 512 KiB. A reservation the budget cannot cover returns 503.
 
@@ -217,7 +223,7 @@ The [common responses](#common-responses) also apply.
 
 ## Image asset contract
 
-An image asset is a stored picture Fluxer serves at a requested size and format, such as an avatar, a guild icon, or an emoji. A resource object exposes the asset hash, and the path combines the owning resource, that hash, and a file extension. An emoji or sticker path has its own identifier as the filename. The grammar, query parameters, and responses below govern every image asset route. [Asset size selection](/media-proxy/transformations/#asset-size-selection) defines every size class.
+An image asset is a stored picture Fluxer serves at a requested size and format, such as an avatar, a guild icon, or an emoji. The asset hash comes from the resource object, and the path combines the owning resource, that hash, and a file extension. On an emoji or sticker path the filename is the identifier itself. The grammar, query parameters, and responses below govern every image asset route. [Asset size selection](/media-proxy/transformations/#asset-size-selection) defines every size class.
 
 A client builds the complete URL from the Media Proxy [base URL](/media-proxy/overview/#base-urls), the path template for the asset class, the hash, and a file extension.
 
@@ -498,4 +504,4 @@ These paths are not part of the public API surface. They are exempt from the med
 | `/_thumbnail` | POST | Produces a WebP thumbnail of a staged upload for the HTTP API |
 | `/_frames` | POST | Extracts one JPEG video frame for the HTTP API |
 
-`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413 on all three.
+`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413.

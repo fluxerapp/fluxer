@@ -12,7 +12,13 @@ The Admin API is the privileged surface for administering an instance: its accou
 
 Every Admin operation accepts a user session token as a bare `Authorization` value, an access token issued by Fluxer's built-in Admin OAuth2 application as `Bearer <token>`, or an Admin API key as `Admin <token>`. Fluxer resolves a value in the user session token form as a session token even under the `Bearer` prefix. [HTTP authentication](/authentication/) defines the credential syntax.
 
-Fluxer evaluates the credential in a fixed order. A request that resolves no account is refused with 401 `UNAUTHORIZED`, as is a credential presented with the `Bot` scheme. An access token issued to any OAuth2 application other than the built-in Admin application is refused with 403 `ACCESS_DENIED`. An account holding neither `admin:authenticate` nor the wildcard `*` is refused with 403 `MISSING_PERMISSIONS`. An account that clears both gates but satisfies none of the [ACLs](#acl-evaluation) the operation names is refused with 403 `MISSING_ACL`.
+Fluxer evaluates the credential in a fixed order.
+
+1. A request that resolves no account is refused with 401 `UNAUTHORIZED`.
+2. A credential presented with the `Bot` scheme is refused with 401 `UNAUTHORIZED`.
+3. An access token issued to any OAuth2 application other than the built-in Admin application is refused with 403 `ACCESS_DENIED`.
+4. An account holding neither `admin:authenticate` nor the wildcard `*` is refused with 403 `MISSING_PERMISSIONS`.
+5. An account that clears both gates but satisfies none of the [ACLs](#acl-evaluation) the operation names is refused with 403 `MISSING_ACL`.
 
 :::caution[A denial names no requirement]
 The `MISSING_ACL` body is a fixed sentence that has no ACL name and no requirement list, so a response never discloses which requirement failed.
@@ -30,15 +36,29 @@ Admin authorisation runs before request validation on every operation except [Qu
 
 An operation names one or more ACLs and admits the request when the caller holds at least one of them. The wildcard `*` satisfies every requirement on its own.
 
-An operation can stack several requirements, each evaluated separately, and the caller must satisfy all of them. [Create NCMEC report](/admin-api/messages/#create-ncmec-report) is the widest example and stacks `csam:submit_ncmec`, `message:delete`, `user:delete`, and `archive:trigger:user` as four independent requirements.
+Where an operation stacks several requirements, Fluxer evaluates each separately and the caller must satisfy all of them. [Create NCMEC report](/admin-api/messages/#create-ncmec-report) is the widest example and stacks `csam:submit_ncmec`, `message:delete`, `user:delete`, and `archive:trigger:user` as independent requirements.
 
 The effective ACL set of a session or an Admin OAuth2 bearer credential is the set stored on the account. The effective set of an Admin API key is the set stored on the key, subject to the owner check above. [Set user ACLs](/admin-api/users/#set-user-acls) writes an account's set. Holding `admin:authenticate` or `*` is the whole definition of an account that can reach the Admin API.
 
 Two operations derive their required ACLs from the validated request body.
 
-[Update guild](/admin-api/guilds/#update-guild) maps each present body field to one ACL and requires every ACL in that set. `name` maps to `guild:update:name`, `vanity_url_code` maps to `guild:update:vanity`, `new_owner_id` maps to `guild:transfer_ownership`, `add_features` and `remove_features` map to `guild:update:features`, and `fields` together with every remaining setting maps to `guild:update:settings`. A body with none of those fields resolves to no ACL at all and applies no change. The route also names those five ACLs as an ordinary any-of requirement, evaluated before the body is read.
+[Update guild](/admin-api/guilds/#update-guild) maps each present body field to one ACL and requires every ACL in that set.
 
-[Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job) maps its `task` discriminator to one ACL and requires that one. `update_user_flags` maps to `bulk:update:user_flags`, `update_suspicious_activity_flags` maps to `bulk:update:suspicious_activity`, `update_guild_features` maps to `bulk:update:guild_features`, `add_guild_members` maps to `bulk:add:guild_members`, and `schedule_user_deletion` maps to `bulk:delete:users`.
+- `name` maps to `guild:update:name`.
+- `vanity_url_code` maps to `guild:update:vanity`.
+- `new_owner_id` maps to `guild:transfer_ownership`.
+- `add_features` and `remove_features` map to `guild:update:features`.
+- `fields` together with every remaining setting maps to `guild:update:settings`.
+
+A body with none of those fields resolves to no ACL at all and applies no change. The route also names those ACLs as an ordinary any-of requirement, evaluated before the body is read.
+
+[Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job) maps its `task` discriminator to one ACL and requires that one.
+
+- `update_user_flags` maps to `bulk:update:user_flags`.
+- `update_suspicious_activity_flags` maps to `bulk:update:suspicious_activity`.
+- `update_guild_features` maps to `bulk:update:guild_features`.
+- `add_guild_members` maps to `bulk:add:guild_members`.
+- `schedule_user_deletion` maps to `bulk:delete:users`.
 
 Fluxer bounds every grant separately. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs additionally refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it resolves the target before the bound is evaluated, so an unknown ID fails first with 404 `UNKNOWN_USER`.
 
@@ -96,9 +116,9 @@ An entry stores an acting Admin, a target type, a target ID, an action name, an 
 
 <sup>7</sup> Keys are 1 to 256 characters and values are 0 to 4,000 characters. The keys an operation records are stated by that operation
 
-Fluxer populates the three `related_` maps from the acting Admin, from the resolved target, and from the metadata. A metadata key contributes when its value is a decimal integer and its name is `user_id`, `guild_id`, `channel_id`, `target_user_id`, or `admin_user_id`, or ends in `_user_id`, `_guild_id`, or `_channel_id`. An identifier that no longer resolves is omitted from the map.
+Fluxer populates the `related_` maps from the acting Admin, from the resolved target, and from the metadata. A metadata key contributes when its value is a decimal integer and its name is `user_id`, `guild_id`, `channel_id`, `target_user_id`, or `admin_user_id`, or ends in `_user_id`, `_guild_id`, or `_channel_id`. An identifier that no longer resolves is omitted from the map.
 
-An entry has no request method, request path, status, duration, IP address, or field change list. An entry is never redacted on read, so a caller holding `audit_log:view` reads `audit_log_reason` and every metadata value in full.
+An entry has no request method, request path, status, duration, IP address, or field change list. Fluxer never redacts an entry on read, so a caller holding `audit_log:view` reads `audit_log_reason` and every metadata value in full.
 
 ### Example
 
@@ -432,6 +452,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | ban:profile_substring:remove | Removes `profile-substring` blocklist entries |
 | bulk:add:guild_members | Queues the bulk guild member addition task |
 | bulk:delete:users | Queues the bulk account deletion task |
+| bulk:delete:user_messages | Queues the bulk message deletion task |
 | bulk:update:guild_features | Queues the bulk guild feature task |
 | bulk:update:suspicious_activity | Queues the bulk suspicious activity flag task |
 | bulk:update:user_flags | Queues the bulk account flag task |

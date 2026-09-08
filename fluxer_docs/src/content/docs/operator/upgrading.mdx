@@ -49,7 +49,7 @@ A failed run leaves the instance running on the images it already had.
 
 An instance older than the `/livekit` routing needs one edit no upgrade can make for it. [Voice signalling moved to /livekit](#voice-signalling-moved-to-livekit) has it, and voice stays silent until it is made.
 
-The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one, and [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the failure a line naming an absent file produces.
+The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one. [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the failure a line naming an absent file produces.
 
 The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data` and `edge-config`, so the old two are left unused and the edge requests its certificate again on the first start.
 
@@ -63,9 +63,9 @@ To write it by hand, run the generator in a shell:
 printf '\nFLUXER_ERLANG_COOKIE=%s\n' "$(openssl rand -hex 32)" >> .env
 ```
 
-Run that as a command. Pasting `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env` as text stores those characters as the value, because Compose reads a line literally and runs nothing in it. The leading newline is what keeps the key on its own line when the last line of `.env` ends without one, which an editor can leave behind and which would otherwise join the two.
+Run that as a command. Pasting `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env` as text stores those characters as the value, because Compose reads a line literally and runs nothing in it. The leading newline keeps the key on its own line. An editor can leave the last line of `.env` without a newline, and the two would otherwise join.
 
-`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. The line has been in `.env.example` for a while as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. `--update` replaces an absent or `CHANGE_ME` value with a generated one before it reads anything. Both services read the same value, so they take one secret rather than two, and writing it in one place is what gives them that. A `CHANGE_ME` value stops `api` at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes`, and an empty one with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
+`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. The line has been in `.env.example` for a while as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. `--update` replaces an absent or `CHANGE_ME` value with a generated one before it reads anything. Both services read the same value from one `.env` line. A `CHANGE_ME` value stops `api` at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes`, and an empty one with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
 
 To write it by hand, run the generator in a shell the same way:
 
@@ -87,11 +87,11 @@ The supported way to hold a local choice is a separate file, listed in `COMPOSE_
 COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
 ```
 
-Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory, so an override file is never backed up with them and belongs wherever the rest of the configuration lives.
+Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory. An override file is never backed up with them, and it belongs wherever the rest of the configuration lives.
 
 `.env` needs no such file. The only value either upgrade mode replaces there is `FLUXER_IMAGE_TAG`, and the Mint step adds a required key the file does not hold at all.
 
-[Enable the overlay](/operator/reverse-proxy/#enable-the-overlay) has the overlay this is most often used for, and [Docker labels](/operator/reverse-proxy/#docker-labels) has a worked third file.
+[Enable the overlay](/operator/reverse-proxy/#enable-the-overlay) has the overlay this is most often used for. [Docker labels](/operator/reverse-proxy/#docker-labels) has a worked third file.
 
 ## When the compose file list names a missing file
 
@@ -127,7 +127,15 @@ cd ~/fluxer
 sh install.sh --update --dry-run
 ```
 
-It prints the images the stack runs now, the backup it intends to take, which stack files the ref changes, which services that makes it restart, and any refusal that would stop the run. It writes nothing outside a temporary directory it removes on exit.
+It prints:
+
+- The images the stack runs now
+- The backup it intends to take
+- The stack files the ref changes
+- The services those changes make it restart
+- Any refusal that would stop the run
+
+It writes nothing outside a temporary directory it removes on exit.
 
 Then run it:
 
@@ -190,7 +198,7 @@ Each upgrade writes one record directory, named `record-` and a UTC stamp, under
 | `seaweedfs-data.tgz` | Every upload, avatar, report and harvest |
 | `.env` | Every secret the instance was built with |
 
-The five stack files sit in the record beside those three, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
+The five stack files sit in the record beside them, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
 
 The dump costs no downtime. The uploads copy stops the stack, and the script starts the stack again on the old images before it goes any further.
 
@@ -215,7 +223,7 @@ sh install.sh --rollback
 
 On Windows it is `.\install.ps1 -Rollback`. It takes the newest record, puts back the images and the stack files it holds, recreates, restarts `edge`, and verifies. `--dry-run` prints that plan too.
 
-A rollback never pulls, so it needs the old images still on the host. Run [Reclaim disk](#reclaim-disk) once an upgrade satisfies you and not before.
+A rollback never pulls, so it needs the old images still on the host. Run [Reclaim disk](#reclaim-disk) only after an upgrade satisfies you.
 
 The database does not move. `api`, `worker`, `users-shard` and `messages-shard` apply schema work in place while they start, and an older image does not undo it. Across a release that changed the schema, the dump in the record is the only way back, and putting it back is a decision you make.
 
@@ -312,7 +320,7 @@ Each upgrade leaves the previous images behind, which adds up to a few gigabytes
 docker image prune -f
 ```
 
-On the default moving tag, the pull moves `v1` onto the new images and leaves the ones it replaced untagged, so this removes them. Those are the images a rollback on a moving tag needs, so prune only once the upgrade satisfies you. A pinned release keeps its own tag and survives the prune. Remove one of those by naming its tag in `docker image rm`.
+On the default moving tag, the pull moves `v1` onto the new images and leaves the ones it replaced untagged, so this removes them. A rollback on a moving tag needs those images. Prune only once the upgrade satisfies you. A pinned release keeps its own tag and survives the prune. Remove one of those by naming its tag in `docker image rm`.
 
 `docker system prune -a` reclaims more. It also deletes every image that no container references, including ones unrelated to Fluxer.
 

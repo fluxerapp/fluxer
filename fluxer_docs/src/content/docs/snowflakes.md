@@ -14,7 +14,7 @@ Snowflake values exceed the exact integer range of a JSON double, so parsing one
 
 ## Format
 
-A snowflake packs three fields into 64 bits. The worker and sequence fields distinguish identifiers minted during the same millisecond. Bit 63 is always zero, so an issued snowflake fits a signed 64-bit integer.
+A snowflake packs a timestamp, a worker ID, and a sequence into 64 bits. The worker and sequence fields distinguish identifiers minted during the same millisecond. Bit 63 is always zero, so an issued snowflake fits a signed 64-bit integer.
 
 | Field | Bits | Description |
 | --- | --- | --- |
@@ -65,9 +65,7 @@ Fluxer emits a snowflake as an unsigned decimal string in every JSON body, path 
 
 Both HTTP validation codes are element codes inside a 400 [`INVALID_FORM_BODY`](/http-api/errors/#api-error-code-registry) response. Each Gateway [command](/gateway/commands/) states what its own rejection does, from discarding the field to abandoning the whole command.
 
-A snowflake sent as a JSON number keeps its exact value at any size.
-
-A fractional JSON number is an ordinary type failure and reports [`INVALID_FORMAT`](/http-api/errors/#validation-error-code-registry). An exponent form is read as the number it denotes, and one above 9007199254740991 reports [`INVALID_SNOWFLAKE_FORMAT`](/http-api/errors/#validation-error-code-registry). A path parameter and a query string parameter always arrive as text.
+A snowflake sent as a JSON number keeps its exact value at any size. A fractional JSON number is an ordinary type failure and reports [`INVALID_FORMAT`](/http-api/errors/#validation-error-code-registry). Fluxer reads an exponent form as the number it denotes, and one above 9007199254740991 reports [`INVALID_SNOWFLAKE_FORMAT`](/http-api/errors/#validation-error-code-registry). Path parameters and query string parameters always arrive as text.
 
 :::note[`0` is the beginning of snowflake time]
 An HTTP pagination cursor accepts `0`. An HTTP path parameter or field that identifies a real resource also accepts `0`, and the request then receives the ordinary not-found result for that resource.
@@ -77,9 +75,15 @@ An HTTP pagination cursor accepts `0`. An HTTP path parameter or field that iden
 
 A collection endpoint that pages over a snowflake-ordered resource accepts a cursor such as `before`, `after`, or `around`. The endpoint defines which cursors it supports, whether they are mutually exclusive, the result order, and how `limit` is applied.
 
-The `before` cursor selects identifiers lower than the cursor value, and the `after` cursor selects identifiers higher than it. Both exclude the cursor value itself. The `around` cursor selects a window centred on the cursor value and includes that value. [List channel messages](/http-api/messages/#list-channel-messages) accepts it as a query string parameter and [List messages from multiple channels](/http-api/messages/#list-messages-from-multiple-channels) accepts it on each entry of its request body. No other operation accepts it.
+| Cursor | Selects |
+| --- | --- |
+| `before` | Identifiers lower than the cursor value, excluding it |
+| `after` | Identifiers higher than the cursor value, excluding it |
+| `around` | A window centred on the cursor value, including it |
 
-The type of a `before` or `after` cursor follows the operation. [List pinned messages](/http-api/messages/#list-pinned-messages) pages on the pin time, so its `before` is an ISO 8601 timestamp rather than a message ID. [List blocklist entries](/admin-api/blocklists/#list-blocklist-entries) pages on the entry value, and its `after` is the stored value of the last entry on the previous page. Each operation states the type of its own cursors.
+[List channel messages](/http-api/messages/#list-channel-messages) accepts `around` as a query string parameter, and [List messages from multiple channels](/http-api/messages/#list-messages-from-multiple-channels) accepts it on each entry of its request body. No other operation accepts it.
+
+The type of a `before` or `after` cursor follows the operation. [List pinned messages](/http-api/messages/#list-pinned-messages) pages on the pin time, so its `before` is an ISO 8601 timestamp. [List blocklist entries](/admin-api/blocklists/#list-blocklist-entries) pages on the entry value. Its `after` is the stored value of the last entry on the previous page. Each operation states the type of its own cursors.
 
 Because the timestamp occupies the high bits, numeric snowflake order is creation time order at millisecond resolution.
 

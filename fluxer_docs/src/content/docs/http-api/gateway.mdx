@@ -53,7 +53,7 @@ Fluxer resolves only `url` from deployment configuration. `shards` and `session_
 
 ## Session start limit object
 
-A session start limit reports how many new Gateway sessions a bot may open in a window. Fluxer publishes four constants here for client-library compatibility.
+A session start limit reports how many new Gateway sessions a bot may open in a window. Fluxer publishes constants here for client-library compatibility.
 
 ### Structure
 
@@ -70,7 +70,7 @@ A session start limit reports how many new Gateway sessions a bot may open in a 
 
 <sup>3</sup> Fluxer runs no Identify concurrency bucket, so a bot MAY identify its shards without pacing them against this value
 
-The limits the Gateway actually enforces live in [Session lifecycle](/gateway/limits-and-rate-limits/#session-lifecycle). Fluxer budgets Identify per source address. It caps a user account at a fixed number of concurrent sessions. Neither bound is reported here.
+The limits the Gateway actually enforces are in [Session lifecycle](/gateway/limits-and-rate-limits/#session-lifecycle). Fluxer budgets Identify per source address and caps a user account at a fixed number of concurrent sessions. Neither bound is reported here.
 
 :::caution[A remaining session start does not guarantee admission]
 A non-zero `remaining` reserves nothing, and neither does the constant `max_concurrency`. [Session admission](/gateway/limits-and-rate-limits/#session-lifecycle) can still hold or reject a connection.

@@ -256,7 +256,14 @@ The snapshot also records a conversation window of up to 25 messages before the 
 
 10 requests per hour, on the `report:create` bucket, which is shared with [Report user](#report-user) and [Report guild](#report-guild).
 
-Four further allowances apply, each counted over one hour. One reporter creates at most 5 reports across all report types and at most 3 message reports in one channel, and one message receives at most 20 reports across all reporters. When the reported message is in a guild, one reporter creates at most 4 message reports in that guild. A duplicate submission returns 409 `CONFLICT` before any of the four is consumed.
+Further allowances apply, each counted over one hour:
+
+- One reporter creates at most 5 reports across all report types.
+- One reporter creates at most 3 message reports in one channel.
+- One message receives at most 20 reports across all reporters.
+- When the reported message is in a guild, one reporter creates at most 4 message reports in that guild.
+
+A duplicate submission returns 409 `CONFLICT` before any of them is consumed.
 
 ## Report user
 
@@ -315,7 +322,13 @@ Creates and returns a [report object](#report-object) for a guild.
 - A `guild_id` that resolves to no guild returns 404 `UNKNOWN_GUILD`.
 - The guild owner reporting their own guild returns 400 `CANNOT_REPORT_OWN_GUILD`.
 
-Fluxer establishes access to the guild in one of three ways, tried in that order. A current member needs nothing further. Any reporter can report a guild with the `DISCOVERABLE` [guild feature](/http-api/guilds/#guild-features). Any other reporter supplies `invite_code` for an invite pointing at that exact guild. A reporter satisfying none of the three returns 403 `CANNOT_REPORT_GUILD`.
+Fluxer establishes access to the guild in one of these ways, tried in order:
+
+1. A current member needs nothing further.
+2. Any reporter can report a guild with the `DISCOVERABLE` [guild feature](/http-api/guilds/#guild-features).
+3. Any other reporter supplies `invite_code` for an invite pointing at that exact guild.
+
+A reporter satisfying none of them returns 403 `CANNOT_REPORT_GUILD`.
 
 ### JSON body
 

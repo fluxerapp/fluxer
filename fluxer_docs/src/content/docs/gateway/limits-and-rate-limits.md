@@ -38,7 +38,19 @@ The Gateway refuses a session start for draining, capacity, paused starts, the r
 
 ## Connection and command rate limits
 
-A Gateway node running with `FLUXER_DISABLE_RATE_LIMITS` set to `1`, `true`, or `TRUE` disables nine budgets together. Six are the connection payload budget, the session payload budget, the source IP payload budget, the source IP connection ceiling, the Presence Update budget, and the Voice State Update queue. The other three are the source IP Identify budget, the per-user session count, and the 30-second complete member list budget. The figures below are the enforced defaults.
+A Gateway node running with `FLUXER_DISABLE_RATE_LIMITS` set to `1`, `true`, or `TRUE` disables nine budgets together:
+
+- The connection payload budget
+- The session payload budget
+- The source IP payload budget
+- The source IP connection ceiling
+- The Presence Update budget
+- The Voice State Update queue
+- The source IP Identify budget
+- The per-user session count
+- The 30-second complete member list budget
+
+The figures below are the enforced defaults.
 
 One WebSocket accepts 600 client payloads in a rolling 60-second window. One authenticated session accepts 600 client payloads in each fixed 60-second bucket. One source IP address accepts 6,000 client payloads in each fixed 60-second bucket. Exceeding any of these budgets closes the current connection with `4008` and reason `Rate limited`.
 

@@ -57,7 +57,7 @@ Transformations never enlarge an image.
 
 `width` alone scales proportionally to the requested width, and `height` alone scales proportionally to the requested height. A fit inside a rectangle uses the smaller of the two ratios, so a dimension requested larger than the source still shrinks when the other requested dimension is smaller than the source.
 
-A cover crop scales a still image to cover the requested rectangle and crops it centrally. An attachment or signed external request asks for one by supplying both `width` and `height`. An emoji or sticker asset always uses one. Every other image asset fits inside the selected square and preserves its full aspect ratio.
+A cover crop scales a still image to cover the requested rectangle and crops it centrally. The Media Proxy applies one to an attachment or signed external request that supplies both `width` and `height`, and to every emoji or sticker asset. Every other image asset fits inside the selected square and preserves its full aspect ratio.
 
 :::note[An animated transformation fits the whole frame]
 The Media Proxy downgrades a cover crop to a plain fit whenever it opens the decoder for every page. An animated emoji or sticker is fitted inside its square.
@@ -76,7 +76,7 @@ An asset request snaps `size` to the ladder and then clamps the result into the 
 
 <sup>1</sup> The banner maximum of 2400 is not a ladder rung and is reachable only by clamping, so 3072 and every larger request collapse onto it
 
-An absent `size` resolves to 128 before clamping, so an avatar defaults to 128 and a banner defaults to 480. An emoji and a sticker also default to 128. Every ladder value below a class minimum collapses onto that minimum, and every value above a class maximum collapses onto that maximum.
+An absent `size` resolves to 128 before clamping, so an avatar defaults to 128 and a banner defaults to 480. Emoji and sticker assets also default to 128. Every ladder value below a class minimum collapses onto that minimum, and every value above a class maximum collapses onto that maximum.
 
 ## Attachment and external formats
 
@@ -124,7 +124,7 @@ Quality names are matched exactly and are case-sensitive. An unrecognised value 
 
 <sup>3</sup> Lossless applies to WebP alone, and JPEG at quality 100 is still a lossy encode
 
-An image asset defaults to `high`. An attachment or signed external image defaults to `lossless`, except that a JPEG, HEIC, or HEIF source defaults to `high`. Animated WebP output defaults to `auto` on every route that reads `quality`. A video thumbnail is extracted at `high`, and `quality` then applies only to the resize step that `width` or `height` requests. A non-transforming SVG rasterisation always uses `lossless`.
+An image asset defaults to `high`. An attachment or signed external image defaults to `lossless`, except that a JPEG, HEIC, or HEIF source defaults to `high`. Animated WebP output defaults to `auto` on every route that reads `quality`. Fluxer extracts a video thumbnail at `high`, and `quality` then applies only to the resize step that `width` or `height` requests. A non-transforming SVG rasterisation always uses `lossless`.
 
 Encoder effort defaults to 2 for animated output or `low` quality and 4 otherwise, and it applies to WebP output only. JPEG and PNG have fixed encoder settings, and GIF always encodes at effort 7. The attachment-only `effort` parameter replaces the default and is clamped to 9. Static WebP output clamps it again to 6, and so does lossy animated WebP. Only lossless animated WebP uses 7 through 9.
 
@@ -150,13 +150,13 @@ Fluxer extracts one thumbnail from a video only when the request supplies an exp
 
 An attachment video request with another transformation parameter but no `format` returns 400. A signed external video request without `format` returns the original bytes instead.
 
-An attachment source that is neither an image nor a video returns 400 when `format` is present and is otherwise returned unchanged. A signed external source that is neither an image nor a video is always returned unchanged.
+An attachment source that is neither an image nor a video returns 400 when `format` is present and is otherwise returned unchanged. The signed external route always returns such a source unchanged.
 
 ## Original representations
 
 The Media Proxy returns the original bytes when the source already has the selected format, no resize or crop is required, and no encoder option requires a new representation. A source whose bytes sniff as animated also requires a request that resolves to animated, and a static request against it is encoded.
 
-An `effort` value forces encoding, and a `quality` value forces encoding for every source except GIF. An animated attachment or signed external request for the source's own GIF, WebP, or APNG format with neither `width` nor `height` bypasses both tests and can still reuse the original animation.
+An `effort` value forces encoding, and a `quality` value forces encoding for every source except GIF. With neither `width` nor `height`, an animated attachment or signed external request for the source's own GIF, WebP, or APNG format bypasses both tests and can still reuse the original animation.
 
 The Media Proxy derives the response `Content-Type` from the content when the stored media type is empty, is case-insensitively `application/octet-stream`, or is outside the set `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/apng`, `image/avif`, `image/heic`, `image/heif`, `image/jxl`, and `image/svg+xml`. An original response can therefore use a different media type from the stored metadata. A stored media type from that set is trusted even when it disagrees with the bytes and is served unchanged.
 
@@ -164,7 +164,7 @@ The Media Proxy derives the response `Content-Type` from the content when the st
 
 Proxied or stored media is limited to 500 MiB. A stored object above that bound returns 413, and so does an external origin that declares or delivers more. The same bound applies to a transforming request and to every buffer it produces.
 
-Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is additionally limited to 20,000 decoded frames and 1,073,741,824 decoded pixels across all frames. These four bounds are fixed. Exceeding a decoded image or animation limit fails the transformation.
+Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is additionally limited to 20,000 decoded frames and 1,073,741,824 decoded pixels across all frames. These bounds are fixed. Exceeding a decoded image or animation limit fails the transformation.
 
 Animated WebP and animated APNG output is bounded again at encode time, and exceeding one of those bounds truncates the output. The encoder stops adding frames after 20,000 frames, or once the accumulated frame delays reach 30,000 ms of playback, and emits the frames it already has. An operator can configure the frame cap from 1 through 100,000 and the playback cap from 100 through 600,000 ms. Animated GIF output has neither cap on either of its paths, so the decode limits above are its only bound.
 

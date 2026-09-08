@@ -70,7 +70,7 @@ An unconfigured instance takes registrations from anyone, and lets any account t
 
 ## Step 3: Open the ports
 
-Open six ports on the host:
+Open these ports on the host:
 
 | Port | Protocol | Used by |
 | --- | --- | --- |
@@ -197,7 +197,7 @@ foreach ($p in '/_health', '/api/_health', '/gateway/_health', '/media/_health',
 }
 ```
 
-All six return 200. `/.well-known/fluxer` lists the endpoints clients use, with your own hostname in them.
+Every path returns 200. `/.well-known/fluxer` lists the endpoints clients use, with your own hostname in them.
 
 <a id="first-run"></a>
 
@@ -209,7 +209,7 @@ The wizard runs in two halves. Before you are signed in it walks a welcome step,
 
 Create the owner account with an email address at a domain you control. On a self-hosted instance the first registration that supplies an email address receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard also grants the wildcard ACL to the account that completes it when that account holds no admin ACL yet.
 
-`.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. Nothing goes out by mail, so a forgotten owner password has no email reset. Record it, and register a passkey or a second admin account before you open registration.
+`.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. A forgotten owner password therefore has no email reset. Record it, and register a passkey or a second admin account before you open registration.
 
 Then sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
 
@@ -257,7 +257,7 @@ A dump and a tarball in `backups`, and every service back to `running`, is the s
 ### Remove the instance
 
 :::danger[This deletes every account, message and upload]
-`-v` deletes all seven named volumes. Every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings any of it back. Take the copies above first. To upgrade rather than delete, the command is `sh install.sh --update`, below.
+`-v` deletes all seven named volumes. Every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings any of it back. Take the copies above first. To upgrade, the command is `sh install.sh --update`, below.
 :::
 
 Take the instance down and delete its data:

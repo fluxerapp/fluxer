@@ -255,7 +255,7 @@ A creation template describes the roles and channels that [Create guild](#create
 
 <sup>3</sup> The identifier is applied only when it resolves to a category in the same template, and every other value leaves the channel at the guild root
 
-<sup>4</sup> The three voice fields are stored only on a voice channel and are null on every other channel type
+<sup>4</sup> These voice fields are stored only on a voice channel and are null on every other channel type
 
 <sup>5</sup> An entry is applied only when its resolved `type` is 0 and its `id` resolves to a role in the same template, and the identifier `0` resolves to the everyone role. Fluxer skips every other entry, and a channel whose entries are all skipped is created with no overwrites
 
@@ -303,7 +303,7 @@ The guild owner, a bot, and any member holding at least one role bypass the chec
 
 <sup>1</sup> Only the guild owner can change this value, the owner account needs a second factor already configured, and the change requires sudo mode
 
-While the level is ELEVATED, a caller other than the guild owner exercises the nine [elevated permissions](/http-api/permissions/#elevated-permissions) only with an enrolled authenticator, and a bot inherits the enrolment state of its application owner. An operation that asserts an elevated permission the caller holds but cannot exercise returns 400 `TWO_FACTOR_REQUIRED` after the permission itself has been confirmed.
+While the level is ELEVATED, a caller other than the guild owner exercises the [elevated permissions](/http-api/permissions/#elevated-permissions) only with an enrolled authenticator, and a bot inherits the enrolment state of its application owner. An operation that asserts an elevated permission the caller holds but cannot exercise returns 400 `TWO_FACTOR_REQUIRED` after the permission itself has been confirmed.
 
 ## Splash card alignments
 
@@ -407,7 +407,7 @@ A feature is a capability or availability flag in the guild's `features` array.
 
 <sup>1</sup> The feature is added or removed through [Modify guild](#modify-guild), as part of the complete array. Send every feature without this marker back to `features` exactly as the guild holds it
 
-<sup>2</sup> The feature changes no HTTP API behaviour. An instance can name it in a filter of the ordered [limit configuration](/http-api/instance/#limit-keys), and the stock configuration names none of the three
+<sup>2</sup> The feature changes no HTTP API behaviour. An instance can name it in a filter of the ordered [limit configuration](/http-api/instance/#limit-keys), and the stock configuration names none of them
 
 <sup>3</sup> The expression operations raise the slot ceiling directly, outside the instance limit configuration
 
@@ -465,7 +465,7 @@ These fields prove [sudo mode](/http-api/users/mfa/#sudo-mode) when an operation
 
 <sup>2</sup> The MFA proof is accepted only when the account has a second factor, and it returns the field code `INVALID_MFA_CODE` on any failure
 
-A bot credential satisfies sudo mode without any proof. An account that has no password hash and no second factor also satisfies it without any proof. Every other account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose error object has `has_mfa` and a `methods` object reporting whether `totp` and `webauthn` are available.
+A bot credential satisfies sudo mode without any proof, and so does an account that has no password hash and no second factor. Every other account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose error object has `has_mfa` and a `methods` object reporting whether `totp` and `webauthn` are available.
 
 Fluxer issues a newly generated proof in the `X-Fluxer-Sudo-Mode-JWT` header of the success response, and only for an account that has a second factor. A proof supplied on the request is echoed back in that same header.
 
@@ -507,7 +507,7 @@ The `icon` base64 payload is bounded to 1 to 13981016 characters and is otherwis
 Without a template the guild is created with a `Text Channels` category holding a text channel named `general`, a `Voice Channels` category holding a voice channel named `General`, and an everyone role with the default permission set. The `general` channel becomes the system channel.
 
 :::note[Embedded collections arrive on the Guild Create Dispatch]
-The creation response has none of them. Read [Get guild](#get-guild) afterwards to fetch roles, channels, emojis, stickers, and member counts over HTTP.
+The creation response has no roles, channels, emojis, stickers, or member counts. Read [Get guild](#get-guild) afterwards to fetch them over HTTP.
 :::
 
 ### Response
@@ -549,7 +549,7 @@ Returns an array of [guild objects](#guild-object), one for every guild the auth
 
 <sup>2</sup> A guild whose counts cannot be fetched is returned without them
 
-A membership whose guild record can no longer be resolved is dropped before the cursor and `limit` are applied, so the page still has up to `limit` guilds when further guilds remain. This route runs no availability screen, and a guild with `UNAVAILABLE_FOR_EVERYONE` is still listed.
+Fluxer drops a membership whose guild record can no longer be resolved before it applies the cursor and `limit`, so the page still has up to `limit` guilds when further guilds remain. This route runs no availability screen, and a guild with `UNAVAILABLE_FOR_EVERYONE` is still listed.
 
 :::caution[`permissions` needs a limit of 100 or lower]
 A page of more than 100 guilds, or a failed lookup, omits `permissions` from every guild. The request still succeeds.

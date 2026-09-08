@@ -144,7 +144,7 @@ Searches the guild member index. Returns a [guild member search response](#guild
 ### Limitations
 
 - The caller must also hold at least one of [MANAGE_GUILD](/http-api/permissions/), [MANAGE_ROLES](/http-api/permissions/), [MANAGE_NICKNAMES](/http-api/permissions/), [BAN_MEMBERS](/http-api/permissions/), [MODERATE_MEMBERS](/http-api/permissions/), or [KICK_MEMBERS](/http-api/permissions/).
-- Five of the six qualifying bits are [elevated permissions](/http-api/permissions/#elevated-permissions). In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller other than the guild owner who holds one of those five and has no enrolled authenticator receives 400 `TWO_FACTOR_REQUIRED`. `MANAGE_NICKNAMES` is not elevated, so a caller who qualifies through it alone never receives that code.
+- Every qualifying bit except `MANAGE_NICKNAMES` is one of the [elevated permissions](/http-api/permissions/#elevated-permissions). In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller other than the guild owner who holds one of those elevated bits and has no enrolled authenticator receives 400 `TWO_FACTOR_REQUIRED`. A caller who qualifies through `MANAGE_NICKNAMES` alone never receives that code.
 - A non-member of an existing guild receives the same 403 `MISSING_PERMISSIONS` as a member holding none of the qualifying bits, so a caller cannot tell the two apart.
 
 A guild that does not exist returns 404 `UNKNOWN_GUILD`.
@@ -193,9 +193,9 @@ Every field is optional, and an omitted filter is not applied. The route reads a
 
 [Input normalisation](/http-api/#input-normalisation) rewrites `""` to null, which the `query` field rejects with 400 `INVALID_FORM_BODY`. `" "` is accepted.
 
-With no `sort_by`, the route sorts by join time and defaults `sort_order` to `desc`. Two members with the same join time are ordered by descending `id`. `relevance` ignores `sort_order`. A Meilisearch instance orders `relevance` by its own ranking rules. An Elasticsearch instance orders `relevance` by descending `id`.
+With no `sort_by`, the route sorts by join time and defaults `sort_order` to `desc`. Two members with the same join time are ordered by descending `id`. `relevance` ignores `sort_order`. A Meilisearch instance orders a `relevance` search by its own ranking rules, and an Elasticsearch instance by descending `id`.
 
-Text matching runs over the username, the discriminator, the global display name, the guild nickname, and the user ID, and a query can match the middle of a username as well as its start. Term matching and typo tolerance belong to the search backend. Filter matching is exact in every case.
+Text matching runs over the username, the discriminator, the global display name, the guild nickname, and the user ID. A query can match the middle of a username as well as its start. The search backend defines term matching and typo tolerance. Filter matching is exact in every case.
 
 :::caution[A deep `offset` returns 200 with an empty page]
 Elasticsearch walks past its 10000 document window with an internal cursor and serves an arbitrary `offset`. Meilisearch caps the window at 10000 and returns an empty page beyond it.

@@ -73,7 +73,7 @@ Reading a code back requires presenting it to [Get gift](/http-api/gifts/#get-gi
 
 ### Side effects
 
-Each code is 32 characters drawn from the uppercase letters, the lowercase letters, and the digits. Each code is created unredeemed and records the system account with ID `0` as its creator, which is the creator the [gift object](/http-api/gifts/#gift-object) reports to the redeemer.
+Each code is 32 characters drawn from the uppercase letters, the lowercase letters, and the digits. Fluxer creates it unredeemed and records the system account with ID `0` as its creator, which is the creator the [gift object](/http-api/gifts/#gift-object) reports to the redeemer.
 
 Fluxer writes the codes one at a time. A failure part way through leaves the codes already written redeemable while the response reports the failure. Those codes appear in no response.
 

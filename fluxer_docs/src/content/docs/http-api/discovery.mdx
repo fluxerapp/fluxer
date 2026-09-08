@@ -12,7 +12,7 @@ Discovery is the public directory of guilds any account can browse and join. A g
 
 On a guild an operator has marked unavailable, Fluxer refuses [Apply for discovery](#apply-for-discovery), [Edit discovery application](#edit-discovery-application), [Withdraw discovery application](#withdraw-discovery-application), and [Get discovery status](#get-discovery-status) with 403 `MISSING_ACCESS` before the route runs. The gate does not cover [Join discovery guild](#join-discovery-guild).
 
-The four routes under `/v1/guilds/{guild_id}/discovery` require [MANAGE_GUILD](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one. A guild that does not exist returns 404 `UNKNOWN_GUILD`. Both a non-member and a member without the permission return 403 `MISSING_PERMISSIONS`. The routes answer 503 `SERVICE_UNAVAILABLE` when the check cannot be admitted, and 504 `GATEWAY_TIMEOUT` when it does not answer in time.
+The routes under `/v1/guilds/{guild_id}/discovery` require [MANAGE_GUILD](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one. A guild that does not exist returns 404 `UNKNOWN_GUILD`. Both a non-member and a member without the permission return 403 `MISSING_PERMISSIONS`. The routes answer 503 `SERVICE_UNAVAILABLE` when the check cannot be admitted, and 504 `GATEWAY_TIMEOUT` when it does not answer in time.
 
 :::note[Discovery is an optional instance capability]
 Searching, applying, editing, withdrawing, and joining fail with 400 `DISCOVERY_DISABLED` while an operator has it disabled. [List discovery categories](#list-discovery-categories) and [Get discovery status](#get-discovery-status) keep answering.
@@ -20,7 +20,7 @@ Searching, applying, editing, withdrawing, and joining fail with 400 `DISCOVERY_
 
 ## Discovery guild object
 
-One search result. Every field except the two counts is read from the discovery search index.
+One search result. Every field except `member_count` and `online_count` is read from the discovery search index.
 
 ### Structure
 
@@ -39,7 +39,7 @@ One search result. Every field except the two counts is read from the discovery 
 | features | array[string] | The [guild features](/http-api/guilds/#guild-features) the guild has |
 | verification_level<sup>4</sup> | integer | The effective [verification level](/http-api/guilds/#verification-levels) of the guild |
 
-<sup>1</sup> The four listing fields come from the guild's approved application as it stood at index time, and an entry that stores no category is reported as category `0`
+<sup>1</sup> These listing fields come from the guild's approved application as it stood at index time, and an entry that stores no category is reported as category `0`
 
 <sup>2</sup> Refreshed from the main Gateway at response time. When that refresh fails, the operation still succeeds and reports the indexed member count with an `online_count` of `0`
 
@@ -199,9 +199,7 @@ The release fixes the set, so an operator cannot add, rename, or remove a catego
 | 7 | MOVIES_AND_TV | Movies & TV |
 | 8 | OTHER | Other |
 
-Every category value on the wire is one of these integers.
-
-A value outside 0 through 8 fails body or query validation with the validation code `INVALID_FORMAT`, so [Apply for discovery](#apply-for-discovery) and [Edit discovery application](#edit-discovery-application) reject it before the listing is stored.
+Every category value on the wire is one of these integers. A value outside 0 through 8 fails body or query validation with the validation code `INVALID_FORMAT`, so [Apply for discovery](#apply-for-discovery) and [Edit discovery application](#edit-discovery-application) reject it before the listing is stored.
 
 The display names above are the strings [List discovery categories](#list-discovery-categories) returns. They are not localised, so the same ID has the same name for every account.
 

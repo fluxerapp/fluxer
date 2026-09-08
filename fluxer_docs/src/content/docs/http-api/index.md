@@ -20,7 +20,7 @@ The API applies no generic byte limit to a request body. An operation that accep
 
 Every request counts against one in-flight request ceiling for the whole instance. A request that arrives while the instance is at that ceiling returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1` before the operation runs. The `/_health`, `/_healthz`, and `/_metrics` probe paths are exempt.
 
-A request to a path that matches no route returns 404 `NOT_FOUND`. A request whose path is registered but not for the request method is answered the same way, and the response has no `Allow` header. Routing is strict, so a trailing slash is significant.
+A request to a path that matches no route returns 404 `NOT_FOUND`. A request using a method the path does not register returns the same 404, and the response has no `Allow` header. Routing is strict, so a trailing slash is significant.
 
 The `GET` registered for a path also serves `HEAD`. A path that registers no `GET` serves no `HEAD` either. A `HEAD` response has the status and headers that `GET` returns, with no body. The request still reports `HEAD` as its method, so the [same-host origin check](#cross-origin-requests) can refuse a `HEAD` that has no `Origin` where the identical `GET` succeeds.
 
@@ -45,7 +45,13 @@ Form bodies accept `application/x-www-form-urlencoded` and `multipart/form-data`
 
 The legacy names `file` and `file` followed by an index are accepted as file fields as well, and a bare `file` takes the next free legacy index.
 
-Five field-name failures are rejected with their own code. An index outside either bound returns `FILE_INDEX_EXCEEDS_MAXIMUM`. Any other name beginning with `files[` returns `INVALID_FILE_FIELD_NAME`. Two file fields resolving to the same index return `DUPLICATE_FILE_INDEX`. More than one file supplied for one index returns `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED`. Where the resolved limit is 0, any file field at all returns `ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE`.
+Field-name failures are rejected with their own code:
+
+- An index outside either bound returns `FILE_INDEX_EXCEEDS_MAXIMUM`.
+- Any other name beginning with `files[` returns `INVALID_FILE_FIELD_NAME`.
+- Two file fields resolving to the same index return `DUPLICATE_FILE_INDEX`.
+- More than one file supplied for one index returns `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED`.
+- Where the resolved limit is 0, any file field at all returns `ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE`.
 
 The `Content-Type` header supplies the multipart boundary. Each part's field name is in `Content-Disposition`. A body the multipart parser cannot read is rejected with `FAILED_TO_PARSE_MULTIPART_FORM_DATA`. A field name the operation does not recognise is ignored, and a `files[n]` part whose value is not a file is ignored once its index has been bounds-checked.
 

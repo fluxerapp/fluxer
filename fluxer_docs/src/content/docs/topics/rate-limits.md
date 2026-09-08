@@ -16,11 +16,11 @@ A request that resolves no account is keyed by the client IP address, exactly fo
 
 Fluxer also evaluates a route bucket against the global bucket unless the route declares that bucket exempt. The global bucket is keyed by the same identity, so a request that resolves no account consumes the global allowance of its client IP address.
 
-Seven buckets are exempt, and each is the only bucket its route declares. Those routes draw on no global allowance: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each sits on a route that already consumed a non-exempt bucket, so both routes still draw on the global allowance.
+Seven buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each sits on a route that already consumed a non-exempt bucket, so both routes still draw on the global allowance.
 
 Every HTTP API and Admin API operation declares a bucket, apart from the seven [desktop download](/http-api/downloads/) routes, which declare none. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
 
-The global window is one second. The default allowance is 50 requests per second, and an account holding the [`HIGH_GLOBAL_RATE_LIMIT`](/admin-api/users/#account-flags) flag receives 1,200 requests per second instead. An account holding the [`RATE_LIMIT_BYPASS`](/admin-api/users/#account-flags) flag is evaluated against neither the global bucket nor any route bucket, and receives no rate limit header on a successful response.
+The global window is one second. The default allowance is 50 requests per second, and an account holding the [`HIGH_GLOBAL_RATE_LIMIT`](/admin-api/users/#account-flags) flag receives 1,200 requests per second instead. The [`RATE_LIMIT_BYPASS`](/admin-api/users/#account-flags) flag exempts an account from the global bucket and from every route bucket. A successful response to that account has no rate limit header.
 
 Some operations enforce a further limit inside the handler. `RATE_LIMIT_BYPASS` exempts an account from none of them. [Limits enforced inside a handler](#limits-enforced-inside-a-handler) has the complete set.
 
@@ -131,9 +131,9 @@ The [cross-origin policy](/http-api/#cross-origin-requests) exposes only `X-Flux
 
 ## Limits enforced inside a handler
 
-Some operations bound a further allowance inside the handler. Each one is keyed independently of the route bucket and of the global bucket, so exhausting it denies the request while both buckets still have room. The set below is complete.
+An allowance enforced inside a handler is keyed independently of the route bucket and of the global bucket, so exhausting it denies the request while both buckets still have room. The set below is complete.
 
-Two deployment switches disable part of this set. `disable_rate_limits` turns off the two login allowances along with both buckets. `relax_registration_rate_limits` turns off the three registration allowances. Every other allowance below is enforced on every deployment.
+The `disable_rate_limits` deployment switch turns off the two login allowances along with both buckets. `relax_registration_rate_limits` turns off the three registration allowances. Every other allowance below is enforced on every deployment.
 
 A denial takes one of two shapes. A send or submission allowance answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. A change allowance answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
 
@@ -195,7 +195,7 @@ Fluxer consumes every multi-factor allowance before it checks the code, so a cor
 
 ### Allowances answering neither shape
 
-[Get desktop handoff information](/http-api/authentication/#get-desktop-handoff-information) and [Complete desktop handoff](/http-api/authentication/#complete-desktop-handoff) share one failed-attempt counter keyed by the client IP address. Five failures block both operations for 15 minutes from the most recent failure, and a blocked request returns 400 `INVALID_HANDOFF_CODE` as a top-level code rather than as a validation entry. Get desktop handoff information separately permits three successful lookups for each handoff code and reports a fourth with the same top-level code.
+[Get desktop handoff information](/http-api/authentication/#get-desktop-handoff-information) and [Complete desktop handoff](/http-api/authentication/#complete-desktop-handoff) share one failed-attempt counter keyed by the client IP address. Five failures block both operations for 15 minutes from the most recent failure, and a blocked request returns 400 `INVALID_HANDOFF_CODE` as a top-level code with no validation entry. Get desktop handoff information separately permits three successful lookups for each handoff code and reports a fourth with the same top-level code.
 
 [Refund latest purchase](/http-api/billing/#refund-latest-purchase) permits one self-serve refund every 30 days for each account and reports a request inside that window as 403 `STRIPE_REFUND_COOLDOWN_ACTIVE`.
 

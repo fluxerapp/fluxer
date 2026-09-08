@@ -58,7 +58,7 @@ An unrecognised scope value is rejected when the authorisation request is comple
 Scope order has no semantic meaning, so a client MUST compare scopes as a set.
 :::
 
-The `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) is sorted into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed. The `scopes` array of an [OAuth2 authorisation](#oauth2-authorisation-object) is in no defined order, and it can hold `bot` and an unrecognised value once more than one refresh token contributes.
+Fluxer sorts the `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed. The `scopes` array of an [OAuth2 authorisation](#oauth2-authorisation-object) is in no defined order, and it can hold `bot` and an unrecognised value once more than one refresh token contributes.
 
 ## OAuth2 error response object
 
@@ -73,7 +73,7 @@ The failure envelope the OAuth2 routes return.
 
 <sup>1</sup> Always present, and some descriptions are a bare API error code identifier
 
-These two members are the whole body, so the routine that reads the ordinary [error response](/http-api/#error-response) cannot parse it. Fluxer returns every OAuth2 failure with status 400. A client MUST key on `error` and never on `error_description`.
+These members are the whole body, so the routine that reads the ordinary [error response](/http-api/#error-response) cannot parse it. Fluxer returns every OAuth2 failure with status 400. A client MUST key on `error` and never on `error_description`.
 
 The consent, token, introspection, and revocation routes return this object for a grant, client authentication, scope, redirect, response type, or permission mask failure. Every other failure, including request validation, authentication, authorisation, and rate limiting, uses the ordinary [error response](/http-api/#error-response) with an [API error code](/http-api/errors/).
 
@@ -319,7 +319,7 @@ Fluxer builds the URL from the registered redirect URI the request resolved to, 
 
 <RouteHeader method="GET" path="/v1/oauth2/authorize" unauthenticated />
 
-Starts an authorisation request. A query that passes request validation always answers with a redirect, and authentication is optional.
+Starts an authorisation request. Fluxer returns a redirect for every query that passes request validation. Authentication is optional.
 
 ### Query parameters
 
@@ -427,11 +427,11 @@ A guild installation emits [Guild Create](/gateway/events/#guild-create), [Guild
 
 Consent issues one authorisation code bound to the application, user, resolved redirect URI, granted scopes, and PKCE challenge, and returns the callback URL that has it.
 
-With the `bot` scope and a guild target, consent adds the bot to the guild with the bot-invite join source and the caller recorded as inviter, bypassing both the bot account's own guild count limit and the guild ban list. The guild member limit still applies. When a non-zero permission mask is requested, it also creates one role with exactly those permissions, names the role after the application, and assigns it to the bot.
+With the `bot` scope and a guild target, consent adds the bot to the guild with the bot-invite join source and the caller recorded as inviter. Consent bypasses both the bot account's own guild count limit and the guild ban list. The guild member limit still applies. When a non-zero permission mask is requested, consent also creates one role with exactly those permissions, names the role after the application, and assigns it to the bot.
 
 That role is created at position 1 with no colour and is neither hoisted nor mentionable. It consumes a guild role slot and is not removed when the bot leaves. The installation records bot add, role create, and member role update [audit log](/http-api/guild-audit-logs/) entries.
 
-With the `bot` scope and a group direct message target, it adds the bot as a recipient and stores the recipient-add system message.
+With the `bot` scope and a group direct message target, consent adds the bot as a recipient and stores the recipient-add system message.
 
 When any part of the installation fails, Fluxer cancels the newly issued authorisation code, so the caller never receives a usable code.
 

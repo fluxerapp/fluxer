@@ -14,7 +14,7 @@ The routes here are user-only and operate on the caller's own collection. Fluxer
 
 Fluxer caps a collection at the instance-configured `max_favorite_memes` [limit](/http-api/instance/#limit-keys), with a fallback of 50. Both creation operations check the count before they touch the channel, the message, or the source URL, so an account at its limit is refused with 400 `MAX_FAVORITE_MEMES` even when the rest of the request would have failed. The error body has `max_favorite_memes` reporting the ceiling reached.
 
-A meme has at most `max_favorite_meme_tags` tags, with a fallback of 10. A request that exceeds the allowance returns 400 `INVALID_FORM_BODY` with the validation code `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path.
+A meme has at most `max_favorite_meme_tags` tags, with a fallback of 10. Fluxer rejects a longer list with 400 `INVALID_FORM_BODY` and the validation code `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path.
 
 Fluxer normalises and trims a tag before counting it, and the result must be 1 through 30 characters. A tag that normalises to the empty string fails with 400 `INVALID_FORM_BODY` and `STRING_LENGTH_INVALID`.
 
@@ -203,7 +203,7 @@ Fetches an absolute media URL, stores a durable Fluxer copy, and returns the cre
 
 <sup>4</sup> Persisted only when the request resolved to a provider GIF and the map is non-empty, and discarded otherwise
 
-The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot, then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. A segment that normalises to nothing, or to only dots and underscores, yields `unnamed`, and the extension is `bin` when the content type maps to none.
+The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot, then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. Where the segment normalises to nothing, or to only dots and underscores, the filename is `unnamed`. The extension is `bin` when the content type maps to none.
 
 The stored `gif_provider` is always the configured provider's own name, so new provider GIFs are sourced from KLIPY even when the request names another provider.
 
@@ -267,7 +267,7 @@ When neither key selects anything, Fluxer takes the message's first attachment. 
 
 Only an `image/*`, `video/*`, or `audio/*` asset can be saved. `attachment_id` is matched only when the message or one of its snapshots has at least one attachment, and an ID matching none of them fails with `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE` at the `attachment_id` path. When the message has no attachment at all, Fluxer ignores the ID and takes the first usable embed. Only the selected attachment is tried, so a message whose chosen attachment has an unsupported type falls through to its embeds. A selection that resolves to no supported media fails with `NO_VALID_MEDIA_IN_MESSAGE` at the `media` path.
 
-An embed selection uses the embed's image, video, or thumbnail, in that order. A URL the instance's own media endpoint serves is copied without a fetch. Any other URL is fetched over the network, and a fetch that resolves no metadata fails with 400 `MEDIA_METADATA_ERROR`.
+An embed selection uses the embed's image, video, or thumbnail, in that order. When the URL is one the instance's own media endpoint serves, Fluxer copies the asset without a fetch. Any other URL is fetched over the network, and a fetch that resolves no metadata fails with 400 `MEDIA_METADATA_ERROR`.
 
 ### Response
 
@@ -443,7 +443,7 @@ Fluxer derives a two-letter country from the requesting address by geolocation, 
 
 <sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result positionally against its request
 
-Fluxer resolves a URL in three stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. A failure in any stage downgrades that URL's entry alone. A URL that none of the three stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
+Fluxer resolves a URL in three stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. When a stage fails, Fluxer downgrades that URL's entry alone. A URL that none of the three stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
 
 ### Response
 

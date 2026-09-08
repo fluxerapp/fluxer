@@ -20,11 +20,11 @@ An `Authorization` credential MUST NOT be copied into a URL. Webhook tokens, sig
 
 ## Authorization header
 
-The header value must have no leading or trailing whitespace. A padded value never authenticates. A value beginning with `Bot `, `Bearer `, or `Admin ` selects that scheme, and the remainder must be non-empty and must have no surrounding whitespace either. The three prefixes match exactly, so any other spelling is not recognised as a scheme.
+The header value must have no leading or trailing whitespace, and a padded value never authenticates. A value beginning with `Bot `, `Bearer `, or `Admin ` selects that scheme, and the remainder must be non-empty and must have no surrounding whitespace either. The prefixes match exactly, so any other spelling is not recognised as a scheme.
 
 A value containing no space is parsed as a bare user session token. A value containing a space without a recognised scheme prefix is invalid.
 
-An invalid, unknown, or unresolvable credential leaves the request unauthenticated, and the matched operation's authorisation policy decides the outcome. An operation that requires a credential returns 401 `UNAUTHORIZED`.
+Fluxer leaves the request unauthenticated when the credential is invalid, unknown, or unresolvable, and the matched operation's authorisation policy decides the outcome. An operation that requires a credential returns 401 `UNAUTHORIZED`.
 
 A user session token is sent bare, with no scheme prefix.
 
@@ -44,7 +44,7 @@ The value after `Bearer ` is an OAuth2 access token.
 Authorization: Bearer IE867jBd9L4M0_tGI8OUOppXVezR1u6x8Yj-Lduilxg
 ```
 
-The value after `Admin ` is an Admin API key, which is read on a route below `/v1/admin` and nowhere else.
+The value after `Admin ` is an Admin API key.
 
 ```text
 Authorization: Admin fa_1508923117441703936_KaqkNax1BF3YSWHGkEPjDRKeO48jGb9F
@@ -92,9 +92,7 @@ Rotation applies to a bot token and a client secret, and rotating a bot token al
 
 ## User session tokens
 
-A user session token authenticates an ordinary user account. It is issued by the login, registration, and session exchange operations documented in [Authentication](/http-api/authentication/). A token that does not identify a live session leaves the request unauthenticated.
-
-A session token is also the credential the Gateway [Identify](/gateway/commands/#identify) command accepts for a user session.
+A user session token authenticates an ordinary user account. It is issued by the login, registration, and session exchange operations documented in [Authentication](/http-api/authentication/). A token that does not identify a live session leaves the request unauthenticated. The Gateway accepts a user session token in [Identify](/gateway/commands/#identify).
 
 The `Authorization` header holds a single credential. A [sudo mode](#sudo-mode) proof travels separately, in the `X-Fluxer-Sudo-Mode-JWT` header, and it proves that the already resolved account recently re-verified.
 
@@ -130,23 +128,24 @@ The response body has this member alongside `code` and `message`.
 
 An Admin API key is read only on a route below `/v1/admin`, and an unknown, expired, or invalid key leaves the request unauthenticated. A valid key authenticates as the user who created it, and the request has the ACLs stored on the key.
 
-An Admin operation also accepts a user session token and an OAuth2 bearer token, and a bearer token is accepted only when it belongs to the built-in Admin OAuth2 application. A bearer token from any other application returns 403 `ACCESS_DENIED`. A request with a bot token returns 401 `UNAUTHORIZED`.
+Fluxer also accepts a user session token or an OAuth2 bearer token on an Admin operation, and it accepts the bearer token only when it belongs to the built-in Admin OAuth2 application. A bearer token from any other application returns 403 `ACCESS_DENIED`. A request with a bot token returns 401 `UNAUTHORIZED`.
 
 On every Admin request the resolved user must hold the `admin:authenticate` ACL or the wildcard, and a user without either returns 403 `MISSING_PERMISSIONS`. A key-authenticated request is checked twice, and either failure returns 403 `MISSING_ACL`. The [Admin API](/admin-api/) hub defines the complete ACL registry, the evaluation modes, the double check, and the audit contract.
 
 ## Authorisation outcomes
 
-An operation that requires a credential declares one authorisation policy. There are four.
+An operation that requires a credential declares one of the four authorisation policies:
 
-A user operation requires a resolved user and rejects an OAuth2 bearer credential it has not opted into. A user-only operation rejects a bot account as well. A bot operation accepts a bot token, which resolves the application's bot account as the request identity. An OAuth2 operation requires the `Bearer` scheme together with the scope it names. An Admin operation requires a session, Admin OAuth2 bearer, or Admin API key credential together with the required ACLs.
+- A user operation requires a resolved user and rejects an OAuth2 bearer credential it has not opted into. A user-only operation rejects a bot account as well.
+- A bot operation accepts a bot token, which resolves the application's bot account as the request identity.
+- An OAuth2 operation requires the `Bearer` scheme together with the scope it names.
+- An Admin operation requires a session, Admin OAuth2 bearer, or Admin API key credential together with the required ACLs.
 
 No authorisation policy requires the `Bot` scheme itself. [`GET /v1/applications/@me`](/http-api/applications/#get-bot-application) is the only operation that requires the prefix.
 
-Fluxer still parses and resolves a credential sent to an operation that requires none. The resolved account keys the [rate limit](/topics/rate-limits/) buckets and can waive a [captcha](/topics/captcha/) requirement. Some operations read the resolved account or the raw header, and each states that on its own page.
+Fluxer still parses and resolves a credential sent to an operation that requires none. The [rate limit](/topics/rate-limits/) buckets are keyed by the resolved account, and that account can waive a [captcha](/topics/captcha/) requirement. Some operations read the resolved account or the raw header, and each states that on its own page.
 
-Fluxer answers with 401 when it resolves no usable identity, and with 403 when it resolves one the operation refuses.
-
-A missing, malformed, unknown, expired, or revoked credential returns 401 `UNAUTHORIZED`. A bot token on an Admin operation and a non-bearer credential on a bearer-only operation return 401 as well.
+Fluxer answers with 401 when it resolves no usable identity, and with 403 when it resolves one the operation refuses. A missing, malformed, unknown, expired, or revoked credential returns 401 `UNAUTHORIZED`. A bot token on an Admin operation and a non-bearer credential on a bearer-only operation return 401 as well.
 
 A resolved identity that the operation refuses returns 403 `ACCESS_DENIED`. That is the outcome for a bot account on a user-only operation and for a bearer credential on an operation that did not opt into OAuth2. An Admin OAuth2 bearer credential issued to an application other than the built-in Admin application returns 403 `ACCESS_DENIED` as well.
 
@@ -175,9 +174,7 @@ Enforcement applies at those operations only. It does not gate password change o
 
 ## Account state gates
 
-The ordinary login requirement rejects an account that has effective suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
-
-A requirement disappears from the response as soon as it is met.
+The ordinary login requirement rejects an account that has effective suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. A requirement disappears from the response as soon as it is met.
 
 ### Account suspicious activity body
 
@@ -200,17 +197,17 @@ No shared gate rejects a deleted or disabled account. Each operation that reads 
 
 ## Failed authentication
 
-An unknown, expired, revoked, or malformed credential all return 401 `UNAUTHORIZED`. A client cannot tell the four apart from the response. A valid credential whose identity the operation resolves and refuses returns 403 `ACCESS_DENIED`, as [authorisation outcomes](#authorisation-outcomes) sets out.
+An unknown, expired, revoked, or malformed credential returns 401 `UNAUTHORIZED`, and the response does not say which. A valid credential whose identity the operation resolves and refuses returns 403 `ACCESS_DENIED`, as [authorisation outcomes](#authorisation-outcomes) sets out.
 
 Fluxer records a malformed header and a credential that resolves nothing against the originating address. An Admin API key presented outside `/v1/admin` records nothing.
 
-Two triggers ban an address. Enough distinct rejected tokens inside the tracking window ban it on the first crossing. A failure score over its threshold bans it only after it crosses that threshold in several separate windows. The window and both thresholds are instance configuration. Fluxer never applies an automatic ban to an address it classifies as mobile. A banned address is refused before the operation runs, as [Errors](/http-api/errors/) sets out.
+Two triggers ban an address. Fluxer bans it on the first crossing of the distinct rejected token threshold inside the tracking window. A failure score over its threshold bans the address only after the score crosses that threshold in several separate windows. The window and both thresholds are instance configuration. Fluxer never applies an automatic ban to an address it classifies as mobile. A banned address is refused before the operation runs, as [Errors](/http-api/errors/) sets out.
 
 ## Sudo mode
 
 Sudo mode is a short-lived proof that the account holder recently re-verified a credential. Each operation that requires it states that on its own page, and [Multi-factor authentication](/http-api/users/mfa/#sudo-mode) defines the accepted proofs, the [sudo verification object](/http-api/users/mfa/#sudo-verification-object) fields, and the [sudo mode methods object](/http-api/users/mfa/#sudo-mode-methods-object) returned with 403 `SUDO_MODE_REQUIRED`.
 
-A sudo proof is an HS256 JSON Web Token with the account ID as its subject, the fixed claim `type` set to `sudo`, an issue time, and an expiry five minutes after issue. A client presents it in the `X-Fluxer-Sudo-Mode-JWT` request header. An invalid, expired, or account-mismatched token is treated as absent. A bad proof and a missing proof produce the same response.
+A sudo proof is an HS256 JSON Web Token with the account ID as its subject, the fixed claim `type` set to `sudo`, an issue time, and an expiry five minutes after issue. A client presents it in the `X-Fluxer-Sudo-Mode-JWT` request header. An invalid, expired, or account-mismatched token produces the same response as a missing one.
 
 Fluxer mints a token only for an account holding a multi-factor authenticator, so a password-only account re-verifies for each operation that requires sudo mode. [Create WebAuthn registration options](/http-api/users/mfa/#create-webauthn-registration-options) and [Disable current account](/http-api/users/current-user/#disable-current-account) mint no token and return no header even for a multi-factor account. A bot account satisfies sudo mode immediately. So does an account that has neither a password nor a multi-factor authenticator.
 

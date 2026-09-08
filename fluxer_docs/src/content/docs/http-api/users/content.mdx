@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Recent mentions and saved messages are private lists that only the account owning them can read. Two further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests live on [Data harvests](/http-api/users/data-harvest/).
 
-Every route here is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has an outstanding required action with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+These routes are user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has an outstanding required action with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
 Every route except [Delete current user's messages](#delete-current-users-messages) reaches the main Gateway, and a Gateway failure returns 502 `BAD_GATEWAY`, 503 `SERVICE_UNAVAILABLE`, or 504 `GATEWAY_TIMEOUT`. [Save message](#save-message) resolves the channel before it writes, so a failure there stores nothing. The request still returns 204 when a [Saved Message Create](/gateway/events/#saved-message-create), [Saved Message Delete](/gateway/events/#saved-message-delete), or [Recent Mention Delete](/gateway/events/#recent-mention-delete) Dispatch fails to publish after the write.
 
@@ -20,7 +20,7 @@ Every route except [Delete current user's messages](#delete-current-users-messag
 
 A saved entry is a private bookmark pairing one message with the channel it was saved from. Saving a message notifies nobody, including its author.
 
-An entry stores no copy of the message. Fluxer resolves the message against current permissions on every read, so one entry can have a message on one read and none on the next.
+The entry stores no copy of the message. Fluxer resolves the message against current permissions on every read, so one entry can have a message on one read and none on the next.
 
 ### Structure
 
@@ -294,7 +294,7 @@ Every message the filter selects is deleted from its channel for every recipient
 
 ### JSON body
 
-The caller proves sudo mode either with the five sudo fields below or with an existing proof in the request. An existing proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The caller proves sudo mode either with the sudo fields below or with an existing proof in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -322,7 +322,7 @@ The caller proves sudo mode either with the five sudo fields below or with an ex
 
 <sup>4</sup> Supplying both bounds requires `start_date` strictly earlier than `end_date`, and an equal pair fails validation on `end_date`
 
-<sup>5</sup> The five sudo fields are the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). Which combination is accepted depends on the account's configured authenticators
+<sup>5</sup> These fields are the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). Which combination is accepted depends on the account's configured authenticators
 
 The `selected` scope requires at least one of the four context toggles to be true, and a request that disables all four fails validation on `include_dms`. The `inaccessible_only` scope ignores the toggles and the guild filter.
 

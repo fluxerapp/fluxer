@@ -170,7 +170,7 @@ chat.example.com {
 }
 ```
 
-Caddy trusts no proxy by default and takes the client address from the connection. Set the global `trusted_proxies` option when another proxy or a CDN sits in front of Caddy, or it records that hop as the client. Caddy appends its own peer to the address list rather than replacing it, and Fluxer reads the first entry.
+Caddy trusts no proxy by default and takes the client address from the connection. Set the global `trusted_proxies` option when another proxy or a CDN sits in front of Caddy, or it records that hop as the client. Caddy appends its own peer to the end of the address list, and Fluxer reads the first entry.
 
 ## Traefik
 

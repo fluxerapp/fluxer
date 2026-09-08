@@ -11,7 +11,7 @@ A note is short private text the caller stores about another account.
 Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
 :::note[A note is private to its author]
-The target account never receives it in an HTTP response or [Gateway Dispatch](/gateway/events/). A note has no relationship requirement, so the caller can hold one for an account that is neither a friend nor blocked.
+The target account never receives the note in an HTTP response or [Gateway Dispatch](/gateway/events/). A note has no relationship requirement, so the caller can hold one for an account that is neither a friend nor blocked.
 :::
 
 ## User note object
@@ -103,10 +103,10 @@ Creates, replaces, or deletes the caller's note for one target account. Returns 
 The supplied text becomes the complete stored note. An unresolved target ID returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
 
 :::caution[An omitted, null, or empty note deletes it]
-An empty string is [read as `null`](/http-api/#input-normalisation), so the three forms are indistinguishable. A value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
+An empty string is [read as `null`](/http-api/#input-normalisation), so the three forms are indistinguishable. Any value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
 :::
 
-A `note` of at least 3 characters matching the instance phrase blocklist, or with a URL matching the URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. That screen runs ahead of the route's own credential and body checks, so a blocked value is refused with `CONTENT_BLOCKED` even when the request would also fail one of those checks.
+A `note` of at least 3 characters matching the instance phrase blocklist, or with a URL matching the URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. The blocklist check runs before the route's own credential and body checks, so a blocked value is refused with `CONTENT_BLOCKED` even when the request would also fail one of those checks.
 
 ### Path parameters
 
@@ -136,7 +136,7 @@ Fluxer reads an omitted body as an empty object and deletes the stored note.
 
 ### Side effects
 
-Supplying text creates or replaces the note, and a request that supplies none deletes it. [User Note Update](/gateway/events/#user-note-update) reaches the caller's own sessions for every accepted request, including one that supplies the current value and one that deletes an absent note. Its payload has the target ID in `id` and the note text in `note`. A deletion has the empty string.
+Supplying text creates or replaces the note, and a request that supplies none deletes it. [User Note Update](/gateway/events/#user-note-update) reaches the caller's own sessions for every accepted request, including one that supplies the current value and one that deletes an absent note. Its payload has the target ID in `id` and the note text in `note`. On a deletion the note text is the empty string.
 
 ### Rate limit
 

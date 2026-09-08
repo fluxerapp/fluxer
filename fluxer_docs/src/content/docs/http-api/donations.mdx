@@ -72,7 +72,7 @@ Accepts a request for a single-use donation management link. Returns 204 with an
 A failure of any of those returns 400 `INVALID_FORM_BODY` with an `errors` entry on `email`.
 
 :::caution[Every address answers the same 204]
-An address that resolves to no donor receives no email, and the response looks identical either way.
+An address that resolves to no donor receives no email.
 :::
 
 ### JSON body
@@ -110,7 +110,7 @@ Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid 
 
 Consumes a donation management token. Answers 302 with `Location` set to the externally hosted billing portal for the matching donor. The token is the credential.
 
-Fluxer checks the token in a fixed order. An unknown token returns 400 `DONATION_MAGIC_LINK_INVALID`. A token past its 15 minute lifetime returns 400 `DONATION_MAGIC_LINK_EXPIRED`. An already consumed token returns 400 `DONATION_MAGIC_LINK_USED`, and a token that is both expired and consumed is reported as expired. None of those three consumes the token.
+Fluxer checks the token in a fixed order. An unknown token returns 400 `DONATION_MAGIC_LINK_INVALID`. A token past its 15 minute lifetime returns 400 `DONATION_MAGIC_LINK_EXPIRED`. An already consumed token returns 400 `DONATION_MAGIC_LINK_USED`, and a token that is both expired and consumed is reported as expired. None of those refusals consumes the token.
 
 A token whose address no longer resolves to a donor holding a payment provider customer is still consumed, and the redirect goes to the public donation page. For a donor holding a customer, a deployment with no configured payment provider returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` and a provider failure returns 400 `STRIPE_ERROR`, both after the token has already been consumed.
 
@@ -133,7 +133,7 @@ A token whose address no longer resolves to a donor holding a payment provider c
 
 ### Side effects
 
-The token is consumed. A resolved donor holding a payment provider customer receives a portal session, and closing that session returns the donor to the public donation page. An address that resolves to no donor, or to a donor with no customer, redirects to the public donation page and creates no portal session.
+The token is consumed. A resolved donor holding a payment provider customer receives a portal session. Closing that session returns the donor to the public donation page. Where the address resolves to no donor, or to a donor with no customer, Fluxer redirects to the public donation page and creates no portal session.
 
 ### Rate limit
 
@@ -145,9 +145,9 @@ The token is consumed. A resolved donor holding a payment provider customer rece
 
 Creates a one-off or recurring donation checkout session. Returns a [donation checkout](#donation-checkout-object) object on success.
 
-An amount outside the selected currency's bounds fails validation with 400 `INVALID_FORM_BODY` and an `errors` entry on `amount_cents`. A deployment with no configured payment provider returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` before the address is resolved, and a provider failure while creating the session returns 400 `STRIPE_ERROR`.
+An amount outside the selected currency's bounds fails validation with 400 `INVALID_FORM_BODY` and an `errors` entry on `amount_cents`. Where the deployment has no configured payment provider, the route returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` before it resolves the address. A provider failure while creating the session returns 400 `STRIPE_ERROR`.
 
-A recurring donation for an address that already holds an active recurring donation returns the public donation management page for that address, with the percent-encoded address in `email` and the literal value `active_subscription` in `alert`. An address holds an active recurring donation when its donor record has a subscription identifier and a current period end still in the future, and has no scheduled cancellation.
+A recurring donation for an address that already holds an active recurring donation returns the public donation management page for that address, with the percent-encoded address in `email` and the literal value `active_subscription` in `alert`. An address holds an active recurring donation when its donor record has a subscription identifier, a current period end still in the future, and no scheduled cancellation.
 
 ### JSON body
 

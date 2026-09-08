@@ -12,7 +12,7 @@ Every route here needs a non-bot user session, and each one admits a session wit
 
 ## Eligibility
 
-[Send phone verification](#send-phone-verification) and [Verify phone code](#verify-phone-code) admit only an account that satisfies at least one of four conditions.
+[Send phone verification](#send-phone-verification) and [Verify phone code](#verify-phone-code) admit only an account that satisfies at least one of these conditions.
 
 - The account already holds a verified phone.
 - A TOTP [authenticator](/http-api/users/#authenticator-types) is enrolled on the account.
@@ -29,11 +29,11 @@ The [required actions](/http-api/users/#required-actions) array is filtered: emp
 
 ## Deferred phone requirement
 
-An instance can defer a new account's phone requirement instead of imposing it at registration. The [deferred phone gate](/admin-api/instance/#deferred-phone-gate-object) policy sets the window after registration in which a qualifying join makes the requirement due, and the member count above which a guild is a qualifying one. A guild with the `DISCOVERABLE` [feature](/http-api/guilds/#guild-features) qualifies at any member count.
+At registration, an instance can defer a new account's phone requirement. The [deferred phone gate](/admin-api/instance/#deferred-phone-gate-object) policy sets the window after registration in which a qualifying join makes the requirement due, and the member count above which a guild is a qualifying one. A guild with the `DISCOVERABLE` [feature](/http-api/guilds/#guild-features) qualifies at any member count.
 
 A deferred requirement is absent from the [required actions](/http-api/users/#required-actions) array and restricts nothing. An attempt to join a qualifying guild inside the window makes it due, and [Accept invite](/http-api/invites/#accept-invite) refuses that attempt with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The account then owes `REQUIRE_VERIFIED_PHONE` or `REQUIRE_REVERIFIED_PHONE`, and every ordinary user route refuses it with the same code.
 
-[Get phone gate escape preview](#get-phone-gate-escape-preview) and [Run phone gate escape](#run-phone-gate-escape) set that requirement aside again in place of verifying a number. Both admit an account the rest of the API refuses. The escape is available only while all six of these hold.
+[Get phone gate escape preview](#get-phone-gate-escape-preview) and [Run phone gate escape](#run-phone-gate-escape) set that requirement aside again without verifying a number. Both admit an account the rest of the API refuses. The escape is available only while all of these hold.
 
 - The instance has the deferred phone gate enabled.
 - The account holds no verified phone.
@@ -205,13 +205,17 @@ What [Run phone gate escape](#run-phone-gate-escape) would do for the current ac
 
 Starts verification of the submitted number. Requires an account satisfying [eligibility](#eligibility). Returns an [SMS delivery](#sms-delivery-object) object or an [inbound challenge](#inbound-challenge-object) object on success.
 
-Several independent policies can force the inbound channel, and each one overrides a requested `sms`. Fluxer routes the attempt inbound before it contacts the lookup and SMS providers in three cases. The caller asks for `inbound_challenge`. The account has the flag that forces inbound verification. The configured inbound-required prefix policy matches the number while the account holds no verified phone.
+Several independent policies can force the inbound channel, and each one overrides a requested `sms`. Fluxer routes the attempt inbound before it contacts the lookup and SMS providers when any of these holds.
+
+- The caller asks for `inbound_challenge`.
+- The account has the flag that forces inbound verification.
+- The configured inbound-required prefix policy matches the number while the account holds no verified phone.
 
 An attempt that survives that step passes through phone attempt risk controls keyed by account, by client IP address, and by /24 network. A hard block returns 429 `PHONE_RATE_LIMIT_EXCEEDED` with a `Retry-After` of 86400. A captcha decision returns 400 `CAPTCHA_REQUIRED`, and this route reads no [CAPTCHA](/topics/captcha/) solution header, so the attempt cannot be retried with a solution. An inbound decision returns a challenge with the `behavioural_risk` reason.
 
 An earlier attempt against the same account or number can record a provider cooldown, and a later request under that cooldown returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The destination is then resolved through [provider lookup](#provider-lookup-verdicts). A number that has already completed verification twice is refused with 400 `PHONE_ALREADY_USED`.
 
-Two further controls bound outbound delivery: 3 sends per 6 hours for each account, and 3 sends per 5 days for each number. Either denial returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The provider can also refuse the send: an invalid destination returns 400 `INVALID_PHONE_NUMBER`, a throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED`, and every other refusal, an unreachable provider included, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. An attempt routed inbound on an instance where the inbound flow or its receiving number is unconfigured returns the same code.
+Further controls bound outbound delivery to 3 sends per 6 hours for each account and 3 sends per 5 days for each number. Either denial returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The provider can also refuse the send. An invalid destination returns 400 `INVALID_PHONE_NUMBER`, and a throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. Every other refusal, an unreachable provider included, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. On an instance where the inbound flow or its receiving number is unconfigured, an attempt routed inbound returns the same code.
 
 ### JSON body
 
@@ -276,7 +280,7 @@ Verifies an outbound SMS code. Requires an account satisfying [eligibility](#eli
 
 The number is resolved through [provider lookup](#provider-lookup-verdicts) again before the code is checked, so a number that has become ineligible since the code was sent is refused.
 
-The configured SMS provider checks the number and the code together, so the provider decides the code lifetime and the attempt allowance. A rejected code returns 400 `INVALID_PHONE_VERIFICATION_CODE`. A provider throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED` and records a cooldown that also denies [Send phone verification](#send-phone-verification) until it expires. An unreachable provider, or one answering with a server error, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. An account record that has been deleted, or can no longer be read, fails with 400 `PHONE_VERIFICATION_REQUIRED` after the code has been accepted.
+The configured SMS provider checks the number and the code together, so the provider decides the code lifetime and the attempt allowance. A rejected code returns 400 `INVALID_PHONE_VERIFICATION_CODE`. A provider throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED` and records a cooldown that also denies [Send phone verification](#send-phone-verification) until it expires. An unreachable provider, or one answering with a server error, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. Once the code has been accepted, an account record that has been deleted or can no longer be read fails with 400 `PHONE_VERIFICATION_REQUIRED`.
 
 ### JSON body
 
@@ -343,7 +347,7 @@ Leaves the qualifying guilds the account does not own and defers the phone requi
 
 ### JSON body
 
-The body is an empty object. An absent or empty body is read as an empty object, and any supplied property is discarded. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. A body that parses as valid JSON but is not an object is rejected with 400.
+The body is an empty object. Fluxer reads an absent or empty body as an empty object and discards any supplied property. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. Valid JSON that is not an object is rejected with 400.
 
 ### Response
 
@@ -356,7 +360,7 @@ The body is an empty object. An absent or empty body is read as an empty object,
 
 Fluxer leaves each qualifying guild the account does not own, at most 25 in one request, with the same effects as [Leave guild](/http-api/guilds/#leave-guild). A qualifying guild the account owns is kept and does not block the escape.
 
-A request that leaves the whole set then defers the requirement again and dispatches [User Update](/gateway/events/#user-update). A request that stopped at the limit writes no account field, dispatches nothing, and returns the account with the requirement still due. Repeat the request until the returned `required_actions` has no phone entry.
+A request that leaves the whole set then defers the requirement again and dispatches [User Update](/gateway/events/#user-update). One that stopped at the limit writes no account field, dispatches nothing, and returns the account with the requirement still due. Repeat the request until the returned `required_actions` has no phone entry.
 
 ### Rate limit
 

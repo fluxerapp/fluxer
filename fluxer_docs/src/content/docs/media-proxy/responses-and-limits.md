@@ -4,7 +4,7 @@ title: Responses and limits
 description: Media Proxy statuses, error bodies, size bounds, work admission, deadlines, and cache policies.
 ---
 
-Almost every failed Media Proxy request answers with a short `text/plain` reason phrase and nothing else. Every bound below is a resource bound, because the Media Proxy has no request-count rate limit.
+Almost every failed Media Proxy request answers with a short `text/plain` reason phrase and nothing else. The Media Proxy has no request-count rate limit, so every bound below is a resource bound.
 
 ## Media error response
 
@@ -27,7 +27,7 @@ An unsuccessful response body is an English reason phrase under the content type
 
 <sup>1</sup> The relay also answers 400 when the client connection fails part way through the body
 
-<sup>2</sup> The six registered paths, `/_health`, `/_metrics`, `/_metadata`, `/_thumbnail`, `/_frames`, and `/v1/relay/{key}`, answer an unaccepted method with an empty body, no `Content-Type`, and an `Allow` header
+<sup>2</sup> The registered paths, `/_health`, `/_metrics`, `/_metadata`, `/_thumbnail`, `/_frames`, and `/v1/relay/{key}`, answer an unaccepted method with an empty body, no `Content-Type`, and an `Allow` header
 
 <sup>3</sup> `/_metadata` is the only endpoint that remaps an origin 429. The signed external read route retains 429 as 429
 
@@ -60,7 +60,7 @@ Every `HEAD` response has an empty body, so the Body column describes `GET`, `PU
 | 503 | [Media error response](#media-error-response) | Upload spool capacity is exhausted, an external buffer reservation or allocation failed, or an external origin answered `/_metadata` with 429<sup>5</sup> |
 | 504 | [Media error response](#media-error-response) | Transformation capacity was unavailable or a transformation deadline expired |
 
-<sup>1</sup> Four [internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) answer 200 with a non-media body. `/_metadata` and `/_frames` answer with JSON, `/_health` with plain text, and `/_metrics` with the Prometheus text exposition
+<sup>1</sup> The [internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) `/_metadata` and `/_frames` answer 200 with JSON, `/_health` with plain text, and `/_metrics` with the Prometheus text exposition
 
 <sup>2</sup> A path served by the read fallback answers with the [media error response](#media-error-response). Each registered path answers with an empty body, no `Content-Type`, and an `Allow` header
 
@@ -75,14 +75,14 @@ An external origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 4
 The Media Proxy evaluates no conditional request header and never redirects a noncanonical target, so it returns no 304 and no 308.
 
 :::note[A retained status describes the external URL]
-The third-party origin chose it, and Fluxer passed the status through.
+The third-party origin chose the status, and Fluxer passed it through.
 :::
 
 ## Request and media limits
 
 Proxied or stored media is limited to 500 MiB, and exceeding that returns 413. The bound applies to a streamed object, a buffered object, an external response body, and any input selected for transformation. When a streamed external body passes the bound only after the response head is committed, the Media Proxy truncates it.
 
-A decoded signed external target URL is limited to 8,192 bytes, and the route follows at most five redirects. A longer URL returns 400. A sixth redirect returns 502, and so does a redirect back to an already visited URL. A redirect target is subject to the same bound and the same address policy as the original URL. Content detection inspects the leading 8,192 bytes of a body.
+A decoded signed external target URL is limited to 8,192 bytes, and a longer URL returns 400. The route follows at most five redirects. A sixth redirect returns 502, and so does a redirect back to an already visited URL. Every redirect target is subject to the same bound and the same address policy as the original URL. Content detection inspects the leading 8,192 bytes of a body.
 
 Buffered external bodies share one endpoint budget of 500 MiB for every [work admission](#work-admission) slot plus 512 KiB. A body the budget cannot cover returns 503, and so does a failed buffer allocation.
 
@@ -94,7 +94,12 @@ An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited t
 
 ## Work admission
 
-A transformation first takes an admission slot without waiting. The pool holds one slot for every concurrent native transform plus one for every queued transform. Native transform concurrency defaults to the process parallelism clamped to 2 through 8 and can be configured from 1 through 128. The queue defaults to eight times that concurrency and can be configured from 1 through 8192. When no slot is free the request returns 504 immediately.
+A transformation first takes an admission slot without waiting. The pool holds one slot for every concurrent native transform plus one for every queued transform. When no slot is free the request returns 504 immediately.
+
+| Setting | Default | Configurable range |
+| --- | --- | --- |
+| Native transform concurrency | The process parallelism clamped to 2 through 8 | 1 through 128 |
+| Queue depth | Eight times the native transform concurrency | 1 through 8192 |
 
 Once admitted, the transformation waits for a native transform permit until the transformation deadline. A wait that outlives the deadline also returns 504.
 

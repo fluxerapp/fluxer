@@ -6,7 +6,7 @@ description: The four gates a Dispatch passes before it reaches a socket, and th
 
 A [Dispatch](/gateway/events/) is one event Fluxer sends to a connected client. Each one passes four independent gates on its way to a socket, and a client shapes its traffic with [Lazy Request](/gateway/commands/#lazy-request) subscriptions and the [Identify](/gateway/commands/#identify) `ignored_events` list.
 
-Fluxer has no intent bitfield. A client ported from a protocol that uses intents replaces its intent mask with those two mechanisms. There is no `intents` field, no intent close code, and no privileged-intent approval.
+Fluxer has no `intents` field, no intent close code, and no privileged-intent approval. A client ported from a protocol that uses intents replaces its intent mask with those two mechanisms.
 
 ## The four gates
 
@@ -25,7 +25,7 @@ An account-scoped Dispatch skips gates 1 through 3 and is subject only to gate 4
 
 ## Permission and visibility
 
-The guild resolves each event to one of five recipient sets.
+The guild resolves each event to one of these recipient sets.
 
 | Event class | Events | Recipients |
 | --- | --- | --- |
@@ -108,7 +108,7 @@ A bot session holds no friend or group direct message presence subscriptions, so
 
 ## Ignored events
 
-Identify accepts `ignored_events`, an array of up to 256 Dispatch event names. Fluxer upper-cases and deduplicates the names at Identify. An absent field and a JSON `null` both mean the empty list. Any other value that is not an array of strings, and any array holding more than 256 entries, close the connection with `4002` and reason `Invalid identify payload`. A Dispatch whose `t` appears in the list is dropped and never enters the replay buffer.
+Identify accepts `ignored_events`, an array of up to 256 Dispatch event names. Fluxer upper-cases and deduplicates the names at Identify. An absent field and a JSON `null` both mean the empty list. Fluxer closes the connection with `4002` and reason `Invalid identify payload` for any other value that is not an array of strings, and for any array of more than 256 entries. A Dispatch whose `t` appears in the list is dropped and never enters the replay buffer.
 
 ```json
 {
@@ -121,7 +121,7 @@ Identify accepts `ignored_events`, an array of up to 256 Dispatch event names. F
 }
 ```
 
-One exception overrides the list. [Message Create](/gateway/events/#message-create) is delivered even when `MESSAGE_CREATE` is ignored, if the message names the session's user in `mentions`, sets `mention_here`, or sets `mention_everyone`. A role mention does not defeat the list.
+[Message Create](/gateway/events/#message-create) is the one exception. Fluxer delivers it even when `MESSAGE_CREATE` is ignored, if the message names the session's user in `mentions`, sets `mention_here`, or sets `mention_everyone`. A role mention does not defeat the list.
 
 A suppressed Dispatch consumes no sequence number, so a client MUST NOT expect a gap in the sequence where the list dropped one.
 

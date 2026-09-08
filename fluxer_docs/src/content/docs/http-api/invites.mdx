@@ -12,7 +12,7 @@ An invite is a code that admits an account into a guild or a group direct messag
 
 ## Invite object
 
-An invite object describes one code and the target it admits into. The `type` selects the representation. A guild invite has the guild it admits into and that guild's online count. A group direct message invite exposes the group's current recipients through its partial channel.
+An invite object describes one code and the target it admits into. The `type` selects the representation. A guild invite has the guild it admits into and that guild's online count, and a group direct message invite lists the group's current recipients in its partial channel.
 
 ### Structure
 
@@ -299,7 +299,7 @@ Creates an invite for a channel, or returns an existing equivalent invite. Retur
 ### Limitations
 
 - A guild channel requires guild membership, [VIEW_CHANNEL](/http-api/permissions/), and [CREATE_INSTANT_INVITE](/http-api/permissions/) in that exact channel.
-- An age-restricted guild channel additionally requires an age-verified account.
+- An age-restricted guild channel also requires an age-verified account.
 - A private channel requires the caller to be a current recipient, and no ownership is required.
 
 `CREATE_INSTANT_INVITE` is read directly from the main Gateway, so this operation never requires elevated multi-factor authentication.
@@ -367,7 +367,7 @@ Returns the standard invites of one channel as an array of [invite metadata obje
 ### Limitations
 
 - A guild channel requires guild membership, [VIEW_CHANNEL](/http-api/permissions/) in that channel, and [MANAGE_CHANNELS](/http-api/permissions/) in the guild.
-- An age-restricted guild channel additionally requires an age-verified account.
+- An age-restricted guild channel also requires an age-verified account.
 - A group direct message requires the caller to be a current recipient and its owner.
 
 `MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who is neither the guild owner nor enrolled in multi-factor authentication receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated.

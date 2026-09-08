@@ -75,7 +75,7 @@ A system account never receives the deleted representation. An account only sche
 
 ## Reply mention preferences
 
-The account-wide preference applied when another account replies to one of this account's messages. `mention_flags` is exactly one of the three values below, and it is omitted from a serialised user while the stored value is `NO_PREFERENCE`.
+The account-wide preference applied when another account replies to one of this account's messages. `mention_flags` is exactly one of the values below, and it is omitted from a serialised user while the stored value is `NO_PREFERENCE`.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -159,7 +159,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>5</sup> For an OAuth2 bearer credential without the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is `null`
 
-<sup>6</sup> Phone numbers are no longer stored on the account record. The field is retained so an older client keeps parsing the response
+<sup>6</sup> The account record stores no phone number. The field is retained so an older client keeps parsing the response
 
 <sup>7</sup> The pair is present only while the account has the staff flag, and it is absent for every other account
 
@@ -169,7 +169,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not currently active
 
-<sup>11</sup> The value is the later of the subscription end and any stacked gift extension, and it is reported even when premium entitlements are no longer active
+<sup>11</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
 
 <sup>12</sup> While the value is set, premium entitlements remain active until it passes, and it replaces the default grace interval that otherwise follows `premium_until`
 
@@ -438,7 +438,7 @@ One entry of the saved, user-owned guild sidebar layout. Joining a guild prepend
 
 ## Guild sensitive media filters
 
-Guild channels accept only these two values.
+Guild channels accept only these values.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -604,7 +604,7 @@ Returns a [full user profile](#full-user-profile-object) object for one target a
 
 ### Limitations
 
-- A caller reading another account needs one of four relationships with the target: friendship, a pending friend request in either direction, a shared guild, or a shared group direct message channel.
+- A caller reading another account needs one of these relationships with the target: friendship, a pending friend request in either direction, a shared guild, or a shared group direct message channel.
 - Reading a bot target is always permitted.
 - Reading the caller's own profile bypasses both the access check and profile privacy.
 

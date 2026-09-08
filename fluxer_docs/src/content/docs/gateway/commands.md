@@ -115,7 +115,7 @@ A malformed `shard` closes with `4010` and reason `Invalid shard`.
 
 Fluxer refuses a bot session that resolves to more than 2,500 guilds after any `shard` filter is applied. The connection closes with `4011` and reason `Sharding required`. A user session is never refused for its guild count.
 
-A token the backend rejects closes with `4004` and reason `Invalid token`. A non-bot account that already holds 100 live sessions closes with `4008` and reason `Too many sessions`, and a bot credential is not bounded by that count. An Identify sent on a socket that already has a session attached closes with `4005` and reason `Already authenticated`, whether or not it has `d`.
+A token the backend rejects closes with `4004` and reason `Invalid token`. A non-bot account that already holds 100 live sessions closes with `4008` and reason `Too many sessions`. A bot credential is not bounded by that count. An Identify sent on a socket that already has a session attached closes with `4005` and reason `Already authenticated`, whether or not it has `d`.
 
 ### Session flags
 
@@ -201,9 +201,9 @@ Opcode `6` restores a retained session.
 | session_id | string | The session ID from [Ready](/gateway/events/#ready) |
 | seq | integer | The last Dispatch sequence the client processed |
 
-All three fields are required. A missing field, a non-string `token` or `session_id`, or a `seq` that is not an integer closes with `4002` and reason `Invalid resume payload`.
+All fields are required. A missing field, a non-string `token` or `session_id`, or a `seq` that is not an integer closes with `4002` and reason `Invalid resume payload`.
 
-An unknown or expired session produces Opcode `9` with `d: false` and leaves the socket unauthenticated. A token that does not own the session closes with `4004` and reason `Invalid token`. A `seq` above the session's current sequence, or below the sequence it has already acknowledged, closes with `4007` and reason `Invalid sequence`. A `seq` below the [replay floor](/gateway/limits-and-rate-limits/#replay-and-backpressure), the highest sequence already dropped from the buffer, also produces Opcode `9` with `d: false`. A negative `seq` closes with `4000` and reason `Session unavailable`, and so does a session that cannot be reached. None of those closes destroys a separately retained session.
+An unknown or expired session produces Opcode `9` with `d: false` and leaves the socket unauthenticated. A `seq` below the [replay floor](/gateway/limits-and-rate-limits/#replay-and-backpressure), the highest sequence already dropped from the buffer, produces the same frame. A token that does not own the session closes with `4004` and reason `Invalid token`. A `seq` above the session's current sequence, or below the sequence it has already acknowledged, closes with `4007` and reason `Invalid sequence`. A negative `seq` closes with `4000` and reason `Session unavailable`, and so does a session that cannot be reached. None of those closes destroys a separately retained session.
 
 A successful Resume replays every retained Dispatch strictly above `seq` in order and finishes with [Resumed](/gateway/events/#resumed). It also replaces the session's socket, and the displaced socket receives Opcode `7` followed by a close.
 
@@ -365,7 +365,9 @@ Fluxer skips a guild the session is not currently connected to. A request that r
 
 A bot requests one guild at a time, and a bot request naming two or more guilds is abandoned.
 
-An empty `query`, a `limit` of `0`, and an empty `user_ids` together request the complete member list. A human account requesting the complete list needs `MANAGE_ROLES`, `KICK_MEMBERS`, and `BAN_MEMBERS` together in that guild, and a request holding only some of them is dropped silently. The guild owner and any member with `ADMINISTRATOR` satisfy that check. A bot requesting the complete list is limited to one accepted request per guild every 30 seconds. A request inside that window produces [Rate Limited](/gateway/events/#rate-limited) and no member chunk.
+An empty `query`, a `limit` of `0`, and an empty `user_ids` together request the complete member list. A human account requesting the complete list needs `MANAGE_ROLES`, `KICK_MEMBERS`, and `BAN_MEMBERS` together in that guild, and a request holding only some of them is dropped silently. The guild owner and any member with `ADMINISTRATOR` satisfy that check.
+
+A bot requesting the complete list is limited to one accepted request per guild every 30 seconds. A request inside that window produces [Rate Limited](/gateway/events/#rate-limited) and no member chunk.
 
 Results arrive as [Guild Members Chunk](/gateway/events/#guild-members-chunk) in pages of at most 1,000 members, each with `chunk_index` and `chunk_count`. Those chunks are delivered live and are never retained for Resume replay.
 

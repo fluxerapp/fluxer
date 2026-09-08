@@ -8,7 +8,11 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An Admin API key is a long-lived credential for the [Admin API](/admin-api/). It authenticates as the account that created it, has its own [ACL](/admin-api/#acl-registry) set, and is honoured only on paths below `/v1/admin`.
 
-Every operation on this page requires `admin_api_key:manage`. None records an Admin audit entry or reads the `X-Audit-Log-Reason` header. An operation that addresses one key returns 404 `ADMIN_API_KEY_NOT_FOUND` when no key has that identifier, when another account created the key, or when the key has expired.
+Every operation on this page requires `admin_api_key:manage`. None records an Admin audit entry or reads the `X-Audit-Log-Reason` header. An operation that addresses one key returns 404 `ADMIN_API_KEY_NOT_FOUND` when any of these holds:
+
+- No key has that identifier.
+- Another account created the key.
+- The key has expired.
 
 :::caution[Key management is scoped to the creating account]
 The wildcard ACL reaches no key created by another account, and such a key reports `ADMIN_API_KEY_NOT_FOUND`.
@@ -18,7 +22,7 @@ The wildcard ACL reaches no key created by another account, and such a key repor
 
 A key is owned by the account that created it, and it stores its own ACL set. Narrowing the owner and narrowing the key are separate actions.
 
-Fluxer checks both sets when a request presents a key. A request passes when all three of these hold:
+Fluxer checks both sets when a request presents a key. A request passes when all of these hold:
 
 - The owning account holds `admin:authenticate` or `*`.
 - The owning account holds the ACL the operation requires, or `*`.
@@ -38,7 +42,7 @@ A key therefore never has wider permission than the account behind it.
 | last_used_at<sup>3</sup> | ?ISO8601 timestamp | Time the key last authenticated a request, or null when it never has |
 | expires_at<sup>4</sup> | ?ISO8601 timestamp | Time the key expires, or null when the key does not expire |
 
-<sup>1</sup> Bounded at 111 entries, the size of the [ACL registry](/admin-api/#acl-registry). Every value written through this API is a registry member
+<sup>1</sup> Bounded at the size of the [ACL registry](/admin-api/#acl-registry). Every value written through this API is a registry member
 
 <sup>2</sup> Never changes, so a key cannot be transferred to another account
 
@@ -140,7 +144,7 @@ The acting credential must already have every value in `acls`, unless it has `*`
 
 <sup>3</sup> An empty array produces a key that satisfies no operation. Fluxer compares `acls` against the presenting key's own ACLs, so a key cannot mint a broader key
 
-An ungrantable ACL fails with 403 `MISSING_ACL` on the first offending value, and a request that names several ungrantable ACLs still reports only that one.
+Fluxer rejects the request with 403 `MISSING_ACL` on the first ungrantable value. A request that names several ungrantable ACLs reports only that one.
 
 ### Response
 
@@ -185,7 +189,7 @@ This operation never returns the raw credential.
 
 Renames a key or replaces its ACL set, and returns the updated [Admin API key](#admin-api-key-object) object. Requires `admin_api_key:manage`.
 
-An omitted field is left unchanged, and the supplied fields take effect on the key's next authenticated request. The acting credential must already have every value in a supplied `acls`, unless it has `*`. A key with an expiry keeps it.
+Fluxer leaves an omitted field unchanged, and the supplied fields take effect on the key's next authenticated request. The acting credential must already have every value in a supplied `acls`, unless it has `*`. A key with an expiry keeps it.
 
 :::caution[Supplying acls replaces the whole stored set]
 An update never rotates the credential, and no field on this route changes the expiry, so revoking the key is the only way to disable it.
@@ -227,7 +231,7 @@ An update never rotates the credential, and no field on this route changes the e
 
 <RouteHeader method="DELETE" path="/v1/admin/api-keys/{key_id}" />
 
-Revokes an Admin API key and answers HTTP 200 with a response body. Requires `admin_api_key:manage`.
+Revokes an Admin API key and returns HTTP 200 with a response body. Requires `admin_api_key:manage`.
 
 The credential stops authenticating on its next use. A request already in flight runs to completion.
 

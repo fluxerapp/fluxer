@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A message is one post in a channel, together with the text, attachments, embeds, stickers, and reactions stored with it. Channel metadata and membership are defined by the [Channels resource](/http-api/channels/).
 
-Two terms recur below. A text-bearing channel is a [channel type](/http-api/channels/#channel-types) that stores messages, which is every type except a guild category and a guild link channel. The message history cutoff is an instant a guild stores on itself, and a member without [READ_MESSAGE_HISTORY](/http-api/permissions/) reads nothing created before it.
+A text-bearing channel is a [channel type](/http-api/channels/#channel-types) that stores messages, which is every type except a guild category and a guild link channel. The message history cutoff is an instant a guild stores on itself, and a member without [READ_MESSAGE_HISTORY](/http-api/permissions/) reads nothing created before it.
 
 ## Channel resolution
 
@@ -117,7 +117,7 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 | 7 | USER_JOIN<sup>2</sup> | User-join system message |
 | 19 | REPLY<sup>1</sup> <sup>2</sup> | Message with a reply reference |
 
-<sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with 400 `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
+<sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
 
 <sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
 
@@ -133,7 +133,7 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 
 <sup>2</sup> Setting this flag binds the message to the voice message contract described under [Create message](#create-message)
 
-These three bits are also the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. A bit outside this table is discarded, and the request still succeeds.
+These bits are also the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. A bit outside this table is discarded, and the request still succeeds.
 
 ## Message attachment object
 
@@ -486,7 +486,7 @@ An allowed mentions object decides which mentions written in the message text be
 
 <sup>1</sup> Defaults to every category when the object is absent, to the empty set when `users` or `roles` is supplied without it, and to the empty set when the object is present with none of its four fields
 
-<sup>2</sup> A non-empty `parse` combined with a non-empty `users` or `roles` is rejected with 400 `PARSE_AND_USERS_OR_ROLES_CANNOT_BE_USED_TOGETHER`
+<sup>2</sup> A non-empty `parse` combined with a non-empty `users` or `roles` is rejected with the field code `PARSE_AND_USERS_OR_ROLES_CANNOT_BE_USED_TOGETHER`
 
 <sup>3</sup> Ignored in a one-to-one direct message and in personal notes, and ignored when the referenced message has the same author as the new message
 
@@ -529,7 +529,7 @@ A new message can refer to a previously uploaded attachment or attach a direct m
 
 <sup>2</sup> The presence of this key is the discriminator that selects this variant over the [direct multipart metadata](#direct-multipart-attachment-metadata-object) variant
 
-<sup>3</sup> Both are required when the message has the `VOICE_MESSAGE` flag. A `waveform` on an attachment whose resolved media type is not `audio/*` fails with 400 `VOICE_MESSAGES_ATTACHMENT_MUST_BE_AUDIO`
+<sup>3</sup> Both are required when the message has the `VOICE_MESSAGE` flag. A `waveform` on an attachment whose resolved media type is not `audio/*` fails with the field code `VOICE_MESSAGES_ATTACHMENT_MUST_BE_AUDIO`
 
 Only `IS_SPOILER` and `CONTAINS_EXPLICIT_MEDIA` survive from a caller-supplied `flags` value. `IS_ANIMATED` is set by media inspection alone.
 
@@ -548,7 +548,7 @@ Only `IS_SPOILER` and `CONTAINS_EXPLICIT_MEDIA` survive from a caller-supplied `
 | duration?<sup>2</sup> | ?integer | Voice media duration in seconds (0-2,147,483,647) |
 | waveform?<sup>2</sup> | ?string | Base64 waveform of 1 through 4,096 characters |
 
-<sup>1</sup> An entry whose `id` matches no supplied file index and that has a `filename` fails with 400 `NO_FILE_FOR_ATTACHMENT_METADATA`. An entry whose `id` matches no supplied file and that has no `filename` is read as an [existing attachment reference](#existing-attachment-reference-object) instead
+<sup>1</sup> An entry whose `id` matches no supplied file index and that has a `filename` fails with the field code `NO_FILE_FOR_ATTACHMENT_METADATA`. An entry whose `id` matches no supplied file and that has no `filename` is read as an [existing attachment reference](#existing-attachment-reference-object) instead
 
 <sup>2</sup> Both are required when the message has the `VOICE_MESSAGE` flag
 
@@ -570,11 +570,11 @@ Fluxer discards a key outside the table above and accepts the rest of the entry.
 
 <sup>1</sup> A retained attachment is rebuilt from its stored record, and only `title` and `description` are written back onto it
 
-<sup>2</sup> Rejected with 400 `CANNOT_EDIT_ATTACHMENT_METADATA` when the caller is a guild moderator editing a message they did not author, because that caller can supply only `id`, `title`, `description`, and `flags`
+<sup>2</sup> Rejected with the field code `CANNOT_EDIT_ATTACHMENT_METADATA` when the caller is a guild moderator editing a message they did not author, because that caller can supply only `id`, `title`, `description`, and `flags`
 
 ## Rich embed input objects
 
-A rich embed input is an embed a client supplies on a message, and Fluxer always stores it with the `rich` [embed type](#embed-types). The number of embeds on one message is bounded by the resolved `max_embeds_per_message` limit, which defaults to 10, and exceeding it fails with 400 `TOO_MANY_EMBEDS`.
+A rich embed input is an embed a client supplies on a message, and Fluxer always stores it with the `rich` [embed type](#embed-types). The number of embeds on one message is bounded by the resolved `max_embeds_per_message` limit, which defaults to 10, and exceeding it fails with the field code `TOO_MANY_EMBEDS`.
 
 ### Rich embed object
 
@@ -616,7 +616,7 @@ A rich embed input is an embed a client supplies on a message, and Fluxer always
 
 <sup>1</sup> Either an `http` or `https` URL, or an `attachment://<filename>` reference naming a `png`, `jpg`, `jpeg`, `webp`, or `gif` attachment on the same message, and from 1 through 2,048 characters in either form. Only `image` and `thumbnail` accept the `attachment://` form
 
-An `attachment://` reference on a request that has no attachment fails with 400 `CANNOT_REFERENCE_ATTACHMENTS_WITHOUT_ATTACHMENTS`. A reference to a filename that no attachment on the request supplies fails with 400 `REFERENCED_ATTACHMENT_NOT_FOUND`, and a reference to an attachment whose extension is not a supported image extension fails with 400 `ATTACHMENT_MUST_BE_IMAGE`.
+An `attachment://` reference on a request that has no attachment fails with the field code `CANNOT_REFERENCE_ATTACHMENTS_WITHOUT_ATTACHMENTS`. A reference to a filename that no attachment on the request supplies fails with the field code `REFERENCED_ATTACHMENT_NOT_FOUND`, and a reference to an attachment whose extension is not a supported image extension fails with the field code `ATTACHMENT_MUST_BE_IMAGE`.
 
 ### Embed footer input object
 
@@ -1008,7 +1008,7 @@ Fluxer aborts the multipart upload and discards its parts when no part was uploa
 :::
 
 :::caution[An unowned upload is reported as invalid input]
-Fluxer reports 400 `UPLOADED_ATTACHMENT_NOT_FOUND` for an upload key the identity does not own, one that belongs to another channel, one planned as singlepart, and one a message already consumed. A caller cannot tell the four apart, so it cannot probe another identity's upload state.
+Fluxer reports the field code `UPLOADED_ATTACHMENT_NOT_FOUND` for an upload key the identity does not own, one that belongs to another channel, one planned as singlepart, and one a message already consumed. A caller cannot tell them apart, so it cannot probe another identity's upload state.
 :::
 
 ### Side effects
@@ -1034,9 +1034,9 @@ Creates a message from a JSON body or from multipart form data. Returns the crea
 - Slowmode applies to a non-bot caller unless they hold [BYPASS_SLOWMODE](/http-api/permissions/).
 - A one-to-one direct message additionally applies the recipient's direct message policy and relationship state, and a denial returns 400 `CANNOT_SEND_MESSAGES_TO_USER`.
 - An unclaimed account can send only to its own personal notes channel, and a send to any other channel is refused with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES` before the channel is resolved.
-- A non-bot caller must have started a session, and one that has not is refused with 400 `MUST_START_SESSION_BEFORE_SENDING`.
+- A non-bot caller must have started a session, and one that has not is refused with the field code `MUST_START_SESSION_BEFORE_SENDING`.
 
-The request body is read as a multipart form when `Content-Type` contains `multipart/form-data`, and as JSON otherwise. An empty JSON body is read as `{}`. A JSON body that is neither valid JSON nor valid against the schema fails with 400 `INVALID_MESSAGE_DATA` on the path `message_data`, which has no per-field detail. A multipart body whose merged payload fails the same schema instead fails with a per-field 400 `INVALID_FORM_BODY` naming each offending path.
+The request body is read as a multipart form when `Content-Type` contains `multipart/form-data`, and as JSON otherwise. An empty JSON body is read as `{}`. A JSON body that is neither valid JSON nor valid against the schema fails with the field code `INVALID_MESSAGE_DATA` on the path `message_data`, which has no per-field detail. A multipart body whose merged payload fails the same schema instead fails with a per-field 400 `INVALID_FORM_BODY` naming each offending path.
 
 ### Path parameters
 
@@ -1069,9 +1069,9 @@ The request body is read as a multipart form when `Content-Type` contains `multi
 
 <sup>5</sup> Fluxer forces the value to false when the caller lacks [SEND_TTS_MESSAGES](/http-api/permissions/) in a guild, and the request still succeeds
 
-<sup>6</sup> Bounded by the resolved `max_embeds_per_message` limit, which defaults to 10. Exceeding it fails with 400 `TOO_MANY_EMBEDS` on the path `embeds`
+<sup>6</sup> Bounded by the resolved `max_embeds_per_message` limit, which defaults to 10. Exceeding it fails with the field code `TOO_MANY_EMBEDS` on the path `embeds`
 
-<sup>7</sup> Bounded by the resolved `max_attachments_per_message` limit, which defaults to 10. Exceeding it fails with 400 `TOO_MANY_FILES` on the path `attachments`
+<sup>7</sup> Bounded by the resolved `max_attachments_per_message` limit, which defaults to 10. Exceeding it fails with the field code `TOO_MANY_FILES` on the path `attachments`
 
 The smallest body that works is one line of text:
 
@@ -1091,11 +1091,11 @@ A nonce is remembered for the authenticated identity for five minutes, so a clie
 
 Reusing a nonce in the same channel inside that window returns the message the first request created. Reusing it in a different channel fails with 404 `UNKNOWN_MESSAGE`. The replay check runs after authorisation and body validation, so a retry that is otherwise invalid still fails, and a retry after the window has passed creates a second message.
 
-A reply applies the caller's message history cutoff to its target, and a forward applies none to its source. A reply whose target is a system message fails with 400 `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
+A reply applies the caller's message history cutoff to its target, and a forward applies none to its source. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
 
 A `FORWARD` reference has `channel_id`. One that does not is refused by body validation before the operation runs, with 400 `INVALID_MESSAGE_DATA` on a JSON body and a per-field 400 `INVALID_FORM_BODY` on a multipart body.
 
-A forward request has no `content`, `embeds`, `attachments`, or `sticker_ids`, and one that does fails with 400 `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT`. A `guild_id` that disagrees with the source channel's guild fails with 400 `GUILD_ID_MUST_MATCH_REFERENCED_MESSAGE`. Reading the source channel requires [VIEW_CHANNEL](/http-api/permissions/) when that channel belongs to a guild.
+A forward request has no `content`, `embeds`, `attachments`, or `sticker_ids`, and one that does fails with the field code `FORWARD_MESSAGES_CANNOT_CONTAIN_CONTENT`. A `guild_id` that disagrees with the source channel's guild fails with the field code `GUILD_ID_MUST_MATCH_REFERENCED_MESSAGE`. Reading the source channel requires [VIEW_CHANNEL](/http-api/permissions/) when that channel belongs to a guild.
 
 Snapshots with embeds require `EMBED_LINKS` in the destination guild channel, and snapshots with attachments require `ATTACH_FILES`, each returning 403 `MISSING_PERMISSIONS` when absent.
 
@@ -1116,24 +1116,37 @@ Snapshots with embeds require `EMBED_LINKS` in the destination guild channel, an
 
 <sup>2</sup> The index runs from 0 through the resolved `max_attachments_per_message` limit minus one
 
-A body that cannot be parsed as a multipart form fails with 400 `FAILED_TO_PARSE_MULTIPART_FORM_DATA`, and a `payload_json` field that is not a JSON string fails with 400 `INVALID_JSON_IN_PAYLOAD_JSON`. A field name beginning with `files[` that does not match `files[<N>]` fails with 400 `INVALID_FILE_FIELD_NAME`.
+A body that cannot be parsed as a multipart form fails with the field code `FAILED_TO_PARSE_MULTIPART_FORM_DATA`, and a `payload_json` field that is not a JSON string fails with the field code `INVALID_JSON_IN_PAYLOAD_JSON`. A field name beginning with `files[` that does not match `files[<N>]` fails with the field code `INVALID_FILE_FIELD_NAME`.
 
 | File field condition | Error |
 | --- | --- |
-| Index below 0 or above 10000 | 400 `FILE_INDEX_EXCEEDS_MAXIMUM` reporting a `maxIndex` of 10000 |
-| Resolved attachment limit is 0 | 400 `ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE` |
-| Index at or above a non-zero resolved limit | 400 `FILE_INDEX_EXCEEDS_MAXIMUM` reporting that limit minus one |
-| Index repeated across fields | 400 `DUPLICATE_FILE_INDEX` |
-| More than one file under one index | 400 `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED` |
-| More files than the resolved limit | 400 `TOO_MANY_FILES` |
+| Index below 0 or above 10000 | `FILE_INDEX_EXCEEDS_MAXIMUM` |
+| Resolved attachment limit is 0 | `ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE` |
+| Index at or above a non-zero resolved limit | `FILE_INDEX_EXCEEDS_MAXIMUM` |
+| Index repeated across fields | `DUPLICATE_FILE_INDEX` |
+| More than one file under one index | `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED` |
+| More files than the resolved limit | `TOO_MANY_FILES` |
 
-The `attachments` array inside `payload_json` uses [direct multipart attachment metadata](#direct-multipart-attachment-metadata-object), and an entry with `upload_filename` is instead read as a [pre-uploaded attachment](#pre-uploaded-attachment-object). An entry whose `id` matches a supplied file index supplies that file's metadata, and two entries claiming the same file fail with 400 `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED`.
+Each is a field code inside a 400 `INVALID_FORM_BODY` body. A `FILE_INDEX_EXCEEDS_MAXIMUM` element reports a `maxIndex` member, 10000 against the absolute bound and the resolved limit minus one otherwise.
+
+The `attachments` array inside `payload_json` uses [direct multipart attachment metadata](#direct-multipart-attachment-metadata-object), and an entry with `upload_filename` is instead read as a [pre-uploaded attachment](#pre-uploaded-attachment-object). An entry whose `id` matches a supplied file index supplies that file's metadata, and two entries claiming the same file fail with the field code `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED`.
 
 Fluxer permits index gaps and attaches the files in ascending index order. A supplied file that no metadata entry claims is attached with its own multipart filename and no title or description, so omitting `attachments` entirely attaches every supplied file that way.
 
-A message with `VOICE_MESSAGE` set has exactly one attachment and nothing else. Each rule fails with its own 400 code.
+A message with `VOICE_MESSAGE` set has exactly one attachment and nothing else.
 
-Any count other than one attachment returns `VOICE_MESSAGES_REQUIRE_SINGLE_ATTACHMENT`. A missing `waveform` returns `VOICE_MESSAGES_ATTACHMENT_WAVEFORM_REQUIRED` and a missing `duration` returns `VOICE_MESSAGES_ATTACHMENT_DURATION_REQUIRED`. Content, embeds, stickers, and a favourite meme return `VOICE_MESSAGES_CANNOT_HAVE_CONTENT`, `VOICE_MESSAGES_CANNOT_HAVE_EMBEDS`, `VOICE_MESSAGES_CANNOT_HAVE_STICKERS`, and `VOICE_MESSAGES_CANNOT_HAVE_FAVORITE_MEMES`. A duration above the resolved `max_voice_message_duration` limit, which defaults to 1200 seconds, returns `VOICE_MESSAGES_DURATION_EXCEEDS_LIMIT`.
+| Voice message condition | Error |
+| --- | --- |
+| Content present | `VOICE_MESSAGES_CANNOT_HAVE_CONTENT` |
+| Embeds present | `VOICE_MESSAGES_CANNOT_HAVE_EMBEDS` |
+| Favourite meme present | `VOICE_MESSAGES_CANNOT_HAVE_FAVORITE_MEMES` |
+| Stickers present | `VOICE_MESSAGES_CANNOT_HAVE_STICKERS` |
+| Any count other than one attachment | `VOICE_MESSAGES_REQUIRE_SINGLE_ATTACHMENT` |
+| Missing `waveform` | `VOICE_MESSAGES_ATTACHMENT_WAVEFORM_REQUIRED` |
+| Missing `duration` | `VOICE_MESSAGES_ATTACHMENT_DURATION_REQUIRED` |
+| Duration above the resolved limit | `VOICE_MESSAGES_DURATION_EXCEEDS_LIMIT` |
+
+The resolved `max_voice_message_duration` limit defaults to 1200 seconds.
 
 ### Response
 
@@ -1176,7 +1189,7 @@ Modifies a message. Returns the updated [message](#message-object) object. Emits
 ### Limitations
 
 - The target must be a `DEFAULT` or `REPLY` message, and any other type fails with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`.
-- A message that has [message snapshots](#message-snapshot-object) cannot be edited by its author and fails with 400 `MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED`. A non-author moderator holding `MANAGE_MESSAGES` can still toggle `SUPPRESS_EMBEDS` and change existing attachment metadata on a forwarded message.
+- A message that has [message snapshots](#message-snapshot-object) cannot be edited by its author and fails with the field code `MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED`. A non-author moderator holding `MANAGE_MESSAGES` can still toggle `SUPPRESS_EMBEDS` and change existing attachment metadata on a forwarded message.
 - The author can modify every supported field, and a timed-out author is refused with 403 `COMMUNICATION_DISABLED`.
 - A caller who is not the author can act only in a guild channel, must hold [MANAGE_MESSAGES](/http-api/permissions/), and can change only `SUPPRESS_EMBEDS` and the metadata of attachments that already exist. A non-author edit that does not satisfy all three conditions fails with 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - `MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller holding the bit without an enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild. A caller who does not hold the bit at all is treated as any other non-author and receives 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
@@ -1382,14 +1395,14 @@ Deletes from 1 through 100 messages in one guild channel. Returns 204 with an em
 
 ### JSON body
 
-At least one of the two fields below must be present. Supplying neither fails with 400 `INVALID_FORM_BODY` on the path `message_ids`, and supplying both uses `message_ids` and ignores `messages`.
+At least one of the fields below must be present. Supplying neither fails with 400 `INVALID_FORM_BODY` on the path `message_ids`, and supplying both uses `message_ids` and ignores `messages`.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | message_ids?<sup>1</sup> | array[snowflake] | Message IDs to delete, at most 100 entries |
 | messages?<sup>1</sup> | array[snowflake] | Alias for `message_ids` |
 
-<sup>1</sup> An empty array fails with 400 `MESSAGE_IDS_CANNOT_BE_EMPTY` on the path `message_ids`. More than 100 entries is rejected by body validation with 400 `INVALID_FORM_BODY` before the operation runs
+<sup>1</sup> An empty array fails with the field code `MESSAGE_IDS_CANNOT_BE_EMPTY` on the path `message_ids`. More than 100 entries is rejected by body validation with 400 `INVALID_FORM_BODY` before the operation runs
 
 :::danger[Bulk deletion removes attachments and search entries]
 Every selected message, with its reactions and attachments, is permanently deleted and removed from search.
@@ -1458,7 +1471,7 @@ The operation deletes every message it finds, with no age boundary and no confir
 
 The operation permanently deletes every personal note, its attachments, and its reactions and removes each from search. The caller's sessions receive one [Message Delete Bulk](/gateway/events/#message-delete-bulk) Dispatch for each page of at most 100 messages.
 
-The operation emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete), and it writes no audit log entry.
+It emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete), and it writes no audit log entry.
 
 ### Rate limit
 
@@ -1503,9 +1516,9 @@ The deletion runs inside the request despite the 202 status, so every matching m
 | webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | WebAuthn assertion for sudo verification |
 | webauthn_challenge? | string | Challenge bound to the sudo mode assertion |
 
-<sup>1</sup> Accepted only when the account has no enrolled authenticator, and an incorrect password fails with 400 `INVALID_PASSWORD`. An account with neither a stored password nor an enrolled authenticator never reaches this check
+<sup>1</sup> Accepted only when the account has no enrolled authenticator, and an incorrect password fails with the field code `INVALID_PASSWORD`. An account with neither a stored password nor an enrolled authenticator never reaches this check
 
-<sup>2</sup> Accepted only when the account has an enrolled authenticator. A failed verification returns 400 `INVALID_MFA_CODE`
+<sup>2</sup> Accepted only when the account has an enrolled authenticator. A failed verification returns the field code `INVALID_MFA_CODE`
 
 :::danger[Every message the caller authored is destroyed]
 The deletion has no age boundary and no selection. It permanently removes every message the caller has authored in the channel, together with its attachments and reactions, and removes each from search. There is no cancellation and no restore.
@@ -1699,7 +1712,7 @@ When the Dispatch fails, the request returns 502, 503, or 504 after the read-sta
 
 The `emoji` path value is URI-encoded and is 1 through 64 characters. A custom emoji uses `name:id`, where `id` is the trailing decimal custom emoji snowflake and `name` is everything before the final colon. Any other decoded value is read as a Unicode emoji.
 
-Fluxer validates the emoji in full only when a request would create a new reaction group on the message. At that point a Unicode value must be exactly one valid emoji, and one that is not fails with 400 `NOT_A_VALID_UNICODE_EMOJI`. A custom emoji must exist, and one that does not fails with 400 `CUSTOM_EMOJI_NOT_FOUND`. Every other reaction operation parses the value without validating it, so removing a reaction with a nonsensical emoji succeeds silently.
+Fluxer validates the emoji in full only when a request would create a new reaction group on the message. At that point a Unicode value must be exactly one valid emoji, and one that is not fails with the field code `NOT_A_VALID_UNICODE_EMOJI`. A custom emoji must exist, and one that does not fails with the field code `CUSTOM_EMOJI_NOT_FOUND`. Every other reaction operation parses the value without validating it, so removing a reaction with a nonsensical emoji succeeds silently.
 
 ## List reaction users unpaged
 
@@ -1795,9 +1808,9 @@ Adds the authenticated identity's ordinary reaction. Returns 204 with an empty b
 - The caller must be able to view the text-bearing channel, must not be timed out, and must reach the message under the message history cutoff.
 - A non-bot caller must have a verified email, and one that does not receives 403 `REACTION_EMAIL_VERIFICATION_REQUIRED`.
 - Creating a new emoji reaction group in a guild requires [ADD_REACTIONS](/http-api/permissions/), while adding to an existing group does not.
-- A custom emoji whose source guild is not the channel's guild requires the `feature_global_expressions` entitlement, and a caller without it receives 400 `CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE`.
+- A custom emoji whose source guild is not the channel's guild requires the `feature_global_expressions` entitlement, and a caller without it receives the field code `CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE`.
 - In a guild channel a custom emoji additionally requires [USE_EXTERNAL_EMOJIS](/http-api/permissions/).
-- A non-bot caller must have started a session, and one that has not receives 400 `MUST_START_SESSION_BEFORE_SENDING`.
+- A non-bot caller must have started a session, and one that has not receives the field code `MUST_START_SESSION_BEFORE_SENDING`.
 - An unclaimed account can react only in its personal notes channel, and elsewhere receives 400 `UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS`.
 - The operation is idempotent, and this route applies no direct message send policy.
 

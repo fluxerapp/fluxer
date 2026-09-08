@@ -30,7 +30,7 @@ A Dispatch is a message from the [Gateway](/gateway/overview/). It tells a clien
 
 A guild-scoped Dispatch is filtered by guild availability, then by channel visibility and permissions, then by the session's active or passive state, and finally by the session-level shard filter and `ignored_events` list. An account-scoped Dispatch is subject only to the session-level filters. [Event filtering](/gateway/event-filtering/) defines each gate.
 
-Most guild-scoped Dispatches have a `guild_id` string. Three identify the guild as `id`: [Guild Create](#guild-create), [Guild Sync](#guild-sync), and every [Guild Delete](#guild-delete) other than the one the guild itself dispatches when the guild is deleted. [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) have no top-level `guild_id`, and each entry in their `counts` array has its own.
+Most guild-scoped Dispatches have a `guild_id` string. [Guild Create](#guild-create) and [Guild Sync](#guild-sync) identify the guild as `id`, and so does every [Guild Delete](#guild-delete) other than the one the guild itself dispatches when the guild is deleted. [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) have no top-level `guild_id`, and each entry in their `counts` array has its own.
 
 The originating session is excluded from a Dispatch only for [Message Reaction Add](#message-reaction-add) and [Message Reaction Remove](#message-reaction-remove) in a guild channel, and only when the request supplied a `session_id`. That field is removed from the payload. The same field on a direct message or group direct message reaction is forwarded to every recipient unchanged and excludes nobody. The actor that issues any other mutation receives the resulting Dispatch like every other eligible session.
 
@@ -393,7 +393,7 @@ Fluxer sends a sync when the subscription flips the guild between active and pas
 
 A guild's configuration changed. The payload is the complete [guild object](/http-api/guilds/#guild-object) with `guild_id` added, which repeats the object's own `id`.
 
-An unavailable guild still dispatches Guild Update, and nothing else. A client learns from it that a guild entered or left the unavailable state.
+Guild Update is the only Dispatch an unavailable guild sends. A client learns from it that a guild entered or left the unavailable state.
 
 ### <span id="guild-delete"></span>GUILD_DELETE
 
@@ -485,7 +485,7 @@ One operation changed several channels together, most often a reorder.
 | guild_id | snowflake | Guild the channels belong to |
 | channels | array[[channel](/http-api/channels/#channel-object) object] | Every changed channel in its complete updated representation |
 
-Each recipient's copy of `channels` is trimmed to the channels that recipient can view, so two sessions in the same guild can receive different arrays from one operation. A recipient whose trimmed array would be empty receives no Dispatch at all and consumes no sequence number.
+Fluxer trims each recipient's copy of `channels` to the channels that recipient can view, so two sessions in the same guild can receive different arrays from one operation. A recipient whose trimmed array would be empty receives no Dispatch at all and consumes no sequence number.
 
 ### <span id="channel-delete"></span>CHANNEL_DELETE
 
@@ -744,7 +744,7 @@ Message Create alone overrides both the passive filter and the `ignored_events` 
 
 A visible message changed. The payload is the complete current [message object](/http-api/messages/#message-object). In a guild channel it is extended with `guild_id` and with `member`, the author's guild member object with its `user` field removed. It has no `channel_type`, `nicks`, or `mention_here`.
 
-A recipient must hold `READ_MESSAGE_HISTORY` on the channel, or the message must be newer than the guild's message history cutoff.
+Recipients must hold `READ_MESSAGE_HISTORY` on the channel, or the message must be newer than the guild's message history cutoff.
 
 ### <span id="message-delete"></span>MESSAGE_DELETE
 
@@ -825,7 +825,7 @@ A session that set the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/comm
 
 <sup>1</sup> Taken from the first addition of the group. The window is per session, and the session groups the additions by guild, channel, and message when the window closes. Each group is one Dispatch, so every addition in `reactions` is on the message these fields name
 
-A window that closes holding exactly one addition sends [Message Reaction Add](#message-reaction-add) instead, and a session without the flag receives one Message Reaction Add per addition.
+When the window closes holding exactly one addition, the session sends [Message Reaction Add](#message-reaction-add) instead. A session without the flag receives one Message Reaction Add per addition.
 
 #### Reaction addition object
 
@@ -1131,8 +1131,8 @@ A channel the session cannot view, and a channel on which it lacks `VIEW_CHANNEL
 
 ## Resource representation
 
-Every resource object named on this page has the representation defined by the [HTTP API](/http-api/). A Dispatch payload with a resource object has the same fields, with the guild-scoped events adding `guild_id` and the message and reaction events adding `member` as documented above.
+Every resource object named on this page has the representation defined by the [HTTP API](/http-api/). A Dispatch payload with a resource object has the same fields, with the guild-scoped events adding `guild_id` and the message and reaction events adding `member`.
 
 Two reductions are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and hoists those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
 
-Every Dispatch payload also drops six fields the Gateway keeps for its own indexing: `recipient_ids`, `role_index`, `channel_index`, `member_role_index`, `role_perms_cache`, and `overwrite_perms_cache`.
+Every Dispatch payload also drops the fields the Gateway keeps for its own indexing: `recipient_ids`, `role_index`, `channel_index`, `member_role_index`, `role_perms_cache`, and `overwrite_perms_cache`.

@@ -12,7 +12,7 @@ Every route except [Get current user](#get-current-user) is user-only. Those rou
 
 ## Sudo verification
 
-Sudo verification asks the account to prove itself again inside the request. Security-sensitive fields and destructive lifecycle operations require it. Proof comes in one of three forms.
+Sudo verification asks the account to prove itself again inside the request. Security-sensitive fields and destructive lifecycle operations require it. The accepted proof depends on the account state.
 
 | Account state | Accepted proof |
 | --- | --- |
@@ -20,13 +20,13 @@ Sudo verification asks the account to prove itself again inside the request. Sec
 | An authenticator configured | `mfa_method` of `totp` with `mfa_code`, or `mfa_method` of `webauthn` with `webauthn_response` and `webauthn_challenge` |
 | No password credential and no authenticator | None, the requirement is already satisfied |
 
-An already valid sudo token replaces any of those forms. Once an account configures an authenticator its `password` stops working here.
+Once an account configures an authenticator, its `password` stops working here. An already valid sudo token replaces any of those forms.
 
 A sudo token is an HS256 JSON Web Token valid for five minutes. It has the account ID as its subject and is rejected for any other account. A successful verification returns the token in the `X-Fluxer-Sudo-Mode-JWT` response header. Fluxer mints a fresh token only when an authenticator satisfied the requirement. A request presenting an already valid token gets that same token back without an extended lifetime.
 
-A request that does not satisfy the requirement returns 403 [`SUDO_MODE_REQUIRED`](/http-api/errors/), whose body has `has_mfa` and `methods` as top-level members. An invalid authenticator code, backup code, or WebAuthn assertion returns [`INVALID_MFA_CODE`](/http-api/errors/) on the `mfa_code` path. An incorrect password returns [`INVALID_PASSWORD`](/http-api/errors/) on the `password` path.
+A request that does not satisfy the requirement returns 403 [`SUDO_MODE_REQUIRED`](/http-api/errors/). The body has `has_mfa` and `methods` as top-level members. An invalid authenticator code, backup code, or WebAuthn assertion returns [`INVALID_MFA_CODE`](/http-api/errors/) on the `mfa_code` path. An incorrect password returns [`INVALID_PASSWORD`](/http-api/errors/) on the `password` path.
 
-A request presents an existing token in the `X-Fluxer-Sudo-Mode-JWT` request header. Retain the response header value and send it back on each later operation in the same sudo window.
+A client sends an existing token in the `X-Fluxer-Sudo-Mode-JWT` request header. Retain the response header value and send it back on each later operation in the same sudo window.
 
 ## Get current user
 
@@ -127,9 +127,9 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 To skip the body proof fields, send the sudo token in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
-A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before the required action barrier, so it succeeds even while an action is outstanding. A body that has only `password` is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
+A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before the required action barrier, so it succeeds even while an action is outstanding. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
 
-Fluxer rejects an account with an outstanding required action, with one exemption. A body that has `email_token` and nothing beyond the sudo verification fields is accepted. Any other defined field removes the exemption.
+Fluxer rejects an account with an outstanding required action. The one exemption is a body that has `email_token` and nothing beyond the sudo verification fields. Any other defined field removes the exemption.
 
 A claimed account needs a verified email before changing the username, discriminator, display name, avatar, banner, biography, pronouns, accent colour, timezone, timezone privacy, or any premium badge field. A request without one returns 403 [`PROFILE_EMAIL_VERIFICATION_REQUIRED`](/http-api/errors/).
 
@@ -286,7 +286,7 @@ Records acceptance of the current terms of service and privacy policy. Returns t
 
 ### JSON body
 
-The body is an empty object. An absent or empty body is read as an empty object, and any supplied property is discarded. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. A body that parses as valid JSON but is not an object is rejected with 400.
+The body is an empty object. An absent or empty body is read as an empty object, and any supplied property is discarded. Invalid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. Valid JSON that is not an object is rejected with 400.
 
 ### Response
 

@@ -12,7 +12,7 @@ An audit log entry records one change made to a guild and the account that made 
 
 An audit-capable route accepts the `X-Audit-Log-Reason` request header, listed with the other [standard request headers](/http-api/#standard-request-headers). Fluxer reads the value verbatim and never percent-decodes it, so a caller that percent-encodes the reason stores and reads back the percent-encoded form.
 
-Fluxer trims the value. A value that is blank before trimming, empty after it, or longer than 512 characters after it counts as no reason at all. None of the three fails the request, so a reason that misses the bound is dropped and the operation still succeeds.
+Fluxer trims the value. A value that is blank before trimming, empty after it, or longer than 512 characters after it counts as no reason at all. None of those values fails the request, so a reason that misses the bound is dropped and the operation still succeeds.
 
 The operation writes the accepted reason onto its entry, returns it as the entry `reason` field, and sends it in the [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) Dispatch.
 
@@ -42,7 +42,7 @@ One page of audit history together with the accounts and webhooks it references.
 
 ## Guild audit log entry object
 
-One recorded guild change. An entry is immutable once written, except for a run of message deletion entries, which [List guild audit logs](#list-guild-audit-logs) can replace with a single consolidated entry. The entry ID is a [snowflake](/snowflakes/), so it has the exact creation time.
+One recorded guild change. An entry is immutable once written, except for a run of message deletion entries, which [List guild audit logs](#list-guild-audit-logs) can replace with a single consolidated entry.
 
 ### Structure
 
@@ -193,7 +193,7 @@ One field a mutation changed, with the value on each side of the change.
 A change value is a string, a JSON number, a boolean, `null`, an array of strings, an array of numbers, or an object with `added` and `removed` string arrays. The last shape comes only from the [permissions_diff](#guild-role-change-fields) key of a role modification.
 
 :::note[A 64-bit domain value is a decimal string]
-A permission mask or a snowflake is serialised as a decimal string. A bounded number such as a position or a colour remains a JSON number.
+Fluxer serialises a permission mask or a snowflake as a decimal string. A bounded number such as a position or a colour remains a JSON number.
 :::
 
 :::caution[A change list holds only the differing fields]
@@ -402,7 +402,7 @@ Recorded by [STICKER_CREATE](#audit-actions), [STICKER_UPDATE](#audit-actions), 
 
 ## Audit log webhook object
 
-A reduced [webhook object](/http-api/webhooks/#webhook-object). It omits the execution token, application ID, and creating user, and it names the avatar hash `avatar_hash` rather than `avatar`.
+A reduced [webhook object](/http-api/webhooks/#webhook-object). It omits the execution token, application ID, and creating user, and it names the avatar hash `avatar_hash` where the full object names it `avatar`.
 
 ### Structure
 
@@ -469,7 +469,7 @@ A request supplying neither `user_id` nor `action_type` deletes every run of two
 :::
 
 :::note[The same consolidation also runs in the background]
-Fluxer also applies it to the 250 most recent entries about 30 seconds after a message deletion entry is written.
+Fluxer also applies consolidation to the 250 most recent entries about 30 seconds after a message deletion entry is written.
 :::
 
 ### Side effects

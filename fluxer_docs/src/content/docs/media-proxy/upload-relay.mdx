@@ -10,9 +10,9 @@ The upload relay is where a client sends the bytes of a file. Each upload URL ha
 
 ## Base URL and authorisation
 
-Both paths here are relative to the relay base in the issued upload URL. That base is a deployment setting.
+Paths here are relative to the relay base in the issued upload URL. That base is a deployment setting.
 
-The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` mode. Every path below `/v1/relay/` is exempt from the [media access policy](/media-proxy/overview/#access-restrictions).
+The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. Every path below `/v1/relay/` is exempt from the [media access policy](/media-proxy/overview/#access-restrictions). The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` mode.
 
 :::note[Some upload URLs address object storage directly]
 The HTTP API decides per request whether to relay, from the caller's country. A caller on the instance's direct-upload list receives a presigned object storage URL, and this contract does not describe it.
@@ -74,7 +74,7 @@ The relay answers 401 to a malformed capability, a signature that is not 32 byte
 
 <RouteHeader method="PUT" path="/v1/relay/{key}" />
 
-Stores the exact object the [relay capability](#relay-capability-object) authorises and returns 200 with an empty body. An `ETag` accompanies it when the object store supplied one. An S3 backend supplies one and a local filesystem backend does not.
+Stores the exact object the [relay capability](#relay-capability-object) authorises and returns 200 with an empty body. The response has an `ETag` when the object store supplied one. An S3 backend supplies one and a local filesystem backend does not.
 
 ### Path parameters
 
@@ -160,8 +160,15 @@ A successful request writes the object the capability selects to the uploads buc
 
 ## Streaming limits
 
-The endpoint body limit defaults to 500 MiB and an operator can configure it from 1 byte through 5 GiB. The effective limit for one request is the smaller of that value and the capability `mb` field.
+| Setting | Default | Configurable range |
+| --- | --- | --- |
+| Endpoint body limit | 500 MiB | 1 byte through 5 GiB |
+| Spool buffer | 1 MiB | 64 KiB through 64 MiB |
+| Endpoint spool budget | 8 GiB | Up to 256 GiB |
+| Object storage write deadline | 900,000 ms | 1,000 through 3,600,000 ms |
 
-A spooled body is written through a 1 MiB buffer by default, configurable from 64 KiB through 64 MiB. Spooled bodies share an 8 GiB endpoint budget by default, configurable up to 256 GiB. A request that arrives with no `Content-Length` reserves the complete effective limit from that budget before the relay reads a byte. The endpoint refuses to start when its body limit exceeds that budget, so one reservation always fits an idle endpoint.
+The effective limit for one request is the smaller of the endpoint body limit and the capability `mb` field.
 
-The object storage write has a 900,000 ms deadline by default, configurable from 1,000 through 3,600,000 ms. For a streamed body the relay extends the deadline by one second for every 16 KiB of declared length.
+The relay writes a spooled body to its temporary file through the spool buffer. Spooled bodies share one endpoint budget, and a request that arrives with no `Content-Length` reserves the complete effective limit from that budget before the relay reads a byte. The endpoint refuses to start when its body limit exceeds that budget, so one reservation always fits an idle endpoint.
+
+For a streamed body the relay extends the object storage write deadline by one second for every 16 KiB of declared length.

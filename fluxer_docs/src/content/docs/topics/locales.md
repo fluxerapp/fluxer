@@ -8,7 +8,7 @@ A locale tells Fluxer which language to write human-readable text in. Each one i
 
 ## Supported locales
 
-This registry is the complete set for every Fluxer surface. Wherever Fluxer stores a locale, such as in [user settings](/http-api/users/settings/), it requires an exact value from this table.
+The registry below is the complete set for every Fluxer surface. Wherever Fluxer stores a locale, such as in [user settings](/http-api/users/settings/), it requires an exact value from this table.
 
 | Value | Description |
 | --- | --- |
@@ -57,17 +57,27 @@ Fluxer resolves the response locale once for each request. When a request resolv
 
 An account created by password registration stores the locale negotiated from its own registration request, so the `Accept-Language` header on that request sets the stored value. An account provisioned through single sign-on stores no account locale. Its [user settings](/http-api/users/settings/) locale reads `en-US`, and its requests negotiate `Accept-Language` until the locale setting is changed.
 
-Fluxer splits the header on commas. It trims each member and then splits it on semicolons. The text before the first semicolon is the language range, and Fluxer reads only the first parameter after it, looking for a `q=` weight. A member with no readable `q=` value has weight 1. Fluxer orders the members by descending weight, and members of equal weight keep their header order.
+Fluxer splits the header on commas. It trims each member and then splits it on semicolons. The text before the first semicolon is the language range, and Fluxer reads a `q=` weight from only the first parameter after it. A member with no readable `q=` value has weight 1. Fluxer orders the members by descending weight, and members of equal weight keep their header order.
 
 Fluxer then runs two passes over that ordered list.
 
 The first pass takes the earliest member whose range names a registry value exactly. Fluxer trims the range, replaces every underscore with a hyphen, and lowercases it before comparing, so `EN-GB` and `en_gb` both name `en-GB`. The bare tags `en` and `sv` are registered aliases for `en-US` and `sv-SE` and match in this pass.
 
-The second pass runs only when the first selects nothing. It reduces each member in the same order to its language subtag. A language subtag with a declared preference selects that value. The declared preferences are `en` to `en-US`, `es` to `es-ES`, `pt` to `pt-BR`, `zh` to `zh-CN`, and `sv` to `sv-SE`, so `en-AU` selects `en-US` and `pt-PT` selects `pt-BR`. A language subtag without a declared preference selects the first registry value whose tag begins with that subtag and a hyphen.
+The second pass runs only when the first selects nothing. It reduces each member in the same order to its language subtag. A language subtag with a declared preference selects that value. The declared preferences are:
 
-No registry tag begins with a subtag outside those five followed by a hyphen, so `de-AT` and `xx-YY` both select nothing. A weight of 0 orders a member last, and that member can still be selected. A range of `*` matches no registry value.
+| Language subtag | Selected locale |
+| --- | --- |
+| `en` | `en-US` |
+| `es` | `es-ES` |
+| `pt` | `pt-BR` |
+| `zh` | `zh-CN` |
+| `sv` | `sv-SE` |
 
-The resolved locale selects the localised `message` in an [error response](/http-api/#error-response) and in each element of a validation `errors` array. The `code` field is never localised.
+Under those preferences, `en-AU` selects `en-US` and `pt-PT` selects `pt-BR`. A language subtag without a declared preference selects the first registry value whose tag begins with that subtag and a hyphen.
+
+Every registry tag with a hyphen begins with one of those five subtags, so `de-AT` and `xx-YY` both select nothing. A weight of 0 orders a member last, and that member can still be selected. A range of `*` matches no registry value.
+
+The resolved locale selects the localised `message` in an [error response](/http-api/#error-response) and in each element of a validation `errors` array.
 
 :::note[Locale selection changes human-readable text only]
 A field name, an enumeration value, an error `code`, a [snowflake](/snowflakes/), and a timestamp representation are identical under every locale.

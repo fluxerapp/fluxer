@@ -197,11 +197,15 @@ The parsed device metadata recorded for a session or a pending handoff.
 
 <sup>1</sup> A native or Electron client reports null, and a session created by an unparseable request reports null. A handoff omits the member entirely
 
-Fluxer recognises a native Fluxer client from a `User-Agent` beginning `Fluxer Android`, `Fluxer iOS`, `Fluxer Linux`, `Fluxer Desktop`, or `Fluxer Client`. Its `platform` is the instance product name followed by the resolved operating system, with `Lite` inserted before the operating system for a non-mobile one. A native client that resolves no operating system reports the product name followed by `Lite`, so `platform` is never null for a native client. An Electron client reports the product name followed by the resolved operating system, and the product name alone when no operating system resolves. Fluxer parses every other client from the recorded `User-Agent`, and that client's platform is the browser name, or the operating system name when no browser resolves, and null when neither resolves.
+Fluxer recognises a native Fluxer client from a `User-Agent` beginning `Fluxer Android`, `Fluxer iOS`, `Fluxer Linux`, `Fluxer Desktop`, or `Fluxer Client`.
+
+- A native client's `platform` is the instance product name followed by the resolved operating system, with `Lite` inserted before the operating system for a non-mobile one. A native client that resolves no operating system reports the product name followed by `Lite`, so `platform` is never null for a native client.
+- An Electron client's `platform` is the product name followed by the resolved operating system, and the product name alone when no operating system resolves.
+- Every other client is parsed from the recorded `User-Agent`, and its `platform` is the browser name, or the operating system name when no browser resolves, and null when neither resolves.
 
 Fluxer resolves `device` from the recorded `User-Agent` and, for a native client, from the operating system reported through `X-Fluxer-Client-Properties`. A native or Electron client is `mobile` only when the resolved operating system is iOS or Android. Every other client is `mobile` when the parsed platform type is mobile or tablet, and `desktop` otherwise.
 
-A session reports a null `location` when the recorded IP address resolves to no location. A handoff always reports the object, and each of its three members is null when that component is unavailable. For a session, an address with a known region and country but no known city reports the region as `city`, the country as `region`, and null as `country`.
+A session reports a null `location` when the recorded IP address resolves to no location. A handoff always reports the object, and each of its members is null when that component is unavailable. For a session, an address with a known region and country but no known city reports the region as `city`, the country as `region`, and null as `country`.
 
 ## Client location object
 
@@ -240,7 +244,7 @@ The state of one IP authorisation ticket, as observed by the device whose sign-i
 | user_id?<sup>1</sup> | ?snowflake | The authenticated user ID |
 | user?<sup>1</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
 
-<sup>1</sup> The three fields are present together only when `completed` is true, and a still-pending ticket returns `completed` alone
+<sup>1</sup> The fields are present together only when `completed` is true, and a still-pending ticket returns `completed` alone
 
 ## Username suggestions object
 
@@ -300,7 +304,7 @@ The state of one desktop handoff as observed by the device that initiated it.
 
 <sup>1</sup> An unknown code and an expired code both report `expired`
 
-<sup>2</sup> The three fields are present together only when the status is `completed`
+<sup>2</sup> The fields are present together only when the status is `completed`
 
 ## Get SSO status
 
@@ -401,7 +405,7 @@ A verified provider email that adopts a bot account returns 403 `BOT_USER_AUTH_S
 
 ### Side effects
 
-Fluxer consumes the SSO state exactly once, before it attempts the provider exchange. A failed exchange still burns the state. A client MUST then start a fresh flow. On first sign-in, the provider identity becomes exclusive to the new account. The account starts with a verified email, no password, no authenticator, and its default settings. Provisioning joins no guild and accepts no invite, so no [Guild Member Add](/gateway/events/#guild-member-add) is emitted.
+Fluxer consumes the SSO state exactly once, before it attempts the provider exchange. A failed exchange still spends the state. A client MUST then start a fresh flow. On first sign-in, the provider identity becomes exclusive to the new account. The account starts with a verified email, no password, no authenticator, and its default settings. Provisioning joins no guild and accepts no invite, so no [Guild Member Add](/gateway/events/#guild-member-add) is emitted.
 
 Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` and creates no session. Otherwise the operation creates one authentication session and clears an expired temporary suspension.
 
@@ -415,7 +419,7 @@ Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` a
 
 Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event when an invite or instance community admission takes effect.
 
-This is a local authentication operation and it verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. Registration additionally permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those three allowances are separate from the route bucket, and only a deployment that relaxes registration rate limits disables them.
+This is a local authentication operation and it verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. Registration permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment that relaxes registration rate limits disables them.
 
 ### Request headers
 
@@ -570,7 +574,6 @@ Consumes an MFA ticket and validates a time-based one-time password or an uncons
 
 This is a local authentication operation. MFA verification additionally permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts.
 
-
 ### JSON body
 
 | Field | Type | Description |
@@ -580,7 +583,7 @@ This is a local authentication operation. MFA verification additionally permits 
 
 <sup>1</sup> A validated authenticator code is claimed for 30 seconds, so the same code cannot be presented twice. A backup code is consumed permanently on the attempt that accepts it
 
-An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment returns the field code `TOTP_NOT_ENABLED` on `code`. An incorrect code, and any code presented after the per-account or per-ticket attempt allowance is exhausted, returns the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment returns the field code `TOTP_NOT_ENABLED` on `code`. Both an incorrect code and any code presented after the per-account or per-ticket attempt allowance is exhausted return the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
 ### Response
 
@@ -659,7 +662,7 @@ This is a local authentication operation.
 
 An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A challenge mismatch, an unknown credential, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
 
-This operation shares the MFA attempt allowances of [complete login with TOTP](#complete-login-with-totp). It permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts, and an exhausted allowance returns the field code `INVALID_CODE` on `ticket`.
+This operation shares the MFA attempt allowances of [complete login with TOTP](#complete-login-with-totp). It permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts. An exhausted allowance returns the field code `INVALID_CODE` on `ticket`.
 
 ### Response
 
@@ -848,7 +851,7 @@ The operation creates one 64-character verification token bound to the account a
 
 ### Rate limit
 
-10 requests per minute, on the `auth:verify:resend` bucket, and the target address additionally permits 3 messages in 15 minutes.
+10 requests per minute, on the `auth:verify:resend` bucket, and the target address permits 3 messages in 15 minutes.
 
 ## Request password recovery
 
@@ -898,7 +901,7 @@ Fluxer sends one 64-character reset token by email to an address that resolves t
 
 ### Rate limit
 
-5 requests per minute, on the `auth:forgot` bucket, and recovery additionally permits 20 attempts per client IP address and 5 attempts per email address in each 30-minute window.
+5 requests per minute, on the `auth:forgot` bucket, and recovery permits 20 attempts per client IP address and 5 attempts per email address in each 30-minute window.
 
 ## Validate a password reset token
 
@@ -987,7 +990,7 @@ A successful reset terminates every authentication session on the account, inclu
 
 The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token. Every terminated session's Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. Other outstanding reset tokens are not invalidated, so a second recovery link issued earlier still works.
 
-An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the session is created by the MFA completion.
+An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the MFA completion creates the session.
 
 ### Rate limit
 
@@ -1016,7 +1019,7 @@ Completing a reversion terminates every authentication session, clears the accou
 
 An unknown or already consumed token, and a token bound to an account that no longer exists, return the field code `INVALID_OR_EXPIRED_REVERT_TOKEN`. Account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`, and a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
-The replacement password is checked against the same breached-password corpus described under [reset a password](#reset-a-password) before the token is spent.
+Fluxer checks the replacement password against the same breached-password corpus described under [reset a password](#reset-a-password) before it spends the token.
 
 ### Response
 
@@ -1204,7 +1207,7 @@ Fluxer sends the authorisation message to the address associated with the login 
 
 ### Rate limit
 
-5 requests per minute, on the `auth:ip_authorization_resend` bucket, and each ticket additionally permits exactly one resend, no earlier than 30 seconds after the ticket was issued.
+5 requests per minute, on the `auth:ip_authorization_resend` bucket, and each ticket permits exactly one resend, no earlier than 30 seconds after the ticket was issued.
 
 ## Poll IP authorisation
 
@@ -1329,7 +1332,7 @@ Reading the handoff information marks the code as inspected but does not approve
 
 Anyone who can reach the API and knows the code can mark it inspected. Declining the request in a client discards only what that client is showing, and the inspected state remains until the handoff is completed or the code expires.
 
-A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. A code whose three lookups are already spent, and a request from a client IP address that has exhausted its failed-attempt allowance, return the same error code. An unknown or expired code returns 200 with the `expired` status and records one failed attempt.
+A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. Both a code whose three lookups are already spent and a request from a client IP address that has exhausted its failed-attempt allowance return the same error code. An unknown or expired code returns 200 with the `expired` status and records one failed attempt.
 
 ### Response
 

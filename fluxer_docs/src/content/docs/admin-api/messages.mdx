@@ -337,7 +337,7 @@ Returned when `message_id` or `attachment_id` was supplied. It is the same body 
 | --- | --- | --- |
 | 200 | search or lookup response body | Search or lookup completed |
 
-An unknown channel, a message that does not exist, and an attachment whose filename does not match all return an empty result. This operation never answers 404.
+The result is empty for an unknown channel, for a message that does not exist, and for an attachment whose filename does not match. This operation never answers 404.
 
 With no message search service configured the search mode returns an empty `messages` array and `total` zero. The two lookup modes are unaffected.
 

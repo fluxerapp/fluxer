@@ -51,7 +51,7 @@ A channel object always has its identity and type. Every other field is present 
 
 <sup>4</sup> The value `0` means no occupancy limit
 
-<sup>5</sup> A guild voice channel that stores no per-user connection limit reports the default `5`
+<sup>5</sup> Defaults to `5` on a guild voice channel that stores no per-user connection limit
 
 <sup>6</sup> Null selects automatic routing. [List RTC regions](#list-rtc-regions) returns the available identifiers
 
@@ -61,9 +61,9 @@ A channel object always has its identity and type. Every other field is present 
 
 <sup>9</sup> A channel with no explicit override reports `nsfw` false and `nsfw_override` null
 
-<sup>10</sup> A channel that inherits reports `content_warning_level` `0` and `content_warning_text` null
+<sup>10</sup> On a channel that inherits, `content_warning_level` is `0` and `content_warning_text` is null
 
-<sup>11</sup> A channel that configures no slowmode reports `0`
+<sup>11</sup> The interval is `0` when the channel configures no slowmode
 
 <sup>12</sup> Omitted when the group stores no nickname. Clearing a nickname removes its key from the map
 
@@ -408,13 +408,11 @@ Every field is optional, and an omitted field preserves its current value. The f
 
 A `url` that is not an absolute `http` or `https` URL with a host returns 400 `INVALID_FORM_BODY` with the code `INVALID_URL_FORMAT` on the path `url`.
 
-Three failures apply to `parent_id`. A parent that does not exist in the same guild returns 400 `INVALID_FORM_BODY` with the code `INVALID_PARENT_CHANNEL` on the path `parent_id`. A parent that is not a category returns `PARENT_MUST_BE_CATEGORY` the same way.
+A parent that does not exist in the same guild returns 400 `INVALID_FORM_BODY` with the code `INVALID_PARENT_CHANNEL` on the path `parent_id`. A parent that is not a category returns `PARENT_MUST_BE_CATEGORY` the same way.
 
 Naming a category other than the current parent also checks capacity. A full category returns 400 `MAX_CATEGORY_CHANNELS` with the ceiling it reached, which is the deployment's [`max_channels_per_category`](/http-api/instance/#limit-keys) limit and defaults to 50.
 
-Fluxer accepts an overwrite mask in two encodings. A decimal string holds at most 9223372036854775807, and a larger one returns 400 `INVALID_FORM_BODY` with the code `INTEGER_OUT_OF_INT64_RANGE`. A JSON integer holds at most 9007199254740991, and a number outside the safe integer range returns `INVALID_INTEGER_FORMAT`.
-
-Every bit outside the defined permission set is discarded. A [feature-gated bit](/http-api/permissions/#feature-gated-permission-bits) the `X-Fluxer-Features` declaration does not name is copied from the stored overwrite.
+Fluxer accepts an overwrite mask as a decimal string or as a JSON integer. The decimal string holds at most 9223372036854775807, and a larger one returns 400 `INVALID_FORM_BODY` with the code `INTEGER_OUT_OF_INT64_RANGE`. The JSON integer holds at most 9007199254740991, and a number outside the safe integer range returns `INVALID_INTEGER_FORMAT`. Every bit outside the defined permission set is discarded.
 
 A non-null `rtc_region` names a region [List RTC regions](#list-rtc-regions) returns for this guild. Any other value returns 400 `INVALID_FORM_BODY` with the code `INVALID_OR_RESTRICTED_RTC_REGION` on the path `rtc_region`. A deployment that configures no voice topology validates no region and stores any accepted string.
 

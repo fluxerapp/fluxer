@@ -80,9 +80,14 @@ The Admin view of one application. An application and its bot account share one 
 
 ## The built-in Admin application
 
-Fluxer serves one synthetic application for its own Admin OAuth2 client. Its ID is the fixed constant `1234567890123456789`, its `name` is `Fluxer Admin`, its `owner_user_id` is the system account `0`, and its only redirect URI is the configured Admin endpoint followed by `/oauth2_callback`.
+Fluxer serves one synthetic application for its own Admin OAuth2 client. The application has no bot, so every `bot_` field is null or false and `has_bot_token` is false. It also reports these values:
 
-It has no bot, so every `bot_` field is null or false and `has_bot_token` is false. `has_client_secret` is true on every response that has it, `client_secret_created_at` is null, and `version` is always 1.
+- `id` is the fixed constant `1234567890123456789`.
+- `name` is `Fluxer Admin`.
+- `owner_user_id` is the system account `0`.
+- `oauth2_redirect_uris` has one entry, the configured Admin endpoint followed by `/oauth2_callback`.
+- `has_client_secret` is true on every response that has it, and `client_secret_created_at` is null.
+- `version` is always 1.
 
 :::caution[The built-in application is read-only]
 [Get application](#get-application) resolves it only while a client secret is configured for the deployment, and answers a null `application` otherwise. [List applications](#list-applications) never returns it. [Transfer application ownership](#transfer-application-ownership) answers 403 `FORBIDDEN`.
@@ -200,7 +205,7 @@ Ownership is the only field this operation writes. The new owner need not be rel
 
 ### Side effects
 
-Fluxer rewrites the record with the new `owner_user_id` and increments its `version`. The application moves in both the `owner_id` selector of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). Fluxer emits no Gateway Dispatch.
+Fluxer rewrites the record with the new `owner_user_id` and increments its `version`. The application moves in both the `owner_id` selector of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). The operation emits no Gateway Dispatch.
 
 Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the target type `application`, the target ID equal to the application ID, and the action `transfer_ownership`. Its metadata is `old_owner_id` and `new_owner_id`. Neither owner is resolved into `related_users`.
 

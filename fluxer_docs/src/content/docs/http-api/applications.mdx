@@ -10,9 +10,9 @@ An application is an OAuth2 client owned by one user account, and every bot acco
 
 ## Access rules
 
-Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. An account with an outstanding required action is accepted everywhere here.
+Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Fluxer accepts an account with an outstanding required action everywhere here.
 
-The three sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. An account with no authenticator proves sudo mode with `password` in the body, because Fluxer issues it no token.
+The three sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
 
 :::caution[Credentials are shown once]
 A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a bot token only by [Create application](#create-application) and [Reset bot token](#reset-bot-token). Both are stored as one-way hashes.
@@ -173,11 +173,11 @@ The bot account's profile fields after an update. [Update bot profile](#update-b
 | 1 &lt;&lt; 4 | FRIENDLY_BOT | The bot accepts friend requests from users |
 | 1 &lt;&lt; 5 | FRIENDLY_BOT_MANUAL_APPROVAL | The bot requires manual approval for friend requests |
 
-These two bits are a subset of the account's [public user flags](/http-api/users/#public-user-flags), so a bot account that also has `STAFF`, `PARTNER`, `BUG_HUNTER`, or `SPAMMER` reports that bit in the same field. A client MUST ignore a bit it does not recognise.
+These bits are a subset of the account's [public user flags](/http-api/users/#public-user-flags), so a bot account that also has `STAFF`, `PARTNER`, `BUG_HUNTER`, or `SPAMMER` reports that bit in the same field. A client MUST ignore a bit it does not recognise.
 
 ## Bot token reset object
 
-The response to [Reset bot token](#reset-bot-token). The fields are the new token and the bot account it belongs to.
+The response to [Reset bot token](#reset-bot-token).
 
 ### Structure
 

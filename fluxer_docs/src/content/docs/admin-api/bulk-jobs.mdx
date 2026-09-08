@@ -56,7 +56,7 @@ ACL `bulk:add:guild_members`. Adds every targeted user to one guild. Runs as `bu
 
 ACL `bulk:delete:users`. Schedules account deletion for every targeted user. Runs as `bulkScheduleUserDeletion`.
 
-Each worker task is recorded as `task_type` on the job and listed under [background job task types](/admin-api/jobs/#background-job-task-types). All five run in the `lifecycle` [processing lane](/admin-api/jobs/#processing-lanes).
+Each worker task is recorded as `task_type` on the job and listed under [background job task types](/admin-api/jobs/#background-job-task-types). Every bulk task runs in the `lifecycle` [processing lane](/admin-api/jobs/#processing-lanes).
 
 ## Queue bulk job
 
@@ -67,7 +67,7 @@ Queues one bulk operation. Returns a [bulk job creation](#bulk-job-creation-obje
 ### Limitations
 
 - The body matches exactly one `task` variant.
-- The caller needs at least one of the five [bulk ACLs](#bulk-task-types) and then the exact ACL that `task` selects.
+- The caller needs at least one of the [bulk ACLs](#bulk-task-types) and then the exact ACL that `task` selects.
 
 :::caution[Authorisation depends on the validated body]
 Body validation runs ahead of authentication and ACL evaluation, so a malformed body answers 400 even when the request has no credential.
@@ -75,7 +75,7 @@ Body validation runs ahead of authentication and ACL evaluation, so a malformed 
 
 ### JSON body
 
-The `task` discriminator selects one of these five structures. Every ID array has an upper bound and no lower bound, so an empty array queues a job that processes nothing and settles as `succeeded`.
+The `task` discriminator selects one of these structures. Every ID array has an upper bound and no lower bound, so an empty array queues a job that processes nothing and settles as `succeeded`.
 
 #### Update user flags structure
 
@@ -86,7 +86,7 @@ The `task` discriminator selects one of these five structures. Every ID array ha
 | add_flags?<sup>1</sup> | array[string] | [Account flag](/admin-api/users/#account-flags) values to add (max 64, default empty) |
 | remove_flags?<sup>1</sup> | array[string] | [Account flag](/admin-api/users/#account-flags) values to remove (max 64, default empty) |
 
-<sup>1</sup> Each entry is one 64-bit flag value as an unsigned decimal string, such as `1024`, rather than a symbolic name. Additions are applied before removals, so a value named in both arrays ends up cleared
+<sup>1</sup> Each entry is one 64-bit flag value written as an unsigned decimal string, such as `1024`. The boundary rejects a symbolic name. Additions are applied before removals, so a value named in both arrays ends up cleared
 
 #### Update suspicious activity flags structure
 
@@ -148,22 +148,24 @@ The 200 confirms that the job was queued. [Get job](/admin-api/jobs/#get-job) re
 
 This operation writes no Admin audit entry. It records one [Jobs](/admin-api/jobs/) ledger row naming the acting Admin as the requester and storing the audit reason, then enqueues the worker task. When the ledger row cannot be written, Fluxer returns 500 `INTERNAL_SERVER_ERROR` and enqueues nothing.
 
-The worker processes entities in the submitted order, one at a time. A cancellation check runs before each entity, so [Cancel job](/admin-api/jobs/#cancel-job) stops the run between two entities and settles the job as `cancelled`. Every entity changed before cancellation or failure stays changed. An entity that fails, including an ID that resolves to nothing, is counted as failed and skipped, and the run continues through the rest of the set. The worker reports progress before the run starts, after every 25 entities, and once at the end. `schedule_user_deletion` reports after every 10 accounts instead. The closing progress message has the successful and failed counts.
+The worker processes entities in the submitted order, one at a time. A cancellation check runs before each entity, so [Cancel job](/admin-api/jobs/#cancel-job) stops the run between two entities and settles the job as `cancelled`. Every entity changed before cancellation or failure stays changed. An entity that fails, including an ID that resolves to nothing, is counted as failed and skipped, and the run continues through the rest of the set.
 
-Every task writes one summary Admin audit entry when it finishes, with the action `bulk_update_user_flags`, `bulk_update_suspicious_activity_flags`, `bulk_update_guild_features`, `bulk_add_guild_members`, or `bulk_schedule_deletion`. The summary has the audit reason, the entity count, the operation-specific parameters, and the successful and failed counts. Its `target_id` is the guild for `add_guild_members` and `0` for the four tasks that target a set. A cancelled or failed job writes no summary entry.
+The worker reports progress before the run starts, after every 25 entities, and once at the end. `schedule_user_deletion` reports after every 10 accounts instead. The closing progress message has the successful and failed counts.
 
-Updating account flags writes one `update_flags` entry for each account and dispatches [User Update](/gateway/events/#user-update) to the account's sessions. A change to a publicly visible flag also dispatches [Guild Member Update](/gateway/events/#guild-member-update) to every guild the account is in.
+Every task writes one summary Admin audit entry when it finishes, with the action `bulk_update_user_flags`, `bulk_update_suspicious_activity_flags`, `bulk_update_guild_features`, `bulk_add_guild_members`, or `bulk_schedule_deletion`. The summary has the audit reason, the entity count, the operation-specific parameters, and the successful and failed counts. Its `target_id` is the guild for `add_guild_members` and `0` for every other task. A cancelled or failed job writes no summary entry.
 
-Updating suspicious activity flags rewrites each account's verification requirements and dispatches [User Update](/gateway/events/#user-update). No [Guild Member Update](/gateway/events/#guild-member-update) follows. The task writes no per-account audit entry.
+`update_user_flags` writes one `update_flags` entry for each account and dispatches [User Update](/gateway/events/#user-update) to the account's sessions. A change to a publicly visible flag also dispatches [Guild Member Update](/gateway/events/#guild-member-update) to every guild the account is in.
 
-Updating guild features writes one `update_features` entry for each guild, dispatches [Guild Update](/gateway/events/#guild-update), and reindexes the guild for search. Fluxer reconciles a guild that already has a discovery application record against the new feature set, so gaining `DISCOVERABLE` approves the record and losing it marks the record removed. A guild with no discovery record is left alone.
+`update_suspicious_activity_flags` rewrites each account's verification requirements and dispatches [User Update](/gateway/events/#user-update). No [Guild Member Update](/gateway/events/#guild-member-update) follows. The task writes no per-account audit entry.
 
-Adding guild members bypasses the ban check and the risk gate. The task suppresses the join system message, records the join source as an Admin force add, and dispatches [Guild Member Add](/gateway/events/#guild-member-add) to the guild and [Guild Create](/gateway/events/#guild-create) to the added account's sessions. The task still enforces the per-account guild cap and the guild member cap, so an account at either ceiling is counted as failed. An account that is already a member is left unchanged and counted as successful, with no second membership and no Dispatch. Adding a bot account also records a `BOT_ADD` guild audit log entry attributed to the acting Admin.
+`update_guild_features` writes one `update_features` entry for each guild, dispatches [Guild Update](/gateway/events/#guild-update), and reindexes the guild for search. Fluxer reconciles a guild that already has a discovery application record against the new feature set, so gaining `DISCOVERABLE` approves the record and losing it marks the record removed. A guild with no discovery record is left alone.
 
-Scheduling deletion marks each account deleted. The task stores the reason code, public reason, and audit reason on the account, and reschedules its pending deletion. It dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account, and emails the account holder when an address is on file. A failed email is logged and does not fail the entity.
+`add_guild_members` bypasses the ban check and the risk gate. The task suppresses the join system message, records the join source as an Admin force add, and dispatches [Guild Member Add](/gateway/events/#guild-member-add) to the guild and [Guild Create](/gateway/events/#guild-create) to the added account's sessions. The task still enforces the per-account guild cap and the guild member cap, so an account at either ceiling is counted as failed. An account that is already a member is left unchanged and counted as successful, with no second membership and no Dispatch. Adding a bot account also records a `BOT_ADD` guild audit log entry attributed to the acting Admin.
+
+`schedule_user_deletion` marks each account deleted. The task stores the reason code, public reason, and audit reason on the account, and reschedules its pending deletion. It dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account, and emails the account holder when an address is on file. A failed email is logged and does not fail the entity.
 
 :::caution[Bulk scheduling is narrower than the single-account operation]
-The worker only schedules the deletion. It does not terminate sessions, cancel or refund a Stripe subscription, ban the account's identifiers, or resolve pending reports, all of which [Schedule user deletion](/admin-api/users/#schedule-user-deletion) performs for one account, the last two only when the reason is not `USER_REQUESTED`.
+The worker does not terminate sessions, cancel or refund a Stripe subscription, ban the account's identifiers, or resolve pending reports. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) performs each of those for one account, the last two only when the reason is not `USER_REQUESTED`.
 :::
 
 ### Rate limit

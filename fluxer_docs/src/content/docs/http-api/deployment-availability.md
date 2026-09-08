@@ -6,7 +6,7 @@ description: The hosted-only routes and the instance flags that report deploymen
 
 A small set of routes exists only on the deployment Fluxer hosts. An operator runs the same release, and most of the HTTP API is identical on both.
 
-A self-hosted deployment does not register those routes. A request to one returns 404 `NOT_FOUND` with no feature-specific code. A caller cannot tell an unavailable route from an unrecognised path.
+A self-hosted deployment does not register those routes. A request to one returns 404 `NOT_FOUND` with no feature-specific code, so a caller cannot tell an unavailable route from an unrecognised path.
 
 The API decides registration once at process start from the deployment configuration. No credential, permission, premium state, or OAuth2 scope changes the answer. A client resolves the deployment kind from instance discovery.
 
@@ -20,7 +20,11 @@ Every deployment reports its kind in `self_hosted` on the [instance features obj
 Neither flag promises that a provider-dependent operation succeeds.
 :::
 
-Without a provider client, the answer depends on the operation. An operation that has to reach the provider fails with 400 `STRIPE_PAYMENT_NOT_AVAILABLE`, and [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) fails with 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`. Three read operations report the absence in a 200 body instead. [Get refund eligibility](/http-api/billing/#get-refund-eligibility) reports `eligible` false with the reason `feature_unavailable`, [Get current subscription price](/http-api/premium/#get-current-subscription-price) reports null, and [Get price IDs](/http-api/premium/#get-price-ids) reports the configured price IDs with every amount null.
+Without a provider client, the answer depends on the operation. An operation that has to reach the provider fails with 400 `STRIPE_PAYMENT_NOT_AVAILABLE`, and [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) fails with 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`. These read operations report the absence in a 200 body instead:
+
+- [Get refund eligibility](/http-api/billing/#get-refund-eligibility) reports `eligible` false with the reason `feature_unavailable`.
+- [Get current subscription price](/http-api/premium/#get-current-subscription-price) reports null.
+- [Get price IDs](/http-api/premium/#get-price-ids) reports the configured price IDs with every amount null.
 
 ## Hosted-only routes
 

@@ -10,7 +10,7 @@ A guild channel is one of the rooms a guild is divided into, including the categ
 
 ## Access rules
 
-A caller who is not a member of an existing guild receives 403 `MISSING_PERMISSIONS`. Every operation here returns 404 `UNKNOWN_GUILD` for a guild that does not exist.
+Every operation here returns 404 `UNKNOWN_GUILD` for a guild that does not exist. A caller who is not a member of an existing guild receives 403 `MISSING_PERMISSIONS`.
 
 A request whose path names a guild that has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) is refused with 403 `MISSING_ACCESS` before the operation runs.
 
@@ -189,7 +189,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 A value longer than 10000 characters is rejected with `STRING_LENGTH_INVALID` before normalisation runs. A parent that does not exist in this guild returns `INVALID_PARENT_CHANNEL`, and one that is not a category returns `PARENT_MUST_BE_CATEGORY`.
 
-A parent category holds at most the instance-configured `max_channels_per_category` [limit](/http-api/instance/#limit-keys), defaulting to 50, and the guild holds at most `max_guild_channels`, defaulting to 500. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each message has the resolved limit. The new channel is created with no RTC region.
+The guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), defaulting to 500, and a parent category holds at most `max_channels_per_category`, defaulting to 50. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each message has the resolved limit. The new channel is created with no RTC region.
 
 The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text or link sibling when the category holds no voice channel. A text or link channel is placed after the last text or link sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered, so two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
 

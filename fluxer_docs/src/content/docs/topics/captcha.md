@@ -30,19 +30,17 @@ The following operations verify a CAPTCHA while the instance enforces verificati
 
 Create private channel is gated only on the group direct message path, where the request body has a `recipients` member. A one-to-one direct message request omits the field and is never gated.
 
-Create application, redeem gift, create private channel, and add group direct message recipient reject an unauthenticated request before Fluxer reads the CAPTCHA. The three authentication operations accept a request with no credential, and each of them returns 403 `SSO_REQUIRED` before Fluxer reads the CAPTCHA when the instance enforces single sign-on.
+Create application, redeem gift, create private channel, and add group direct message recipient reject an unauthenticated request before Fluxer reads the CAPTCHA. The authentication operations accept a request with no credential. When the instance enforces single sign-on, each of them returns 403 `SSO_REQUIRED` before Fluxer reads the CAPTCHA.
 
 ## Exemption
 
-Two exemptions skip the challenge. Fluxer tests both of them before it reads the token. A request that passes either one proceeds as though the instance had no provider configured.
+Two exemptions skip the challenge. Fluxer tests both before it reads the token. A request that passes either one proceeds as though the instance had no provider configured.
 
-The first exemption is the `captcha_exempt` capability the instance account policy grants to a contact address. A policy rule matches the address itself or the domain it belongs to, so one grant can cover a whole domain. Fluxer tests it against the resolved account's email address alone, so an unauthenticated request never matches this exemption.
+The instance account policy grants the `captcha_exempt` capability to a contact address. A policy rule matches the address itself or the domain it belongs to, so one grant can cover a whole domain. Fluxer tests the capability against the resolved account's email address alone. An unauthenticated request never matches this exemption.
 
-The second exemption is the `APP_STORE_REVIEWER` user flag. Fluxer tests it against the resolved account, then against the account an `email` member of the request body resolves to.
+The other exemption is the `APP_STORE_REVIEWER` user flag. Fluxer tests it against the resolved account, then against the account an `email` member of the request body resolves to. The body check parses the request body as JSON and reads a string `email` member, and a body that is absent, is not JSON, or is not a JSON object yields no address. That check exempts a login or a registration attempt before any account is resolved.
 
-The body check parses the request body as JSON and reads a string `email` member, and a body that is absent, is not JSON, or is not a JSON object yields no address. That check exempts a login or a registration attempt before any account is resolved.
-
-The exemptions run before request validation on the three authentication operations, on create application, and on redeem gift. Create private channel and add group direct message recipient validate the request first, so an invalid request is rejected before any exemption is tested.
+The exemptions run before request validation on the authentication operations, on create application, and on redeem gift. Create private channel and add group direct message recipient validate the request first, so an invalid request is rejected before any exemption is tested.
 
 No exemption is visible in an API response. A client cannot predict one and handles a challenge on every gated operation.
 

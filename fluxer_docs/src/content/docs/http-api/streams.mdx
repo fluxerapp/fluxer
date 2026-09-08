@@ -34,7 +34,7 @@ A key with a different segment count, a non-numeric channel segment, an empty co
 
 [Modify stream region](#modify-stream-region), [Get stream preview](#get-stream-preview), and [Delete stream preview](#delete-stream-preview) resolve the channel from the channel segment of the key. [Upload stream preview](#upload-stream-preview) and [Create stream preview upload URL](#create-stream-preview-upload-url) instead resolve it from the `channel_id` in their request body and compare that value against the key afterwards.
 
-The scope segment is checked against the resolved channel. A guild-scoped key whose channel turns out to be private, a `dm` key whose channel turns out to belong to a guild, and a guild-scoped key whose guild segment is not the resolved channel's guild each return 400 `STREAM_KEY_SCOPE_MISMATCH`.
+Fluxer checks the scope segment against the resolved channel. A guild-scoped key whose resolved channel is private returns 400 `STREAM_KEY_SCOPE_MISMATCH`, and so does a `dm` key whose resolved channel belongs to a guild. A guild-scoped key whose guild segment is not the resolved channel's guild returns the same code.
 
 The route then compares the channel segment against the resolved channel ID, and a mismatch returns 400 `STREAM_KEY_CHANNEL_MISMATCH`. On the two routes that have a body `channel_id`, a caller MUST send the same value in the body and in the key.
 
@@ -46,13 +46,13 @@ Two boundaries apply across this page.
 
 Read access matches [Get channel](/http-api/channels/#get-channel) for the [resolved channel](#stream-key). A guild channel additionally requires the [CONNECT](/http-api/permissions/) permission. The caller does not have to own the stream, so any member who can join the channel can read its preview.
 
-Mutation access adds two requirements to read access. A guild channel also requires the [STREAM](/http-api/permissions/) permission. The caller must hold a voice state in exactly the resolved channel and the connection identifier the key names. Fluxer rejects a caller that holds no such voice state with 403 `ACCESS_DENIED`, even when it owns the channel.
+Mutation access requires everything read access does. A guild channel also requires the [STREAM](/http-api/permissions/) permission. The caller must hold a voice state in exactly the resolved channel and the connection identifier the key names. Fluxer rejects a caller that holds no such voice state with 403 `ACCESS_DENIED`, even when it owns the channel.
 
 :::caution[A preview can exist with no live stream]
 A caller can record a region and upload a preview for any voice connection it holds, whether or not it is streaming.
 :::
 
-A guild channel resolves before its guild does. A channel row that outlives its guild returns 404 `UNKNOWN_GUILD`. A guild record that exists but whose membership state cannot be resolved returns 403 `ACCESS_DENIED`, and a caller that is not a member or that lacks [VIEW_CHANNEL](/http-api/permissions/) returns 403 `MISSING_PERMISSIONS`. An unsatisfied age restriction on a guild text, voice, or link channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
+A guild channel resolves before its guild does. A channel row that outlives its guild returns 404 `UNKNOWN_GUILD`. Where the guild record exists and Fluxer cannot resolve the membership state, the route returns 403 `ACCESS_DENIED`, and a caller that is not a member or that lacks [VIEW_CHANNEL](/http-api/permissions/) returns 403 `MISSING_PERMISSIONS`. An unsatisfied age restriction on a guild text, voice, or link channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
 
 A private channel whose recipient set does not contain the caller returns 404 `UNKNOWN_CHANNEL`. An absent channel returns the same code, so recipient membership is never distinguishable from private channel existence.
 
@@ -204,7 +204,7 @@ When the image should travel out of band, use [Create stream preview upload URL]
 
 <sup>3</sup> A value containing `jpeg` or `jpg` in any case is accepted without inspecting the bytes. Any other value, and an absent field, is accepted only when the decoded bytes begin with `FF D8` and end with `FF D9`
 
-Fluxer stores the accepted `content_type` verbatim and returns it from [Get stream preview](#get-stream-preview). An absent field stores the preview as `image/jpeg`.
+Fluxer stores the accepted `content_type` verbatim and returns it from [Get stream preview](#get-stream-preview). When the field is absent, the stored media type is `image/jpeg`.
 
 A `thumbnail` that is not canonical base64 returns 400 `INVALID_STREAM_THUMBNAIL_PAYLOAD`. Fluxer re-encodes the decoded bytes and rejects the value when the result is not what the client sent. The 2000000 character ceiling admits 1500000 decoded bytes, so an oversized JPEG reaches the byte check and returns `FILE_SIZE_TOO_LARGE`. The format check runs before the size check. An oversized payload that is not a JPEG returns `PREVIEW_MUST_BE_JPEG`.
 

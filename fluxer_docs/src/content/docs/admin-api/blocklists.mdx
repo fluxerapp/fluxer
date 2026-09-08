@@ -6,11 +6,11 @@ description: The nine safety blocklists, their value forms, and the operations t
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A blocklist is a stored set of values Fluxer checks account access and user content against. Nine lists exist. Each has one canonical value form, one matching rule, and its own stored fields, and Fluxer canonicalises every value before storage and before every check.
+A blocklist is a stored set of values Fluxer checks account access and user content against. Nine lists exist. Each has one canonical value form, one matching rule, and its own stored fields. Fluxer canonicalises every value before storage and before every check.
 
 Each list has its own three [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission, so an account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
 
-A list's three values are `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
+Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
 
 :::note[The Admin API exposes no other blocklist]
 Fluxer synchronises disposable email domains from external feeds every six hours. No operation on this page reads or writes them.
@@ -32,7 +32,7 @@ Fluxer synchronises disposable email domains from external feeds every six hours
 | avatar-hash<sup>8</sup> | Avatar hashes barred from being set |
 | profile-substring<sup>4</sup> <sup>9</sup> | Substrings barred from one named profile field |
 
-<sup>1</sup> Two guards refuse an address with 400 `IP_BAN_DECLINED`: the instance exemption list, and the high blast-radius carrier network check. Fluxer records both refusals in the Admin audit log
+<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, or when the high blast-radius carrier network check matches, and records both refusals in the Admin audit log
 
 <sup>2</sup> Stored lowercased, so a mixed-case value does not create a second row
 

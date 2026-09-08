@@ -23,7 +23,7 @@ The Media Proxy serves Fluxer attachments, image assets, themes, entrance sound 
 
 <sup>2</sup> Served by a `static` endpoint alone
 
-[Transformations](/media-proxy/transformations/) defines representation selection for every family that has one. [Responses and limits](/media-proxy/responses-and-limits/) consolidates statuses, size bounds, deadlines, and cache policies.
+[Transformations](/media-proxy/transformations/) defines representation selection for every family that has one. [Responses and limits](/media-proxy/responses-and-limits/) lists statuses, size bounds, deadlines, and cache policies.
 
 ## Base URLs
 
@@ -120,7 +120,7 @@ A reversed range, a zero-length suffix, a start outside the representation, or a
 
 The route forwards a range to the origin only when no transformation is requested. It sends the range verbatim when the value after `bytes=` is non-empty and every byte of it is an ASCII graphic character, so a multiple range reaches the origin and the origin decides how to answer it. A value with a space anywhere is dropped, and no range is sent. The route relays the origin partial response with the origin `Content-Range` unchanged.
 
-A transforming request forwards no range to the origin and applies the client range to the transformed bytes, so it still returns 206 or 416. An origin 200 on a non-transforming request is relayed as that 200 when its declared type is trustworthy and the response is not SVG by declared type, filename, or leading bytes. A relayed 200 does not reapply the client range. An SVG response is rasterised and the client range is applied to the rasterised bytes.
+A transforming request forwards no range to the origin and applies the client range to the transformed bytes, so it still returns 206 or 416. On a non-transforming request, an origin 200 is relayed as that 200 when its declared type is trustworthy and the response is not SVG by declared type, filename, or leading bytes. The relayed 200 does not reapply the client range. Fluxer rasterises an SVG response and applies the client range to the rasterised bytes.
 
 A trustworthy type is a normalised `image/`, `video/`, or `audio/` type other than `application/octet-stream`. An absent or empty `Content-Type`, `text/plain`, `application/pdf`, and `application/zip` are all untrustworthy. Fluxer buffers the body of a 200 under an untrustworthy type and applies the client range to those bytes, so that read returns 206.
 
@@ -163,7 +163,7 @@ Disposition follows that declared type, so SVG mislabelled as an image or video 
 
 Every successful media representation uses `Cache-Control: public, max-age=31536000` and `CDN-Cache-Control: public, max-age=31536000`. An audio or video representation adds `no-transform` to the browser-facing policy only. No response repeats its policy in an `Expires` header. [Cache policies](/media-proxy/responses-and-limits/#cache-policies) lists the responses that have no policy at all.
 
-No read route sends an `ETag`. The upload relay is the only route that returns one, and it relays the object storage value for the stored object.
+The upload relay is the only route that returns an `ETag`, and it relays the object storage value for the stored object.
 
 :::note[External media is cached for a year too]
 The signed path is derived from the target URL, so the bytes behind one unchanged target are cached for a year at both layers.

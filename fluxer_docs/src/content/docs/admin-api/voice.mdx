@@ -15,7 +15,7 @@ Every write takes effect once each API node reloads its topology. No write moves
 :::
 
 :::caution[Each write runs in three separate steps]
-It stores the record, notifies every node to reload, then records the audit entry. A failure at the second or third step answers 500 with the record already stored, so read the record back before retrying.
+A write stores the record, notifies every node to reload, then records the audit entry. A failure at the second or third step answers 500 with the record already stored, so read the record back before retrying.
 :::
 
 ## Media transport
@@ -44,7 +44,7 @@ With a guild present, a guild named by `allowed_guild_ids` is admitted at once a
 
 A region record has the identity a client sees, the coordinate placement measures distance from, and the eligibility fields described under [placement eligibility](#placement-eligibility). It has no capacity, no health, and no server count.
 
-The operator supplies `id` on creation, and it is the primary key. It is the value a channel stores as its `rtc_region` and the value [Modify call region](/http-api/calls/#modify-call-region) accepts, so changing it means creating a new region and deleting the old one.
+The operator supplies `id` on creation, and it is the primary key. A channel stores it as its `rtc_region`, and [Modify call region](/http-api/calls/#modify-call-region) accepts it, so changing it means creating a new region and deleting the old one.
 
 ### Structure
 
@@ -95,7 +95,7 @@ The operator supplies `id` on creation, and it is the primary key. It is the val
 
 A server record names one LiveKit deployment, the API key pair the instance authenticates to it with, and its own copy of the eligibility fields. A server is reachable for placement only when its region is also reachable.
 
-The `region_id` and `server_id` pair addresses one server, and a server belongs to exactly one region. The same server identifier can exist in two regions, and moving a server between regions means deleting it and recreating it. Both are operator-chosen strings of 1 to 64 characters, and no operation renames either one.
+The `region_id` and `server_id` pair addresses one server, and a server belongs to exactly one region. The same server identifier can exist in two regions. Moving a server between regions means deleting it and recreating it. Both identifiers are operator-chosen strings of 1 to 64 characters, and no operation renames either one.
 
 A server can have its own coordinate. When it does, placement measures distance from that coordinate to pick the closest server for an automatically placed session. When it does not, the server takes no part in distance comparison.
 
@@ -125,7 +125,7 @@ A server can have its own coordinate. When it does, placement measures distance 
 <sup>4</sup> Duplicate entries collapse and the returned order is not the submitted order
 
 :::caution[Server credentials are never returned]
-`api_key` and `api_secret` are stored on the record and accepted by the create and update bodies, but no read returns them. A lost secret has to be replaced with an update.
+`api_key` and `api_secret` are stored on the record and accepted by the create and update bodies. No read returns them, so a lost secret has to be replaced with an update.
 :::
 
 ### Example

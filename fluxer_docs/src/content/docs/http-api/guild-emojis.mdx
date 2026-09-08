@@ -8,9 +8,9 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An emoji is a custom image that one guild owns. Members use it in messages and reactions. Its ID is a [snowflake](/snowflakes/) that is unique across every guild. [List guild emojis](#list-guild-emojis) is the only guild-scoped read, and [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) resolves a single emoji without membership of its guild.
 
-Every route names a guild in its path. A guild that has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) rejects the request with 403 `MISSING_ACCESS` before the operation runs, and [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag.
+Every route names a guild in its path. When that guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features), Fluxer rejects the request with 403 `MISSING_ACCESS` before the operation runs. Fluxer does the same for a guild with [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) when the account has no instance staff flag.
 
-A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is distinguishable from guild membership. On [Modify guild emoji](#modify-guild-emoji) a non-member receives the same 403 `MISSING_PERMISSIONS`, and a guild that does not exist returns 404 `UNKNOWN_EMOJI`.
+A guild that does not exist returns 404 `UNKNOWN_GUILD`. Fluxer returns 403 `MISSING_PERMISSIONS` to a caller who is not a current member of an existing guild, so guild existence is distinguishable from guild membership. On [Modify guild emoji](#modify-guild-emoji) a non-member receives the same 403 `MISSING_PERMISSIONS`, and a guild that does not exist returns 404 `UNKNOWN_EMOJI`.
 
 The instance phrase and URL blocklists screen a submitted emoji `name` before the operation runs, and a match returns 403 `CONTENT_BLOCKED`. A name of fewer than three characters is not scanned. Neither blocklist reads `image`. Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
 
@@ -112,7 +112,7 @@ One item a bulk creation rejected, identified only by the name the caller submit
 
 <sup>2</sup> Rendered in the locale of the authenticated account, so its value changes with the caller's locale
 
-There is no machine-readable code, so a client that needs to branch on the reason retries the item on its own. An item that fails because the guild is full renders the emoji limit message with the resolved limit. Every other failure with a registered [error code](/http-api/errors/) renders that code's own message. An undecodable or unaccepted image renders the generic `INVALID_FORM_BODY` message with no per-field validation code. A banned image hash renders the `CONTENT_BLOCKED` message. A failure with no registered code, such as an object storage fault, renders a fixed unknown-error message.
+There is no machine-readable code, so a client that needs to branch on the reason retries the item on its own. An item rejected because the guild is full renders the emoji limit message with the resolved limit. Every other failure with a registered [error code](/http-api/errors/) renders that code's own message. An undecodable or unaccepted image renders the generic `INVALID_FORM_BODY` message with no per-field validation code. A banned image hash renders the `CONTENT_BLOCKED` message. A failure with no registered code, such as an object storage fault, renders a fixed unknown-error message.
 
 ## List guild emojis
 
@@ -175,7 +175,7 @@ The body is one [emoji create object](#emoji-create-object).
 
 <sup>2</sup> The [error code](/http-api/errors/) is `CONTENT_BLOCKED` for a blocked name and for a banned image hash, `MISSING_ACCESS` for an unavailable guild, and `MISSING_PERMISSIONS` for a membership or permission failure
 
-An image the decoder cannot read returns `INVALID_IMAGE_FORMAT`. The name scan runs before the route is reached, so it precedes the rate limit bucket and the credential check. The image hash check runs at upload time, after every other admission step has passed.
+The name scan runs before the route is reached, so it precedes the rate limit bucket and the credential check. Fluxer checks the image hash at upload time, after every other admission step has passed.
 
 ### Side effects
 
@@ -228,7 +228,7 @@ Every item name is scanned together before the route is reached, so one blocked 
 
 ### Side effects
 
-Each successful item consumes one guild emoji slot, stores its image, and writes an [`EMOJI_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason. One [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection is emitted after the batch when at least one item succeeded, and it is emitted before the audit entries are written. A failed item leaves no emoji, audit entry, or slot consumption.
+Each successful item consumes one guild emoji slot, stores its image, and writes an [`EMOJI_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason. When at least one item succeeded, Fluxer emits one [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection after the batch, then writes the audit entries. A failed item leaves no emoji, audit entry, or slot consumption.
 
 ### Rate limit
 
