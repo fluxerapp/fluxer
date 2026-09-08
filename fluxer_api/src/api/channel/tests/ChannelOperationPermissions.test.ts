@@ -46,6 +46,18 @@ describe('Channel Operation Permissions', () => {
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});
+	it('should let a minor manage a mature channel without reading it', async () => {
+		const owner = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+		const guild = await createGuild(harness, owner.token, 'Mature Channel Guild');
+		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
+		await updateChannel(harness, owner.token, systemChannel.id, {nsfw: true});
+		const renamed = await updateChannel(harness, owner.token, systemChannel.id, {name: 'still-manageable'});
+		expect(renamed.name).toBe('still-manageable');
+		await createBuilder(harness, owner.token)
+			.get(`/channels/${systemChannel.id}/messages`)
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.execute();
+	});
 	it('should reject member from updating channel without MANAGE_CHANNELS', async () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);

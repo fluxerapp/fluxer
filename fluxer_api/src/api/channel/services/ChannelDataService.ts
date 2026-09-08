@@ -111,7 +111,7 @@ export class ChannelDataService {
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
 	}): Promise<Channel> {
-		const {channel} = await this.auth.getChannelAuthenticated({userId, channelId});
+		const {channel} = await this.auth.getChannelAuthenticated({userId, channelId, skipNsfwValidation: true});
 		if (channel.type === ChannelTypes.GROUP_DM) {
 			return await this.groupDmUpdate.updateGroupDmChannel({
 				userId,

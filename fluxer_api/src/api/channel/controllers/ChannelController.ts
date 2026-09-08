@@ -123,6 +123,7 @@ export function ChannelController(app: HonoApp) {
 				const existing = await ctx.get('channelService').channelData.operations.getChannel({
 					userId: ctx.get('user').id,
 					channelId,
+					skipNsfwValidation: true,
 				});
 				ctx.set('channelUpdateType', existing.type);
 				return undefined;
