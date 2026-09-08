@@ -187,7 +187,7 @@ export async function register(
 		contactDomain = normalizePolicyContactDomain(extractEmailDomain(rawEmail));
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(rawEmail);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		contactDomainBlocked = accountPolicyEvaluator.isBlockedRegistrationEmailDomain(contactDomain);
 		if (contactDomainBlocked) {

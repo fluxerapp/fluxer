@@ -40,7 +40,7 @@ export class DonationCheckoutService {
 		}
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(params.email);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		const isRecurring = params.interval !== null;
 		const existingDonor = await this.donationRepository.findDonorByEmail(params.email);

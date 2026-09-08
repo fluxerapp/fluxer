@@ -343,7 +343,7 @@ export class ReportService {
 		const normalizedEmail = this.normalizeEmail(email);
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(normalizedEmail);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		const verificationCode = this.generateDsaVerificationCode();
 		const expiresAt = new Date(Date.now() + ms('10 minutes'));

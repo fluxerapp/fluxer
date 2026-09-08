@@ -128,6 +128,7 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.INVALID_BASE64_FORMAT]: 'admin_and_system.invalid_format',
 	[ValidationErrorCodes.INVALID_EMAIL_FORMAT]: 'email.invalid_format',
 	[ValidationErrorCodes.INVALID_EMAIL_LOCAL_PART]: 'email.invalid_format',
+	[ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL]: 'email.domain_cannot_receive_mail',
 	[ValidationErrorCodes.EMAIL_DOMAIN_NOT_ALLOWED_FOR_SSO]: 'auth_and_oauth.email_domain_not_allowed_for_sso',
 	[APIErrorCodes.INVALID_HANDOFF_CODE]: 'auth_and_oauth.handoff_code_invalid',
 	[ValidationErrorCodes.INVALID_OR_EXPIRED_AUTHORIZATION_TICKET]:

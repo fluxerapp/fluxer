@@ -178,7 +178,7 @@ export class EmailChangeService {
 		}
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(trimmedEmail);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		const existing = await users.findByEmail(trimmedEmail.toLowerCase());
 		if (existing && existing.id !== user.id) {
