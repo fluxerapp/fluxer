@@ -102,6 +102,7 @@ async function parseWebhookMultipartMessageData(
 			onPayloadParsed(payload) {
 				parsedPayload = payload;
 			},
+			actor: 'webhook',
 		},
 	);
 	if (!parsedPayload) {

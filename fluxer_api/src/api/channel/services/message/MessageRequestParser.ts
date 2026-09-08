@@ -34,6 +34,7 @@ type AttachmentMetadata = ClientAttachmentRequest | ClientUploadedAttachmentRequ
 
 interface ParseMultipartMessageDataOptions {
 	onPayloadParsed?: (payload: unknown) => void;
+	actor?: 'member' | 'webhook';
 }
 
 export async function parseMultipartMessageData(
@@ -158,6 +159,7 @@ export async function parseMultipartMessageData(
 				clientIp,
 				files: filesWithIndices,
 				attachmentMetadata: inlineNewAttachments,
+				actor: options?.actor,
 			});
 		const uploadedMap = new Map(uploadedAttachments.map((attachment) => [attachment.id, attachment]));
 		const processedInlineAttachments = inlineNewAttachments.map((clientData) => {

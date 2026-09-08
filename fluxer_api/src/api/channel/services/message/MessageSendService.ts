@@ -9,7 +9,12 @@ import {
 	SENDABLE_MESSAGE_FLAGS,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel, GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {RelationshipTypes, SensitiveMediaFilterLevel, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {
+	DELETED_USER_ID,
+	RelationshipTypes,
+	SensitiveMediaFilterLevel,
+	UserFlags,
+} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -211,15 +216,18 @@ export class MessageSendService {
 		return processed.length > 0 ? processed : undefined;
 	}
 
-	private resolveWebhookAttachmentUploadUserId(
+	private async resolveWebhookAttachmentUploadUserId(
 		webhook: Webhook,
 		attachments?: Array<AttachmentRequestData>,
-	): UserID | undefined {
-		const uploadUserId = webhook.creatorId ?? undefined;
-		if (uploadUserId === undefined && this.attachmentsToProcess(attachments) !== undefined) {
-			throw InputValidationError.fromCode('attachments', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	): Promise<UserID | undefined> {
+		if (this.attachmentsToProcess(attachments) === undefined) {
+			return webhook.creatorId ?? undefined;
 		}
-		return uploadUserId;
+		if (!webhook.creatorId) {
+			return createUserID(DELETED_USER_ID);
+		}
+		const creator = await this.deps.userRepository.findUnique(webhook.creatorId);
+		return creator ? webhook.creatorId : createUserID(DELETED_USER_ID);
 	}
 
 	private getOneToOneDmRecipientId(channel: Channel, senderId: UserID): UserID | null {
@@ -1184,7 +1192,7 @@ export class MessageSendService {
 			flags: this.deps.validationService.calculateMessageFlags(data),
 			embeds: data.embeds,
 			attachments: this.attachmentsToProcess(data.attachments),
-			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
+			attachmentUploadUserId: await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
 			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
 			messageReference,
 			messageSnapshots,
@@ -1269,7 +1277,7 @@ export class MessageSendService {
 			data,
 			channel,
 			guild,
-			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
+			attachmentUploadUserId: await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
 			allowEmbeds: true,
 		});
 		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});

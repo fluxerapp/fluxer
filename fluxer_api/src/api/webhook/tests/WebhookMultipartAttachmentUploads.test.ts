@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {loadFixture} from '../../channel/tests/AttachmentTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
+import {createPermissionOverwrite} from '../../channel/tests/ChannelTestUtils';
+import {acceptInvite, addMemberRole, createGuild, createRole} from '../../guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
-import {createWebhook, deleteWebhook, executeWebhookWithAttachments} from './WebhookTestUtils';
+import {createChannelInvite, createWebhook, deleteWebhook, executeWebhookWithAttachments} from './WebhookTestUtils';
 
 describe('Webhook multipart attachment uploads', () => {
 	let harness: ApiTestHarness;
@@ -90,6 +92,36 @@ describe('Webhook multipart attachment uploads', () => {
 			files: [],
 		});
 		expect(response.status).toBe(HTTP_STATUS.BAD_REQUEST);
+		await deleteWebhook(harness, webhook.id, owner.token);
+	});
+	it('executes multipart webhook requests when the creator is denied attach files', async () => {
+		const owner = await createTestAccount(harness);
+		const creator = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Webhook creator denied attach files guild');
+		const channelId = guild.system_channel_id!;
+		const invite = await createChannelInvite(harness, owner.token, channelId);
+		await acceptInvite(harness, creator.token, invite.code);
+		const webhookManagerRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Webhook Manager',
+			permissions: Permissions.MANAGE_WEBHOOKS.toString(),
+		});
+		await addMemberRole(harness, owner.token, guild.id, creator.userId, webhookManagerRole.id);
+		const webhook = await createWebhook(harness, channelId, creator.token, 'Denied Creator Webhook');
+		await createPermissionOverwrite(harness, owner.token, channelId, creator.userId, {
+			type: 1,
+			allow: '0',
+			deny: Permissions.ATTACH_FILES.toString(),
+		});
+		const {response, json} = await executeWebhookWithAttachments(harness, {
+			webhookId: webhook.id,
+			webhookToken: webhook.token,
+			payload: {
+				attachments: [{id: 0, filename: 'denied_creator.png'}],
+			},
+			files: [{index: 0, filename: 'denied_creator.png', data: loadFixture('yeah.png')}],
+		});
+		expect(response.status).toBe(HTTP_STATUS.OK);
+		expect(json?.attachments?.length).toBe(1);
 		await deleteWebhook(harness, webhook.id, owner.token);
 	});
 	it('rejects multipart webhook requests when file indices do not match metadata IDs', async () => {

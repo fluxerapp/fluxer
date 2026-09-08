@@ -162,6 +162,7 @@ export class ChannelService {
 			this.interactions,
 			this.messages,
 			limitConfigService,
+			gatewayService,
 		);
 		this.groupDms = new GroupDmOperationsService(
 			channelRepository,
