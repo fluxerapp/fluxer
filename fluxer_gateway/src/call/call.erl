@@ -442,4 +442,3 @@ check_pending_session_alive(ConnectionId, UserId, SessionId, SessionPid, State) 
                 ConnectionId, UserId, SessionId, State
             )
     end.
-

@@ -99,7 +99,12 @@ disconnect_user_if_in_channel(UserId, ExpectedChannelId, VoiceStates, Sessions, 
     ).
 
 -spec disconnect_user_if_in_channel(
-    user_id(), integer(), binary() | undefined, voice_states_map(), sessions_map(), cleanup_fun()
+    user_id(),
+    integer(),
+    binary() | undefined,
+    voice_states_map(),
+    sessions_map(),
+    cleanup_fun()
 ) ->
     {ok, voice_states_map(), sessions_map()}
     | {not_found, voice_states_map(), sessions_map()}

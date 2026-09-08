@@ -395,7 +395,6 @@ bounded_put_new(Key, Value, Map, MaxSize) ->
             Map#{Key => Value}
     end.
 
-
 -spec sweep_recently_disconnected(map()) -> map().
 sweep_recently_disconnected(State) ->
     Cache = maps:get(recently_disconnected_voice_states, State, #{}),
