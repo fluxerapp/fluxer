@@ -20,7 +20,7 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The members a failure adds are fixed by its code, so a client reads only the members documented for the code it matched. `errors` reports field violations. `retry_after` states the delay before another attempt is admitted, `global` distinguishes a global rate limit denial from a route one, `required_scope` names a missing OAuth2 scope, and `has_mfa` and `methods` state the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted, `global` is `true` on a global rate limit denial and `false` on a route one, `required_scope` is the OAuth2 scope the request is missing, and `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
 
 The two IP ban codes have their own members. `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` both have `ip_address` with the normalised client address, `appeal_email` with the address an appeal is sent to, `appeals_supported` which is `true` only for the permanent ban, and `ban_kind` which is `permanent` or `temporary_24h`. `expires_at` is an ISO 8601 timestamp when the ban records an expiry and `null` otherwise, including on every permanent ban.
 
