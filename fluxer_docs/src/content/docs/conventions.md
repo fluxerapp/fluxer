@@ -53,7 +53,7 @@ The `Type` column uses this notation.
 
 The description of a duration field names its unit.
 
-The type of a union lists its alternatives separated by a vertical bar, written as `type \| type` in a table cell. A field that accepts a small fixed set of literal values lists those exact wire values in the same form, as in `emoji \| sticker`.
+The type of a union lists its alternatives separated by a vertical bar, written as `type | type` in a table cell. A field that accepts a small fixed set of literal values lists those exact wire values in the same form, as in `emoji | sticker`.
 
 A superscript marker such as <sup>1</sup> refers to the numbered footnote written beneath its table or paragraph. Numbering restarts in every table. A footnote records a presence condition, gate, bound, or computed value that does not fit in a description cell.
 
