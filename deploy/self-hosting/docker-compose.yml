@@ -258,9 +258,11 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${FLUXER_SEAWEEDFS_MEMORY_LIMIT:-512mb}
+          memory: ${FLUXER_SEAWEEDFS_MEMORY_LIMIT:-2gb}
     restart: unless-stopped
     networks: [fluxer]
+    environment:
+      GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
     command: ["server", "-s3", "-dir=/data"]
     volumes:
       - seaweedfs-data:/data

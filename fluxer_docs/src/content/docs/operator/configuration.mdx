@@ -1769,7 +1769,11 @@ Default `384mb`. Becomes `MEILI_MAX_INDEXING_MEMORY`. The memory the indexer may
 
 #### `FLUXER_SEAWEEDFS_MEMORY_LIMIT`
 
-Default `512mb`. The ceiling for `seaweedfs`. One process runs the master, the volume server and the S3 gateway.
+Default `2gb`. The ceiling for `seaweedfs`. One process runs the master, the volume server and the S3 gateway. The peak is the parts of one upload in flight at once, which the client uploads in parallel: a 500 MB attachment is 20 parts of 25 MB.
+
+#### `FLUXER_SEAWEEDFS_GOMEMLIMIT`
+
+Default `1536MiB`. The heap ceiling the Go runtime collects against. Go cannot see the container limit, so without this value an upload burst grows the heap past `FLUXER_SEAWEEDFS_MEMORY_LIMIT` and the kernel OOM-kills the container mid-upload with exit 137. Raising `FLUXER_SEAWEEDFS_MEMORY_LIMIT` on its own does not fix that, because the runtime grows to fill whatever it is given. Keep this near three quarters of the container limit and move the two together.
 
 #### `FLUXER_SEAWEEDFS_INIT_MEMORY_LIMIT`
 
@@ -1930,10 +1934,12 @@ FLUXER_GATEWAY_MEMORY_LIMIT=512mb
 FLUXER_GATEWAY_MEMORY_RESERVATION=256mb
 FLUXER_MEILISEARCH_MEMORY_LIMIT=512mb
 FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=256mb
+FLUXER_SEAWEEDFS_MEMORY_LIMIT=1gb
+FLUXER_SEAWEEDFS_GOMEMLIMIT=768MiB
 FLUXER_GIFS_SHARD_CACHE_MAX_BYTES=134217728
 ```
 
-At 8 GB the api and worker heap ceilings fall to 664 MB each and Postgres caches less of the working set, which shows up as slower search and slower history scrolling under load. Nothing is turned off.
+At 8 GB the api and worker heap ceilings fall to 664 MB each and Postgres caches less of the working set, which shows up as slower search and slower history scrolling under load. Nothing is turned off, though the largest attachments need the 16 GB SeaweedFS ceiling to upload every part at once.
 
 The 4 GB profile trades more.
 
@@ -1954,6 +1960,7 @@ FLUXER_MEILISEARCH_MEMORY_LIMIT=384mb
 FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=128mb
 FLUXER_MEDIA_PROXY_MEMORY_LIMIT=320mb
 FLUXER_SEAWEEDFS_MEMORY_LIMIT=320mb
+FLUXER_SEAWEEDFS_GOMEMLIMIT=240MiB
 FLUXER_LIVEKIT_MEMORY_LIMIT=320mb
 FLUXER_VALKEY_MEMORY_LIMIT=192mb
 FLUXER_VALKEY_MAXMEMORY=128mb
