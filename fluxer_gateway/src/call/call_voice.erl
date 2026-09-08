@@ -10,7 +10,6 @@
     handle_disconnect_user/4,
     handle_leave/2,
     disconnect_user_after_pending_timeout/4,
-    reconcile_absent_connections/2,
     maybe_notify_session_force_disconnect/4,
     maybe_spawn_region_switch/3,
     is_session_pid_alive/1
@@ -155,7 +154,7 @@ handle_disconnect_user(
     end,
     case
         voice_disconnect_common:disconnect_user_if_in_channel(
-            UserId, ExpectedChannelId, VoiceStates, Sessions, CleanupFun
+            UserId, ExpectedChannelId, ConnectionId, VoiceStates, Sessions, CleanupFun
         )
     of
         {not_found, _, _} ->
@@ -236,93 +235,6 @@ disconnect_user_after_pending_timeout(
             {noreply, State#{
                 pending_connections => NewPending, sessions => NewSessions
             }}
-    end.
-
--spec reconcile_absent_connections([voice_reconciliation_v3:participant_entry()], map()) ->
-    {noreply, map()} | {stop, normal, map()}.
-reconcile_absent_connections([], State) ->
-    {noreply, State};
-reconcile_absent_connections(
-    AbsentEntries,
-    #{
-        voice_states := VoiceStates,
-        sessions := Sessions,
-        pending_connections := PendingConns
-    } = State
-) ->
-    ActiveAbsentEntries = active_absent_entries(AbsentEntries, VoiceStates),
-    case ActiveAbsentEntries of
-        [] ->
-            {noreply, State};
-        _ ->
-            do_reconcile_absent_connections(
-                ActiveAbsentEntries, VoiceStates, Sessions, PendingConns, State
-            )
-    end.
-
--spec active_absent_entries([voice_reconciliation_v3:participant_entry()], map()) ->
-    [voice_reconciliation_v3:participant_entry()].
-active_absent_entries(AbsentEntries, VoiceStates) ->
-    lists:filter(
-        fun(Entry) -> absent_entry_active(Entry, VoiceStates) end,
-        AbsentEntries
-    ).
-
--spec absent_entry_active(voice_reconciliation_v3:participant_entry(), map()) -> boolean().
-absent_entry_active(#{user_id := UserId, connection_id := ConnectionId}, VoiceStates) ->
-    case maps:get(UserId, VoiceStates, undefined) of
-        VoiceState when is_map(VoiceState) ->
-            maps:get(<<"connection_id">>, VoiceState, undefined) =:= ConnectionId;
-        _ ->
-            false
-    end.
-
--spec do_reconcile_absent_connections(
-    [voice_reconciliation_v3:participant_entry()], map(), map(), map(), map()
-) -> {noreply, map()} | {stop, normal, map()}.
-do_reconcile_absent_connections(
-    ActiveAbsentEntries, VoiceStates, Sessions, PendingConns, State
-) ->
-    RemovedUsers = [maps:get(user_id, Entry) || Entry <- ActiveAbsentEntries],
-    NewVoiceStates = lists:foldl(fun maps:remove/2, VoiceStates, RemovedUsers),
-    {NewSessions, NewPending} = remove_absent_sessions(
-        ActiveAbsentEntries, Sessions, PendingConns, State
-    ),
-    BaseState = State#{
-        voice_states => NewVoiceStates,
-        sessions => NewSessions,
-        pending_connections => NewPending
-    },
-    CleanState = call_ringing:cancel_ringing_timers(RemovedUsers, BaseState),
-    RingState = call_ringing:remove_users_from_ringing(RemovedUsers, CleanState),
-    {UpdatedState, Dispatched} = call_ringing:maybe_dispatch_state_update(State, RingState),
-    call_ringing:maybe_stop_or_noreply(UpdatedState, Dispatched).
-
--spec remove_absent_sessions(
-    [voice_reconciliation_v3:participant_entry()], map(), map(), map()
-) -> {map(), map()}.
-remove_absent_sessions(ActiveAbsentEntries, Sessions, PendingConns, State) ->
-    lists:foldl(
-        fun(Entry, {SessionsAcc, PendingAcc}) ->
-            remove_absent_session(Entry, SessionsAcc, PendingAcc, State)
-        end,
-        {Sessions, PendingConns},
-        ActiveAbsentEntries
-    ).
-
--spec remove_absent_session(voice_reconciliation_v3:participant_entry(), map(), map(), map()) ->
-    {map(), map()}.
-remove_absent_session(
-    #{user_id := UserId, connection_id := ConnectionId}, Sessions, Pending, State
-) ->
-    NewPending = voice_pending_common:remove_pending_connection(ConnectionId, Pending),
-    case voice_disconnect_common:find_session_by_user_id(UserId, Sessions) of
-        {ok, SessionId, _Pid, Ref} ->
-            demonitor(Ref, [flush]),
-            maybe_notify_session_force_disconnect(UserId, SessionId, ConnectionId, State),
-            {maps:remove(SessionId, Sessions), NewPending};
-        not_found ->
-            {Sessions, NewPending}
     end.
 
 -spec maybe_notify_session_force_disconnect(

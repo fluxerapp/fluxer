@@ -33,7 +33,6 @@
     {'DOWN', reference(), process, pid(), term()}
     | {ring_timeout, integer()}
     | {pending_connection_timeout, binary()}
-    | voice_reconcile_v3_tick
     | idle_timeout.
 -type start_result() :: {ok, pid()} | {error, term()}.
 
@@ -49,14 +48,12 @@ start_link_from_state(State) ->
 init({transferred, TransferState}) ->
     erlang:process_flag(fullsweep_after, 10),
     State = call_handoff:restore_state(TransferState),
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
     erlang:garbage_collect(),
     {ok, State};
 init(CallData) ->
     erlang:process_flag(fullsweep_after, 10),
     State = build_initial_state(CallData),
     FinalState = run_init_pipeline(State),
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
     erlang:garbage_collect(),
     {ok, FinalState}.
 
@@ -176,9 +173,6 @@ handle_info_message({ring_timeout, UserId}, State) ->
     call_ringing:handle_ring_timeout(UserId, State);
 handle_info_message({pending_connection_timeout, ConnectionId}, State) ->
     handle_pending_timeout(ConnectionId, State);
-handle_info_message(voice_reconcile_v3_tick, State) ->
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
-    maybe_reconcile_voice_v3(State);
 handle_info_message(idle_timeout, State) ->
     call_ringing:handle_idle_timeout(State).
 
@@ -324,8 +318,6 @@ decode_info_message({ring_timeout, UserId}) when is_integer(UserId) ->
     {ok, {ring_timeout, UserId}};
 decode_info_message({pending_connection_timeout, ConnectionId}) when is_binary(ConnectionId) ->
     {ok, {pending_connection_timeout, ConnectionId}};
-decode_info_message(voice_reconcile_v3_tick) ->
-    {ok, voice_reconcile_v3_tick};
 decode_info_message(idle_timeout) ->
     {ok, idle_timeout};
 decode_info_message(_) ->
@@ -451,15 +443,3 @@ check_pending_session_alive(ConnectionId, UserId, SessionId, SessionPid, State) 
             )
     end.
 
--spec maybe_reconcile_voice_v3(map()) -> {noreply, map()} | {stop, normal, map()}.
-maybe_reconcile_voice_v3(#{channel_id := ChannelId, voice_states := VoiceStates} = State) ->
-    case
-        maps:size(VoiceStates) > 0 andalso
-            voice_reconciliation_v3:enabled_for(call, ChannelId)
-    of
-        true ->
-            AbsentEntries = voice_reconciliation_v3:find_absent_call_entries(State),
-            call_voice:reconcile_absent_connections(AbsentEntries, State);
-        false ->
-            {noreply, State}
-    end.

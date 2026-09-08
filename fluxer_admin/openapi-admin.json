@@ -12287,14 +12287,7 @@
 					"max_concurrent_guild_starts": {"type": "integer", "minimum": 1, "maximum": 10000, "format": "int32"},
 					"gateway_dispatch_relay_shards": {"type": "integer", "minimum": 1, "maximum": 10000, "format": "int32"},
 					"gateway_dispatch_relay_max_queue": {"type": "integer", "minimum": 0, "maximum": 1000000, "format": "int32"},
-					"voice_e2ee_scope": {"enum": ["guild_feature_only", "platform_wide"], "type": "string"},
-					"voice_reconciliation_v3_percentage": {"type": "number", "minimum": 0, "maximum": 100},
-					"voice_reconciliation_v3_interval_ms": {
-						"type": "integer",
-						"minimum": 500,
-						"maximum": 60000,
-						"format": "int32"
-					}
+					"voice_e2ee_scope": {"enum": ["guild_feature_only", "platform_wide"], "type": "string"}
 				}
 			},
 			"InstanceConfigUpdateRequest": {
@@ -12534,14 +12527,7 @@
 					"max_concurrent_guild_starts": {"type": "integer", "minimum": 1, "maximum": 10000, "format": "int32"},
 					"gateway_dispatch_relay_shards": {"type": "integer", "minimum": 1, "maximum": 10000, "format": "int32"},
 					"gateway_dispatch_relay_max_queue": {"type": "integer", "minimum": 0, "maximum": 1000000, "format": "int32"},
-					"voice_e2ee_scope": {"enum": ["guild_feature_only", "platform_wide"], "type": "string"},
-					"voice_reconciliation_v3_percentage": {"type": "number", "minimum": 0, "maximum": 100},
-					"voice_reconciliation_v3_interval_ms": {
-						"type": "integer",
-						"minimum": 500,
-						"maximum": 60000,
-						"format": "int32"
-					}
+					"voice_e2ee_scope": {"enum": ["guild_feature_only", "platform_wide"], "type": "string"}
 				}
 			},
 			"BrandingAssetUploadRequest": {

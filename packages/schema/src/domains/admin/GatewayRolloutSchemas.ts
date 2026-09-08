@@ -16,8 +16,6 @@ export const GatewayRolloutConfigSchema = z.object({
 	gateway_dispatch_relay_shards: z.number().int().min(1).max(10000).default(32),
 	gateway_dispatch_relay_max_queue: z.number().int().min(0).max(1000000).default(50000),
 	voice_e2ee_scope: VoiceE2EEScopeEnum.default('guild_feature_only'),
-	voice_reconciliation_v3_percentage: z.number().min(0).max(100).default(100),
-	voice_reconciliation_v3_interval_ms: z.number().int().min(500).max(60000).default(2000),
 });
 
 export type GatewayRolloutConfig = z.infer<typeof GatewayRolloutConfigSchema>;
@@ -32,8 +30,6 @@ export const GatewayRolloutConfigUpdateRequest = z.object({
 	gateway_dispatch_relay_shards: z.number().int().min(1).max(10000).optional(),
 	gateway_dispatch_relay_max_queue: z.number().int().min(0).max(1000000).optional(),
 	voice_e2ee_scope: VoiceE2EEScopeEnum.optional(),
-	voice_reconciliation_v3_percentage: z.number().min(0).max(100).optional(),
-	voice_reconciliation_v3_interval_ms: z.number().int().min(500).max(60000).optional(),
 });
 
 export type GatewayRolloutConfigUpdateRequest = z.infer<typeof GatewayRolloutConfigUpdateRequest>;

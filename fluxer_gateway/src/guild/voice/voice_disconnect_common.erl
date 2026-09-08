@@ -7,6 +7,7 @@
     find_session_by_user_id/2,
     disconnect_user/4,
     disconnect_user_if_in_channel/5,
+    disconnect_user_if_in_channel/6,
     channel_has_capacity/3
 ]).
 
@@ -93,18 +94,46 @@ sessions_for_user(UserId, Sessions) ->
     | {not_found, voice_states_map(), sessions_map()}
     | {channel_mismatch, voice_states_map(), sessions_map()}.
 disconnect_user_if_in_channel(UserId, ExpectedChannelId, VoiceStates, Sessions, CleanupFun) ->
+    disconnect_user_if_in_channel(
+        UserId, ExpectedChannelId, undefined, VoiceStates, Sessions, CleanupFun
+    ).
+
+-spec disconnect_user_if_in_channel(
+    user_id(), integer(), binary() | undefined, voice_states_map(), sessions_map(), cleanup_fun()
+) ->
+    {ok, voice_states_map(), sessions_map()}
+    | {not_found, voice_states_map(), sessions_map()}
+    | {channel_mismatch, voice_states_map(), sessions_map()}.
+disconnect_user_if_in_channel(
+    UserId, ExpectedChannelId, ExpectedConnectionId, VoiceStates, Sessions, CleanupFun
+) ->
     case maps:get(UserId, VoiceStates, undefined) of
         undefined ->
             {not_found, VoiceStates, Sessions};
         VoiceState ->
-            disconnect_matching_channel(
-                UserId,
-                ExpectedChannelId,
-                VoiceState,
-                VoiceStates,
-                Sessions,
-                CleanupFun
-            )
+            case connection_matches(VoiceState, ExpectedConnectionId) of
+                false ->
+                    {not_found, VoiceStates, Sessions};
+                true ->
+                    disconnect_matching_channel(
+                        UserId,
+                        ExpectedChannelId,
+                        VoiceState,
+                        VoiceStates,
+                        Sessions,
+                        CleanupFun
+                    )
+            end
+    end.
+
+-spec connection_matches(map(), binary() | undefined) -> boolean().
+connection_matches(_VoiceState, undefined) ->
+    true;
+connection_matches(VoiceState, ExpectedConnectionId) ->
+    case maps:get(<<"connection_id">>, VoiceState, undefined) of
+        undefined -> true;
+        ExpectedConnectionId -> true;
+        _ -> false
     end.
 
 -spec disconnect_matching_channel(

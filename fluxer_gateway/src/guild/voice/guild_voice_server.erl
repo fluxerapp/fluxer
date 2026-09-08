@@ -131,7 +131,6 @@ init(#{guild_id := GuildId, guild_pid := GuildPid} = Args) ->
     guild_voice_server_sync:ensure_registry(),
     ets:insert(?REGISTRY_TABLE, {GuildId, self()}),
     erlang:send_after(?SWEEP_INTERVAL_MS, self(), sweep_pending_joins),
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
     InitialVoiceStates = voice_state_utils:ensure_voice_states(
         maps:get(initial_voice_states, Args, #{})
     ),
@@ -261,9 +260,6 @@ handle_info(sweep_pending_joins, State) ->
             NewGuildState = guild_voice_connection:sweep_expired_pending_joins(GuildState),
             {noreply, guild_voice_server_state:apply_guild_state(NewGuildState, State2)}
     end;
-handle_info(voice_reconcile_v3_tick, State) ->
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
-    {noreply, maybe_reconcile_voice_v3(State)};
 handle_info({'EXIT', Pid, Reason}, #{guild_pid := GuildPid} = State) when Pid =:= GuildPid ->
     logger:info(
         "Voice server shutting down because guild process exited",
@@ -399,20 +395,6 @@ bounded_put_new(Key, Value, Map, MaxSize) ->
             Map#{Key => Value}
     end.
 
--spec maybe_reconcile_voice_v3(server_state()) -> server_state().
-maybe_reconcile_voice_v3(#{guild_id := GuildId, voice_states := VoiceStates} = State) ->
-    case
-        maps:size(VoiceStates) > 0 andalso
-            voice_reconciliation_v3:enabled_for(guild, GuildId)
-    of
-        true ->
-            AbsentConnectionIds = voice_reconciliation_v3:find_absent_guild_connections(State),
-            guild_voice_disconnect:reconcile_absent_voice_connections(
-                AbsentConnectionIds, State
-            );
-        false ->
-            State
-    end.
 
 -spec sweep_recently_disconnected(map()) -> map().
 sweep_recently_disconnected(State) ->

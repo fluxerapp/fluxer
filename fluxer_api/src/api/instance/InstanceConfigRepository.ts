@@ -42,8 +42,6 @@ const DEFAULT_GATEWAY_ROLLOUT_CONFIG: GatewayRolloutConfig = {
 	gateway_dispatch_relay_shards: 32,
 	gateway_dispatch_relay_max_queue: 50000,
 	voice_e2ee_scope: 'guild_feature_only',
-	voice_reconciliation_v3_percentage: 100,
-	voice_reconciliation_v3_interval_ms: 2000,
 };
 export type InstanceRegistrationMode = 'open' | 'approval' | 'closed';
 export interface InstanceRegistrationConfig {

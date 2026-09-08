@@ -85,8 +85,6 @@ Admission and dispatch tuning for the Gateway cluster.
 | gateway_dispatch_relay_shards | integer | Dispatch relay shard count (1-10000, default 32) |
 | gateway_dispatch_relay_max_queue | integer | Dispatch relay queue ceiling (0-1000000, default 50000) |
 | voice_e2ee_scope | string | `guild_feature_only` or `platform_wide` (default `guild_feature_only`) |
-| voice_reconciliation_v3_percentage | number | Percentage of voice states on the newer reconciliation path (0-100, default 100) |
-| voice_reconciliation_v3_interval_ms | integer | Voice reconciliation interval (500-60000, default 2000) |
 
 Every field is present on read. A deployment that has stored nothing reports the defaults above.
 

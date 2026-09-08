@@ -8,7 +8,6 @@
 -export([disconnect_voice_user/2]).
 -export([disconnect_voice_user_if_in_channel/2]).
 -export([disconnect_all_voice_users_in_channel/2]).
--export([reconcile_absent_voice_connections/2]).
 -export([cleanup_virtual_channel_access_for_user/2]).
 -export([recently_disconnected_voice_states/1]).
 -export([clear_recently_disconnected/2]).
@@ -51,10 +50,6 @@ disconnect_voice_user_if_in_channel(Request, State) ->
     voice_reply().
 disconnect_all_voice_users_in_channel(Request, State) ->
     guild_voice_disconnect_channel:disconnect_all_voice_users_in_channel(Request, State).
-
--spec reconcile_absent_voice_connections([binary()], guild_state()) -> guild_state().
-reconcile_absent_voice_connections(ConnectionIds, State) ->
-    guild_voice_disconnect_user:reconcile_absent_voice_connections(ConnectionIds, State).
 
 -spec cleanup_virtual_channel_access_for_user(integer(), guild_state()) -> guild_state().
 cleanup_virtual_channel_access_for_user(UserId, State) ->
@@ -207,23 +202,6 @@ disconnect_all_voice_users_in_channel_test() ->
     Remaining = maps:get(voice_states, NewState),
     ?assert(maps:is_key(<<"c">>, Remaining)),
     ?assertNot(maps:is_key(<<"a">>, Remaining)).
-
-reconcile_absent_voice_connections_removes_without_force_disconnect_test() ->
-    TestFun = test_force_disconnect_fun(),
-    VoiceStates = #{
-        <<"a">> => voice_state_fixture(5, 10, 20),
-        <<"b">> => voice_state_fixture(6, 10, 20)
-    },
-    State = #{
-        id => 10,
-        voice_states => VoiceStates,
-        test_force_disconnect_fun => TestFun
-    },
-    NewState = reconcile_absent_voice_connections([<<"a">>], State),
-    Remaining = maps:get(voice_states, NewState),
-    ?assertNot(maps:is_key(<<"a">>, Remaining)),
-    ?assert(maps:is_key(<<"b">>, Remaining)),
-    ?assertEqual([], collect_force_disconnect_messages(1)).
 
 pending_connection_tests_test() ->
     Pending = #{
