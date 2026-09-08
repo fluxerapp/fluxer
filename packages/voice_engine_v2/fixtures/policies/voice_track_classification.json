@@ -119,5 +119,177 @@
 			"remoteScreenShareTrackIndex": 3,
 			"remoteScreenShareAudioTrackIndex": null
 		}
+	},
+	{
+		"name": "classifies a firefox screen share whose outbound stats omit the track identifier",
+		"input": {
+			"tracks": [
+				{
+					"direction": "recv",
+					"kind": "audio",
+					"trackIdentifier": "{8a106956-d202-4916-8e19-0a1672c64b73}",
+					"bitrateKbps": 46
+				},
+				{"direction": "send", "kind": "audio", "bitrateKbps": 30},
+				{"direction": "send", "kind": "video", "bitrateKbps": 47}
+			],
+			"publications": {
+				"localCameraTrackId": null,
+				"localMicrophoneTrackId": "b0d2f1a7-6c3e-4f8a-9b21-5d7c4e0a1f36",
+				"localScreenShareTrackId": "2f4c8de1-9a07-4b53-8c6d-1e5b7a02d94f",
+				"localScreenShareAudioTrackId": null,
+				"remoteMicrophoneTrackIds": ["8a106956-d202-4916-8e19-0a1672c64b73"],
+				"remoteScreenShareTrackIds": [],
+				"remoteScreenShareAudioTrackIds": []
+			}
+		},
+		"expected": {
+			"localVideoTrackIndex": null,
+			"localAudioTrackIndex": 1,
+			"localScreenShareTrackIndex": 2,
+			"localScreenShareAudioTrackIndex": null,
+			"remoteVideoTrackIndex": null,
+			"remoteAudioTrackIndex": 0,
+			"remoteScreenShareTrackIndex": null,
+			"remoteScreenShareAudioTrackIndex": null
+		}
+	},
+	{
+		"name": "classifies a firefox inbound screen share reported with a braced track identifier",
+		"input": {
+			"tracks": [
+				{
+					"direction": "recv",
+					"kind": "audio",
+					"trackIdentifier": "{9010d313-264b-4c51-9f13-9a6aefafce83}",
+					"bitrateKbps": 29
+				},
+				{
+					"direction": "recv",
+					"kind": "video",
+					"trackIdentifier": "{34171e0d-174d-4d56-bb71-76b4fba330c3}",
+					"bitrateKbps": 3585
+				},
+				{"direction": "send", "kind": "audio", "bitrateKbps": 44}
+			],
+			"publications": {
+				"localCameraTrackId": null,
+				"localMicrophoneTrackId": "7c5a1b98-3d24-4e6f-8a10-9b2c3d4e5f60",
+				"localScreenShareTrackId": null,
+				"localScreenShareAudioTrackId": null,
+				"remoteMicrophoneTrackIds": ["9010d313-264b-4c51-9f13-9a6aefafce83"],
+				"remoteScreenShareTrackIds": ["34171e0d-174d-4d56-bb71-76b4fba330c3"],
+				"remoteScreenShareAudioTrackIds": []
+			}
+		},
+		"expected": {
+			"localVideoTrackIndex": null,
+			"localAudioTrackIndex": 2,
+			"localScreenShareTrackIndex": null,
+			"localScreenShareAudioTrackIndex": null,
+			"remoteVideoTrackIndex": null,
+			"remoteAudioTrackIndex": 0,
+			"remoteScreenShareTrackIndex": 1,
+			"remoteScreenShareAudioTrackIndex": null
+		}
+	},
+	{
+		"name": "leaves both local video roles unresolved when unidentified sends could be camera or screen share",
+		"input": {
+			"tracks": [
+				{"direction": "send", "kind": "video", "bitrateKbps": 1600},
+				{"direction": "send", "kind": "video", "bitrateKbps": 500}
+			],
+			"publications": {
+				"localCameraTrackId": "c1e7d3b0-88f4-45a9-9c62-0ab5d1e2f374",
+				"localMicrophoneTrackId": null,
+				"localScreenShareTrackId": "2f4c8de1-9a07-4b53-8c6d-1e5b7a02d94f",
+				"localScreenShareAudioTrackId": null,
+				"remoteMicrophoneTrackIds": [],
+				"remoteScreenShareTrackIds": [],
+				"remoteScreenShareAudioTrackIds": []
+			}
+		},
+		"expected": {
+			"localVideoTrackIndex": null,
+			"localAudioTrackIndex": null,
+			"localScreenShareTrackIndex": null,
+			"localScreenShareAudioTrackIndex": null,
+			"remoteVideoTrackIndex": null,
+			"remoteAudioTrackIndex": null,
+			"remoteScreenShareTrackIndex": null,
+			"remoteScreenShareAudioTrackIndex": null
+		}
+	},
+	{
+		"name": "keeps chromium outbound identifier matching for a screen share published without a camera",
+		"input": {
+			"tracks": [
+				{
+					"direction": "send",
+					"kind": "video",
+					"trackIdentifier": "97079fec-a3af-4bc0-a8e6-ad142dc05c83",
+					"bitrateKbps": 1600
+				},
+				{"direction": "send", "kind": "audio", "bitrateKbps": 30}
+			],
+			"publications": {
+				"localCameraTrackId": null,
+				"localMicrophoneTrackId": null,
+				"localScreenShareTrackId": "97079fec-a3af-4bc0-a8e6-ad142dc05c83",
+				"localScreenShareAudioTrackId": null,
+				"remoteMicrophoneTrackIds": [],
+				"remoteScreenShareTrackIds": [],
+				"remoteScreenShareAudioTrackIds": []
+			}
+		},
+		"expected": {
+			"localVideoTrackIndex": null,
+			"localAudioTrackIndex": 1,
+			"localScreenShareTrackIndex": 0,
+			"localScreenShareAudioTrackIndex": null,
+			"remoteVideoTrackIndex": null,
+			"remoteAudioTrackIndex": null,
+			"remoteScreenShareTrackIndex": null,
+			"remoteScreenShareAudioTrackIndex": null
+		}
+	},
+	{
+		"name": "keeps chromium identified sends eligible for the camera role while a screen share is published",
+		"input": {
+			"tracks": [
+				{
+					"direction": "send",
+					"kind": "video",
+					"trackIdentifier": "97079fec-a3af-4bc0-a8e6-ad142dc05c83",
+					"bitrateKbps": 1600
+				},
+				{
+					"direction": "send",
+					"kind": "video",
+					"trackIdentifier": "1d0a4c62-5b3e-4f71-88d9-6c2a7e50b431",
+					"bitrateKbps": 400
+				}
+			],
+			"publications": {
+				"localCameraTrackId": null,
+				"localMicrophoneTrackId": null,
+				"localScreenShareTrackId": "97079fec-a3af-4bc0-a8e6-ad142dc05c83",
+				"localScreenShareAudioTrackId": null,
+				"remoteMicrophoneTrackIds": [],
+				"remoteScreenShareTrackIds": [],
+				"remoteScreenShareAudioTrackIds": []
+			}
+		},
+		"expected": {
+			"localVideoTrackIndex": 1,
+			"localAudioTrackIndex": null,
+			"localScreenShareTrackIndex": 0,
+			"localScreenShareAudioTrackIndex": null,
+			"remoteVideoTrackIndex": null,
+			"remoteAudioTrackIndex": null,
+			"remoteScreenShareTrackIndex": null,
+			"remoteScreenShareAudioTrackIndex": null
+		}
 	}
 ]

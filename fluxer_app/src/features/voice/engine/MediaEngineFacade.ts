@@ -749,6 +749,16 @@ class MediaEngineFacade extends Store {
 		await voiceEngineV2AppMediaExecutionAdapter.refreshCameraCapture();
 	}
 
+	refreshScreenShareCodecNegotiationFromSettings(): void {
+		void this.refreshScreenShareCodecNegotiationFromCurrentEngine().catch((error) => {
+			logger.warn('Failed to refresh screen share codec negotiation from settings', {error});
+		});
+	}
+
+	private async refreshScreenShareCodecNegotiationFromCurrentEngine(): Promise<void> {
+		await ScreenShareCodecNegotiation.publishLocalCapabilities(this.room, 'manual');
+	}
+
 	private reconcileLocalAudioStateInBackground(reason: string): void {
 		const previous = this.localAudioReconcileCoalescer;
 		const next = transitionVoiceLocalAudioReconcileCoalescerSnapshot(previous, {type: 'run.requested', reason});

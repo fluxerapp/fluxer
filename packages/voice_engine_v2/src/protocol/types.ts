@@ -499,12 +499,14 @@ export interface VoiceEngineV2PerTrackStats {
 	kind: 'audio' | 'video' | 'unknown';
 	ssrc?: number;
 	rid?: string;
+	active?: boolean;
 	mid?: string;
 	trackIdentifier?: string;
 	mediaSourceId?: string;
 	codec?: string;
 	payloadType?: number;
 	bitrateKbps: number;
+	bitrateWindowMs?: number;
 	packetsLost?: number;
 	packetsLossPercent?: number;
 	jitterMs?: number;

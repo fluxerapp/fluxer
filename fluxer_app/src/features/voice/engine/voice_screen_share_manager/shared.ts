@@ -469,6 +469,7 @@ interface OutboundVideoStatsEntry {
 	mediaType?: string;
 	codecId?: string;
 	mediaSourceId?: string;
+	active?: boolean;
 	framesEncoded?: number;
 	framesSent?: number;
 	encoderImplementation?: string;
@@ -592,6 +593,7 @@ export function findStalledVideoEncoder(stats: RTCStatsReport, codec?: VideoCode
 	}
 	for (const report of reports) {
 		if (getStatsKind(report, reportsById) !== 'video') continue;
+		if (report.active === false) continue;
 		const mimeType = report.codecId ? reportsById.get(report.codecId)?.mimeType : undefined;
 		if (report.codecId && !codecMatchesTarget(mimeType, codec)) continue;
 		const resolvedCodec = codec ?? getVideoCodecFromMimeType(mimeType);

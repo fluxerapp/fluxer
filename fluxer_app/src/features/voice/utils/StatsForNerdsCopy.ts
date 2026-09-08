@@ -15,7 +15,6 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {getScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
 import {getNativeEngineAudioTrackPumpStats} from '@app/features/voice/engine/voice_screen_share_manager/NativeEngineAudioTrackPump';
 import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
@@ -36,6 +35,7 @@ import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/featu
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
+	collectScreenShareAudioPublicationDiagnostics,
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {NativeAudioApplication, VirtmicNode} from '@app/types/electron.d';
@@ -519,8 +519,8 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
-			pump: getScreenShareAudioPumpDiagnostics(),
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),
+			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
 		},
 		appInfo: {
 			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',

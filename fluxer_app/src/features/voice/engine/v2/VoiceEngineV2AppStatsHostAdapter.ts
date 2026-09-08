@@ -54,12 +54,14 @@ export interface PerTrackStats {
 	kind: 'audio' | 'video' | 'unknown';
 	ssrc?: number;
 	rid?: string;
+	active?: boolean;
 	mid?: string;
 	trackIdentifier?: string;
 	mediaSourceId?: string;
 	codec?: string;
 	payloadType?: number;
 	bitrateKbps: number;
+	bitrateWindowMs?: number;
 	packetsLost?: number;
 	packetsLossPercent?: number;
 	jitterMs?: number;
@@ -160,6 +162,12 @@ type RoomWithEngine = Room & {
 
 interface StatsSource {
 	getStats(): Promise<StatsReportMap>;
+	getTransceivers?(): ReadonlyArray<StatsTransceiver>;
+}
+
+interface StatsTransceiver {
+	mid: string | null;
+	sender?: {track?: {id: string} | null} | null;
 }
 
 interface StatsReportMap {
@@ -186,6 +194,7 @@ interface RTCStatsEntry {
 	payloadType?: number;
 	ssrc?: number;
 	rid?: string;
+	active?: boolean;
 	mid?: string;
 	trackId?: string;
 	trackIdentifier?: string;
@@ -248,6 +257,11 @@ const LATENCY_UPDATE_INTERVAL_MS = 2000;
 const STATS_CLOCK_INTERVAL_MS = 1000;
 const STATS_UPDATE_INTERVAL_MS = 2000;
 
+interface BitrateSample {
+	bitrateKbps: number;
+	windowMs?: number;
+}
+
 function normalizeTrackKind(kind: string | undefined): PerTrackStats['kind'] {
 	if (kind === 'audio' || kind === 'video') return kind;
 	return 'unknown';
@@ -264,28 +278,32 @@ function getReportKind(report: RTCStatsEntry, reportsById: Map<string, RTCStatsE
 	return normalizeTrackKind(track?.kind ?? track?.mediaType ?? mediaSource?.kind ?? mediaSource?.mediaType);
 }
 
-function getBitrateKbps(
+function getBitrateSample(
 	reportId: string,
 	currentBytes: number | undefined,
 	now: number,
 	rtpCounters: Map<string, VoiceStatsRtpCounter>,
-): number {
+): BitrateSample {
 	if (typeof currentBytes !== 'number' || !Number.isFinite(currentBytes)) {
-		return 0;
+		return {bitrateKbps: 0};
 	}
 	const previous = rtpCounters.get(reportId);
 	let bitrateKbps = 0;
+	let windowMs: number | undefined;
 	if (previous?.bytes !== undefined) {
 		const dt = (now - previous.timestamp) / 1000;
 		const db = currentBytes - previous.bytes;
-		if (dt > 0 && db >= 0) bitrateKbps = (db * 8) / 1000 / dt;
+		if (dt > 0 && db >= 0) {
+			bitrateKbps = (db * 8) / 1000 / dt;
+			windowMs = Math.round(now - previous.timestamp);
+		}
 	}
 	rtpCounters.set(reportId, {
 		...previous,
 		bytes: currentBytes,
 		timestamp: now,
 	});
-	return bitrateKbps;
+	return {bitrateKbps, windowMs};
 }
 
 function hasUsableLossDeltas(lostDelta: number, receivedDelta: number): boolean {
@@ -344,6 +362,7 @@ function hasUsableJitterBuffer(report: RTCStatsEntry): boolean {
 
 function buildOutboundTrackExtras(report: RTCStatsEntry): Partial<PerTrackStats> {
 	return {
+		active: report.active,
 		retransmittedPacketsSent: report.retransmittedPacketsSent,
 		retransmittedBytesSent: report.retransmittedBytesSent,
 		keyFramesEncoded: report.keyFramesEncoded,
@@ -379,11 +398,12 @@ function buildPerTrackStat(args: {
 	now: number;
 	rtpCounters: Map<string, VoiceStatsRtpCounter>;
 	reportsById: Map<string, RTCStatsEntry>;
+	midToSenderTrackId: Map<string, string>;
 }): PerTrackStats {
-	const {report, sourceId, isOutbound, isInbound, now, rtpCounters, reportsById} = args;
+	const {report, sourceId, isOutbound, isInbound, now, rtpCounters, reportsById, midToSenderTrackId} = args;
 	const id = `${sourceId}:${report.type}:${report.id}`;
 	const currentBytes = isOutbound ? report.bytesSent : report.bytesReceived;
-	const bitrateKbps = getBitrateKbps(id, currentBytes, now, rtpCounters);
+	const bitrate = getBitrateSample(id, currentBytes, now, rtpCounters);
 	const codec = report.codecId ? reportsById.get(report.codecId) : undefined;
 	const mediaSource = report.mediaSourceId ? reportsById.get(report.mediaSourceId) : undefined;
 	const packetsLossPercent = isInbound ? getPacketLossPercent(id, report, now, rtpCounters) : undefined;
@@ -402,11 +422,15 @@ function buildPerTrackStat(args: {
 		ssrc: report.ssrc,
 		rid: report.rid,
 		mid: report.mid,
-		trackIdentifier: report.trackIdentifier ?? mediaSource?.trackIdentifier,
+		trackIdentifier:
+			report.trackIdentifier ??
+			mediaSource?.trackIdentifier ??
+			(isOutbound && report.mid ? midToSenderTrackId.get(report.mid) : undefined),
 		mediaSourceId: report.mediaSourceId,
 		codec: codec?.mimeType,
 		payloadType: codec?.payloadType,
-		bitrateKbps: Math.round(bitrateKbps),
+		bitrateKbps: Math.round(bitrate.bitrateKbps),
+		bitrateWindowMs: bitrate.windowMs,
 		packetsLost: report.packetsLost,
 		packetsLossPercent: packetsLossPercent !== undefined ? Math.round(packetsLossPercent * 10) / 10 : undefined,
 		jitterMs: typeof report.jitter === 'number' ? Math.round(report.jitter * 1000 * 10) / 10 : undefined,
@@ -485,6 +509,11 @@ async function collectFromStatsSource(
 	transport: TransportInfo | null;
 }> {
 	const reports = await source.getStats();
+	const midToSenderTrackId = new Map<string, string>();
+	for (const transceiver of source.getTransceivers?.() ?? []) {
+		const senderTrackId = transceiver.sender?.track?.id;
+		if (transceiver.mid && senderTrackId) midToSenderTrackId.set(transceiver.mid, senderTrackId);
+	}
 	const reportsById = new Map<string, RTCStatsEntry>();
 	for (const report of reports.values()) {
 		const statsEntry = report as RTCStatsEntry;
@@ -511,7 +540,9 @@ async function collectFromStatsSource(
 		if (!isOutbound && !isInbound) continue;
 		const id = `${sourceId}:${report.type}:${report.id}`;
 		activeCounterIds.add(id);
-		tracks.push(buildPerTrackStat({report, sourceId, isOutbound, isInbound, now, rtpCounters, reportsById}));
+		tracks.push(
+			buildPerTrackStat({report, sourceId, isOutbound, isInbound, now, rtpCounters, reportsById, midToSenderTrackId}),
+		);
 	}
 	if (!activePair && transportReport?.selectedCandidatePairId) {
 		const selectedPair = reportsById.get(transportReport.selectedCandidatePairId);

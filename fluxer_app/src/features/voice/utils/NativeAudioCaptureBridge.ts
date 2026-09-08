@@ -4,7 +4,10 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {getNativeAudioErrorDetail} from '@app/features/voice/utils/NativeAudioFailureUtils';
-import {getBridgeStats as getNativeAudioBridgeStats} from '@app/features/voice/utils/native_audio_capture_bridge/bridgeStats';
+import {
+	getEndedBridgeCaptures,
+	getBridgeStats as getNativeAudioBridgeStats,
+} from '@app/features/voice/utils/native_audio_capture_bridge/bridgeStats';
 import {createGeneratorBridge} from '@app/features/voice/utils/native_audio_capture_bridge/createGeneratorBridge';
 import {createScriptProcessorBridge} from '@app/features/voice/utils/native_audio_capture_bridge/createScriptProcessorBridge';
 import {
@@ -67,8 +70,18 @@ interface NativeAudioStartedCaptureDiagnostic {
 	includeSelfWindowAudio?: boolean;
 }
 
+interface NativeAudioLifecycleFaultDiagnostic {
+	captureId: string;
+	sourceId: string;
+	message: string;
+	atMs: number;
+}
+
+const MAX_RETAINED_LIFECYCLE_FAULTS = 8;
+
 let lastStartedCapture: NativeAudioStartedCaptureDiagnostic | null = null;
 let sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null = null;
+let lifecycleFaults: Array<NativeAudioLifecycleFaultDiagnostic> = [];
 const lifecycleBoundCaptureIds = new Set<string>();
 
 export {getNativeAudioBridgeStats};
@@ -93,9 +106,19 @@ function bindNativeAudioCaptureLifecycle(captureId: string): void {
 	}
 }
 
+function recordLifecycleFault(captureId: string, message: string): void {
+	lifecycleFaults.push({captureId, sourceId: `native-audio-tap:${captureId}`, message, atMs: Date.now()});
+	if (lifecycleFaults.length > MAX_RETAINED_LIFECYCLE_FAULTS) {
+		lifecycleFaults = lifecycleFaults.slice(-MAX_RETAINED_LIFECYCLE_FAULTS);
+	}
+}
+
 function unbindNativeAudioCaptureLifecycle(captureId: string, faulted: boolean): void {
 	if (!lifecycleBoundCaptureIds.has(captureId)) return;
 	const bridge = sourceLifecycleBridge;
+	if (faulted) {
+		recordLifecycleFault(captureId, 'native-audio-tap-track-ended');
+	}
 	if (bridge) {
 		if (faulted) {
 			bridge.reportLifecycle({captureId, kind: 'error', message: 'native-audio-tap-track-ended'});
@@ -167,6 +190,8 @@ export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> 
 		lastStartedCapture: started,
 		lastArmFailure: getLastNativeAudioArmFailure(),
 		bridgeStats: getNativeAudioBridgeStats(),
+		endedBridgeCaptures: getEndedBridgeCaptures(),
+		lifecycleFaults: lifecycleFaults.map((fault) => ({...fault})),
 	};
 }
 
@@ -1499,5 +1524,6 @@ export function resetNativeAudioCaptureBridgeForTests(): void {
 	activeBridge = null;
 	supersededBridge = null;
 	sourceLifecycleBridge = null;
+	lifecycleFaults = [];
 	lifecycleBoundCaptureIds.clear();
 }

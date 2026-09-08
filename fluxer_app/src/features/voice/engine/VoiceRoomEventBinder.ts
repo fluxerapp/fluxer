@@ -18,7 +18,7 @@ import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import {ScreenShareWatchErrorCode, ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import {scheduleScreenShareDecoderVerification} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
-import {markVideoDecoderRuntimeFailure} from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {markScreenShareDecodeFailure} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import type {
 	LocalParticipant,
@@ -266,7 +266,7 @@ export function bindRoomEvents(
 					screenShareDecoderVerificationTimers.delete(trackSid);
 				},
 				(failure) => {
-					if (!markVideoDecoderRuntimeFailure(failure.codec, 'screen-share-decode-stalled')) return;
+					if (!markScreenShareDecodeFailure(failure.codec, 'screen-share-decode-stalled')) return;
 					void ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual').catch((error) => {
 						logger.warn('Failed to publish updated codec capabilities after decode stall', {
 							error,

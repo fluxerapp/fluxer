@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {FluxerCodecAdvertisement} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
+import type {
+	FluxerCodecAdvertisement,
+	FluxerSelectProtocolMessage,
+} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import type {HardwareEncodeReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 let av1OptIn = false;
 let hevcOptIn = false;
 let preferredScreenShareCodec = 'auto';
 let gpuReport: HardwareEncodeReport | null = null;
+let firefoxBrowser = false;
 
 vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 	default: {
@@ -26,7 +30,7 @@ vi.mock('@app/features/ui/utils/NativeUtils', () => ({
 	guessPlatform: () => 'windows',
 	isChromiumBrowser: () => true,
 	isDesktop: () => true,
-	isFirefoxBrowser: () => false,
+	isFirefoxBrowser: () => firefoxBrowser,
 }));
 
 vi.mock('@app/features/voice/utils/GpuEncoderCapabilities', () => ({
@@ -48,6 +52,8 @@ vi.mock('@app/features/voice/utils/OpenH264Status', () => ({
 }));
 
 vi.mock('@app/features/voice/utils/VideoDecoderCapabilities', () => ({
+	clearScreenShareDecodeFailures: () => undefined,
+	getScreenShareDecodeFailures: () => new Set(),
 	getVideoDecoderExclusionsSync: () => [],
 	loadVideoDecoderExclusions: async () => [],
 }));
@@ -216,6 +222,92 @@ describe('screen-share codec negotiation with the HEVC opt-in off', () => {
 	});
 });
 
+describe('screen-share codec negotiation on Gecko', () => {
+	beforeEach(() => {
+		av1OptIn = false;
+		hevcOptIn = false;
+		preferredScreenShareCodec = 'auto';
+		gpuReport = null;
+		firefoxBrowser = true;
+		resetCachedCodecCapabilities();
+	});
+
+	afterEach(() => {
+		firefoxBrowser = false;
+		resetCachedCodecCapabilities();
+	});
+
+	it('ranks VP8 ahead of H.264 because Gecko always software-encodes H.264', () => {
+		expect(getScreenShareCodecPreferenceOrder()).toEqual(['vp8', 'h264']);
+	});
+
+	it('negotiates VP8 when both ends can encode and decode VP8 and H.264', () => {
+		const local = buildLocalCodecAdvertisements();
+		const remote = [buildLocalCodecAdvertisements()];
+		expect(computeNegotiatedVideoCodec(local, remote, 0, getScreenShareCodecPreferenceOrder()).codec).toBe('vp8');
+	});
+
+	it('still lets an explicit H.264 pin win over the Gecko order', () => {
+		expect(getScreenShareCodecPreferenceOrder('h264')[0]).toBe('h264');
+	});
+});
+
+describe('advertising local capabilities over the negotiation topic', () => {
+	let room: FakeRoom;
+
+	beforeEach(() => {
+		av1OptIn = false;
+		hevcOptIn = false;
+		preferredScreenShareCodec = 'auto';
+		gpuReport = {av1: 'hardware', h265: 'hardware', h264: 'hardware', vp9: 'software', vp8: 'software'};
+		resetCachedCodecCapabilities();
+		room = new FakeRoom();
+		ScreenShareCodecNegotiation.setSelectionChangeListener(null);
+	});
+
+	async function publishAndCaptureSelectProtocol(): Promise<{
+		payload: Uint8Array;
+		message: FluxerSelectProtocolMessage;
+	}> {
+		Object.defineProperty(globalThis, 'window', {configurable: true, writable: true, value: {}});
+		try {
+			ScreenShareCodecNegotiation.bind(room as never);
+			await ScreenShareCodecNegotiation.publishLocalCapabilities(room as never, 'manual');
+		} finally {
+			Reflect.deleteProperty(globalThis, 'window');
+		}
+		const payloads = (room.localParticipant.publishData.mock.calls as Array<Array<unknown>>).map(
+			(call) => call[0] as Uint8Array,
+		);
+		const payload = payloads.findLast(
+			(candidate) => (JSON.parse(new TextDecoder().decode(candidate)) as {op: number}).op === 1,
+		);
+		if (!payload) throw new Error('no select-protocol message was published');
+		return {payload, message: JSON.parse(new TextDecoder().decode(payload)) as FluxerSelectProtocolMessage};
+	}
+
+	it('advertises no experiments because nothing on either side reads them', async () => {
+		const {message} = await publishAndCaptureSelectProtocol();
+		expect(message.op).toBe(1);
+		expect(message.d.experiments).toEqual([]);
+		ScreenShareCodecNegotiation.dispose();
+	});
+
+	it('keeps the empty experiments list acceptable to the receive-side validator', async () => {
+		const {payload} = await publishAndCaptureSelectProtocol();
+		ScreenShareCodecNegotiation.dispose();
+		const peerRoom = new FakeRoom();
+		peerRoom.remoteParticipants.set('peer', {identity: 'peer'});
+		ScreenShareCodecNegotiation.bind(peerRoom as never);
+		const listener = vi.fn();
+		ScreenShareCodecNegotiation.setSelectionChangeListener(listener);
+		peerRoom.emit(RoomEvent.DataReceived, payload, {identity: 'peer'}, undefined, SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC);
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(listener).toHaveBeenCalled();
+		ScreenShareCodecNegotiation.dispose();
+	});
+});
+
 describe('reacting to a mid-session codec selection change', () => {
 	let room: FakeRoom;
 
@@ -264,6 +356,47 @@ describe('reacting to a mid-session codec selection change', () => {
 		expect(negotiated).not.toBe('h265');
 		expect(listener).toHaveBeenCalledTimes(1);
 		expect(listener).toHaveBeenCalledWith(room, negotiated, 'data');
+		ScreenShareCodecNegotiation.dispose();
+	});
+
+	async function withWindowDefined(run: () => Promise<void>): Promise<void> {
+		Object.defineProperty(globalThis, 'window', {configurable: true, writable: true, value: {}});
+		try {
+			await run();
+		} finally {
+			Reflect.deleteProperty(globalThis, 'window');
+		}
+	}
+
+	it('stops reusing a live AV1 selection once the AV1 opt-in is turned off mid-share', async () => {
+		av1OptIn = true;
+		resetCachedCodecCapabilities();
+		await establishBaseline();
+		expect(ScreenShareCodecNegotiation.getSelectedCodec()).toBe('av1');
+		av1OptIn = false;
+		resetCachedCodecCapabilities();
+		expect(ScreenShareCodecNegotiation.selectScreenShareCodec('auto')).not.toBe('av1');
+		expect(ScreenShareCodecNegotiation.selectNativeScreenShareCodec('auto')).not.toBe('av1');
+		expect(getScreenShareCodecPreferenceOrder()).toContain(ScreenShareCodecNegotiation.selectScreenShareCodec('auto'));
+		ScreenShareCodecNegotiation.dispose();
+	});
+
+	it('renegotiates the live share off AV1 when the opt-in toggle refreshes the local capabilities', async () => {
+		av1OptIn = true;
+		resetCachedCodecCapabilities();
+		await establishBaseline();
+		expect(ScreenShareCodecNegotiation.getSelectedCodec()).toBe('av1');
+		const listener = vi.fn();
+		ScreenShareCodecNegotiation.setSelectionChangeListener(listener);
+		av1OptIn = false;
+		resetCachedCodecCapabilities();
+		await withWindowDefined(async () => {
+			await ScreenShareCodecNegotiation.publishLocalCapabilities(room as never, 'manual');
+		});
+		const negotiated = ScreenShareCodecNegotiation.getSelectedCodec();
+		expect(negotiated).not.toBe('av1');
+		expect(listener).toHaveBeenCalledTimes(1);
+		expect(listener).toHaveBeenCalledWith(room, negotiated, 'manual');
 		ScreenShareCodecNegotiation.dispose();
 	});
 

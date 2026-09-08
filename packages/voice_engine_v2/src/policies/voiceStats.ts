@@ -513,22 +513,53 @@ function normalizedId(id: string | null | undefined): string | null {
 	return trimmed ? trimmed : null;
 }
 
+function canonicalId(id: string | null | undefined): string | null {
+	const normalized = normalizedId(id);
+	if (normalized === null) return null;
+	const unwrapped =
+		normalized.startsWith('{') && normalized.endsWith('}') ? normalized.slice(1, -1).trim() : normalized;
+	return unwrapped ? unwrapped.toLowerCase() : null;
+}
+
 function idList(ids: ReadonlyArray<string>): Array<string> {
-	return ids.map((id) => normalizedId(id)).filter((id): id is string => id !== null);
+	return ids.map((id) => canonicalId(id)).filter((id): id is string => id !== null);
 }
 
 function matchesId(candidate: IndexedVoiceEngineV2StatsTrack, id: string | null): boolean {
-	const trackId = normalizedId(candidate.track.trackIdentifier);
-	return trackId !== null && id !== null && trackId === id;
+	const trackId = canonicalId(candidate.track.trackIdentifier);
+	const publicationId = canonicalId(id);
+	return trackId !== null && publicationId !== null && trackId === publicationId;
 }
 
 function idInList(candidate: IndexedVoiceEngineV2StatsTrack, ids: ReadonlyArray<string>): boolean {
-	const trackId = normalizedId(candidate.track.trackIdentifier);
+	const trackId = canonicalId(candidate.track.trackIdentifier);
 	return trackId !== null && ids.includes(trackId);
+}
+
+function hasId(candidate: IndexedVoiceEngineV2StatsTrack): boolean {
+	return canonicalId(candidate.track.trackIdentifier) !== null;
 }
 
 function hasRid(candidate: IndexedVoiceEngineV2StatsTrack): boolean {
 	return normalizedId(candidate.track.rid) !== null;
+}
+
+function couldBeLocalScreenShare(
+	candidate: IndexedVoiceEngineV2StatsTrack,
+	localScreenShareTrackId: string | null,
+): boolean {
+	if (localScreenShareTrackId === null) return false;
+	return matchesId(candidate, localScreenShareTrackId) || !hasId(candidate);
+}
+
+function unidentifiedLocalScreenShareIndex(
+	sentVideoTracks: ReadonlyArray<IndexedVoiceEngineV2StatsTrack>,
+	localCameraTrackId: string | null,
+	localScreenShareTrackId: string | null,
+): number | null {
+	if (localScreenShareTrackId === null || localCameraTrackId !== null || sentVideoTracks.length !== 1) return null;
+	const candidate = sentVideoTracks[0];
+	return candidate && !hasId(candidate) ? candidate.index : null;
 }
 
 function filterById(
@@ -565,19 +596,25 @@ export function classifyVoiceEngineV2TrackStats(
 	const remoteScreenShareTracks = receivedVideoTracks.filter((track) => idInList(track, remoteScreenShareTrackIds));
 	const remoteScreenShareTrackIndex = pickActiveTrackIndex(remoteScreenShareTracks);
 	const fallbackRemoteVideoTracks = receivedVideoTracks.filter((track) => !idInList(track, remoteScreenShareTrackIds));
+	const localScreenShareFallbackIndex = unidentifiedLocalScreenShareIndex(
+		sentVideoTracks,
+		localCameraTrackId,
+		localScreenShareTrackId,
+	);
 
 	return {
 		localVideoTrackIndex:
 			pickActiveTrackIndex(filterById(sentVideoTracks, localCameraTrackId)) ??
 			pickActiveTrackIndex(
-				sentVideoTracks.filter((track) => !hasRid(track) && !matchesId(track, localScreenShareTrackId)),
+				sentVideoTracks.filter((track) => !hasRid(track) && !couldBeLocalScreenShare(track, localScreenShareTrackId)),
 			),
 		localAudioTrackIndex:
 			pickActiveTrackIndex(filterById(sentAudioTracks, localMicrophoneTrackId)) ??
 			pickActiveTrackIndex(sentAudioTracks.filter((track) => !matchesId(track, localScreenShareAudioTrackId))),
 		localScreenShareTrackIndex:
 			pickActiveTrackIndex(filterById(sentVideoTracks, localScreenShareTrackId)) ??
-			pickActiveTrackIndex(sentVideoTracks.filter((track) => hasRid(track) && !matchesId(track, localCameraTrackId))),
+			pickActiveTrackIndex(sentVideoTracks.filter((track) => hasRid(track) && !matchesId(track, localCameraTrackId))) ??
+			localScreenShareFallbackIndex,
 		localScreenShareAudioTrackIndex: pickActiveTrackIndex(filterById(sentAudioTracks, localScreenShareAudioTrackId)),
 		remoteVideoTrackIndex:
 			pickActiveTrackIndex(fallbackRemoteVideoTracks) ??
