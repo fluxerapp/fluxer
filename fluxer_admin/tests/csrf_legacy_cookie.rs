@@ -18,6 +18,7 @@ use tower::ServiceExt;
 const SECRET_KEY: &str = "legacy-csrf-cookie-test-secret";
 const ADMIN_ORIGIN: &str = "https://admin.example.test";
 const LEGACY_HEX_TOKEN: &str = "8f14e45fceea167a5a36dedd4bea25438f14e45fceea167a5a36dedd4bea2543";
+const CREATED_KEY_SECRET: &str = "fa_1900000000000000001_OneTimeSecretForTests";
 
 struct TestApp {
     router: Router,
@@ -128,6 +129,10 @@ async fn load_page(app: &TestApp, cookie: &str) -> (String, String) {
     let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
     let text = String::from_utf8(body.to_vec()).unwrap();
     assert_eq!(status, StatusCode::OK, "{text}");
+    assert!(
+        text.contains("AdminUser"),
+        "the page did not render the admin the mock API returns"
+    );
     let cookie_token = host_csrf_cookie(&headers)
         .unwrap_or_else(|| panic!("no __Host-csrf_token in Set-Cookie: {headers:?}"));
     let page_token = form_csrf_value(&text).expect("no _csrf hidden input rendered");
@@ -166,7 +171,16 @@ async fn submit_action(app: &TestApp, cookie: &str, form_token: &str) -> StatusC
         )
         .await
         .unwrap();
-    response.status()
+    let status = response.status();
+    let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+    let text = String::from_utf8(body.to_vec()).unwrap();
+    if status == StatusCode::OK {
+        assert!(
+            text.contains(CREATED_KEY_SECRET),
+            "the action did not render the key the mock API creates"
+        );
+    }
+    status
 }
 
 fn host_csrf_cookie(headers: &HeaderMap) -> Option<String> {
@@ -207,11 +221,11 @@ async fn spawn_mock_api() -> String {
 
 async fn mock_api(method: Method, uri: Uri) -> Response {
     match (method, uri.path()) {
-        (Method::GET, "/admin/users/me") => Json(json!({ "user": admin_user() })).into_response(),
+        (Method::GET, "/admin/users/@me") => Json(json!({ "user": admin_user() })).into_response(),
         (Method::GET, "/admin/api-keys") => Json(json!([])).into_response(),
         (Method::POST, "/admin/api-keys") => Json(json!({
             "key_id": "1900000000000000001",
-            "key": "fa_1900000000000000001_OneTimeSecretForTests",
+            "key": CREATED_KEY_SECRET,
             "name": "Legacy Cookie Key",
             "created_at": "2026-07-10T15:00:00.000Z",
             "expires_at": null,

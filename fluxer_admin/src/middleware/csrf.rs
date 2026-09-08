@@ -27,7 +27,6 @@ pub async fn csrf_protection(
 ) -> Response {
     let config = state.config();
     let secret = config.secret_key_base.clone();
-    let admin_endpoint = config.admin_endpoint.clone();
     let secure_cookies = config.secure_cookies();
 
     let user_id = request
@@ -50,7 +49,7 @@ pub async fn csrf_protection(
             .iter()
             .any(|suffix| path.ends_with(suffix));
         if !is_ignored {
-            if !is_same_site_request(&request, &admin_endpoint) {
+            if !is_same_site_request(&request, config.admin_origin().as_deref()) {
                 return StatusCode::FORBIDDEN.into_response();
             }
             let header_token = extract_csrf_header(&request);
@@ -167,7 +166,7 @@ async fn extract_csrf_from_form_body(
     Ok((request, token))
 }
 
-fn is_same_site_request(request: &Request, admin_endpoint: &str) -> bool {
+fn is_same_site_request(request: &Request, admin_origin: Option<&str>) -> bool {
     if let Some(site) = request
         .headers()
         .get("sec-fetch-site")
@@ -180,7 +179,7 @@ fn is_same_site_request(request: &Request, admin_endpoint: &str) -> bool {
         .get(header::ORIGIN)
         .and_then(|value| value.to_str().ok())
     {
-        Some(origin) => origin == admin_endpoint,
+        Some(origin) => admin_origin.is_some_and(|expected| origin == expected),
         None => true,
     }
 }
@@ -273,6 +272,98 @@ mod tests {
             !cookies.iter().any(|cookie| cookie.contains("__Host-")),
             "expected no __Host- cookie, got {cookies:?}"
         );
+    }
+
+    async fn action_status(admin_endpoint: &str, origin: &str) -> StatusCode {
+        let state = state_with_admin_endpoint(admin_endpoint);
+        let app = Router::new()
+            .route("/", get(|| async { "ok" }).post(|| async { "ok" }))
+            .layer(from_fn_with_state(state, csrf_protection));
+        let issued = app
+            .clone()
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .expect("router responds");
+        let cookie = issued
+            .headers()
+            .get_all(header::SET_COOKIE)
+            .iter()
+            .filter_map(|value| value.to_str().ok())
+            .filter_map(|value| value.split(';').next())
+            .find(|pair| pair.contains("csrf_token=") && !pair.ends_with('='))
+            .expect("a csrf cookie is issued")
+            .to_owned();
+        let token = cookie.split_once('=').expect("a cookie value").1.to_owned();
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .method(Method::POST)
+                    .uri("/")
+                    .header(header::COOKIE, cookie.as_str())
+                    .header(header::ORIGIN, origin)
+                    .header(CSRF_HEADER_NAME, token.as_str())
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .expect("router responds");
+        response.status()
+    }
+
+    #[tokio::test]
+    async fn a_matching_origin_passes_the_same_site_check() {
+        let status = action_status(
+            "https://admin.example.test/admin",
+            "https://admin.example.test",
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn a_matching_origin_on_a_non_default_port_passes_the_same_site_check() {
+        let status = action_status(
+            "https://admin.example.test:19080/admin",
+            "https://admin.example.test:19080",
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn a_foreign_origin_fails_the_same_site_check() {
+        let status = action_status(
+            "https://admin.example.test:19080/admin",
+            "https://evil.example.test:19080",
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn another_port_on_the_admin_host_fails_the_same_site_check() {
+        let status = action_status(
+            "https://admin.example.test:19080/admin",
+            "https://admin.example.test",
+        )
+        .await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn an_unparseable_admin_endpoint_fails_closed() {
+        let status = action_status("not-an-endpoint", "https://admin.example.test").await;
+        assert_eq!(status, StatusCode::FORBIDDEN);
+    }
+
+    #[tokio::test]
+    async fn an_explicit_default_port_matches_a_portless_origin() {
+        let status = action_status(
+            "https://admin.example.test:443/admin",
+            "https://admin.example.test",
+        )
+        .await;
+        assert_eq!(status, StatusCode::OK);
     }
 
     #[test]
