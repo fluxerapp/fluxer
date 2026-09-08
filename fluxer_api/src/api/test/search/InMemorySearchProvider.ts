@@ -441,16 +441,25 @@ function collectGuildText(doc: SearchableGuild): Array<string | null> {
 	return [doc.name, doc.vanityUrlCode, doc.discoveryDescription, ...doc.discoveryTags];
 }
 
+const sortGuildsByCreatedAt = sortNumericField<SearchableGuild, GuildSearchFilters>('createdAt', 'asc');
+const sortGuildsByMemberCount = sortNumericField<SearchableGuild, GuildSearchFilters>('memberCount', 'desc');
+
+function sortGuilds(left: SearchableGuild, right: SearchableGuild, filters: GuildSearchFilters, query: string): number {
+	const sorter = filters.sortBy === 'memberCount' ? sortGuildsByMemberCount : sortGuildsByCreatedAt;
+	const delta = sorter(left, right, filters, query);
+	if (delta !== 0) return delta;
+	const leftId = BigInt(left.id);
+	const rightId = BigInt(right.id);
+	if (leftId === rightId) return 0;
+	return leftId > rightId ? -1 : 1;
+}
+
 class InMemoryGuildSearchService
 	extends InMemorySearchServiceBase<GuildSearchFilters, SearchableGuild>
 	implements IGuildSearchService
 {
 	constructor() {
-		super(
-			matchesGuildFilters,
-			collectGuildText,
-			sortNumericField<SearchableGuild, GuildSearchFilters>('createdAt', 'asc'),
-		);
+		super(matchesGuildFilters, collectGuildText, sortGuilds);
 	}
 
 	async indexGuild(guild: Guild, discovery?: GuildDiscoveryContext): Promise<void> {

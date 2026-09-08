@@ -401,7 +401,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		const language =
 			params.primaryLanguage && isValidDiscoveryLanguage(params.primaryLanguage) ? params.primaryLanguage : undefined;
 		const tag = params.tag && params.tag.trim().length > 0 ? normalizeDiscoveryTag(params.tag) : undefined;
-		const sortBy = params.sortBy === 'member_count' ? 'memberCount' : 'relevance';
+		const sortBy = params.sortBy === 'relevance' ? 'relevance' : 'memberCount';
 		const filters: GuildSearchFilters = {
 			isDiscoverable: true,
 			discoveryCategory: params.categoryId,
@@ -444,7 +444,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 				for (const guild of guilds) {
 					const counts = freshCounts.get(BigInt(guild.id) as GuildID);
 					if (counts) {
-						guild.member_count = counts.memberCount;
 						guild.online_count = counts.onlineCount;
 					}
 				}

@@ -264,7 +264,7 @@ The `current` scope requires one of `context_guild_id` and `context_channel_id`.
 
 Fluxer resolves a supplied `context_guild_id` before anything else. A guild that cannot be resolved returns 404 `UNKNOWN_GUILD`, and a guild the caller is not a member of returns 403 `MISSING_PERMISSIONS`. A guild context searches that guild, restricted to `channel_ids` when supplied and to every channel of the guild otherwise, and every channel in the resulting set must belong to that guild. A channel the caller cannot both view and read history in is dropped when the set came from the guild, and rejected with 403 `MISSING_PERMISSIONS` when the caller named it in `channel_ids`. An age-gated channel that `include_nsfw` does not admit is removed from the set before the permission check runs, so it never causes that refusal.
 
-A guild whose NSFW level is age restricted refuses a caller who is not old enough with 403 `NSFW_CONTENT_AGE_RESTRICTED`. An old-enough caller who did not set `include_nsfw` receives an empty result from such a guild. The request still succeeds.
+A guild whose NSFW level is age restricted refuses a caller who is not old enough with 403 `NSFW_CONTENT_AGE_RESTRICTED`. An old-enough caller searches every channel of such a guild, including its age-gated channels, whether or not `include_nsfw` is set.
 
 A channel context searches only that channel and ignores `channel_ids`, `cursor`, and `include_nsfw`. When the caller cannot read the channel's history and the guild defines no message history cutoff, the search returns an empty result.
 

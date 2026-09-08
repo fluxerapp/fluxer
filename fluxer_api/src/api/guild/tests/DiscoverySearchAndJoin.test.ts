@@ -8,13 +8,21 @@ import type {
 	DiscoveryCategoryResponse,
 	DiscoveryGuildListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
+import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
+import type {GuildID} from '../../BrandedTypes';
 import {createTestBotAccount} from '../../bot/tests/BotTestUtils';
+import {setInjectedGatewayService} from '../../middleware/ServiceRegistry';
+import {getGuildRepository} from '../../middleware/ServiceSingletons';
 import {banUser} from '../../moderation/tests/ModerationTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {NoopLogger} from '../../test/mocks/NoopLogger';
+import {NoopGatewayService} from '../../test/NoopGatewayService';
 import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import syncDiscoveryIndex from '../../worker/tasks/SyncDiscoveryIndex';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../../worker/WorkerContext';
 import {createGuild, getUserGuilds} from './GuildTestUtils';
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
@@ -22,6 +30,30 @@ async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, mem
 		.post(`/test/guilds/${guildId}/member-count`)
 		.body({member_count: memberCount})
 		.execute();
+}
+
+interface LiveGuildCounts {
+	memberCount: number;
+	onlineCount: number;
+}
+
+const WORKER_HELPERS = {logger: new NoopLogger()} as unknown as WorkerTaskHelpers;
+
+class LiveCountsGatewayService extends NoopGatewayService {
+	constructor(private readonly liveCounts: Map<string, LiveGuildCounts>) {
+		super();
+	}
+
+	override async getDiscoveryGuildCounts(guildIds: Array<GuildID>): Promise<Map<GuildID, LiveGuildCounts>> {
+		const counts = new Map<GuildID, LiveGuildCounts>();
+		for (const guildId of guildIds) {
+			const live = this.liveCounts.get(guildId.toString());
+			if (live) {
+				counts.set(guildId, live);
+			}
+		}
+		return counts;
+	}
 }
 
 async function applyAndApprove(
@@ -44,12 +76,39 @@ async function applyAndApprove(
 		.execute();
 }
 
+async function createApprovedDiscoveryGuild(
+	harness: ApiTestHarness,
+	adminToken: string,
+	name: string,
+	memberCount: number,
+): Promise<string> {
+	const owner = await createTestAccount(harness);
+	const guild = await createGuild(harness, owner.token, name);
+	await setGuildMemberCount(harness, guild.id, memberCount);
+	await applyAndApprove(
+		harness,
+		owner.token,
+		adminToken,
+		guild.id,
+		`${name} welcomes everyone`,
+		DiscoveryCategories.GAMING,
+	);
+	return guild.id;
+}
+
+function expectNonIncreasing(counts: Array<number>): void {
+	for (let index = 1; index < counts.length; index++) {
+		expect(counts[index]).toBeLessThanOrEqual(counts[index - 1]);
+	}
+}
+
 describe('Discovery Search and Join', () => {
 	let harness: ApiTestHarness;
 	beforeEach(async () => {
 		harness = await createApiTestHarness({search: 'enabled'});
 	});
 	afterEach(async () => {
+		clearWorkerDependencies();
 		await harness?.shutdown();
 	});
 	describe('categories', () => {
@@ -256,6 +315,82 @@ describe('Discovery Search and Join', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(results.guilds.length).toBeLessThanOrEqual(2);
+		});
+		test('should order results by the member count it reports back', async () => {
+			const liveCounts = new Map<string, LiveGuildCounts>();
+			setInjectedGatewayService(new LiveCountsGatewayService(liveCounts));
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			const guildIds: Array<string> = [];
+			for (const memberCount of [50, 40, 30, 20, 10]) {
+				guildIds.push(
+					await createApprovedDiscoveryGuild(harness, admin.token, `Ordered Guild ${memberCount}`, memberCount),
+				);
+			}
+			liveCounts.set(guildIds[0], {memberCount: 5, onlineCount: 3});
+			liveCounts.set(guildIds[4], {memberCount: 500, onlineCount: 7});
+			const searcher = await createTestAccount(harness);
+			const results = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds?sort_by=member_count&limit=48')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(results.guilds.map((guild) => guild.id)).toEqual(guildIds);
+			expectNonIncreasing(results.guilds.map((guild) => guild.member_count));
+			expect(results.guilds[0].online_count).toBe(3);
+			expect(results.guilds[4].online_count).toBe(7);
+		});
+		test('should rank by member count when the client omits sort_by', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			const guildsByCount = new Map<number, string>();
+			for (const memberCount of [30, 10, 20]) {
+				guildsByCount.set(
+					memberCount,
+					await createApprovedDiscoveryGuild(harness, admin.token, `Unsorted Guild ${memberCount}`, memberCount),
+				);
+			}
+			const searcher = await createTestAccount(harness);
+			const results = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds?limit=48')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(results.guilds.map((guild) => guild.id)).toEqual([
+				guildsByCount.get(30),
+				guildsByCount.get(20),
+				guildsByCount.get(10),
+			]);
+			expectNonIncreasing(results.guilds.map((guild) => guild.member_count));
+		});
+		test('should not repeat guilds across pages when the discovery index is resynced', async () => {
+			const liveCounts = new Map<string, LiveGuildCounts>();
+			const gatewayService = new LiveCountsGatewayService(liveCounts);
+			setInjectedGatewayService(gatewayService);
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			const guildIds: Array<string> = [];
+			for (const [index, memberCount] of [60, 50, 40, 40, 30, 30].entries()) {
+				guildIds.push(await createApprovedDiscoveryGuild(harness, admin.token, `Paged Guild ${index}`, memberCount));
+			}
+			const searcher = await createTestAccount(harness);
+			const firstPage = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds?sort_by=member_count&limit=2&offset=0')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(firstPage.guilds.map((guild) => guild.id)).toEqual([guildIds[0], guildIds[1]]);
+			liveCounts.set(guildIds[0], {memberCount: 5, onlineCount: 0});
+			setWorkerDependenciesForTest({guildRepository: getGuildRepository(), gatewayService});
+			await syncDiscoveryIndex({}, WORKER_HELPERS);
+			const secondPage = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds?sort_by=member_count&limit=2&offset=2')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const thirdPage = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds?sort_by=member_count&limit=2&offset=4')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const paged = [...firstPage.guilds, ...secondPage.guilds, ...thirdPage.guilds].map((guild) => guild.id);
+			expect(new Set(paged).size).toBe(paged.length);
+			expect([...paged].sort()).toEqual([...guildIds].sort());
 		});
 		test('should require login to search', async () => {
 			await createBuilderWithoutAuth(harness).get('/discovery/guilds').expect(HTTP_STATUS.UNAUTHORIZED).execute();

@@ -68,23 +68,10 @@ export class GuildSearchService {
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
 		const canUserAccessNsfw =
 			guildIsAgeRestricted || includeNsfwRequested ? await this.getCanUserAccessNsfw(userId) : false;
-		if (guildIsAgeRestricted) {
-			if (!canUserAccessNsfw) {
-				throw new NsfwContentRequiresAgeVerificationError();
-			}
-			if (!includeNsfwRequested) {
-				const hitsPerPage = searchParams.hits_per_page ?? 25;
-				const page = searchParams.page ?? 1;
-				return {
-					channels: [],
-					messages: [],
-					total: 0,
-					hits_per_page: hitsPerPage,
-					page,
-				};
-			}
+		if (guildIsAgeRestricted && !canUserAccessNsfw) {
+			throw new NsfwContentRequiresAgeVerificationError();
 		}
-		const canIncludeNsfw = includeNsfwRequested && canUserAccessNsfw;
+		const canIncludeNsfw = canUserAccessNsfw && (includeNsfwRequested || guildIsAgeRestricted);
 		const guildNsfw = guildData?.nsfw ?? false;
 		const channels = await this.channelRepository.listChannels(channelIds);
 		const channelMap = new Map<string, Channel>();
