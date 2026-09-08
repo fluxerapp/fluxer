@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::super::{MediaError, extract_video_thumbnail};
+use super::super::{
+    MediaError, VideoThumbnailOptions, extract_video_thumbnail,
+    extract_video_thumbnail_with_options,
+};
 use super::fixtures::{decode_rgba, metadata_value, test_media_limits};
 use crate::{
+    image_quality::ResolvedImageQuality,
     output_format::OutputFormat,
     test_fixtures::{
         ffmpeg_gen_media, ffmpeg_gen_mp4, ffmpeg_gen_rotated_mp4, ffmpeg_mirror_mp4, png_dimensions,
@@ -115,32 +119,171 @@ fn video_thumbnail_accepts_every_widened_sdr_transfer() {
 }
 
 #[test]
-fn video_thumbnail_still_rejects_pq_bt2020_hdr() {
+fn video_thumbnail_tone_maps_hdr_instead_of_refusing_it() {
     let Some(hdr) = color_tagged_video("bt2020", "smpte2084", "bt2020nc") else {
+        eprintln!("skipping: ffmpeg CLI not available");
+        return;
+    };
+    let thumb = extract_video_thumbnail(&hdr, OutputFormat::PNG, &test_media_limits())
+        .expect("pq bt2020 video should thumbnail");
+    assert_eq!(png_dimensions(&thumb.bytes), Some((320, 240)));
+
+    for (primaries, transfer, matrix) in [
+        ("bt709", "smpte2084", "bt709"),
+        ("bt2020", "arib-std-b67", "bt709"),
+        ("bt2020", "arib-std-b67", "bt2020nc"),
+        ("bt2020", "bt709", "bt709"),
+        ("smpte432", "bt709", "bt709"),
+    ] {
+        let video = color_tagged_video(primaries, transfer, matrix)
+            .unwrap_or_else(|| panic!("{primaries}/{transfer}/{matrix} fixture"));
+        let thumb = extract_video_thumbnail(&video, OutputFormat::PNG, &test_media_limits())
+            .unwrap_or_else(|error| {
+                panic!("{primaries}/{transfer}/{matrix} should thumbnail: {error:?}")
+            });
+        assert_eq!(
+            png_dimensions(&thumb.bytes),
+            Some((320, 240)),
+            "{primaries}/{transfer}/{matrix}"
+        );
+    }
+}
+
+#[test]
+fn hdr_video_thumbnail_still_errors_on_an_expired_deadline() {
+    let Some(hdr) = color_tagged_video("bt2020", "smpte2084", "bt2020nc") else {
+        eprintln!("skipping: ffmpeg CLI not available");
+        return;
+    };
+    assert!(matches!(
+        extract_video_thumbnail_with_options(
+            &hdr,
+            VideoThumbnailOptions {
+                format: OutputFormat::PNG,
+                width: None,
+                height: None,
+                quality: ResolvedImageQuality::High,
+                deadline_ms: Some(1),
+            },
+            &test_media_limits(),
+        ),
+        Err(MediaError::RequestTimeout)
+    ));
+}
+
+#[test]
+fn video_thumbnail_still_rejects_colour_signals_it_cannot_model() {
+    let Some(cinema_transfer) = color_tagged_video("bt709", "smpte428", "bt709") else {
         eprintln!("skipping: ffmpeg CLI not available");
         return;
     };
     assert_eq!(
         Some(MediaError::MediaDecodeFailed),
-        extract_video_thumbnail(&hdr, OutputFormat::PNG, &test_media_limits()).err()
+        extract_video_thumbnail(&cinema_transfer, OutputFormat::PNG, &test_media_limits()).err()
     );
 
-    let pq_only = color_tagged_video("bt709", "smpte2084", "bt709").expect("pq fixture");
+    let cinema_primaries =
+        color_tagged_video("smpte428", "bt709", "bt709").expect("smpte428 primaries fixture");
     assert_eq!(
         Some(MediaError::MediaDecodeFailed),
-        extract_video_thumbnail(&pq_only, OutputFormat::PNG, &test_media_limits()).err()
+        extract_video_thumbnail(&cinema_primaries, OutputFormat::PNG, &test_media_limits()).err()
     );
+}
 
-    let hlg = color_tagged_video("bt2020", "arib-std-b67", "bt709").expect("hlg fixture");
-    assert_eq!(
-        Some(MediaError::MediaDecodeFailed),
-        extract_video_thumbnail(&hlg, OutputFormat::PNG, &test_media_limits()).err()
+fn flat_colour_tagged_video(
+    colour: &str,
+    primaries: &str,
+    transfer: &str,
+    matrix: &str,
+) -> Option<Vec<u8>> {
+    let params =
+        format!("setparams=color_primaries={primaries}:color_trc={transfer}:colorspace={matrix}");
+    ffmpeg_gen_media(
+        "fixture.mkv",
+        &[
+            "-f",
+            "lavfi",
+            "-i",
+            &format!("color=c={colour}:size=320x240:rate=10:duration=1"),
+            "-vf",
+            &params,
+            "-pix_fmt",
+            "yuv420p",
+            "-c:v",
+            "mpeg4",
+            "-qscale:v",
+            "1",
+            "-f",
+            "matroska",
+        ],
+    )
+}
+
+fn flat_colour_centre_pixel(
+    colour: &str,
+    primaries: &str,
+    transfer: &str,
+    matrix: &str,
+) -> Option<[u8; 4]> {
+    let video = flat_colour_tagged_video(colour, primaries, transfer, matrix)?;
+    let thumb = extract_video_thumbnail(&video, OutputFormat::PNG, &test_media_limits())
+        .unwrap_or_else(|error| panic!("{primaries}/{transfer}/{matrix} thumbnails: {error:?}"));
+    let (width, height, rgba) = decode_rgba(&thumb.bytes);
+    assert_eq!((320, 240), (width, height));
+    let centre = ((height as usize / 2) * width as usize + width as usize / 2) * 4;
+    Some([
+        rgba[centre],
+        rgba[centre + 1],
+        rgba[centre + 2],
+        rgba[centre + 3],
+    ])
+}
+
+#[test]
+fn a_pq_video_frame_is_tone_mapped_rather_than_read_as_srgb() {
+    let Some(sdr) = flat_colour_centre_pixel("0xc0c0c0", "bt709", "bt709", "bt709") else {
+        eprintln!("skipping: ffmpeg CLI not available");
+        return;
+    };
+    let hdr = flat_colour_centre_pixel("0xc0c0c0", "bt2020", "smpte2084", "bt2020nc")
+        .expect("pq fixture");
+    assert!(
+        hdr[0] > sdr[0] + 20,
+        "a PQ highlight read as plain sRGB would land on the sdr value, got {hdr:?} against {sdr:?}"
     );
+    assert_eq!(255, hdr[3], "tone mapped output stays opaque");
+}
 
-    let wide_primaries = color_tagged_video("bt2020", "bt709", "bt709").expect("bt2020 fixture");
-    assert_eq!(
-        Some(MediaError::MediaDecodeFailed),
-        extract_video_thumbnail(&wide_primaries, OutputFormat::PNG, &test_media_limits()).err()
+#[test]
+fn an_hlg_video_frame_is_tone_mapped_rather_than_read_as_srgb() {
+    let Some(sdr) = flat_colour_centre_pixel("0xc0c0c0", "bt709", "bt709", "bt709") else {
+        eprintln!("skipping: ffmpeg CLI not available");
+        return;
+    };
+    let hdr = flat_colour_centre_pixel("0xc0c0c0", "bt2020", "arib-std-b67", "bt2020nc")
+        .expect("hlg fixture");
+    assert!(
+        hdr[0] > sdr[0] + 20,
+        "an HLG highlight read as plain sRGB would land on the sdr value, got {hdr:?} against {sdr:?}"
+    );
+    assert_eq!(255, hdr[3], "tone mapped output stays opaque");
+}
+
+#[test]
+fn a_bt2020_sdr_video_frame_is_converted_into_the_bt709_gamut() {
+    let Some(wide) = flat_colour_centre_pixel("0x00ff00", "bt2020", "bt709", "bt709") else {
+        eprintln!("skipping: ffmpeg CLI not available");
+        return;
+    };
+    let narrow =
+        flat_colour_centre_pixel("0x00ff00", "bt709", "bt709", "bt709").expect("bt709 fixture");
+    let shift = (0..3)
+        .map(|channel| wide[channel].abs_diff(narrow[channel]))
+        .max()
+        .expect("three channels");
+    assert!(
+        shift > 8,
+        "bt2020 green {wide:?} should not match bt709 green {narrow:?}"
     );
 }
 

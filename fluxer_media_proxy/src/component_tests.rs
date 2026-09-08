@@ -463,7 +463,8 @@ fn nsfw_frame_emit_failure_is_reported_instead_of_decoder_eof() {
     assert_eq!(NativeStatus::Ok, sdr_status);
     assert_eq!(3, sdr_frames.expect("sdr frames").len());
 
-    let rejected = matroska_video(&["-colorspace", "bt2020nc"]).expect("ffmpeg tags the matrix");
+    let rejected =
+        matroska_video(&["-vf", "setparams=color_trc=smpte428"]).expect("ffmpeg tags the transfer");
     let (status, frames) = av_nsfw_extract(&rejected, &timestamps);
     assert_eq!(NativeStatus::Unsupported, status);
     assert_eq!(Err(NSFWFrameCopyError::InvalidOutput), frames);

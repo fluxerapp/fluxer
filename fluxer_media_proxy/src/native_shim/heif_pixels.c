@@ -2,340 +2,9 @@
 
 #include "native_shim_internal.h"
 
-#define FLUXER_HDR_PQ_LUT_SIZE 4096
-#define FLUXER_HDR_HLG_LUT_SIZE 4096
-#define FLUXER_HDR_SRGB_LUT_SIZE 4096
-#define FLUXER_PQ_SDR_TARGET_NORM 0.0203f
-#define FLUXER_HLG_REFERENCE_PEAK_NORM 0.1f
 #define FLUXER_HEIF_MAX_AUXILIARY_IMAGES 4096
 #define FLUXER_HEIF_DEADLINE_ROWS 64
 #define FLUXER_HEIF_ICC_PROFILE_BYTES_MAX ((size_t)4 * 1024 * 1024)
-
-enum fluxer_heif_gamut {
-    FLUXER_HEIF_GAMUT_SRGB = 0,
-    FLUXER_HEIF_GAMUT_BT2020 = 1,
-    FLUXER_HEIF_GAMUT_DISPLAY_P3 = 2,
-};
-
-static float fluxer_pq_lut[FLUXER_HDR_PQ_LUT_SIZE];
-static float fluxer_hlg_lut[FLUXER_HDR_HLG_LUT_SIZE];
-static float fluxer_hlg_ootf_scale_lut[FLUXER_HDR_HLG_LUT_SIZE];
-static float fluxer_pq_tone_scale_lut[FLUXER_HDR_PQ_LUT_SIZE];
-static float fluxer_hlg_tone_scale_lut[FLUXER_HDR_HLG_LUT_SIZE];
-static uint8_t fluxer_srgb_lut[FLUXER_HDR_SRGB_LUT_SIZE];
-static pthread_once_t fluxer_hdr_lut_once = PTHREAD_ONCE_INIT;
-static float fluxer_pq_sdr_target_perceptual;
-static float fluxer_hlg_source_peak_perceptual;
-static float fluxer_hlg_sdr_target_perceptual;
-
-static inline float fluxer_pq_oetf(float luminance);
-static inline float fluxer_hdr_tone_scale(
-    float maximum,
-    float target_normalized,
-    float source_peak_perceptual,
-    float target_perceptual
-);
-static inline float fluxer_srgb_oetf(float value);
-static inline uint8_t fluxer_quantize8(float value);
-
-static void fluxer_init_hdr_luts(void) {
-    const double m1 = 0.1593017578125;
-    const double m2 = 78.84375;
-    const double c1 = 0.8359375;
-    const double c2 = 18.8515625;
-    const double c3 = 18.6875;
-    for (int index = 0; index < FLUXER_HDR_PQ_LUT_SIZE; index++) {
-        double encoded = (double)index / (FLUXER_HDR_PQ_LUT_SIZE - 1);
-        double encoded_power = pow(encoded, 1.0 / m2);
-        double numerator = encoded_power - c1;
-        if (numerator < 0.0) numerator = 0.0;
-        double denominator = c2 - c3 * encoded_power;
-        double luminance = denominator > 0.0
-                         ? pow(numerator / denominator, 1.0 / m1)
-                         : 0.0;
-        if (luminance < 0.0) luminance = 0.0;
-        if (luminance > 1.0) luminance = 1.0;
-        fluxer_pq_lut[index] = (float)luminance;
-    }
-    const double a = 0.17883277;
-    const double b = 0.28466892;
-    const double c = 0.55991073;
-    for (int index = 0; index < FLUXER_HDR_HLG_LUT_SIZE; index++) {
-        double encoded = (double)index / (FLUXER_HDR_HLG_LUT_SIZE - 1);
-        double scene = encoded <= 0.5
-                     ? (encoded * encoded) / 3.0
-                     : (exp((encoded - c) / a) + b) / 12.0;
-        if (scene < 0.0) scene = 0.0;
-        if (scene > 1.0) scene = 1.0;
-        fluxer_hlg_lut[index] = (float)scene;
-        double normalized = (double)index / (FLUXER_HDR_HLG_LUT_SIZE - 1);
-        fluxer_hlg_ootf_scale_lut[index] = normalized > 0.0
-                                         ? (float)pow(normalized, 0.2)
-                                         : 0.0f;
-    }
-    fluxer_pq_sdr_target_perceptual =
-        fluxer_pq_oetf(FLUXER_PQ_SDR_TARGET_NORM);
-    fluxer_hlg_source_peak_perceptual =
-        fluxer_pq_oetf(FLUXER_HLG_REFERENCE_PEAK_NORM);
-    fluxer_hlg_sdr_target_perceptual =
-        fluxer_pq_sdr_target_perceptual /
-        fluxer_hlg_source_peak_perceptual;
-    for (int index = 0; index < FLUXER_HDR_PQ_LUT_SIZE; index++) {
-        fluxer_pq_tone_scale_lut[index] = fluxer_hdr_tone_scale(
-            fluxer_pq_lut[index], FLUXER_PQ_SDR_TARGET_NORM,
-            1.0f,
-            fluxer_pq_sdr_target_perceptual);
-    }
-    for (int index = 0; index < FLUXER_HDR_HLG_LUT_SIZE; index++) {
-        float maximum = (float)index / (FLUXER_HDR_HLG_LUT_SIZE - 1);
-        float absolute_maximum =
-            maximum * FLUXER_HLG_REFERENCE_PEAK_NORM;
-        fluxer_hlg_tone_scale_lut[index] =
-            FLUXER_HLG_REFERENCE_PEAK_NORM * fluxer_hdr_tone_scale(
-                absolute_maximum, FLUXER_PQ_SDR_TARGET_NORM,
-                fluxer_hlg_source_peak_perceptual,
-                fluxer_hlg_sdr_target_perceptual);
-    }
-    for (int index = 0; index < FLUXER_HDR_SRGB_LUT_SIZE; index++) {
-        float linear = (float)index / (FLUXER_HDR_SRGB_LUT_SIZE - 1);
-        fluxer_srgb_lut[index] = fluxer_quantize8(
-            fluxer_srgb_oetf(linear));
-    }
-}
-
-static inline uint16_t fluxer_hdr_lut_index(uint16_t code, int bit_depth) {
-    assert(bit_depth == 10 || bit_depth == 12);
-    if (bit_depth == 12) return code & 0x0fffu;
-    uint16_t code10 = code & 0x03ffu;
-    return (uint16_t)((code10 << 2) | (code10 >> 8));
-}
-
-static inline uint16_t fluxer_unit_lut_index(float value) {
-    if (value <= 0.0f) return 0;
-    if (value >= 1.0f) return FLUXER_HDR_HLG_LUT_SIZE - 1;
-    return (uint16_t)(
-        value * (FLUXER_HDR_HLG_LUT_SIZE - 1) + 0.5f);
-}
-
-static inline uint16_t fluxer_heif_read_le16(const uint8_t *value) {
-    return (uint16_t)((uint16_t)value[0] | ((uint16_t)value[1] << 8));
-}
-
-static inline float fluxer_bt2390_eetf_perceptual(
-    float encoded,
-    float max_luminance
-) {
-    if (encoded <= 0.0f) return 0.0f;
-    if (max_luminance >= 1.0f) {
-        return encoded > 1.0f ? 1.0f : encoded;
-    }
-    float knee = 1.5f * max_luminance - 0.5f;
-    if (encoded < knee) return encoded;
-    if (encoded >= 1.0f) return max_luminance;
-    float position = (encoded - knee) / (1.0f - knee);
-    float squared = position * position;
-    float cubed = squared * position;
-    float start_basis = 2.0f * cubed - 3.0f * squared + 1.0f;
-    float tangent_basis = cubed - 2.0f * squared + position;
-    float end_basis = -2.0f * cubed + 3.0f * squared;
-    float mapped = start_basis * knee + tangent_basis * (1.0f - knee) +
-                   end_basis * max_luminance;
-    if (mapped > max_luminance) mapped = max_luminance;
-    if (mapped < 0.0f) mapped = 0.0f;
-    return mapped;
-}
-
-static inline float fluxer_pq_oetf(float luminance) {
-    if (luminance <= 0.0f) return 0.0f;
-    if (luminance >= 1.0f) luminance = 1.0f;
-    const float m1 = 0.1593017578125f;
-    const float m2 = 78.84375f;
-    const float c1 = 0.8359375f;
-    const float c2 = 18.8515625f;
-    const float c3 = 18.6875f;
-    float power = powf(luminance, m1);
-    return powf((c1 + c2 * power) / (1.0f + c3 * power), m2);
-}
-
-static inline float fluxer_srgb_oetf(float value) {
-    if (value <= 0.0f) return 0.0f;
-    if (value >= 1.0f) return 1.0f;
-    if (value <= 0.0031308f) return 12.92f * value;
-    return 1.055f * powf(value, 1.0f / 2.4f) - 0.055f;
-}
-
-static inline uint8_t fluxer_quantize8(float value) {
-    if (value <= 0.0f) return 0;
-    if (value >= 1.0f) return 255;
-    int quantized = (int)(value * 255.0f + 0.5f);
-    if (quantized < 0) return 0;
-    if (quantized > 255) return 255;
-    return (uint8_t)quantized;
-}
-
-static inline uint8_t fluxer_srgb_lut_quantize(float value) {
-    if (value <= 0.0f) return 0;
-    if (value >= 1.0f) return 255;
-    size_t index = (size_t)(
-        value * (FLUXER_HDR_SRGB_LUT_SIZE - 1) + 0.5f);
-    assert(index < FLUXER_HDR_SRGB_LUT_SIZE);
-    return fluxer_srgb_lut[index];
-}
-
-static inline void fluxer_bt2020_to_bt709_linear(
-    float red,
-    float green,
-    float blue,
-    float *out_red,
-    float *out_green,
-    float *out_blue
-) {
-    *out_red = 1.6605f * red - 0.5876f * green - 0.0728f * blue;
-    *out_green = -0.1246f * red + 1.1329f * green - 0.0083f * blue;
-    *out_blue = -0.0182f * red - 0.1006f * green + 1.1187f * blue;
-}
-
-static inline void fluxer_display_p3_to_srgb_linear(
-    float red,
-    float green,
-    float blue,
-    float *out_red,
-    float *out_green,
-    float *out_blue
-) {
-    *out_red = 1.2249401f * red - 0.2249404f * green;
-    *out_green = -0.0420569f * red + 1.0420571f * green;
-    *out_blue = -0.0196376f * red - 0.0786361f * green + 1.0982735f * blue;
-}
-
-static inline float fluxer_inverse_srgb(float encoded) {
-    if (encoded <= 0.0f) return 0.0f;
-    if (encoded >= 1.0f) return 1.0f;
-    if (encoded <= 0.04045f) return encoded / 12.92f;
-    return powf((encoded + 0.055f) / 1.055f, 2.4f);
-}
-
-static inline float fluxer_inverse_bt709(float encoded) {
-    if (encoded <= 0.0f) return 0.0f;
-    if (encoded >= 1.0f) return 1.0f;
-    if (encoded < 0.081f) return encoded / 4.5f;
-    return powf((encoded + 0.099f) / 1.099f, 1.0f / 0.45f);
-}
-
-static inline float fluxer_inverse_bt2020_12(float encoded) {
-    if (encoded <= 0.0f) return 0.0f;
-    if (encoded >= 1.0f) return 1.0f;
-    if (encoded < 0.08145f) return encoded / 4.5f;
-    return powf((encoded + 0.0993f) / 1.0993f, 1.0f / 0.45f);
-}
-
-static inline void fluxer_heif_convert_gamut_linear(
-    int gamut,
-    float red,
-    float green,
-    float blue,
-    float *out_red,
-    float *out_green,
-    float *out_blue
-) {
-    if (gamut == FLUXER_HEIF_GAMUT_BT2020) {
-        fluxer_bt2020_to_bt709_linear(
-            red, green, blue, out_red, out_green, out_blue);
-        return;
-    }
-    if (gamut == FLUXER_HEIF_GAMUT_DISPLAY_P3) {
-        fluxer_display_p3_to_srgb_linear(
-            red, green, blue, out_red, out_green, out_blue);
-        return;
-    }
-    assert(gamut == FLUXER_HEIF_GAMUT_SRGB);
-    *out_red = red;
-    *out_green = green;
-    *out_blue = blue;
-}
-
-static inline float fluxer_heif_linear_luma(
-    int gamut,
-    float red,
-    float green,
-    float blue
-) {
-    if (gamut == FLUXER_HEIF_GAMUT_BT2020) {
-        return 0.2627f * red + 0.6780f * green + 0.0593f * blue;
-    }
-    if (gamut == FLUXER_HEIF_GAMUT_DISPLAY_P3) {
-        return 0.2289746f * red + 0.6917385f * green + 0.0792869f * blue;
-    }
-    assert(gamut == FLUXER_HEIF_GAMUT_SRGB);
-    return 0.2126f * red + 0.7152f * green + 0.0722f * blue;
-}
-
-static inline float fluxer_inverse_pq(float encoded) {
-    const float m1 = 0.1593017578125f;
-    const float m2 = 78.84375f;
-    const float c1 = 0.8359375f;
-    const float c2 = 18.8515625f;
-    const float c3 = 18.6875f;
-    float power = powf(encoded, 1.0f / m2);
-    float numerator = power - c1;
-    if (numerator < 0.0f) numerator = 0.0f;
-    float denominator = c2 - c3 * power;
-    if (denominator <= 0.0f) return 0.0f;
-    float luminance = powf(numerator / denominator, 1.0f / m1);
-    return luminance < 0.0f ? 0.0f : luminance;
-}
-
-static inline float fluxer_hdr_tone_scale(
-    float maximum,
-    float target_normalized,
-    float source_peak_perceptual,
-    float target_perceptual
-) {
-    if (maximum <= 0.0f) return 0.0f;
-    assert(source_peak_perceptual > 0.0f);
-    assert(source_peak_perceptual <= 1.0f);
-    float perceptual = fluxer_pq_oetf(maximum) /
-                       source_peak_perceptual;
-    float mapped_perceptual = fluxer_bt2390_eetf_perceptual(
-        perceptual, target_perceptual);
-    float mapped = fluxer_inverse_pq(
-        mapped_perceptual * source_peak_perceptual);
-    return (mapped / maximum) / target_normalized;
-}
-
-static inline void fluxer_hdr_pipeline_pixel(
-    float red,
-    float green,
-    float blue,
-    float scale,
-    int gamut,
-    uint8_t *output
-) {
-    float display_red = red * scale;
-    float display_green = green * scale;
-    float display_blue = blue * scale;
-    if (display_red < 0.0f) display_red = 0.0f;
-    if (display_green < 0.0f) display_green = 0.0f;
-    if (display_blue < 0.0f) display_blue = 0.0f;
-    if (display_red > 1.0f) display_red = 1.0f;
-    if (display_green > 1.0f) display_green = 1.0f;
-    if (display_blue > 1.0f) display_blue = 1.0f;
-    float linear_red = display_red;
-    float linear_green = display_green;
-    float linear_blue = display_blue;
-    fluxer_heif_convert_gamut_linear(
-        gamut, display_red, display_green, display_blue,
-        &linear_red, &linear_green, &linear_blue);
-    if (linear_red < 0.0f) linear_red = 0.0f;
-    if (linear_green < 0.0f) linear_green = 0.0f;
-    if (linear_blue < 0.0f) linear_blue = 0.0f;
-    if (linear_red > 1.0f) linear_red = 1.0f;
-    if (linear_green > 1.0f) linear_green = 1.0f;
-    if (linear_blue > 1.0f) linear_blue = 1.0f;
-    output[0] = fluxer_srgb_lut_quantize(linear_red);
-    output[1] = fluxer_srgb_lut_quantize(linear_green);
-    output[2] = fluxer_srgb_lut_quantize(linear_blue);
-}
 
 static unsigned char fluxer_ascii_lower(unsigned char value) {
     if (value >= 'A' && value <= 'Z') {
@@ -625,13 +294,35 @@ static int fluxer_heif_nclx_gamut(int primaries, int *out_gamut) {
     assert(out_gamut != NULL);
     switch (primaries) {
         case heif_color_primaries_ITU_R_BT_709_5:
-            *out_gamut = FLUXER_HEIF_GAMUT_SRGB;
+            *out_gamut = FLUXER_HDR_GAMUT_SRGB;
             return FLUXER_NATIVE_STATUS_OK;
         case heif_color_primaries_ITU_R_BT_2020_2_and_2100_0:
-            *out_gamut = FLUXER_HEIF_GAMUT_BT2020;
+            *out_gamut = FLUXER_HDR_GAMUT_BT2020;
             return FLUXER_NATIVE_STATUS_OK;
         case heif_color_primaries_SMPTE_EG_432_1:
-            *out_gamut = FLUXER_HEIF_GAMUT_DISPLAY_P3;
+            *out_gamut = FLUXER_HDR_GAMUT_DISPLAY_P3;
+            return FLUXER_NATIVE_STATUS_OK;
+        default:
+            return FLUXER_NATIVE_STATUS_UNSUPPORTED;
+    }
+}
+
+static int fluxer_heif_nclx_transfer(int transfer, int *out_transfer) {
+    assert(out_transfer != NULL);
+    switch (transfer) {
+        case heif_transfer_characteristic_IEC_61966_2_1:
+            *out_transfer = FLUXER_HDR_TRANSFER_SRGB;
+            return FLUXER_NATIVE_STATUS_OK;
+        case heif_transfer_characteristic_ITU_R_BT_709_5:
+        case heif_transfer_characteristic_ITU_R_BT_601_6:
+        case heif_transfer_characteristic_ITU_R_BT_2020_2_10bit:
+            *out_transfer = FLUXER_HDR_TRANSFER_BT709;
+            return FLUXER_NATIVE_STATUS_OK;
+        case heif_transfer_characteristic_ITU_R_BT_2020_2_12bit:
+            *out_transfer = FLUXER_HDR_TRANSFER_BT2020_12;
+            return FLUXER_NATIVE_STATUS_OK;
+        case heif_transfer_characteristic_linear:
+            *out_transfer = FLUXER_HDR_TRANSFER_LINEAR;
             return FLUXER_NATIVE_STATUS_OK;
         default:
             return FLUXER_NATIVE_STATUS_UNSUPPORTED;
@@ -647,60 +338,15 @@ static int fluxer_heif_apply_sdr_nclx(
 ) {
     assert(destination != NULL);
     assert(profile != NULL);
-    int gamut = FLUXER_HEIF_GAMUT_SRGB;
+    int gamut = FLUXER_HDR_GAMUT_SRGB;
     int status = fluxer_heif_nclx_gamut(profile->primaries, &gamut);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
-    int transfer = profile->transfer;
-    int is_srgb = transfer == heif_transfer_characteristic_IEC_61966_2_1;
-    int is_bt709 = transfer == heif_transfer_characteristic_ITU_R_BT_709_5 ||
-                   transfer == heif_transfer_characteristic_ITU_R_BT_601_6 ||
-                   transfer == heif_transfer_characteristic_ITU_R_BT_2020_2_10bit;
-    int is_bt2020_12 =
-        transfer == heif_transfer_characteristic_ITU_R_BT_2020_2_12bit;
-    int is_linear = transfer == heif_transfer_characteristic_linear;
-    if (!is_srgb && !is_bt709 && !is_bt2020_12 && !is_linear) {
-        return FLUXER_NATIVE_STATUS_UNSUPPORTED;
-    }
-    if (is_srgb && gamut == FLUXER_HEIF_GAMUT_SRGB) {
-        return FLUXER_NATIVE_STATUS_OK;
-    }
-    size_t row_bytes = (size_t)width * 4u;
-    for (int row = 0; row < height; row++) {
-        if (row % FLUXER_HEIF_DEADLINE_ROWS == 0) {
-            status = fluxer_native_deadline_status(deadline_monotonic_ms);
-            if (status != FLUXER_NATIVE_STATUS_OK) return status;
-        }
-        uint8_t *row_data = destination + (size_t)row * row_bytes;
-        for (int column = 0; column < width; column++) {
-            uint8_t *pixel = row_data + (size_t)column * 4u;
-            float red = (float)pixel[0] / 255.0f;
-            float green = (float)pixel[1] / 255.0f;
-            float blue = (float)pixel[2] / 255.0f;
-            if (is_srgb) {
-                red = fluxer_inverse_srgb(red);
-                green = fluxer_inverse_srgb(green);
-                blue = fluxer_inverse_srgb(blue);
-            } else if (is_bt709) {
-                red = fluxer_inverse_bt709(red);
-                green = fluxer_inverse_bt709(green);
-                blue = fluxer_inverse_bt709(blue);
-            } else if (is_bt2020_12) {
-                red = fluxer_inverse_bt2020_12(red);
-                green = fluxer_inverse_bt2020_12(green);
-                blue = fluxer_inverse_bt2020_12(blue);
-            }
-            float srgb_red = 0.0f;
-            float srgb_green = 0.0f;
-            float srgb_blue = 0.0f;
-            fluxer_heif_convert_gamut_linear(
-                gamut, red, green, blue,
-                &srgb_red, &srgb_green, &srgb_blue);
-            pixel[0] = fluxer_quantize8(fluxer_srgb_oetf(srgb_red));
-            pixel[1] = fluxer_quantize8(fluxer_srgb_oetf(srgb_green));
-            pixel[2] = fluxer_quantize8(fluxer_srgb_oetf(srgb_blue));
-        }
-    }
-    return fluxer_native_deadline_status(deadline_monotonic_ms);
+    int transfer = FLUXER_HDR_TRANSFER_SRGB;
+    status = fluxer_heif_nclx_transfer(profile->transfer, &transfer);
+    if (status != FLUXER_NATIVE_STATUS_OK) return status;
+    return fluxer_hdr_apply_sdr_gamut(
+        destination, width, height, gamut, transfer,
+        FLUXER_HEIF_DEADLINE_ROWS, deadline_monotonic_ms);
 }
 
 static int fluxer_heif_cancel_decoding(void *opaque) {
@@ -860,67 +506,6 @@ static int fluxer_heif_decode_sdr(
     return status;
 }
 
-struct fluxer_heif_hdr_transform {
-    int bit_depth;
-    int mask;
-    int gamut;
-    int is_hlg;
-    const float *linear_lut;
-    const float *tone_scale_lut;
-};
-
-static void fluxer_heif_transform_hdr_row(
-    const uint8_t *source,
-    uint8_t *destination,
-    int width,
-    const struct fluxer_heif_hdr_transform *transform
-) {
-    assert(source != NULL);
-    assert(destination != NULL);
-    assert(transform != NULL);
-    for (int column = 0; column < width; column++) {
-        const uint8_t *source_pixel = source + (size_t)column * 8u;
-        uint16_t red_code =
-            fluxer_heif_read_le16(source_pixel) & transform->mask;
-        uint16_t green_code =
-            fluxer_heif_read_le16(source_pixel + 2) & transform->mask;
-        uint16_t blue_code =
-            fluxer_heif_read_le16(source_pixel + 4) & transform->mask;
-        uint16_t red_index = fluxer_hdr_lut_index(
-            red_code, transform->bit_depth);
-        uint16_t green_index = fluxer_hdr_lut_index(
-            green_code, transform->bit_depth);
-        uint16_t blue_index = fluxer_hdr_lut_index(
-            blue_code, transform->bit_depth);
-        float red = transform->linear_lut[red_index];
-        float green = transform->linear_lut[green_index];
-        float blue = transform->linear_lut[blue_index];
-        uint16_t maximum_index = red_index;
-        if (green_index > maximum_index) maximum_index = green_index;
-        if (blue_index > maximum_index) maximum_index = blue_index;
-        if (transform->is_hlg) {
-            float luma = fluxer_heif_linear_luma(
-                transform->gamut, red, green, blue);
-            float ootf_scale =
-                fluxer_hlg_ootf_scale_lut[fluxer_unit_lut_index(luma)];
-            red *= ootf_scale;
-            green *= ootf_scale;
-            blue *= ootf_scale;
-            float maximum = fmaxf(red, fmaxf(green, blue));
-            maximum_index = fluxer_unit_lut_index(maximum);
-        }
-        float scale = transform->tone_scale_lut[maximum_index];
-        uint8_t *destination_pixel = destination + (size_t)column * 4u;
-        fluxer_hdr_pipeline_pixel(
-            red, green, blue, scale, transform->gamut,
-            destination_pixel);
-        uint16_t alpha =
-            fluxer_heif_read_le16(source_pixel + 6) & transform->mask;
-        destination_pixel[3] = (uint8_t)(
-            (alpha * 255 + (transform->mask >> 1)) / transform->mask);
-    }
-}
-
 static int fluxer_heif_decode_hdr(
     struct heif_image_handle *handle,
     uint8_t *destination,
@@ -931,11 +516,6 @@ static int fluxer_heif_decode_hdr(
 ) {
     int status = fluxer_native_deadline_status(deadline_monotonic_ms);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
-    if (pthread_once(&fluxer_hdr_lut_once, fluxer_init_hdr_luts) != 0) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    }
-    status = fluxer_native_deadline_status(deadline_monotonic_ms);
-    if (status != FLUXER_NATIVE_STATUS_OK) return status;
     int bit_depth = heif_image_handle_get_luma_bits_per_pixel(handle);
     if (bit_depth != 10 && bit_depth != 12) {
         return FLUXER_NATIVE_STATUS_UNSUPPORTED;
@@ -943,10 +523,19 @@ static int fluxer_heif_decode_hdr(
     if (!profile->nclx_present) {
         return FLUXER_NATIVE_STATUS_UNSUPPORTED;
     }
-    int gamut = FLUXER_HEIF_GAMUT_SRGB;
+    int transfer;
+    if (profile->transfer == heif_transfer_characteristic_ITU_R_BT_2100_0_PQ) {
+        transfer = FLUXER_HDR_TRANSFER_PQ;
+    } else if (profile->transfer ==
+               heif_transfer_characteristic_ITU_R_BT_2100_0_HLG) {
+        transfer = FLUXER_HDR_TRANSFER_HLG;
+    } else {
+        return FLUXER_NATIVE_STATUS_UNSUPPORTED;
+    }
+    int gamut = FLUXER_HDR_GAMUT_SRGB;
     if (fluxer_heif_nclx_gamut(profile->primaries, &gamut) !=
         FLUXER_NATIVE_STATUS_OK) {
-        gamut = FLUXER_HEIF_GAMUT_SRGB;
+        gamut = FLUXER_HDR_GAMUT_SRGB;
     }
     if ((size_t)width > SIZE_MAX / 8u) {
         return FLUXER_NATIVE_STATUS_INVALID_DIMENSIONS;
@@ -961,37 +550,11 @@ static int fluxer_heif_decode_hdr(
     status = fluxer_heif_interleaved_plane(
         image, width, height, heif_chroma_interleaved_RRGGBBAA_LE,
         64, bit_depth, (size_t)width * 8u, &plane, &stride);
-    struct fluxer_heif_hdr_transform transform = {
-        .bit_depth = bit_depth,
-        .mask = (1 << bit_depth) - 1,
-        .gamut = gamut,
-        .is_hlg =
-            profile->transfer == heif_transfer_characteristic_ITU_R_BT_2100_0_HLG,
-        .linear_lut =
-            profile->transfer == heif_transfer_characteristic_ITU_R_BT_2100_0_PQ
-                    ? fluxer_pq_lut
-                    : fluxer_hlg_lut,
-        .tone_scale_lut =
-            profile->transfer == heif_transfer_characteristic_ITU_R_BT_2100_0_PQ
-                        ? fluxer_pq_tone_scale_lut
-                        : fluxer_hlg_tone_scale_lut,
-    };
     if (status == FLUXER_NATIVE_STATUS_OK) {
-        size_t destination_stride = (size_t)width * 4u;
-        for (int row = 0; row < height; row++) {
-            if (row % FLUXER_HEIF_DEADLINE_ROWS == 0) {
-                status = fluxer_native_deadline_status(
-                    deadline_monotonic_ms);
-                if (status != FLUXER_NATIVE_STATUS_OK) break;
-            }
-            fluxer_heif_transform_hdr_row(
-                plane + (size_t)row * (size_t)stride,
-                destination + (size_t)row * destination_stride,
-                width, &transform);
-        }
-        if (status == FLUXER_NATIVE_STATUS_OK) {
-            status = fluxer_native_deadline_status(deadline_monotonic_ms);
-        }
+        status = fluxer_hdr_tone_map_rgba16(
+            plane, (size_t)stride, destination, (size_t)width * 4u,
+            width, height, bit_depth, gamut, transfer,
+            FLUXER_HEIF_DEADLINE_ROWS, deadline_monotonic_ms);
     }
     heif_image_release(image);
     return status;

@@ -2,46 +2,74 @@
 
 #include "native_shim_internal.h"
 
-enum ff_sdr_transfer {
-    FF_SDR_TRANSFER_SRGB = 0,
-    FF_SDR_TRANSFER_LINEAR = 1,
+struct ff_frame_color_plan {
+    int transfer;
+    int gamut;
 };
 
-static uint8_t ff_linear_to_srgb_lut[256];
-static pthread_once_t ff_transfer_lut_once = PTHREAD_ONCE_INIT;
-
-static uint8_t ff_encode_srgb_byte(double linear) {
-    double srgb = linear <= 0.0031308
-                ? 12.92 * linear
-                : 1.055 * pow(linear, 1.0 / 2.4) - 0.055;
-    long quantized = lround(srgb * 255.0);
-    if (quantized < 0) quantized = 0;
-    if (quantized > 255) quantized = 255;
-    return (uint8_t)quantized;
-}
-
-static void ff_initialize_transfer_luts(void) {
-    for (int index = 0; index < 256; index++) {
-        double encoded = (double)index / 255.0;
-        ff_linear_to_srgb_lut[index] = ff_encode_srgb_byte(encoded);
-    }
-}
-
-static const uint8_t *ff_transfer_to_srgb_lut(enum ff_sdr_transfer transfer) {
-    switch (transfer) {
-        case FF_SDR_TRANSFER_LINEAR:
-            return ff_linear_to_srgb_lut;
+static int ff_frame_color_gamut(const AVFrame *frame, int *out_gamut) {
+    assert(frame != NULL);
+    assert(out_gamut != NULL);
+    switch (frame->color_primaries) {
+        case AVCOL_PRI_UNSPECIFIED:
+        case AVCOL_PRI_BT709:
+        case AVCOL_PRI_BT470M:
+        case AVCOL_PRI_BT470BG:
+        case AVCOL_PRI_SMPTE170M:
+        case AVCOL_PRI_SMPTE240M:
+        case AVCOL_PRI_FILM:
+            *out_gamut = FLUXER_HDR_GAMUT_SRGB;
+            return 0;
+        case AVCOL_PRI_BT2020:
+            *out_gamut = FLUXER_HDR_GAMUT_BT2020;
+            return 0;
+        case AVCOL_PRI_SMPTE432:
+            *out_gamut = FLUXER_HDR_GAMUT_DISPLAY_P3;
+            return 0;
         default:
-            return NULL;
+            return -1;
     }
 }
 
-static int ff_frame_sdr_transfer(
-    const AVFrame *frame,
-    enum ff_sdr_transfer *out_transfer
-) {
+static int ff_frame_color_transfer(const AVFrame *frame, int *out_transfer) {
     assert(frame != NULL);
     assert(out_transfer != NULL);
+    switch (frame->color_trc) {
+        case AVCOL_TRC_UNSPECIFIED:
+        case AVCOL_TRC_IEC61966_2_1:
+        case AVCOL_TRC_GAMMA22:
+        case AVCOL_TRC_GAMMA28:
+            *out_transfer = FLUXER_HDR_TRANSFER_SRGB;
+            return 0;
+        case AVCOL_TRC_BT709:
+        case AVCOL_TRC_SMPTE170M:
+        case AVCOL_TRC_SMPTE240M:
+        case AVCOL_TRC_BT2020_10:
+            *out_transfer = FLUXER_HDR_TRANSFER_BT709;
+            return 0;
+        case AVCOL_TRC_BT2020_12:
+            *out_transfer = FLUXER_HDR_TRANSFER_BT2020_12;
+            return 0;
+        case AVCOL_TRC_LINEAR:
+            *out_transfer = FLUXER_HDR_TRANSFER_LINEAR;
+            return 0;
+        case AVCOL_TRC_SMPTE2084:
+            *out_transfer = FLUXER_HDR_TRANSFER_PQ;
+            return 0;
+        case AVCOL_TRC_ARIB_STD_B67:
+            *out_transfer = FLUXER_HDR_TRANSFER_HLG;
+            return 0;
+        default:
+            return -1;
+    }
+}
+
+static int ff_frame_color_plan(
+    const AVFrame *frame,
+    struct ff_frame_color_plan *out_plan
+) {
+    assert(frame != NULL);
+    assert(out_plan != NULL);
     switch (frame->colorspace) {
         case AVCOL_SPC_RGB:
         case AVCOL_SPC_BT709:
@@ -50,6 +78,7 @@ static int ff_frame_sdr_transfer(
         case AVCOL_SPC_BT470BG:
         case AVCOL_SPC_SMPTE170M:
         case AVCOL_SPC_SMPTE240M:
+        case AVCOL_SPC_BT2020_NCL:
             break;
         default:
             return -1;
@@ -59,75 +88,17 @@ static int ff_frame_sdr_transfer(
         frame->color_range != AVCOL_RANGE_JPEG) {
         return -1;
     }
-    switch (frame->color_primaries) {
-        case AVCOL_PRI_UNSPECIFIED:
-        case AVCOL_PRI_BT709:
-        case AVCOL_PRI_BT470M:
-        case AVCOL_PRI_BT470BG:
-        case AVCOL_PRI_SMPTE170M:
-        case AVCOL_PRI_SMPTE240M:
-        case AVCOL_PRI_FILM:
-            break;
-        default:
-            return -1;
-    }
-    switch (frame->color_trc) {
-        case AVCOL_TRC_UNSPECIFIED:
-        case AVCOL_TRC_IEC61966_2_1:
-        case AVCOL_TRC_GAMMA22:
-        case AVCOL_TRC_GAMMA28:
-            *out_transfer = FF_SDR_TRANSFER_SRGB;
-            return 0;
-        case AVCOL_TRC_BT709:
-        case AVCOL_TRC_SMPTE170M:
-        case AVCOL_TRC_SMPTE240M:
-            *out_transfer = FF_SDR_TRANSFER_SRGB;
-            return 0;
-        case AVCOL_TRC_LINEAR:
-            *out_transfer = FF_SDR_TRANSFER_LINEAR;
-            return 0;
-        default:
-            return -1;
-    }
+    if (ff_frame_color_gamut(frame, &out_plan->gamut) != 0) return -1;
+    return ff_frame_color_transfer(frame, &out_plan->transfer);
 }
 
-static int ff_convert_rgba_transfer_to_srgb(
-    enum ff_sdr_transfer transfer,
-    uint8_t *data,
-    int width,
-    int height,
-    long long deadline_monotonic_ms
+static int ff_frame_plan_is_passthrough(
+    const struct ff_frame_color_plan *plan
 ) {
-    assert(data != NULL);
-    assert(width > 0);
-    assert(height > 0);
-    if (deadline_monotonic_ms < 0) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    }
-    if (pthread_once(
-            &ff_transfer_lut_once,
-            ff_initialize_transfer_luts) != 0) {
-        return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    }
-    const uint8_t *lut = ff_transfer_to_srgb_lut(transfer);
-    if (lut == NULL) {
-        return fluxer_native_deadline_status(deadline_monotonic_ms);
-    }
-    size_t row_bytes = (size_t)width * 4u;
-    for (int row = 0; row < height; row++) {
-        if (row % FLUXER_VIDEO_DEADLINE_ROWS == 0) {
-            int status = fluxer_native_deadline_status(deadline_monotonic_ms);
-            if (status != FLUXER_NATIVE_STATUS_OK) return status;
-        }
-        uint8_t *row_data = data + (size_t)row * row_bytes;
-        for (int column = 0; column < width; column++) {
-            uint8_t *pixel = row_data + (size_t)column * 4u;
-            pixel[0] = lut[pixel[0]];
-            pixel[1] = lut[pixel[1]];
-            pixel[2] = lut[pixel[2]];
-        }
-    }
-    return fluxer_native_deadline_status(deadline_monotonic_ms);
+    assert(plan != NULL);
+    return plan->gamut == FLUXER_HDR_GAMUT_SRGB &&
+           !fluxer_hdr_transfer_is_hdr(plan->transfer) &&
+           plan->transfer != FLUXER_HDR_TRANSFER_LINEAR;
 }
 
 typedef int (*ff_i420_to_abgr_fn)(
@@ -150,6 +121,8 @@ static int ff_swscale_colorspace(enum AVColorSpace colorspace) {
             return SWS_CS_SMPTE170M;
         case AVCOL_SPC_SMPTE240M:
             return SWS_CS_SMPTE240M;
+        case AVCOL_SPC_BT2020_NCL:
+            return SWS_CS_BT2020;
         default:
             return SWS_CS_DEFAULT;
     }
@@ -331,6 +304,7 @@ static int ff_swscale_frame_to_rgba(
     int source_height,
     int output_width,
     int output_height,
+    int destination_pixel_bytes,
     long long deadline_monotonic_ms,
     uint8_t *dst
 ) {
@@ -339,6 +313,7 @@ static int ff_swscale_frame_to_rgba(
     assert(source_height > 0);
     assert(output_width > 0);
     assert(output_height > 0);
+    assert(destination_pixel_bytes == 4 || destination_pixel_bytes == 8);
     assert(dst != NULL);
     const AVPixFmtDescriptor *descriptor = av_pix_fmt_desc_get(frame->format);
     if (descriptor == NULL) return FLUXER_NATIVE_STATUS_UNSUPPORTED;
@@ -350,7 +325,7 @@ static int ff_swscale_frame_to_rgba(
         if (source_height < 2) return FLUXER_NATIVE_STATUS_UNSUPPORTED;
     }
     uint8_t *dst_data[4] = { dst, NULL, NULL, NULL };
-    int dst_linesize[4] = { output_width * 4, 0, 0, 0 };
+    int dst_linesize[4] = { output_width * destination_pixel_bytes, 0, 0, 0 };
     int output_rows = 0;
     for (int source_row = 0; source_row < source_height;) {
         status = fluxer_native_deadline_status(deadline_monotonic_ms);
@@ -395,6 +370,54 @@ static int ff_swscale_frame_to_rgba(
         : FLUXER_NATIVE_STATUS_CODEC_FAILURE;
 }
 
+static int ff_convert_hdr_frame_to_rgba(
+    AVFrame *frame,
+    int source_width,
+    int source_height,
+    int output_width,
+    int output_height,
+    struct SwsContext **sws,
+    long long deadline_monotonic_ms,
+    uint8_t *dst,
+    size_t rgba_size,
+    const struct ff_frame_color_plan *plan
+) {
+    assert(sws != NULL);
+    assert(dst != NULL);
+    assert(plan != NULL);
+    if (rgba_size > FLUXER_MAX_VIDEO_RGBA_BYTES / 2u) {
+        return FLUXER_NATIVE_STATUS_INVALID_DIMENSIONS;
+    }
+    uint8_t *staging = (uint8_t *)g_try_malloc(rgba_size * 2u);
+    if (staging == NULL) return FLUXER_NATIVE_STATUS_ALLOCATION_FAILED;
+    *sws = sws_getCachedContext(*sws,
+                                source_width, source_height,
+                                (enum AVPixelFormat)frame->format,
+                                output_width, output_height,
+                                AV_PIX_FMT_RGBA64LE,
+                                SWS_FAST_BILINEAR, NULL, NULL, NULL);
+    int status = FLUXER_NATIVE_STATUS_OK;
+    if (*sws == NULL) {
+        status = FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+    } else if (ff_configure_swscale_color(*sws, frame) != 0) {
+        status = FLUXER_NATIVE_STATUS_UNSUPPORTED;
+    } else {
+        status = ff_swscale_frame_to_rgba(
+            *sws, frame, source_height, output_width, output_height, 8,
+            deadline_monotonic_ms, staging);
+    }
+    if (status == FLUXER_NATIVE_STATUS_OK) {
+        status = fluxer_hdr_tone_map_rgba16(
+            staging, (size_t)output_width * 8u,
+            dst, (size_t)output_width * 4u,
+            output_width, output_height, 16,
+            plan->gamut, plan->transfer, FLUXER_VIDEO_DEADLINE_ROWS,
+            deadline_monotonic_ms);
+    }
+    g_free(staging);
+    return status;
+}
+
 int fluxer_av_frame_convert_to_rgba(
     AVFrame *frame,
     int source_width,
@@ -411,43 +434,43 @@ int fluxer_av_frame_convert_to_rgba(
     }
     int status = fluxer_native_deadline_status(deadline_monotonic_ms);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
+    size_t rgba_size = 0;
     if (ff_validate_rgba_geometry(source_width, source_height, NULL) != 0 ||
-        ff_validate_rgba_geometry(output_width, output_height, NULL) != 0) {
+        ff_validate_rgba_geometry(output_width, output_height, &rgba_size) != 0) {
         return FLUXER_NATIVE_STATUS_INVALID_DIMENSIONS;
     }
-    enum ff_sdr_transfer transfer = FF_SDR_TRANSFER_SRGB;
-    if (ff_frame_sdr_transfer(frame, &transfer) != 0) {
+    struct ff_frame_color_plan plan;
+    if (ff_frame_color_plan(frame, &plan) != 0) {
         return FLUXER_NATIVE_STATUS_UNSUPPORTED;
+    }
+    if (fluxer_hdr_transfer_is_hdr(plan.transfer)) {
+        return ff_convert_hdr_frame_to_rgba(
+            frame, source_width, source_height, output_width, output_height,
+            sws, deadline_monotonic_ms, dst, rgba_size, &plan);
     }
     int libyuv_applied = 0;
     status = ff_convert_i420_frame_to_rgba_libyuv(
         frame, source_width, source_height, output_width, output_height,
         deadline_monotonic_ms, dst, &libyuv_applied);
     if (status != FLUXER_NATIVE_STATUS_OK) return status;
-    if (libyuv_applied) {
-        if (transfer != FF_SDR_TRANSFER_SRGB) {
-            return ff_convert_rgba_transfer_to_srgb(
-                transfer, dst, output_width, output_height,
-                deadline_monotonic_ms);
+    if (!libyuv_applied) {
+        *sws = sws_getCachedContext(*sws,
+                                    source_width, source_height,
+                                    (enum AVPixelFormat)frame->format,
+                                    output_width, output_height,
+                                    AV_PIX_FMT_RGBA,
+                                    SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        if (*sws == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
+        if (ff_configure_swscale_color(*sws, frame) != 0) {
+            return FLUXER_NATIVE_STATUS_UNSUPPORTED;
         }
-        return FLUXER_NATIVE_STATUS_OK;
+        status = ff_swscale_frame_to_rgba(
+            *sws, frame, source_height, output_width, output_height, 4,
+            deadline_monotonic_ms, dst);
+        if (status != FLUXER_NATIVE_STATUS_OK) return status;
     }
-    *sws = sws_getCachedContext(*sws,
-                                source_width, source_height,
-                                (enum AVPixelFormat)frame->format,
-                                output_width, output_height, AV_PIX_FMT_RGBA,
-                                SWS_FAST_BILINEAR, NULL, NULL, NULL);
-    if (*sws == NULL) return FLUXER_NATIVE_STATUS_CODEC_FAILURE;
-    if (ff_configure_swscale_color(*sws, frame) != 0) {
-        return FLUXER_NATIVE_STATUS_UNSUPPORTED;
-    }
-    status = ff_swscale_frame_to_rgba(
-        *sws, frame, source_height, output_width, output_height,
-        deadline_monotonic_ms, dst);
-    if (status != FLUXER_NATIVE_STATUS_OK) return status;
-    if (transfer != FF_SDR_TRANSFER_SRGB) {
-        return ff_convert_rgba_transfer_to_srgb(
-            transfer, dst, output_width, output_height, deadline_monotonic_ms);
-    }
-    return FLUXER_NATIVE_STATUS_OK;
+    if (ff_frame_plan_is_passthrough(&plan)) return FLUXER_NATIVE_STATUS_OK;
+    return fluxer_hdr_apply_sdr_gamut(
+        dst, output_width, output_height, plan.gamut, plan.transfer,
+        FLUXER_VIDEO_DEADLINE_ROWS, deadline_monotonic_ms);
 }
