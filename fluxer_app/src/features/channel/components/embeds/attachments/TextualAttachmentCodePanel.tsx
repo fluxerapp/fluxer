@@ -64,10 +64,11 @@ export function TextualAttachmentCodePanel({
 						data-flx="channel.embeds.attachments.textual-attachment-code-panel.warning-circle-icon"
 					/>
 					<span data-flx="channel.embeds.attachments.textual-attachment-code-panel.span">
-						{previewError?.type === 'size'
-							? i18n._(FILE_IS_TOO_LARGE_FOR_INLINE_PREVIEW_LIMIT_DESCRIPTOR, {previewLimitKb: PREVIEW_LIMIT_KB})
-							: i18n._(UNABLE_TO_LOAD_PREVIEW_DESCRIPTOR)}
-						{previewError?.type === 'network' && previewError.message ? ` ${previewError.message}` : ''}
+						{`${
+							previewError?.type === 'size'
+								? i18n._(FILE_IS_TOO_LARGE_FOR_INLINE_PREVIEW_LIMIT_DESCRIPTOR, {previewLimitKb: PREVIEW_LIMIT_KB})
+								: i18n._(UNABLE_TO_LOAD_PREVIEW_DESCRIPTOR)
+						}${previewError?.type === 'network' && previewError.message ? ` ${previewError.message}` : ''}`}
 					</span>
 				</div>
 			</div>

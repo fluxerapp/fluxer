@@ -165,9 +165,11 @@ export const TermsAcceptanceModal = observer(() => {
 					ref={primaryRef}
 					data-flx="auth.terms-acceptance-modal.button.accept"
 				>
-					{kind === 'terms' && i18n._(I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR)}
-					{kind === 'privacy' && i18n._(I_AGREE_TO_THE_UPDATED_PRIVACY_POLICY_DESCRIPTOR)}
-					{kind === 'both' && i18n._(I_AGREE_TO_THE_UPDATED_POLICIES_DESCRIPTOR)}
+					{kind === 'terms'
+						? i18n._(I_AGREE_TO_THE_UPDATED_TERMS_DESCRIPTOR)
+						: kind === 'privacy'
+							? i18n._(I_AGREE_TO_THE_UPDATED_PRIVACY_POLICY_DESCRIPTOR)
+							: i18n._(I_AGREE_TO_THE_UPDATED_POLICIES_DESCRIPTOR)}
 				</Button>
 			</Modal.Footer>
 		</Modal.Root>

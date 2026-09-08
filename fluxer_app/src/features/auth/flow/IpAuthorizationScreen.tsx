@@ -142,7 +142,9 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 						data-flx="auth.flow.ip-authorization-screen.button.resend"
 					>
 						{resendUsed ? <Trans>Resent</Trans> : <Trans>Resend email</Trans>}
-						{resendIn > 0 ? ` (${resendIn}s)` : ''}
+						<flx-i18n data-flx="auth.flow.ip-authorization-screen.flx-i18n">
+							{resendIn > 0 ? ` (${resendIn}s)` : ''}
+						</flx-i18n>
 					</Button>
 				)}
 				{onBack ? (

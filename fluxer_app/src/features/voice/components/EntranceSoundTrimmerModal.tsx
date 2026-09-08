@@ -341,7 +341,9 @@ export const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps>
 											) : (
 												<PlayIcon size={14} weight="fill" data-flx="voice.entrance-sound-trimmer-modal.play-icon" />
 											)}
-											{isPlaying ? i18n._(PAUSE_SELECTION_DESCRIPTOR) : i18n._(PLAY_SELECTION_DESCRIPTOR)}
+											<flx-i18n data-flx="voice.entrance-sound-trimmer-modal.flx-i18n">
+												{isPlaying ? i18n._(PAUSE_SELECTION_DESCRIPTOR) : i18n._(PLAY_SELECTION_DESCRIPTOR)}
+											</flx-i18n>
 										</span>
 									</Button>
 								</div>

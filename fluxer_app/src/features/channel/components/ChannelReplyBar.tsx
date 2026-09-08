@@ -182,7 +182,9 @@ export const ReplyBar = observer(function ReplyBar({
 									data-flx="channel.reply-bar.switch.toggle-mention"
 								>
 									<AtIcon weight="bold" className={styles.mentionIcon} data-flx="channel.reply-bar.mention-icon" />
-									{shouldMention ? i18n._(ON_DESCRIPTOR) : i18n._(OFF_DESCRIPTOR)}
+									<flx-i18n data-flx="channel.channel-reply-bar.reply-bar.flx-i18n">
+										{shouldMention ? i18n._(ON_DESCRIPTOR) : i18n._(OFF_DESCRIPTOR)}
+									</flx-i18n>
 								</button>
 							</FocusRing>
 						</Tooltip>

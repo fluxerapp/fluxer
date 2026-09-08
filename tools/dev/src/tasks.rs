@@ -109,6 +109,12 @@ pub fn run_build() -> Result<i32> {
     Ok(0)
 }
 
+pub fn run_lint() -> Result<i32> {
+    task_run(&["pnpm", "exec", "biome", "ci"])?;
+    task_run(&["pnpm", "exec", "eslint", ".", "--max-warnings", "0"])?;
+    Ok(0)
+}
+
 pub fn run_knip() -> Result<i32> {
     task_run(&["pnpm", "--filter", "fluxer_app", "i18n:compile"])?;
     task_run(&["pnpm", "exec", "knip"])?;

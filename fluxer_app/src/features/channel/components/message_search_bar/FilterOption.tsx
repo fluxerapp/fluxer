@@ -116,7 +116,9 @@ export const FiltersSection: React.FC<FiltersSectionProps> = observer(
 							size={remFromPx(12)}
 							data-flx="channel.message-search-bar.filter-option.filters-section.funnel-icon"
 						/>
-						{title || i18n._(SEARCH_FILTERS_DESCRIPTOR)}
+						<flx-i18n data-flx="channel.message-search-bar.filter-option.filters-section.flx-i18n">
+							{title || i18n._(SEARCH_FILTERS_DESCRIPTOR)}
+						</flx-i18n>
 					</span>
 				</div>
 				{options.map((option: SearchFilterOption, index) => (

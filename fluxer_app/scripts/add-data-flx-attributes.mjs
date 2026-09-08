@@ -11,6 +11,7 @@ const JSX_EXTENSIONS = new Set(['.tsx', '.jsx']);
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.cache', '.swc']);
 const GENERATED_FILES = new Set([join(SOURCE_DIR, 'features', 'ui', 'components', 'SVGMasks.tsx')]);
 const NON_THEMEABLE_IDENTIFIERS = new Set([
+	'AppI18nProvider',
 	'Fragment',
 	'I18nProvider',
 	'Outlet',

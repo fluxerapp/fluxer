@@ -247,7 +247,9 @@ export const MacPermissionsModal: React.FC<MacPermissionsModalProps> = observer(
 													data-flx="permissions.system.mac-permissions-modal.check-icon"
 												/>
 											)}
-											{i18n._(statusDescriptorForStatus(status))}
+											<flx-i18n data-flx="permissions.system.mac-permissions-modal.flx-i18n">
+												{i18n._(statusDescriptorForStatus(status))}
+											</flx-i18n>
 										</div>
 										{hasAction && (
 											<div className={styles.action} data-flx="permissions.mac-permissions-modal.action">

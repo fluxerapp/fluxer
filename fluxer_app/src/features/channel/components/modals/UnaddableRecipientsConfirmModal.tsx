@@ -84,7 +84,8 @@ export const UnaddableRecipientsConfirmModal = observer(
 				<ul data-flx="channel.unaddable-recipients-confirm-modal.ul">
 					{rows.map((row) => (
 						<li key={row.userId} data-flx="channel.unaddable-recipients-confirm-modal.li">
-							<strong data-flx="channel.unaddable-recipients-confirm-modal.strong">{row.name}</strong>: {row.reasonText}
+							<strong data-flx="channel.unaddable-recipients-confirm-modal.strong">{row.name}</strong>
+							<span data-flx="channel.unaddable-recipients-confirm-modal.span">{`: ${row.reasonText}`}</span>
 						</li>
 					))}
 				</ul>

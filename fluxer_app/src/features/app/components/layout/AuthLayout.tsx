@@ -12,6 +12,7 @@ import {AuthCardContainer} from '@app/features/auth/flow/AuthCardContainer';
 import {useAuthBackground} from '@app/features/auth/hooks/useAuthBackground';
 import {type AuthCardVariant, AuthLayoutContext} from '@app/features/auth/state/AuthLayoutContext';
 import {AuthRegisterDraftContext, type AuthRegisterFormDraft} from '@app/features/auth/state/AuthRegisterDraftContext';
+import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
@@ -21,7 +22,6 @@ import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
 import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
-import {I18nProvider} from '@lingui/react';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from 'react';
@@ -258,8 +258,8 @@ export const AuthLayout = observer(function AuthLayout({children}: {children?: R
 		return null;
 	}
 	return (
-		<I18nProvider i18n={i18n}>
+		<AppI18nProvider i18n={i18n}>
 			<AuthLayoutContent data-flx="app.auth-layout.auth-layout-content">{children}</AuthLayoutContent>
-		</I18nProvider>
+		</AppI18nProvider>
 	);
 });

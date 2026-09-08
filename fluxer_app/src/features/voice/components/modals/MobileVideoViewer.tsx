@@ -423,8 +423,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 						aria-hidden="true"
 						data-flx="voice.mobile-video-viewer.seek-feedback"
 					>
-						{seekFeedback.direction === 'backward' ? '-' : '+'}
-						{seekFeedback.seconds}s
+						{`${seekFeedback.direction === 'backward' ? '-' : '+'}${seekFeedback.seconds}s`}
 					</motion.div>
 				)}
 			</AnimatePresence>

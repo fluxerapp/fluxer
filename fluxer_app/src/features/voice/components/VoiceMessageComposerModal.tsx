@@ -592,7 +592,9 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 												data-flx="voice.voice-message-composer-modal.play-icon"
 											/>
 										)}
-										{isPlaying ? i18n._(PAUSE_DESCRIPTOR) : i18n._(PLAY_DESCRIPTOR)}
+										<flx-i18n data-flx="voice.voice-message-composer-modal.flx-i18n">
+											{isPlaying ? i18n._(PAUSE_DESCRIPTOR) : i18n._(PLAY_DESCRIPTOR)}
+										</flx-i18n>
 									</span>
 								</Button>
 								<Button

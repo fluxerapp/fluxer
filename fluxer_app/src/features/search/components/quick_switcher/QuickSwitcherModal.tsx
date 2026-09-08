@@ -181,6 +181,7 @@ const ResultRow = observer(
 			quickStyles.optionIcon,
 			quickStyles.optionIconHighlight,
 		);
+		const iconContent: React.ReactElement = iconRendered.content;
 		const key = getViewContext(executableResult)
 			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
 			: `${executableResult.type}-${executableResult.id}`;
@@ -215,17 +216,17 @@ const ResultRow = observer(
 								className={quickStyles.avatar}
 								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--3"
 							>
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : iconRendered.type === 'guild' ? (
 							<div
 								className={quickStyles.guildIcon}
 								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--4"
 							>
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : (
-							iconRendered.content
+							iconContent
 						)}
 						<div
 							className={clsx(quickStyles.optionText, isHighlight && quickStyles.optionHighlight)}

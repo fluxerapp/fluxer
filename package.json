@@ -34,6 +34,7 @@
 		"i18n:typecheck": "pnpm --filter @fluxer/errors --filter @pkgs/email typecheck",
 		"i18n:weblate-compile": "pnpm i18n:compile",
 		"knip": "cargo run -p fluxer-dev -- knip",
+		"lint": "cargo run -p fluxer-dev -- lint",
 		"openapi:generate": "pnpm --filter @fluxer/openapi generate",
 		"openapi:validate": "pnpm --filter @fluxer/openapi validate",
 		"remote": "node scripts/remote.mjs",
@@ -50,7 +51,11 @@
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
+		"eslint": "catalog:",
+		"eslint-plugin-react-google-translate": "catalog:",
 		"knip": "catalog:",
+		"typescript": "catalog:",
+		"typescript-eslint": "catalog:",
 		"vite": "catalog:"
 	},
 	"packageManager": "pnpm@10.29.3"

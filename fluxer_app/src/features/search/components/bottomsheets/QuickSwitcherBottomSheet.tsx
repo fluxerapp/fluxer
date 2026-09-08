@@ -165,6 +165,7 @@ const ResultRow = observer(
 			onConfirm(executableResult);
 		};
 		const iconRendered = renderIcon(executableResult, isHighlight, styles.optionIcon, styles.optionIconHighlight);
+		const iconContent: React.ReactElement = iconRendered.content;
 		const key = getViewContext(executableResult)
 			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
 			: `${executableResult.type}-${executableResult.id}`;
@@ -194,14 +195,14 @@ const ResultRow = observer(
 					<div className={styles.optionContent} data-flx="search.quick-switcher-bottom-sheet.result-row.option-content">
 						{iconRendered.type === 'avatar' ? (
 							<div className={styles.avatar} data-flx="search.quick-switcher-bottom-sheet.result-row.avatar">
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : iconRendered.type === 'guild' ? (
 							<div className={styles.guildIcon} data-flx="search.quick-switcher-bottom-sheet.result-row.guild-icon">
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : (
-							iconRendered.content
+							iconContent
 						)}
 						<div
 							className={clsx(styles.optionText, isHighlight && styles.optionHighlight)}

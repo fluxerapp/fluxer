@@ -653,8 +653,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 														{entry.name}
 													</span>
 													<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-														{(entry.durationMs / 1000).toFixed(1)}s
-														{isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}
+														{`${(entry.durationMs / 1000).toFixed(1)}s${isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}`}
 													</span>
 												</div>
 											</div>

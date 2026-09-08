@@ -1492,6 +1492,9 @@
         "msgid": "Disable direct messages and friend requests"
       },
       {
+        "msgid": "Disable translation DOM guard"
+      },
+      {
         "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
       },
       {

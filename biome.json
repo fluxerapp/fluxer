@@ -84,7 +84,18 @@
 				},
 				"useConst": "error",
 				"noNonNullAssertion": "off",
-				"noParameterAssign": "off"
+				"noParameterAssign": "off",
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"@lingui/react": {
+								"importNames": ["I18nProvider"],
+								"message": "Use AppI18nProvider from @app/features/i18n/components/AppI18nProvider so <Trans> output stays safe under page translation."
+							}
+						}
+					}
+				}
 			},
 			"a11y": {
 				"recommended": true,
@@ -117,8 +128,19 @@
 	"assist": {"actions": {"source": {"organizeImports": "on"}}},
 	"overrides": [
 		{
+			"includes": ["fluxer_app/src/**/*.tsx"],
+			"plugins": ["./tools/lint/no-adjacent-jsx-text.grit"]
+		},
+		{
 			"includes": ["fluxer_docs/scripts/VerifyDocsCoverage.ts"],
 			"linter": {"rules": {"suspicious": {"noTemplateCurlyInString": "off"}}}
+		},
+		{
+			"includes": [
+				"fluxer_app/src/features/i18n/components/AppI18nProvider.tsx",
+				"fluxer_app/src/features/i18n/components/AppI18nProvider.test.tsx"
+			],
+			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
 		},
 		{
 			"includes": ["**/*.astro"],

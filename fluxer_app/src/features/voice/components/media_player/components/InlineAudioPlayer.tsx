@@ -384,9 +384,7 @@ export function InlineAudioPlayer({
 						</span>
 					</p>
 					<p className={styles.fileMeta} data-flx="voice.media-player.inline-audio-player.file-meta">
-						{fileSizeString}
-						{fileSizeString && displayDuration > 0 && ' · '}
-						{displayDuration > 0 && formatDuration(displayDuration)}
+						{`${fileSizeString}${fileSizeString && displayDuration > 0 ? ' · ' : ''}${displayDuration > 0 ? formatDuration(displayDuration) : ''}`}
 					</p>
 				</div>
 			</div>

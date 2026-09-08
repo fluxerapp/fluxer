@@ -34,6 +34,16 @@ const ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR = msg({
 	comment:
 		'Developer / debug surface — keep terse and technical. Tooltip / description for forcing the voice connection status bar visible in mocked mode.',
 });
+const DISABLE_TRANSLATION_DOM_GUARD_DESCRIPTOR = msg({
+	message: 'Disable translation DOM guard',
+	comment: 'Developer option label for turning off the page-translator DOM crash guard.',
+});
+const STOP_PATCHING_NODE_PROTOTYPE_INSERTBEFORE_AND_DESCRIPTOR = msg({
+	message:
+		'Stop patching Node.prototype insertBefore and removeChild. The app will crash again when a page translator re-parents text nodes React still holds.',
+	comment:
+		'Developer / debug surface — keep terse and technical. Tooltip / description for the translation DOM guard kill switch.',
+});
 const APP_STATE_DESCRIPTOR = msg({
 	message: 'App state',
 	comment: 'Developer options group for overriding app/account state.',
@@ -254,6 +264,11 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 				key: 'noOpInAppReports',
 				label: NO_OP_IN_APP_REPORTS_DESCRIPTOR,
 				description: NO_OP_IN_APP_REPORTS_DESC_DESCRIPTOR,
+			},
+			{
+				key: 'disableTranslationDomGuard',
+				label: DISABLE_TRANSLATION_DOM_GUARD_DESCRIPTOR,
+				description: STOP_PATCHING_NODE_PROTOTYPE_INSERTBEFORE_AND_DESCRIPTOR,
 			},
 		],
 	},

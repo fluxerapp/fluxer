@@ -3654,7 +3654,7 @@ msgid "App settings"
 msgstr "应用设置"
 
 #. Developer options group for overriding app/account state.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:37
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:47
 msgid "App state"
 msgstr "应用状态"
 
@@ -4580,7 +4580,7 @@ msgstr "当前离开"
 #. OAuth authorization secondary button. Returns to the previous carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:77
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx:14
-#: src/features/auth/flow/IpAuthorizationScreen.tsx:150
+#: src/features/auth/flow/IpAuthorizationScreen.tsx:152
 #: src/features/channel/components/channel_header/shared.ts:27
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
@@ -5464,7 +5464,7 @@ msgstr "使用 {productName} 即表示您同意更新后的政策。"
 #. Developer option label.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:41
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:41
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:51
 msgid "Bypass loading skeleton"
 msgstr "跳过加载骨架"
 
@@ -9539,7 +9539,7 @@ msgstr "创建身份组"
 msgid "Create the administrator account"
 msgstr "创建管理员账户"
 
-#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:93
+#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:94
 msgid "Create the group DM with the remaining {addableCount} recipient(s) and skip the others?"
 msgstr "创建包含其余 {addableCount} 位成员的群聊，并跳过其他成员？"
 
@@ -11270,6 +11270,11 @@ msgstr "禁用快捷方式"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:175
 msgid "Disable sounds"
 msgstr "关闭声音"
+
+#. Developer option label for turning off the page-translator DOM crash guard.
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:37
+msgid "Disable translation DOM guard"
+msgstr "禁用翻译 DOM 保护程序"
 
 #. Button or menu action label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:35
@@ -13680,7 +13685,7 @@ msgid "Export themes"
 msgstr "导出主题"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:129
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
 msgid "Expose the staff-only timezone section in profile settings."
 msgstr "在个人资料设置中显示仅供员工访问的时区部分。"
 
@@ -14182,7 +14187,7 @@ msgstr "功能暂时停用"
 
 #. Developer options group for feature behavior overrides.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:113
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:123
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:137
 msgid "Features"
 msgstr "功能"
@@ -14619,17 +14624,17 @@ msgid "Force enabled"
 msgstr "强制启用"
 
 #. Developer option label for simulating failed message loads.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:109
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:119
 msgid "Force failed message loads"
 msgstr "强制消息加载失败"
 
 #. Developer option label for simulating failed message sends.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:105
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:115
 msgid "Force failed message sends"
 msgstr "强制消息发送失败"
 
 #. Developer option label for simulating a loading GIF picker.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:65
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:75
 msgid "Force GIF picker loading"
 msgstr "强制加载 GIF 选择器"
 
@@ -14641,7 +14646,7 @@ msgstr "强制隐藏"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:45
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:45
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:55
 msgid "Force loading skeleton"
 msgstr "强制加载骨架"
 
@@ -14661,12 +14666,12 @@ msgid "Force no {permissionName} permission"
 msgstr "强制无 {permissionName} 权限"
 
 #. Developer option label for always showing profile data warnings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:101
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:111
 msgid "Force profile data warning"
 msgstr "强制显示个人资料数据警告"
 
 #. Developer option label for forcing user profile loading skeletons.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:97
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:107
 msgid "Force profile skeletons"
 msgstr "强制显示资料骨架屏"
 
@@ -14676,12 +14681,12 @@ msgid "Force show"
 msgstr "强制显示"
 
 #. Developer option label for always showing a community settings warning.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:69
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:79
 msgid "Force show vanity URL disclaimer"
 msgstr "强制显示自定义网址免责声明"
 
 #. Developer option label for always showing the voice connection status bar.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:121
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:131
 msgid "Force show voice connection"
 msgstr "强制显示语音连接"
 
@@ -14690,12 +14695,12 @@ msgid "Force slowmode active"
 msgstr "强制慢速模式开启"
 
 #. Developer option label for rendering messages as unknown message types.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:117
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:127
 msgid "Force unknown message type"
 msgstr "强制显示未知消息类型"
 
 #. Developer option label for simulating an available update.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:49
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:59
 msgid "Force update ready"
 msgstr "强制更新就绪"
 
@@ -20952,7 +20957,7 @@ msgid "Network error"
 msgstr "网络错误"
 
 #. Developer options group for simulated slow or failed operations.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:73
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:83
 msgid "Networking and performance"
 msgstr "网络和性能"
 
@@ -21565,7 +21570,7 @@ msgstr "未提供理由。"
 msgid "No recent mentions"
 msgstr "暂无提及"
 
-#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:97
+#: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:98
 msgid "No remaining recipients to create a group DM with."
 msgstr "没有其他收件人可以创建群聊。"
 
@@ -21754,7 +21759,7 @@ msgid "No webhooks"
 msgstr "无 Webhook"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:134
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:144
 msgid "No-op in-app reports"
 msgstr "空操作应用内举报"
 
@@ -27876,7 +27881,7 @@ msgid "Self-hosted mode"
 msgstr "自托管模式"
 
 #. Developer option label for forcing self-hosted client mode.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:67
 msgid "Self-hosted mode override"
 msgstr "自托管模式覆盖"
 
@@ -29020,7 +29025,7 @@ msgstr "显示我的屏幕共享"
 #. Developer option label for showing the current user as typing.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:89
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:53
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:63
 msgid "Show myself typing"
 msgstr "显示我正在输入"
 
@@ -29074,7 +29079,7 @@ msgid "Show per-device participant volume sliders in voice menus"
 msgstr "在语音菜单中显示每个设备的参与者音量滑块"
 
 #. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:125
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
 msgid "Show profile timezone settings"
 msgstr "显示个人资料时区设置（仅限管理员）"
 
@@ -29441,7 +29446,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "跳过所有域名的外部链接警告"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:149
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "提交应用内报告时跳过网络调用。流程仍会跳转到成功界面，以便您测试 UI，但实际上不会向安全团队发送任何内容。"
 
@@ -29499,7 +29504,7 @@ msgstr "斯洛文尼亚"
 #. Developer option label for simulating slow file uploads.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:93
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:89
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:99
 msgid "Slow attachment upload"
 msgstr "慢速附件上传"
 
@@ -29516,28 +29521,28 @@ msgstr "慢一点 — 请稍后再试。"
 #. Developer option label for simulating slow message edits.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:105
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:85
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:95
 msgid "Slow message edit"
 msgstr "慢速消息编辑"
 
 #. Developer option label for simulating slow message loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:97
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:77
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:87
 msgid "Slow message load"
 msgstr "慢速加载消息"
 
 #. Developer option label for simulating slow message sending.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:101
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:81
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:91
 msgid "Slow message send"
 msgstr "慢速发送消息"
 
 #. Developer option label for simulating slow profile loading.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:109
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:93
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:103
 msgid "Slow profile load"
 msgstr "慢速加载个人资料"
 
@@ -30330,7 +30335,7 @@ msgstr "重新开始"
 msgid "Start recording"
 msgstr "开始录音"
 
-#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:585
+#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:586
 msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> to narrow down results."
 msgstr "从 <0>{peoplePrefix}</0>、<1>{textChannelPrefix}</1>、<2>{voiceChannelPrefix}</2> 和 <3>{communityPrefix}</3> 开始搜索，以缩小结果范围。"
 
@@ -30590,6 +30595,11 @@ msgstr "停止接收消息和好友请求."
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "停止Neko追逐你的光标，同时保持其可拖动和交互性。"
+
+#. Developer / debug surface — keep terse and technical. Tooltip / description for the translation DOM guard kill switch.
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:41
+msgid "Stop patching Node.prototype insertBefore and removeChild. The app will crash again when a page translator re-parents text nodes React still holds."
+msgstr "停止修补 Node.prototype 的 insertBefore 和 removeChild。当页面翻译器重新挂载 React 仍持有的文本节点时，应用将再次崩溃。"
 
 #. Action that stops ringing the selected participant in a voice call.
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:29
@@ -33633,7 +33643,7 @@ msgid "Typing state"
 msgstr "正在输入"
 
 #. Developer options group for forcing UI component states.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:61
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:71
 msgid "UI components"
 msgstr "界面组件"
 

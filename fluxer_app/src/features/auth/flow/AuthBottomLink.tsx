@@ -20,7 +20,7 @@ export function AuthBottomLink({variant, to}: AuthBottomLinkProps) {
 	return (
 		<div className={styles.bottomLink} data-flx="auth.flow.auth-bottom-link.bottom-link">
 			<span className={styles.bottomLinkText} data-flx="auth.flow.auth-bottom-link.bottom-link-text">
-				{variant === 'login' ? i18n._(ALREADY_HAVE_ACCOUNT_DESCRIPTOR) : i18n._(NEED_ACCOUNT_DESCRIPTOR)}{' '}
+				{`${variant === 'login' ? i18n._(ALREADY_HAVE_ACCOUNT_DESCRIPTOR) : i18n._(NEED_ACCOUNT_DESCRIPTOR)} `}
 			</span>
 			<AuthRouterLink
 				to={to}

@@ -448,6 +448,9 @@ jobs:
       - name: Check formatting and lint
         run: pnpm exec biome ci .
 
+      - name: Lint JSX for browser-translation safety
+        run: pnpm exec eslint . --max-warnings 0
+
   i18n:
     runs-on: ubuntu-24.04
     timeout-minutes: 25

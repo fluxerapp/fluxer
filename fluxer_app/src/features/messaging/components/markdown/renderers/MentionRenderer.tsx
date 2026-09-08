@@ -123,7 +123,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 			const genericMention = (
 				<span key={id} className={markupStyles.mention} data-flx="messaging.markdown.renderers.mention-renderer.span">
 					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label">
-						@{name || kind.id}
+						{`@${name || kind.id}`}
 					</MentionLabel>
 				</span>
 			);
@@ -138,7 +138,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 						data-flx="messaging.markdown.renderers.mention-renderer.span--2"
 					>
 						<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--2">
-							@{name || user.displayName}
+							{`@${name || user.displayName}`}
 						</MentionLabel>
 					</span>
 				);
@@ -166,7 +166,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 							data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation"
 						>
 							<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--3">
-								@{name || user.displayName}
+								{`@${name || user.displayName}`}
 							</MentionLabel>
 						</span>
 					</FocusRing>
