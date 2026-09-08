@@ -72,6 +72,8 @@ Outside Compose these fall back to an empty base domain, `http`, and port `8088`
 
 `FLUXER_DOMAIN` also feeds the default passkey relying party identifier, the default VAPID contact address, and the edge listener address.
 
+`FLUXER_PUBLIC_ORIGIN` states the same public address as one string, and [The public origin](#the-public-origin) has it.
+
 #### `FLUXER_INTERNAL_SCHEME`
 
 Default `http`. The scheme for internal service URLs. Must be `http` or `https`, and anything else fails startup. Nothing outside the config loader reads it.
@@ -167,11 +169,15 @@ Nothing in the stack reads `X-Forwarded-Proto` or `X-Forwarded-Host`. Every abso
 
 ## The public origin
 
-`FLUXER_PUBLIC_ORIGIN` is the public origin browsers use, with no trailing slash. Only `docker-compose.yml` reads it, and it substitutes the value into fourteen values that need a full origin, including `FLUXER_MEDIA_ENDPOINT`, `FLUXER_MARKETING_ENDPOINT`, `FLUXER_ADMIN_ENDPOINT`, `FLUXER_ADMIN_OAUTH_REDIRECT_URI`, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`, `PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT`, and the Gateway's media and static endpoints.
+`FLUXER_PUBLIC_ORIGIN` states the public address as one string, with no trailing slash: the scheme, the host, and the port when that port is not the default for the scheme. `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT` state the same address between them, so the two spellings have to agree.
 
-It ships commented out. When it is unset, Compose falls back to `FLUXER_PUBLIC_SCHEME` and `FLUXER_DOMAIN` with no port, which is correct for the usual https-on-443 case.
+`docker-compose.yml` substitutes it into every name that needs a full origin, among them `FLUXER_APP_ENDPOINT`, `FLUXER_ADMIN_ENDPOINT`, `FLUXER_ADMIN_OAUTH_REDIRECT_URI`, `FLUXER_MEDIA_ENDPOINT`, `FLUXER_MARKETING_ENDPOINT`, `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`, `FLUXER_STATIC_CDN_ENDPOINT`, `FLUXER_LIVEKIT_URL`, `FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`, `PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT`, and the Gateway's media and static endpoints. `grep FLUXER_PUBLIC_ORIGIN docker-compose.yml` is the whole list. Compose also puts the name itself into the shared `x-fluxer-env` block, and a service that reads it takes its base domain, scheme and port from it.
 
-Serving the instance on any other port means setting `FLUXER_PUBLIC_ORIGIN` by hand, with that port in it, because the fallback has no port and the media and admin links are built from it.
+It ships commented out. When it is unset, Compose builds those names from `FLUXER_PUBLIC_SCHEME` and `FLUXER_DOMAIN`, and each service puts `FLUXER_PUBLIC_PORT` back into the endpoints it derives.
+
+A non-default port therefore needs nothing here. `FLUXER_PUBLIC_PORT` is where the port of the public address goes, and the rest of the stack follows it. The comment block under the first three lines of `.env.example` says what each layout needs.
+
+Set `FLUXER_PUBLIC_ORIGIN` only to write the address out in one place, and then repeat the port `FLUXER_PUBLIC_PORT` names and the host `FLUXER_DOMAIN` names inside it. An `.env` whose two spellings disagree names two addresses. Half the instance answers on one and half on the other, and the web app sends no `Authorization` header to an API that is not on its own origin.
 
 ## Endpoint overrides
 
@@ -265,7 +271,7 @@ Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. 
 
 The `edge` container is the only HTTP entry point. Both layouts below work with the edge left alone.
 
-Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else.
+Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else. The two `443` publishes follow `FLUXER_PUBLIC_PORT`, so a non-default public port moves them with it.
 
 Put your own reverse proxy in front by adding `docker-compose.proxy.yml`, a second Compose file that overrides parts of the first. Load it with `-f` twice, or set `COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml` in `.env` once. The edge then serves plain HTTP on one port, and the proxy in front terminates TLS. [Behind your own reverse proxy](/operator/reverse-proxy/) owns the switch, the requirements, and the per-proxy configuration.
 
@@ -273,7 +279,7 @@ All are optional.
 
 #### `FLUXER_EDGE_SITE_ADDRESS`
 
-Default `FLUXER_DOMAIN`. What the edge listens on. Honoured in the bundled layout only, because `docker-compose.proxy.yml` sets the literal `:8080` and discards any `.env` value. Several hostnames or a non-default TLS port therefore needs the bundled layout. It is independent of `FLUXER_PUBLIC_SCHEME` and `FLUXER_PUBLIC_PORT`, so keep the listener and the advertised origin in step by hand.
+Defaults to the address Compose builds from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT`. What the edge listens on, and the default keeps the listener on the address the instance advertises. Honoured in the bundled layout only, because `docker-compose.proxy.yml` sets the literal `:8080` and `tunnel.compose.yml` the literal `:80`, and either discards any `.env` value. Several hostnames therefore need the bundled layout. Write the scheme into any value you set here, because a bare hostname means automatic HTTPS on `443` whatever `FLUXER_PUBLIC_SCHEME` says.
 
 #### `FLUXER_EDGE_TRUSTED_PROXIES`
 
@@ -285,11 +291,11 @@ Default `127.0.0.1:8080`. Where the plain-HTTP port binds. Read only under the o
 
 #### `FLUXER_HTTP_PORT`
 
-Default `80`. The host side of the edge's HTTP publish. The container still listens on `80` inside. It takes an optional bind address in front of the port, so `127.0.0.1:80` keeps the publish off every public interface. Not read under the overlay, which publishes `FLUXER_EDGE_BIND` instead.
+Default `80`. The host side of the edge's HTTP publish, which serves the redirect to HTTPS and the ACME HTTP challenge under an `https` scheme and nothing at all under an `http` one. The container still listens on `80` inside. It takes an optional bind address in front of the port, so `127.0.0.1:80` keeps the publish off every public interface. Do not set it to the port `FLUXER_PUBLIC_PORT` already names, because that publishes one host port twice and the edge refuses to start. Not read under the overlay, which publishes `FLUXER_EDGE_BIND` instead.
 
 #### `FLUXER_HTTPS_PORT`
 
-Default `443`. The host side of the edge's HTTPS publish. It moves the TCP and the UDP publish together, because HTTP/3 needs both on the same port. Same optional bind address, and it is not read under the overlay either.
+Defaults to `FLUXER_PUBLIC_PORT`. The host side of the edge's HTTPS publish, and the only thing it moves is that host side. Set it when the host already has something on the port the instance advertises. It moves the TCP and the UDP publish together, because HTTP/3 needs both on the same port. Same optional bind address, and it is not read under the overlay either.
 
 #### `COMPOSE_FILE`
 
@@ -649,7 +655,7 @@ Default empty. The LiveKit secret. Compose fills it from `LIVEKIT_API_SECRET`.
 
 #### `FLUXER_LIVEKIT_URL`
 
-Default empty. The client-facing LiveKit URL. When empty the API derives it from the public API origin as `wss://host/livekit`, or `ws://` under `http`, and keeps a non-default port. Set it only when LiveKit is served from another host. Compose forwards the `.env` value, empty by default.
+Default empty. The client-facing LiveKit URL. Set it only when LiveKit is served from another host. `docker-compose.yml` never passes it empty: it builds the value from `FLUXER_PUBLIC_ORIGIN`, or from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT` when the origin is unset, followed by `/livekit`. An empty value outside Compose has the API derive `wss://host/livekit` from the public API origin, or `ws://` under `http`, with a non-default port kept.
 
 #### `FLUXER_LIVEKIT_USE_EXTERNAL_IP`
 
@@ -728,6 +734,8 @@ Default `60000`. Grace before culling a LiveKit-only participant. Milliseconds.
 ## Email
 
 Email is off by default, and two conditions turn it on. The switch must be on, and the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
+
+The same two conditions turn on a DNS check at registration. The check runs when email is on by the rule above, so the dashboard switch and the SMTP values decide it along with the variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
 
 #### `FLUXER_EMAIL_ENABLED`
 
@@ -1599,10 +1607,6 @@ Docker Compose or the edge container consumes most of the names below, and each 
 #### `FLUXER_DOMAIN`
 
 Interpolated into `FLUXER_BASE_DOMAIN` and into the derived URL strings.
-
-#### `FLUXER_PUBLIC_ORIGIN`
-
-Interpolated into fourteen values that need a full origin.
 
 #### `COMPOSE_FILE`
 

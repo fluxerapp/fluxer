@@ -936,22 +936,77 @@ fluxer_wait_ready() {
 	return 1
 }
 
+fluxer_env_value() {
+	sed -n "s/^$1=\\(.*\\)\$/\\1/p" "$opt_dir/.env" | head -n 1
+}
+
+# The origin browsers use. .env states it outright when FLUXER_PUBLIC_ORIGIN is
+# set, and Compose otherwise builds the same string from the scheme, the domain
+# and the port, dropping a port that is the default for its scheme.
+#
+# Compose expands a ${...} reference inside an .env value and this script does
+# not, so a FLUXER_PUBLIC_ORIGIN written that way is skipped rather than printed
+# back with the braces still in it. The three names below say the same address,
+# so the derived string is the right one to fall back to.
+#
+# By hand:
+#   grep -E '^FLUXER_(PUBLIC_ORIGIN|PUBLIC_SCHEME|DOMAIN|PUBLIC_PORT)=' .env
+fluxer_public_origin() {
+	fluxer_origin=$(fluxer_env_value FLUXER_PUBLIC_ORIGIN)
+	case $fluxer_origin in
+		*'${'*)
+			printf '%s\n' 'FLUXER_PUBLIC_ORIGIN in .env holds a ${...} reference. This script does not expand those, so the address below comes from FLUXER_PUBLIC_SCHEME, FLUXER_DOMAIN and FLUXER_PUBLIC_PORT instead.' >&2
+			fluxer_origin=''
+			;;
+	esac
+	if [ -n "$fluxer_origin" ]; then
+		printf '%s' "${fluxer_origin%/}"
+		return 0
+	fi
+	fluxer_origin_host=$(fluxer_env_value FLUXER_DOMAIN)
+	if [ -z "$fluxer_origin_host" ]; then
+		return 0
+	fi
+	fluxer_origin_scheme=$(fluxer_env_value FLUXER_PUBLIC_SCHEME)
+	if [ -z "$fluxer_origin_scheme" ]; then
+		fluxer_origin_scheme='https'
+	fi
+	fluxer_origin_port=$(fluxer_env_value FLUXER_PUBLIC_PORT)
+	if [ -z "$fluxer_origin_port" ]; then
+		fluxer_origin_suffix=''
+	else
+		case $fluxer_origin_scheme:$fluxer_origin_port in
+			http:80|https:443) fluxer_origin_suffix='' ;;
+			*) fluxer_origin_suffix=":$fluxer_origin_port" ;;
+		esac
+	fi
+	printf '%s://%s%s' "$fluxer_origin_scheme" "$fluxer_origin_host" "$fluxer_origin_suffix"
+}
+
 # The public probe is informational. A host behind hairpin NAT cannot always
 # reach its own hostname, and a false failure there would be worse than no probe.
+# It asks the origin .env advertises, so an instance on a non-default port is
+# probed where it actually answers.
 fluxer_probe() {
-	fluxer_probe_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "https://$1/_health" 2>/dev/null || true)
+	fluxer_probe_origin=$1
+	fluxer_probe_authority=${fluxer_probe_origin#*://}
+	fluxer_probe_host=${fluxer_probe_authority%%:*}
+	case $fluxer_probe_origin in
+		http://*) fluxer_probe_port='80' ;;
+		*) fluxer_probe_port='443' ;;
+	esac
+	case $fluxer_probe_authority in
+		*:*) fluxer_probe_port=${fluxer_probe_authority##*:} ;;
+	esac
+	fluxer_probe_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$fluxer_probe_origin/_health" 2>/dev/null || true)
 	if [ -z "$fluxer_probe_code" ]; then
 		fluxer_probe_code='000'
 	fi
 	if [ "$fluxer_probe_code" = '200' ]; then
-		fluxer_say "https://$1/_health answers 200."
+		fluxer_say "$fluxer_probe_origin/_health answers 200."
 		return 0
 	fi
-	fluxer_say "https://$1/_health answers $fluxer_probe_code from this host. Check the DNS record for $1 and inbound ports 80 and 443."
-}
-
-fluxer_env_value() {
-	sed -n "s/^$1=\\(.*\\)\$/\\1/p" "$opt_dir/.env" | head -n 1
+	fluxer_say "$fluxer_probe_origin/_health answers $fluxer_probe_code from this host. Check the DNS record for $fluxer_probe_host and inbound port $fluxer_probe_port."
 }
 
 # The keys a refreshed stack requires that an .env written by an older installer
@@ -1510,9 +1565,9 @@ fluxer_verify_stack() {
 	if ! fluxer_wait_ready; then
 		fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read $fluxer_engine compose logs in $opt_dir."
 	fi
-	fluxer_domain_value=$(fluxer_env_value FLUXER_DOMAIN)
-	if [ -n "$fluxer_domain_value" ]; then
-		fluxer_probe "$fluxer_domain_value"
+	fluxer_origin_value=$(fluxer_public_origin)
+	if [ -n "$fluxer_origin_value" ]; then
+		fluxer_probe "$fluxer_origin_value"
 	fi
 }
 
@@ -1862,6 +1917,7 @@ if ! fluxer_generate_vapid; then
 fi
 fluxer_write_env
 fluxer_say "Wrote $opt_dir/.env, readable by you alone."
+fluxer_say 'That .env serves https on 443, which is the only layout this script writes. The .env.example beside it says what to change for any other one.'
 
 if [ "$opt_no_start" -eq 1 ]; then
 	fluxer_say "Start the instance with $fluxer_engine compose up -d in $opt_dir."
@@ -1878,8 +1934,12 @@ fluxer_say 'Waiting for every service to report ready. This takes several minute
 if ! fluxer_wait_ready; then
 	fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read $fluxer_engine compose logs in $opt_dir."
 fi
-fluxer_probe "$opt_domain"
+fluxer_ready_origin=$(fluxer_public_origin)
+if [ -z "$fluxer_ready_origin" ]; then
+	fluxer_ready_origin="https://$opt_domain"
+fi
+fluxer_probe "$fluxer_ready_origin"
 
-fluxer_say "Instance ready at https://$opt_domain"
+fluxer_say "Instance ready at $fluxer_ready_origin"
 fluxer_say 'Open it and create the first admin account. Finish the setup wizard in the same sitting.'
 fluxer_say "Secrets live in $opt_dir/.env. Back that file up."
