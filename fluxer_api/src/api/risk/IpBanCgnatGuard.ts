@@ -7,9 +7,14 @@ import {isTrustedCommercialPrivacyProvider} from './TrustedPrivacyProviders';
 
 const VERDICT_CACHE_TTL_MS = 60 * 60 * 1000;
 
+interface IpBanBlastRadiusVerdict {
+	cgnat: boolean;
+	sharedAccess: boolean;
+}
+
 interface CachedVerdict {
 	expiresAtMs: number;
-	highRisk: boolean;
+	verdict: IpBanBlastRadiusVerdict;
 }
 
 const verdictCache = new Map<string, CachedVerdict>();
@@ -48,7 +53,7 @@ export function getSuspiciousIpSkipReason(result: IpInfoLookupResult): Suspiciou
 	return null;
 }
 
-function isHighSharedAccessBlastRadiusRisk(result: IpInfoLookupResult): boolean {
+export function isHighSharedAccessBlastRadiusRisk(result: IpInfoLookupResult): boolean {
 	if (result.flags.isHosting || isAnonymousAccess(result)) {
 		return false;
 	}
@@ -60,29 +65,32 @@ export function isSingleIpBanCandidate(value: string): boolean {
 	return parseIpBanEntry(value)?.type === 'single';
 }
 
-export async function hasHighCgnatBlastRadiusRisk(
+export async function getIpBanBlastRadiusVerdict(
 	ip: string,
 	ipInfoService: IpInfoService,
 	context: {
 		source: string;
 		reason: string;
 	},
-): Promise<boolean> {
+): Promise<IpBanBlastRadiusVerdict> {
 	const now = Date.now();
 	const cacheKey = getSameIpDecisionKey(ip) ?? ip;
 	const cached = verdictCache.get(cacheKey);
 	if (cached && cached.expiresAtMs > now) {
-		return cached.highRisk;
+		return cached.verdict;
 	}
 	const result = await ipInfoService.lookup(ip, {
 		source: context.source,
 		reason: context.reason,
 		metadata: {policy: 'ip_ban_cgnat_guard'},
 	});
-	const highRisk = isHighCgnatBlastRadiusRisk(result);
+	const verdict: IpBanBlastRadiusVerdict = {
+		cgnat: isHighCgnatBlastRadiusRisk(result),
+		sharedAccess: isHighSharedAccessBlastRadiusRisk(result),
+	};
 	verdictCache.set(cacheKey, {
-		highRisk,
+		verdict,
 		expiresAtMs: now + VERDICT_CACHE_TTL_MS,
 	});
-	return highRisk;
+	return verdict;
 }

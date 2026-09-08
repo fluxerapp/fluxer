@@ -14,7 +14,7 @@ import type {GuildID, RoleID, UserID} from '../../../BrandedTypes';
 import {guildIdToRoleId} from '../../../BrandedTypes';
 import {Logger} from '../../../Logger';
 import type {GuildMember} from '../../../models/GuildMember';
-import {hasHighCgnatBlastRadiusRisk, isSingleIpBanCandidate} from '../../../risk/IpBanCgnatGuard';
+import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '../../../risk/IpBanCgnatGuard';
 import {isIpBanExempt} from '../../../risk/IpBanExemptions';
 import type {IUserRepository} from '../../../user/IUserRepository';
 import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
@@ -119,14 +119,15 @@ export class GuildMemberValidationService {
 			return true;
 		}
 		try {
-			const highRisk = await hasHighCgnatBlastRadiusRisk(userIp, this.ipInfoService, {
+			const {cgnat, sharedAccess} = await getIpBanBlastRadiusVerdict(userIp, this.ipInfoService, {
 				source: 'guild.member_ip_ban',
 				reason: 'join_cgnat_guard',
 			});
+			const highRisk = cgnat || sharedAccess;
 			if (highRisk) {
 				Logger.warn(
 					{userIp, bannedIp},
-					'Skipping guild member IP ban match because IPInfo indicates high CGNAT blast-radius risk',
+					'Skipping guild member IP ban match because IPInfo indicates high shared-network blast-radius risk',
 				);
 			}
 			return !highRisk;

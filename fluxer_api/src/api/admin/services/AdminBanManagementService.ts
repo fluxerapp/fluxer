@@ -30,8 +30,8 @@ import {phraseBlocklistCache} from '../../middleware/PhraseBlocklistCache';
 import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
 import {urlBlocklistCache} from '../../middleware/UrlBlocklistCache';
 import {
+	getIpBanBlastRadiusVerdict,
 	getSuspiciousIpSkipReason,
-	hasHighCgnatBlastRadiusRisk,
 	isSingleIpBanCandidate,
 } from '../../risk/IpBanCgnatGuard';
 import {isIpBanExempt} from '../../risk/IpBanExemptions';
@@ -292,7 +292,7 @@ export class AdminBanManagementService {
 			return false;
 		}
 		try {
-			const highRisk = await hasHighCgnatBlastRadiusRisk(ip, this.deps.ipInfoService, {
+			const {cgnat: highRisk} = await getIpBanBlastRadiusVerdict(ip, this.deps.ipInfoService, {
 				source: 'admin.ip_ban',
 				reason: 'pre_write_cgnat_guard',
 			});

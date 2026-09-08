@@ -2,7 +2,11 @@
 
 import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
 import {describe, expect, it} from 'vitest';
-import {isHighCgnatBlastRadiusRisk, isSingleIpBanCandidate} from '../IpBanCgnatGuard';
+import {
+	isHighCgnatBlastRadiusRisk,
+	isHighSharedAccessBlastRadiusRisk,
+	isSingleIpBanCandidate,
+} from '../IpBanCgnatGuard';
 
 function ipInfoResult(overrides: Partial<IpInfoLookupResult> = {}): IpInfoLookupResult {
 	return {
@@ -92,6 +96,65 @@ describe('IpBanCgnatGuard', () => {
 						percentDaysSeen: null,
 					},
 					flags: {isAnycast: false, isHosting: false, isMobile: true, isSatellite: false},
+				}),
+			),
+		).toBe(false);
+	});
+	it('flags satellite, anycast and education networks as high blast-radius risk', () => {
+		expect(
+			isHighSharedAccessBlastRadiusRisk(
+				ipInfoResult({
+					flags: {isAnycast: false, isHosting: false, isMobile: false, isSatellite: true},
+				}),
+			),
+		).toBe(true);
+		expect(
+			isHighSharedAccessBlastRadiusRisk(
+				ipInfoResult({
+					flags: {isAnycast: true, isHosting: false, isMobile: false, isSatellite: false},
+				}),
+			),
+		).toBe(true);
+		expect(
+			isHighSharedAccessBlastRadiusRisk(
+				ipInfoResult({asn: {asn: 'AS64500', number: 64500, name: 'Test University', domain: null, type: 'education'}}),
+			),
+		).toBe(true);
+	});
+	it('does not flag ordinary residential networks as shared-access risk', () => {
+		expect(isHighSharedAccessBlastRadiusRisk(ipInfoResult())).toBe(false);
+	});
+	it('does not treat shared-access networks as CGNAT risk', () => {
+		expect(
+			isHighCgnatBlastRadiusRisk(
+				ipInfoResult({
+					flags: {isAnycast: false, isHosting: false, isMobile: false, isSatellite: true},
+				}),
+			),
+		).toBe(false);
+	});
+	it('does not exempt hosting or anonymous shared-access infrastructure', () => {
+		expect(
+			isHighSharedAccessBlastRadiusRisk(
+				ipInfoResult({
+					flags: {isAnycast: true, isHosting: true, isMobile: false, isSatellite: false},
+				}),
+			),
+		).toBe(false);
+		expect(
+			isHighSharedAccessBlastRadiusRisk(
+				ipInfoResult({
+					anonymous: {
+						isAnonymous: true,
+						providerName: 'Example VPN',
+						isVpn: true,
+						isProxy: false,
+						isResidentialProxy: false,
+						isTor: false,
+						isRelay: false,
+						percentDaysSeen: null,
+					},
+					flags: {isAnycast: false, isHosting: false, isMobile: false, isSatellite: true},
 				}),
 			),
 		).toBe(false);

@@ -19,7 +19,7 @@ import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import {Logger} from '../../Logger';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import type {GuildBan} from '../../models/GuildBan';
-import {hasHighCgnatBlastRadiusRisk, isSingleIpBanCandidate} from '../../risk/IpBanCgnatGuard';
+import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '../../risk/IpBanCgnatGuard';
 import {isIpBanExempt} from '../../risk/IpBanExemptions';
 import type {IUserRepository} from '../../user/IUserRepository';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
@@ -237,19 +237,20 @@ export class GuildModerationService {
 			return true;
 		}
 		try {
-			const highRisk = await hasHighCgnatBlastRadiusRisk(userIp, this.ipInfoService, {
+			const {cgnat, sharedAccess} = await getIpBanBlastRadiusVerdict(userIp, this.ipInfoService, {
 				source: 'guild.ip_ban',
 				reason: 'join_cgnat_guard',
 			});
+			const highRisk = cgnat || sharedAccess;
 			if (highRisk) {
 				Logger.warn(
 					{userIp, bannedIp},
-					'Skipping guild IP ban match because IPInfo indicates high CGNAT blast-radius risk',
+					'Skipping guild IP ban match because IPInfo indicates high shared-network blast-radius risk',
 				);
 			}
 			return !highRisk;
 		} catch (error) {
-			Logger.warn({error, userIp, bannedIp}, 'IPInfo CGNAT guard failed while checking guild IP ban');
+			Logger.warn({error, userIp, bannedIp}, 'IPInfo blast-radius guard failed while checking guild IP ban');
 			return true;
 		}
 	}
