@@ -9,6 +9,11 @@ const CACHE_KEY_PREFIX = 'ipinfo:max:';
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/u;
 const POSITIVE_CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
 const NEGATIVE_CACHE_TTL_SECONDS = 14 * 24 * 60 * 60;
+const FAILURE_TTL_REQUEST_FAILED_SECONDS = 60;
+const FAILURE_TTL_HTTP_ERROR_SECONDS = 300;
+const FAILURE_TTL_QUOTA_SECONDS = 900;
+const FAILURE_TTL_SCHEMA_MISMATCH_SECONDS = 600;
+const FAILURE_TTL_BACKGROUND_CAP_SECONDS = 120;
 
 export interface IpInfoGeoBlock {
 	countryCode: string | null;
@@ -73,6 +78,41 @@ export interface IpInfoCache {
 	set<T>(key: string, value: T, ttlSeconds?: number): Promise<void>;
 }
 
+export type IpInfoLookupPriority = 'critical' | 'standard' | 'background';
+
+export interface IpInfoLookupBudget {
+	tryConsume(priority: IpInfoLookupPriority): Promise<boolean>;
+}
+
+export interface CachedIpInfoFailure extends IpInfoLookupResult {
+	cachedFailure: true;
+	failureOutcome: 'http_error' | 'request_failed' | 'schema_mismatch';
+	failureHttpStatus: number | null;
+	cachedAtMs: number;
+}
+
+export function resolveIpInfoLookupPriority(source: string | undefined): IpInfoLookupPriority {
+	if (source === 'admin.ip_ban' || source === 'admin.scheduled_deletion_suspicious_ip') return 'critical';
+	if (source === 'AbusiveIpAutoBanner') return 'background';
+	return 'standard';
+}
+
+export function isCachedIpInfoFailure(value: unknown): value is CachedIpInfoFailure {
+	return typeof value === 'object' && value !== null && (value as {available?: unknown}).available === false;
+}
+
+function failureCacheTtlSeconds(
+	outcome: CachedIpInfoFailure['failureOutcome'],
+	httpStatus: number | null,
+	priority: IpInfoLookupPriority,
+): number {
+	let ttl = FAILURE_TTL_HTTP_ERROR_SECONDS;
+	if (outcome === 'request_failed') ttl = FAILURE_TTL_REQUEST_FAILED_SECONDS;
+	else if (outcome === 'schema_mismatch') ttl = FAILURE_TTL_SCHEMA_MISMATCH_SECONDS;
+	else if (httpStatus === 402 || httpStatus === 403 || httpStatus === 429) ttl = FAILURE_TTL_QUOTA_SECONDS;
+	return priority === 'background' ? Math.min(ttl, FAILURE_TTL_BACKGROUND_CAP_SECONDS) : ttl;
+}
+
 export interface IpInfoLookupContext {
 	source?: string;
 	reason?: string;
@@ -86,7 +126,7 @@ export interface IpInfoRequestAuditEvent {
 	source: string;
 	reason: string | null;
 	metadata?: Record<string, string | number | boolean | null>;
-	outcome: 'http_success' | 'http_error' | 'request_failed' | 'schema_mismatch';
+	outcome: 'http_success' | 'http_error' | 'request_failed' | 'schema_mismatch' | 'budget_shed';
 	httpStatus: number | null;
 	available: boolean;
 	riskNote: string;
@@ -110,6 +150,7 @@ interface IpInfoServiceContext {
 	apiKey: string;
 	cache: IpInfoCache;
 	auditLogger?: IpInfoRequestAuditLogger;
+	budget?: IpInfoLookupBudget;
 }
 
 export interface IpInfoService {
@@ -177,8 +218,12 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 	return {
 		async lookup(ip: string, context?: IpInfoLookupContext): Promise<IpInfoLookupResult> {
 			const cacheKey = `${CACHE_KEY_PREFIX}${getSameIpDecisionKey(ip) ?? ip}`;
+			const priority = resolveIpInfoLookupPriority(context?.source);
 			const cached = await ctx.cache.get<IpInfoLookupResult>(cacheKey);
 			if (cached !== null) {
+				if (isCachedIpInfoFailure(cached)) {
+					return unavailable(ip, cached.riskNote);
+				}
 				return {...cached, ip};
 			}
 			const existing = inflight.get(cacheKey);
@@ -222,6 +267,30 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 				return params.result;
 			};
 			const performLookup = async (): Promise<IpInfoLookupResult> => {
+				if (ctx.budget && !(await ctx.budget.tryConsume(priority))) {
+					return finalize({
+						result: unavailable(ip, `IPInfo lookup shed (budget exhausted, priority: ${priority})`),
+						outcome: 'budget_shed',
+						httpStatus: null,
+					});
+				}
+				const finalizeFailure = async (params: {
+					result: IpInfoLookupResult;
+					outcome: CachedIpInfoFailure['failureOutcome'];
+					httpStatus: number | null;
+				}): Promise<IpInfoLookupResult> => {
+					const entry: CachedIpInfoFailure = {
+						...params.result,
+						cachedFailure: true,
+						failureOutcome: params.outcome,
+						failureHttpStatus: params.httpStatus,
+						cachedAtMs: Date.now(),
+					};
+					await ctx.cache
+						.set(cacheKey, entry, failureCacheTtlSeconds(params.outcome, params.httpStatus, priority))
+						.catch(() => {});
+					return finalize(params);
+				};
 				let payload: unknown;
 				try {
 					const res = await fetch(fetchUrl, {
@@ -229,7 +298,7 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 						headers: {Accept: 'application/json'},
 					});
 					if (!res.ok) {
-						return finalize({
+						return finalizeFailure({
 							result: unavailable(ip, `IPInfo HTTP ${res.status}`),
 							outcome: 'http_error',
 							httpStatus: res.status,
@@ -238,7 +307,7 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 					payload = await res.json();
 				} catch (err) {
 					const detail = err instanceof Error ? err.message : String(err);
-					return finalize({
+					return finalizeFailure({
 						result: unavailable(ip, `IPInfo request failed: ${detail}`),
 						outcome: 'request_failed',
 						httpStatus: null,
@@ -246,7 +315,7 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 				}
 				const parsedResponse = RawIpInfoResponseSchema.safeParse(payload);
 				if (!parsedResponse.success) {
-					return finalize({
+					return finalizeFailure({
 						result: unavailable(ip, formatSchemaMismatch(parsedResponse.error)),
 						outcome: 'schema_mismatch',
 						httpStatus: 200,
@@ -261,8 +330,10 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 					httpStatus: 200,
 				});
 			};
-			const promise = performLookup().finally(() => {
-				inflight.delete(cacheKey);
+			const promise: Promise<IpInfoLookupResult> = performLookup().finally(() => {
+				if (inflight.get(cacheKey) === promise) {
+					inflight.delete(cacheKey);
+				}
 			});
 			inflight.set(cacheKey, promise);
 			return promise;

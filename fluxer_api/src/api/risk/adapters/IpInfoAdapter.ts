@@ -2,14 +2,40 @@
 
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import {isAccountPolicyEducationOrganizationName} from '../AccountPolicyService';
+import type {IpInfoPrescreenVerdict} from '../RegistrationIpPrescreen';
 import type {IpConnectionType, IpInfoAnonymousResult} from '../RiskTypes';
 
 interface IpInfoCheckerContext {
 	ipInfoService: IpInfoService;
+	prescreen?: (ip: string) => Promise<IpInfoPrescreenVerdict>;
+}
+
+export function unavailableIpInfoAnonymousResult(ip: string, riskNote: string): IpInfoAnonymousResult {
+	return {
+		ip,
+		available: false,
+		isAnonymous: false,
+		providerName: null,
+		isVpn: false,
+		isProxy: false,
+		isResidentialProxy: false,
+		isTor: false,
+		isRelay: false,
+		isHosting: false,
+		isMobile: false,
+		asnType: null,
+		asnOrg: null,
+		connectionType: 'unknown',
+		percentDaysSeen: null,
+		riskNote,
+	};
 }
 
 export function createIpInfoChecker(ctx: IpInfoCheckerContext) {
 	return async function checkIpInfo(ip: string): Promise<IpInfoAnonymousResult> {
+		if (ctx.prescreen && (await ctx.prescreen(ip)) === 'skip') {
+			return unavailableIpInfoAnonymousResult(ip, 'IPInfo skipped (local pre-screen)');
+		}
 		const result = await ctx.ipInfoService.lookup(ip, {
 			source: 'risk.ipinfo_checker',
 			reason: 'registration_risk',

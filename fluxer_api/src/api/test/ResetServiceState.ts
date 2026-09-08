@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resetGeoipReadersForTesting} from '@pkgs/geoip/src/GeoipLookup';
 import {resetSudoModeServiceForTesting} from '../auth/services/SudoModeService';
 import {resetSsoRequestUrlPolicyForTesting} from '../instance/SsoConfigValidation';
 import {resetGlobalLimitConfigServiceForTesting} from '../limits/LimitConfigService';
@@ -32,6 +33,7 @@ export function resetServiceStateForTesting(): void {
 	torExitListCache.shutdown();
 	torExitListCache.clearForTesting();
 	urlBlocklistCache.resetForTesting();
+	resetGeoipReadersForTesting();
 	fileShaCache.resetForTesting();
 	phraseBlocklistCache.resetForTesting();
 	bannedAvatarHashCache.resetForTesting();

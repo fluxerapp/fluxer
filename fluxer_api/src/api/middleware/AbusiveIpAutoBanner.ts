@@ -15,6 +15,7 @@ import type {HonoEnv} from '../types/HonoEnv';
 import {parseJsonRecord} from '../utils/JsonBoundaryUtils';
 import {ipBanCache} from './IpBanMiddleware';
 import {getIpInfoService} from './ServiceMiddleware';
+import {getKVClient} from './ServiceRegistry';
 import {getCacheService} from './ServiceSingletons';
 
 type IpClass = 'datacenter' | 'anonymous' | 'mobile' | 'residential' | 'unknown';
@@ -51,6 +52,22 @@ interface AbuseSignalOptions {
 	weight?: number;
 }
 
+interface PeerIpClassHint {
+	ipClass: IpClass;
+	expiresAtMs: number;
+}
+
+interface OutboundIpClass {
+	lookupIp: string;
+	ipClass: IpClass;
+}
+
+interface ResolvedBanClass {
+	ipClass: IpClass;
+	authoritative: boolean;
+	blocked: boolean;
+}
+
 const WINDOW_MS = positiveNumberFromEnv('FLUXER_ABUSE_WINDOW_MS', 60_000);
 const THRESHOLD_DATACENTER = positiveNumberFromEnv('FLUXER_ABUSE_THRESHOLD_DATACENTER', 20);
 const THRESHOLD_ANONYMOUS = positiveNumberFromEnv('FLUXER_ABUSE_THRESHOLD_ANONYMOUS', 500);
@@ -73,6 +90,14 @@ const REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN = positiveNumberFromEnv(
 	3,
 );
 const REPLICATION_CHANNEL = 'abuse_tracker:ticks';
+const IP_CLASS_CHANNEL = 'abuse_tracker:ipclass';
+const IP_CLASS_CLAIM_PREFIX = 'abuse:ipclass:claim:';
+const IP_CLASS_CLAIM_ENABLED = process.env.FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED !== '0';
+const IP_CLASS_CLAIM_TTL_SECONDS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_CLAIM_TTL_SEC', 15);
+const DEFAULT_IP_CLASS_PENDING_TTL_MS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_PENDING_TTL_MS', 20_000);
+const DEFAULT_IP_CLASS_NEGATIVE_TTL_MS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_NEGATIVE_TTL_MS', 300_000);
+const DEFAULT_IP_CLASS_HINT_TTL_MS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_HINT_TTL_MS', 600_000);
+const IP_CLASSES = ['datacenter', 'anonymous', 'mobile', 'residential', 'unknown'] as const;
 const POD_ID = process.env.HOSTNAME ?? randomUUID();
 
 type ReplicatedTick = [banKey: string, scoreDelta: number, tokenHashes: Array<string>, lookupIp: string];
@@ -83,11 +108,23 @@ interface ReplicationMessage {
 	ts: number;
 }
 
+type IpClassEntry = [banKey: string, lookupIp: string, ipClass: IpClass];
+
+interface IpClassMessage {
+	sender: string;
+	entries: Array<IpClassEntry>;
+	ts: number;
+}
+
 const records = new Map<string, AbuseRecord>();
 const outboundDeltas = new Map<string, OutboundEntry>();
 const persistentScoreWindows = new Map<string, PersistentScoreState>();
 const ipClassCache = new Map<string, IpClass>();
-const ipClassPending = new Set<string>();
+const ipClassPending = new Map<string, number>();
+const ipClassNegativeUntil = new Map<string, number>();
+const peerIpClassHints = new Map<string, PeerIpClassHint>();
+const outboundIpClasses = new Map<string, OutboundIpClass>();
+const pendingIpClassTasks = new Set<Promise<void>>();
 const recordedClientErrorRequests = new WeakSet<Request>();
 const pendingAutoBanTasks = new Set<Promise<void>>();
 const adminRepository = new AdminRepository();
@@ -97,6 +134,9 @@ let flushTimer: NodeJS.Timeout | null = null;
 let kvSubscription: IKVSubscription | null = null;
 let messageHandler: ((channel: string, message: string) => void) | null = null;
 let errorHandler: ((error: Error) => void) | null = null;
+let ipClassPendingTtlMs = DEFAULT_IP_CLASS_PENDING_TTL_MS;
+let ipClassNegativeTtlMs = DEFAULT_IP_CLASS_NEGATIVE_TTL_MS;
+let ipClassHintTtlMs = DEFAULT_IP_CLASS_HINT_TTL_MS;
 
 function positiveNumberFromEnv(name: string, fallback: number): number {
 	const raw = process.env[name];
@@ -164,13 +204,99 @@ function shouldSkipAutoBanForIpClass(ipClass: IpClass): boolean {
 	return ipClass === 'mobile';
 }
 
+function isIpClass(value: unknown): value is IpClass {
+	return typeof value === 'string' && (IP_CLASSES as ReadonlyArray<string>).includes(value);
+}
+
+function getOwnIpClass(key: string, now: number): IpClass | null {
+	const cached = ipClassCache.get(key);
+	if (cached === undefined) return null;
+	const negativeUntilMs = ipClassNegativeUntil.get(key);
+	if (negativeUntilMs !== undefined && negativeUntilMs <= now) {
+		ipClassCache.delete(key);
+		ipClassNegativeUntil.delete(key);
+		return null;
+	}
+	return cached;
+}
+
+function isOwnIpClassNegative(key: string, now: number): boolean {
+	const negativeUntilMs = ipClassNegativeUntil.get(key);
+	return negativeUntilMs !== undefined && negativeUntilMs > now;
+}
+
+function setOwnIpClass(key: string, lookupIp: string, ipClass: IpClass, negative: boolean): void {
+	ipClassCache.set(key, ipClass);
+	if (negative) {
+		ipClassNegativeUntil.set(key, Date.now() + ipClassNegativeTtlMs);
+	} else {
+		ipClassNegativeUntil.delete(key);
+		peerIpClassHints.delete(key);
+	}
+	ipClassPending.delete(key);
+	if (!negative && ipClass !== 'unknown') {
+		queueOutboundIpClass(key, lookupIp, ipClass);
+	}
+	const rec = records.get(key);
+	if (rec) maybeFireAutoBan(key, rec);
+}
+
+function isIpClassPending(key: string, now: number): boolean {
+	const expiresAtMs = ipClassPending.get(key);
+	if (expiresAtMs === undefined) return false;
+	if (expiresAtMs <= now) {
+		ipClassPending.delete(key);
+		return false;
+	}
+	return true;
+}
+
+function getPeerClassHint(key: string, now: number): IpClass | null {
+	const hint = peerIpClassHints.get(key);
+	if (!hint) return null;
+	if (hint.expiresAtMs <= now) {
+		peerIpClassHints.delete(key);
+		return null;
+	}
+	return hint.ipClass;
+}
+
+function recordPeerClassHint(key: string, ipClass: IpClass): void {
+	peerIpClassHints.set(key, {ipClass, expiresAtMs: Date.now() + ipClassHintTtlMs});
+}
+
+function isStricterThanUnknown(ipClass: IpClass): boolean {
+	return (
+		scoreThresholdFor(ipClass) <= scoreThresholdFor('unknown') &&
+		tokenDiversityThresholdFor(ipClass) <= tokenDiversityThresholdFor('unknown')
+	);
+}
+
+function resolveClassForBan(key: string, now: number): ResolvedBanClass {
+	const own = getOwnIpClass(key, now);
+	if (own !== null && !isOwnIpClassNegative(key, now)) return {ipClass: own, authoritative: true, blocked: false};
+	const hint = getPeerClassHint(key, now);
+	if (hint !== null && isStricterThanUnknown(hint)) return {ipClass: hint, authoritative: true, blocked: false};
+	if (hint !== null) return {ipClass: 'unknown', authoritative: false, blocked: true};
+	if (own !== null) return {ipClass: own, authoritative: true, blocked: false};
+	return {ipClass: 'unknown', authoritative: false, blocked: isIpClassPending(key, now)};
+}
+
 function pruneIfNeeded(now: number): void {
 	if (records.size < MAX_TRACKED_IPS) return;
+	for (const [key, expiresAtMs] of ipClassPending) {
+		if (expiresAtMs <= now) ipClassPending.delete(key);
+	}
+	for (const [key, hint] of peerIpClassHints) {
+		if (hint.expiresAtMs <= now) peerIpClassHints.delete(key);
+	}
 	for (const [key, rec] of records) {
-		if (rec.windowStartMs + WINDOW_MS < now) {
+		if (rec.windowStartMs + WINDOW_MS < now && !ipClassPending.has(key)) {
 			records.delete(key);
 			ipClassCache.delete(key);
-			ipClassPending.delete(key);
+			ipClassNegativeUntil.delete(key);
+			peerIpClassHints.delete(key);
+			outboundIpClasses.delete(key);
 		}
 		if (records.size < MAX_TRACKED_IPS * 0.9) return;
 	}
@@ -222,9 +348,11 @@ function queueOutboundDelta(
 	}
 }
 
-function shouldEnsureIpClassLookup(key: string, rec: AbuseRecord): boolean {
-	if (ipClassCache.has(key) || ipClassPending.has(key)) return false;
-	return rec.score >= MIN_SCORE_FOR_IP_LOOKUP || rec.distinctTokenHashes.size >= MIN_TOKENS_FOR_IP_LOOKUP;
+function shouldEnsureIpClassLookup(key: string, rec: AbuseRecord, now: number): boolean {
+	if (getOwnIpClass(key, now) !== null || isIpClassPending(key, now)) return false;
+	if (getPeerClassHint(key, now) !== null) return false;
+	if (rec.score < MIN_SCORE_FOR_IP_LOOKUP && rec.distinctTokenHashes.size < MIN_TOKENS_FOR_IP_LOOKUP) return false;
+	return ipBanCache.getMatch(rec.lookupIp) === null;
 }
 
 function markScoreThresholdWindow(key: string, rec: AbuseRecord, now: number): number {
@@ -247,33 +375,53 @@ function markScoreThresholdWindow(key: string, rec: AbuseRecord, now: number): n
 	return state.count;
 }
 
+async function claimIpClassLookup(key: string): Promise<boolean> {
+	if (!IP_CLASS_CLAIM_ENABLED) return true;
+	if (!kvPublisher) return true;
+	try {
+		return await getKVClient().setnx(`${IP_CLASS_CLAIM_PREFIX}${key}`, POD_ID, IP_CLASS_CLAIM_TTL_SECONDS);
+	} catch {
+		return true;
+	}
+}
+
+async function runIpClassLookup(key: string, lookupIp: string): Promise<void> {
+	try {
+		if (!(await claimIpClassLookup(key))) return;
+		const result = await getIpInfoService().lookup(lookupIp, {source: 'AbusiveIpAutoBanner', reason: 'classify'});
+		setOwnIpClass(key, lookupIp, classifyIpInfo(result), !result.available);
+	} catch (err) {
+		setOwnIpClass(key, lookupIp, 'unknown', true);
+		Logger.warn({err, ip: lookupIp}, '[abuse-auto-ban] IP classification lookup failed');
+	}
+}
+
 function ensureIpClassLookup(key: string, lookupIp: string): void {
-	if (ipClassCache.has(key) || ipClassPending.has(key)) return;
-	ipClassPending.add(key);
-	void (async () => {
-		try {
-			const result = await getIpInfoService().lookup(lookupIp, {source: 'AbusiveIpAutoBanner', reason: 'classify'});
-			ipClassCache.set(key, classifyIpInfo(result));
-		} catch (err) {
-			ipClassCache.set(key, 'unknown');
-			Logger.warn({err, ip: lookupIp}, '[abuse-auto-ban] IP classification lookup failed');
-		} finally {
-			ipClassPending.delete(key);
-			const rec = records.get(key);
-			if (rec) maybeFireAutoBan(key, rec);
-		}
-	})();
+	const now = Date.now();
+	if (getOwnIpClass(key, now) !== null || isIpClassPending(key, now)) return;
+	ipClassPending.set(key, now + ipClassPendingTtlMs);
+	const task = runIpClassLookup(key, lookupIp);
+	pendingIpClassTasks.add(task);
+	void task.finally(() => {
+		pendingIpClassTasks.delete(task);
+	});
 }
 
 function maybeFireAutoBan(key: string, rec: AbuseRecord): void {
 	if (rec.autoBanFired) return;
-	const ipClass = ipClassCache.get(key) ?? 'unknown';
+	const now = Date.now();
+	if (ipBanCache.getMatch(rec.lookupIp) !== null) {
+		rec.autoBanFired = true;
+		return;
+	}
+	const resolved = resolveClassForBan(key, now);
+	const ipClass = resolved.ipClass;
 	const scoreThreshold = scoreThresholdFor(ipClass);
 	const tokenThreshold = tokenDiversityThresholdFor(ipClass);
 	const overScore = rec.score >= scoreThreshold;
 	const overTokenDiversity = rec.distinctTokenHashes.size >= tokenThreshold;
 	if (!overScore && !overTokenDiversity) return;
-	if (!ipClassCache.has(key) && ipClassPending.has(key)) {
+	if (resolved.blocked) {
 		return;
 	}
 	if (shouldSkipAutoBanForIpClass(ipClass)) {
@@ -369,7 +517,7 @@ export function recordAbuseSignal(ip: string | null, reason: string, opts: Abuse
 		queuedTokenHash = opts.tokenHash;
 	}
 	queueOutboundDelta(signalIp, weight, queuedTokenHash, hadToken);
-	if (shouldEnsureIpClassLookup(signalIp.banKey, rec)) {
+	if (shouldEnsureIpClassLookup(signalIp.banKey, rec, now)) {
 		ensureIpClassLookup(signalIp.banKey, signalIp.lookupIp);
 	}
 	maybeFireAutoBan(signalIp.banKey, rec);
@@ -404,7 +552,7 @@ function applyReplicatedTick(tick: ReplicatedTick): void {
 		if (rec.distinctTokenHashes.size >= MAX_TOKEN_HASHES_PER_IP) break;
 		rec.distinctTokenHashes.add(tokenHash);
 	}
-	if (shouldEnsureIpClassLookup(banKey, rec)) {
+	if (shouldEnsureIpClassLookup(banKey, rec, now)) {
 		ensureIpClassLookup(banKey, lookupIp);
 	}
 	maybeFireAutoBan(banKey, rec);
@@ -435,7 +583,56 @@ async function flushOutbound(): Promise<void> {
 	}
 }
 
+function queueOutboundIpClass(key: string, lookupIp: string, ipClass: IpClass): void {
+	if (!kvPublisher) return;
+	if (!outboundIpClasses.has(key) && outboundIpClasses.size >= MAX_TRACKED_IPS) return;
+	outboundIpClasses.set(key, {lookupIp, ipClass});
+}
+
+async function flushOutboundIpClasses(): Promise<void> {
+	if (!kvPublisher || outboundIpClasses.size === 0) return;
+	const entries: Array<IpClassEntry> = [];
+	const selectedKeys: Array<string> = [];
+	for (const [key, entry] of outboundIpClasses) {
+		entries.push([key, entry.lookupIp, entry.ipClass]);
+		selectedKeys.push(key);
+		if (entries.length >= MAX_BATCH_TICKS) break;
+	}
+	const message: IpClassMessage = {sender: POD_ID, entries, ts: Date.now()};
+	try {
+		await kvPublisher.publish(IP_CLASS_CHANNEL, JSON.stringify(message));
+		for (const key of selectedKeys) {
+			outboundIpClasses.delete(key);
+		}
+	} catch (err) {
+		Logger.warn({err, entryCount: entries.length}, '[abuse-auto-ban] Failed to publish abuse IP class batch');
+	}
+}
+
+function handleIpClassMessage(message: string): void {
+	const msg = parseJsonRecord(message);
+	if (!msg || msg.sender === POD_ID || !Array.isArray(msg.entries)) return;
+	for (const rawEntry of msg.entries) {
+		if (!Array.isArray(rawEntry) || rawEntry.length < 3) continue;
+		const [banKey, lookupIp, ipClass] = rawEntry;
+		if (typeof banKey !== 'string' || typeof lookupIp !== 'string' || !isIpClass(ipClass)) continue;
+		if (ipClass === 'unknown') continue;
+		const signalIp = normalizeSignalIp(lookupIp);
+		if (!signalIp || signalIp.banKey !== banKey) continue;
+		const rec = records.get(banKey);
+		if (!rec) continue;
+		const now = Date.now();
+		if (getOwnIpClass(banKey, now) !== null && !isOwnIpClassNegative(banKey, now)) continue;
+		recordPeerClassHint(banKey, ipClass);
+		maybeFireAutoBan(banKey, rec);
+	}
+}
+
 function handleReplicationMessage(channel: string, message: string): void {
+	if (channel === IP_CLASS_CHANNEL) {
+		handleIpClassMessage(message);
+		return;
+	}
 	if (channel !== REPLICATION_CHANNEL) return;
 	const msg = parseJsonRecord(message);
 	if (!msg || msg.sender === POD_ID || !Array.isArray(msg.ticks)) return;
@@ -469,11 +666,12 @@ export async function startAbuseReplicationSubscriber(kvClient: IKVProvider | nu
 	};
 	try {
 		await subscription.connect();
-		await subscription.subscribe(REPLICATION_CHANNEL);
+		await subscription.subscribe(REPLICATION_CHANNEL, IP_CLASS_CHANNEL);
 		subscription.on('message', messageHandler);
 		subscription.on('error', errorHandler);
 		flushTimer = setInterval(() => {
 			void flushOutbound();
+			void flushOutboundIpClasses();
 		}, BATCH_FLUSH_MS);
 		if (typeof flushTimer === 'object' && flushTimer && 'unref' in flushTimer) {
 			(flushTimer as {unref(): void}).unref();
@@ -514,11 +712,28 @@ export async function drainAbuseAutoBanTasksForTests(): Promise<void> {
 	await Promise.all([...pendingAutoBanTasks]);
 }
 
+export async function drainAbuseIpClassLookupsForTests(): Promise<void> {
+	await Promise.all([...pendingIpClassTasks]);
+}
+
+export function setAbuseIpClassTtlsForTests(opts: {negativeMs?: number; hintMs?: number; pendingMs?: number}): void {
+	if (opts.negativeMs !== undefined) ipClassNegativeTtlMs = opts.negativeMs;
+	if (opts.hintMs !== undefined) ipClassHintTtlMs = opts.hintMs;
+	if (opts.pendingMs !== undefined) ipClassPendingTtlMs = opts.pendingMs;
+}
+
 export function resetAbuseTrackingForTests(): void {
 	records.clear();
 	outboundDeltas.clear();
 	persistentScoreWindows.clear();
 	ipClassCache.clear();
 	ipClassPending.clear();
+	ipClassNegativeUntil.clear();
+	peerIpClassHints.clear();
+	outboundIpClasses.clear();
+	pendingIpClassTasks.clear();
 	pendingAutoBanTasks.clear();
+	ipClassPendingTtlMs = DEFAULT_IP_CLASS_PENDING_TTL_MS;
+	ipClassNegativeTtlMs = DEFAULT_IP_CLASS_NEGATIVE_TTL_MS;
+	ipClassHintTtlMs = DEFAULT_IP_CLASS_HINT_TTL_MS;
 }

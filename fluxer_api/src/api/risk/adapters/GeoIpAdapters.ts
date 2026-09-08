@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
+import type {GeoipAsnResult, GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {GeoIpAsnResult, GeoIpCityResult} from '../RiskTypes';
 
 interface GeoIpCityContext {
 	ipInfoService: IpInfoService;
+	lookupLocalCity?: (ip: string) => Promise<GeoipResult>;
 }
 
 interface GeoIpAsnContext {
 	ipInfoService: IpInfoService;
+	lookupLocalAsn?: (ip: string) => Promise<GeoipAsnResult>;
 }
 
 export function createGeoIpCityAdapter(ctx: GeoIpCityContext) {
@@ -18,6 +21,22 @@ export function createGeoIpCityAdapter(ctx: GeoIpCityContext) {
 		const parsed = parseIpAddress(ip);
 		if (!parsed) {
 			return notFound(ip, true);
+		}
+		const local = ctx.lookupLocalCity ? await ctx.lookupLocalCity(parsed.normalized) : null;
+		if (local && local.countryCode !== null) {
+			return {
+				ip,
+				available: true,
+				found: true,
+				countryIso: local.countryCode,
+				country: local.countryName,
+				region: local.region,
+				city: local.city,
+				latitude: local.latitude ?? null,
+				longitude: local.longitude ?? null,
+				accuracyRadiusKm: local.accuracyRadiusKm ?? null,
+				timeZone: local.timeZone ?? null,
+			};
 		}
 		const info = await ctx.ipInfoService.lookup(parsed.normalized, {
 			source: 'risk.geoip_city',
@@ -62,6 +81,10 @@ export function createGeoIpAsnAdapter(ctx: GeoIpAsnContext) {
 		const parsed = parseIpAddress(ip);
 		if (!parsed) {
 			return {ip, available: true, found: false, asn: null, asnOrg: null};
+		}
+		const local = ctx.lookupLocalAsn ? await ctx.lookupLocalAsn(parsed.normalized) : null;
+		if (local && local.asn !== null) {
+			return {ip, available: true, found: true, asn: local.asn, asnOrg: local.asnOrg};
 		}
 		const info = await ctx.ipInfoService.lookup(parsed.normalized, {
 			source: 'risk.geoip_asn',
