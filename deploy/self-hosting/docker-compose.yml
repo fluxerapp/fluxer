@@ -14,6 +14,7 @@ x-fluxer-env: &fluxer-env
   <<: *fluxer-postgres-env
   FLUXER_ENV: production
   NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   FLUXER_SELF_HOSTED: "true"
   FLUXER_BASE_DOMAIN: ${FLUXER_DOMAIN:?set FLUXER_DOMAIN in .env}
   FLUXER_PUBLIC_SCHEME: ${FLUXER_PUBLIC_SCHEME:-https}

@@ -143,6 +143,32 @@ describe('StorageService.getPresignedUploadURL', () => {
 			},
 		);
 	});
+
+	it('gives both clients the configured addressing rather than pinning one to path style', async () => {
+		await withS3Config(
+			{
+				endpoint: 'https://s3.example.test',
+				presignedUrlBase: '',
+				forcePathStyle: false,
+				region: 'eu-central-1',
+				accessKeyId: 'fluxer',
+				secretAccessKey: 'fluxer-secret',
+				buckets: {uploads: 'fluxer-uploads'},
+			},
+			async () => {
+				const service = new StorageService();
+				const probe = service as unknown as {
+					client: {config: {forcePathStyle?: unknown}};
+					presignClient: {config: {forcePathStyle?: unknown}};
+				};
+				const resolve = async (value: unknown): Promise<unknown> =>
+					typeof value === 'function' ? await (value as () => Promise<unknown>)() : value;
+
+				expect(await resolve(probe.client.config.forcePathStyle)).toBe(false);
+				expect(await resolve(probe.presignClient.config.forcePathStyle)).toBe(false);
+			},
+		);
+	});
 });
 
 describe('StorageService.copyObjectWithMetadataStripping', () => {

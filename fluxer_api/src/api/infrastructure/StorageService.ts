@@ -127,7 +127,7 @@ export class StorageService implements IStorageService {
 			region: this.provider.region,
 			accessKeyId: this.provider.accessKeyId,
 			secretAccessKey: this.provider.secretAccessKey,
-			forcePathStyle: true,
+			forcePathStyle: this.provider.forcePathStyle,
 		});
 		this.presignClient = buildPooledS3Client({
 			endpoint: this.resolvePresignEndpoint(),
@@ -136,6 +136,15 @@ export class StorageService implements IStorageService {
 			secretAccessKey: this.provider.secretAccessKey,
 			forcePathStyle: this.provider.forcePathStyle,
 		});
+		Logger.info(
+			{
+				endpoint: this.provider.endpoint,
+				presignEndpoint: this.resolvePresignEndpoint(),
+				region: this.provider.region,
+				addressing: this.provider.forcePathStyle ? 'path' : 'virtual-host',
+			},
+			'Object storage client ready',
+		);
 	}
 
 	private resolvePresignEndpoint(): string {
