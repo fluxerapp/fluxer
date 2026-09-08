@@ -1351,7 +1351,28 @@ fluxer_postgres_running() {
 # step does not, because the size of a custom-format dump is not knowable before
 # pg_dump writes it. Point --backup-dir at a filesystem with room for the
 # database.
+# The bundled data stores are services in the stack file. An operator who points
+# the stack at a database or an object store outside it takes those services out,
+# and the two backup steps that reach into them then have nothing to reach. That
+# is a supported shape rather than a fault, so each step says what it skipped and
+# the upgrade goes on. Backing up a store outside the stack belongs to whoever
+# runs it.
+fluxer_stack_defines_service() {
+	if [ ! -f "$fluxer_scratch/all-services" ]; then
+		if ! fluxer_compose_services > "$fluxer_scratch/all-services"; then
+			rm -f "$fluxer_scratch/all-services"
+			fluxer_fail 6 "docker compose config --services failed in $opt_dir, so the services this stack defines cannot be read. Compose printed:
+$(fluxer_compose_error '  ')"
+		fi
+	fi
+	grep -qxF "$1" "$fluxer_scratch/all-services"
+}
+
 fluxer_dump_postgres() {
+	if ! fluxer_stack_defines_service postgres; then
+		fluxer_say 'Skipping the database dump. This stack defines no postgres service, so its database runs outside the stack and only the operator of that database can dump it.'
+		return 0
+	fi
 	if ! fluxer_postgres_running; then
 		fluxer_say 'Postgres is not running. Starting it for the dump.'
 		if ! $fluxer_engine compose up -d --wait postgres; then
@@ -1400,6 +1421,10 @@ fluxer_free_kb() {
 #   docker run --rm -v fluxer_seaweedfs-data:/data -v "$PWD/backups:/backup" alpine tar czf /backup/seaweedfs-data.tgz -C /data .
 #   docker compose up -d
 fluxer_copy_volumes() {
+	if ! fluxer_stack_defines_service seaweedfs; then
+		fluxer_say 'Skipping the uploads copy. This stack defines no seaweedfs service, so its objects live outside the stack and only the operator of that store can copy them.'
+		return 0
+	fi
 	fluxer_backup_volumes > "$fluxer_scratch/backup-volumes"
 	: > "$fluxer_scratch/copy-volumes"
 	fluxer_copy_any=0

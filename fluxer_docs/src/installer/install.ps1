@@ -1281,7 +1281,28 @@ function Test-FluxerDumpHeader([string]$Path) {
 # The volume copy measures its volume and refuses when the disk is short. This step does not,
 # because the size of a custom-format dump is not knowable before pg_dump writes it. Point
 # -BackupDir at a drive with room for the database.
+# The bundled data stores are services in the stack file. An operator who points the stack at a
+# database or an object store outside it takes those services out, and the two backup steps that
+# reach into them then have nothing to reach. That is a supported shape rather than a fault, so
+# each step says what it skipped and the upgrade goes on. Backing up a store outside the stack
+# belongs to whoever runs it.
+$script:FluxerStackServices = $null
+
+function Test-FluxerStackDefinesService([string]$Name, [string]$TargetDir) {
+	if ($null -eq $script:FluxerStackServices) {
+		if ((Invoke-FluxerComposeQuery '--services') -ne 0) {
+			Stop-Fluxer "docker compose config --services failed in $TargetDir, so the services this stack defines cannot be read. Compose printed:`n$(Get-FluxerComposeError '  ')" $FluxerExitUnhealthy
+		}
+		$script:FluxerStackServices = @(Get-FluxerComposeServices)
+	}
+	return $script:FluxerStackServices -contains $Name
+}
+
 function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
+	if (-not (Test-FluxerStackDefinesService 'postgres' $TargetDir)) {
+		Write-FluxerLine 'Skipping the database dump. This stack defines no postgres service, so its database runs outside the stack and only the operator of that database can dump it.'
+		return
+	}
 	if (-not (Test-FluxerPostgresRunning)) {
 		Write-FluxerLine 'Postgres is not running. Starting it for the dump.'
 		if ((Invoke-FluxerDocker @('compose', 'up', '-d', '--wait', 'postgres')) -ne 0) {
@@ -1340,7 +1361,11 @@ function Get-FluxerFreeKb([string]$Path) {
 #   docker compose stop
 #   docker run --rm -v fluxer_seaweedfs-data:/data -v "${PWD}\backups:/backup" alpine tar czf /backup/seaweedfs-data.tgz -C /data .
 #   docker compose up -d
-function Copy-FluxerVolumes([string]$Record, [string]$Project) {
+function Copy-FluxerVolumes([string]$Record, [string]$Project, [string]$TargetDir) {
+	if (-not (Test-FluxerStackDefinesService 'seaweedfs' $TargetDir)) {
+		Write-FluxerLine 'Skipping the uploads copy. This stack defines no seaweedfs service, so its objects live outside the stack and only the operator of that store can copy them.'
+		return
+	}
 	$present = @()
 	foreach ($volume in $FluxerBackupVolumes) {
 		$full = "${Project}_$volume"
@@ -1391,7 +1416,7 @@ function Backup-FluxerInstance([string]$Record, [string]$TargetDir, [string]$Pro
 		Write-FluxerLine 'Skipping the uploads copy. -NoVolumeBackup was given.'
 		return
 	}
-	Copy-FluxerVolumes $Record $Project
+	Copy-FluxerVolumes $Record $Project $TargetDir
 }
 
 # A newer Postgres major does not read the data directory an older major wrote, so moving between

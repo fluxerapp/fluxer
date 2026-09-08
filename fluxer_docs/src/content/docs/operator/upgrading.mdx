@@ -212,6 +212,25 @@ Put a dump on a timer as well. On Linux and macOS, this crontab line writes one 
 
 `/srv/fluxer` stands for the directory holding `.env`. Write it as an absolute path, because cron does not expand `~`. An unescaped `%` in a crontab is a newline, which is why every one of them has a backslash.
 
+## Run a data store outside the stack
+
+The stack ships its own Postgres and its own object store and points at both by service name. `.env` moves either one somewhere else, and the bundled service is used when the line is absent:
+
+```ini
+FLUXER_POSTGRES_HOST=db.example.com
+FLUXER_POSTGRES_PORT=5432
+FLUXER_POSTGRES_SSL=true
+FLUXER_S3_ENDPOINT=https://s3.eu-central-1.amazonaws.com
+FLUXER_S3_REGION=eu-central-1
+FLUXER_S3_FORCE_PATH_STYLE=false
+```
+
+`FLUXER_S3_PUBLIC_ENDPOINT` follows `FLUXER_S3_ENDPOINT` when it is not set on its own, and the credentials stay `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
+
+Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. Take it out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
+
+An upgrade backs up what the stack holds. The Dump step reaches into the `postgres` service and the Copy step reaches into the `seaweedfs` volume, so a stack that defines neither has neither step to run. The run says which one it skipped and goes on. Backing up a store outside the stack belongs to whoever runs it, and the record the upgrade writes holds no dump of it, so take one before upgrading if a rollback would need it.
+
 ## Roll back
 
 A rollback puts the previous release back:
