@@ -218,6 +218,7 @@ const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Magic link หมดอายุแล้ว",
 	"donation.magic_link_invalid": "Magic link ไม่ถูกต้อง",
 	"donation.magic_link_used": "Magic link ถูกใช้ไปแล้ว",
+	"email.domain_cannot_receive_mail": "โดเมนอีเมลนั้นไม่สามารถรับอีเมลได้ โปรดใช้ที่อยู่อีเมลบนโดเมนที่รับอีเมลได้",
 	"email.email_already_in_use": "อีเมลนี้ถูกใช้งานแล้ว",
 	"email.email_required": "ต้องระบุอีเมล",
 	"email.email_service_not_testable": "บริการอีเมลไม่พร้อมใช้งานชั่วคราว กรุณาลองใหม่อีกครั้งในภายหลัง",

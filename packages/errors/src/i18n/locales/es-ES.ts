@@ -218,6 +218,7 @@ const ERROR_I18N_ES_ES_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "El enlace mágico ha caducado.",
 	"donation.magic_link_invalid": "El enlace mágico no es válido.",
 	"donation.magic_link_used": "El enlace mágico ya se ha utilizado.",
+	"email.domain_cannot_receive_mail": "Ese dominio de correo electrónico no puede recibir mensajes. Usa una dirección de un dominio que acepte correos.",
 	"email.email_already_in_use": "El correo electrónico ya está en uso.",
 	"email.email_required": "Se requiere un correo electrónico.",
 	"email.email_service_not_testable": "El servicio de correo electrónico no está disponible temporalmente; inténtalo de nuevo más tarde.",

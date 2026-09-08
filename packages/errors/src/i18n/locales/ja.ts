@@ -218,6 +218,7 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "マジックリンクの有効期限が切れました。",
 	"donation.magic_link_invalid": "マジックリンクが正しくありません。",
 	"donation.magic_link_used": "マジックリンクはすでに使用されています。",
+	"email.domain_cannot_receive_mail": "そのメールアドレスのドメインはメールを受信できません。メールを受け入れられるドメインのメールアドレスを使用してください。",
 	"email.email_already_in_use": "このメールアドレスはすでに使われています。",
 	"email.email_required": "メールアドレスは必須です。",
 	"email.email_service_not_testable": "メールサービスは一時的にご利用いただけません。後でもう一度お試しください。",

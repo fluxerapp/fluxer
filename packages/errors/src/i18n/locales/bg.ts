@@ -218,6 +218,7 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Магическият линк изтече.",
 	"donation.magic_link_invalid": "Магическият линк е невалиден.",
 	"donation.magic_link_used": "Магическият линк вече е използван.",
+	"email.domain_cannot_receive_mail": "Имейл домейнът не може да получава имейли. Използвайте адрес от домейн, който приема имейли.",
 	"email.email_already_in_use": "Този имейл вече се използва.",
 	"email.email_required": "Имейл адресът е задължителен.",
 	"email.email_service_not_testable": "Имейл услугата е временно недостъпна. Опитай пак по-късно.",

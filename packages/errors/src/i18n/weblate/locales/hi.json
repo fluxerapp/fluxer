@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "मैजिक लिंक एक्सपायर हो गया है।",
 	"donation.magic_link_invalid": "मैजिक लिंक इनवैलिड है।",
 	"donation.magic_link_used": "मैजिक लिंक पहले ही इस्तेमाल किया जा चुका है।",
+	"email.domain_cannot_receive_mail": "यह ईमेल डोमेन मेल प्राप्त नहीं कर सकता। ऐसा डोमेन चुनें जो ईमेल स्वीकार करता हो।",
 	"email.email_already_in_use": "ईमेल पहले से इस्तेमाल में है।",
 	"email.email_required": "ईमेल ज़रूरी है।",
 	"email.email_service_not_testable": "ईमेल सर्विस अस्थायी रूप से उपलब्ध नहीं है। कृपया बाद में फिर से कोशिश करें।",

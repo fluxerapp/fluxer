@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "Liên kết ma thuật đã hết hạn.",
 	"donation.magic_link_invalid": "Liên kết ma thuật không hợp lệ.",
 	"donation.magic_link_used": "Liên kết ma thuật đã được sử dụng.",
+	"email.domain_cannot_receive_mail": "Miền email đó không nhận được thư. Vui lòng sử dụng địa chỉ thuộc miền có chấp nhận email.",
 	"email.email_already_in_use": "Email đã được sử dụng.",
 	"email.email_required": "Email là bắt buộc.",
 	"email.email_service_not_testable": "Dịch vụ email tạm thời không khả dụng. Vui lòng thử lại sau.",

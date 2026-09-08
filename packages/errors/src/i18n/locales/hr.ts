@@ -218,6 +218,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Poveznica za prijavu je istekla.",
 	"donation.magic_link_invalid": "Poveznica za prijavu je nevažeća.",
 	"donation.magic_link_used": "Poveznica za prijavu je već iskorištena.",
+	"email.domain_cannot_receive_mail": "Ta domena e-pošte ne može primati poštu. Upotrijebite adresu s domene koja prihvaća e-poštu.",
 	"email.email_already_in_use": "E-mail je već u upotrebi.",
 	"email.email_required": "E-mail je potreban.",
 	"email.email_service_not_testable": "E-mail usluga privremeno je nedostupna. Pokušaj ponovno kasnije.",

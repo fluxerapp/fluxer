@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "Ο μαγικός σύνδεσμος έχει λήξει.",
 	"donation.magic_link_invalid": "Ο μαγικός σύνδεσμος δεν είναι έγκυρος.",
 	"donation.magic_link_used": "Ο μαγικός σύνδεσμος έχει ήδη χρησιμοποιηθεί.",
+	"email.domain_cannot_receive_mail": "Αυτός ο τομέας email δεν μπορεί να λάβει αλληλογραφία. Χρησιμοποιήστε μια διεύθυνση σε έναν τομέα που δέχεται email.",
 	"email.email_already_in_use": "Αυτό το email χρησιμοποιείται ήδη.",
 	"email.email_required": "Το email είναι υποχρεωτικό.",
 	"email.email_service_not_testable": "Η υπηρεσία email είναι προσωρινά μη διαθέσιμη. Δοκίμασε ξανά αργότερα.",

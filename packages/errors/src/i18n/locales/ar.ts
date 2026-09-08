@@ -218,6 +218,7 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "انتهت صلاحية الرابط السحري.",
 	"donation.magic_link_invalid": "الرابط السحري غير صالح.",
 	"donation.magic_link_used": "تم استخدام الرابط السحري بالفعل.",
+	"email.domain_cannot_receive_mail": "لا يمكن لهذا النطاق البريدي استقبال البريد. استخدم عنوانًا على نطاق يقبل البريد الإلكتروني.",
 	"email.email_already_in_use": "البريد الإلكتروني قيد الاستخدام بالفعل.",
 	"email.email_required": "البريد الإلكتروني مطلوب.",
 	"email.email_service_not_testable": "خدمة البريد الإلكتروني غير متاحة مؤقتًا. حاول مجددًا لاحقًا.",

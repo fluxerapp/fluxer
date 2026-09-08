@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "Den magiske linken har utløpt.",
 	"donation.magic_link_invalid": "Den magiske linken er ugyldig.",
 	"donation.magic_link_used": "Den magiske linken er allerede brukt.",
+	"email.domain_cannot_receive_mail": "Den e-postdomenet kan ikke motta e-post. Bruk en adresse på et domene som godtar e-post.",
 	"email.email_already_in_use": "E-postadressen er allerede i bruk.",
 	"email.email_required": "E-postadresse er påkrevd.",
 	"email.email_service_not_testable": "E-posttjenesten er midlertidig utilgjengelig. Prøv igjen senere.",

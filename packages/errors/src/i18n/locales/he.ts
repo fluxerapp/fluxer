@@ -218,6 +218,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "קישור הקסם פג תוקף.",
 	"donation.magic_link_invalid": "קישור הקסם שגוי.",
 	"donation.magic_link_used": "קישור הקסם כבר נוצל.",
+	"email.domain_cannot_receive_mail": "כתובת הדוא\"ל הזו אינה יכולה לקבל דואר. השתמש בכתובת מתחום שמקבל דואר.",
 	"email.email_already_in_use": "כתובת האימייל כבר בשימוש.",
 	"email.email_required": "נדרשת כתובת אימייל.",
 	"email.email_service_not_testable": "שירות האימייל אינו זמין באופן זמני. נסו שוב מאוחר יותר.",

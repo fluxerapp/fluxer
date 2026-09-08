@@ -355,7 +355,7 @@ msgstr "{count, plural, one {# záložka} few {# záložky} many {# záložek} o
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# komunita nalezena} other {# komunit nalezeno} few {# komunity nalezeny}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1950
+#: src/features/app/components/layout/GuildsLayout.tsx:1951
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# komunita je dočasně nedostupná kvůli poruše \"flux kondenzátoru\".} few {# komunity jsou dočasně nedostupné kvůli poruše \"flux kondenzátoru\".} many {# komunit je dočasně nedostupných kvůli poruše \"flux kondenzátoru\".} other {# komunit je dočasně nedostupných kvůli poruše \"flux kondenzátoru\".}}"
 
@@ -404,7 +404,7 @@ msgstr "{count, plural, one {# společná komunita} other {# společné komunity
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# další} few {# další} many {# dalších} other {# dalších}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:506
+#: src/features/voice/components/VoiceCallView.tsx:507
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# účastník hovoru} few {# účastníci hovoru} many {# účastníka hovoru} other {# účastníků hovoru}}"
 
@@ -450,7 +450,7 @@ msgstr "{count, plural, one {Rozbalit (1 řádek)} few {Rozbalit (# řádky)} ma
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Rozbalit (# řádek)} other {Rozbalit (# řádky)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:311
+#: src/features/voice/components/VoiceParticipantTile.tsx:315
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Rozbalit # další zařízení} other {Rozbalit # dalších zařízení}}"
 
@@ -471,7 +471,7 @@ msgstr "{count, plural, one {V hovoru} other {# v hovoru}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Připojit se k videohovoru (1 účastník)} few {Připojit se k videohovoru (# účastníci)} many {Připojit se k videohovoru (# účastníků)} other {Připojit se k videohovoru (# účastníků)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:637
+#: src/features/voice/components/VoiceParticipantTile.tsx:655
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Sledovat # stream a přidat tento} other {Sledovat # streamy a přidat tento}}"
 
@@ -2182,7 +2182,7 @@ msgstr "Akce"
 msgid "Active"
 msgstr "Aktivní"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:358
+#: src/features/app/components/floating/UserAreaPopout.tsx:356
 #: src/features/auth/components/accounts/AccountRow.tsx:136
 msgid "Active account"
 msgstr "Aktivní účet"
@@ -4578,7 +4578,7 @@ msgstr "Momentálně pryč"
 #. Button that moves to the previous setup wizard step.
 #. Footer button in the IAR modal that returns to the previous step.
 #. OAuth authorization secondary button. Returns to the previous carousel step.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:75
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:77
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx:14
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:150
 #: src/features/channel/components/channel_header/shared.ts:27
@@ -4642,7 +4642,7 @@ msgid "Back to sticker"
 msgstr "Zpět k nálepce"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:114
+#: src/features/voice/components/VoiceCallView.tsx:115
 msgid "Back to voice channel"
 msgstr "Zpět do hlasového kanálu"
 
@@ -7497,7 +7497,7 @@ msgstr "Sbalit téma kanálu"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
-#: src/features/voice/components/VoiceParticipantTile.tsx:173
+#: src/features/voice/components/VoiceParticipantTile.tsx:176
 msgid "Collapse devices"
 msgstr "Sbalit zařízení"
 
@@ -8157,7 +8157,7 @@ msgstr "Připojeno k hlasovému chatu"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:93
+#: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Connecting..."
 msgstr "Připojování..."
 
@@ -8218,7 +8218,7 @@ msgid "Connection removed"
 msgstr "Spojení odebráno"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:118
+#: src/features/voice/components/VoiceCallView.tsx:119
 msgid "Connection stats"
 msgstr "Statistiky připojení"
 
@@ -8466,7 +8466,7 @@ msgid "Copied"
 msgstr "Zkopírováno"
 
 #. Toast shown after copying stats for nerds JSON to clipboard.
-#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:13
+#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:9
 msgid "Copied stats JSON to clipboard"
 msgstr "Statistiky JSON zkopírovány do schránky"
 
@@ -8498,11 +8498,6 @@ msgstr "Adresa URL zkopírována do schránky"
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:59
 msgid "Copy"
 msgstr "Kopírovat"
-
-#. Aria label for a button that copies stats for nerds data as JSON to the clipboard.
-#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
-msgid "Copy as JSON"
-msgstr "Kopírovat jako JSON"
 
 #. Developer-mode action that copies the attachment ID to the clipboard.
 #: src/features/ui/action_menu/MessageContextMenu.tsx:67
@@ -8540,7 +8535,7 @@ msgid "Copy banner URL"
 msgstr "Kopírovat URL banneru"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
-#: src/features/app/components/floating/UserAreaPopout.tsx:714
+#: src/features/app/components/floating/UserAreaPopout.tsx:707
 #: src/features/platform/utils/DesktopLocaleBridge.ts:164
 msgid "Copy build info"
 msgstr "Kopírovat informace o sestavení"
@@ -8743,8 +8738,8 @@ msgstr "Zkopírovat klíč pro nastavení"
 msgid "Copy stack trace"
 msgstr "Kopírovat zásobník volání"
 
-#. Button label in audio and video settings. Copies stats for nerds data as JSON to the clipboard.
-#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:9
+#. Menu item label in the screen share menu. Copies stats for nerds data as JSON to the clipboard.
+#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
 msgid "Copy stats JSON"
 msgstr "Kopírovat JSON statistik"
 
@@ -8772,7 +8767,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "Zkopírujte klíč pro nastavení do vaší aplikace pro ověřování."
 
 #. Developer-mode action that copies a user snowflake/ID to the clipboard.
-#: src/features/app/components/floating/UserAreaPopout.tsx:699
+#: src/features/app/components/floating/UserAreaPopout.tsx:692
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:172
 msgid "Copy user ID"
 msgstr "Kopírovat ID uživatele"
@@ -8797,7 +8792,7 @@ msgstr "Kopírovat video"
 msgid "Copy video link"
 msgstr "Kopírovat odkaz na video"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:727
+#: src/features/app/components/floating/UserAreaPopout.tsx:720
 msgid "Copy voice diagnostics"
 msgstr "Kopírovat diagnostiku hlasu"
 
@@ -8827,7 +8822,7 @@ msgid "Could not decode this audio file."
 msgstr "Tento zvukový soubor se nepodařilo dekódovat."
 
 #. Error shown when the setup wizard fails to load the instance configuration.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:91
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:93
 msgid "Could not load the instance configuration. Try reloading the page."
 msgstr "Nepodařilo se načíst konfiguraci instance. Zkuste znovu načíst stránku."
 
@@ -11424,7 +11419,7 @@ msgstr "Odpojit socket"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:102
+#: src/features/voice/components/VoiceCallView.tsx:103
 msgid "Disconnected"
 msgstr "Odpojeno"
 
@@ -12256,7 +12251,7 @@ msgstr "Upravit nebo smazat emoji a nálepky vytvořené jinými členy."
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Upravit přepsání pro role a členy v tomto kanálu."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:750
+#: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
@@ -13109,7 +13104,7 @@ msgstr "Zadejte kód"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:110
+#: src/features/voice/components/VoiceCallView.tsx:111
 msgid "Enter fullscreen"
 msgstr "Přejít na celou obrazovku"
 
@@ -13277,7 +13272,7 @@ msgstr "Celá obrazovka"
 msgid "Entire system"
 msgstr "Celý systém"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:249
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:253
 msgid "Entire system audio"
 msgstr "Celý zvuk systému"
 
@@ -13478,7 +13473,7 @@ msgstr "Odejít"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:106
+#: src/features/voice/components/VoiceCallView.tsx:107
 msgid "Exit fullscreen"
 msgstr "Ukončit režim celé obrazovky"
 
@@ -14387,7 +14382,7 @@ msgstr "Nejprve dokončete nastavení účtu"
 
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:83
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:85
 #: src/features/app/components/setup/SetupWizardSteps.tsx:327
 msgid "Finish setup"
 msgstr "Dokončit nastavení"
@@ -16830,7 +16825,7 @@ msgstr "V režimu \"Operační systém\" jsou výše uvedené slovníky pouze do
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "V prohlížeči funguje funkce push-to-talk pouze, když je karta {PRODUCT_NAME} aktivní. Nainstalujte si desktopovou aplikaci pro funkci push-to-talk v celém systému."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:728
+#: src/features/app/components/floating/UserAreaPopout.tsx:721
 msgid "In a call"
 msgstr "V hovoru"
 
@@ -18592,7 +18587,7 @@ msgid "Loading destinations…"
 msgstr "Načítání cílů…"
 
 #. Accessible status while the setup wizard loads the instance configuration.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:87
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:89
 msgid "Loading instance configuration"
 msgstr "Načítání konfigurace instance"
 
@@ -18885,7 +18880,7 @@ msgstr "Malware, krádež přihlašovacích údajů nebo škodlivé soubory."
 msgid "Manage"
 msgstr "Spravovat"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:398
+#: src/features/app/components/floating/UserAreaPopout.tsx:396
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:78
 msgid "Manage accounts"
 msgstr "Spravovat účty"
@@ -21123,7 +21118,7 @@ msgstr "Nejnovější nahoře"
 #. Button that moves to the next setup wizard step.
 #. Generic primary or pagination action label that advances to the next step, page, or item.
 #. Primary button in the required-action modal. Moves to the next carousel step.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:79
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 msgid "Next"
@@ -21799,7 +21794,7 @@ msgstr "Neanimované emoji ({emojiCount})"
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:261
 msgid "None"
 msgstr "Žádné"
 
@@ -24956,7 +24951,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Opětovné připojení proběhlo úspěšně. Pokud chcete pokračovat v předchozím streamu, vyberte obrazovku znovu."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:97
+#: src/features/voice/components/VoiceCallView.tsx:98
 msgid "Reconnecting..."
 msgstr "Opětovné připojování..."
 
@@ -25097,7 +25092,7 @@ msgstr "Odkaz zkopírován."
 msgid "Referral parameters"
 msgstr "Parametry doporučení"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:301
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:305
 msgid "Refresh audio sources"
 msgstr "Obnovit zdroje zvuku"
 
@@ -27871,7 +27866,7 @@ msgid "Self-harm or suicide"
 msgstr "Sebepoškozování nebo sebevražda"
 
 #. Accessible label for the self-host setup wizard carousel.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:67
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:69
 msgid "Self-host setup"
 msgstr "Nastavení vlastního hostování"
 
@@ -28220,7 +28215,7 @@ msgstr "Relace"
 msgid "Set {fieldNode} to {0}."
 msgstr "Nastaveno {fieldNode} na {0}."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:608
+#: src/features/app/components/floating/UserAreaPopout.tsx:601
 #: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:314
 msgid "Set a custom status"
 msgstr "Nastavit vlastní status"
@@ -28419,7 +28414,7 @@ msgid "Set this check aside?"
 msgstr "Odložit tuto kontrolu?"
 
 #. Title for the self-host setup wizard modal.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:71
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:73
 msgid "Set up {productName}"
 msgstr "Nastavit {productName}"
 
@@ -30929,7 +30924,7 @@ msgstr "Švédština"
 msgid "Switch account"
 msgstr "Přepnout účet"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:684
+#: src/features/app/components/floating/UserAreaPopout.tsx:677
 msgid "Switch accounts"
 msgstr "Přepnout účty"
 
@@ -31586,7 +31581,7 @@ msgid "That friend request is no longer available. Refresh and try again."
 msgstr "Tato žádost o přátelství již není k dispozici. Obnovte stránku a zkuste to znovu."
 
 #. Error shown when a branding image fails to upload in the setup wizard.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:95
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:102
 msgid "That image could not be used. Try a different file."
 msgstr "Tento obrázek nebylo možné použít. Zkuste jiný soubor."
 
@@ -31616,6 +31611,11 @@ msgstr "To je vše."
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
 msgid "The #0000 tag is reserved for Visionary subscribers. Visionary is no longer available for purchase."
 msgstr "Tag #0000 je rezervován pro předplatitele Visionary. Visionary už není k dispozici k zakoupení."
+
+#. Error shown when the setup wizard cannot load because the API origin differs from the page origin.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:97
+msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
+msgstr "API je na jiné doméně než tato stránka, takže žádosti o nastavení se odesílají bez vaší relace. Zkontrolujte veřejnou doménu a port, se kterými je tato instance nakonfigurována, a poté znovu načtěte."
 
 #: src/features/app/components/ErrorFallback.tsx:120
 msgid "The app crashed"
@@ -34049,7 +34049,7 @@ msgstr "neznámý uživatel"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:169
+#: src/features/voice/components/VoiceParticipantTile.tsx:172
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Neznámý uživatel"
@@ -35961,7 +35961,7 @@ msgid "View call"
 msgstr "Zobrazit hovor"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:123
+#: src/features/voice/components/VoiceCallView.tsx:124
 msgid "View call controls"
 msgstr "Zobrazit ovládání hovoru"
 
@@ -37928,12 +37928,12 @@ msgstr "Odeslané zprávy po smazání účtu nebude možné odstranit"
 msgid "You will still need to finish the email step."
 msgstr "Stále bude potřeba dokončit krok s e-mailem."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:94
+#: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
 msgstr "Na počítači nebudete dostávat oznámení"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:95
+#: src/features/app/components/floating/UserAreaPopout.tsx:93
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:41
 msgid "You'll appear offline"
 msgstr "Budete vypadat offline"

@@ -218,6 +218,7 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Le lien magique a expiré.",
 	"donation.magic_link_invalid": "Le lien magique est invalide.",
 	"donation.magic_link_used": "Le lien magique a déjà été utilisé.",
+	"email.domain_cannot_receive_mail": "Ce domaine d'e-mail ne peut pas recevoir de courrier. Utilisez une adresse sur un domaine qui accepte les e-mails.",
 	"email.email_already_in_use": "L'adresse e-mail est déjà utilisée.",
 	"email.email_required": "L'adresse e-mail est obligatoire.",
 	"email.email_service_not_testable": "Le service de messagerie est temporairement indisponible. Réessaie plus tard.",

@@ -218,6 +218,7 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Magisk link er udløbet.",
 	"donation.magic_link_invalid": "Magisk link er ugyldigt.",
 	"donation.magic_link_used": "Magisk link er allerede brugt.",
+	"email.domain_cannot_receive_mail": "Den e-mailadresse kan ikke modtage post. Brug en adresse på et domæne, der accepterer e-mail.",
 	"email.email_already_in_use": "E-mailadressen er allerede i brug.",
 	"email.email_required": "E-mailadresse er nødvendig.",
 	"email.email_service_not_testable": "E-mailtjenesten er midlertidigt utilgængelig. Prøv igen senere.",

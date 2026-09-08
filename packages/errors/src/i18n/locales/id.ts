@@ -218,6 +218,7 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Tautan ajaib sudah kedaluwarsa.",
 	"donation.magic_link_invalid": "Tautan ajaib tidak valid.",
 	"donation.magic_link_used": "Tautan ajaib sudah digunakan.",
+	"email.domain_cannot_receive_mail": "Domain email tersebut tidak dapat menerima email. Gunakan alamat pada domain yang menerima email.",
 	"email.email_already_in_use": "Email sudah digunakan.",
 	"email.email_required": "Email harus diisi.",
 	"email.email_service_not_testable": "Layanan email sedang tidak tersedia. Coba lagi nanti.",

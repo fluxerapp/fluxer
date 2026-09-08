@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "魔术链接已过期。",
 	"donation.magic_link_invalid": "魔术链接无效。",
 	"donation.magic_link_used": "魔术链接已被使用。",
+	"email.domain_cannot_receive_mail": "该邮箱域名无法接收邮件。请使用一个可以接收邮件的域名下的地址。",
 	"email.email_already_in_use": "该邮箱已被使用。",
 	"email.email_required": "邮箱是必填项。",
 	"email.email_service_not_testable": "邮件服务暂时不可用。请稍后重试。",

@@ -218,6 +218,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Sihirli bağlantının süresi doldu.",
 	"donation.magic_link_invalid": "Sihirli bağlantı geçersiz.",
 	"donation.magic_link_used": "Sihirli bağlantı daha önce kullanıldı.",
+	"email.domain_cannot_receive_mail": "Bu e-posta alan adı e-posta kabul edemez. E-posta kabul eden bir alana ait adres kullanın.",
 	"email.email_already_in_use": "E-posta adresi zaten kullanımda.",
 	"email.email_required": "E-posta adresi gerekli.",
 	"email.email_service_not_testable": "E-posta hizmeti geçici olarak kullanılamıyor. Daha sonra tekrar dene.",

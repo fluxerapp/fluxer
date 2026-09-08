@@ -218,6 +218,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Magic link is verlopen.",
 	"donation.magic_link_invalid": "Magic link is ongeldig.",
 	"donation.magic_link_used": "Magic link is al gebruikt.",
+	"email.domain_cannot_receive_mail": "Dat e-maildomein kan geen e-mail ontvangen. Gebruik een adres op een domein dat e-mail accepteert.",
 	"email.email_already_in_use": "E-mailadres is al in gebruik.",
 	"email.email_required": "E-mailadres is verplicht.",
 	"email.email_service_not_testable": "E-mailservice is tijdelijk niet beschikbaar. Probeer het later opnieuw.",

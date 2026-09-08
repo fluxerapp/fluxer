@@ -355,7 +355,7 @@ msgstr "{count, plural, one {# отметка} other {# отметки}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# общност намерена} other {# общности намерени}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1950
+#: src/features/app/components/layout/GuildsLayout.tsx:1951
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# общност е временно недостъпна поради неизправност на флукс кондензатора.} other {# общности са временно недостъпни поради неизправност на флукс кондензатора.}}"
 
@@ -404,7 +404,7 @@ msgstr "{count, plural, one {# обща общност} other {# общи общ
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# друг} other {# други}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:506
+#: src/features/voice/components/VoiceCallView.tsx:507
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# участник в разговора} other {# участници в разговора}}"
 
@@ -450,7 +450,7 @@ msgstr "{count, plural, one {Разгъване (1 ред)} other {Разгъв�
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Разгънете (# ред)} other {Разгънете (# реда)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:311
+#: src/features/voice/components/VoiceParticipantTile.tsx:315
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Разгъване на # друго устройство} other {Разгъване на # други устройства}}"
 
@@ -471,7 +471,7 @@ msgstr "{count, plural, one {В разговор} other {# в разговор}}
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Присъединяване към видео разговор (# участник)} other {Присъединяване към видео разговор (# участници)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:637
+#: src/features/voice/components/VoiceParticipantTile.tsx:655
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Продължи да гледаш # поток и добави този} other {Продължи да гледаш # потока и добави този}}"
 
@@ -2182,7 +2182,7 @@ msgstr "Действия"
 msgid "Active"
 msgstr "Активен"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:358
+#: src/features/app/components/floating/UserAreaPopout.tsx:356
 #: src/features/auth/components/accounts/AccountRow.tsx:136
 msgid "Active account"
 msgstr "Активен акаунт"
@@ -4578,7 +4578,7 @@ msgstr "В момента ме няма"
 #. Button that moves to the previous setup wizard step.
 #. Footer button in the IAR modal that returns to the previous step.
 #. OAuth authorization secondary button. Returns to the previous carousel step.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:75
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:77
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx:14
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:150
 #: src/features/channel/components/channel_header/shared.ts:27
@@ -4642,7 +4642,7 @@ msgid "Back to sticker"
 msgstr "Обратно към стикера"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:114
+#: src/features/voice/components/VoiceCallView.tsx:115
 msgid "Back to voice channel"
 msgstr "Обратно към гласовия канал"
 
@@ -7497,7 +7497,7 @@ msgstr "Скрий темата на канала"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:122
-#: src/features/voice/components/VoiceParticipantTile.tsx:173
+#: src/features/voice/components/VoiceParticipantTile.tsx:176
 msgid "Collapse devices"
 msgstr "Свиване на устройствата"
 
@@ -8157,7 +8157,7 @@ msgstr "Свързан към гласов чат"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:93
+#: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Connecting..."
 msgstr "Свързване..."
 
@@ -8218,7 +8218,7 @@ msgid "Connection removed"
 msgstr "Връзката е премахната"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:118
+#: src/features/voice/components/VoiceCallView.tsx:119
 msgid "Connection stats"
 msgstr "Статистика на връзката"
 
@@ -8466,7 +8466,7 @@ msgid "Copied"
 msgstr "Копирано"
 
 #. Toast shown after copying stats for nerds JSON to clipboard.
-#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:13
+#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:9
 msgid "Copied stats JSON to clipboard"
 msgstr "Копирахте JSON на статистиката в клипборда"
 
@@ -8498,11 +8498,6 @@ msgstr "URL адресът е копиран в клипборда"
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:59
 msgid "Copy"
 msgstr "Копирай"
-
-#. Aria label for a button that copies stats for nerds data as JSON to the clipboard.
-#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
-msgid "Copy as JSON"
-msgstr "Копирай като JSON"
 
 #. Developer-mode action that copies the attachment ID to the clipboard.
 #: src/features/ui/action_menu/MessageContextMenu.tsx:67
@@ -8540,7 +8535,7 @@ msgid "Copy banner URL"
 msgstr "Копирай URL на банер"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
-#: src/features/app/components/floating/UserAreaPopout.tsx:714
+#: src/features/app/components/floating/UserAreaPopout.tsx:707
 #: src/features/platform/utils/DesktopLocaleBridge.ts:164
 msgid "Copy build info"
 msgstr "Копирай инфо за версията"
@@ -8743,8 +8738,8 @@ msgstr "Копиране на ключа за настройка"
 msgid "Copy stack trace"
 msgstr "Копиране на стека от извиквания"
 
-#. Button label in audio and video settings. Copies stats for nerds data as JSON to the clipboard.
-#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:9
+#. Menu item label in the screen share menu. Copies stats for nerds data as JSON to the clipboard.
+#: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
 msgid "Copy stats JSON"
 msgstr "Копирай JSON на статистиките"
 
@@ -8772,7 +8767,7 @@ msgid "Copy the setup key into your authenticator app."
 msgstr "Копирайте ключа за настройка във вашето приложение за удостоверяване."
 
 #. Developer-mode action that copies a user snowflake/ID to the clipboard.
-#: src/features/app/components/floating/UserAreaPopout.tsx:699
+#: src/features/app/components/floating/UserAreaPopout.tsx:692
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:172
 msgid "Copy user ID"
 msgstr "Копирай потребителски ID"
@@ -8797,7 +8792,7 @@ msgstr "Копирай видеоклип"
 msgid "Copy video link"
 msgstr "Копиране на връзка към видеоклипа"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:727
+#: src/features/app/components/floating/UserAreaPopout.tsx:720
 msgid "Copy voice diagnostics"
 msgstr "Копиране на гласова диагностика"
 
@@ -8827,7 +8822,7 @@ msgid "Could not decode this audio file."
 msgstr "Не може да се декодира този аудиофайл."
 
 #. Error shown when the setup wizard fails to load the instance configuration.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:91
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:93
 msgid "Could not load the instance configuration. Try reloading the page."
 msgstr "Не успяхме да заредим конфигурацията на инстанцията. Опитайте да презаредите страницата."
 
@@ -11424,7 +11419,7 @@ msgstr "Прекъсване на връзката"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:102
+#: src/features/voice/components/VoiceCallView.tsx:103
 msgid "Disconnected"
 msgstr "Прекъсната връзка"
 
@@ -12256,7 +12251,7 @@ msgstr "Редактиране или изтриване на емоджита �
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Редактиране на отменяния за роли и членове в този канал."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:750
+#: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
@@ -13109,7 +13104,7 @@ msgstr "Въвеждане на код"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:110
+#: src/features/voice/components/VoiceCallView.tsx:111
 msgid "Enter fullscreen"
 msgstr "На цял екран"
 
@@ -13277,7 +13272,7 @@ msgstr "Цял екран"
 msgid "Entire system"
 msgstr "Цялата система"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:249
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:253
 msgid "Entire system audio"
 msgstr "Целия системен звук"
 
@@ -13478,7 +13473,7 @@ msgstr "Изход"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:106
+#: src/features/voice/components/VoiceCallView.tsx:107
 msgid "Exit fullscreen"
 msgstr "Изход от цял екран"
 
@@ -14387,7 +14382,7 @@ msgstr "Първо завърши настройката на профила"
 
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:83
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:85
 #: src/features/app/components/setup/SetupWizardSteps.tsx:327
 msgid "Finish setup"
 msgstr "Завърши настройката"
@@ -16830,7 +16825,7 @@ msgstr "В режим \"Операционна система\" посочени
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "В браузър функцията \"натисни и говори\" работи само докато разделът на {PRODUCT_NAME} е активен. Инсталирайте настолното приложение за \"натисни и говори\" в цялата система."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:728
+#: src/features/app/components/floating/UserAreaPopout.tsx:721
 msgid "In a call"
 msgstr "В разговор"
 
@@ -18592,7 +18587,7 @@ msgid "Loading destinations…"
 msgstr "Зареждане на дестинации…"
 
 #. Accessible status while the setup wizard loads the instance configuration.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:87
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:89
 msgid "Loading instance configuration"
 msgstr "Зареждане на конфигурацията на инстанцията"
 
@@ -18885,7 +18880,7 @@ msgstr "Зловреден софтуер, кражба на данни или �
 msgid "Manage"
 msgstr "Управление"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:398
+#: src/features/app/components/floating/UserAreaPopout.tsx:396
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:78
 msgid "Manage accounts"
 msgstr "Управление на профили"
@@ -21123,7 +21118,7 @@ msgstr "Първо най-новите"
 #. Button that moves to the next setup wizard step.
 #. Generic primary or pagination action label that advances to the next step, page, or item.
 #. Primary button in the required-action modal. Moves to the next carousel step.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:79
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
 msgid "Next"
@@ -21799,7 +21794,7 @@ msgstr "Неанимирани емоджита ({emojiCount})"
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:143
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:219
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:93
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:261
 msgid "None"
 msgstr "Няма"
 
@@ -24956,7 +24951,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Връзката е възстановена. Изберете екран отново, ако искате да продължите предишния си поток."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:97
+#: src/features/voice/components/VoiceCallView.tsx:98
 msgid "Reconnecting..."
 msgstr "Повторно свързване..."
 
@@ -25097,7 +25092,7 @@ msgstr "Връзката е копирана."
 msgid "Referral parameters"
 msgstr "Параметри за препоръка"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:301
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:305
 msgid "Refresh audio sources"
 msgstr "Обнови аудиоизточниците"
 
@@ -27871,7 +27866,7 @@ msgid "Self-harm or suicide"
 msgstr "Самоувреждане или самоубийство"
 
 #. Accessible label for the self-host setup wizard carousel.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:67
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:69
 msgid "Self-host setup"
 msgstr "Настройка за самостоятелно хостване"
 
@@ -28220,7 +28215,7 @@ msgstr "Сесии"
 msgid "Set {fieldNode} to {0}."
 msgstr "Задайте {fieldNode} на {0}."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:608
+#: src/features/app/components/floating/UserAreaPopout.tsx:601
 #: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:314
 msgid "Set a custom status"
 msgstr "Задаване на персонализиран статус"
@@ -28419,7 +28414,7 @@ msgid "Set this check aside?"
 msgstr "Отложите ли тази проверка?"
 
 #. Title for the self-host setup wizard modal.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:71
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:73
 msgid "Set up {productName}"
 msgstr "Настройване на {productName}"
 
@@ -30929,7 +30924,7 @@ msgstr "Шведски"
 msgid "Switch account"
 msgstr "Превключване на профил"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:684
+#: src/features/app/components/floating/UserAreaPopout.tsx:677
 msgid "Switch accounts"
 msgstr "Смени профила"
 
@@ -31586,7 +31581,7 @@ msgid "That friend request is no longer available. Refresh and try again."
 msgstr "Тази покана за приятелство вече не е налична. Опреснете и опитайте отново."
 
 #. Error shown when a branding image fails to upload in the setup wizard.
-#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:95
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:102
 msgid "That image could not be used. Try a different file."
 msgstr "Не може да се използва това изображение. Опитайте с друг файл."
 
@@ -31616,6 +31611,11 @@ msgstr "Това е всичко."
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
 msgid "The #0000 tag is reserved for Visionary subscribers. Visionary is no longer available for purchase."
 msgstr "Тагът #0000 е запазен за абонати на Visionary. Visionary вече не е наличен за закупуване."
+
+#. Error shown when the setup wizard cannot load because the API origin differs from the page origin.
+#: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:97
+msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
+msgstr "API е на различен домейн от тази страница, така че заявките за настройка се изпращат без вашата сесия. Проверете публичния домейн и порт, с които е конфигуриран този екземпляр, след което презаредете."
 
 #: src/features/app/components/ErrorFallback.tsx:120
 msgid "The app crashed"
@@ -34049,7 +34049,7 @@ msgstr "неизвестен потребител"
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:169
+#: src/features/voice/components/VoiceParticipantTile.tsx:172
 #: src/features/webhook/components/WebhookListItem.tsx:30
 msgid "Unknown user"
 msgstr "Неизвестен потребител"
@@ -35961,7 +35961,7 @@ msgid "View call"
 msgstr "Преглед на обаждането"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:123
+#: src/features/voice/components/VoiceCallView.tsx:124
 msgid "View call controls"
 msgstr "Вижте контролите на разговора"
 
@@ -37928,12 +37928,12 @@ msgstr "Няма да можете да изтриете изпратените 
 msgid "You will still need to finish the email step."
 msgstr "Ще трябва да завършите и стъпката с имейла."
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:94
+#: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
 msgstr "Няма да получавате известия на компютъра си"
 
-#: src/features/app/components/floating/UserAreaPopout.tsx:95
+#: src/features/app/components/floating/UserAreaPopout.tsx:93
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:41
 msgid "You'll appear offline"
 msgstr "Ще изглеждате офлайн"

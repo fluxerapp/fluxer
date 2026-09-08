@@ -218,6 +218,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Taikalinkki on vanhentunut.",
 	"donation.magic_link_invalid": "Taikalinkki on virheellinen.",
 	"donation.magic_link_used": "Taikalinkki on jo käytetty.",
+	"email.domain_cannot_receive_mail": "Sähköpostiverkkotunnus ei voi vastaanottaa postia. Käytä osoitetta verkkotunnuksessa, joka hyväksyy sähköpostia.",
 	"email.email_already_in_use": "Sähköpostiosoite on jo käytössä.",
 	"email.email_required": "Sähköpostiosoite vaaditaan.",
 	"email.email_service_not_testable": "Sähköpostipalvelu on tilapäisesti poissa käytöstä. Yritä uudelleen myöhemmin.",

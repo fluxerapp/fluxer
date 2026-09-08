@@ -218,6 +218,7 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Den magiska länken har gått ut.",
 	"donation.magic_link_invalid": "Den magiska länken är ogiltig.",
 	"donation.magic_link_used": "Den magiska länken har redan använts.",
+	"email.domain_cannot_receive_mail": "Den e-postdomänen kan inte ta emot e-post. Använd en adress på en domän som accepterar e-post.",
 	"email.email_already_in_use": "E-postadressen används redan.",
 	"email.email_required": "E-postadress krävs.",
 	"email.email_service_not_testable": "E-posttjänsten är tillfälligt otillgänglig. Försök igen senare.",

@@ -218,6 +218,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Термін дії магічного посилання закінчився.",
 	"donation.magic_link_invalid": "Магічне посилання недійсне.",
 	"donation.magic_link_used": "Магічне посилання вже використано.",
+	"email.domain_cannot_receive_mail": "Цей домен електронної пошти не може отримувати пошту. Використовуйте адресу з домену, який приймає електронні листи.",
 	"email.email_already_in_use": "Ця електронна пошта вже використовується.",
 	"email.email_required": "Електронна пошта обов'язкова.",
 	"email.email_service_not_testable": "Служба електронної пошти тимчасово недоступна. Спробуй пізніше.",

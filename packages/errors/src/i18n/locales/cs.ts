@@ -218,6 +218,7 @@ const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Magický odkaz vypršel.",
 	"donation.magic_link_invalid": "Magický odkaz je neplatný.",
 	"donation.magic_link_used": "Magický odkaz již byl použit.",
+	"email.domain_cannot_receive_mail": "Tato e-mailová doména nemůže přijímat poštu. Použijte adresu z domény, která přijímá e-maily.",
 	"email.email_already_in_use": "E-mail se již používá.",
 	"email.email_required": "E-mail je povinný.",
 	"email.email_service_not_testable": "E-mailová služba je dočasně nedostupná. Zkuste to prosím později.",

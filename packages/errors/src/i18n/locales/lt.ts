@@ -218,6 +218,7 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Magiška nuoroda nebegalioja.",
 	"donation.magic_link_invalid": "Magiška nuoroda netinkama.",
 	"donation.magic_link_used": "Magiška nuoroda jau panaudota.",
+	"email.domain_cannot_receive_mail": "Domenas negali gauti el. laiškų. Naudokite el. pašto adresą iš domeno, kuris priima el. laiškus.",
 	"email.email_already_in_use": "El. paštas jau užregistruotas.",
 	"email.email_required": "Būtinas el. paštas.",
 	"email.email_service_not_testable": "El. pašto paslauga laikinai nepasiekiama. Pabandyk dar kartą.",

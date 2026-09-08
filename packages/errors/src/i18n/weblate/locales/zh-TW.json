@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "魔法連結已過期。",
 	"donation.magic_link_invalid": "魔法連結無效。",
 	"donation.magic_link_used": "魔法連結已被使用。",
+	"email.domain_cannot_receive_mail": "該電子郵件網域無法接收郵件。請改用可接收電子郵件的網域地址。",
 	"email.email_already_in_use": "此電子郵件已被使用。",
 	"email.email_required": "電子郵件為必填欄位。",
 	"email.email_service_not_testable": "電子郵件服務暫時無法使用，請稍後再試。",

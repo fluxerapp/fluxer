@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "A varázslink lejárt.",
 	"donation.magic_link_invalid": "A varázslink érvénytelen.",
 	"donation.magic_link_used": "A varázslinket már felhasználták.",
+	"email.domain_cannot_receive_mail": "Ez az e-mail domain nem tud e-mailt fogadni. Használj olyan címet, amelynek domainje elfogad e-mailt.",
 	"email.email_already_in_use": "Az e-mail cím már használatban van.",
 	"email.email_required": "E-mail cím szükséges.",
 	"email.email_service_not_testable": "Az e-mail szolgáltatás átmenetileg nem elérhető. Próbáld meg újra később.",

@@ -218,6 +218,7 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Linkul magic a expirat deja.",
 	"donation.magic_link_invalid": "Linkul magic e invalid.",
 	"donation.magic_link_used": "Linkul magic a fost deja folosit.",
+	"email.domain_cannot_receive_mail": "Domeniul de email nu poate primi mesaje. Folosește o adresă dintr-un domeniu care acceptă emailuri.",
 	"email.email_already_in_use": "Adresa de e-mail e deja folosită.",
 	"email.email_required": "Adresa de e-mail e necesară.",
 	"email.email_service_not_testable": "Serviciul de e-mail este temporar indisponibil. Încearcă din nou mai târziu.",

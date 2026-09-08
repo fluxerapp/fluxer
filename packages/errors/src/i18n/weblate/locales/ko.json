@@ -214,6 +214,7 @@
 	"donation.magic_link_expired": "매직 링크가 만료되었어요.",
 	"donation.magic_link_invalid": "매직 링크가 올바르지 않아요.",
 	"donation.magic_link_used": "매직 링크가 이미 사용되었어요.",
+	"email.domain_cannot_receive_mail": "해당 이메일 도메인으로는 메일을 받을 수 없습니다. 메일을 수신할 수 있는 도메인의 주소를 사용하세요.",
 	"email.email_already_in_use": "이미 사용하고 있는 이메일이에요.",
 	"email.email_required": "이메일은 꼭 필요해요.",
 	"email.email_service_not_testable": "이메일 서비스를 일시적으로 이용할 수 없어요. 나중에 다시 시도해 주세요.",

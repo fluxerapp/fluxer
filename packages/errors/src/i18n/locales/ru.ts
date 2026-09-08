@@ -218,6 +218,7 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"donation.magic_link_expired": "Срок действия волшебной ссылки истёк.",
 	"donation.magic_link_invalid": "Волшебная ссылка недействительна.",
 	"donation.magic_link_used": "Волшебная ссылка уже использована.",
+	"email.domain_cannot_receive_mail": "Этот домен электронной почты не может принимать письма. Используйте адрес из домена, который принимает электронную почту.",
 	"email.email_already_in_use": "Этот email уже используется.",
 	"email.email_required": "Email обязателен.",
 	"email.email_service_not_testable": "Почтовый сервис временно недоступен. Пожалуйста, попробуй ещё раз.",
