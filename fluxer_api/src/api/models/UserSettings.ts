@@ -197,7 +197,7 @@ export class UserSettings {
 		return {
 			user_id: userId,
 			locale,
-			theme: theme ?? ThemeTypes.SYSTEM,
+			theme: theme ?? ThemeTypes.DARK,
 			status: 'online',
 			status_resets_at: null,
 			status_resets_to: null,

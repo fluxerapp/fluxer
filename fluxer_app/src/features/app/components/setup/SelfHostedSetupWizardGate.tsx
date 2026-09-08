@@ -430,7 +430,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [stepNavigationLocked, setStepNavigationLocked] = useState(false);
 	const [wizardSnapshot, setWizardSnapshot] = useState(createSetupWizardSnapshot);
-	const [setupTheme, setSetupTheme] = useState<ThemeType>(ThemeTypes.SYSTEM);
+	const [setupTheme, setSetupTheme] = useState<ThemeType>(ThemeTypes.DARK);
 	const [forceUnauthenticatedSetup, setForceUnauthenticatedSetup] = useState(false);
 	const [integrationDraft, setIntegrationDraft] = useState<ServiceIntegrationDraft>(() => ({
 		...DEFAULT_INTEGRATION_DRAFT,

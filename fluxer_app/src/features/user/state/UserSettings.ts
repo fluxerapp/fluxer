@@ -257,7 +257,7 @@ class UserSettingsState {
 	status: StatusType = StatusTypes.ONLINE;
 	statusResetsAt: string | null = null;
 	statusResetsTo: string | null = null;
-	theme: string = ThemeTypes.SYSTEM;
+	theme: string = ThemeTypes.DARK;
 	timeFormat: number = TimeFormatTypes.AUTO;
 	locale: string = 'en-US';
 	restrictedGuilds: Array<string> = [];
