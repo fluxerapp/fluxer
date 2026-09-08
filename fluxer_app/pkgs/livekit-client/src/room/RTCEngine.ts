@@ -96,7 +96,7 @@ const videoCodecMimeTypes: Record<VideoCodec, Array<string>> = {
 	vp8: ['video/vp8'],
 };
 const h264OpenH264ProfileLevelId = '42e01f';
-const h264PreferredHardwareProfileLevelIds = new Set(['42001f', '4d001f', '64001f']);
+const h264PreferredHardwareProfileLevelIds = new Set(['42001f']);
 type RtpCodecCapability = RTCRtpCapabilities['codecs'][number] & {sdpFmtpLine?: string};
 
 enum PCState {
@@ -1656,8 +1656,8 @@ function getH264PublisherCodecScore(codec: RtpCodecCapability): number {
 	const packetizationMode = getFmtpParameter(codec.sdpFmtpLine, 'packetization-mode');
 	const packetizationScore = packetizationMode === '1' ? 0 : 1;
 	if (profileLevelId && h264PreferredHardwareProfileLevelIds.has(profileLevelId)) return packetizationScore;
-	if (profileLevelId && profileLevelId !== h264OpenH264ProfileLevelId) return 10 + packetizationScore;
-	if (profileLevelId === h264OpenH264ProfileLevelId) return 20 + packetizationScore;
+	if (profileLevelId === h264OpenH264ProfileLevelId) return 10 + packetizationScore;
+	if (profileLevelId) return 20 + packetizationScore;
 	return 30 + packetizationScore;
 }
 
