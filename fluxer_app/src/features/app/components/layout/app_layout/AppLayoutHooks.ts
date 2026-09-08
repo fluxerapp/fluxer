@@ -11,6 +11,7 @@ import Config from '@app/features/app/config/Config';
 import {isClientReconnecting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import Updater from '@app/features/app/state/Updater';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -230,6 +231,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const canShowLinuxInputAccess = NativePermission.shouldShowLinuxInputAccessNagbar;
 	const canShowSoftwareEncoder = SoftwareEncoderWarning.showWarning;
 	const canShowStreamerMode = StreamerMode.shouldShowNagbar;
+	const canShowDesktopUpdateReady = Updater.shouldShowUpdateReadyNagbar;
 	const canShowBuildEnvironment =
 		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.PUBLIC_RELEASE_CHANNEL) &&
 		!nagbarState.buildEnvironmentDismissedThisSession;
@@ -288,6 +290,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowLinuxInputAccess,
 		canShowSoftwareEncoder,
 		canShowStreamerMode,
+		canShowDesktopUpdateReady,
 	};
 };
 export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarState> => {
@@ -405,6 +408,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.STREAMER_MODE,
 				priority: -2.5,
 				visible: conditions.canShowStreamerMode,
+				dismissible: true,
+			},
+			{
+				type: NagbarType.DESKTOP_UPDATE_READY,
+				priority: -1.5,
+				visible: conditions.canShowDesktopUpdateReady,
 				dismissible: true,
 			},
 		];

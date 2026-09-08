@@ -88,16 +88,16 @@ const DESKTOP_UPDATE_READY_DESCRIPTOR = msg({
 	message: 'Desktop update ready',
 	comment: 'Modal title shown when a desktop app update has finished downloading.',
 });
-const DESKTOP_VERSION_HAS_BEEN_DOWNLOADED_DESCRIPTOR = msg({
+export const DESKTOP_VERSION_HAS_BEEN_DOWNLOADED_DESCRIPTOR = msg({
 	message: 'Desktop version {version} has been downloaded. Restart {productName} to finish installing.',
 	comment:
 		'Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.',
 });
-const THE_DESKTOP_UPDATE_HAS_BEEN_DOWNLOADED_DESCRIPTOR = msg({
+export const THE_DESKTOP_UPDATE_HAS_BEEN_DOWNLOADED_DESCRIPTOR = msg({
 	message: 'The desktop update has been downloaded. Restart {productName} to finish installing.',
 	comment: 'Desktop updater modal body when the downloaded version is unknown. productName is the app name.',
 });
-const RESTART_FLUXER_DESCRIPTOR = msg({
+export const RESTART_FLUXER_DESCRIPTOR = msg({
 	message: 'Restart {productName}',
 	comment: 'Button label that restarts the app to apply a desktop update. productName is the app name.',
 });

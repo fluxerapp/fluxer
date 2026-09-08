@@ -141,6 +141,7 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 	const sourceMode = VoiceSettings.getScreenShareAudioSourceMode();
 	const includeSources = VoiceSettings.getScreenShareAudioIncludeSources();
 	const excludeSources = VoiceSettings.getScreenShareAudioExcludeSources();
+	const usesDeviceMicrophone = VoiceSettings.getScreenShareDeviceAudioUsesMicrophone();
 	const granular = VoiceSettings.getLinuxAudioCaptureGranularSelect();
 	const deviceSelect = VoiceSettings.getLinuxAudioCaptureDeviceSelect();
 	const ignoreVirtual = VoiceSettings.getLinuxAudioCaptureIgnoreVirtual();
@@ -167,12 +168,13 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 		onSelectionChange?.('window');
 	}, [onSelectionChange]);
 	const handlePickSystem = useCallback(() => {
-		VoiceSettingsCommands.update({
-			screenShareAudioSourceMode: 'system',
-			screenShareAudioIncludeSources: [],
-		});
+		VoiceSettingsCommands.update(
+			isDeviceShare
+				? {screenShareDeviceAudioUsesMicrophone: true}
+				: {screenShareAudioSourceMode: 'system', screenShareAudioIncludeSources: []},
+		);
 		onSelectionChange?.(widenedScope);
-	}, [onSelectionChange, widenedScope]);
+	}, [isDeviceShare, onSelectionChange, widenedScope]);
 	const handlePickNone = useCallback(() => {
 		VoiceSettingsCommands.update({
 			screenShareAudioSourceMode: 'none',
@@ -189,10 +191,11 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 			VoiceSettingsCommands.update({
 				screenShareAudioSourceMode: nextSources.length > 0 ? 'specific' : 'system',
 				screenShareAudioIncludeSources: nextSources,
+				...(isDeviceShare ? {screenShareDeviceAudioUsesMicrophone: false} : {}),
 			});
 			onSelectionChange?.(widenedScope);
 		},
-		[includeSources, onSelectionChange, widenedScope],
+		[includeSources, isDeviceShare, onSelectionChange, widenedScope],
 	);
 	const handleToggleExcludeApp = useCallback(
 		(item: LinuxAudioSourceItem) => {
@@ -217,9 +220,10 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 		microphoneLabel,
 		displayShareEnvironment,
 		windowAudioScope,
+		usesDeviceMicrophone,
 	});
 	const showsWideSourceLists = !offersWindowScope || resolvedScope === 'system';
-	const wideSourceIsSelected = isDeviceShare ? !routesSelectedSources : sourceMode === 'system';
+	const wideSourceIsSelected = isDeviceShare ? usesDeviceMicrophone || !routesSelectedSources : sourceMode === 'system';
 	if (!snapshot.available && !snapshot.loading) {
 		return null;
 	}

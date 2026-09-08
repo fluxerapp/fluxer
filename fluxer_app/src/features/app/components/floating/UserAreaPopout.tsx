@@ -25,7 +25,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {MockAvatar} from '@app/features/ui/components/MockAvatar';
 import {StatusIndicator} from '@app/features/ui/components/StatusIndicator';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -52,9 +51,8 @@ import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
-import {COPIED_STATS_JSON_DESCRIPTOR} from '@app/features/voice/components/StatsForNerdsCopyDescriptors';
+import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {buildStatsForNerdsCopyPayload, collectStatsForNerdsSnapshot} from '@app/features/voice/utils/StatsForNerdsCopy';
 import {MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {MessageDescriptor} from '@lingui/core';
@@ -462,12 +460,7 @@ export const UserAreaPopout = observer(() => {
 			});
 	}, [i18n]);
 	const handleCopyStats = useCallback(() => {
-		const data = collectStatsForNerdsSnapshot();
-		void buildStatsForNerdsCopyPayload(data).then((payload) => {
-			void navigator.clipboard.writeText(JSON.stringify(payload, null, 2)).then(() => {
-				ToastCommands.createToast({type: 'success', children: i18n._(COPIED_STATS_JSON_DESCRIPTOR)});
-			});
-		});
+		void copyVoiceDiagnostics(i18n);
 	}, [i18n]);
 	const handleCopyUserTag = useCallback(() => {
 		if (!currentUser) {

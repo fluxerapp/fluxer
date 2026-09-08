@@ -225,7 +225,7 @@ fn build_csp_directives(
     extend_runtime_sources(&mut font, runtime_sources, true, true);
     directives.push(format!("font-src {}", font.join(" ")));
 
-    let mut connect = vec!["'self'".to_owned(), "data:".to_owned()];
+    let mut connect = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut connect, &config.extra_connect_src, CONNECT_SOURCES);
     extend_runtime_sources(&mut connect, runtime_sources, true, true);
     extend_runtime_s3_sources(&mut connect, runtime_sources);
@@ -353,6 +353,36 @@ mod tests {
         assert!(csp.contains("object-src 'none'"));
         assert!(csp.contains("base-uri 'self'"));
         assert!(csp.contains("frame-ancestors 'none'"));
+    }
+
+    #[test]
+    fn build_csp_allows_blob_connections_for_camera_background_media() {
+        let config = default_csp_config();
+        let csp = build_csp(&config, "testnonce", &runtime_sources());
+        let connect = csp
+            .split("; ")
+            .find(|directive| directive.starts_with("connect-src "))
+            .expect("connect-src directive");
+        assert!(
+            connect.split(' ').any(|source| source == "blob:"),
+            "connect-src must allow blob: object URLs: {connect}"
+        );
+    }
+
+    #[test]
+    fn an_asset_header_allows_blob_connections_for_the_camera_effect_worker() {
+        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
+        let asset = policy.asset_header();
+        let asset = asset.to_str().unwrap();
+        let connect = asset
+            .split("; ")
+            .find(|directive| directive.starts_with("connect-src "))
+            .expect("connect-src directive");
+        assert!(
+            connect.split(' ').any(|source| source == "blob:"),
+            "the camera-effect worker is served as /assets/*.worker.js and runs under the asset \
+             policy, so that policy must allow blob: object URLs: {connect}"
+        );
     }
 
     #[test]

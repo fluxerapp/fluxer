@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {LongPressable} from '@app/features/app/components/LongPressable';
 import Channels from '@app/features/channel/state/Channels';
 import {WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -7,6 +8,7 @@ import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {dimColor} from '@app/features/theme/utils/ColorUtils';
 import type {VoiceParticipantMenuSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
+import {STREAM_VOLUME_DESCRIPTOR} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {UserContextMenu} from '@app/features/ui/action_menu/UserContextMenu';
 import {VoiceParticipantContextMenu} from '@app/features/ui/action_menu/VoiceParticipantContextMenu';
 import {Button} from '@app/features/ui/button/Button';
@@ -57,6 +59,7 @@ import {
 	selectVoiceParticipantTileCameraActive,
 	selectVoiceParticipantTileScreenShareState,
 	shouldShowCameraBuffering,
+	shouldShowTileStreamAudioControls,
 	type VoiceParticipantTileScreenShareSignals,
 } from '@app/features/voice/components/VoiceParticipantTileStateMachine';
 import {useVoiceTileGroup} from '@app/features/voice/components/VoiceTileGroupContext';
@@ -296,6 +299,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		: getVoiceDeafenedStatusLabel(i18n, isCurrentUser);
 	const deafenStatusClassName = isModeratorDeafened ? styles.participantIconRed : styles.participantIconMuted;
 	const isActuallySpeaking = displayState.speaking;
+	const shouldAnimateTileAvatar = isActuallySpeaking && !Accessibility.useReducedMotion;
 	const isMobileExperience = isMobileExperienceEnabled();
 	const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
 	const tileGroup = useVoiceTileGroup();
@@ -632,7 +636,21 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const participantDisplayName =
 		(participantUser ? NicknameUtils.getNickname(participantUser, guildId, channelId) : participant.name) ||
 		i18n._(UNKNOWN_USER_DESCRIPTOR);
-	const showStreamAudioControls = isScreenShare && !isOwnScreenShare && isWatching && hasScreenShareAudio;
+	const showStreamAudioControls = shouldShowTileStreamAudioControls({
+		isScreenShare,
+		isOwnScreenShare,
+		isWatching,
+		hasScreenShareAudio,
+		isFocusedPlaceholderTile,
+		presentation,
+	});
+	const showTileSpectatorPill = !isFocusPresentationTile && isScreenShare && viewerUsers.length > 0;
+	const showTileControlPill =
+		!isFocusedPlaceholderTile &&
+		(showStreamAudioControls ||
+			showTileSpectatorPill ||
+			(isGridTile && groupHiddenCount > 0) ||
+			showDeviceCollapseControl);
 	const viewerStreamCount = graphViewerStreamKeys.length;
 	const addStreamTooltipText = plural(
 		{count: viewerStreamCount},
@@ -940,6 +958,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 							user={participantUser}
 							size={TILE_AVATAR_BASE}
 							mediaSize={TILE_AVATAR_MEDIA_SIZE}
+							forceAnimate={shouldAnimateTileAvatar}
 							className={styles.avatarFlexShrink}
 							style={TILE_AVATAR_STYLE}
 							guildId={guildId}
@@ -962,6 +981,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		placeholderStyle,
 		previewUrl,
 		screenSharePlaceholderStyle,
+		shouldAnimateTileAvatar,
 		trackRef,
 		shouldHideOwnScreenShareVideo,
 	]);
@@ -1195,154 +1215,150 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 							/>
 						</div>
 					)}
-					{!isFocusPresentationTile &&
-						!isFocusedPlaceholderTile &&
-						(showStreamAudioControls ||
-							(isScreenShare && viewerUsers.length > 0) ||
-							(isGridTile && groupHiddenCount > 0) ||
-							showDeviceCollapseControl) && (
-							<div
-								className={clsx(
-									voiceCallStyles.tileControlPill,
-									isScreenShare && viewerUsers.length > 0 && voiceCallStyles.tileControlPillPersistent,
-								)}
-								data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-control-pill"
-							>
-								{showStreamAudioControls && (
-									<div
-										className={clsx(voiceCallStyles.tileControlPillSlot, isStreamMuted && styles.streamAudioSlotMuted)}
-										role="group"
-										onClick={(e) => e.stopPropagation()}
-										onKeyDown={(e) => e.stopPropagation()}
-										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-audio-volume"
+					{showTileControlPill && (
+						<div
+							className={clsx(
+								voiceCallStyles.tileControlPill,
+								showTileSpectatorPill && voiceCallStyles.tileControlPillPersistent,
+							)}
+							data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-control-pill"
+						>
+							{showStreamAudioControls && (
+								<div
+									className={clsx(voiceCallStyles.tileControlPillSlot, isStreamMuted && styles.streamAudioSlotMuted)}
+									role="group"
+									onClick={(e) => e.stopPropagation()}
+									onKeyDown={(e) => e.stopPropagation()}
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-audio-volume"
+								>
+									<MediaVerticalVolumeControl
+										volume={streamVolume / 100}
+										isMuted={isStreamMuted}
+										maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
+										onVolumeChange={handleStreamVolumeChange}
+										onToggleMute={handleStreamAudioToggle}
+										iconSize={14}
+										position="below"
+										ariaLabel={i18n._(STREAM_VOLUME_DESCRIPTOR)}
+										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-audio-volume-control"
+									/>
+								</div>
+							)}
+							{showDeviceCollapseControl && (
+								<Tooltip
+									text={groupCollapseTooltip}
+									position="top"
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-collapse-tooltip"
+								>
+									<FocusRing
+										offset={-2}
+										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-collapse-focus-ring"
 									>
-										<MediaVerticalVolumeControl
-											volume={streamVolume / 100}
-											isMuted={isStreamMuted}
-											maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
-											onVolumeChange={handleStreamVolumeChange}
-											onToggleMute={handleStreamAudioToggle}
-											iconSize={14}
-											position="below"
-											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-audio-volume-control"
+										<div
+											role="button"
+											tabIndex={0}
+											className={clsx(voiceCallStyles.tileControlPillSlot, styles.groupExpandPillSlot)}
+											onClick={handleExpandGroup}
+											onKeyDown={(event) => {
+												if (!isKeyboardActivationKey(event.key)) return;
+												event.preventDefault();
+												handleExpandGroup(event);
+											}}
+											aria-label={groupCollapseTooltip}
+											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-collapse-pill"
+										>
+											<span
+												className={styles.groupExpandPillSign}
+												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-pill-sign"
+											>
+												-
+											</span>
+											{groupDeviceConnectionCount}
+										</div>
+									</FocusRing>
+								</Tooltip>
+							)}
+							{isGridTile && groupHiddenCount > 0 && (
+								<Tooltip
+									text={groupExpandTooltip}
+									position="top"
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-tooltip"
+								>
+									<FocusRing
+										offset={-2}
+										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-focus-ring"
+									>
+										<div
+											role="button"
+											tabIndex={0}
+											className={clsx(voiceCallStyles.tileControlPillSlot, styles.groupExpandPillSlot)}
+											onClick={handleExpandGroup}
+											onKeyDown={(event) => {
+												if (!isKeyboardActivationKey(event.key)) return;
+												event.preventDefault();
+												handleExpandGroup(event);
+											}}
+											aria-label={groupExpandTooltip}
+											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-pill"
+										>
+											<span
+												className={styles.groupExpandPillSign}
+												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-pill-sign--2"
+											>
+												+
+											</span>
+											{groupHiddenCount}
+										</div>
+									</FocusRing>
+								</Tooltip>
+							)}
+							{isOwnScreenShare && viewerUsers.length > 0 && streamUnderperformanceReason && (
+								<Tooltip
+									text={getStreamUnderperformanceLabel(i18n, streamUnderperformanceReason)}
+									position="top"
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tooltip"
+								>
+									<div
+										className={clsx(voiceCallStyles.tileControlPillSlot, styles.streamUnderperformanceSlot)}
+										role="img"
+										aria-label={i18n._(STREAM_NOT_KEEPING_UP_DESCRIPTOR)}
+										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-underperformance-slot"
+									>
+										<WarningIcon
+											weight="fill"
+											className={styles.tilePillIcon}
+											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-pill-icon"
 										/>
 									</div>
-								)}
-								{showDeviceCollapseControl && (
-									<Tooltip
-										text={groupCollapseTooltip}
-										position="top"
-										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-collapse-tooltip"
+								</Tooltip>
+							)}
+							{showTileSpectatorPill && (
+								<StreamSpectatorsPopout
+									viewerUsers={viewerUsers}
+									spectatorEntries={spectatorEntries}
+									guildId={guildId}
+									channelId={channelId}
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-spectators-popout"
+								>
+									<div
+										className={clsx(voiceCallStyles.tileControlPillSlot, voiceCallStyles.tileControlPillViewerSlot)}
+										role="img"
+										aria-label={i18n._(WATCHING_DESCRIPTOR, {length: viewerUsers.length})}
+										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-count"
 									>
-										<FocusRing
-											offset={-2}
-											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-collapse-focus-ring"
-										>
-											<div
-												role="button"
-												tabIndex={0}
-												className={clsx(voiceCallStyles.tileControlPillSlot, styles.groupExpandPillSlot)}
-												onClick={handleExpandGroup}
-												onKeyDown={(event) => {
-													if (!isKeyboardActivationKey(event.key)) return;
-													event.preventDefault();
-													handleExpandGroup(event);
-												}}
-												aria-label={groupCollapseTooltip}
-												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-collapse-pill"
-											>
-												<span
-													className={styles.groupExpandPillSign}
-													data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-pill-sign"
-												>
-													-
-												</span>
-												{groupDeviceConnectionCount}
-											</div>
-										</FocusRing>
-									</Tooltip>
-								)}
-								{isGridTile && groupHiddenCount > 0 && (
-									<Tooltip
-										text={groupExpandTooltip}
-										position="top"
-										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-tooltip"
-									>
-										<FocusRing
-											offset={-2}
-											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-focus-ring"
-										>
-											<div
-												role="button"
-												tabIndex={0}
-												className={clsx(voiceCallStyles.tileControlPillSlot, styles.groupExpandPillSlot)}
-												onClick={handleExpandGroup}
-												onKeyDown={(event) => {
-													if (!isKeyboardActivationKey(event.key)) return;
-													event.preventDefault();
-													handleExpandGroup(event);
-												}}
-												aria-label={groupExpandTooltip}
-												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-pill"
-											>
-												<span
-													className={styles.groupExpandPillSign}
-													data-flx="voice.voice-participant-tile.voice-participant-tile-inner.group-expand-pill-sign--2"
-												>
-													+
-												</span>
-												{groupHiddenCount}
-											</div>
-										</FocusRing>
-									</Tooltip>
-								)}
-								{isOwnScreenShare && viewerUsers.length > 0 && streamUnderperformanceReason && (
-									<Tooltip
-										text={getStreamUnderperformanceLabel(i18n, streamUnderperformanceReason)}
-										position="top"
-										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tooltip"
-									>
-										<div
-											className={clsx(voiceCallStyles.tileControlPillSlot, styles.streamUnderperformanceSlot)}
-											role="img"
-											aria-label={i18n._(STREAM_NOT_KEEPING_UP_DESCRIPTOR)}
-											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-underperformance-slot"
-										>
-											<WarningIcon
-												weight="fill"
-												className={styles.tilePillIcon}
-												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-pill-icon"
-											/>
-										</div>
-									</Tooltip>
-								)}
-								{isScreenShare && viewerUsers.length > 0 && (
-									<StreamSpectatorsPopout
-										viewerUsers={viewerUsers}
-										spectatorEntries={spectatorEntries}
-										guildId={guildId}
-										channelId={channelId}
-										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-spectators-popout"
-									>
-										<div
-											className={clsx(voiceCallStyles.tileControlPillSlot, voiceCallStyles.tileControlPillViewerSlot)}
-											role="img"
-											aria-label={i18n._(WATCHING_DESCRIPTOR, {length: viewerUsers.length})}
-											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-count"
-										>
-											<EyeIcon
-												weight="fill"
-												className={styles.tilePillIcon}
-												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-icon"
-											/>
-											<span data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-count-text">
-												{viewerUsers.length}
-											</span>
-										</div>
-									</StreamSpectatorsPopout>
-								)}
-							</div>
-						)}
+										<EyeIcon
+											weight="fill"
+											className={styles.tilePillIcon}
+											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-icon"
+										/>
+										<span data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-count-text">
+											{viewerUsers.length}
+										</span>
+									</div>
+								</StreamSpectatorsPopout>
+							)}
+						</div>
+					)}
 					{showParticipantMetadata && (
 						<div
 							className={voiceCallStyles.lkParticipantMetadata}

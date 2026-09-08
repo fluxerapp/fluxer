@@ -9,6 +9,7 @@ const voiceSettings = {
 	includeSources: [] as Array<Record<string, string>>,
 	excludeSources: [] as Array<Record<string, string>>,
 	audioDeviceId: 'default',
+	deviceUsesMicrophone: false,
 };
 
 const activeShareContext = {current: null as 'app' | 'device' | 'display' | null};
@@ -149,6 +150,7 @@ vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 		getScreenShareAudioSourceMode: () => voiceSettings.audioSourceMode,
 		getScreenShareAudioIncludeSources: () => voiceSettings.includeSources,
 		getScreenShareAudioExcludeSources: () => voiceSettings.excludeSources,
+		getScreenShareDeviceAudioUsesMicrophone: () => voiceSettings.deviceUsesMicrophone,
 		getEffectiveScreenShareAudioSourceMode: () => voiceSettings.audioSourceMode,
 		getEffectiveScreenShareAudioIncludeSources: () => voiceSettings.includeSources,
 		getEffectiveScreenShareAudioExcludeSources: () => voiceSettings.excludeSources,
@@ -178,6 +180,7 @@ beforeEach(() => {
 	voiceSettings.includeSources = [];
 	voiceSettings.excludeSources = [];
 	voiceSettings.audioDeviceId = 'default';
+	voiceSettings.deviceUsesMicrophone = false;
 	activeShareContext.current = null;
 	activeShareSourceId.current = null;
 	activeShareOwnWindow.current = false;
@@ -362,6 +365,37 @@ describe('sharing a video device', () => {
 		expect(ensureDeviceScreenShareMicPublication).toHaveBeenCalledTimes(1);
 	});
 
+	test('keeps the microphone the device picker chose while the shared application selection stands', async () => {
+		platform.current = 'linux';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'application.name': 'mpv'}];
+		voiceSettings.deviceUsesMicrophone = true;
+
+		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
+
+		expect(deviceShareAudioDeviceId(startDeviceScreenShare.mock.calls[0])).toBe('mic-1');
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+
+		expect(await reconfigureActiveDeviceShareAudio()).toBe(true);
+		expect(ensureDeviceScreenShareMicPublication).toHaveBeenCalledWith('mic-1');
+		expect(ensureLinuxScreenShareAudioPublication).not.toHaveBeenCalled();
+
+		expect(voiceSettings.audioSourceMode).toBe('specific');
+		expect(voiceSettings.includeSources).toEqual([{'application.name': 'mpv'}]);
+	});
+
+	test('routes the selected applications again once the device picker leaves the microphone', async () => {
+		platform.current = 'linux';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'application.name': 'mpv'}];
+		voiceSettings.deviceUsesMicrophone = false;
+
+		expect(await startConfiguredDeviceScreenShare('camera-1')).toBe(true);
+
+		expect(deviceShareAudioDeviceId(startDeviceScreenShare.mock.calls[0])).toBeUndefined();
+		expect(ensureLinuxScreenShareAudioPublication).toHaveBeenCalledTimes(1);
+	});
+
 	test('keeps the paired capture card input when the live share rebinds its microphone', async () => {
 		platform.current = 'linux';
 		activeShareVideoDeviceId.current = 'camera-1';
@@ -409,6 +443,20 @@ describe('sharing a whole display', () => {
 		platform.current = 'linux';
 		voiceSettings.audioSourceMode = 'specific';
 		voiceSettings.includeSources = [{'application.name': 'mpv'}];
+
+		expect(await startConfiguredDisplayScreenShare('screen:1')).toBe(true);
+
+		expect(armNativeAudioForLinuxRouting.mock.calls[0][0]).toMatchObject({
+			include: [{'application.name': 'mpv'}],
+			ignoreInputMedia: true,
+		});
+	});
+
+	test('keeps the stored include list while a device share of its own is on the microphone', async () => {
+		platform.current = 'linux';
+		voiceSettings.audioSourceMode = 'specific';
+		voiceSettings.includeSources = [{'application.name': 'mpv'}];
+		voiceSettings.deviceUsesMicrophone = true;
 
 		expect(await startConfiguredDisplayScreenShare('screen:1')).toBe(true);
 

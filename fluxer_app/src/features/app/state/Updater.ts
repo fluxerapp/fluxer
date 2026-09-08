@@ -131,6 +131,7 @@ class Updater {
 	private backgroundCheckInterval: number | null = null;
 	private backgroundCheckCleanups: Array<() => void> = [];
 	private unsubscribeNativeEvents: (() => void) | null = null;
+	private updateReadyNagbarDismissedVersion: string | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -191,6 +192,18 @@ class Updater {
 
 	get nativeUpdateReady(): boolean {
 		return this.updateInfo.native.available && this.updateInfo.native.downloaded;
+	}
+
+	get shouldShowUpdateReadyNagbar(): boolean {
+		return (
+			this.nativeUpdateReady &&
+			!this.updateInfo.native.installing &&
+			this.updateReadyNagbarDismissedVersion !== this.updateReadyNagbarVersionKey
+		);
+	}
+
+	private get updateReadyNagbarVersionKey(): string {
+		return this.updateInfo.native.version ?? 'unknown';
 	}
 
 	get nativeDownloadInFlight(): boolean {
@@ -348,9 +361,6 @@ class Updater {
 					break;
 				}
 				this.transition({type: 'native.downloaded', version: event.version ?? null});
-				if (shouldShowImmediateUserResult) {
-					this.showCurrentUpdateState();
-				}
 				break;
 			case 'progress':
 				if (!shouldSurfaceNativeDesktopUpdate || !this.nativeDownloadProgressSupported) {
@@ -659,6 +669,10 @@ class Updater {
 		} finally {
 			this.transition({type: 'manualDownload.finished'});
 		}
+	}
+
+	dismissUpdateReadyNagbar(): void {
+		this.updateReadyNagbarDismissedVersion = this.updateReadyNagbarVersionKey;
 	}
 
 	reset(): void {

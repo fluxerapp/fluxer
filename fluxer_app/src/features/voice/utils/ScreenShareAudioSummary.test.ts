@@ -143,6 +143,30 @@ describe('resolveScreenShareAudioSummary', () => {
 		});
 	});
 
+	it('names the microphone on a device share that picked it over the stored application selection', () => {
+		expect(
+			summary({
+				shareContext: 'device',
+				microphoneLabel: 'Elgato 4K X Analog Stereo',
+				sourceMode: 'specific',
+				includeSources: [{'application.name': 'mpv'}],
+				usesDeviceMicrophone: true,
+			}),
+		).toEqual({
+			kind: 'message',
+			descriptor: MICROPHONE_WITH_DEVICE_DESCRIPTOR,
+			values: {deviceLabel: 'Elgato 4K X Analog Stereo'},
+		});
+		expect(
+			summary({
+				shareContext: 'display',
+				sourceMode: 'specific',
+				includeSources: [{'application.name': 'mpv'}],
+				usesDeviceMicrophone: true,
+			}),
+		).toEqual({kind: 'sourceName', name: 'mpv'});
+	});
+
 	it('keeps a window share on the shared window whatever the stored display selection says', () => {
 		for (const sourceMode of ['none', 'system', 'specific'] as const) {
 			expect(summary({shareContext: 'app', sourceMode, includeSources: [{'application.name': 'mpv'}]})).toEqual({

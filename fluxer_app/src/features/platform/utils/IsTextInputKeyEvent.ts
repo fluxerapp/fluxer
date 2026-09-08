@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
+
 export function isTextInputKeyEvent(event: KeyboardEvent): boolean {
-	const {key, ctrlKey, metaKey} = event;
+	const {key, ctrlKey, metaKey, altKey} = event;
 	if (!key || key === 'Unidentified') {
 		return false;
 	}
@@ -10,6 +12,9 @@ export function isTextInputKeyEvent(event: KeyboardEvent): boolean {
 	}
 	if (key === 'Dead') {
 		return true;
+	}
+	if (altKey && !isNativeMacOS()) {
+		return false;
 	}
 	if (key.length > 1 && NAMED_KEY_PATTERN.test(key)) {
 		return false;

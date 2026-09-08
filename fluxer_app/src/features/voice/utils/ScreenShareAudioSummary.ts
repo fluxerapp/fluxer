@@ -54,6 +54,7 @@ export interface ScreenShareAudioSummaryInput {
 	microphoneLabel?: string | null;
 	displayShareEnvironment?: DisplayShareEnvironment;
 	windowAudioScope?: WindowShareAudioScope;
+	usesDeviceMicrophone?: boolean;
 }
 
 export type ScreenShareAudioSummary =
@@ -83,7 +84,9 @@ export function resolveScreenShareAudioSummary(input: ScreenShareAudioSummaryInp
 	const selected = filterRoutableLinuxAudioSources(input.includeSources);
 	const routesSelectedSources = input.sourceMode === 'specific' && selected.length > 0;
 	if (input.shareContext === 'device') {
-		return routesSelectedSources ? summariseSelectedSources(selected) : summariseMicrophone(input.microphoneLabel);
+		return routesSelectedSources && input.usesDeviceMicrophone !== true
+			? summariseSelectedSources(selected)
+			: summariseMicrophone(input.microphoneLabel);
 	}
 	if (supportsWindowShareAudioScope(input)) {
 		const route = selectAppShareAudioRoute({

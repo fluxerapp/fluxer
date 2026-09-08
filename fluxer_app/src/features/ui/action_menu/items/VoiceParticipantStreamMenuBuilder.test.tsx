@@ -4,7 +4,7 @@
 import {installVoiceMenuTestBootstrap} from '@app/features/ui/action_menu/items/__fixtures__/VoiceMenuTestBootstrap';
 import type {VoiceParticipantMenuScreenShareSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import type {I18n} from '@lingui/core';
-import {expect, test, vi} from 'vitest';
+import {beforeEach, expect, test, vi} from 'vitest';
 
 vi.mock('@lingui/core/macro', () => {
 	const descriptor = (value: unknown): unknown => (typeof value === 'string' ? {message: value} : value);
@@ -38,6 +38,9 @@ vi.mock('@app/features/voice/state/StreamAudioPrefs', () => ({
 vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 	default: {showMyOwnScreenShare: false, pauseOwnScreenSharePreviewOnUnfocus: false},
 }));
+vi.mock('@app/features/voice/commands/VoiceDiagnosticsCommands', () => ({
+	copyVoiceDiagnostics: vi.fn(async () => undefined),
+}));
 vi.mock('@app/features/voice/commands/VoiceSettingsCommands', () => ({
 	update: vi.fn(),
 }));
@@ -47,6 +50,7 @@ installVoiceMenuTestBootstrap();
 const {buildVoiceParticipantStreamMenu} = await import(
 	'@app/features/ui/action_menu/items/VoiceParticipantStreamMenuBuilder'
 );
+const {copyVoiceDiagnostics} = await import('@app/features/voice/commands/VoiceDiagnosticsCommands');
 
 const i18n = {
 	locale: 'en',
@@ -56,6 +60,7 @@ const i18n = {
 interface MenuLeaf {
 	label?: string;
 	items?: Array<MenuLeaf>;
+	onClick?: () => void;
 }
 
 function streamMenu(source: VoiceParticipantMenuScreenShareSource): Array<{items: Array<MenuLeaf>}> {
@@ -99,18 +104,44 @@ const WATCHED_REMOTE_STREAM_SOURCE: VoiceParticipantMenuScreenShareSource = {
 	state: {kind: 'remote-watched', hasAudio: true, onStopWatching: () => undefined},
 };
 
+const UNWATCHED_REMOTE_STREAM_SOURCE: VoiceParticipantMenuScreenShareSource = {
+	kind: 'screen-share',
+	streamKey: 'stream-key',
+	state: {kind: 'remote-unwatched', onWatch: () => undefined},
+};
+
+beforeEach(() => {
+	vi.mocked(copyVoiceDiagnostics).mockClear();
+});
+
 test('own stream keeps a More options submenu with the screen-share preferences', () => {
 	const groups = streamMenu(OWN_STREAM_SOURCE);
 	const moreOptions = findLeaf(groups, 'More options');
 	expect(moreOptions).not.toBeNull();
 	expect(findLeaf(groups, 'Show my screen share')).not.toBeNull();
+	expect(findLeaf(groups, 'Copy stats JSON')).not.toBeNull();
 	expect(findLeaf(groups, 'Report Problem')).toBeNull();
 });
 
-test('remote watched stream omits the now-empty More options submenu and keeps audio controls', () => {
+test('remote watched stream keeps a More options submenu with the diagnostics entry and audio controls', () => {
 	const groups = streamMenu(WATCHED_REMOTE_STREAM_SOURCE);
-	expect(findLeaf(groups, 'More options')).toBeNull();
+	expect(findLeaf(groups, 'More options')).not.toBeNull();
+	expect(findLeaf(groups, 'Copy stats JSON')).not.toBeNull();
 	expect(findLeaf(groups, 'Mute')).not.toBeNull();
 	expect(findLeaf(groups, 'Stream volume')).not.toBeNull();
 	expect(findLeaf(groups, 'Report Problem')).toBeNull();
+});
+
+test('remote unwatched stream keeps the diagnostics entry', () => {
+	const groups = streamMenu(UNWATCHED_REMOTE_STREAM_SOURCE);
+	expect(findLeaf(groups, 'More options')).not.toBeNull();
+	expect(findLeaf(groups, 'Copy stats JSON')).not.toBeNull();
+});
+
+test('the diagnostics entry on a remote stream copies voice diagnostics', () => {
+	const groups = streamMenu(WATCHED_REMOTE_STREAM_SOURCE);
+	const copyStats = findLeaf(groups, 'Copy stats JSON');
+	expect(copyStats).not.toBeNull();
+	copyStats?.onClick?.();
+	expect(vi.mocked(copyVoiceDiagnostics)).toHaveBeenCalledTimes(1);
 });

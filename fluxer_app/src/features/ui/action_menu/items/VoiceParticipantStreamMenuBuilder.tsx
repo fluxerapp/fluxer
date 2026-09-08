@@ -30,9 +30,11 @@ import type {
 	MenuSliderType,
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {changeActiveScreenShare, stopActiveScreenShare} from '@app/features/voice/components/ActiveScreenShareMenu';
 import {openScreenSharePreviewPrivacyModal} from '@app/features/voice/components/modals/ScreenSharePickerModal';
+import {COPY_STATS_JSON_DESCRIPTOR} from '@app/features/voice/components/StatsForNerdsCopyDescriptors';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import PopoutWindowManager, {isVoicePopoutSupported} from '@app/features/voice/state/PopoutWindowManager';
@@ -211,28 +213,39 @@ function buildStreamPopoutAction(options: VoiceParticipantStreamMenuBuilderOptio
 
 function buildStreamMoreOptions(options: VoiceParticipantStreamMenuBuilderOptions): MenuSubmenuItemType | null {
 	const {i18n, guildId, source, showMyOwnScreenShare, pauseOwnScreenSharePreviewOnUnfocus, onClose} = options;
-	if (source.state.kind !== 'own') return null;
-	const items: Array<MenuItemType | MenuCheckboxType> = [
-		{
-			label: i18n._(SHOW_MY_SCREEN_SHARE_DESCRIPTOR),
-			checked: showMyOwnScreenShare,
-			onChange: (checked: boolean) => VoiceSettingsCommands.update({showMyOwnScreenShare: checked}),
-		},
-		{
-			label: i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR),
-			checked: pauseOwnScreenSharePreviewOnUnfocus,
-			onChange: (checked: boolean) => VoiceSettingsCommands.update({pauseOwnScreenSharePreviewOnUnfocus: checked}),
-		},
-	];
-	if (guildId === undefined) {
-		items.push({
-			label: i18n._(SCREEN_SHARE_PRIVACY_DESCRIPTOR),
-			onClick: () => {
-				onClose();
-				openScreenSharePreviewPrivacyModal();
+	const items: Array<MenuItemType | MenuCheckboxType> = [];
+	if (source.state.kind === 'own') {
+		items.push(
+			{
+				label: i18n._(SHOW_MY_SCREEN_SHARE_DESCRIPTOR),
+				checked: showMyOwnScreenShare,
+				onChange: (checked: boolean) => VoiceSettingsCommands.update({showMyOwnScreenShare: checked}),
 			},
-		});
+			{
+				label: i18n._(PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR),
+				checked: pauseOwnScreenSharePreviewOnUnfocus,
+				onChange: (checked: boolean) => VoiceSettingsCommands.update({pauseOwnScreenSharePreviewOnUnfocus: checked}),
+			},
+		);
+		if (guildId === undefined) {
+			items.push({
+				label: i18n._(SCREEN_SHARE_PRIVACY_DESCRIPTOR),
+				onClick: () => {
+					onClose();
+					openScreenSharePreviewPrivacyModal();
+				},
+			});
+		}
 	}
+	items.push({
+		label: i18n._(COPY_STATS_JSON_DESCRIPTOR),
+		onClick: () => {
+			onClose();
+			void copyVoiceDiagnostics(i18n).catch((error) => {
+				logger.error('Failed to copy voice diagnostics from participant menu', error);
+			});
+		},
+	});
 	if (items.length === 0) return null;
 	return {
 		label: i18n._(MORE_OPTIONS_DESCRIPTOR),
@@ -334,6 +347,17 @@ export const VoiceParticipantOwnStreamMenuTail: React.FC<VoiceParticipantOwnStre
 										{i18n._(SCREEN_SHARE_PRIVACY_DESCRIPTOR)}
 									</MenuItem>
 								)}
+								<MenuItem
+									onClick={() => {
+										onClose();
+										void copyVoiceDiagnostics(i18n).catch((error) => {
+											logger.error('Failed to copy voice diagnostics from participant menu', error);
+										});
+									}}
+									data-flx="ui.action-menu.items.voice-participant-stream-menu-builder.voice-participant-own-stream-menu-tail.menu-item.close--2"
+								>
+									{i18n._(COPY_STATS_JSON_DESCRIPTOR)}
+								</MenuItem>
 							</MenuGroup>
 						)}
 						data-flx="ui.action-menu.items.voice-participant-stream-menu-builder.more-options-submenu"

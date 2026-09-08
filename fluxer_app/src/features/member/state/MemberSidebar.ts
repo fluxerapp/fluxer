@@ -5,6 +5,7 @@ import Channels from '@app/features/channel/state/Channels';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import Guilds from '@app/features/guild/state/Guilds';
 import {GuildMember} from '@app/features/member/models/GuildMember';
+import GuildMembers from '@app/features/member/state/GuildMembers';
 import {getHydratedMemberListRangesFromNormalized} from '@app/features/member/utils/MemberListHydration';
 import {deriveMemberListIdentity} from '@app/features/member/utils/MemberListIdentity';
 import {
@@ -695,6 +696,7 @@ class MemberSidebar {
 			}
 			userIdRowCounts.set(userId, (userIdRowCounts.get(userId) ?? 0) + 1);
 			newMembersByUserId.set(userId, member);
+			GuildMembers.hydrateIfMissing(guildId, member);
 			const memberItem = this.convertItem(guildId, row);
 			if (memberItem) {
 				newItems.set(rowIndex, memberItem);

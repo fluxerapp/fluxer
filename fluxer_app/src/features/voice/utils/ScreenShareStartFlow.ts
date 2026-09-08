@@ -156,6 +156,7 @@ async function getManualAudioSourceSelectionInput(shareContext: StreamSettingsSh
 		nativeAudioAvailability: platform === 'linux' ? await getNativeAudioAvailabilityCached() : null,
 		audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 		selectedSourceCount: countRoutableAudioSources(),
+		usesDeviceMicrophone: VoiceSettings.getScreenShareDeviceAudioUsesMicrophone(),
 	};
 }
 

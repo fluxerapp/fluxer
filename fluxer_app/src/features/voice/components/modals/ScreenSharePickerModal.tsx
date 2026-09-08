@@ -1492,6 +1492,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 					microphoneLabel,
 					displayShareEnvironment,
 					windowAudioScope,
+					usesDeviceMicrophone: VoiceSettings.getScreenShareDeviceAudioUsesMicrophone(),
 				})
 			: activeTab === 'devices'
 				? i18n._(DEVICE_AUDIO_MUTED_DESCRIPTOR)
