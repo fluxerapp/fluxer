@@ -581,7 +581,7 @@ Default `nats://127.0.0.1:4222`. The JetStream address. Read by `api` and `worke
 
 #### `FLUXER_NATS_AUTH_TOKEN`
 
-Default empty. NATS authentication. Read by `api`, `worker`, and `gateway`. The shipped NATS runs without authentication.
+Default empty. NATS authentication. Read by `api`, `worker`, `gateway`, and the five internal services. The shipped NATS runs without authentication, and Compose forwards this name to every container that connects to it.
 
 #### `FLUXER_SVC_NATS_URL`
 

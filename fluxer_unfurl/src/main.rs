@@ -27,7 +27,8 @@ use shard_impl::UnfurlShard;
 async fn main() -> anyhow::Result<()> {
     fluxer_svc::init_tracing();
     let config = ServiceConfig::from_env()?;
-    let transport = NatsTransport::connect(&config.nats_url).await?;
+    let transport =
+        NatsTransport::connect(&config.nats_url, config.nats_auth_token.as_deref()).await?;
 
     tracing::info!(
         service = config.service_name,

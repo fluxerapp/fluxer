@@ -17,6 +17,7 @@ pub struct ServiceConfig {
     pub shard_count: u32,
     pub listen_addr: SocketAddr,
     pub nats_url: String,
+    pub nats_auth_token: Option<String>,
     pub cache_max_entries: u64,
     pub cache_ttl: Duration,
     pub cache_hard_ttl: Duration,
@@ -105,6 +106,8 @@ impl ServiceConfig {
         let nats_url = optional_from(&get, "FLUXER_SVC_NATS_URL")
             .unwrap_or_else(|| "nats://127.0.0.1:4222".to_owned());
 
+        let nats_auth_token = optional_from(&get, "FLUXER_NATS_AUTH_TOKEN");
+
         let cache_ttl_ms = optional_from(&get, "FLUXER_SVC_CACHE_TTL_MS")
             .map(|v| v.parse::<u64>())
             .transpose()?
@@ -165,6 +168,7 @@ impl ServiceConfig {
             shard_count,
             listen_addr: format!("{listen_host}:{listen_port}").parse()?,
             nats_url,
+            nats_auth_token,
             cache_max_entries: optional_from(&get, "FLUXER_SVC_CACHE_MAX_ENTRIES")
                 .map(|v| v.parse::<u64>())
                 .transpose()?

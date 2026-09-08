@@ -26,6 +26,7 @@ x-fluxer-env: &fluxer-env
   FLUXER_KV_URL: redis://valkey:6379/0
   FLUXER_NATS_URL: nats://nats:4222
   FLUXER_NATS_JETSTREAM_URL: nats://nats:4222
+  FLUXER_NATS_AUTH_TOKEN: ${FLUXER_NATS_AUTH_TOKEN:-}
   FLUXER_SVC_NATS_URL: nats://nats:4222
   FLUXER_SVC_SHARD_COUNT: "1"
 

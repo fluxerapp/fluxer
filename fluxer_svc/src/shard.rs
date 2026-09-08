@@ -417,6 +417,7 @@ mod tests {
             shard_count: 1,
             listen_addr: "127.0.0.1:0".parse().unwrap(),
             nats_url: "memory".to_owned(),
+            nats_auth_token: None,
             cache_max_entries: 100,
             cache_ttl: Duration::from_secs(30),
             cache_hard_ttl: Duration::from_secs(600),

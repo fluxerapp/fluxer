@@ -77,7 +77,7 @@ pub struct NatsMessage {
 }
 
 impl NatsTransport {
-    pub async fn connect(url: &str) -> anyhow::Result<Self> {
+    pub async fn connect(url: &str, auth_token: Option<&str>) -> anyhow::Result<Self> {
         let reconnect_notify = Arc::new(Notify::new());
 
         let event_notify = reconnect_notify.clone();
@@ -111,6 +111,11 @@ impl NatsTransport {
                 }
             }
         });
+
+        let options = match auth_token {
+            Some(token) => options.token(token.to_owned()),
+            None => options,
+        };
 
         let client = options
             .subscription_capacity(NATS_SUBSCRIPTION_CAPACITY)
