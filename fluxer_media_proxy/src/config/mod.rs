@@ -121,6 +121,10 @@ impl Config {
             !secret_key.is_empty(),
             "FLUXER_MEDIA_PROXY_SECRET_KEY is required"
         );
+        let (public_base_domain, public_port) =
+            fluxer_common::config::resolve_public_domain_and_port(|name| {
+                env.get(name).map(ToOwned::to_owned)
+            })?;
 
         Ok(Self {
             node_env: env.get("NODE_ENV").unwrap_or("development").to_owned(),
@@ -134,8 +138,15 @@ impl Config {
                 8080,
             )?,
             secret_key,
-            public_endpoint: non_empty(env.get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT"))
-                .map(|endpoint| endpoint.trim_end_matches('/').to_owned()),
+            public_endpoint: non_empty(env.get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")).map(
+                |endpoint| {
+                    fluxer_common::config::normalize_public_endpoint(
+                        endpoint.trim_end_matches('/'),
+                        &public_base_domain,
+                        public_port,
+                    )
+                },
+            ),
             mode,
             read_only: parse_bool(
                 "FLUXER_MEDIA_PROXY_READ_ONLY",

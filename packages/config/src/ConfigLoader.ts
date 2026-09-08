@@ -3,9 +3,11 @@
 import {createECDH} from 'node:crypto';
 import {buildNamedFluxerEnvOverrides} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {
+	buildUrl,
 	type DerivedEndpoints,
 	deriveEndpointsFromDomain,
 	normalizePublicEndpoint,
+	parsePublicOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 
@@ -26,6 +28,7 @@ function defaultConfig(): MasterConfig {
 		env: 'development',
 		domain: {
 			base_domain: '',
+			public_origin: '',
 			public_scheme: 'http',
 			internal_scheme: 'http',
 			public_port: 8088,
@@ -476,6 +479,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);
 	assertIntegerInRange(config.services.api.request_timeout_ms, 'FLUXER_API_REQUEST_TIMEOUT_MS', 1_000, 3_600_000);
+	assertIntegerInRange(config.domain.public_port, 'FLUXER_PUBLIC_PORT', 1, 65_535);
 	requireString(config.domain.base_domain, 'FLUXER_BASE_DOMAIN');
 	requireString(config.auth.sudo_mode_secret, 'FLUXER_SUDO_MODE_SECRET');
 	requireString(config.auth.connection_initiation_secret, 'FLUXER_CONNECTION_INITIATION_SECRET');
@@ -493,16 +497,51 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	return config;
 }
 
+function applyPublicOrigin(config: MasterConfig): MasterConfig {
+	const raw = config.domain.public_origin.trim();
+	if (raw.length === 0) {
+		return config;
+	}
+	const origin = parsePublicOrigin(raw);
+	if (!origin) {
+		throw new Error(
+			`FLUXER_PUBLIC_ORIGIN must be a scheme, host and optional port such as https://chat.example.com:8443, got ${raw}`,
+		);
+	}
+	return {
+		...config,
+		domain: {
+			...config.domain,
+			base_domain: origin.base_domain,
+			public_scheme: origin.public_scheme,
+			public_port: origin.public_port,
+		},
+	};
+}
+
 function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): MasterConfig {
 	const {base_domain, public_port} = config.domain;
 	const normalize = (url: string) => normalizePublicEndpoint(url, base_domain, public_port);
+	const normalizeOptional = (url: string | undefined) => (url === undefined ? undefined : normalize(url));
 	const normalizedEndpoints = {...endpoints};
 	for (const key of Object.keys(normalizedEndpoints) as Array<keyof DerivedEndpoints>) {
 		normalizedEndpoints[key] = normalize(normalizedEndpoints[key]);
 	}
+	const {bluesky, passkeys} = config.auth;
+	const {branding} = config.instance;
+	const {email, sms, voice} = config.integrations;
 	return {
 		...config,
+		domain: {
+			...config.domain,
+			public_origin: buildUrl(config.domain.public_scheme, base_domain, public_port),
+		},
 		endpoints: normalizedEndpoints,
+		s3: config.s3 && {...config.s3, presigned_url_base: normalizeOptional(config.s3.presigned_url_base)},
+		s3_downloads: config.s3_downloads && {
+			...config.s3_downloads,
+			presigned_url_base: normalizeOptional(config.s3_downloads.presigned_url_base),
+		},
 		services: {
 			...config.services,
 			media_proxy: {
@@ -512,12 +551,40 @@ function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): Mas
 					endpoint: normalize(config.services.media_proxy.upload_relay.endpoint),
 				},
 			},
+			gateway: {
+				...config.services.gateway,
+				media_proxy_endpoint: normalizeOptional(config.services.gateway.media_proxy_endpoint),
+			},
 		},
 		auth: {
 			...config.auth,
 			passkeys: {
-				...config.auth.passkeys,
-				additional_allowed_origins: config.auth.passkeys.additional_allowed_origins.map(normalize),
+				...passkeys,
+				additional_allowed_origins: passkeys.additional_allowed_origins.map(normalize),
+			},
+			bluesky: {
+				...bluesky,
+				client_uri: normalize(bluesky.client_uri),
+				logo_uri: normalize(bluesky.logo_uri),
+				tos_uri: normalize(bluesky.tos_uri),
+				policy_uri: normalize(bluesky.policy_uri),
+			},
+		},
+		integrations: {
+			...config.integrations,
+			email: {...email, app_base_url: normalize(email.app_base_url)},
+			sms: {...sms, inbound_webhook_public_url: normalizeOptional(sms.inbound_webhook_public_url)},
+			voice: {...voice, url: normalize(voice.url)},
+		},
+		instance: {
+			...config.instance,
+			branding: {
+				...branding,
+				icon_url: normalizeOptional(branding.icon_url),
+				symbol_url: normalizeOptional(branding.symbol_url),
+				logo_url: normalizeOptional(branding.logo_url),
+				wordmark_url: normalizeOptional(branding.wordmark_url),
+				favicon_url: normalizeOptional(branding.favicon_url),
 			},
 		},
 	};
@@ -546,7 +613,7 @@ export async function loadConfig(): Promise<MasterConfig> {
 		return cachedConfig;
 	}
 	const overrides = buildNamedFluxerEnvOverrides(process.env);
-	const merged = mergeConfig(defaultConfig(), overrides);
+	const merged = applyPublicOrigin(mergeConfig(defaultConfig(), overrides));
 	const normalized = normalizeConfig(merged);
 	const derived = deriveEndpointsFromDomain(normalized.domain);
 	const endpoints = {...derived, ...(normalized.endpoint_overrides ?? {})};

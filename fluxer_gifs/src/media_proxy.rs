@@ -90,6 +90,7 @@ mod tests {
             "FLUXER_MEDIA_PROXY_SECRET_KEY",
             "FLUXER_BASE_DOMAIN",
             "FLUXER_PUBLIC_PORT",
+            "FLUXER_PUBLIC_ORIGIN",
         ];
         let saved = keys
             .iter()

@@ -193,6 +193,61 @@ mod tests {
     }
 
     #[test]
+    fn a_non_default_public_port_reaches_the_signed_self_origin() {
+        let app = AppState::for_tests(
+            Config::load_from_iter([
+                (
+                    "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
+                    "secret".to_owned(),
+                ),
+                (
+                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),
+                    format!("{ENDPOINT}/"),
+                ),
+                (
+                    "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
+                    "local".to_owned(),
+                ),
+                (
+                    "FLUXER_BASE_DOMAIN".to_owned(),
+                    "chat.example.com".to_owned(),
+                ),
+                ("FLUXER_PUBLIC_PORT".to_owned(), "29080".to_owned()),
+            ])
+            .expect("self origin test config"),
+        );
+        let endpoint = app
+            .cfg
+            .public_endpoint
+            .clone()
+            .expect("a public endpoint is configured");
+        assert_eq!("https://chat.example.com:29080/media", endpoint);
+        let target = "https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp";
+        let proxied = fluxer_common::external_media_path::build_external_media_proxy_url(
+            &endpoint,
+            target,
+            app.cfg.secret_key.as_bytes(),
+        )
+        .expect("proxy url");
+        match resolve(&app, &proxied) {
+            Some(SelfOrigin::External { url }) => assert_eq!(target, url),
+            _ => panic!("its own signed url resolves to the origin url"),
+        }
+        match resolve(
+            &app,
+            &format!("{endpoint}/attachments/1544725486800732163/1544971349200470016/cat.gif"),
+        ) {
+            Some(SelfOrigin::Stored { key, .. }) => assert_eq!(
+                "attachments/1544725486800732163/1544971349200470016/cat.gif",
+                key
+            ),
+            _ => panic!("its own attachment paths resolve to stored objects"),
+        }
+        assert!(resolve(&app, "https://cdn.other.example/avatars/1/abc.png").is_none());
+        assert!(resolve(&app, &format!("{ENDPOINT}/avatars/1/abc.png")).is_none());
+    }
+
+    #[test]
     fn own_path_matches_the_endpoint_prefix() {
         assert_eq!(
             own_path(

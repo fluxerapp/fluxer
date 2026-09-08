@@ -646,4 +646,183 @@ describe('ConfigLoader', () => {
 		vi.stubEnv('FLUXER_ENV', 'test');
 		await expect(loadConfig()).rejects.toThrow();
 	});
+
+	test('inserts the public port into the LiveKit url', async () => {
+		stubMinimalEnv({FLUXER_LIVEKIT_URL: 'http://localhost/livekit'});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.voice.url).toBe('http://localhost:8088/livekit');
+	});
+
+	test('inserts the public port into every other public url the config carries', async () => {
+		stubMinimalEnv({
+			FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://localhost/media',
+			FLUXER_S3_PUBLIC_ENDPOINT: 'http://localhost/s3',
+			FLUXER_EMAIL_APP_BASE_URL: 'http://localhost',
+			FLUXER_SMS_INBOUND_WEBHOOK_PUBLIC_URL: 'http://localhost/webhooks/sms',
+			FLUXER_AUTH_BLUESKY_CLIENT_URI: 'http://localhost',
+			FLUXER_AUTH_BLUESKY_TOS_URI: 'http://localhost/terms',
+			FLUXER_APP_ICON_URL: 'http://localhost/icon.png',
+			FLUXER_LIVEKIT_INTERNAL_URL: 'http://livekit:7880',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.services.gateway.media_proxy_endpoint).toBe('http://localhost:8088/media');
+		expect(config.s3?.presigned_url_base).toBe('http://localhost:8088/s3');
+		expect(config.integrations.email.app_base_url).toBe('http://localhost:8088');
+		expect(config.integrations.sms.inbound_webhook_public_url).toBe('http://localhost:8088/webhooks/sms');
+		expect(config.auth.bluesky.client_uri).toBe('http://localhost:8088');
+		expect(config.auth.bluesky.tos_uri).toBe('http://localhost:8088/terms');
+		expect(config.instance.branding.icon_url).toBe('http://localhost:8088/icon.png');
+		expect(config.integrations.voice.internal_url).toBe('http://livekit:7880');
+	});
+
+	test('rejects a public port outside the valid range', async () => {
+		stubMinimalEnv({FLUXER_PUBLIC_PORT: '70000'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_PUBLIC_PORT must be an integer between 1 and 65535');
+	});
+});
+
+describe('FLUXER_PUBLIC_ORIGIN', () => {
+	beforeEach(() => {
+		resetConfig();
+		clearFluxerEnv();
+	});
+
+	afterEach(() => {
+		resetConfig();
+		vi.unstubAllEnvs();
+	});
+
+	test('a ported origin ports every derived endpoint and every compose override', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '',
+			FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com:29080',
+			FLUXER_MARKETING_ENDPOINT: 'https://chat.example.com:29080',
+			FLUXER_MEDIA_ENDPOINT: 'https://chat.example.com:29080/media',
+			FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: 'https://chat.example.com:29080/media',
+			FLUXER_LIVEKIT_URL: 'https://chat.example.com:29080/livekit',
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: 'https://chat.example.com:29080',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.domain.public_port).toBe(29080);
+		expect(config.domain.public_origin).toBe('https://chat.example.com:29080');
+		expect(config.endpoints.api_client).toBe('https://chat.example.com:29080/api');
+		expect(config.endpoints.app).toBe('https://chat.example.com:29080');
+		expect(config.endpoints.gateway).toBe('wss://chat.example.com:29080/gateway');
+		expect(config.endpoints.admin).toBe('https://chat.example.com:29080/admin');
+		expect(config.endpoints.marketing).toBe('https://chat.example.com:29080');
+		expect(config.endpoints.media).toBe('https://chat.example.com:29080/media');
+		expect(config.services.media_proxy.upload_relay.endpoint).toBe('https://chat.example.com:29080/media');
+		expect(config.integrations.voice.url).toBe('https://chat.example.com:29080/livekit');
+		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['https://chat.example.com:29080']);
+	});
+
+	test('the origin port wins over a FLUXER_PUBLIC_PORT that disagrees', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '443',
+			FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com:29080',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.domain.public_port).toBe(29080);
+		expect(config.endpoints.app).toBe('https://chat.example.com:29080');
+		expect(config.endpoints.api_client).toBe('https://chat.example.com:29080/api');
+		expect(config.endpoints.gateway).toBe('wss://chat.example.com:29080/gateway');
+		expect(config.endpoints.admin).toBe('https://chat.example.com:29080/admin');
+	});
+
+	test('accepts an origin whose port matches FLUXER_PUBLIC_PORT', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '29080',
+			FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com:29080',
+		});
+
+		expect((await loadConfig()).endpoints.gateway).toBe('wss://chat.example.com:29080/gateway');
+	});
+
+	test('normalizes an origin written with an explicit default port', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '443',
+			FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com:443',
+			FLUXER_ADMIN_ENDPOINT: 'https://chat.example.com/admin',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.domain.public_port).toBe(443);
+		expect(config.domain.public_origin).toBe('https://chat.example.com');
+		expect(config.endpoints.admin).toBe('https://chat.example.com/admin');
+		expect(config.endpoints.app).toBe('https://chat.example.com');
+		expect(config.endpoints.gateway).toBe('wss://chat.example.com/gateway');
+	});
+
+	test('takes the scheme and the domain from the origin when neither is set', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: '',
+			FLUXER_PUBLIC_SCHEME: '',
+			FLUXER_PUBLIC_PORT: '',
+			FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com:29080',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.domain.base_domain).toBe('chat.example.com');
+		expect(config.domain.public_scheme).toBe('https');
+		expect(config.domain.public_port).toBe(29080);
+	});
+
+	test('the origin scheme wins over a FLUXER_PUBLIC_SCHEME that disagrees', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'http',
+			FLUXER_PUBLIC_PORT: '',
+			FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.domain.public_scheme).toBe('https');
+		expect(config.endpoints.app).toBe('https://chat.example.com');
+		expect(config.endpoints.gateway).toBe('wss://chat.example.com/gateway');
+	});
+
+	test('the origin host wins over a FLUXER_BASE_DOMAIN that disagrees', async () => {
+		stubMinimalEnv({
+			FLUXER_BASE_DOMAIN: 'chat.example.com',
+			FLUXER_PUBLIC_SCHEME: 'https',
+			FLUXER_PUBLIC_PORT: '',
+			FLUXER_PUBLIC_ORIGIN: 'https://other.example.com',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.domain.base_domain).toBe('other.example.com');
+		expect(config.endpoints.app).toBe('https://other.example.com');
+	});
+
+	test('refuses to boot on an origin that is not a bare origin', async () => {
+		stubMinimalEnv({FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com/app'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_PUBLIC_ORIGIN must be a scheme, host and optional port such as https://chat.example.com:8443, got https://chat.example.com/app',
+		);
+	});
+
+	test('leaves the derived origin canonical when nothing is set', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).domain.public_origin).toBe('http://localhost:8088');
+	});
 });

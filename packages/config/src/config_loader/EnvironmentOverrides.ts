@@ -14,6 +14,7 @@ interface NamedEnvOverride {
 const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_ENV: {path: ['env']},
 	FLUXER_BASE_DOMAIN: {path: ['domain', 'base_domain']},
+	FLUXER_PUBLIC_ORIGIN: {path: ['domain', 'public_origin']},
 	FLUXER_PUBLIC_SCHEME: {path: ['domain', 'public_scheme']},
 	FLUXER_INTERNAL_SCHEME: {path: ['domain', 'internal_scheme']},
 	FLUXER_PUBLIC_PORT: {path: ['domain', 'public_port'], parse: parseInteger},

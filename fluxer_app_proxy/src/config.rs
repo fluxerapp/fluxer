@@ -547,23 +547,26 @@ fn resolve_time_freeze_enabled_from_env() -> bool {
 
 fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
     resolve_bootstrap_api_public_endpoint(|name| env::var(name).ok())
+        .unwrap_or_else(|error| panic!("{error}"))
 }
 
-fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> Option<String>
+fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> anyhow::Result<Option<String>>
 where
     F: FnMut(&str) -> Option<String>,
 {
-    let endpoint = read_var("PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT")
+    let (base_domain, public_port) = cfg::resolve_public_domain_and_port(&mut read_var)?;
+    let Some(endpoint) = read_var("PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT")
         .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())?;
-    let base_domain = read_var("FLUXER_BASE_DOMAIN").unwrap_or_default();
-    let public_port = read_var("FLUXER_PUBLIC_PORT").and_then(|port| port.trim().parse().ok());
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(None);
+    };
 
-    Some(cfg::normalize_public_endpoint(
+    Ok(Some(cfg::normalize_public_endpoint(
         &endpoint,
         &base_domain,
         public_port,
-    ))
+    )))
 }
 
 fn resolve_time_freeze_enabled<F>(mut read_var: F) -> bool
@@ -635,6 +638,12 @@ mod tests {
     }
 
     fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
+        try_resolve_bootstrap_endpoint_from_pairs(pairs).expect("the boot html endpoint resolves")
+    }
+
+    fn try_resolve_bootstrap_endpoint_from_pairs(
+        pairs: &[(&str, &str)],
+    ) -> anyhow::Result<Option<String>> {
         let env: HashMap<&str, &str> = pairs.iter().copied().collect();
         resolve_bootstrap_api_public_endpoint(|name| env.get(name).map(|value| value.to_string()))
     }
@@ -694,6 +703,49 @@ mod tests {
             Some("http://fluxer.example/api".to_owned())
         );
         assert_eq!(resolve_bootstrap_endpoint_from_pairs(&[]), None);
+    }
+
+    #[test]
+    fn the_public_origin_supplies_the_boot_html_port() {
+        assert_eq!(
+            resolve_bootstrap_endpoint_from_pairs(&[
+                (
+                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                    "https://fluxer.example/api",
+                ),
+                ("FLUXER_PUBLIC_ORIGIN", "https://fluxer.example:19080"),
+                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+                ("FLUXER_PUBLIC_PORT", "443"),
+            ]),
+            Some("https://fluxer.example:19080/api".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_malformed_public_port_is_loud() {
+        let error = try_resolve_bootstrap_endpoint_from_pairs(&[
+            (
+                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                "http://fluxer.example/api",
+            ),
+            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+            ("FLUXER_PUBLIC_PORT", "not-a-port"),
+        ])
+        .expect_err("a malformed port is refused");
+        assert!(error.to_string().contains("FLUXER_PUBLIC_PORT"));
+    }
+
+    #[test]
+    fn a_malformed_public_origin_is_loud() {
+        let error = try_resolve_bootstrap_endpoint_from_pairs(&[
+            (
+                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                "http://fluxer.example/api",
+            ),
+            ("FLUXER_PUBLIC_ORIGIN", "fluxer.example:19080"),
+        ])
+        .expect_err("a malformed origin is refused");
+        assert!(error.to_string().contains("FLUXER_PUBLIC_ORIGIN"));
     }
 
     #[test]

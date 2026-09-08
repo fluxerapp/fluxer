@@ -20,6 +20,7 @@ export interface MasterConfig {
 	env: RuntimeEnv;
 	domain: {
 		base_domain: string;
+		public_origin: string;
 		public_scheme: PublicScheme;
 		internal_scheme: PublicScheme;
 		public_port: number;
