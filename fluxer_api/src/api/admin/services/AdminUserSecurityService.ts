@@ -45,6 +45,7 @@ import {Logger} from '../../Logger';
 import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import type {IRiskHistoryRepository} from '../../risk/HistoricalOutcomeRepository';
 import type {HistoricalOutcomeCode} from '../../risk/RiskHistoryTypes';
+import {resolveAssignedTraits} from '../../user/UserTraits';
 import {getIpAddressReverse, getLocationLabelFromIp} from '../../utils/IpUtils';
 import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
 import {mapUserToAdminResponse} from '../models/UserTypes';
@@ -383,7 +384,8 @@ export class AdminUserSecurityService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const traitSet = data.traits.length > 0 ? new Set(data.traits) : null;
+		const assigned = resolveAssignedTraits(user.traits ?? [], data.traits);
+		const traitSet = assigned.size > 0 ? assigned : null;
 		const updatedUser = await userRepository.patchUpsert(
 			userId,
 			{
