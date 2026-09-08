@@ -111,7 +111,7 @@ One issued download URL and its stated expiry.
 
 <sup>2</sup> Exactly seven days after issuance, even when the archive's own deadline falls earlier
 
-Each response mints a URL, and a later call invalidates no earlier one. A URL pointing at [Download data harvest archive](#download-data-harvest-archive) still stops resolving at the archive's own deadline, so its stated expiry can outlast the point at which it stops working.
+A URL pointing at [Download data harvest archive](#download-data-harvest-archive) still stops resolving at the archive's own deadline, so its stated expiry can outlast the point at which it stops working.
 
 :::note[An issued URL has its own seven day validity]
 A presigned object storage URL, the default form, is never rechecked against the harvest record, so one issued shortly before the deadline keeps working past it. The signed token form rechecks the deadline.

@@ -142,8 +142,6 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 
 <sup>1</sup> A full queue rejects the job, which surfaces as `INTERNAL_SERVER_ERROR`
 
-The 200 confirms that the job was queued. [Get job](/admin-api/jobs/#get-job) reports whether its mutations completed.
-
 ### Side effects
 
 This operation writes no Admin audit entry. It records one [Jobs](/admin-api/jobs/) ledger row naming the acting Admin as the requester and storing the audit reason, then enqueues the worker task. When the ledger row cannot be written, Fluxer returns 500 `INTERNAL_SERVER_ERROR` and enqueues nothing.

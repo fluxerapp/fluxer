@@ -132,7 +132,7 @@ Encoder effort defaults to 2 for animated output or `low` quality and 4 otherwis
 
 An owner-and-hash asset whose hash begins with `a_` requests animated output by default, and a bare hash requests static output by default. The prefix is stripped from the storage key, so both spellings read the same stored object.
 
-The `animated` parameter overrides that default in both directions. It is read whenever the name is present and is true only for case-insensitive `true` or the exact value `1`, so `animated=false` forces static output even for an `a_` hash. Omitting the name keeps the route default.
+The `animated` parameter overrides that default in both directions. It is read whenever the name is present, so `animated=false` forces static output even for an `a_` hash. Omitting the name keeps the route default.
 
 Fluxer issues emoji and sticker paths without an `a_` prefix, so those requests default to static output and need `animated=true` for animation. An attachment or signed external request also defaults to static output.
 

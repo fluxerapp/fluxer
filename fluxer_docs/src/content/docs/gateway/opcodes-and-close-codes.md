@@ -76,8 +76,6 @@ Fluxer resolves an inbound payload in this order.
 A client that receives an unknown opcode SHOULD log it and ignore the frame. It MUST NOT close or reconnect solely because the server used an opcode newer than this registry.
 :::
 
-See [Client commands](/gateway/commands/) for field tables, validation bounds, examples, and results.
-
 ## Close codes
 
 | Code | Name | Meaning |

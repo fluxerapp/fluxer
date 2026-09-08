@@ -440,7 +440,7 @@ Sets the member list position of one or more roles and returns 204 with an empty
 - The caller needs [hierarchy authority](#role-hierarchy) over every named role.
 - The everyone role cannot receive a hoist position.
 
-A hoist position orders the separately displayed member list groups and is independent of the permission hierarchy. A role with no hoist position is ordered by its hierarchy `position` instead. The operation holds a guild-wide lock, so a concurrent hoist position write on the same guild returns 423 `GENERAL_ERROR`.
+A hoist position orders the separately displayed member list groups and is independent of the permission hierarchy. The operation holds a guild-wide lock, so a concurrent hoist position write on the same guild returns 423 `GENERAL_ERROR`.
 
 ### Path parameters
 

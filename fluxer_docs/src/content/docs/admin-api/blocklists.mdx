@@ -214,7 +214,7 @@ A value can be blocked with no row of its own, as a single address covered by a 
 
 ## Blocklist entry creation object
 
-The body of [Add blocklist entry](#add-blocklist-entry) is a union resolved by the `list_type` path segment. The field that has the value differs per blocklist, and two of the nine take an array, so one request can add up to 1000 avatar hashes or profile substrings. Supplying a field the selected blocklist does not accept is not an error. Fluxer strips the unrecognised key.
+The body of [Add blocklist entry](#add-blocklist-entry) is a union resolved by the `list_type` path segment. The field that has the value differs per blocklist, and two of the nine take an array, so one request can add up to 1000 avatar hashes or profile substrings.
 
 ### Value field
 
@@ -269,7 +269,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 
 Returns one [blocklist](#blocklist-object) object for every blocklist this instance maintains. Requires any one of the nine `check` permissions.
 
-The response is identical for every Admin and does not change when entries are added or removed.
+The response is identical for every Admin.
 
 ### Response body
 

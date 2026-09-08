@@ -205,8 +205,6 @@ Fetches an absolute media URL, stores a durable Fluxer copy, and returns the cre
 
 The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot, then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. Where the segment normalises to nothing, or to only dots and underscores, the filename is `unnamed`. The extension is `bin` when the content type maps to none.
 
-The stored `gif_provider` is always the configured provider's own name, so new provider GIFs are sourced from KLIPY even when the request names another provider.
-
 Fluxer fetches the asset and resolves its metadata before it stores anything. A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. When the request resolves to a provider GIF, the provider's canonical share URL is unfurled and the video content hash it reports replaces the fetched hash for [deduplication](#deduplication).
 
 ### Response

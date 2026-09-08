@@ -191,4 +191,4 @@ When `download` resolves to true and the served media type has a canonical exten
 The attachment, image asset, and signed external routes rasterise SVG to WebP, so a browser does not execute the document in the Media Proxy origin.
 :::
 
-On a non-transforming attachment read, only an `mp` endpoint rasterises SVG, and that path always uses lossless WebP. A transforming request uses the `format` and `quality` it was given, and an image asset path defaults to `high`. A `static` mode endpoint serves the original bytes.
+On a non-transforming attachment read, an `mp` endpoint rasterises SVG to lossless WebP. A transforming request uses the `format` and `quality` it was given, and an image asset path defaults to `high`. A `static` mode endpoint serves the original bytes.

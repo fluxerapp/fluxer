@@ -260,7 +260,7 @@ Returns a page of [Admin report](#admin-report-object) objects without message c
 
 The operation has two branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
 
-The branches default `status` differently. The status-only branch defaults to PENDING, so a request with no query string returns pending reports only. The search branch applies no status filter when `status` is omitted. `sort_by` and `sort_order` reach the search branch only. The status-only branch always orders by `reported_at` descending.
+The status-only branch defaults to PENDING, so a request with no query string returns pending reports only. The search branch applies no status filter when `status` is omitted. `sort_by` and `sort_order` reach the search branch only. The status-only branch always orders by `reported_at` descending.
 
 An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on both branches.
 

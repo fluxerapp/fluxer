@@ -248,7 +248,7 @@ Every field is optional, though the default `current` scope requires a context. 
 
 A `current` guild context rejects a requested channel outside that guild with 400 and the field code [ALL_CHANNELS_MUST_BELONG_TO_GUILD](/http-api/errors/). It rejects a channel inside the guild that the caller cannot read with 403 `MISSING_PERMISSIONS`. Every other scope rejects a requested channel its resolved set does not already contain with 403 `MISSING_PERMISSIONS`. Use `exclude_channel_id` to remove a channel.
 
-Fluxer compares `attachment_extension` without lowercasing it, so an uppercase value never matches. `include_nsfw` gates which channels a resolved scope keeps, and a single channel context ignores it.
+Fluxer compares `attachment_extension` without lowercasing it, so an uppercase value never matches. `include_nsfw` gates which channels a resolved scope keeps.
 
 :::caution[One stale hit re-reads the whole result set]
 The operation walks the set from the first page to skip stale hits, so a deep offset page costs proportionally more and returns no cursor.

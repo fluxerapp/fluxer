@@ -46,7 +46,7 @@ A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_O
 
 An undefined bit never fails the authority comparison described by [Create guild channel](#create-guild-channel). It is stored as supplied and echoed back by every later read of the channel.
 
-A denied bit is never compared against the caller's own permissions. A bit set in both masks resolves to an allow during [permission computation](/http-api/permissions/#permission-computation).
+A bit set in both masks resolves to an allow during [permission computation](/http-api/permissions/#permission-computation).
 
 ### Example
 

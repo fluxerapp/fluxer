@@ -48,7 +48,7 @@ Fluxer appends no query string, so a client appends the [connection parameters](
 [Identify](/gateway/commands/#identify) accepts a `shard` pair whose `shard_count` element is from 1 through 16,384 under the [sharding](/gateway/overview/#sharding) contract, whatever `shards` reports. A bot session whose shard is assigned more than 2,500 guilds closes with `4011`, and the bot must shard further. A user session is never checked against the guild ceiling.
 
 :::note[The response is currently static]
-Fluxer resolves only `url` from deployment configuration. `shards` and `session_start_limit` are fixed values that do not track the bot's guild count. Starting a session decrements neither value.
+Fluxer resolves only `url` from deployment configuration. `shards` and `session_start_limit` are fixed values that do not track the bot's guild count.
 :::
 
 ## Session start limit object

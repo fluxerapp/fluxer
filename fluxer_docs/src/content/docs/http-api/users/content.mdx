@@ -357,7 +357,7 @@ On completion the system account sends the caller a direct message in the accoun
 
 Schedules deletion of every message the caller has ever sent. Returns 204 with an empty body. Emits a [User Update](/gateway/events/#user-update) Gateway event.
 
-The request requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](#delete-current-users-messages) is the immediate counterpart and takes a filter. This form takes none and waits a day, so the caller can change their mind.
+The request requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](#delete-current-users-messages) is the immediate counterpart and takes a filter. This form takes none and waits a day.
 
 Calling the operation again replaces the pending schedule. The account holds at most one pending deletion, reported by the [pending bulk message deletion object](/http-api/users/#pending-bulk-message-deletion-object) on the [user object](/http-api/users/#user-object).
 
