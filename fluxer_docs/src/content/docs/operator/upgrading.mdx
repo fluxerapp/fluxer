@@ -225,7 +225,9 @@ FLUXER_S3_REGION=eu-central-1
 FLUXER_S3_FORCE_PATH_STYLE=false
 ```
 
-`FLUXER_S3_PUBLIC_ENDPOINT` follows `FLUXER_S3_ENDPOINT` when it is not set on its own, and the credentials stay `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`.
+`FLUXER_S3_PUBLIC_ENDPOINT` follows `FLUXER_S3_ENDPOINT` when it is not set on its own, and the credentials stay `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`. `FLUXER_S3_BUCKET_CDN`, `FLUXER_S3_BUCKET_UPLOADS`, `FLUXER_S3_BUCKET_DOWNLOADS`, `FLUXER_S3_BUCKET_REPORTS` and `FLUXER_S3_BUCKET_HARVESTS` name the five buckets. The bundled object store creates whichever names they hold, and a store outside the stack needs those buckets to exist already.
+
+`FLUXER_KV_URL`, `FLUXER_NATS_URL`, `FLUXER_SEARCH_URL` and `FLUXER_LIVEKIT_INTERNAL_URL` move the other four bundled services the same way, and `FLUXER_NATS_JETSTREAM_URL` and `FLUXER_SVC_NATS_URL` follow `FLUXER_NATS_URL` when they are not set on their own.
 
 Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. Take it out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
 
