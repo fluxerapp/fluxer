@@ -194,6 +194,32 @@ should_receive_event_passive_message_user_mentioned_test() ->
     ),
     ok.
 
+should_receive_event_passive_message_update_user_mentioned_test() ->
+    SessionData = #{user_id => 1, active_guilds => sets:new(), user_roles => []},
+    EventData = #{
+        <<"mentions">> => [#{<<"id">> => <<"1">>}],
+        <<"mention_roles">> => [],
+        <<"mention_everyone">> => false
+    },
+    State = #{member_count => 300},
+    ?assertEqual(
+        true,
+        session_passive:should_receive_event(message_update, EventData, 123, SessionData, State)
+    ),
+    ok.
+
+should_receive_event_passive_message_update_not_mentioned_test() ->
+    SessionData = #{user_id => 1, active_guilds => sets:new(), user_roles => []},
+    EventData = #{
+        <<"mentions">> => [], <<"mention_roles">> => [], <<"mention_everyone">> => false
+    },
+    State = #{member_count => 300},
+    ?assertEqual(
+        false,
+        session_passive:should_receive_event(message_update, EventData, 123, SessionData, State)
+    ),
+    ok.
+
 should_receive_event_passive_message_mention_everyone_test() ->
     SessionData = #{user_id => 1, active_guilds => sets:new(), user_roles => []},
     EventData = #{

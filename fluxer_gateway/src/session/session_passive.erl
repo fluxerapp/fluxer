@@ -145,6 +145,8 @@ should_passive_receive(message_create, EventData, SessionData) ->
         false ->
             false
     end;
+should_passive_receive(message_update, EventData, SessionData) ->
+    is_user_mentioned(EventData, SessionData);
 should_passive_receive(guild_delete, _EventData, _SessionData) ->
     true;
 should_passive_receive(guild_member_update, EventData, SessionData) ->
