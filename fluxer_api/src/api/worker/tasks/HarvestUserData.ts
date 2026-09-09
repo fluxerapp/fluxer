@@ -171,6 +171,10 @@ interface ArchiveResult {
 	downloadUrl: string;
 }
 
+// A harvest is every message the account wrote, so the read pages to the end of
+// the account rather than stopping at a count. The page size is what bounds one
+// query, not what bounds the archive.
+const HARVEST_MESSAGE_CHUNK_SIZE = 1000;
 const CONCURRENT_MESSAGE_LIMIT = 10;
 const INITIAL_PROGRESS = 5;
 const MESSAGES_PROGRESS_MAX = 55;
@@ -231,6 +235,7 @@ async function harvestMessages(
 		listMessagesByAuthor: (
 			userId: UserID,
 			limit: number,
+			lastMessageId?: MessageID,
 		) => Promise<
 			Array<{
 				channelId: ChannelID;
@@ -252,7 +257,19 @@ async function harvestMessages(
 	const channelMessagesMap = new Map<string, Array<HarvestedMessage>>();
 	Logger.debug('Fetching all user messages');
 	const startFetchTime = Date.now();
-	const messageRefs = await channelRepository.listMessagesByAuthor(userId, 100000);
+	const messageRefs: Array<{channelId: ChannelID; messageId: MessageID}> = [];
+	let lastMessageId: MessageID | undefined;
+	while (true) {
+		const page = await channelRepository.listMessagesByAuthor(userId, HARVEST_MESSAGE_CHUNK_SIZE, lastMessageId);
+		if (page.length === 0) {
+			break;
+		}
+		messageRefs.push(...page);
+		lastMessageId = page[page.length - 1].messageId;
+		if (page.length < HARVEST_MESSAGE_CHUNK_SIZE) {
+			break;
+		}
+	}
 	Logger.debug(
 		{
 			totalMessages: messageRefs.length,

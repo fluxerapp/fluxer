@@ -191,7 +191,7 @@ Fluxer prepares the archive in the background. It contains:
 
 Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
 
-At most 100,000 authored messages are collected. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued.
+Every authored message is collected, with no ceiling on the count. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued.
 
 ### Rate limit
 
