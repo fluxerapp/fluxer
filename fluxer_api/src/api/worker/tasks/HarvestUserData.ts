@@ -230,7 +230,7 @@ interface HarvestMessagesFilterArgs {
 	findChannel: (channelId: ChannelID) => Promise<Channel | null>;
 }
 
-async function harvestMessages(
+export async function harvestMessages(
 	channelRepository: {
 		listMessagesByAuthor: (
 			userId: UserID,
@@ -255,36 +255,78 @@ async function harvestMessages(
 	filterArgs: HarvestMessagesFilterArgs | null,
 ): Promise<HarvestMessageResult> {
 	const channelMessagesMap = new Map<string, Array<HarvestedMessage>>();
+	const channelEligibility = filterArgs ? new Map<string, boolean>() : null;
 	Logger.debug('Fetching all user messages');
 	const startFetchTime = Date.now();
-	const messageRefs: Array<{channelId: ChannelID; messageId: MessageID}> = [];
 	let lastMessageId: MessageID | undefined;
+	let scannedMessages = 0;
+	let totalMessages = 0;
+
+	const readMessage = async ({
+		channelId,
+		messageId,
+	}: {
+		channelId: ChannelID;
+		messageId: MessageID;
+	}): Promise<ChannelHarvestResult | null> => {
+		try {
+			const message = await channelRepository.getMessage(channelId, messageId);
+			if (!message) {
+				Logger.warn(
+					{channelId: channelId.toString(), messageId: messageId.toString()},
+					'Message not found during harvest',
+				);
+				return null;
+			}
+			const timestamp = snowflakeToDate(messageId);
+			const attachments: Array<HarvestedAttachment> = [];
+			if (message.attachments) {
+				for (const attachment of message.attachments) {
+					attachments.push({
+						attachment_id: attachment.id.toString(),
+						filename: attachment.filename,
+						size: attachment.size.toString(),
+						content_type: attachment.contentType,
+						content_hash: null,
+						archive_path: null,
+						cdn_url: makeAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
+						width: attachment.width,
+						height: attachment.height,
+					});
+				}
+			}
+			return {
+				channelId: channelId.toString(),
+				messageData: {
+					id: messageId.toString(),
+					timestamp: timestamp.toISOString(),
+					content: message.content ?? '',
+					attachments,
+				},
+			};
+		} catch (error) {
+			Logger.error(
+				{error, channelId: channelId.toString(), messageId: messageId.toString()},
+				'Failed to process message during harvest',
+			);
+			return null;
+		}
+	};
+
 	while (true) {
 		const page = await channelRepository.listMessagesByAuthor(userId, HARVEST_MESSAGE_CHUNK_SIZE, lastMessageId);
 		if (page.length === 0) {
 			break;
 		}
-		messageRefs.push(...page);
+		scannedMessages += page.length;
 		lastMessageId = page[page.length - 1].messageId;
-		if (page.length < HARVEST_MESSAGE_CHUNK_SIZE) {
-			break;
-		}
-	}
-	Logger.debug(
-		{
-			totalMessages: messageRefs.length,
-			fetchElapsed: Date.now() - startFetchTime,
-			totalElapsed: Date.now() - startTime,
-		},
-		'All messages retrieved',
-	);
-	if (messageRefs.length === 0) {
-		return {channelMessagesMap, totalMessages: 0};
-	}
-	const channelEligibility = filterArgs ? new Map<string, boolean>() : null;
-	const filteredRefs: Array<{channelId: ChannelID; messageId: MessageID}> = [];
-	if (filterArgs) {
-		for (const ref of messageRefs) {
+
+		const pageRefs: Array<{channelId: ChannelID; messageId: MessageID}> = [];
+		for (const ref of page) {
+			if (!filterArgs) {
+				pageRefs.push(ref);
+				continue;
+			}
 			const ts = snowflakeToDate(ref.messageId).getTime();
 			if (!isTimestampInWindow(ts, filterArgs.filter)) {
 				continue;
@@ -297,76 +339,41 @@ async function harvestMessages(
 				channelEligibility!.set(channelIdStr, eligible);
 			}
 			if (eligible) {
-				filteredRefs.push(ref);
+				pageRefs.push(ref);
 			}
 		}
-	} else {
-		filteredRefs.push(...messageRefs);
-	}
-	if (filteredRefs.length === 0) {
-		return {channelMessagesMap, totalMessages: 0};
-	}
-	const messages: Array<ChannelHarvestResult> = [];
-	for (let i = 0; i < filteredRefs.length; i += CONCURRENT_MESSAGE_LIMIT) {
-		const batch = filteredRefs.slice(i, i + CONCURRENT_MESSAGE_LIMIT);
-		const batchPromises = batch.map(async ({channelId, messageId}): Promise<ChannelHarvestResult | null> => {
-			try {
-				const message = await channelRepository.getMessage(channelId, messageId);
-				if (!message) {
-					Logger.warn(
-						{channelId: channelId.toString(), messageId: messageId.toString()},
-						'Message not found during harvest',
-					);
-					return null;
+
+		for (let i = 0; i < pageRefs.length; i += CONCURRENT_MESSAGE_LIMIT) {
+			const batchResults = await Promise.all(pageRefs.slice(i, i + CONCURRENT_MESSAGE_LIMIT).map(readMessage));
+			for (const result of batchResults) {
+				if (result === null) {
+					continue;
 				}
-				const timestamp = snowflakeToDate(messageId);
-				const attachments: Array<HarvestedAttachment> = [];
-				if (message.attachments) {
-					for (const attachment of message.attachments) {
-						attachments.push({
-							attachment_id: attachment.id.toString(),
-							filename: attachment.filename,
-							size: attachment.size.toString(),
-							content_type: attachment.contentType,
-							content_hash: null,
-							archive_path: null,
-							cdn_url: makeAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
-							width: attachment.width,
-							height: attachment.height,
-						});
-					}
+				let bucket = channelMessagesMap.get(result.channelId);
+				if (!bucket) {
+					bucket = [];
+					channelMessagesMap.set(result.channelId, bucket);
 				}
-				return {
-					channelId: channelId.toString(),
-					messageData: {
-						id: messageId.toString(),
-						timestamp: timestamp.toISOString(),
-						content: message.content ?? '',
-						attachments,
-					},
-				};
-			} catch (error) {
-				Logger.error(
-					{error, channelId: channelId.toString(), messageId: messageId.toString()},
-					'Failed to process message during harvest',
-				);
-				return null;
-			}
-		});
-		const batchResults = await Promise.all(batchPromises);
-		for (const result of batchResults) {
-			if (result !== null) {
-				messages.push(result);
+				bucket.push(result.messageData);
+				totalMessages++;
 			}
 		}
-	}
-	for (const {channelId, messageData} of messages) {
-		if (!channelMessagesMap.has(channelId)) {
-			channelMessagesMap.set(channelId, []);
+
+		if (page.length < HARVEST_MESSAGE_CHUNK_SIZE) {
+			break;
 		}
-		channelMessagesMap.get(channelId)!.push(messageData);
 	}
-	return {channelMessagesMap, totalMessages: messages.length};
+
+	Logger.debug(
+		{
+			scannedMessages,
+			totalMessages,
+			fetchElapsed: Date.now() - startFetchTime,
+			totalElapsed: Date.now() - startTime,
+		},
+		'All messages retrieved',
+	);
+	return {channelMessagesMap, totalMessages};
 }
 
 function buildUserDataJson(params: UserDataJsonParams) {
