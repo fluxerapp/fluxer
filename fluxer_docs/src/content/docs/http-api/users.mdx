@@ -75,7 +75,7 @@ A system account never receives the deleted representation. An account only sche
 
 ## Reply mention preferences
 
-The account-wide preference applied when another account replies to one of this account's messages. `mention_flags` is exactly one of the values below, and it is omitted from a serialised user while the stored value is `NO_PREFERENCE`.
+The account-wide preference applied when another account replies to one of this account's messages. `mention_flags` is exactly one of the values below. It is omitted from a serialised user while the stored value is `NO_PREFERENCE`.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -87,7 +87,7 @@ A guild member has the same enumeration in its own `mention_flags`, where `NO_PR
 
 ## User object
 
-The private representation of the current account, returned by [Get current user](/http-api/users/current-user/#get-current-user) and by every operation that mutates the account. It extends the [partial user object](#partial-user-object).
+The private representation of the current account, returned by [Get current user](/http-api/users/current-user/#get-current-user) and by every operation that changes the account. It extends the [partial user object](#partial-user-object).
 
 ### Structure
 
@@ -128,10 +128,10 @@ The private representation of the current account, returned by [Get current user
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The lifetime premium sequence, or null |
 | premium_grace_ends_at<sup>12</sup> | ?ISO8601 timestamp | The end of the post-cancellation grace interval, or null when the account is not in grace |
 | premium_discriminator<sup>13</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
-| premium_badge_hidden<sup>3</sup> | boolean | Whether the premium badge is withheld from the public profile |
+| premium_badge_hidden<sup>3</sup> | boolean | Whether the premium badge is hidden from the public profile |
 | premium_badge_masked<sup>3</sup> | boolean | Whether a lifetime badge is presented as an ordinary subscription badge |
-| premium_badge_timestamp_hidden<sup>3</sup> | boolean | Whether the premium activation time is withheld from the public profile |
-| premium_badge_sequence_hidden<sup>3</sup> | boolean | Whether the lifetime sequence is withheld from the public profile |
+| premium_badge_timestamp_hidden<sup>3</sup> | boolean | Whether the premium activation time is hidden from the public profile |
+| premium_badge_sequence_hidden<sup>3</sup> | boolean | Whether the lifetime sequence is hidden from the public profile |
 | premium_purchase_disabled<sup>3</sup> | boolean | Whether premium purchasing is disabled for the account |
 | premium_enabled_override<sup>3</sup> | boolean | Whether an administrative override grants premium entitlements |
 | premium_perks_disabled<sup>3</sup> | boolean | Whether premium entitlements are suspended for the account |
@@ -151,11 +151,11 @@ The private representation of the current account, returned by [Get current user
 
 <sup>1</sup> An animated avatar hash has the `a_` prefix, and the prefix is removed while the account has no animated avatar entitlement
 
-<sup>2</sup> The array is empty for an account with no Admin access, and it is replaced wholesale by [Set user ACLs](/admin-api/users/#set-user-acls). It is independent of `is_staff`
+<sup>2</sup> The array is empty for an account with no Admin access, and it is replaced in full by [Set user ACLs](/admin-api/users/#set-user-acls). It is independent of `is_staff`
 
 <sup>3</sup> The field is neutralised for an OAuth2 bearer credential as described below
 
-<sup>4</sup> The value `premium` is present exactly when premium entitlements are currently active, regardless of the stored trait set, and every other stored trait is returned sorted
+<sup>4</sup> The value `premium` is present exactly when premium entitlements are active, regardless of the stored trait set, and every other stored trait is returned sorted
 
 <sup>5</sup> For an OAuth2 bearer credential without the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is `null`
 
@@ -163,11 +163,11 @@ The private representation of the current account, returned by [Get current user
 
 <sup>7</sup> The pair is present only while the account has the staff flag, and it is absent for every other account
 
-<sup>8</sup> The banner hash is withheld entirely while the account lacks the animated banner entitlement, which gates every profile banner
+<sup>8</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
 
 <sup>9</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator omits `authenticator_types`
 
-<sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not currently active
+<sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not active
 
 <sup>11</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
 
@@ -183,7 +183,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>17</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
 
-<sup>18</sup> The value is false while premium entitlements are not currently active, even when a dismissal was recorded earlier
+<sup>18</sup> The value is false while premium entitlements are not active, even when a dismissal was recorded earlier
 
 <sup>19</sup> Both values derive from the difference between the stored gift inventory sequence and the sequence the account has acknowledged, and they report `false` and `0` when no gift has ever been recorded
 
@@ -285,7 +285,7 @@ Update semantics belong to the [user settings update object](/http-api/users/set
 | animate_emoji | boolean | Whether custom emoji animate |
 | animate_stickers | integer | [Sticker animation setting](#sticker-animation-settings) |
 | render_spoilers | integer | [Spoiler rendering setting](#spoiler-rendering-settings) |
-| message_display_compact | boolean | Whether messages use compact presentation |
+| message_display_compact | boolean | Whether messages use compact display |
 | friend_source_flags | integer | [Friend source flags](#friend-source-flags) |
 | incoming_call_flags | integer | [Incoming call flags](#incoming-call-flags) |
 | group_dm_add_permission_flags | integer | [Group DM add permission flags](#group-dm-add-permission-flags) |
@@ -318,7 +318,7 @@ Update semantics belong to the [user settings update object](/http-api/users/set
 
 <sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 262144 bytes, the 256 KiB ceiling
 
-<sup>7</sup> The field is read-only here and is mutated by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing)
+<sup>7</sup> The field is read-only here and is changed by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing)
 
 ## Custom status object
 
@@ -367,7 +367,7 @@ One entry of the saved, user-owned guild sidebar layout. Joining a guild prepend
 
 <sup>1</sup> The value `-1` identifies the uncategorised folder, which holds guilds not placed in a named folder. A stored layout that omits it has it prepended when the layout is written
 
-<sup>2</sup> A folder written without a colour is stored with `0`. The value is null on an uncategorised folder synthesised from a legacy guild ordering or created by a guild join
+<sup>2</sup> A folder written without a colour is stored with `0`. The value is null on an uncategorised folder built from a legacy guild ordering or created by a guild join
 
 <sup>3</sup> A folder written without an icon is stored with `folder`
 
@@ -416,9 +416,9 @@ One entry of the saved, user-owned guild sidebar layout. Joining a guild prepend
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | ALWAYS | Always reveal spoiler content |
-| 1 | ON_CLICK | Reveal spoiler content after interaction |
-| 2 | IF_MODERATOR | Reveal spoiler content for moderators |
+| 0 | ALWAYS | Always show spoiler content |
+| 1 | ON_CLICK | Show spoiler content after interaction |
+| 2 | IF_MODERATOR | Show spoiler content for moderators |
 
 ## Time format settings
 
@@ -504,7 +504,7 @@ The account-wide profile customisation inside a [full user profile object](#full
 
 <sup>1</sup> The value is forced to `null` when profile privacy restricts the viewer, which is reported by `profile_limited`
 
-<sup>2</sup> The banner hash is withheld while the account lacks the animated banner entitlement, which gates every profile banner. This withholding is independent of profile privacy
+<sup>2</sup> The banner hash is not returned while the account lacks the animated banner entitlement, which every profile banner requires. The hash is not returned regardless of profile privacy
 
 ## Guild member profile object
 
@@ -557,7 +557,7 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>1</sup> The pair requires the `guild_id` query parameter and requires both the caller and the target to be members of that guild
 
-<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is additionally omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
+<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is also omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
 
 <sup>3</sup> The collection is omitted unless its query parameter is true, and always when the target is the caller
 
@@ -567,7 +567,7 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>6</sup> The field is present only on a restricted read
 
-A lifetime target that masks its badge reports `premium_type` of `1` rather than `2`.
+A lifetime target that masks its badge reports `premium_type` of `1`, not `2`.
 
 ## Get user
 

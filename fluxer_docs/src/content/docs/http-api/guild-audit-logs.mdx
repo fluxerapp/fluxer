@@ -50,7 +50,7 @@ One recorded guild change. An entry is immutable once written, except for a run 
 | --- | --- | --- |
 | id | snowflake | The ID of the entry, whose [snowflake](/snowflakes/) timestamp is the time it was written |
 | action_type | integer | [Audit action](#audit-actions) value that identifies the recorded operation |
-| user_id<sup>1</sup> | snowflake | The ID of the user that performed the action |
+| user_id<sup>1</sup> | snowflake | The ID of the user that did the action |
 | target_id<sup>2</sup> | ?string | The ID of the affected entity |
 | reason?<sup>3</sup> | string | The [audit log reason](#audit-log-reason) recorded with the operation |
 | options?<sup>4</sup> | [audit log options](#audit-log-options-object) object | The context fields this [audit action](#audit-actions) records |
@@ -321,7 +321,7 @@ Recorded by [MEMBER_BAN_ADD](#audit-actions) and [MEMBER_BAN_REMOVE](#audit-acti
 | moderator_id | string | The decimal ID of the user that issued the ban |
 | banned_at | ISO8601 timestamp | The time the ban was issued |
 | expires_at | ?ISO8601 timestamp | The expiry of a temporary ban, or null for a permanent ban |
-| reason | ?string | The stored [ban](/http-api/guild-moderation/#guild-ban-object) reason, which is separate from the audit reason |
+| reason | ?string | The stored [ban](/http-api/guild-moderation/#guild-ban-object) reason, which is not the [audit log reason](#audit-log-reason) |
 
 #### Guild role change fields
 
@@ -341,7 +341,7 @@ Recorded by [ROLE_CREATE](#audit-actions), [ROLE_UPDATE](#audit-actions), and [R
 | mentionable | boolean | Whether the role is mentionable |
 | permissions_diff<sup>1</sup> | object | The permission names this change added and removed |
 
-<sup>1</sup> Recorded only by [Modify guild role](/http-api/permissions/#modify-guild-role), and only when the mask actually changed. The value is an object with `added` and `removed` string arrays of permission names
+<sup>1</sup> Recorded only by [Modify guild role](/http-api/permissions/#modify-guild-role), and only when the mask changed. The value is an object with `added` and `removed` string arrays of permission names
 
 `permissions_diff` arrives as `new_value` with no `old_value`, and the same change list still has the `permissions` change. The role position and hoist position operations record [ROLE_UPDATE](#audit-actions) without it.
 
@@ -449,7 +449,7 @@ A guild ID that names no guild returns 404 `UNKNOWN_GUILD`. A non-member of an e
 
 The read is ordered from newest to oldest by entry ID. `before` selects entries below the cursor and `after` selects entries above it, both read in that same descending order. An `after` page therefore begins with the newest entry above the cursor.
 
-Consolidation breaks that ordering. A consolidated entry keeps the array position of the first entry of the run it replaces. Its ID is freshly minted and larger than every stored entry on the page, so a client that needs a strictly descending array sorts the page by ID itself.
+Consolidation breaks that ordering. A consolidated entry keeps the array position of the first entry of the run it replaces. Its ID is newly issued and larger than every stored entry on the page, so a client that needs a strictly descending array sorts the page by ID itself.
 
 A page holds fewer entries than `limit` only when the guild has no further matching entries in that direction.
 

@@ -26,11 +26,11 @@ Every bound below is a fixed constant of the instance, and none is resolved from
 
 <sup>2</sup> Only [Upload entrance sound](#upload-entrance-sound) applies the lower bound
 
-The [instance discovery](/http-api/instance/#limit-keys) document publishes a `feature_voice_entrance_sounds` limit key. That key gates the feature in the client. No route on this page consults it, so a library can be read, written, and played back regardless of its resolved value.
+The [instance discovery](/http-api/instance/#limit-keys) document publishes a `feature_voice_entrance_sounds` limit key. That key gates the feature in the client. No route on this page checks it, so a library can be read, written, and played back regardless of its resolved value.
 
 ## Supported containers
 
-The container is detected from the decoded bytes, so a filename, a `data:` media type, or any other declared type has no effect on the result. The detected container resolves to a stored extension, and every other input fails with `ENTRANCE_SOUND_INVALID_FORMAT`.
+Fluxer detects the container from the decoded bytes, so a filename, a `data:` media type, or any other declared type has no effect on the result. The detected container resolves to a stored extension, and every other input fails with `ENTRANCE_SOUND_INVALID_FORMAT`.
 
 | Detected container | Stored extension | Stored content type |
 | --- | --- | --- |
@@ -139,7 +139,7 @@ Returns the current account's complete entrance sound library together with its 
 | Field | Type | Description |
 | --- | --- | --- |
 | sounds | array[[entrance sound](#entrance-sound-object) object] | Every clip the account owns, at most 8 |
-| selections | array[[entrance sound selection](#entrance-sound-selection-object) object] | Every scope that currently has a sound assigned |
+| selections | array[[entrance sound selection](#entrance-sound-selection-object) object] | Every scope with a sound assigned |
 
 Both members are always present and both arrays are empty for an account that has uploaded nothing. A selection always names a sound present in `sounds`.
 
@@ -170,7 +170,7 @@ Decodes, validates, and stores one audio clip in the current account's library, 
 
 <sup>2</sup> A `data:` URI prefix is accepted and discarded, and only the part after the first comma is measured and decoded
 
-Invisible characters in `name` are not stripped and count toward the 32 character bound.
+Invisible characters in `name` are not stripped and count towards the 32 character bound.
 
 ### Validation
 
@@ -192,7 +192,7 @@ Every failure below is a 400 `INVALID_FORM_BODY`. One response can report two of
 
 <sup>2</sup> Measured after any `data:` prefix is discarded, so a value that is whitespace only, or that ends at its first comma, has zero payload characters and fails here
 
-The first four rows are checked before the quota, so an account already holding 8 clips receives `BASE64_LENGTH_INVALID` or `INVALID_BASE64_FORMAT` for a malformed or over-long payload.
+Fluxer checks the first four rows before the quota, so an account already holding 8 clips receives `BASE64_LENGTH_INVALID` or `INVALID_BASE64_FORMAT` for a malformed or too-long payload.
 
 The validation entry has no member naming which duration bound the clip crossed.
 

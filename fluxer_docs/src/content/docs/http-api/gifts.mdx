@@ -111,7 +111,7 @@ Redeems a gift for the authenticated account and returns 204 with an empty body.
 - The account must not have the purchase-disabled premium flag, and the flag returns 403 `PREMIUM_PURCHASE_BLOCKED` with a top-level `reason` member set to `purchase_disabled`.
 - An account already holding lifetime Visionary entitlement receives 400 `CANNOT_REDEEM_PLUTONIUM_WITH_VISIONARY`.
 
-A consumed code receives 400 `GIFT_CODE_ALREADY_REDEEMED`. A code another request is currently redeeming receives 400 `STRIPE_GIFT_REDEMPTION_IN_PROGRESS`. A code that does not exist or has been revoked receives 404 `UNKNOWN_GIFT_CODE`.
+A consumed code receives 400 `GIFT_CODE_ALREADY_REDEEMED`. A code another request is redeeming receives 400 `STRIPE_GIFT_REDEMPTION_IN_PROGRESS`. A code that does not exist or has been revoked receives 404 `UNKNOWN_GIFT_CODE`.
 
 :::note[The refusal order differs from checkout]
 The claimed account, verified email and purchase flag refusals are evaluated before the lifetime refusal here. [Create subscription checkout](/http-api/billing/#create-subscription-checkout) evaluates the same two groups in the opposite order.
@@ -134,7 +134,7 @@ One redemption can be in flight for a code across the whole deployment, and a se
 | X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
 | X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the caller's contact has the exemption capability
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the caller's contact has the exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
 
 <sup>2</sup> Any other value, including an omitted header, falls back to the instance's configured provider
 
@@ -143,7 +143,7 @@ One redemption can be in flight for a code across the whole deployment, and a se
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The gift was redeemed and the entitlement was applied |
-| 400 | [error response](/http-api/#error-response) | CAPTCHA failed, the code is already redeemed, a redemption is already in flight, the account is unclaimed, the account holds lifetime entitlement, the payment provider rejected the subscription work, or the Visionary guild join for a lifetime gift failed |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA failed, the code is redeemed or a redemption is in flight, the account is unclaimed or holds lifetime entitlement, the payment provider rejected the subscription work, or the Visionary guild join for a lifetime gift failed |
 | 403 | [error response](/http-api/#error-response) | The email address is unverified, or purchases are disabled for the account |
 | 404 | [error response](/http-api/#error-response) | No gift exists for the code, the gift was revoked, the authenticated account record no longer exists, or the configured Visionary guild does not exist |
 
@@ -160,7 +160,7 @@ A gift with a positive quantity extends recurring premium. Fluxer stacks the dur
 
 Stacking adds the duration to the existing trial end, or to the current period end when no trial end is set, and applies the update without proration.
 
-The stacked path and the unstacked path both set the gift extension end to the gift duration added to the latest of the current time, the current premium end and the existing gift extension end. Both also clear an active grace deadline and set the premium type when the account has none. The stacked path also records the account as having ever purchased.
+The stacked and unstacked paths set the gift extension end to the gift duration added to the latest of the current time, the current premium end and the existing gift extension end. Both also clear an active grace deadline and set the premium type when the account has none. The stacked path also records the account as having ever purchased.
 
 The provider refuses a stacking attempt when the subscription is unknown, already cancelled, or has neither a trial end nor a current period end. That refusal clears the stored subscription identity, the billing cycle and any pending cancellation. The redemption then continues unstacked. Any other provider failure aborts the redemption and returns 400 `STRIPE_ERROR`, and the code stays unredeemed.
 

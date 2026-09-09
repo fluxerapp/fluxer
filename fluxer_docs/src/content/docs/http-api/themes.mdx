@@ -37,13 +37,13 @@ The UTF-8 encoding of a submitted document cannot exceed 8388608 bytes, and the 
 
 <sup>3</sup> Measured in characters of the submitted string
 
-An account holds no theme quota. The route bucket is the only bound on how many themes an account creates, and no route here consults an [instance limit key](/http-api/instance/#limit-keys).
+An account holds no theme quota. The route bucket is the only bound on how many themes an account creates, and no route here checks an [instance limit key](/http-api/instance/#limit-keys).
 
 ## Content screening
 
 The instance-wide content filter screens the submitted document before the route runs. It checks a `css` value of at least 3 characters against the instance phrase blocklist and the instance URL blocklist. A match on either returns 403 `CONTENT_BLOCKED`. A shorter value is never screened.
 
-Fluxer scans a body under every content type except `multipart/form-data` and `application/x-www-form-urlencoded`. The filter also skips a body that does not parse as JSON. The route parses the body from the raw request text and reads no content type, so a JSON document sent under either form content type is stored without passing the blocklists.
+Fluxer scans a body under every content type except `multipart/form-data` and `application/x-www-form-urlencoded`. The filter also skips a body that does not parse as JSON. The route parses the body from the raw request text and reads no content type, so a JSON document sent under either [form content type](/http-api/#request-body-formats) is stored without passing the blocklists.
 
 The screen precedes the rate limit bucket, the credential check, and the request schema, so a blocked document returns `CONTENT_BLOCKED` even when the request has no credential.
 

@@ -12,7 +12,7 @@ Every route except [Get current user](#get-current-user) is user-only. Those rou
 
 ## Sudo verification
 
-Sudo verification asks the account to prove itself again inside the request. Security-sensitive fields and destructive lifecycle operations require it. The accepted proof depends on the account state.
+Security-sensitive fields and destructive lifecycle operations on this page require [sudo mode](/http-api/users/mfa/#sudo-mode), which states the token form, the header round trip, and the code each failure returns. The accepted proof depends on the account state.
 
 | Account state | Accepted proof |
 | --- | --- |
@@ -20,13 +20,7 @@ Sudo verification asks the account to prove itself again inside the request. Sec
 | An authenticator configured | `mfa_method` of `totp` with `mfa_code`, or `mfa_method` of `webauthn` with `webauthn_response` and `webauthn_challenge` |
 | No password credential and no authenticator | None, the requirement is already satisfied |
 
-Once an account configures an authenticator, its `password` stops working here. An already valid sudo token replaces any of those forms.
-
-A sudo token is an HS256 JSON Web Token valid for five minutes. It has the account ID as its subject and is rejected for any other account. A successful verification returns the token in the `X-Fluxer-Sudo-Mode-JWT` response header. Fluxer mints a fresh token only when an authenticator satisfied the requirement. A request presenting an already valid token gets that same token back without an extended lifetime.
-
-A request that does not satisfy the requirement returns 403 [`SUDO_MODE_REQUIRED`](/http-api/errors/). The body has `has_mfa` and `methods` as top-level members. An invalid authenticator code, backup code, or WebAuthn assertion returns [`INVALID_MFA_CODE`](/http-api/errors/) on the `mfa_code` path. An incorrect password returns [`INVALID_PASSWORD`](/http-api/errors/) on the `password` path.
-
-A client sends an existing token in the `X-Fluxer-Sudo-Mode-JWT` request header. Retain the response header value and send it back on each later operation in the same sudo window.
+Once an account configures an authenticator, its `password` stops working here.
 
 ## Get current user
 
@@ -60,7 +54,7 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 ### Limitations
 
-- Changing the username or discriminator to a different value, supplying `new_password`, or supplying `email_token` requires [sudo verification](#sudo-verification).
+- Changing the username or discriminator to a different value, supplying `new_password`, or supplying `email_token` requires [sudo verification](/http-api/users/mfa/#sudo-mode).
 - A field supplied with the value the account already holds is not a change and does not raise that requirement.
 - An unclaimed account never raises it either.
 
@@ -73,7 +67,7 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 | global_name?<sup>3</sup> | ?string | Display name after sanitisation (1-32 characters), or null to clear |
 | email?<sup>4</sup> | string | Always rejected, because an address is applied through `email_token` |
 | new_password?<sup>5</sup> | string | New password (8-256 characters) |
-| password? | string | Current password (8-256 characters), used as [sudo verification](#sudo-verification) proof |
+| password? | string | Current password (8-256 characters), used as [sudo verification](/http-api/users/mfa/#sudo-mode) proof |
 | avatar?<sup>6</sup> | ?string | Base64-encoded avatar image, or null to clear |
 | banner?<sup>6</sup> <sup>7</sup> | ?string | Base64-encoded banner image, or null to clear |
 | bio?<sup>8</sup> | ?string | Biography (1-320 characters), or null to clear |
@@ -81,19 +75,19 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 | accent_color? | ?integer | Packed 24-bit RGB colour (0-16777215), or null to clear |
 | timezone?<sup>10</sup> <sup>11</sup> | ?string | Supported IANA timezone identifier (1-128 characters), or null to clear |
 | timezone_privacy_flags?<sup>10</sup> | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) applied to the profile timezone |
-| premium_badge_hidden? | boolean | Whether to withhold the premium badge from the public profile |
+| premium_badge_hidden? | boolean | Whether to hide the premium badge from the public profile |
 | premium_badge_masked? | boolean | Whether to present a lifetime badge as an ordinary subscription badge |
-| premium_badge_timestamp_hidden? | boolean | Whether to withhold the premium activation time |
-| premium_badge_sequence_hidden? | boolean | Whether to withhold the lifetime premium sequence |
+| premium_badge_timestamp_hidden? | boolean | Whether to hide the premium activation time |
+| premium_badge_sequence_hidden? | boolean | Whether to hide the lifetime premium sequence |
 | premium_enabled_override?<sup>12</sup> | boolean | Whether a staff override grants premium entitlements |
 | has_dismissed_premium_onboarding?<sup>13</sup> | boolean | Whether the premium onboarding flow has been dismissed |
 | has_unread_gift_inventory?<sup>14</sup> | boolean | Whether the gift inventory still holds unread items |
 | mention_flags? | integer | [Reply mention preference](/http-api/users/#reply-mention-preferences), one of `0`, `1`, or `2` |
 | email_token?<sup>15</sup> | string | Email token (1-256 characters) issued by [verify new email](/http-api/users/email-and-password/#verify-new-email) |
-| mfa_method? | string | [Sudo verification](#sudo-verification) method, either `totp` or `webauthn` |
-| mfa_code? | string | [Sudo verification](#sudo-verification) authenticator or backup code (1-32 characters) |
-| webauthn_response? | [WebAuthn assertion](/http-api/users/mfa/#webauthn-assertion-object) object | [Sudo verification](#sudo-verification) WebAuthn assertion |
-| webauthn_challenge? | string | [Sudo verification](#sudo-verification) WebAuthn challenge (1-256 characters) |
+| mfa_method? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) method, either `totp` or `webauthn` |
+| mfa_code? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) authenticator or backup code (1-32 characters) |
+| webauthn_response? | [WebAuthn assertion](/http-api/users/mfa/#webauthn-assertion-object) object | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn assertion |
+| webauthn_challenge? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn challenge (1-256 characters) |
 
 <sup>1</sup> The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`, on every instance including a self-hosted one
 
@@ -125,6 +119,8 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 <sup>15</sup> Supplying the field applies the verified address the token stands for, and the token is deleted once the update lands
 
+An omitted field leaves its stored value untouched, and an explicit `null` clears a nullable field. `has_dismissed_premium_onboarding` acts only on `true` and `has_unread_gift_inventory` only on `false`, so neither can be reversed through this route.
+
 To skip the body proof fields, send the sudo token in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before the required action barrier, so it succeeds even while an action is outstanding. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
@@ -143,7 +139,7 @@ An animated avatar requires the animated avatar entitlement and is otherwise rej
 
 ### Content blocklists
 
-The username, display name, biography, and pronouns are matched against the instance profile substring blocklist, and a match returns 403 [`CONTENT_BLOCKED`](/http-api/errors/). An account with the `STAFF` flag is exempt. The biography and pronouns are additionally scanned against the phrase and URL blocklists.
+The username, display name, biography, and pronouns are matched against the instance profile substring blocklist, and a match returns 403 [`CONTENT_BLOCKED`](/http-api/errors/). An account with the `STAFF` flag is exempt. The biography and pronouns are also scanned against the phrase and URL blocklists.
 
 The global content filter applied to every POST, PUT, and PATCH JSON body runs the same pair of blocklists over the whole body before the handler. It reads `username`, `global_name`, `email`, `timezone`, and `discriminator` when supplied as a string, alongside the biography and pronouns. It skips `avatar`, `banner`, `password`, `new_password`, `email_token`, `mfa_code`, `webauthn_response`, `webauthn_challenge`, and every field whose name ends in `_flags`, and it ignores any value shorter than 3 characters. A match returns the same 403 `CONTENT_BLOCKED`, and no flag exempts an account from it.
 
@@ -161,10 +157,6 @@ Each control is separate from the route bucket. A denial returns 400 `INVALID_FO
 | Any banner value past the entitlement check | 25 per 30 minutes | `BANNER_CHANGED_TOO_MANY_TIMES` |
 
 Fluxer consumes the avatar control before it detects identical content, and clearing the avatar consumes nothing. A clearing request consumes the banner control, and so does a request whose value is unchanged.
-
-:::note[Omission and null are distinct]
-An omitted field leaves its stored value untouched, and an explicit `null` clears a nullable field. `has_dismissed_premium_onboarding` acts only on `true` and `has_unread_gift_inventory` only on `false`, so neither can be reversed through this route.
-:::
 
 :::caution[A password change rotates the session]
 Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The replacement arrives as [Auth Session Change](/gateway/events/#auth-session-change).
@@ -190,7 +182,7 @@ A successful change emits [User Update](/gateway/events/#user-update) to the acc
 
 <RouteHeader method="DELETE" path="/v1/users/@me/authorized-ips" mfa />
 
-Deletes every authorised IP record for the current account. Requires [sudo verification](#sudo-verification). Returns 204 with an empty body and emits no Gateway Dispatch.
+Deletes every authorised IP record for the current account. Requires [sudo verification](/http-api/users/mfa/#sudo-mode). Returns 204 with an empty body and emits no Gateway Dispatch.
 
 A later sign-in from any address then needs fresh IP authorisation.
 
@@ -213,9 +205,9 @@ The body is the [sudo verification object](/http-api/users/mfa/#sudo-verificatio
 
 <RouteHeader method="POST" path="/v1/users/@me/disable" mfa />
 
-Disables the current account while preserving its data. Requires [sudo verification](#sudo-verification).
+Disables the current account while preserving its data. Requires [sudo verification](/http-api/users/mfa/#sudo-mode).
 
-The operation mints no sudo token and returns no `X-Fluxer-Sudo-Mode-JWT` header.
+The route issues no sudo token and returns no `X-Fluxer-Sudo-Mode-JWT` response header.
 
 ### JSON body
 
@@ -235,7 +227,7 @@ Disabling deletes every authentication session the account owns, including the o
 
 ### Side effects
 
-Fluxer marks the account disabled and deletes every authentication session it owns. [User Update](/gateway/events/#user-update) is published only after that deletion. No client of the account is still connected to receive it. The disabled flag is not part of the public flag bitfield, so other accounts observe no change.
+Fluxer marks the account disabled and deletes every authentication session it owns. [User Update](/gateway/events/#user-update) is published only after that deletion, so no client of the account is left to receive it. The disabled flag is not part of the public flag bitfield, so other accounts observe no change.
 
 ### Rate limit
 
@@ -245,7 +237,7 @@ Fluxer marks the account disabled and deletes every authentication session it ow
 
 <RouteHeader method="POST" path="/v1/users/@me/delete" mfa />
 
-Schedules deletion of the current account and deletes every authentication session it holds. Requires [sudo verification](#sudo-verification).
+Schedules deletion of the current account and deletes every authentication session it holds. Requires [sudo verification](/http-api/users/mfa/#sudo-mode).
 
 ### Limitations
 
@@ -272,7 +264,7 @@ Fluxer checks guild ownership before it accepts the deletion, so an owner of any
 
 ### Side effects
 
-Fluxer marks the account for deletion at the configured deadline and enqueues it for erasure at that time. When the account has an email address, Fluxer sends a scheduled deletion email in the account locale. Every authentication session is deleted, and [User Update](/gateway/events/#user-update) is published only after that deletion. The self-deleted flag is not part of the public flag bitfield, so other accounts observe no change until erasure runs.
+Fluxer marks the account for deletion at the configured deadline and queues it for erasure at that time. When the account has an email address, Fluxer sends a scheduled deletion email in the account locale. Every authentication session is deleted, and [User Update](/gateway/events/#user-update) is published only after that deletion. The self-deleted flag is not part of the public flag bitfield, so other accounts observe no change until erasure runs.
 
 ### Rate limit
 
@@ -286,7 +278,7 @@ Records acceptance of the current terms of service and privacy policy. Returns t
 
 ### JSON body
 
-The body is an empty object. An absent or empty body is read as an empty object, and any supplied property is discarded. Invalid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. Valid JSON that is not an object is rejected with 400.
+The body is an empty object, and an absent or empty body is read as one. Any supplied property is discarded. Invalid JSON returns 400 `INVALID_FORM_BODY` with `INVALID_FORMAT` at the `body` path. Valid JSON that is not an object is rejected with 400.
 
 ### Response
 

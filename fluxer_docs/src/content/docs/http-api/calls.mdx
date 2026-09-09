@@ -41,7 +41,7 @@ Fluxer computes eligibility for one caller against one private channel at the mo
 | Field | Type | Description |
 | --- | --- | --- |
 | ringable<sup>1</sup> | boolean | Whether the authenticated user can initiate an audible ring in this channel |
-| silent<sup>2</sup> | boolean | Whether a newly initiated call notifies the other recipient without audible ringing |
+| silent<sup>2</sup> | boolean | Whether a newly started call notifies the other recipient without audible ringing |
 
 <sup>1</sup> False when the caller is already connected to the channel's call, when a direct message caller has never claimed its credentials, and when the other recipient's incoming call policy excludes the caller
 
@@ -124,7 +124,7 @@ Any other unknown or inaccessible `region` returns 400 `INVALID_FORM_BODY` with 
 
 The body can be omitted. Fluxer treats a missing, empty, or whitespace-only body as an empty object, which requests no change. A body that is not valid JSON returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_FORMAT` at the `body` path.
 
-A region identifier is the `id` of an [RTC region object](/http-api/channels/#rtc-region-object). No route enumerates the regions a call accepts, and [List RTC regions](/http-api/channels/#list-rtc-regions) answers only for a guild voice channel.
+A region identifier is the `id` of an [RTC region object](/http-api/channels/#rtc-region-object). No route returns the regions a call accepts, and [List RTC regions](/http-api/channels/#list-rtc-regions) answers only for a guild voice channel.
 
 A region or voice server is unselectable for a call on any of these grounds:
 
@@ -183,7 +183,7 @@ The body can be omitted. Fluxer treats a missing, empty, or whitespace-only body
 
 An identifier that names a non-recipient or the caller itself returns 400 `INVALID_FORM_BODY` with the validation code `USER_NOT_IN_CHANNEL`. A repeated identifier is accepted and rings that recipient once.
 
-A named recipient is only rung when the incoming call policy described by [Get call eligibility](#get-call-eligibility) admits the caller audibly, so a recipient admitted only under the silent-everyone flag is notified without being rung. In a direct message Fluxer ignores the named set when choosing whom to ring and always evaluates the policy against the other recipient.
+A named recipient is only rung when the incoming call policy described by [Get call eligibility](#get-call-eligibility) admits the caller audibly. A recipient admitted only under the silent-everyone flag is notified without being rung. In a direct message Fluxer ignores the named set when choosing whom to ring and always evaluates the policy against the other recipient.
 
 ### Response
 
@@ -201,15 +201,15 @@ A named recipient is only rung when the incoming call policy described by [Get c
 
 Fluxer first reopens the private channel for the caller and for every notified recipient, and each account for which the channel was closed receives [Channel Create](/gateway/events/#channel-create).
 
-When no call exists, Fluxer then stores a call system message with the initial participant set and creates the call with [Call Create](/gateway/events/#call-create) that has the initial ringing set and the automatically selected region. It raises the unread mention count of every other recipient that is not a bot and has not blocked the caller. It acknowledges the message for the initiating user without a Dispatch, and only then delivers the stored message with [Message Create](/gateway/events/#message-create). Fluxer sends [Call Create](/gateway/events/#call-create) before [Message Create](/gateway/events/#message-create).
+When no call exists, Fluxer then stores a call system message with the initial participant set and creates the call with [Call Create](/gateway/events/#call-create). The event has the initial ringing set and the automatically selected region. Fluxer raises the unread mention count of every other recipient that is not a bot and has not blocked the caller. It acknowledges the message for the initiating user without a Dispatch, and only then delivers the stored message with [Message Create](/gateway/events/#message-create). Fluxer sends [Call Create](/gateway/events/#call-create) before [Message Create](/gateway/events/#message-create).
 
 When a call already exists, Fluxer instead extends the ringing set and emits [Call Update](/gateway/events/#call-update) when the set grows. A recipient who is already connected to the call is never added to the ringing set.
 
-Each rung recipient holds a ringing entry for 30 seconds. Fluxer then drops the entry and emits [Call Update](/gateway/events/#call-update) again. When that expiry leaves the call with no connected participant and no other ringing recipient, Fluxer removes the call in the same step, which emits [Call Delete](/gateway/events/#call-delete) and stamps the call system message with its ended timestamp. A call that rang at least one recipient and that nobody joined therefore ends 30 seconds after the ring.
+Each rung recipient holds a ringing entry for 30 seconds. Fluxer then drops the entry and emits [Call Update](/gateway/events/#call-update) again. When that expiry leaves the call with no connected participant and no other ringing recipient, Fluxer removes the call in the same step. That emits [Call Delete](/gateway/events/#call-delete) and stamps the call system message with its ended timestamp. A call that rang at least one recipient and that nobody joined therefore ends 30 seconds after the ring.
 
-Fluxer arms no ring timer for a call created with an empty ringing set, so that call ends on the 120 second idle timer instead. An explicit empty `recipients` array produces such a call, and so does a ring that admits no candidate audibly.
+A call created with an empty ringing set has no ring timer, so it ends on the 120 second idle timer instead. An explicit empty `recipients` array produces such a call, and so does a ring that admits no candidate audibly.
 
-Whenever Fluxer removes a call, it rewrites that call's system message with the ended timestamp and with every account that ever connected, and publishes the rewritten message to every recipient of the private channel as [Message Update](/gateway/events/#message-update).
+Whenever Fluxer removes a call, it rewrites that call's system message with the ended timestamp and with every account that ever connected. It publishes the rewritten message to every recipient of the private channel as [Message Update](/gateway/events/#message-update).
 
 The call's recipient list is fixed when the call is created. Changing the recipient set of a group direct message afterwards neither ends the call nor updates that list. [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient), [Remove group direct message recipient](/http-api/channels/#remove-group-direct-message-recipient), and [Delete or leave channel](/http-api/channels/#delete-or-leave-channel) leave a running call in place. A recipient added later receives no Dispatch for it.
 
@@ -290,7 +290,7 @@ A participant leaves by sending [Voice State Update](/gateway/commands/#voice-st
 | --- | --- | --- |
 | 204 | empty | Request was accepted |
 
-A call ends the moment its last connected participant leaves, whether or not a recipient is still ringing. Fluxer publishes [Call Delete](/gateway/events/#call-delete) at that moment. A call that no participant ever joined ends instead when its last ringing entry expires, and a call whose ringing set was emptied by [Stop ringing call recipients](#stop-ringing-call-recipients) ends on the Gateway's 120 second idle timer.
+A call ends the moment its last connected participant leaves, whether or not a recipient is still ringing. Fluxer publishes [Call Delete](/gateway/events/#call-delete) at that moment. A call that no participant ever joined ends instead when its last ringing entry expires. A call whose ringing set was emptied by [Stop ringing call recipients](#stop-ringing-call-recipients) ends on the Gateway's 120 second idle timer.
 
 ### Rate limit
 

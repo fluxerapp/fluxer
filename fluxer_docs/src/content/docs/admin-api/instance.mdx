@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Instance configuration is everything an operator can change at runtime. It covers single sign-on, Gateway rollout, registration policy, branding and legal links, instance policy, third party integrations, media retention, and the ordered limit configuration. The [Instance](/http-api/instance/) resource serves the subset published to unauthenticated clients.
 
-Every write is a merge over the stored configuration, and an omitted key leaves the stored value unchanged. The limit configuration write is the one exception, and it replaces the stored document.
+Every write is a merge over the stored configuration, and an omitted key leaves the stored value unchanged. The limit configuration write is the one exception and replaces the stored document.
 
 Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`. The heap snapshot requires `system:heap_snapshot`.
 
@@ -208,7 +208,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 | Field | Type | Description |
 | --- | --- | --- |
 | single_community_enabled | boolean | Whether the deployment presents one community |
-| single_community_guild_id | ?string | Guild used as that community, or null before one has been provisioned |
+| single_community_guild_id | ?string | Guild used as that community, or null before one has been created |
 | direct_messages_disabled | boolean | Whether direct messages are disabled |
 | direct_messages_locked<sup>1</sup> | boolean | Whether the direct message setting is locked against further change |
 | premium_mode | string | [Premium mode](#premium-modes) |
@@ -221,7 +221,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 
 <sup>2</sup> Each key is the operator override when one is set, and otherwise the matching `services_available` value
 
-<sup>3</sup> `gif` and `youtube` report whether an API key resolves from either the stored configuration or the deployment configuration. `bluesky` reports the integration's resolved enablement
+<sup>3</sup> `gif` and `youtube` report whether an API key resolves from the stored configuration or the deployment configuration. `bluesky` reports the integration's resolved enablement
 
 ## Premium modes
 
@@ -232,15 +232,15 @@ Community, direct message, premium and gating policy for the whole deployment.
 
 ## Deferred phone gate object
 
-A rule that imposes phone verification in a configured window of hours after registration.
+A rule that requires phone verification in a configured window of hours after registration.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | enabled | boolean | Whether the delayed phone requirement is applied (default false) |
-| window_hours | number | Hours after registration in which the requirement can be imposed (default 6) |
-| member_threshold | number | Guild member count above which the requirement is imposed (default 50) |
+| window_hours | number | Hours after registration in which the requirement can be applied (default 6) |
+| member_threshold | number | Guild member count above which the requirement is applied (default 50) |
 
 ## Instance integrations object
 
@@ -265,7 +265,7 @@ CAPTCHA provider settings, and the provider resolved from them.
 | Field | Type | Description |
 | --- | --- | --- |
 | provider | ?string | Operator override of `hcaptcha`, `turnstile`, or `none`, or null for no override |
-| effective_provider | string | Provider actually in use, one of `hcaptcha`, `turnstile`, or `none` |
+| effective_provider | string | Provider in use, one of `hcaptcha`, `turnstile`, or `none` |
 | hcaptcha_site_key | ?string | hCaptcha site key |
 | hcaptcha_secret_key_set | boolean | Whether an hCaptcha secret is stored or supplied by deployment configuration |
 | turnstile_site_key | ?string | Turnstile site key |
@@ -283,7 +283,7 @@ Outbound email settings, and the provider resolved from them.
 | enabled | ?boolean | Operator override, or null for no override |
 | effective_enabled | boolean | Whether outbound email is in force |
 | provider | ?string | Operator override of `smtp` or `none`, or null for no override |
-| effective_provider | string | Provider actually in use, either `smtp` or `none` |
+| effective_provider | string | Provider in use, either `smtp` or `none` |
 | from_email | ?string | Envelope sender address |
 | from_name | ?string | Envelope sender name |
 | smtp<sup>1</sup> | object | `host`, `port`, `username`, `secure`, and `password_set` |
@@ -383,7 +383,7 @@ The stored limit configuration together with the deployment defaults and the met
 | limit_config_json | string | The same document rendered as JSON indented by two spaces, for an editor to display |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
 | defaults<sup>1</sup> | map[string, map[string, integer]] | Deployment default limits, keyed by rule identifier and then by limit key |
-| metadata | map[string, [limit key metadata](#limit-key-metadata-object) object] | Presentation metadata for each limit key |
+| metadata | map[string, [limit key metadata](#limit-key-metadata-object) object] | Display metadata for each limit key |
 | categories<sup>2</sup> | map[string, string] | Display label for each metadata category |
 | limit_keys | array[string] | Every [limit key](/http-api/instance/#limit-keys) in registry order |
 | bounds?<sup>3</sup> | map[string, object] | Optional `min` and `max` pair for each limit key |
@@ -424,7 +424,7 @@ One rule in that ordered set, with the filters that scope it and the limits it s
 
 ## Limit key metadata object
 
-Presentation metadata for one [limit key](/http-api/instance/#limit-keys), which an editor uses to render its control.
+Display metadata for one [limit key](/http-api/instance/#limit-keys), which an editor uses to render its control.
 
 ### Structure
 
@@ -463,7 +463,7 @@ Returns the [instance configuration](#instance-configuration-object) object. Req
 Applies a merge patch to the stored configuration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
 
 :::note[Every section is optional and merged independently]
-The body has one optional object for each section, and Fluxer leaves an absent section alone. Within a section, an absent key keeps its stored value, and a key sent as null clears the stored value where the schema permits null.
+The body has one optional object for each section. Fluxer leaves an absent section alone. Within a section, an absent key keeps its stored value, and a key sent as null clears the stored value where the schema permits null.
 :::
 
 ### JSON body
@@ -485,7 +485,7 @@ The body has one optional object for each section, and Fluxer leaves an absent s
 <sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
 
 :::note[Single sign-on URL validation is conditional]
-Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration that is both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source. `issuer` stands in for the two endpoints and the claims source.
+Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source. `issuer` stands in for the two endpoints and the claims source.
 :::
 
 #### Instance policy update structure
@@ -500,7 +500,7 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | services? | object | Nullable `gif_enabled`, `youtube_enabled`, and `bluesky_enabled` overrides |
 | deferred_phone_gate?<sup>3</sup> | object | `enabled`, `window_hours`, and `member_threshold` |
 
-<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists, and otherwise provisions a community using `single_community_name` or the configured product name. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
+<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists, and otherwise creates a community using `single_community_name` or the configured product name. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
 
 <sup>2</sup> The setting can be changed only while `direct_messages_locked` is false, and a change attempted after the lock is set fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` unless the same request sets `direct_messages_locked` to false. Re-enabling direct messages sets the lock again
 
@@ -700,7 +700,7 @@ Both decisions remove the pending registration, so the same account cannot be de
 
 Approval removes both the `registration_pending_approval` trait and the `registration_rejected` trait, and joins the account to the single community when that mode is enabled and a guild is designated. A join that fails is logged and does not fail the request. Rejection removes the `registration_pending_approval` trait and adds the `registration_rejected` trait, which blocks login and every later session creation. A session issued before the decision stays valid. The pending registration is removed either way.
 
-One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account and records the audit reason. It has no metadata.
+One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account, records the audit reason, and has no metadata.
 
 ### Rate limit
 
@@ -786,7 +786,7 @@ The 200 has `Content-Type: application/octet-stream`, `Content-Disposition: atta
 A client MUST NOT decode the body as JSON. The published OpenAPI document declares a JSON object of `success`, `filename`, and `size_bytes` here, so a generated client has to be overridden.
 
 :::danger[A snapshot stalls the process and exposes memory]
-Writing a snapshot blocks the process that serves the request for as long as the dump takes. The file contains whatever that process held in memory, including message content, tokens, and personal data.
+Writing a snapshot blocks the serving process until the dump finishes. The file contains whatever that process held in memory, including message content, tokens, and personal data.
 :::
 
 :::caution[Only the serving node is captured]

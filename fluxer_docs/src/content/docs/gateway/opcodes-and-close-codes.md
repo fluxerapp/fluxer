@@ -73,7 +73,7 @@ Fluxer resolves an inbound payload in this order.
 5. With a session attached, Presence Update, Voice State Update, Request Guild Members, Lazy Request, Request Guild Counts, and Request Channel Member Counts are handled. Every other opcode, including a server opcode and an undefined value, closes with `4001`.
 
 :::note[Unknown server opcodes are forward compatible]
-A client that receives an unknown opcode SHOULD log it and ignore the frame. It MUST NOT close or reconnect solely because the server used an opcode newer than this registry.
+A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close or reconnect solely because the server used an opcode newer than this registry.
 :::
 
 ## Close codes
@@ -188,4 +188,4 @@ A held or discarded Identify, an over-budget Presence Update, a dropped bounded 
 
 ## Ordinary WebSocket closes
 
-A transport can end with no Fluxer application close code, as happens on a network failure, an intermediary reset, and an ordinary `1000` or `1001` close. An established session remains available for 60,000 ms after the transport ends. A later transport end starts a new 60,000 ms window, and neither the window length nor the bounded replay history grows.
+A transport can end with no Fluxer application close code, as happens on a network failure, an intermediary reset, and an ordinary `1000` or `1001` close. An established session remains available for 60,000 ms after the transport ends, and a later transport end starts a new 60,000 ms window. Neither the window length nor the bounded replay history grows.

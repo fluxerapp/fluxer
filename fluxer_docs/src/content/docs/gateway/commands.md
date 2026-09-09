@@ -26,9 +26,11 @@ Except for [Heartbeat](#heartbeat), [Identify](#identify), and [Resume](#resume)
 
 A frame that fails the size, decompression, or decoding checks closes the connection without consuming any budget. A frame that decodes to something other than an object closes with `4002` and reason `Decode failed`, and an object with no `op` closes with `4002` and reason `Invalid payload`.
 
-Fluxer charges every command that gets past those checks against the [source IP, session, and connection payload budgets](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) before it handles the opcode. Each session gets its own session budget, so two sessions of one account never share one, and Fluxer skips that budget while the connection is unauthenticated.
+Fluxer charges every command that gets past those checks against the [source IP, session, and connection payload budgets](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) before it handles the opcode. Each session has its own session budget, so two sessions of one account never share one, and Fluxer skips that budget while the connection is unauthenticated.
 
 An opcode outside the registry closes with `4001` and reason `Unknown opcode` once a session is attached, and with `4003` while the connection is unauthenticated. A payload that has `op` but no `d` also closes with `4001`, except for Identify, which closes with `4005`.
+
+A Boolean command field is set only by `true`, and by the string `"true"` where noted. Every other value resolves to false, except in the Lazy Request [guild subscription object](#guild-subscription-object), which states its own rule.
 
 :::note[Most command payloads are permissive]
 Identify, Resume, and Presence Update reject a malformed payload with a close. The [bounded query commands](#bounded-requests) coerce or discard whatever they cannot parse, so a wrong field type usually produces an empty result.
@@ -36,7 +38,7 @@ Identify, Resume, and Presence Update reject a malformed payload with a close. T
 
 ## Heartbeat
 
-Opcode `1` has the last Dispatch sequence the client processed. Use `null` before the first Dispatch.
+Opcode `1` has the last Dispatch sequence the client processed, or `null` before the first Dispatch.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -106,8 +108,8 @@ Opcode `2` authenticates and creates a new session.
 The following faults close with `4002` and reason `Invalid identify payload`:
 
 - A missing `token` or `properties`.
-- A `properties` value that is not an object.
-- A `properties` object whose `os`, `browser`, or `device` is missing or is not a string.
+- `properties` that is not an object.
+- `properties` whose `os`, `browser`, or `device` is missing or is not a string.
 - An `ignored_events` value that is not an array of strings, or one that holds more than 256 entries.
 - A `flags` value that is not a non-negative integer.
 
@@ -121,11 +123,11 @@ A token the backend rejects closes with `4004` and reason `Invalid token`. A non
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 1 &lt;&lt; 1 | DEBOUNCE_MESSAGE_REACTIONS | Coalesce runs of reaction additions into [Message Reaction Add Many](/gateway/events/#message-reaction-add-many) |
+| 1 &lt;&lt; 1 | DEBOUNCE_MESSAGE_REACTIONS | Merge runs of reaction additions into [Message Reaction Add Many](/gateway/events/#message-reaction-add-many) |
 
 Bit `0` and every bit above `1` are undefined. An undefined bit is accepted and ignored without closing the connection.
 
-`DEBOUNCE_MESSAGE_REACTIONS` applies to a reaction in a direct message or group direct message. A reaction in a guild channel is never coalesced and arrives as its own [Message Reaction Add](/gateway/events/#message-reaction-add).
+`DEBOUNCE_MESSAGE_REACTIONS` applies to a reaction in a direct message or group direct message. A reaction in a guild channel is never merged and arrives as its own [Message Reaction Add](/gateway/events/#message-reaction-add).
 
 ### Identify properties object
 
@@ -141,7 +143,7 @@ Bit `0` and every bit above `1` are undefined. An undefined bit is accepted and 
 | latitude?<sup>3</sup> | string | The client latitude as a decimal string of 1 through 32 characters |
 | longitude?<sup>3</sup> | string | The client longitude as a decimal string of 1 through 32 characters |
 
-<sup>1</sup> Only the exact value `true` sets it. A session without it is refused from an end-to-end encrypted voice channel with `VOICE_E2EE_REQUIRED`
+<sup>1</sup> A session without it is refused from an end-to-end encrypted voice channel with `VOICE_E2EE_REQUIRED`
 
 <sup>2</sup> Read only when `presence` is absent or null, in which case it decides the session's mobile flag. Otherwise the [initial presence object](#initial-presence-object) decides it
 
@@ -149,7 +151,7 @@ Bit `0` and every bit above `1` are undefined. An undefined bit is accepted and 
 
 `os`, `browser`, and `device` are required strings. The remaining fields are optional hints. Fluxer accepts and ignores unrecognised properties.
 
-`latitude` and `longitude` are accepted here only as strings. A number fails validation and the whole session start fails, so send `"52.52"`. Both must be sent together to have any effect, and a string that does not parse as a number counts as absent. Omit them when the client has no location, and Ready orders `rtc_regions` by region ID instead.
+`latitude` and `longitude` are accepted here only as strings. A number fails validation and the whole session start fails, so send `"52.52"`. Both must be sent together to have any effect, and a string that does not parse as a number counts as absent. A client with no location omits them, and Ready orders `rtc_regions` by region ID instead.
 
 ### Initial presence object
 
@@ -158,15 +160,13 @@ Bit `0` and every bit above `1` are undefined. An undefined bit is accepted and 
 | Field | Type | Description |
 | --- | --- | --- |
 | status?<sup>1</sup> | string | The initial status, accepting `online`, `idle`, `dnd`, `invisible`, or `offline` |
-| afk?<sup>2</sup> | boolean | Whether the session is away (default false) |
-| mobile?<sup>2</sup> | boolean | Whether the presence is mobile (default false) |
-| custom_status?<sup>3</sup> | ?[custom status](#custom-status-object) object | The custom status this session publishes |
+| afk? | boolean | Whether the session is away (default false) |
+| mobile? | boolean | Whether the presence is mobile (default false) |
+| custom_status?<sup>2</sup> | ?[custom status](#custom-status-object) object | The custom status this session publishes |
 
-<sup>1</sup> The account's saved status wins when `status` is absent, when it is null or any other non-string, when it is the string `unknown`, and when it is `online` while the saved status is not `online`. The empty string resolves to `online`, and the remaining accepted values are used as sent
+<sup>1</sup> The account's saved status is used when `status` is absent, when it is null or any other non-string, when it is the string `unknown`, and when it is `online` while the saved status is not `online`. The empty string resolves to `online`, and the remaining accepted values are used as sent
 
-<sup>2</sup> Only the exact value `true` sets the flag. Every other value resolves to false
-
-<sup>3</sup> Read only when the account has no saved custom status, and stored as sent with no validation
+<sup>2</sup> Read only when the account has no saved custom status, and stored as sent with no validation
 
 Identify accepts `offline` as a distinct initial status, and [Presence Update](#presence-update) normalises `offline` to `invisible`. A session whose resolved status is `offline` or `invisible` publishes `status: "offline"` and a null `custom_status` to other users.
 
@@ -187,7 +187,7 @@ Identify accepts `offline` as a distinct initial status, and [Presence Update](#
 
 <sup>3</sup> A single Unicode emoji. Fluxer strips the field before validation when `emoji_id` is supplied
 
-Only these fields are read. [Presence Update](#presence-update) validates the object against the account before publishing it. [Identify](#identify) does not validate it, and reads it only when the account has no saved custom status.
+Only these fields are read. [Presence Update](#presence-update) validates the object against the account before publishing it.
 
 The published presence adds `emoji_animated` to this object.
 
@@ -207,7 +207,7 @@ An unknown or expired session produces Opcode `9` with `d: false` and leaves the
 
 A successful Resume replays every retained Dispatch strictly above `seq` in order and finishes with [Resumed](/gateway/events/#resumed). It also replaces the session's socket, and the displaced socket receives Opcode `7` followed by a close.
 
-Fluxer processes Resume in any authentication state. A socket that already has a session attached still processes one, and the named session takes the attached session's place. Send Resume only on a fresh socket.
+Fluxer processes Resume in any authentication state. A socket that already has a session attached still processes a Resume, and the named session takes the attached session's place. Send Resume only on a fresh socket.
 
 ## Presence Update
 
@@ -216,13 +216,11 @@ Opcode `3` replaces the current session presence.
 | Field | Type | Description |
 | --- | --- | --- |
 | status | string | The status to publish, accepting `online`, `idle`, `dnd`, `invisible`, or `offline` |
-| afk?<sup>1</sup> | boolean | Whether the session is away (default false) |
-| mobile?<sup>1</sup> | boolean | Whether the session is mobile (default false) |
-| custom_status?<sup>2</sup> | ?[custom status](#custom-status-object) object | The custom status that replaces the current one |
+| afk? | boolean | Whether the session is away (default false) |
+| mobile? | boolean | Whether the session is mobile (default false) |
+| custom_status?<sup>1</sup> | ?[custom status](#custom-status-object) object | The custom status that replaces the current one |
 
-<sup>1</sup> Only the exact value `true` sets the flag. Every other value resolves to false
-
-<sup>2</sup> An object identical to the current one in `text`, `expires_at`, `emoji_id`, and `emoji_name` is reused without revalidation
+<sup>1</sup> An object identical to the current one in `text`, `expires_at`, `emoji_id`, and `emoji_name` is reused without revalidation
 
 ```json
 {
@@ -240,7 +238,7 @@ Opcode `3` replaces the current session presence.
 
 `status` is required. A payload that is not an object, an object with no `status` key, and a `status` string outside the accepted set all close with `4002` and reason `Invalid presence payload`. The empty string resolves to `online`.
 
-Fluxer accepts a `status` that is not a string. Null and a Boolean publish the session as offline, and every other non-string value resolves to `online`.
+Fluxer accepts a non-string `status`. Null and a Boolean publish the session as offline, and every other non-string value resolves to `online`.
 
 `offline` is normalised to `invisible`, so a Presence Update cannot publish a session as offline while it is connected.
 
@@ -248,7 +246,7 @@ Fluxer accepts a `status` that is not a string. Null and a Boolean publish the s
 
 The published presence has a [custom status](#custom-status-object) object and no activities.
 
-Presence Update has a dedicated limit of five accepted commands per 20 seconds on one WebSocket. A further update inside that window is discarded without closing the connection, after it has consumed the shared payload budgets.
+Presence Update has its own limit of five accepted commands per 20 seconds on one WebSocket. A further update inside that window is discarded without closing the connection, after it has consumed the [shared payload budgets](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits).
 
 ## Voice State Update
 
@@ -279,7 +277,7 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
 
 <sup>4</sup> A non-negative integer. Fluxer treats every other value as absent, which disables the staleness check
 
-<sup>5</sup> Only `true` and the string `"true"` set it, and Fluxer publishes `false` when the member lacks `STREAM` in the channel. The screenshare track rides this same connection, so setting the flag mints no grant and sends no [Voice Server Update](/gateway/events/#voice-server-update)
+<sup>5</sup> Only `true` and the string `"true"` set it, and Fluxer publishes `false` when the member lacks `STREAM` in the channel. The screenshare track uses this same connection, so setting the flag issues no grant and sends no [Voice Server Update](/gateway/events/#voice-server-update)
 
 ```json
 {
@@ -311,7 +309,7 @@ When a guild update has `mutation_id`, Fluxer also reports the outcome to the re
 
 `base_version` is a staleness check for an update that names an existing guild connection. An update whose `base_version` is more than one behind that connection's current voice state version is rejected with `stale_base_version`. The check runs after the member, channel, and connection lookups and before the permission checks. It does not apply to opening a new connection, to leaving a channel, or to the DM and group DM call context.
 
-The first two updates in a rolling one-second window are processed immediately. Later updates enter a per-session queue that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
+The first two updates in a rolling one-second window are processed immediately. Later updates enter a [per-session queue](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
 
 ## Request Guild Members
 
@@ -327,7 +325,7 @@ Opcode `8` requests bounded member chunks.
 | presences?<sup>5</sup> | boolean | Whether results include presences (default false) |
 | nonce? | string | A value of at most 32 bytes echoed in each chunk |
 
-<sup>1</sup> A non-empty `guild_ids` array wins. `guild_id` is read only when `guild_ids` is absent or empty
+<sup>1</sup> A non-empty `guild_ids` array is used. `guild_id` is read only when `guild_ids` is absent or empty
 
 <sup>2</sup> Matched case-insensitively as a prefix of the member's display name, which is the guild nickname, then the global name, then the username
 
@@ -335,7 +333,7 @@ Opcode `8` requests bounded member chunks.
 
 <sup>4</sup> A non-empty `user_ids` array selects those members directly and ignores `query` and `limit`
 
-<sup>5</sup> Only the exact value `true` sets it. Presences whose status is `offline` or `invisible` are omitted from the result
+<sup>5</sup> Presences whose status is `offline` or `invisible` are omitted from the result
 
 ```json
 {
@@ -356,12 +354,12 @@ The command never closes the connection. Invalid input is coerced or discarded:
 - Duplicate guild IDs are collapsed.
 - A `user_ids` array longer than 100 entries abandons the whole request. Individual entries that are not positive Snowflakes are dropped.
 - A `limit` that is not a non-negative integer becomes `0`, and a larger value is clamped to `100`.
-- A `query` that is not a string becomes the empty string.
+- Any non-string `query` becomes the empty string.
 - A `nonce` that is not a string of at most 32 bytes becomes null.
 
 The nonce is echoed only when the request named exactly one guild.
 
-Fluxer skips a guild the session is not currently connected to. A request that resolves to no connected guild produces no chunk.
+Fluxer skips a guild this session is not connected to. A request that resolves to no connected guild produces no chunk.
 
 A bot requests one guild at a time, and a bot request naming two or more guilds is abandoned.
 
@@ -414,7 +412,7 @@ Opcode `14` sets the per-guild subscriptions that decide member list, typing, an
 | member_list_channels?<sup>2</sup> | map[snowflake, array[array[integer]]] | The member list windows to subscribe to, keyed by channel ID |
 | members? | array[snowflake] | The explicit member IDs to subscribe to, at most 1,000 |
 
-<sup>1</sup> Both are Booleans when present. Any other value abandons the rest of the command silently, without a close and without a result
+<sup>1</sup> Both are Booleans when present. Any other value drops the rest of the command silently, without a close and without a result
 
 <sup>2</sup> A coalesced subscription waits 100 ms before Fluxer applies it, and ranges arriving inside that window merge into the ranges already buffered for the same channel. A request that has no ranges for a channel discards the ranges already buffered for it
 
@@ -426,7 +424,7 @@ Marking a guild active changes how much traffic it produces, and [Event filterin
 
 Fluxer applies a subscription at once when the guild has no coalescing window open, its buffer is empty, and the channel's member list is already built. That request opens the window. Fluxer buffers it as applied and does not apply it a second time when the window closes. Every other subscription waits out the window, including one for a channel whose member list is not built yet and one arriving while the window is open.
 
-`VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` together govern the member list subscription, and both are evaluated for each channel separately. A channel the session cannot view, or can view without holding `VIEW_CHANNEL_MEMBERS` there, receives no [Guild Member List Update](/gateway/events/#guild-member-list-update) while its siblings subscribe normally.
+`VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` together control the member list subscription, and both are evaluated for each channel separately. A channel the session cannot view, or can view without holding `VIEW_CHANNEL_MEMBERS` there, receives no [Guild Member List Update](/gateway/events/#guild-member-list-update) while its siblings subscribe normally.
 
 Subscribing a channel to at least one range drops the session's other member list subscriptions in that guild, so one session holds at most one member list per guild.
 
@@ -487,6 +485,6 @@ Results arrive in one [Channel Member Counts Update](/gateway/events/#channel-me
 
 ## Bounded requests
 
-One WebSocket processes at most four bounded requests at once across Request Guild Members, Lazy Request, Request Guild Counts, and Request Channel Member Counts. A command that arrives when all four slots are taken is dropped, without a close and without a result. Each request has a 10,000 ms deadline, after which it produces no further events.
+One WebSocket processes at most four bounded requests at once across [Request Guild Members](#request-guild-members), [Lazy Request](#lazy-request), [Request Guild Counts](#request-guild-counts), and [Request Channel Member Counts](#request-channel-member-counts). A command that arrives when all four slots are taken is dropped, without a close and without a result. Each request has a 10,000 ms deadline, after which it produces no further events.
 
-Request Guild Members also keeps one replaceable pending request while another member request is active, whether or not a slot is free.
+Request Guild Members also keeps one replaceable pending request while another member request is active, whether or not a slot is free. See [Bounded commands](/gateway/limits-and-rate-limits/#bounded-commands).

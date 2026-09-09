@@ -48,7 +48,7 @@ One Media Proxy process serves exactly one mode. The mode is fixed at startup an
 | Mode | Serves |
 | --- | --- |
 | `mp` | Attachments, signed external media, themes, entrance sounds, and every image asset route |
-| `static` | Every read path as a raw object read from the static bucket, with no transformation and no SVG rasterisation<sup>1</sup> |
+| `static` | Every read route as a raw object read from the static bucket, with no transformation and no SVG rasterisation<sup>1</sup> |
 | `upload` | The [upload relay](/media-proxy/upload-relay/), plus every `mp` read route from the same buckets |
 
 <sup>1</sup> A `static` mode endpoint also strips `X-Robots-Tag` from every response and sends no `Content-Disposition`
@@ -59,7 +59,7 @@ Which published base URL serves which mode is a deployment choice. The reference
 
 ## Methods
 
-Every read route accepts `GET` and `HEAD`. HEAD returns the same status and representation headers as GET with an empty body, and a `Range` on HEAD still selects 206 or 416. Any other method on a read path returns 405.
+Every read route accepts `GET` and `HEAD`. HEAD returns the same status and representation headers as GET with an empty body, and a `Range` on HEAD still selects 206 or 416. Any other method on a read route returns 405.
 
 The relay path accepts `PUT`. Any other method there returns 405 with an `Allow` header. An unknown path returns 404.
 
@@ -71,7 +71,7 @@ That answer uses the declared type and the filename alone, so an origin that mis
 
 ## Request headers
 
-Only `Range` affects the representation a public read returns. `X-Forwarded-For` decides which address the [media access allowlist](#access-restrictions) evaluates, so it can turn a 200 into a 403 without changing the representation. Every other request header, including `Authorization`, `Cookie`, `Accept`, `If-Range`, `If-None-Match`, and `Origin`, is ignored on a public read route.
+Only `Range` affects the representation a public read returns. `X-Forwarded-For` decides which address the [media access allowlist](#access-restrictions) evaluates, so it can turn a 200 into a 403 without changing the representation. Every other request header, including `Authorization`, `Cookie`, `Accept`, `Origin`, `If-Range`, `If-None-Match`, `If-Modified-Since`, `If-Match`, and `If-Unmodified-Since`, is ignored on a public read route.
 
 ### Common request headers
 
@@ -83,8 +83,6 @@ Only `Range` affects the representation a public read returns. `X-Forwarded-For`
 <sup>1</sup> A value whose unit is not the exact lowercase `bytes`, or that names more than one range, is ignored, and the response has the complete representation
 
 <sup>2</sup> Read only when the allowlist gate is enabled and the peer address is a configured trusted proxy. A value from any other peer is ignored
-
-The Media Proxy reads no `If-None-Match`, `If-Modified-Since`, `If-Range`, `If-Match`, or `If-Unmodified-Since`, and it sends no `ETag` or `Last-Modified` on a read route, so a cache revalidates a representation by fetching it again.
 
 ## Access restrictions
 
@@ -106,7 +104,7 @@ A Boolean is true only for case-insensitive `true` or the exact value `1`. Every
 
 ## Byte ranges
 
-This contract governs every range the Media Proxy resolves itself. A range is recognised only when its unit is the exact lowercase `bytes`, so `bytes=0-99` selects an interval and `BYTES=0-99` is ignored. Surrounding spaces and tabs are trimmed. A range containing a comma names multiple ranges and is ignored. A malformed range is ignored and produces the complete representation. `HEAD` applies the same contract as `GET`.
+This contract controls every range the Media Proxy resolves itself. A range is recognised only when its unit is the exact lowercase `bytes`, so `bytes=0-99` selects an interval and `BYTES=0-99` is ignored. Surrounding spaces and tabs are trimmed. A range containing a comma names multiple ranges and is ignored. A malformed range is ignored and produces the complete representation. `HEAD` applies the same contract as `GET`.
 
 | Value | Description |
 | --- | --- |
@@ -118,13 +116,13 @@ A reversed range, a zero-length suffix, a start outside the representation, or a
 
 ### Ranges on the signed external route
 
-The route forwards a range to the origin only when no transformation is requested. It sends the range verbatim when the value after `bytes=` is non-empty and every byte of it is an ASCII graphic character, so a multiple range reaches the origin and the origin decides how to answer it. A value with a space anywhere is dropped, and no range is sent. The route relays the origin partial response with the origin `Content-Range` unchanged.
+The route forwards a range to the origin only when no transformation is requested. It sends the range verbatim when the value after `bytes=` is non-empty and every byte of it is an ASCII graphic character. A multiple range therefore reaches the origin, and the origin decides how to answer it. A value with a space anywhere is dropped, and no range is sent. The route relays the origin partial response with the origin `Content-Range` unchanged.
 
-A transforming request forwards no range to the origin and applies the client range to the transformed bytes, so it still returns 206 or 416. On a non-transforming request, an origin 200 is relayed as that 200 when its declared type is trustworthy and the response is not SVG by declared type, filename, or leading bytes. The relayed 200 does not reapply the client range. Fluxer rasterises an SVG response and applies the client range to the rasterised bytes.
+A transforming request forwards no range to the origin, and the client range applies to the transformed bytes, so it still returns 206 or 416. On a non-transforming request, an origin 200 is relayed as that 200 when its declared type is trustworthy and the response is not SVG by declared type, filename, or leading bytes. The relayed 200 does not reapply the client range. Fluxer rasterises an SVG response and applies the client range to the rasterised bytes.
 
 A trustworthy type is a normalised `image/`, `video/`, or `audio/` type other than `application/octet-stream`. An absent or empty `Content-Type`, `text/plain`, `application/pdf`, and `application/zip` are all untrustworthy. Fluxer buffers the body of a 200 under an untrustworthy type and applies the client range to those bytes, so that read returns 206.
 
-The route fetches twice in exactly one case. When an origin answers a forwarded range with 206 under a declared SVG media type, Fluxer discards that partial response, fetches the whole object again without a range, rasterises it, and applies the client range to the rasterised bytes.
+The route fetches twice in exactly one case. When an origin answers a forwarded range with 206 under a declared SVG media type, Fluxer discards that partial response and fetches the whole object again without a range. It rasterises the object and applies the client range to the rasterised bytes.
 
 :::caution[A mislabelled SVG reaches the client as bytes]
 The re-fetch tests the declared media type alone. An origin that answers a forwarded range with SVG bytes under another type produces a 206 of raw SVG under that type.
@@ -143,7 +141,7 @@ Disposition follows that declared type, so SVG mislabelled as an image or video 
 | Accept-Ranges | string | The literal `bytes` on every media representation |
 | Access-Control-Allow-Origin | string | The literal `*` on media responses |
 | Cache-Control<sup>4</sup> | string | The browser cache policy for the representation |
-| CDN-Cache-Control | string | The corresponding shared cache policy |
+| CDN-Cache-Control | string | The matching shared cache policy |
 | Vary | string | The literal `Accept-Encoding` |
 | X-Content-Type-Options | string | The literal `nosniff` |
 | X-Robots-Tag<sup>5</sup> | string | The indexing policy |
@@ -157,13 +155,13 @@ Disposition follows that declared type, so SVG mislabelled as an image or video 
 
 <sup>4</sup> An audio or video representation appends `no-transform`. A route-produced error uses `no-store` instead
 
-<sup>5</sup> The literal `noindex, nofollow, nosnippet, noimageindex, notranslate, max-snippet:0, max-image-preview:none, max-video-preview:0`. Present in `mp` and `upload` mode. A `static` mode endpoint removes it
+<sup>5</sup> The literal `noindex, nofollow, nosnippet, noimageindex, notranslate, max-snippet:0, max-image-preview:none, max-video-preview:0`. Present in `mp` and `upload` mode, and a `static` mode endpoint removes it
 
 <sup>6</sup> Absent from a media access allowlist rejection
 
-Every successful media representation uses `Cache-Control: public, max-age=31536000` and `CDN-Cache-Control: public, max-age=31536000`. An audio or video representation adds `no-transform` to the browser-facing policy only. No response repeats its policy in an `Expires` header. [Cache policies](/media-proxy/responses-and-limits/#cache-policies) lists the responses that have no policy at all.
+Every successful media representation uses `Cache-Control: public, max-age=31536000` and `CDN-Cache-Control: public, max-age=31536000`. An audio or video representation adds `no-transform` to `Cache-Control` only. No response repeats its policy in an `Expires` header. [Cache policies](/media-proxy/responses-and-limits/#cache-policies) lists every cache policy this surface sets, including the responses that set none.
 
-The upload relay is the only route that returns an `ETag`, and it relays the object storage value for the stored object.
+The upload relay is the only route that returns an `ETag`, and it relays the object storage value for the stored object. No read route sends an `ETag` or a `Last-Modified`, so a cache revalidates a representation by fetching it again.
 
 :::note[External media is cached for a year too]
 The signed path is derived from the target URL, so the bytes behind one unchanged target are cached for a year at both layers.
@@ -185,7 +183,7 @@ Disposition follows the resolved media type. An image other than SVG and a video
 
 The disposition filename comes from the route. An attachment or signed external read uses the filename in the path or target URL. An image asset uses the path hash with any `a_` prefix stripped, followed by the canonical name of the path extension, so `/avatars/1/a_abcd1234.jpg` is offered as `abcd1234.jpeg`.
 
-When `download` resolves to true and the served media type has a canonical extension the filename does not already use, the filename keeps its stem and takes that extension, so a PNG transformation of `holiday.jpg` is offered as `holiday.png`. When a filename is not safe as a quoted ASCII value, Fluxer sends a sanitised quoted fallback and an RFC 5987 `filename*` parameter.
+When `download` resolves to true and the served media type has a canonical extension the filename does not already use, the filename keeps its stem and takes that extension. A PNG transformation of `holiday.jpg` is offered as `holiday.png`. When a filename is not safe as a quoted ASCII value, Fluxer sends a sanitised quoted fallback and an RFC 5987 `filename*` parameter.
 
 :::caution[A scriptable document is never inline]
 The attachment, image asset, and signed external routes rasterise SVG to WebP, so a browser does not execute the document in the Media Proxy origin.

@@ -4,7 +4,7 @@ title: Gateway events
 description: Every main Gateway Dispatch event, its payload, its delivery scope, and its replay behaviour.
 ---
 
-A Dispatch is a message from the [Gateway](/gateway/overview/). It tells a client that something happened, such as a new message arriving or a member joining a guild. Every Dispatch has [Opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, the name of the event, and the event's data. [Event filtering](/gateway/event-filtering/) defines the gates each one passes on its way to a socket.
+A Dispatch is a message from the [Gateway](/gateway/overview/) that tells a client something happened, such as a new message arriving or a member joining a guild. Every Dispatch has [Opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, the name of the event, and the event's data. [Event filtering](/gateway/event-filtering/) defines the gates each one passes on its way to a socket.
 
 ## Dispatch envelope
 
@@ -84,7 +84,7 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Guild Member Update](#guild-member-update) | A member's guild state or public user representation changes | Guild connection |
 | [Guild Member Remove](#guild-member-remove) | A user stops being a member of a connected guild | Guild connection |
 | [Guild Members Chunk](#guild-members-chunk) | A bounded member result answers Request Guild Members | Command response |
-| [Guild Member List Update](#guild-member-list-update) | A subscribed member list resynchronises the subscriber's ranges | Member list subscription |
+| [Guild Member List Update](#guild-member-list-update) | A subscribed member list resyncs the subscriber's ranges | Member list subscription |
 | [Guild Audit Log Entry Create](#guild-audit-log-entry-create) | An audit log entry is written in a guild | Holders of `VIEW_AUDIT_LOG` |
 | [Guild Ban Add](#guild-ban-add) | A guild ban is created | Guild connection |
 | [Guild Ban Remove](#guild-ban-remove) | A guild ban is removed | Guild connection |
@@ -108,7 +108,7 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Voice State Ack](#voice-state-ack) | The session's own voice mutation is applied or rejected | Current session |
 | [Voice Server Update](#voice-server-update) | The session receives or replaces its own voice grant | Current session |
 | [Entrance Sound Play](#entrance-sound-play) | A participant's entrance sound plays in a voice channel | Voice channel |
-| [Call Create](#call-create) | A DM or group DM call begins or becomes visible | Call recipient |
+| [Call Create](#call-create) | A private channel call begins or becomes visible | Call recipient |
 | [Call Update](#call-update) | The ringing set, participant roster, or region of a call changes | Call recipient |
 | [Call Delete](#call-delete) | A call ends or becomes unavailable | Call recipient |
 | [Guild Counts Update](#guild-counts-update) | Member and online counts are returned for connected guilds | Command response |
@@ -234,7 +234,7 @@ The payload is otherwise empty. Resumed has the session's current sequence in `s
 
 ### <span id="sessions-replace"></span>SESSIONS_REPLACE
 
-The account's set of live sessions changed. The payload is a bare JSON array of [session presence objects](#session-presence-object) and replaces the client's copy in full. [Ready](#ready) sends the initial set as `sessions`.
+The account's set of live sessions changed. The payload, a bare JSON array of [session presence objects](#session-presence-object), replaces the client's copy in full. [Ready](#ready) sends the initial set as `sessions`.
 
 ### <span id="auth-session-change"></span>AUTH_SESSION_CHANGE
 
@@ -244,7 +244,7 @@ The account's authentication session was rotated, for example by a password chan
 | --- | --- | --- |
 | old_auth_session_id_hash | string | Base64url hash of the authentication session that was replaced |
 | new_auth_session_id_hash | string | Base64url hash of the replacement authentication session |
-| new_token | string | The token that replaces the one the client currently holds |
+| new_token | string | Replacement for the token the client holds |
 
 Every session of the account receives the event, including the one that caused the rotation. A client MUST use `new_token` for every later HTTP request and for any later [Resume](/gateway/commands/#resume) or [Identify](/gateway/commands/#identify). A client whose own `auth_session_id_hash` from [Ready](#ready) equals `old_auth_session_id_hash` MUST replace it with `new_auth_session_id_hash`.
 
@@ -260,7 +260,7 @@ A [Request Guild Members](/gateway/commands/#request-guild-members) command was 
 
 `meta` has `guild_id` and, when the request named exactly one guild and supplied a valid nonce, `nonce`.
 
-That budget admits one unfiltered member request per bot account and guild every 30,000 ms, and `retry_after` is the remainder of that window expressed in seconds. Every other command refusal is silent.
+That budget admits one unfiltered member request per bot account and guild every 30,000 ms, and `retry_after` is the remainder of that window in seconds. Every other command refusal is silent.
 
 ### <span id="user-update"></span>USER_UPDATE
 
@@ -276,7 +276,7 @@ Fluxer republishes the account's presence on every settings update, whether or n
 
 ### <span id="user-guild-settings-update"></span>USER_GUILD_SETTINGS_UPDATE
 
-One guild's notification settings changed. The payload is the complete user guild settings object for that guild.
+One guild's notification settings changed. The payload is that guild's complete user guild settings object.
 
 ### <span id="user-note-update"></span>USER_NOTE_UPDATE
 
@@ -387,7 +387,7 @@ A user session receives Guild Create when a guild becomes available after Ready,
 
 A session that asked for a sync through [Lazy Request](/gateway/commands/#lazy-request) receives a replacement snapshot of the guild. The payload is a [guild ready object](#guild-ready-object) and has the same replacement semantics as [Guild Create](#guild-create).
 
-Fluxer sends a sync when the subscription flips the guild between active and passive, and when `sync: true` names a guild the session has not already synced. A second `sync: true` for an already-synced guild sends nothing.
+Fluxer sends a sync when the subscription switches the guild between active and passive, and when `sync: true` names a guild the session has not already synced. A second `sync: true` for an already-synced guild sends nothing.
 
 ### <span id="guild-update"></span>GUILD_UPDATE
 
@@ -584,7 +584,7 @@ This event is delivered live and is never retained for [Resume](/gateway/command
 
 ### <span id="guild-member-list-update"></span>GUILD_MEMBER_LIST_UPDATE
 
-A member list the session subscribed to through [Lazy Request](/gateway/commands/#lazy-request) resynchronises the subscriber's ranges.
+A member list the session subscribed to through [Lazy Request](/gateway/commands/#lazy-request) resyncs the subscriber's ranges.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -605,7 +605,7 @@ A member list the session subscribed to through [Lazy Request](/gateway/commands
 
 <sup>1</sup> Hoisted role groups come first in role order, then `online`, then `offline`
 
-A group whose count is `0` is omitted. The `offline` group is also omitted once it holds more than 1,000 members, and in that case the offline members are omitted from `items` as well. `member_count` can then exceed the number of items a client can ever read back.
+A group whose count is `0` is omitted. The `offline` group is also omitted once it holds more than 1,000 members, and in that case `items` omits the offline members too. `member_count` can then exceed the number of items a client can ever read back.
 
 #### Member list operation object
 
@@ -626,7 +626,7 @@ Each item has exactly one of the two fields.
 | group? | [member list group object](#member-list-group-object) | A group header occupying one list position |
 | member?<sup>1</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | A member of the list |
 
-<sup>1</sup> Extended with a `presence` field that always exists. It is the guild's [presence object](#presence-object) for that member when the member is visibly online to the guild, and otherwise the placeholder `{"status": "offline", "mobile": false, "afk": false}`
+<sup>1</sup> Extended with a `presence` field that always exists. The value is the guild's [presence object](#presence-object) for that member when the member is visibly online to the guild, and otherwise the placeholder `{"status": "offline", "mobile": false, "afk": false}`
 
 ### <span id="guild-audit-log-entry-create"></span>GUILD_AUDIT_LOG_ENTRY_CREATE
 
@@ -634,7 +634,7 @@ An audit log entry was written. The payload has the shape of a [guild audit log 
 
 The `ip` change key is stripped from `changes`, so an entry whose only change was `ip` has no `changes` at all. A client MUST treat an absent `options` or `changes` as an empty set.
 
-Recipients are every session in the guild that holds `VIEW_AUDIT_LOG`, including the session that performed the action.
+Recipients are every session in the guild that holds `VIEW_AUDIT_LOG`, including the acting session.
 
 ### <span id="guild-ban-add"></span>GUILD_BAN_ADD
 
@@ -679,11 +679,11 @@ After the burst a Dispatch is held again when the session cannot place it. The s
 | custom_status | ?[custom status object](#custom-status-object) | The user's custom status |
 | guild_id? | snowflake | Guild context, present when the presence arrived through a guild |
 
-An account's published `status` is the highest-precedence status across its live sessions, resolved in the order `dnd`, `online`, `idle`, `invisible`, and finally `offline` when no session is live. A session that selected `invisible`, and an account with no live session, both publish `status: "offline"`. A session that lost its transport is published as `offline` 5,000 ms later, even though it stays resumable for the rest of its 60,000 ms retention window, and a successful [Resume](/gateway/commands/#resume) republishes the status it last selected.
+An account's published `status` is the highest-precedence status across its live sessions, resolved in the order `dnd`, `online`, `idle`, `invisible`, and finally `offline` when no session is live. A session that selected `invisible`, and an account with no live session, both publish `status: "offline"`. A session that lost its transport is published as `offline` 5,000 ms later, even though it stays resumable for the rest of its 60,000 ms retention window. A successful [Resume](/gateway/commands/#resume) republishes the status it last selected.
 
-`mobile` is true only when the account's resolved status is `online` and at least one online session declared itself mobile. `afk` is false whenever `mobile` is true, and otherwise true only when every live session is away.
+`mobile` is true only when the account's resolved status is `online` and at least one online session declared itself mobile. `afk` is false whenever `mobile` is true. Otherwise it is true only when every live session is away.
 
-`custom_status` is suppressed to `null` whenever the published status is `offline`, so an invisible account never leaks one.
+`custom_status` is suppressed to `null` whenever the published status is `offline`, so an invisible account never reveals one.
 
 #### Custom status object
 
@@ -738,11 +738,11 @@ A visible message was created. The payload is the complete [message object](/htt
 
 <sup>1</sup> The `user` field is removed from it, and the account is in the message's `author`
 
-Message Create alone overrides both the passive filter and the `ignored_events` list, and the two use different tests. The passive filter is defeated by a direct mention, a mention of one of the user's roles, an everyone mention, or a here mention. The `ignored_events` list is defeated by a direct, everyone, or here mention alone.
+Message Create alone overrides both the passive filter and the `ignored_events` list, and the two use different tests. A direct mention, a mention of one of the user's roles, an everyone mention, or a here mention overrides the passive filter. A direct, everyone, or here mention alone overrides the `ignored_events` list.
 
 ### <span id="message-update"></span>MESSAGE_UPDATE
 
-A visible message changed. The payload is the complete current [message object](/http-api/messages/#message-object). In a guild channel it is extended with `guild_id` and with `member`, the author's guild member object with its `user` field removed. It has no `channel_type`, `nicks`, or `mention_here`.
+A visible message changed. The payload is the complete current [message object](/http-api/messages/#message-object), with no `channel_type`, `nicks`, or `mention_here`. In a guild channel it is extended with `guild_id` and with `member`, the author's guild member object with its `user` field removed.
 
 Recipients must hold `READ_MESSAGE_HISTORY` on the channel, or the message must be newer than the guild's message history cutoff.
 
@@ -759,7 +759,7 @@ One visible message was deleted.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member?<sup>2</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | The author's guild member object, present in a guild channel |
 
-<sup>1</sup> Both fields are omitted when the deletion came from moderation tooling, and `author_id` is also omitted for a message with no author
+<sup>1</sup> Both fields are omitted when the deletion came from moderation tools, and `author_id` is also omitted for a message with no author
 
 <sup>2</sup> The `user` field is removed from it, and the whole field is absent when `author_id` is absent or the author is no longer a member
 
@@ -798,7 +798,7 @@ A user added a reaction to a message.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member? | [guild member](/http-api/guild-members/#guild-member-object) object | The reacting user's guild member object, present in a guild channel |
 
-In a guild channel the session named by the request's `session_id` is excluded and that field is removed from the payload. In a direct message or group direct message the field is delivered as `session_id` and excludes nobody, so a client MUST tolerate receiving its own reaction back.
+In a guild channel the session named by the request's `session_id` is excluded and that field is removed from the payload. In a private channel the field is delivered as `session_id` and excludes nobody, so a client MUST tolerate receiving its own reaction back.
 
 #### Reaction emoji object
 
@@ -814,16 +814,16 @@ Neither `id` nor `animated` is ever null. A Unicode reaction omits both, so a cl
 
 ### <span id="message-reaction-add-many"></span>MESSAGE_REACTION_ADD_MANY
 
-A session that set the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-flags) coalesces a run of reaction additions in a direct message or group direct message into one Dispatch. A reaction in a guild channel is never coalesced and arrives as its own [Message Reaction Add](#message-reaction-add). The session opens a 650 ms window on the first addition and sends the coalesced Dispatch when the window closes. The window holds at most 512 additions and drops the oldest beyond that.
+A session that set the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-flags) merges a run of reaction additions in a private channel into one Dispatch. A reaction in a guild channel is never merged and arrives as its own [Message Reaction Add](#message-reaction-add). The session opens a 650 ms window on the first addition and sends the merged Dispatch when the window closes. The window holds at most 512 additions and drops the oldest beyond that.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id<sup>1</sup> | snowflake | Channel the message is in |
 | message_id<sup>1</sup> | snowflake | Message that was reacted to |
 | guild_id?<sup>1</sup> | snowflake | Guild the channel belongs to |
-| reactions | array[[reaction addition object](#reaction-addition-object)] | The coalesced additions, in arrival order |
+| reactions | array[[reaction addition object](#reaction-addition-object)] | The merged additions, in arrival order |
 
-<sup>1</sup> Taken from the first addition of the group. The window is per session, and the session groups the additions by guild, channel, and message when the window closes. Each group is one Dispatch, so every addition in `reactions` is on the message these fields name
+<sup>1</sup> Taken from the first addition of the group. The window is per session and groups its additions by guild, channel, and message when it closes, so each group is one Dispatch and every addition in `reactions` is on the message these fields name
 
 When the window closes holding exactly one addition, the session sends [Message Reaction Add](#message-reaction-add) instead. A session without the flag receives one Message Reaction Add per addition.
 
@@ -1047,14 +1047,14 @@ Recipients are every other account with a voice state in that channel, one Dispa
 
 ### <span id="call-create"></span>CALL_CREATE
 
-A direct message or group direct message call began, or became visible in the session's initial state.
+A private channel call began, or became visible in the session's initial state.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id | snowflake | Channel the call is in |
 | message_id | snowflake | Call message that opened the call |
 | region | ?string | Voice region serving the call, null until one is chosen |
-| ringing | array[snowflake] | Recipients currently being rung |
+| ringing | array[snowflake] | Recipients being rung |
 | voice_states<sup>1</sup> | array[[voice state object](#voice-state-object)] | Participants, ordered by participant ID |
 | recipients?<sup>2</sup> | array[snowflake] | Every recipient of the channel |
 | created_at?<sup>2</sup> | integer | Unix milliseconds when the call was opened |
@@ -1107,7 +1107,7 @@ A guild that is not connected, or that missed its deadline, has no entry in `cou
 | member_count | integer | Total members |
 | online_count<sup>1</sup> | integer | Online members visible to the requesting account |
 
-<sup>1</sup> Counts only the online members that share at least one channel the requesting account can view. An account holding `ADMINISTRATOR` receives the guild's whole online count instead, and an account that can view no channel at all receives `1` when it is itself online and `0` when it is not
+<sup>1</sup> Counts only the online members that share at least one channel the requesting account can view. An account holding `ADMINISTRATOR` receives the guild's whole online count instead, and an account that can view no channel receives `1` when it is itself online and `0` when it is not
 
 ### <span id="channel-member-counts-update"></span>CHANNEL_MEMBER_COUNTS_UPDATE
 
@@ -1133,6 +1133,6 @@ A channel the session cannot view, and a channel on which it lacks `VIEW_CHANNEL
 
 Every resource object named on this page has the representation defined by the [HTTP API](/http-api/). A Dispatch payload with a resource object has the same fields, with the guild-scoped events adding `guild_id` and the message and reaction events adding `member`.
 
-Two reductions are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and hoists those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
+Two reductions are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and moves those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
 
 Every Dispatch payload also drops the fields the Gateway keeps for its own indexing: `recipient_ids`, `role_index`, `channel_index`, `member_role_index`, `role_perms_cache`, and `overwrite_perms_cache`.

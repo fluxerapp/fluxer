@@ -126,7 +126,7 @@ A key past its expiry is never returned.
 
 <RouteHeader method="POST" path="/v1/admin/api-keys" />
 
-Creates a key and returns an [Admin API key creation](#admin-api-key-creation-object) object that has the raw credential, with HTTP 200 rather than 201. Requires `admin_api_key:manage`.
+Creates a key and returns an [Admin API key creation](#admin-api-key-creation-object) object that has the raw credential, with HTTP 200, not 201. Requires `admin_api_key:manage`.
 
 The acting credential must already have every value in `acls`, unless it has `*`. The key authenticates immediately, and its effective permission is the intersection described under [Admin API key object](#admin-api-key-object).
 
@@ -142,7 +142,7 @@ The acting credential must already have every value in `acls`, unless it has `*`
 
 <sup>2</sup> The stored expiry is the request instant plus this many days. Omitting the field creates a key that does not expire
 
-<sup>3</sup> An empty array produces a key that satisfies no operation. Fluxer compares `acls` against the presenting key's own ACLs, so a key cannot mint a broader key
+<sup>3</sup> An empty array produces a key that satisfies no operation. Fluxer compares `acls` against the presenting key's own ACLs, so a key cannot issue a broader key
 
 Fluxer rejects the request with 403 `MISSING_ACL` on the first ungrantable value. A request that names several ungrantable ACLs reports only that one.
 
@@ -221,7 +221,7 @@ An update never rotates the credential, and no field on this route changes the e
 | 403<sup>1</sup> | [error response](/admin-api/#error-response) | Credential type is refused, `admin_api_key:manage` is absent, or `acls` names a value the acting credential does not have |
 | 404 | [error response](/admin-api/#error-response) | `ADMIN_API_KEY_NOT_FOUND`, which also covers an expired key and a key created by another account |
 
-<sup>1</sup> The ownership check runs before the ACL grant check, so a key belonging to another account returns 404 rather than 403
+<sup>1</sup> The ownership check runs before the ACL grant check, so a key belonging to another account returns 404, not 403
 
 ### Rate limit
 

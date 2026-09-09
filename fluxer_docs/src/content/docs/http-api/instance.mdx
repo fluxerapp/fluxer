@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 The Instance resource describes how one Fluxer deployment is set up. It publishes the discovery document, the client geolocation lookup, and the served OpenAPI document, and it owns the [limit key](#limit-keys) registry.
 
-[Get instance discovery](#get-instance-discovery) is the entry point of the API. A client that knows only a Fluxer origin reads `/.well-known/fluxer` first, and that one unauthenticated response has every field of the [instance discovery object](#instance-discovery-object). Those values include the API base URLs, the [main Gateway](/gateway/overview/) WebSocket URL, and the [Media Proxy](/media-proxy/overview/) base URL, and they override the [endpoint path defaults](#instance-endpoints-object) a deployment would otherwise serve from its canonical public origin.
+[Get instance discovery](#get-instance-discovery) is the entry point of the API. A client that knows only a Fluxer origin reads `/.well-known/fluxer` first, and that one unauthenticated response has every field of the [instance discovery object](#instance-discovery-object). Those values include the API base URLs, the [main Gateway](/gateway/overview/) WebSocket URL, and the [Media Proxy](/media-proxy/overview/) base URL. They override the [endpoint path defaults](#instance-endpoints-object) a deployment would otherwise serve from its canonical public origin.
 
 Every route here is unauthenticated. A credential changes no response body. One that resolves to an account moves the [rate limit bucket](/topics/rate-limits/) from the client IP address onto that account.
 
@@ -124,8 +124,8 @@ Which CAPTCHA provider this deployment uses, and the site keys a client needs to
 | Value | Description |
 | --- | --- |
 | none | The deployment requires no CAPTCHA |
-| hcaptcha | hCaptcha challenges gate the operations that demand one |
-| turnstile | Cloudflare Turnstile challenges gate the operations that demand one |
+| hcaptcha | hCaptcha challenges gate the operations that require one |
+| turnstile | Cloudflare Turnstile challenges gate the operations that require one |
 
 The complete challenge handshake, including the `X-Captcha-Token` and `X-Captcha-Type` request headers, is defined in [CAPTCHA handling](/topics/captcha/).
 
@@ -174,7 +174,7 @@ Who can register an account on this deployment.
 | mode | string | The [registration mode](#registration-modes) |
 | admin_registration_urls_enabled<sup>1</sup> | boolean | Whether an administrator-issued registration URL code is accepted |
 
-<sup>1</sup> When true, [Register an account](/http-api/authentication/#register-an-account) accepts `registration_url_code`, a valid code admits registration even while `mode` is `closed`, and the code's own approval requirement replaces the one the mode would impose
+<sup>1</sup> When true, [Register an account](/http-api/authentication/#register-an-account) accepts `registration_url_code`, a valid code admits registration even while `mode` is `closed`, and the code's own approval requirement replaces the one the mode would set
 
 ### Registration modes
 
@@ -501,7 +501,7 @@ A resolved result is cached for ten minutes against the address. An IPv4 address
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [geolocation](#geolocation-object) object | The location was resolved, wholly, partly, or not at all |
+| 200 | [geolocation](#geolocation-object) object | The location was resolved, fully, partly, or not at all |
 
 ### Rate limit
 

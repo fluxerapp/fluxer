@@ -8,10 +8,10 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An application is an OAuth2 client, and it can own one bot account. These routes report its ownership, bot state, redirect configuration, and non-secret credential metadata. [Transfer application ownership](#transfer-application-ownership) is the only one that writes.
 
-The records are the same ones the public [Applications](/http-api/applications/) resource serves. Creation, deletion, renaming, bot provisioning, redirect URI editing, and credential rotation stay there.
+These records are the same ones the public [Applications](/http-api/applications/) resource serves. Creation, deletion, renaming, bot creation, redirect URI editing, and credential rotation stay there.
 
 :::note[Admin operations report credential metadata only]
-The Admin application object reports whether a client secret or bot token hash is stored, when it was provisioned, and the non-secret bot token preview.
+The Admin application object reports whether a client secret or bot token hash is stored, when it was created, and the non-secret bot token preview.
 :::
 
 ## Admin application object
@@ -38,8 +38,8 @@ The Admin view of one application. An application and its bot account share one 
 | has_client_secret | boolean | Whether a client secret hash is stored |
 | has_bot_token | boolean | Whether a bot token hash is stored |
 | bot_token_preview | ?string | The non-secret trailing preview of the bot token, or null when none is stored |
-| bot_token_created_at | ?ISO8601 timestamp | When the bot token was provisioned, or null when none is stored |
-| client_secret_created_at<sup>4</sup> | ?ISO8601 timestamp | When the client secret was provisioned |
+| bot_token_created_at | ?ISO8601 timestamp | When the bot token was created, or null when none is stored |
+| client_secret_created_at<sup>4</sup> | ?ISO8601 timestamp | When the client secret was created |
 | version<sup>5</sup> | integer | The optimistic locking version of the stored record (0-2147483647) |
 
 <sup>1</sup> Null when the owner account can no longer be read
@@ -83,8 +83,7 @@ The Admin view of one application. An application and its bot account share one 
 Fluxer serves one synthetic application for its own Admin OAuth2 client. The application has no bot, so every `bot_` field is null or false and `has_bot_token` is false. It also reports these values:
 
 - `id` is the fixed constant `1234567890123456789`.
-- `name` is `Fluxer Admin`.
-- `owner_user_id` is the system account `0`.
+- `name` is `Fluxer Admin`, and `owner_user_id` is the system account `0`.
 - `oauth2_redirect_uris` has one entry, the configured Admin endpoint followed by `/oauth2_callback`.
 - `has_client_secret` is true on every response that has it, and `client_secret_created_at` is null.
 - `version` is always 1.

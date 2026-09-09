@@ -33,8 +33,8 @@ Amounts are expressed in the minor unit of the selected currency. Each currency 
 
 | Value | Description |
 | --- | --- |
-| month | The donation recurs every month |
-| year | The donation recurs every year |
+| month | The donation repeats every month |
+| year | The donation repeats every year |
 | null | The donation is taken once |
 
 ## Donation checkout object
@@ -67,7 +67,7 @@ Accepts a request for a single-use donation management link. Returns 204 with an
 
 - The submitted address must be syntactically valid.
 - The address must not exceed 254 characters.
-- The address domain must publish usable mail or address records.
+- Its domain must publish usable mail or address records.
 
 A failure of any of those returns 400 `INVALID_FORM_BODY` with an `errors` entry on `email`.
 
@@ -98,7 +98,7 @@ An address that resolves to no donor receives no email.
 
 Everything happens before the response. Fluxer resolves the address domain, looks up the donor, and, when a donor exists, creates a token and sends the email. A delivery failure is absorbed. An address held as hard bounced and a transport error both leave the token stored and still answer 204.
 
-Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid for 15 minutes, only when the address resolves to a donor. Issuing a new link deletes every earlier token for the same address, and a superseded link returns 400 `DONATION_MAGIC_LINK_INVALID`.
+Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid for 15 minutes, only when the address resolves to a donor. Issuing a new link deletes every earlier token for the same address, and a replaced link returns 400 `DONATION_MAGIC_LINK_INVALID`.
 
 ### Rate limit
 
@@ -120,7 +120,7 @@ A token whose address no longer resolves to a donor holding a payment provider c
 | --- | --- | --- |
 | token<sup>1</sup> <sup>2</sup> | string | The management token, exactly 64 characters |
 
-<sup>1</sup> A token whose case was altered in transit returns 400 `DONATION_MAGIC_LINK_INVALID`
+<sup>1</sup> A token whose case was changed in transit returns 400 `DONATION_MAGIC_LINK_INVALID`
 
 <sup>2</sup> Consumed as soon as it is found valid, so a portal creation failure leaves the token spent
 
@@ -170,7 +170,7 @@ A recurring donation for an address that already holds an active recurring donat
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [donation checkout](#donation-checkout-object) object | The checkout session was created, or the donor was redirected to donation management |
-| 400 | [error response](/http-api/#error-response) | The amount is outside the bounds for the currency, the address domain publishes no usable records, the payment provider is not configured and returns `STRIPE_PAYMENT_NOT_AVAILABLE`, or the provider rejected the request and returns `STRIPE_ERROR` |
+| 400 | [error response](/http-api/#error-response) | The amount is outside the currency's bounds, the address domain publishes no usable records, the payment provider is not configured and returns `STRIPE_PAYMENT_NOT_AVAILABLE`, or the provider rejected the request and returns `STRIPE_ERROR` |
 
 ### Side effects
 

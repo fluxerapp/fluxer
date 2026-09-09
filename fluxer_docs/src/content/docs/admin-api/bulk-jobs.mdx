@@ -22,7 +22,7 @@ A bulk job creation has the identifier of the queued job.
 | --- | --- | --- |
 | job_id<sup>1</sup> | snowflake | The job that applies the requested operation, readable through [Get job](/admin-api/jobs/#get-job) |
 
-<sup>1</sup> Fluxer writes the ledger row before it enqueues the job, so the identifier in a 200 is always readable
+<sup>1</sup> Fluxer writes the ledger row before it queues the job, so the identifier in a 200 is always readable
 
 ### Example
 
@@ -140,11 +140,11 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 | 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without the ACL selected by `task` |
 | 500<sup>1</sup> | [error response](/admin-api/#error-response) | The job could not be queued |
 
-<sup>1</sup> A full queue rejects the job, which surfaces as `INTERNAL_SERVER_ERROR`
+<sup>1</sup> A full queue rejects the job and the request returns `INTERNAL_SERVER_ERROR`
 
 ### Side effects
 
-This operation writes no Admin audit entry. It records one [Jobs](/admin-api/jobs/) ledger row naming the acting Admin as the requester and storing the audit reason, then enqueues the worker task. When the ledger row cannot be written, Fluxer returns 500 `INTERNAL_SERVER_ERROR` and enqueues nothing.
+This operation writes no Admin audit entry. It records one [Jobs](/admin-api/jobs/) ledger row naming the acting Admin as the requester and storing the audit reason, then queues the worker task. When the ledger row cannot be written, Fluxer returns 500 `INTERNAL_SERVER_ERROR` and queues nothing.
 
 The worker processes entities in the submitted order, one at a time. A cancellation check runs before each entity, so [Cancel job](/admin-api/jobs/#cancel-job) stops the run between two entities and settles the job as `cancelled`. Every entity changed before cancellation or failure stays changed. An entity that fails, including an ID that resolves to nothing, is counted as failed and skipped, and the run continues through the rest of the set.
 
@@ -163,7 +163,7 @@ Every task writes one summary Admin audit entry when it finishes, with the actio
 `schedule_user_deletion` marks each account deleted. The task stores the reason code, public reason, and audit reason on the account, and reschedules its pending deletion. It dispatches [User Update](/gateway/events/#user-update), writes one `schedule_deletion` entry for each account, and emails the account holder when an address is on file. A failed email is logged and does not fail the entity.
 
 :::caution[Bulk scheduling is narrower than the single-account operation]
-The worker does not terminate sessions, cancel or refund a Stripe subscription, ban the account's identifiers, or resolve pending reports. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) performs each of those for one account, the last two only when the reason is not `USER_REQUESTED`.
+The worker does not terminate sessions, cancel or refund a Stripe subscription, ban the account's identifiers, or resolve pending reports. [Schedule user deletion](/admin-api/users/#schedule-user-deletion) does each of those for one account, the last two only when the reason is not `USER_REQUESTED`.
 :::
 
 ### Rate limit

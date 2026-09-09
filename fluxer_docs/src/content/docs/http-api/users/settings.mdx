@@ -86,9 +86,9 @@ Notification settings stored for one channel.
 | mute_config | ?[guild mute configuration](#guild-mute-configuration-object) object | The mute configuration of the channel, or null when none is stored |
 | unread_badges<sup>1</sup> <sup>2</sup> | ?integer | [Notification level](#notification-levels) for unread badges, or null to inherit |
 
-<sup>1</sup> The value controls client presentation and does not affect notification delivery
+<sup>1</sup> The value controls client display and does not affect notification delivery
 
-<sup>2</sup> Every response has the member, with null standing in for an unset level
+<sup>2</sup> Every response has the member, with null meaning no level is set
 
 ## Channel notification override input object
 
@@ -128,11 +128,11 @@ Notification settings for one guild, or for every private channel when `guild_id
 
 <sup>2</sup> An override map holding no entry is serialised as null
 
-<sup>3</sup> The value controls client presentation and does not affect notification delivery
+<sup>3</sup> The value controls client display and does not affect notification delivery
 
 <sup>4</sup> The value increases on every stored write, including one that changes no other member, so a client can discard a stale [User Guild Settings Update](/gateway/events/#user-guild-settings-update)
 
-<sup>5</sup> Every response has the member, with null standing in for an unset level
+<sup>5</sup> Every response has the member, with null meaning no level is set
 
 ### Example
 
@@ -209,7 +209,7 @@ Two further members are accepted and ignored. `guild_positions` is an array of a
 | animate_emoji? | boolean | Whether custom emoji animate |
 | animate_stickers? | integer | [Sticker animation setting](/http-api/users/#sticker-animation-settings) |
 | render_spoilers? | integer | [Spoiler rendering setting](/http-api/users/#spoiler-rendering-settings) |
-| message_display_compact? | boolean | Whether messages use compact presentation |
+| message_display_compact? | boolean | Whether messages use compact display |
 | flags?<sup>4</sup> | integer | [Friend source flags](/http-api/users/#friend-source-flags) |
 | friend_source_flags?<sup>4</sup> | integer | [Friend source flags](/http-api/users/#friend-source-flags) |
 | incoming_call_flags?<sup>5</sup> | integer | [Incoming call flags](/http-api/users/#incoming-call-flags) |
@@ -306,7 +306,7 @@ A custom status as submitted with a settings update.
 
 <sup>2</sup> The value is in the future, and a value at or before the current time is rejected
 
-<sup>3</sup> `emoji_name` is ignored, and not validated, when `emoji_id` has a value. An `emoji_id` of null leaves `emoji_name` in place, and it is then exactly one Unicode emoji
+<sup>3</sup> `emoji_name` is ignored without validation when `emoji_id` has a value. An `emoji_id` of null leaves `emoji_name` in place, and it is then exactly one Unicode emoji
 
 A custom emoji ID that does not resolve fails with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. Fluxer drops the resolved emoji for an account without the global expression entitlement, so the request succeeds with text alone.
 
@@ -360,7 +360,7 @@ An account with an outstanding required action can still call this route. An acc
 
 Modifies the account-wide settings and returns the complete [user settings](/http-api/users/#user-settings-object) object. Emits a [User Settings Update](/gateway/events/#user-settings-update) Gateway event.
 
-An account with no stored settings record returns 404 `UNKNOWN_USER`. A locale change additionally emits a [User Update](/gateway/events/#user-update) Gateway event.
+An account with no stored settings record returns 404 `UNKNOWN_USER`. A locale change also emits a [User Update](/gateway/events/#user-update) Gateway event.
 
 An unresolvable custom status emoji returns 400 `INVALID_FORM_BODY` with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. The trusted domain, age restriction, and synced preferences decisions return 400 `VALIDATION_ERROR` with their own codes in `errors`.
 
@@ -379,11 +379,11 @@ The body uses the [user settings update object](#user-settings-update-object).
 
 ### Side effects
 
-Fluxer emits [User Settings Update](/gateway/events/#user-settings-update) to the caller's own sessions. A value-identical patch still performs the write and produces the Dispatch. A locale change also applies to email and notification localisation and emits [User Update](/gateway/events/#user-update). The user object has no locale member.
+Fluxer emits [User Settings Update](/gateway/events/#user-settings-update) to the caller's own sessions. A value-identical patch still does the write and produces the Dispatch. A locale change also applies to email and notification localisation and emits [User Update](/gateway/events/#user-update). The user object has no locale member.
 
 Every [User Settings Update](/gateway/events/#user-settings-update) republishes the caller's current [Presence Update](/gateway/events/#presence-update) to eligible sessions, so a custom status change becomes visible without a further request.
 
-A status of invisible forces every one of the caller's sessions to invisible. A later status of online, idle, or dnd releases them, and it does so only when at least one session is currently invisible.
+A status of invisible forces every one of the caller's sessions to invisible. A later status of online, idle, or dnd releases them only when at least one session is currently invisible.
 
 ### Rate limit
 
@@ -397,7 +397,7 @@ Changes the default voice activity sharing value, applies it to the caller's sid
 
 A missing account or settings record returns 404 `UNKNOWN_USER`.
 
-This operation owns `default_share_voice_activity`, which is read-only in the [user settings object](/http-api/users/#user-settings-object).
+Only this route writes `default_share_voice_activity`, which is read-only in the [user settings object](/http-api/users/#user-settings-object).
 
 ### JSON body
 
@@ -421,7 +421,7 @@ Outside the window the cooldown restarts on every accepted request, including on
 
 ### Side effects
 
-An accepted request writes `default_share_voice_activity` and then walks every friendship. A friendship whose caller-side value already equals the submitted value is skipped, and its stored `version` does not advance. Every friendship, skipped or rewritten, produces one [Relationship Update](/gateway/events/#relationship-update) to the caller and one to the friend, so re-sending the current value still fans the full set out. The friend's Dispatch is emitted only when the reciprocal friendship exists.
+An accepted request writes `default_share_voice_activity` and then walks every friendship. A friendship whose caller-side value already equals the submitted value is skipped, and its stored `version` does not advance. Every friendship, skipped or rewritten, produces one [Relationship Update](/gateway/events/#relationship-update) to the caller and one to the friend, so re-sending the current value still sends the full set out. The friend's Dispatch is emitted only when the reciprocal friendship exists.
 
 It then records the change time in `last_voice_activity_sharing_change_at` and emits [User Update](/gateway/events/#user-update) to the caller.
 
@@ -433,7 +433,7 @@ It then records the change time in `last_voice_activity_sharing_change_at` and e
 
 <RouteHeader method="PATCH" path="/v1/users/@me/guilds/@me/settings" />
 
-Modifies and returns the [user guild settings](#user-guild-settings-object) object that governs direct messages and group DMs. Emits a [User Guild Settings Update](/gateway/events/#user-guild-settings-update) Gateway event on every success.
+Modifies and returns the [user guild settings](#user-guild-settings-object) object that controls direct messages and group DMs. Emits a [User Guild Settings Update](/gateway/events/#user-guild-settings-update) Gateway event on every success.
 
 Fluxer creates the settings with the documented defaults when they are absent.
 
@@ -449,7 +449,7 @@ The body uses the [guild settings update fields](#guild-settings-update-fields).
 
 ### Side effects
 
-The private channel settings are returned with `guild_id` null. Fluxer performs the write and emits the Dispatch to the caller's own sessions even when the request changes nothing, and `version` advances on that write. No other account receives a Dispatch.
+The private channel settings are returned with `guild_id` null. Fluxer does the write and emits the Dispatch to the caller's own sessions even when the request changes nothing, and `version` advances on that write. No other account receives a Dispatch.
 
 ### Rate limit
 
@@ -489,7 +489,7 @@ The body uses the [guild settings update fields](#guild-settings-update-fields).
 
 ### Side effects
 
-Fluxer performs the write and emits the Dispatch to the caller's own sessions even when the request changes nothing, and `version` advances on that write. No guild member other than the caller receives a Dispatch.
+Fluxer does the write and emits the Dispatch to the caller's own sessions even when the request changes nothing, and `version` advances on that write. No guild member other than the caller receives a Dispatch.
 
 ### Rate limit
 

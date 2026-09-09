@@ -40,9 +40,9 @@ One media asset owned by one account. Fluxer resolves every media field at creat
 | content_type | string | The MIME type of the stored copy |
 | content_hash | ?string | The content hash used for [deduplication](#deduplication), or null when it is unavailable |
 | size | integer | The stored size of the copy in bytes |
-| width | ?integer | The width of the media in pixels, or null when inapplicable or unknown |
-| height | ?integer | The height of the media in pixels, or null when inapplicable or unknown |
-| duration | ?number | The duration of the media in seconds, or null when inapplicable or unknown |
+| width | ?integer | The width of the media in pixels, or null when not applicable or unknown |
+| height | ?integer | The height of the media in pixels, or null when not applicable or unknown |
+| duration | ?number | The duration of the media in seconds, or null when not applicable or unknown |
 | url<sup>3</sup> | string | The Fluxer attachment URL of the stored copy |
 | is_gifv<sup>4</sup> | boolean | Whether the stored media is animated or a video converted from a GIF |
 | gif_slug<sup>5</sup> | ?string | The provider-issued slug this meme was sourced from, or null |
@@ -60,7 +60,7 @@ One media asset owned by one account. Fluxer resolves every media field at creat
 
 <sup>5</sup> Both fields are null together. `klipy` is the only value a new meme records, and `tenor` appears on legacy records alone
 
-<sup>6</sup> Keyed by [GIF media format name](#gif-media-format-names). Persisted only by [Save meme from URL](#save-meme-from-url), and null on every message-sourced meme
+<sup>6</sup> Keyed by [GIF media format name](#gif-media-format-names). Stored only by [Save meme from URL](#save-meme-from-url), and null on every message-sourced meme
 
 A message-sourced meme records a slug only when the selected embed is a `gifv` embed whose URL the configured provider recognises. An attachment selection never records one.
 
@@ -201,9 +201,9 @@ Fetches an absolute media URL, stores a durable Fluxer copy, and returns the cre
 
 <sup>3</sup> Honoured together only when `gif_provider` names the configured provider. Otherwise Fluxer extracts a slug from `url` with the configured provider
 
-<sup>4</sup> Persisted only when the request resolved to a provider GIF and the map is non-empty, and discarded otherwise
+<sup>4</sup> Stored only when the request resolved to a provider GIF and the map is non-empty, and discarded otherwise
 
-The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot, then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. Where the segment normalises to nothing, or to only dots and underscores, the filename is `unnamed`. The extension is `bin` when the content type maps to none.
+The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot. It then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. Where the segment normalises to nothing, or to only dots and underscores, the filename is `unnamed`. The extension is `bin` when the content type maps to none.
 
 Fluxer fetches the asset and resolves its metadata before it stores anything. A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. When the request resolves to a provider GIF, the provider's canonical share URL is unfurled and the video content hash it reports replaces the fetched hash for [deduplication](#deduplication).
 
@@ -263,7 +263,7 @@ A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select
 
 When neither key selects anything, Fluxer takes the message's first attachment. It takes the first usable embed when the message has no attachment, or when that attachment has no supported media type. An embed selection has no alt text of its own.
 
-Only an `image/*`, `video/*`, or `audio/*` asset can be saved. `attachment_id` is matched only when the message or one of its snapshots has at least one attachment, and an ID matching none of them fails with `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE` at the `attachment_id` path. When the message has no attachment at all, Fluxer ignores the ID and takes the first usable embed. Only the selected attachment is tried, so a message whose chosen attachment has an unsupported type falls through to its embeds. A selection that resolves to no supported media fails with `NO_VALID_MEDIA_IN_MESSAGE` at the `media` path.
+Only an `image/*`, `video/*`, or `audio/*` asset can be saved. `attachment_id` is matched only when the message or one of its snapshots has at least one attachment. An ID matching none of them fails with `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE` at the `attachment_id` path. When the message has no attachment at all, Fluxer ignores the ID and takes the first usable embed. Only the selected attachment is tried, so a message whose chosen attachment has an unsupported type falls through to its embeds. A selection that resolves to no supported media fails with `NO_VALID_MEDIA_IN_MESSAGE` at the `media` path.
 
 An embed selection uses the embed's image, video, or thumbnail, in that order. When the URL is one the instance's own media endpoint serves, Fluxer copies the asset without a fetch. Any other URL is fetched over the network, and a fetch that resolves no metadata fails with 400 `MEDIA_METADATA_ERROR`.
 
@@ -423,7 +423,7 @@ A client uses it to turn stored URL-only favourite GIFs into renderable picker e
 | --- | --- | --- |
 | Accept-Language?<sup>1</sup> | string | The preferred locale used for a GIF provider lookup |
 
-<sup>1</sup> Resolved against the [supported locale registry](/topics/locales/#supported-locales), superseded by the account's own stored locale, and defaulting to `en-US`
+<sup>1</sup> Resolved against the [supported locale registry](/topics/locales/#supported-locales), replaced by the account's own stored locale, and defaulting to `en-US`
 
 Fluxer derives a two-letter country from the requesting address by geolocation, with `US` as the fallback.
 
@@ -439,7 +439,7 @@ Fluxer derives a two-letter country from the requesting address by geolocation, 
 | --- | --- | --- |
 | entries<sup>1</sup> | array[[resolved GIF entry](#resolved-gif-entry-object) object] | One entry for each submitted URL |
 
-<sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result positionally against its request
+<sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result by position against its request
 
 Fluxer resolves a URL in three stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. When a stage fails, Fluxer downgrades that URL's entry alone. A URL that none of the three stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
 

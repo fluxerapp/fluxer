@@ -10,7 +10,7 @@ A Media Proxy read route resolves one path to one file and returns it. These pat
 
 ## Shared route contract
 
-Every route here accepts `GET` and `HEAD`, reads no `Authorization` header, and has no request-count rate limit. HEAD returns the GET status and representation headers with an empty body, including 206 and 416.
+[Methods](/media-proxy/overview/#methods) and [Authorisation](/media-proxy/overview/#authorisation) define the contract every route here uses. No route here has a request-count rate limit.
 
 [Selector parsing](/media-proxy/overview/#selector-parsing) defines query decoding. [Byte ranges](/media-proxy/overview/#byte-ranges) defines which ranges are recognised and which headers a 206 or 416 has.
 
@@ -58,9 +58,9 @@ The path has no signature and no expiry, so anyone holding the URL reads the obj
 
 <sup>1</sup> Read only on this route, and an empty or unparsable value is ignored. Only lossless animated WebP output uses a value above 6
 
-A transformation begins when `width`, `height`, `format`, or `quality` is present, or when `animated` resolves to true. `download` and `effort` select none on their own.
+[When a transformation runs](/media-proxy/transformations/#when-a-transformation-runs) defines the trigger.
 
-Without a transformation Fluxer streams the object from the store and forwards the range to it. With a transformation it reads the complete object into memory first, and the range then applies to the transformed bytes.
+Without a transformation Fluxer streams the object from the store and forwards the range to it. With one it reads the complete object into memory first, and the range applies to the transformed bytes.
 
 An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only an `mp` endpoint rasterises it, always as lossless WebP. An `upload` endpoint returns the stored SVG bytes.
 
@@ -77,7 +77,7 @@ A video source requires an explicit image `format`. Another transformation param
 | 416 | empty | The range is unsatisfiable |
 | 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
-The [common responses](#common-responses) also apply.
+[Common responses](#common-responses) also apply.
 
 ## Get signed external media
 
@@ -107,7 +107,7 @@ A field holds a signed path only when its source URL is external. A URL already 
 A client MUST preserve both components exactly as issued and MUST NOT decode or reconstruct either one. The signature covers the target component alone, so adding or changing a query parameter does not invalidate it. A path with no `/` after `/external/` returns 400.
 
 :::caution[The signed path is the only authorisation]
-Anyone holding a signed path fetches that external target through Fluxer for as long as the deployment secret is unchanged. The path has no expiry, user binding, or individual revocation.
+Anyone holding a signed path fetches that external target through Fluxer for as long as the deployment secret is unchanged, with no expiry, user binding, or individual revocation.
 :::
 
 ### Target validation
@@ -118,7 +118,7 @@ The target must resolve to a public address. A hostname must be at most 253 byte
 
 A hostname whose lookup fails or resolves to no address returns 400.
 
-The route follows at most five redirects. A further redirect, a repeated URL, or a redirect without a `Location` header returns 502. A redirect to a rejected target returns 400.
+A redirect beyond the [five-redirect bound](/media-proxy/responses-and-limits/#request-and-media-limits), a repeated URL, or a redirect without a `Location` header returns 502. A redirect to a rejected target returns 400.
 
 ### Query parameters
 
@@ -137,9 +137,9 @@ A transformation begins when `width`, `height`, `format`, or `quality` is presen
 
 A non-transforming request forwards the client range to the origin under the filter [byte ranges](/media-proxy/overview/#byte-ranges) defines, and relays an origin 206 with its `Content-Range` and `Content-Length` unchanged. An origin that ignores the range answers 200, and Fluxer streams that whole body through when the origin names an `image/`, `video/`, or `audio/` media type other than `image/svg+xml`. Fluxer buffers a transforming request, an SVG body, and any body whose declared media type is empty, `application/octet-stream`, or outside those categories. A buffered response has the range applied to the bytes the route finally serves, so a client range over a buffered origin 200 produces 206.
 
-Buffering reserves the whole body from a process-wide external buffer budget of 500 MiB for each configured transform slot and queue slot, plus 512 KiB. A reservation the budget cannot cover returns 503.
+A body the [external buffer budget](/media-proxy/responses-and-limits/#request-and-media-limits) cannot cover returns 503.
 
-Fluxer answers a `HEAD` with no transformation and no range from an origin `HEAD` when that origin returns 200, declares a `Content-Length` of at most 500 MiB, and names a non-SVG media type. Any other `HEAD` runs the `GET` path and returns its headers with an empty body.
+This is the one route whose `HEAD` can answer differently from its `GET`. A `HEAD` with no transformation and no range is served from an origin `HEAD` when that origin returns 200, declares a `Content-Length` of at most 500 MiB, and names a non-SVG media type. Any other `HEAD` runs the `GET` path and returns its headers with an empty body. [Methods](/media-proxy/overview/#methods) defines how that origin `HEAD` resolves the media type.
 
 A video target requires an explicit image `format` to produce a thumbnail. Without one, Fluxer returns the original bytes unchanged, and it does the same for a target that is neither an image nor a video.
 
@@ -159,7 +159,7 @@ A video target requires an explicit image `format` to produce a thumbnail. Witho
 
 <sup>1</sup> A forwarded range relays the origin `Content-Range` and `Content-Length` unchanged and omits either header the origin did not send, so a chunked origin 206 produces a 206 with no `Content-Length`. A local range over buffered or transformed bytes always has both
 
-An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged as an upstream fetch failure. The origin body and headers are not returned. Any other unsuccessful origin status becomes 502. The [common responses](#common-responses) also apply.
+An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged as an upstream fetch failure, and the origin body and headers are not returned. Any other unsuccessful origin status becomes 502. [Common responses](#common-responses) also apply.
 
 ### Side effects
 
@@ -190,7 +190,7 @@ The route selects no representation and accepts a `Range`.
 | 400 | Bad request | The decoded theme key is invalid |
 | 416 | empty | The range is unsatisfiable |
 
-The [common responses](#common-responses) also apply. A path that does not end in `.css` is not a theme path and falls through to 404.
+[Common responses](#common-responses) also apply. A path that does not end in `.css` is not a theme path and falls through to 404.
 
 ## Get entrance sound
 
@@ -219,11 +219,11 @@ The route selects no representation, accepts a `Range`, and sends no `Content-Di
 | 206 | Selected audio bytes | One range is satisfiable |
 | 416 | empty | The range is unsatisfiable |
 
-The [common responses](#common-responses) also apply.
+[Common responses](#common-responses) also apply.
 
 ## Image asset contract
 
-An image asset is a stored picture Fluxer serves at a requested size and format, such as an avatar, a guild icon, or an emoji. The asset hash comes from the resource object, and the path combines the owning resource, that hash, and a file extension. On an emoji or sticker path the filename is the identifier itself. The grammar, query parameters, and responses below govern every image asset route. [Asset size selection](/media-proxy/transformations/#asset-size-selection) defines every size class.
+An image asset is a stored picture Fluxer serves at a requested size and format, such as an avatar, a guild icon, or an emoji. The asset hash comes from the resource object, and the path combines the owning resource, that hash, and a file extension. On an emoji or sticker path the filename is the identifier itself. The grammar, query parameters, and responses below apply to every image asset route. [Asset size selection](/media-proxy/transformations/#asset-size-selection) defines every size class.
 
 A client builds the complete URL from the Media Proxy [base URL](/media-proxy/overview/#base-urls), the path template for the asset class, the hash, and a file extension.
 
@@ -273,7 +273,7 @@ An owner segment of the literal `.` or `..` parses as an asset path but produces
 
 <sup>1</sup> A failed transcode whose stored media type begins with `image/` and is not `image/avif`, `image/heic`, `image/heif`, or SVG instead returns 200 with the original stored bytes and media type but without `Content-Disposition`
 
-The [common responses](#common-responses) also apply. [Transformations](/media-proxy/transformations/) defines geometry, animation, output formats, and original representation selection.
+[Common responses](#common-responses) also apply. [Transformations](/media-proxy/transformations/) defines geometry, animation, output formats, and original representation selection.
 
 ## Get user avatar
 
@@ -286,12 +286,12 @@ Returns the user avatar under the icon size class.
 | Field | Type | Description |
 | --- | --- | --- |
 | user_id | string | The owning user [snowflake](/snowflakes/) paired with the avatar hash |
-| hash | string | The avatar hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The avatar hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get guild icon
 
@@ -304,12 +304,12 @@ Returns the guild icon under the icon size class.
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id | string | The owning guild [snowflake](/snowflakes/) paired with the icon hash |
-| hash | string | The icon hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The icon hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get instance branding
 
@@ -322,12 +322,12 @@ Returns the instance branding image written by [Create branding asset](/admin-ap
 | Field | Type | Description |
 | --- | --- | --- |
 | entity_id | string | The instance branding entity key supplied by the branding URL |
-| hash | string | The branding hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The branding hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get owner banner
 
@@ -340,12 +340,12 @@ Returns the owner banner under the banner size class.
 | Field | Type | Description |
 | --- | --- | --- |
 | owner_id | string | The owning user or guild [snowflake](/snowflakes/) paired with the banner hash |
-| hash | string | The banner hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The banner hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get guild splash
 
@@ -358,12 +358,12 @@ Returns the guild splash under the banner size class.
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id | string | The owning guild [snowflake](/snowflakes/) paired with the splash hash |
-| hash | string | The splash hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The splash hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get guild embed splash
 
@@ -376,12 +376,12 @@ Returns the guild embed splash under the banner size class.
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id | string | The owning guild [snowflake](/snowflakes/) paired with the embed splash hash |
-| hash | string | The embed splash hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The embed splash hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get guild member avatar
 
@@ -395,12 +395,12 @@ Returns the guild member avatar under the icon size class.
 | --- | --- | --- |
 | guild_id | string | The guild [snowflake](/snowflakes/) owning the member asset |
 | user_id | string | The member user [snowflake](/snowflakes/) paired with the member avatar hash |
-| hash | string | The member avatar hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The member avatar hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get guild member banner
 
@@ -414,12 +414,12 @@ Returns the guild member banner under the banner size class.
 | --- | --- | --- |
 | guild_id | string | The guild [snowflake](/snowflakes/) owning the member asset |
 | user_id | string | The member user [snowflake](/snowflakes/) paired with the member banner hash |
-| hash | string | The member banner hash, optionally prefixed with `a_` to default to animated output |
+| hash | string | The member banner hash, under the [image asset contract](#image-asset-contract) |
 | ext | string | The path extension, which selects the output format |
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get emoji image
 
@@ -442,7 +442,7 @@ Fluxer issues emoji paths without an `a_` prefix, so an emoji request defaults t
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get sticker image
 
@@ -463,7 +463,7 @@ Fluxer issues sticker paths without an `a_` prefix, so a sticker request default
 
 ### Response
 
-The operation uses the shared [image asset response](#image-asset-response).
+The [image asset response](#image-asset-response) applies.
 
 ## Get static object
 
@@ -490,7 +490,7 @@ The complete request path is the storage key after percent-decoding. The route a
 | 400 | Bad request | The decoded key is invalid |
 | 416 | empty | The range is unsatisfiable |
 
-The [common responses](#common-responses) also apply.
+[Common responses](#common-responses) also apply.
 
 ## Operator and internal endpoints
 

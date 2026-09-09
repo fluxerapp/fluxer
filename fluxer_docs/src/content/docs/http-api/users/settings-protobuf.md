@@ -4,13 +4,13 @@ title: User settings Protobuf
 description: The client preference snapshot in the user settings object.
 ---
 
-A synced preferences snapshot holds the client settings an account shares between its devices. It travels as one base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` message in the `synced_preferences` field of the [user settings object](/http-api/users/#user-settings-object). Fluxer stores it and interprets no field on this page.
+A synced preferences snapshot holds the client settings an account shares between its devices. It is one base64-encoded `fluxer.user.preferences.v1.SyncedPreferences` message in the `synced_preferences` field of the [user settings object](/http-api/users/#user-settings-object). Fluxer stores it and interprets no field on this page.
 
 ## Reading and writing the snapshot
 
 Decode the string before reading any preference, and encode a valid `SyncedPreferences` message when writing one. [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) takes the complete snapshot every time.
 
-The empty string in a response means nothing is stored. Sending null clears the stored snapshot, and so does sending the empty string. A stored snapshot reaches the account's other sessions through [User Settings Update](/gateway/events/#user-settings-update).
+The empty string in a response means nothing is stored. Sending null or the empty string clears it. A stored snapshot reaches the account's other sessions through [User Settings Update](/gateway/events/#user-settings-update).
 
 Fluxer decodes every submitted snapshot and re-encodes it in canonical form before storing it, so a read can return a different string from the one submitted. Known fields are emitted in ascending field number order, and an unrecognised field number is preserved and re-emitted after them. Enums here are open, and an unassigned numeric value survives the round trip. When every known field holds its zero value and no unrecognised field is present, the snapshot encodes to zero bytes and is stored as the empty string.
 
@@ -20,7 +20,7 @@ A submission may use either the standard or the URL-safe base64 alphabet, with o
 
 Types here are the declared Protobuf types. A field whose declared type is an enumeration appears as `int32`, its wire representation, and the Description column links the enumeration.
 
-A field without the optional marker always decodes and holds its Protobuf zero value: false for a bool, 0 for a numeric type, the empty string, an empty repeated field, or an empty map. A field with the optional marker tracks presence and is absent until a value is stored. Every singular message field tracks presence the same way, so a preference group is absent from the snapshot until a client writes to it.
+A field without the optional marker always decodes and holds its Protobuf zero value. That is false for a bool, 0 for a numeric type, the empty string, an empty repeated field, or an empty map. A field with the optional marker tracks presence and is absent until a value is stored. Every singular message field tracks presence the same way, so a preference group is absent from the snapshot until a client writes to it.
 
 Fluxer applies no bound to any individual field of the message, so every length, range, and enumeration membership below describes what the first-party client writes and reads.
 
@@ -92,7 +92,7 @@ The `SyncedPreferences` message is the root of the snapshot. Every field is a pr
 
 ## Accessibility settings object
 
-The `accessibility` field has display, motion, message, media, voice, and interaction presentation preferences. Almost every field is optional, so distinguish an absent field from a stored zero value before applying a default.
+The `accessibility` field has display, motion, message, media, voice, and interaction preferences. Almost every field is optional, so distinguish an absent field from a stored zero value before applying a default.
 
 ### Structure
 
@@ -171,9 +171,9 @@ The `accessibility` field has display, motion, message, media, voice, and intera
 
 <sup>5</sup> The same enumeration as `animate_stickers` on the [user settings object](/http-api/users/#user-settings-object). This field is the mobile-local replacement
 
-<sup>6</sup> The complete CSS of the account's synced custom theme, stored inline. A client that has opted out of syncing its theme applies a local one instead and re-emits this value unchanged, so it does not clobber the devices that do sync
+<sup>6</sup> The complete CSS of the account's synced custom theme, stored inline. A client that has opted out of syncing its theme applies a local one instead and re-emits this value unchanged, so it does not overwrite the value on the devices that do sync
 
-<sup>7</sup> A multiplier, where 1 is unscaled. The first-party client keeps its zoom level in browser storage and neither reads nor writes this field
+<sup>7</sup> A multiplier, where 1 is unscaled. The first-party client keeps its zoom level in browser storage and does not read or write this field
 
 <sup>8</sup> A multiplier, where 1 is the unmodified speaking rate
 
@@ -202,7 +202,7 @@ Field numbers 42 and 43 are reserved, together with the names `attachment_media_
 | Value | Name | Description |
 | --- | --- | --- |
 | 0 | HDR_DISPLAY_MODE_UNSPECIFIED | No explicit mode is selected |
-| 1 | HDR_DISPLAY_MODE_FULL | Display HDR media without constraining its range |
+| 1 | HDR_DISPLAY_MODE_FULL | Display HDR media without limiting its range |
 | 2 | HDR_DISPLAY_MODE_STANDARD | Display HDR media using the standard presentation |
 
 ## Accessibility overrides object
@@ -282,7 +282,7 @@ The `memes_picker` field records meme usage, favourites, and collapsed picker ca
 
 ## Emoji state object
 
-The `emoji` field stores the selected emoji skin tone.
+The `emoji` field holds the selected skin tone.
 
 ### Structure
 
@@ -294,7 +294,7 @@ The `emoji` field stores the selected emoji skin tone.
 
 ## Emoji and sticker layout settings object
 
-The `emoji_sticker_layout` field controls how the emoji and sticker pickers lay their contents out.
+The `emoji_sticker_layout` field controls how the emoji and sticker pickers lay out their contents.
 
 ### Structure
 
@@ -372,7 +372,7 @@ One descriptor addresses one encoding of one favourited GIF. It mirrors the [GIF
 
 ## Favourites state object
 
-The `favorites` field stores favourite channels, the categories they are grouped into, and the presentation state of that grouping. These categories are private to the favourites view.
+The `favorites` field stores favourite channels, the categories they are grouped into, and the display state of that grouping. These categories are private to the favourites view.
 
 ### Structure
 
@@ -428,13 +428,13 @@ The `recent_mentions` field controls which mentions appear in the recent mention
 | include_roles?<sup>1</sup> | bool | Whether to include role mentions |
 | include_guilds?<sup>1</sup> <sup>2</sup> | bool | Whether to include mentions in a guild channel |
 
-<sup>1</sup> The first-party client defaults every filter to true and omits the field while it holds that default, so a client that reads an absent value as the Protobuf zero filters out mentions the account expects to see
+<sup>1</sup> The first-party client defaults every filter to true and omits the field while it holds that default. A client that reads an absent value as the Protobuf zero then filters out mentions the account expects to see
 
 <sup>2</sup> False keeps direct message mentions and drops every mention whose channel belongs to a guild
 
 ## Sidebar preferences object
 
-The `sidebar` field stores direct message sidebar presentation state.
+The `sidebar` field stores direct message sidebar display state.
 
 ### Structure
 
@@ -564,7 +564,7 @@ The `whats_new` field stores the most recently dismissed update entry.
 
 ## Privacy preferences object
 
-The `privacy` field stores client privacy behaviour. Fluxer reads none of it, and none of it changes the privacy fields of the [user settings object](/http-api/users/#user-settings-object), which govern what Fluxer itself discloses about the account.
+The `privacy` field stores client privacy behaviour. Fluxer reads none of it, and none of it changes the privacy fields of the [user settings object](/http-api/users/#user-settings-object), which control what Fluxer itself discloses about the account.
 
 ### Structure
 
@@ -578,7 +578,7 @@ The `privacy` field stores client privacy behaviour. Fluxer reads none of it, an
 
 ## Local user spam overrides object
 
-The `local_spam_overrides` field stores client-local classifications that override the [SPAMMER public user flag](/http-api/users/#public-user-flags) in presentation only. Fluxer neither reads these lists nor changes any flag because of them.
+The `local_spam_overrides` field stores client-local classifications that override the [SPAMMER public user flag](/http-api/users/#public-user-flags) in display only. Fluxer neither reads these lists nor changes any flag because of them.
 
 ### Structure
 
@@ -839,7 +839,7 @@ One combination describes the key, modifiers, and buttons that trigger a keybind
 
 <sup>1</sup> Resolves to Meta on macOS and to Control on every other platform, so one stored combination expresses the platform-native accelerator
 
-<sup>2</sup> Distinct from `enabled` on the [custom keybind](#custom-keybind-object) that owns the combination, and with the opposite default, because an absent value here reads as active
+<sup>2</sup> An absent value here reads as active, the opposite of the default for `enabled` on the [custom keybind](#custom-keybind-object) that owns the combination
 
 ## Chat input settings object
 

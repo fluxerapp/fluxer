@@ -40,7 +40,7 @@ The instance account policy grants the `captcha_exempt` capability to a contact 
 
 The other exemption is the `APP_STORE_REVIEWER` user flag. Fluxer tests it against the resolved account, then against the account an `email` member of the request body resolves to. The body check parses the request body as JSON and reads a string `email` member, and a body that is absent, is not JSON, or is not a JSON object yields no address. That check exempts a login or a registration attempt before any account is resolved.
 
-The exemptions run before request validation on the authentication operations, on create application, and on redeem gift. Create private channel and add group direct message recipient validate the request first, so an invalid request is rejected before any exemption is tested.
+Both exemptions run before request validation on the authentication operations, on create application, and on redeem gift. Create private channel and add group direct message recipient validate the request first, so an invalid request is rejected before any exemption is tested.
 
 No exemption is visible in an API response. A client cannot predict one and handles a challenge on every gated operation.
 

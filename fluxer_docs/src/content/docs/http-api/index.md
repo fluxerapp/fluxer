@@ -62,7 +62,7 @@ The `attachments` array inside `payload_json` maps attachment metadata to files 
 [Messages](/http-api/messages/) defines the attachment metadata and pre-uploaded attachment form, and [Attachment uploads](/topics/uploads/) defines the separate relay upload flow.
 
 :::caution[Multipart indices are attachment IDs]
-Each direct file's `files[n]` index is also the `id` in its attachment metadata entry. Fluxer reads `n` from the field name, so part order sets no identity. The indices need not begin at zero and need not be contiguous.
+Each direct file's `files[n]` index is also the `id` in its attachment metadata entry. Fluxer reads `n` from the field name, so part order sets no identity. The indices need not begin at zero and need not be consecutive.
 :::
 
 ## Input normalisation
@@ -111,7 +111,7 @@ These headers are accepted across resources. An operation-specific header is doc
 
 <sup>2</sup> The configured locale of the authenticated account takes precedence, so this header selects the locale only for an unauthenticated request or an account with no configured locale
 
-<sup>3</sup> The value is read verbatim with no percent-decoding, then stripped of form feed and right-to-left override characters and trimmed. A blank or over-long value is treated as absent
+<sup>3</sup> The value is read verbatim with no percent-decoding, then stripped of form feed and right-to-left override characters and trimmed. A blank or too-long value is treated as absent
 
 <sup>4</sup> Read only for a native Fluxer `User-Agent`, at most 4096 characters, and only the `os` member is used
 
@@ -152,7 +152,7 @@ An `X-Audit-Log-Reason` normalised to more than 512 characters is discarded, and
 
 <sup>2</sup> A generated UUID unless the request supplied its own, in which case that value is echoed back unchanged and unvalidated
 
-<sup>3</sup> A token newly issued where the caller proved sudo mode afresh, and otherwise the incoming proof echoed back with no extension of its lifetime
+<sup>3</sup> A token newly issued where the caller proved sudo mode again, and otherwise the incoming proof echoed back with no extension of its lifetime
 
 <sup>4</sup> Absent from a response with no body
 
@@ -168,7 +168,7 @@ An operation that sets its own `Cache-Control` keeps that value. A response whos
 
 ## Rate limits
 
-Every route consumes its own rate limit bucket and is additionally evaluated against one global bucket unless that bucket is exempt. A denial returns 429 `RATE_LIMITED`. [Rate limits](/topics/rate-limits/) defines the bucket scoping rules, the global allowance, the 429 body, the scope registry, and the complete `X-RateLimit-*` header contract.
+Every route consumes its own rate limit bucket and is also evaluated against one global bucket unless that bucket is exempt. A denial returns 429 `RATE_LIMITED`. [Rate limits](/topics/rate-limits/) defines the bucket scoping rules, the global allowance, the 429 body, the scope registry, and the complete `X-RateLimit-*` header contract.
 
 :::note[Two 429 responses have no `X-RateLimit-*` header]
 A 429 `RESOURCE_LOCKED` response has `Retry-After: 1`, and a 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` response has the remaining cooldown in whole seconds. A client that reads the bucket headers branches on `code`.

@@ -20,7 +20,7 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted, `global` is `true` on a global rate limit denial and `false` on a route one, `required_scope` is the OAuth2 scope the request is missing, and `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
 
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
@@ -65,7 +65,7 @@ An empty or whitespace-only body becomes `{}`, so the response reports the field
 Fluxer normalises empty values on all four targets before validation runs. An empty string becomes `null` wherever it appears, including inside an array element. A nested object becomes `null` when it holds no members. It also becomes `null` when every one of its members is `null` after Fluxer has applied the same rule to each of them. The top-level object itself is never replaced, so a request that sends nothing still reaches the schema as an object and fails on the fields the schema requires.
 
 :::caution[An enumerated validation failure answers 400 alone]
-A validation failure whose elements have enumerated codes answers 400 with its elements in `errors`, and its top-level code is `INVALID_FORM_BODY` everywhere except [Modify current user settings](/http-api/users/settings/#modify-current-user-settings). Any other status, retry guidance, or response header from the original failure is dropped.
+A validation failure whose elements have enumerated codes answers 400 with its elements in `errors`. Its top-level code is `INVALID_FORM_BODY` everywhere except [Modify current user settings](/http-api/users/settings/#modify-current-user-settings). Any other status, retry guidance, or response header from the original failure is dropped.
 :::
 
 ### Default schema failure codes
@@ -124,7 +124,7 @@ The window length, both thresholds, and the number of windows the score trigger 
 
 ## API error code registry
 
-These codes appear in the top-level `code` field of an error response, transmitted as the exact JSON string shown. The registry is closed. Each entry states the leading sentence of the English source message, without its final full stop. Those messages call a [guild](/http-api/guilds/) a community.
+These codes appear in the top-level `code` field of an error response, sent as the exact JSON string shown. The registry is closed. Each entry states the leading sentence of the English source message, without its final full stop. Those messages call a [guild](/http-api/guilds/) a community.
 
 :::note[The rendered `message` fills in the braced values]
 A description containing a value in braces is an ICU MessageFormat template. `You've reached the maximum of {count, plural, one {# emoji} other {# emojis}}` renders as a complete sentence with the applicable limit.

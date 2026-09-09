@@ -6,7 +6,7 @@ description: Compiling the account's data into a downloadable ZIP archive.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A data harvest is a ZIP archive of the current account's data. Fluxer compiles it asynchronously, reports progress while it runs, and issues a temporary download URL once the archive is written.
+A data harvest is a ZIP archive of the current account's data. Fluxer compiles it in the background, reports progress while it runs, and issues a temporary download URL once the archive is written.
 
 Every route except [Download data harvest archive](#download-data-harvest-archive) is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. No route here requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](/http-api/users/content/#delete-current-users-messages) takes the same filter shape, destroys the messages, and requires it.
 
@@ -154,7 +154,7 @@ The `inaccessible_only` scope selects messages in guilds the caller has left or 
 
 Both scopes exclude the caller's personal notes channel, and both exclude a message whose channel no longer resolves or is neither a direct message, a group DM, nor a guild channel.
 
-Supplying both date bounds requires `start_date` strictly earlier than `end_date`. An equal or inverted pair is rejected at path `end_date`.
+Supplying both date bounds requires `start_date` strictly earlier than `end_date`. An equal or reversed pair is rejected at path `end_date`.
 
 :::caution[A filtered archive still has every non-message section]
 The archive still contains the account document, the payment history document, the owned application document, the security document, and the account's avatar and banner. No read response returns the applied filter, so a caller keeps its own record of what it submitted.
@@ -180,7 +180,7 @@ The operation takes no request body and always returns before the archive exists
 
 A harvest record is created with a new [snowflake](/snowflakes/), the request time as `created_at`, progress 0, the step `Queued`, and every other timestamp null. Creating a harvest removes no earlier record and enforces no ceiling on how many an account holds, so the route bucket is the only bound.
 
-Fluxer prepares the archive asynchronously. It contains:
+Fluxer prepares the archive in the background. It contains:
 
 - `user.json`, the account document
 - one `channels/{channel_id}/messages.json` file for each channel that contributed a message, with its messages ordered oldest first
@@ -191,7 +191,7 @@ Fluxer prepares the archive asynchronously. It contains:
 
 Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
 
-At most 100,000 authored messages are collected. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was minted.
+At most 100,000 authored messages are collected. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued.
 
 ### Rate limit
 
@@ -321,7 +321,7 @@ The signed `token` query parameter issued by [Get data harvest download URL](#ge
 The operation is active only while the instance has presigned harvest downloads disabled. That setting is enabled by default, so a default deployment answers every request here as 404 without inspecting the token.
 
 :::note[Every rejection looks identical]
-A missing, malformed, forged, or expired token, a token for another harvest, a harvest that never completed, a harvest that recorded a failure, a harvest past its deadline, and a stale object key all return 404 with the plain text body `Not Found`.
+A missing, malformed, forged, or expired token and a token for another harvest all return 404 with the plain text body `Not Found`. So do a harvest that never completed, one that recorded a failure, one past its deadline, and a stale object key.
 :::
 
 ### Path parameters

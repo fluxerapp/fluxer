@@ -14,7 +14,7 @@ Every route requires a session credential. A bot token and an OAuth2 bearer cred
 
 `klipy` is the only provider name a deployment binds. [Get instance discovery](/http-api/instance/#get-instance-discovery) publishes it as the [GIF provider](/http-api/instance/#gif-provider-object) object. An instance that has bound no provider key refuses every route on this page with 403 `FEATURE_TEMPORARILY_DISABLED`. That same key drives `gif_enabled` in [service availability](/http-api/instance/#service-availability-object), a flag an operator can also set by hand, so a client that reads `gif_enabled` as true can still receive the 403.
 
-A provider outage, a request that outlives its deadline, and an unreadable provider payload all surface as 503 `SERVICE_UNAVAILABLE`. The deadline is 12 seconds everywhere except [Register a GIF share](#register-a-gif-share), which uses 3 seconds. An operator can change both.
+A provider outage, a request past its deadline, and an unreadable provider payload all return 503 `SERVICE_UNAVAILABLE`. The deadline is 12 seconds everywhere except [Register a GIF share](#register-a-gif-share), which uses 3 seconds. An operator can change both.
 
 ## Locale and country
 

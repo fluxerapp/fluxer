@@ -77,9 +77,9 @@ Open these ports on the host:
 | 7881 | tcp | LiveKit media, published by the LiveKit container |
 | 7882 | udp | LiveKit media, published by the LiveKit container |
 
-A machine behind a home router needs 80, 443 and both LiveKit ports forwarded to it. The certificate is issued from the public internet, and voice media arrives on the LiveKit ports directly. Running your own reverse proxy changes only the first two, which the proxy holds while the stack binds a plain HTTP port on the loopback. 7881 and 7882 have to reach the host either way, because voice media never goes through a proxy.
+A machine behind a home router needs 80, 443 and both LiveKit ports forwarded to it. The certificate is issued from the public internet, and voice media arrives on the LiveKit ports directly. Running your own reverse proxy changes only the first two. The proxy holds them, and the stack binds a plain HTTP port on the loopback. 7881 and 7882 have to reach the host either way, because voice media never goes through a proxy.
 
-On another port, open that one in place of 443 and read [Serving on another port](#serving-on-another-port).
+For another port, open that one instead of 443 and read [Serving on another port](#serving-on-another-port).
 
 On a cloud VM, open them in the provider's firewall or security group. On a Linux host running firewalld:
 
@@ -151,7 +151,7 @@ FLUXER_HTTPS_PORT=8443
 docker compose up -d
 ```
 
-`FLUXER_PUBLIC_PORT` is where the port of the public address goes, and every endpoint the services advertise follows it. It does not move what the host publishes, so `FLUXER_HTTPS_PORT` has to name the same port. Move `FLUXER_PUBLIC_SCHEME` with them when the new port serves plain HTTP, and set `FLUXER_HTTP_PORT` in place of `FLUXER_HTTPS_PORT`. `.env.example` ships beside `.env` and writes out both complete recipes.
+`FLUXER_PUBLIC_PORT` is the port of the public address, and every endpoint the services advertise follows it. It does not move what the host publishes, so `FLUXER_HTTPS_PORT` has to name the same port. Move `FLUXER_PUBLIC_SCHEME` with them when the new port serves plain HTTP, and set `FLUXER_HTTP_PORT` instead of `FLUXER_HTTPS_PORT`. `.env.example` ships beside `.env` and writes out both complete recipes.
 
 Host 80 stays published on the `https` recipe and still answers the ACME challenge. Let's Encrypt only ever connects to the public 80 or 443, so the certificate is issued if a router in front forwards public 80 to this host. Serve your own certificate from the `Caddyfile` when it cannot.
 
@@ -180,7 +180,7 @@ Run `--dry-run` first to see what a set of flags does. The PowerShell script tak
 
 ### The script is the reference
 
-Every step in the script has a comment beside it holding the command that does that step alone and the reason it exists: where each stack file comes from, how `.env` is built from `.env.example`, what each `CHANGE_ME` takes, and how the VAPID pair is derived. Read it at [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or the Windows script at [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1).
+Every step in the script has a comment beside it with the command that does that step alone and why it exists: where each stack file comes from, how `.env` is built from `.env.example`, what each `CHANGE_ME` takes, and how the VAPID pair is derived. Read it at [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or the Windows script at [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1).
 
 ## Step 5: Check that it works
 
@@ -224,13 +224,13 @@ The wizard runs in two halves. The first is a welcome, a theme choice, an admin 
 
 Create the owner account with an email address at a domain you control. The first registration that supplies one receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
 
-Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so setting `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. Its domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
+Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
 
 `.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. A forgotten owner password therefore has no email reset. Record it, and register a passkey or a second admin account before you open registration.
 
 Then sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
 
-The desktop client opens the hosted web app for its release channel, so reach your own instance in a browser. See [Issue #1088](https://github.com/fluxerapp/fluxer/issues/1088) before you assume we don't care. It's being actively worked on.
+The desktop client opens the hosted web app for its release channel, so reach your own instance in a browser. [Issue #1088](https://github.com/fluxerapp/fluxer/issues/1088) tracks that, and is being worked on.
 
 [Configuration](/operator/configuration/) lists every runtime setting and the environment variable each one overrides. [Deployment availability](/http-api/deployment-availability/) lists the routes that exist only on the hosted deployment.
 
@@ -269,12 +269,12 @@ In PowerShell write `${PWD}` in place of `$PWD`.
 
 You are done when `backups` holds a dump and a tarball and every service reads `running` again.
 
-`sh install.sh --update` takes both before every upgrade. [What the backup covers](/operator/upgrading/#what-the-backup-covers) puts the dump on a nightly timer, and [Restore a backup](/operator/upgrading/#restore-a-backup) puts either artifact back.
+`sh install.sh --update` takes both artifacts before every upgrade. [What the backup covers](/operator/upgrading/#what-the-backup-covers) puts the dump on a nightly timer, and [Restore a backup](/operator/upgrading/#restore-a-backup) puts either artifact back.
 
 ### Remove the instance
 
 :::danger[This deletes every account, message and upload]
-`-v` deletes every named volume. Every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings any of it back. Take the copies above first. To upgrade, the command is `sh install.sh --update`, below.
+`-v` deletes every named volume. Every account, message, upload, search index and certificate the instance holds is gone, and no `docker compose up -d` brings any of it back. Take the copies above first. To upgrade instead, run `sh install.sh --update`, below.
 :::
 
 Take the instance down and delete its data:

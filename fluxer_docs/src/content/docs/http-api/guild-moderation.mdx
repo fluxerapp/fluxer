@@ -52,7 +52,7 @@ Accepting an [invite](/http-api/invites/) compares the joining account against t
 
 Fluxer skips the address match when the joining address is on the instance exemption list. It also skips the match when the banned address is a single address and the joining address is reported as high mobile or carrier-grade NAT blast radius. The match runs when that report is unavailable or fails.
 
-The email comparison is exact and runs only when an invite is accepted. An email match refuses the join with 403 `USER_BANNED_FROM_GUILD`. Every other path that adds a member compares the account identifier and the address alone, and several compare nothing. [Grant OAuth2 consent](/http-api/oauth2/#grant-oauth2-consent) installing a bot, the admin membership operations, the stock community auto-join, and the premium entitlement guild join all add the member without consulting the ban list.
+The email comparison is exact and runs only when an invite is accepted. An email match refuses the join with 403 `USER_BANNED_FROM_GUILD`. Every other path that adds a member compares the account identifier and the address alone, and several compare nothing. [Grant OAuth2 consent](/http-api/oauth2/#grant-oauth2-consent) installing a bot, the admin membership operations, the stock community auto-join, and the premium entitlement guild join all add the member without checking the ban list.
 
 [Remove guild ban](#remove-guild-ban) releases both blocks. Permanently deleting the banned account deletes every guild ban it holds, and that releases both blocks in every guild at once.
 
@@ -77,7 +77,7 @@ The operation returns the complete collection in one response and has no limit o
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[guild ban](#guild-ban-object) object] | Bans were returned |
-| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller holds `BAN_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller holds `BAN_MEMBERS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `BAN_MEMBERS` is absent |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
 
@@ -98,7 +98,7 @@ Creates a guild ban, or replaces an existing one, and returns 204 with an empty 
 ### Limitations
 
 - The caller cannot ban themselves, and Fluxer reports a self-target as 404 `UNKNOWN_MEMBER`.
-- Banning a target who is currently a member also requires role hierarchy authority over that member. The guild owner holds that authority over everyone, and no other caller holds it over the owner.
+- Banning a target who is a member also requires role hierarchy authority over that member. The guild owner holds that authority over everyone, and no other caller holds it over the owner.
 - A target who is not a member can still be banned, and the ban pre-empts a future join.
 
 Fluxer scans every string in a JSON request body against the instance phrase and URL blocklists, and that includes `reason`. A blocked value returns 403 `CONTENT_BLOCKED` before the rate limit bucket, the credential check, and the permission check.
@@ -142,7 +142,7 @@ The second ban overwrites the stored reason, moderator, issue time, expiry, addr
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Ban was created or replaced |
-| 400<sup>1</sup> | [error response](/http-api/#error-response) | Duration, deletion interval, or reason is invalid, or the caller holds `BAN_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Duration, deletion interval, or reason is invalid, or the caller holds `BAN_MEMBERS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, blocked content was supplied, `BAN_MEMBERS` is absent, or hierarchy authority over a member target is absent |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
 | 404<sup>3</sup> | [error response](/http-api/#error-response) | Target account does not exist, or the target is the caller |
@@ -157,7 +157,7 @@ The second ban overwrites the stored reason, moderator, issue time, expiry, addr
 
 The operation stores the ban together with the target's last known IP address and account email. It records a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) audit entry whose change list has the stored [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields), emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Ban Add](/gateway/events/#guild-ban-add) to the guild's sessions, subject to [event filtering](/gateway/event-filtering/). A positive deletion interval schedules permanent deletion of the target's newer guild messages.
 
-A target that is a current member also loses that membership. The guild member count decreases, the guild's sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove), the banned account's sessions receive [Guild Delete](/gateway/events/#guild-delete), and the membership is dropped from the member search index of an indexed guild. Fluxer records no `MEMBER_KICK` entry alongside the ban entry.
+A target that is a current member also loses that membership. The guild member count decreases. The guild's sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove), the banned account's sessions receive [Guild Delete](/gateway/events/#guild-delete), and the membership is dropped from the member search index of an indexed guild. Fluxer records no `MEMBER_KICK` entry alongside the ban entry.
 
 A ban does not preserve an active communication timeout for a later rejoin, and [Remove guild member](/http-api/guild-members/#remove-guild-member) does. The banned account loses its guild nickname, guild avatar hash, guild banner hash, biography, pronouns, accent colour, and role set. Its read states and guild settings stay in place.
 
@@ -173,7 +173,7 @@ From that point Fluxer refuses a join attempt by the banned account. The address
 
 Removes an existing guild ban and returns 204 with an empty body. Requires [BAN_MEMBERS](/http-api/permissions/). Emits a [Guild Ban Remove](/gateway/events/#guild-ban-remove) Gateway event.
 
-Fluxer rejects a target that is not currently banned with 400 `INVALID_FORM_BODY`.
+Fluxer rejects a target that is not banned with 400 `INVALID_FORM_BODY`.
 
 ### Path parameters
 
@@ -187,7 +187,7 @@ Fluxer rejects a target that is not currently banned with 400 `INVALID_FORM_BODY
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Ban was removed |
-| 400<sup>1</sup> | [error response](/http-api/#error-response) | Target is not banned, or the caller holds `BAN_MEMBERS` without an enrolled authenticator in an elevated-MFA guild |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Target is not banned, or the caller holds `BAN_MEMBERS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `BAN_MEMBERS` is absent |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
 

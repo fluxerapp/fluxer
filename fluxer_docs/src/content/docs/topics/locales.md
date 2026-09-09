@@ -55,7 +55,7 @@ The registry below is the complete set for every Fluxer surface. Wherever Fluxer
 
 Fluxer resolves the response locale once for each request. When a request resolves an authenticated user with a stored locale, Fluxer takes that locale. Every other request negotiates the `Accept-Language` header against the [supported locale registry](#supported-locales), and `en-US` is the result whenever negotiation selects no registry value.
 
-An account created by password registration stores the locale negotiated from its own registration request, so the `Accept-Language` header on that request sets the stored value. An account provisioned through single sign-on stores no account locale. Its [user settings](/http-api/users/settings/) locale reads `en-US`, and its requests negotiate `Accept-Language` until the locale setting is changed.
+An account created by password registration stores the locale negotiated from its own registration request, so the `Accept-Language` header on that request sets the stored value. An account created through single sign-on stores no account locale. Its [user settings](/http-api/users/settings/) locale reads `en-US`, and its requests negotiate `Accept-Language` until the locale setting is changed.
 
 Fluxer splits the header on commas. It trims each member and then splits it on semicolons. The text before the first semicolon is the language range, and Fluxer reads a `q=` weight from only the first parameter after it. A member with no readable `q=` value has weight 1. Fluxer orders the members by descending weight, and members of equal weight keep their header order.
 

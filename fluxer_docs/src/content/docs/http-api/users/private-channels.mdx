@@ -78,9 +78,9 @@ Fluxer omits an open entry whose channel no longer lists the caller among its re
 
 Opens a direct message with one account, or creates a group DM. Returns a [channel](/http-api/channels/#channel-object) object on success. Emits [Channel Create](/gateway/events/#channel-create) and [Message Create](/gateway/events/#message-create) Gateway events.
 
-One body field selects the channel type. `recipient_id` opens a direct message. `recipients` always creates a group DM whatever its length, so a single-element array creates a two-participant group DM, and an empty array creates a group DM whose only participant is the caller.
+One body field selects the channel type. `recipient_id` opens a direct message. `recipients` always creates a group DM whatever its length. A single-element array creates a two-participant group DM, and an empty array creates a group DM whose only participant is the caller.
 
-A request supplying `recipients` additionally consumes the `user:group_dm:create` bucket and is subject to the CAPTCHA check below, whatever the resulting participant count.
+A request supplying `recipients` also consumes the `user:group_dm:create` bucket and is subject to the CAPTCHA check below, whatever the resulting participant count.
 
 Instance policy can disable private channel creation entirely, in which case every request returns 400 `DIRECT_MESSAGES_DISABLED` after the body has been validated and the group DM bucket and CAPTCHA have been applied.
 
@@ -93,7 +93,7 @@ A request naming the caller as its own target returns 400 `CANNOT_DM_YOURSELF` a
 Fluxer reads no block state, no friendship, and no shared guild on this route. A target that resolves is admitted, so the caller opens a direct message with an account that has blocked them. `CANNOT_SEND_MESSAGES_TO_USER` is reachable from [Create message](/http-api/messages/#create-message) alone, which applies the recipient's direct message policy on every send.
 
 :::caution[Blocking removes no channel from the blocked account]
-Blocking refuses no creation and closes no channel. The blocked account still opens the pair's direct message through this route and receives 200. Fluxer refuses the send alone, with 400 `CANNOT_SEND_MESSAGES_TO_USER`.
+Blocking closes no existing channel. The blocked account still opens the pair's direct message through this route and receives 200. Only the send is refused, with 400 `CANNOT_SEND_MESSAGES_TO_USER`.
 :::
 
 :::caution[A SPAMMER caller receives a channel nobody sees]
@@ -113,7 +113,7 @@ Fluxer then evaluates each other recipient independently and collects every fail
 An ordinary caller never adds a recipient across a block in either direction, because blocking deletes the friendship both ways and a friend request crosses no block.
 
 :::note[Group DM admission reads no block state]
-Fluxer holds a bot caller to no friendship, so a recipient that has blocked the bot is added when the two share a guild and the recipient's [group DM add permission flags](/http-api/users/#group-dm-add-permission-flags) admit it.
+Fluxer holds a bot caller to no friendship. A recipient that has blocked the bot is added when the two share a guild and the recipient's [group DM add permission flags](/http-api/users/#group-dm-add-permission-flags) admit it.
 :::
 
 ### Request headers
@@ -131,7 +131,7 @@ Fluxer holds a bot caller to no friendship, so a recipient that has blocked the 
 
 | Field | Type | Description |
 | --- | --- | --- |
-| recipient_id?<sup>1</sup> | snowflake | The sole recipient of a direct message |
+| recipient_id?<sup>1</sup> | snowflake | The only recipient of a direct message |
 | recipients?<sup>1</sup> | array[snowflake] | The other participants of a group DM, excluding the caller (max 49) |
 
 <sup>1</sup> Exactly one of the two is supplied. Supplying both or neither fails validation with the entry path `root`
@@ -147,7 +147,7 @@ Fluxer holds a bot caller to no friendship, so a recipient that has blocked the 
 
 ### Side effects
 
-A newly created direct message opens for the caller only and emits [Channel Create](/gateway/events/#channel-create) to the caller. The recipient's side stays closed until they open it themselves, or until the pair becomes friends through [Accept request or block user](/http-api/users/relationships/#accept-request-or-block-user), which opens both sides. Reopening an existing direct message emits `CHANNEL_CREATE` to the caller unconditionally.
+A newly created direct message opens for the caller only and emits [Channel Create](/gateway/events/#channel-create) to the caller. The recipient's side stays closed until they open it themselves, or until the pair becomes friends through [Accept request or block user](/http-api/users/relationships/#accept-request-or-block-user), which opens both sides. Reopening an existing direct message always emits `CHANNEL_CREATE` to the caller.
 
 Creating a group DM makes the caller its owner, adds the complete participant set, and emits [Channel Create](/gateway/events/#channel-create) to every participant. It creates one [RECIPIENT_ADD](/http-api/messages/#message-types) system message authored by the caller for each other recipient and emits [Message Create](/gateway/events/#message-create) for each to every participant. Initial creation emits no [Channel Recipient Add](/gateway/events/#channel-recipient-add), which is reserved for a recipient added later. A group DM created from an empty `recipients` array produces no system message.
 
@@ -155,7 +155,7 @@ Creating a group DM makes the caller its owner, adds the complete participant se
 
 40 requests per 10 seconds for each authenticated user, on the `user:channels` bucket, shared with [List private channels](#list-private-channels), [Pin private channel](#pin-private-channel), and [Unpin private channel](#unpin-private-channel).
 
-A request supplying `recipients` additionally draws on the `user:group_dm:create` bucket of 10 requests per hour for each authenticated user, which is exempt from the global HTTP limit.
+A request supplying `recipients` also draws on the `user:group_dm:create` bucket of 10 requests per hour for each authenticated user, which is exempt from the global HTTP limit.
 
 ## Preload private channel messages
 

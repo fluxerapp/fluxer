@@ -52,11 +52,11 @@ A `bsky` connection is identified by the account's decentralised identifier whil
 | bsky<sup>1</sup> | BLUESKY | A Bluesky account authorised through atproto OAuth |
 | domain | DOMAIN | A domain the account has proved it controls |
 
-<sup>1</sup> [Initiate connection](#initiate-connection) rejects this type with 400 `BLUESKY_OAUTH_NOT_ENABLED` before it consults the connection ceiling. A Bluesky connection is created only by completing the flow that begins at [Start Bluesky authorisation](#start-bluesky-authorisation)
+<sup>1</sup> [Initiate connection](#initiate-connection) rejects this type with 400 `BLUESKY_OAUTH_NOT_ENABLED` before it checks the connection ceiling. A Bluesky connection is created only by completing the flow that begins at [Start Bluesky authorisation](#start-bluesky-authorisation)
 
 ## Connection visibility flags
 
-The flags of one connection decide which viewers of the owner's profile see it. Fluxer evaluates them against a viewer with the same rule as the [profile field privacy flags](/http-api/users/#profile-field-privacy-flags).
+A connection's flags decide which viewers of the owner's profile see it. Fluxer evaluates them against a viewer with the same rule as the [profile field privacy flags](/http-api/users/#profile-field-privacy-flags).
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -100,7 +100,7 @@ Fluxer attempts a `domain` proof against the stored identifier exactly as it was
 
 Fluxer first resolves the TXT records of `_fluxer.<domain>`. It issues the query in parallel to a fixed set of eight public DNS resolvers, each with a 2000 millisecond timeout and one attempt. The proof succeeds when any resolver returns a record whose concatenated strings equal `fluxer-verification=<token>` exactly. A resolver that fails or times out is treated like an absent record and produces no separate error.
 
-When DNS does not prove ownership, Fluxer issues one HTTPS `GET` to `https://<domain>/.well-known/fluxer-verification` with a 5000 millisecond timeout. It follows up to 5 redirects. A sixth redirect fails the proof, as does a redirect response that has no `Location` header. The proof succeeds only when the status of the final response is in the 2xx range and the whitespace-trimmed body equals the token exactly. A response body over the 16384 byte ceiling fails the proof, and a declared `Content-Length` over that ceiling fails it before the body is read.
+When the DNS proof fails, Fluxer issues one HTTPS `GET` to `https://<domain>/.well-known/fluxer-verification` with a 5000 millisecond timeout. It follows up to 5 redirects. A sixth redirect fails the proof, as does a redirect response that has no `Location` header. The proof succeeds only when the status of the final response is in the 2xx range and the whitespace-trimmed body equals the token exactly. A response body over the 16384 byte ceiling fails the proof, and a declared `Content-Length` over that ceiling fails it before the body is read.
 
 The instance outbound URL policy applies to the initial request and to every redirect it follows. A redirect target must use the `http` or `https` scheme. Fluxer lowercases the host and strips one trailing dot before the check.
 
@@ -108,7 +108,7 @@ A host that is an IP literal cannot sit in a loopback, private, shared, link-loc
 
 Any other host must be a fully qualified domain name of at most 253 characters with at least one dot. Every label must be 1 to 63 characters of ASCII letters, digits, and hyphens that neither begins nor ends with a hyphen. The final label cannot consist only of digits, and every address the host resolves to must be a public internet address. A host that fails any of those checks fails the proof, so a domain pointed at a loopback, link-local, or private range is never provable this way.
 
-[Verify and create connection](#verify-and-create-connection) takes the token from the signed initiation token, and [Verify connection](#verify-connection) reuses the connection's stored verification token, so a recheck expects the same DNS record or document as the original proof.
+[Verify and create connection](#verify-and-create-connection) takes the token from the signed initiation token. [Verify connection](#verify-connection) reuses the connection's stored verification token, so a recheck expects the same DNS record or document as the original proof.
 
 :::note[Only the DNS record has the prefix]
 The DNS record value has the `fluxer-verification=` prefix and the well-known document does not. A document that contains the prefixed form fails the HTTPS proof.
@@ -134,7 +134,7 @@ Returns every [connection object](#connection-object) the authenticated account 
 
 Fluxer checks the scope before it checks the account state, so a bearer without `connections` is rejected with 403 `MISSING_OAUTH_SCOPE` even when the account also has an outstanding required action.
 
-<sup>1</sup> The sort is stable and has no secondary key, so two connections that share a `sort_order` are returned in their stored order, which is ascending by [connection type](#connection-types) and then descending by `id`
+<sup>1</sup> The sort is stable and has no secondary key, so two connections sharing a `sort_order` are returned in stored order, ascending by [connection type](#connection-types) and then descending by `id`
 
 ### Response
 
@@ -175,13 +175,13 @@ Fluxer checks the requested type first, then the 20-connection ceiling, and then
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 201 | [connection verification](#connection-verification-object) object | Verification was initiated |
+| 201 | [connection verification](#connection-verification-object) object | Verification was started |
 | 400 | [error response](/http-api/#error-response) | The requested type is bsky and the request returns `BLUESKY_OAUTH_NOT_ENABLED` |
 | 409 | [error response](/http-api/#error-response) | A connection of the same type already exists for that identifier, compared case-insensitively, and the request returns `CONNECTION_ALREADY_EXISTS` |
 
 ### Side effects
 
-This operation creates no connection and emits no Gateway Dispatch. It returns a signed initiation token that expires 30 minutes after issue and a deterministic verification token that the caller MUST publish at the domain before calling [Verify and create connection](#verify-and-create-connection).
+The operation creates no connection and emits no Gateway Dispatch. It returns a signed initiation token that expires 30 minutes after issue and a verification token the caller MUST publish at the domain before calling [Verify and create connection](#verify-and-create-connection).
 
 ### Rate limit
 
@@ -193,7 +193,7 @@ This operation creates no connection and emits no Gateway Dispatch. It returns a
 
 Checks the [domain ownership proof](#domain-ownership-proof) described by a signed initiation token. Creates and returns the [connection object](#connection-object) on success.
 
-The type, identifier, and verification token all come from the signed token, so a caller cannot verify a target it did not initiate. Fluxer re-evaluates the 20-connection ceiling and the duplicate identifier before it attempts the proof, and a target that became a duplicate since the token was issued is refused with no DNS or HTTPS lookup.
+The type, identifier, and verification token all come from the signed token, so a caller cannot verify a target it did not initiate. Fluxer re-evaluates the 20-connection ceiling and the duplicate identifier before it attempts the proof. A target that became a duplicate since the token was issued is refused with no DNS or HTTPS lookup.
 
 ### JSON body
 
@@ -256,7 +256,7 @@ Updates the visibility or display order of one existing connection and returns 2
 
 ### Side effects
 
-The supplied fields replace the corresponding connection values. The complete connection list is then published as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions. The Dispatch is emitted even when every supplied value already matched, and even when the body supplies no field at all.
+Each supplied field replaces the stored value. The complete connection list is then published as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions. The Dispatch is emitted even when every supplied value already matched, and even when the body supplies no field at all.
 
 Assigning a `sort_order` that another connection already holds is permitted. [List connections](#list-connections) then resolves the tie by stored order.
 
@@ -328,13 +328,13 @@ The handle a `bsky` recheck resolves proves the session is live and is then disc
 | 403 | [error response](/http-api/#error-response) | The proof failed and the request returns `CONNECTION_VERIFICATION_FAILED` |
 | 404 | [error response](/http-api/#error-response) | No connection of that type and identifier is owned by the caller and the request returns `CONNECTION_NOT_FOUND` |
 
-<sup>1</sup> Every other recheck failure is reported as a failed proof. The route reads the configured OAuth client alone and never consults the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`
+<sup>1</sup> Every other recheck failure is reported as a failed proof. The route reads the configured OAuth client alone and never checks the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`
 
 ### Side effects
 
 A successful proof sets `verified` to true, refreshes the last-verified timestamp, and sets the original verification timestamp to now when the connection had none. It then publishes the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to the caller's own sessions.
 
-A failed proof against a connection that was verified sets `verified` to false, clears the original verification timestamp, and refreshes the last-verified timestamp. A failed proof against a connection that was already unverified writes nothing. Both publish the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch, so every session of the account observes the current `verified` value.
+A failed proof against a connection that was verified sets `verified` to false, clears the original verification timestamp, and refreshes the last-verified timestamp. A failed proof against an already unverified connection writes nothing. Both publish the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch, so every session of the account observes the current `verified` value.
 
 ### Rate limit
 
@@ -392,13 +392,13 @@ Fluxer trims surrounding whitespace, then removes a leading `https://bsky.app/pr
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | [Bluesky authorisation](#bluesky-authorisation-object) object | Authorisation was initiated |
+| 200<sup>1</sup> | [Bluesky authorisation](#bluesky-authorisation-object) object | Authorisation was started |
 | 400<sup>2</sup> | [error response](/http-api/#error-response) | Bluesky connections are unavailable on this instance and the request returns `BLUESKY_OAUTH_NOT_ENABLED`, or the flow could not be started and the request returns `BLUESKY_OAUTH_AUTHORIZATION_FAILED` |
 | 409<sup>3</sup> | [error response](/http-api/#error-response) | A bsky connection whose name equals the normalised handle already exists and the request returns `CONNECTION_ALREADY_EXISTS` |
 
-<sup>1</sup> This operation does not consult the 20-connection ceiling, which is enforced only when the provider callback creates the connection
+<sup>1</sup> This operation does not check the 20-connection ceiling, which is enforced only when the provider callback creates the connection
 
-<sup>2</sup> Every authorisation failure other than an unavailable integration collapses into one code, including an unresolvable handle, a handle whose authorisation server is unreachable, and a rejected client registration, so a client MUST NOT derive a remedy from it
+<sup>2</sup> Every authorisation failure other than an unavailable integration collapses into one code, including an unresolvable handle, a handle whose authorisation server is unreachable, and a rejected client registration, so a client MUST NOT use it to choose a fix
 
 <sup>3</sup> The comparison is case-insensitive and runs against the stored connection `name`, so an account whose upstream handle has since changed is not detected as a duplicate here and refreshes its existing connection at the callback
 
@@ -416,9 +416,9 @@ The provider callback reads and deletes the state in one operation. A replay and
 
 ### Completing the flow
 
-The returned `authorize_url` is an atproto authorisation server URL. The client sends the user there, the user approves the request, and the authorisation server calls the instance's registered redirect URI, `/connections/bluesky/callback` on the `api_public` [instance endpoint](/http-api/instance/#instance-endpoints-object). A client MUST NOT call that route directly.
+A client sends the user to the returned `authorize_url`, which is an atproto authorisation server URL. The user approves the request, and the authorisation server calls the instance's registered redirect URI, `/connections/bluesky/callback` on the `api_public` [instance endpoint](/http-api/instance/#instance-endpoints-object). A client MUST NOT call that route directly.
 
-Fluxer consumes the state, exchanges the authorisation code for an atproto session, resolves the account's decentralised identifier and current handle, writes the connection, and then redirects the browser to `/connection-callback` on the `webapp` [instance endpoint](/http-api/instance/#instance-endpoints-object).
+Fluxer consumes the state and exchanges the authorisation code for an atproto session. It resolves the account's decentralised identifier and current handle, writes the connection, and then redirects the browser to `/connection-callback` on the `webapp` [instance endpoint](/http-api/instance/#instance-endpoints-object).
 
 That redirect has `status=connected` on success. On failure it has `status=error` together with one `reason` value.
 
@@ -433,13 +433,13 @@ That redirect has `status=connected` on success. On failure it has `status=error
 
 <sup>2</sup> A replayed callback and a callback more than one hour after issue both land here
 
-<sup>3</sup> An account already holding 20 connections lands here, as does any unexpected internal failure, so a client MUST NOT derive a remedy from this value
+<sup>3</sup> An account already holding 20 connections lands here, as does any unexpected internal failure, so a client MUST NOT use this value to choose a fix
 
-On success, an account that has no `bsky` connection for that decentralised identifier receives a new one with `verified` set to true, EVERYONE visibility, and the number of connections it already held as its order. An account that already has one keeps its identifier and `sort_order`, has its `name` rewritten to the current handle, and has `verified` set back to true. Either path publishes the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to that account's own sessions.
+On success, an account with no `bsky` connection for that decentralised identifier receives a new one. The new connection has `verified` set to true, EVERYONE visibility, and the number of connections the account already held as its order. An account that already has one keeps its identifier and `sort_order`, has its `name` rewritten to the current handle, and has `verified` set back to true. Either path publishes the complete connection list as a [User Connections Update](/gateway/events/#user-connections-update) Gateway Dispatch to that account's own sessions.
 
 Completing the flow is the only way a `bsky` connection `name` is written, so it is the only way to reconcile an upstream handle rename. It renews the 24-hour atproto session that [Verify connection](#verify-connection) rechecks.
 
-The callback does not consult the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`. An authorisation started while the flag was set completes normally after an operator clears it, as long as the OAuth client is still configured.
+The callback does not check the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`. An authorisation started while the flag was set completes normally after an operator clears it, as long as the OAuth client is still configured.
 
 ### Rate limit
 
@@ -508,7 +508,7 @@ An atproto authorisation server reads this document, named by `jwks_uri` in [Get
 | --- | --- | --- |
 | keys | array[object] | The public half of each configured signing key, in configuration order |
 
-The array holds at least one entry on any 200. Each entry has the public members of one ES256 key. There is no `alg` and no `use`, so a verifier that demands either one rejects the set.
+The array holds at least one entry on any 200. Each entry has the public members of one ES256 key. There is no `alg` and no `use`, so a verifier that requires either one rejects the set.
 
 | Field | Type | Description |
 | --- | --- | --- |

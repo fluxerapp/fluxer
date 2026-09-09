@@ -10,9 +10,9 @@ A guild is a community with its own channels, roles, members, and configuration.
 
 [List current user guilds](#list-current-user-guilds) and [Get guild](#get-guild) declare the `guilds` [OAuth2 scope](/http-api/oauth2/#oauth2-scopes), and a bearer credential without that scope receives 403 `MISSING_OAUTH_SCOPE`. Every other route rejects a bearer credential with 403 `ACCESS_DENIED`.
 
-A guild that does not exist returns 404 `UNKNOWN_GUILD`, and an existing guild that does not hold the caller as a member returns 403 `MISSING_PERMISSIONS`, so any authenticated caller can tell a missing guild from one they are not in. A guild whose stored record exists while the main Gateway reports it unknown returns 403 `ACCESS_DENIED`.
+A guild that does not exist returns 404 `UNKNOWN_GUILD`. An existing guild that does not hold the caller as a member returns 403 `MISSING_PERMISSIONS`. So any authenticated caller can tell a missing guild from one they are not in. A guild whose stored record exists while the main Gateway reports it unknown returns 403 `ACCESS_DENIED`.
 
-Fluxer screens a route whose path opens with `/guilds/{guild_id}` for [guild availability](#guild-features) before the operation runs. [Create guild](#create-guild), [List current user guilds](#list-current-user-guilds), [Leave guild](#leave-guild), and [Bulk delete current user's guild messages](#bulk-delete-current-users-guild-messages) do not have the guild in their first two path segments, so a forced-unavailable guild is still listed and can still be left.
+Fluxer checks [guild availability](#guild-features) on a route whose path opens with `/guilds/{guild_id}` before the operation runs. [Create guild](#create-guild), [List current user guilds](#list-current-user-guilds), [Leave guild](#leave-guild), and [Bulk delete current user's guild messages](#bulk-delete-current-users-guild-messages) do not have the guild in their first two path segments, so a forced-unavailable guild is still listed and can still be left.
 
 The instance-wide content filter screens the JSON body of every `POST`, `PUT`, and `PATCH` route here before the route runs. A string of at least 3 characters matching the phrase blocklist, or a URL matching the URL blocklist, returns 403 `CONTENT_BLOCKED`. The `icon`, `banner`, `splash`, `embed_splash`, `permissions`, `roles`, `channels`, `password`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` members are exempt. The guild `name` is scanned a second time inside [Create guild](#create-guild) and [Modify guild](#modify-guild), without the 3 character floor.
 
@@ -130,7 +130,7 @@ A guild object contains the guild's configuration. The operation that returns it
 
 ## Partial guild object
 
-A partial guild object is the smaller guild shape that appears inside invite payloads. It has identity and presentation fields only, and the feature-gated asset rules of the complete [guild object](#guild-object) apply to it unchanged.
+A partial guild object is the smaller shape that appears inside invite payloads. It has identity and display fields only, and the feature-gated asset rules of the complete [guild object](#guild-object) apply to it unchanged.
 
 ### Structure
 
@@ -303,7 +303,7 @@ The guild owner, a bot, and any member holding at least one role bypass the chec
 
 <sup>1</sup> Only the guild owner can change this value, the owner account needs a second factor already configured, and the change requires sudo mode
 
-While the level is ELEVATED, a caller other than the guild owner exercises the [elevated permissions](/http-api/permissions/#elevated-permissions) only with an enrolled authenticator, and a bot inherits the enrolment state of its application owner. An operation that asserts an elevated permission the caller holds but cannot exercise returns 400 `TWO_FACTOR_REQUIRED` after the permission itself has been confirmed.
+While the level is ELEVATED, a non-owner caller uses the [elevated permissions](/http-api/permissions/#elevated-permissions) only with an enrolled authenticator. A bot inherits the enrolment state of its application owner. An operation that asserts an elevated permission the caller holds but cannot use returns 400 `TWO_FACTOR_REQUIRED` after confirming the permission itself.
 
 ## Splash card alignments
 
@@ -372,7 +372,7 @@ A set bit disables the named behaviour across the guild. Only the [Admin API](/a
 
 ## Guild features
 
-A feature is a capability or availability flag in the guild's `features` array.
+Each value in the guild's `features` array is a capability or availability flag.
 
 | Value | Description |
 | --- | --- |
@@ -413,7 +413,7 @@ A feature is a capability or availability flag in the guild's `features` array.
 
 <sup>4</sup> An authenticated request whose path opens with `/guilds/{guild_id}` or `/channels/{channel_id}`, where that channel belongs to this guild, is rejected before the operation runs with 403 `MISSING_ACCESS`. `UNAVAILABLE_FOR_EVERYONE` applies to the guild owner exactly as it applies to every other member, while `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` exempts an account with the instance staff flag
 
-<sup>5</sup> The feature raises the default `max_guild_members` limit from 1000000 to 10000000 before the ordered [limit configuration](/http-api/instance/#limit-keys) is consulted, so the raised ceiling applies even when no configured rule names the feature
+<sup>5</sup> The feature raises the default `max_guild_members` limit from 1000000 to 10000000 before the ordered [limit configuration](/http-api/instance/#limit-keys) is checked, so the raised ceiling applies even when no configured rule names the feature
 
 ## Custom invite URL object
 
@@ -483,7 +483,7 @@ Creates a guild owned by the caller. Requires a user session credential. Returns
 - A caller already at the configured guild limit is rejected with 400 `MAX_GUILDS`.
 - While the instance's single community policy is active, every caller is rejected with 400 `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS`.
 
-Fluxer decides the single community refusal first, so it precedes the email, bot, unclaimed, and guild limit failures.
+Fluxer decides the single community refusal before the email, bot, unclaimed, and guild limit failures.
 
 ### JSON body
 
@@ -492,7 +492,7 @@ Fluxer decides the single community refusal first, so it precedes the email, bot
 | name<sup>1</sup> | string | Guild name (1-100 characters) |
 | icon?<sup>2</sup> | ?base64 string | Guild icon |
 | empty_features?<sup>3</sup> | boolean | Whether to create the guild with no features (default false) |
-| template? | [guild creation template object](#guild-creation-template-object) | Roles and channels to provision for the new guild |
+| template? | [guild creation template object](#guild-creation-template-object) | Roles and channels to create for the new guild |
 
 <sup>1</sup> Fluxer trims the value before it measures the length bound
 
@@ -549,7 +549,7 @@ Returns an array of [guild objects](#guild-object), one for every guild the auth
 
 <sup>2</sup> A guild whose counts cannot be fetched is returned without them
 
-Fluxer drops a membership whose guild record can no longer be resolved before it applies the cursor and `limit`, so the page still has up to `limit` guilds when further guilds remain. This route runs no availability screen, and a guild with `UNAVAILABLE_FOR_EVERYONE` is still listed.
+Fluxer drops a membership whose guild record can no longer be resolved before it applies the cursor and `limit`, so the page still has up to `limit` guilds when further guilds remain. This route runs no availability check, and a guild with `UNAVAILABLE_FOR_EVERYONE` is still listed.
 
 :::caution[`permissions` needs a limit of 100 or lower]
 A page of more than 100 guilds, or a failed lookup, omits `permissions` from every guild. The request still succeeds.
@@ -602,9 +602,9 @@ The response has no `permissions` field. Read [List current user guilds](#list-c
 
 Modifies guild configuration and returns the updated [guild object](#guild-object). Requires membership and [MANAGE_GUILD](/http-api/permissions/). Emits a [Guild Update](/gateway/events/#guild-update) Gateway event to every session that can see the guild.
 
-`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
+`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a non-owner caller also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
 
-Changing `mfa_level` to a different value additionally requires the guild owner, an owner account that already has a second factor, and sudo mode. A caller who is not the owner receives 403 `MISSING_PERMISSIONS` for that change even while holding `MANAGE_GUILD`. Sudo mode is verified before ownership, so a non-owner without a proof receives 403 `SUDO_MODE_REQUIRED` first.
+Changing `mfa_level` to a different value also requires the guild owner, an owner account that already has a second factor, and sudo mode. A caller who is not the owner receives 403 `MISSING_PERMISSIONS` for that change even while holding `MANAGE_GUILD`. Sudo mode is verified before ownership, so a non-owner without a proof receives 403 `SUDO_MODE_REQUIRED` first.
 
 ### Path parameters
 
@@ -664,7 +664,7 @@ Every field is optional. An omitted field preserves its current value, and a fie
 
 <sup>7</sup> Sending the value the guild already holds needs neither ownership nor sudo mode, and an owner without a configured second factor is rejected with the field code `MUST_ENABLE_2FA_BEFORE_REQUIRING_FOR_MODS`
 
-<sup>8</sup> The only accepted values are 0 and 3, and `nsfw` takes precedence when both fields are supplied. Setting 3 through this field also raises the content warning level to CONTENT_WARNING when `content_warning_level` is absent from the same body and the guild currently sits at INHERIT
+<sup>8</sup> The only accepted values are 0 and 3, and `nsfw` takes precedence when both fields are supplied. Setting 3 through this field also raises the content warning level to CONTENT_WARNING when `content_warning_level` is absent from the same body and the guild content warning level is INHERIT
 
 <sup>9</sup> The write also sets `nsfw_level` to 3 when true and 0 when false, and unlike `nsfw_level` it never changes the content warning level
 
@@ -672,7 +672,7 @@ Every field is optional. An omitted field preserves its current value, and a fie
 
 <sup>11</sup> The value is trimmed, and a value that is empty after trimming is stored as null
 
-<sup>12</sup> A non-null value requires `BANNER`, and an animated image additionally requires `ANIMATED_BANNER`, otherwise the request is rejected with the field codes `GUILD_BANNER_REQUIRES_FEATURE` or `ANIMATED_GUILD_BANNER_REQUIRES_FEATURE`
+<sup>12</sup> A non-null value requires `BANNER`, and an animated image also requires `ANIMATED_BANNER`, otherwise the request is rejected with the field codes `GUILD_BANNER_REQUIRES_FEATURE` or `ANIMATED_GUILD_BANNER_REQUIRES_FEATURE`
 
 <sup>13</sup> A non-null value requires `INVITE_SPLASH` and is rejected with the field codes `INVITE_SPLASH_REQUIRES_FEATURE` or `EMBED_SPLASH_REQUIRES_FEATURE`. Both splash fields take static images only, so GIF and APNG are not accepted for either and an animated upload is rejected with the field code `INVALID_IMAGE_FORMAT`
 
@@ -690,11 +690,11 @@ Send the current array with the intended changes applied. A feature without the 
 | --- | --- | --- |
 | 200 | [guild object](#guild-object) | Guild was modified, or the supplied values matched current state |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Body, image, feature set, channel reference, timestamp, or sudo proof is invalid |
-| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot exercise `MANAGE_GUILD` |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot use `MANAGE_GUILD` |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the name is blocked, `MANAGE_GUILD` or ownership is absent, or sudo mode is required |
 | 404<sup>3</sup> | [error response](/http-api/#error-response) | Guild does not exist |
 
-<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot exercise it, and `INVALID_FORM_BODY` otherwise
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot use it, and `INVALID_FORM_BODY` otherwise
 
 <sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked name or body string, `SUDO_MODE_REQUIRED` when an MFA level change is unproven, and `MISSING_PERMISSIONS` for a non-member, a missing `MANAGE_GUILD`, or a non-owner changing the MFA level
 
@@ -704,9 +704,9 @@ Send the current array with the intended changes applied. A feature without the 
 
 Every successful request emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild, and a request that writes no field still emits it.
 
-Only a change to an audited field records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new values, which in turn emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
+Only a change to an audited field records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new values. That entry emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
 
-Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text channel whose stored name does not satisfy the strict naming policy and, when at least one channel is renamed, emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
+Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text channel whose stored name does not satisfy the strict naming policy. When at least one channel is renamed, the removal emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
 
 Replacing an image queues the previous asset for deletion after the change succeeds. A failed replacement rolls back the newly uploaded asset and leaves the previous image unchanged.
 
@@ -722,7 +722,7 @@ Permanently deletes the guild and returns 204 with an empty body. Requires the g
 
 Fluxer refuses a non-owner with 403 `MISSING_PERMISSIONS`. A bot can never own a guild, so a bot credential never satisfies the requirement.
 
-A guild protected by an active single community policy cannot be deleted and returns 400 `SINGLE_COMMUNITY_CANNOT_DELETE`. Fluxer decides that refusal before the ownership check and before sudo mode is verified, so a non-owner of such a guild receives the 400 rather than the 403.
+A guild protected by an active single community policy cannot be deleted and returns 400 `SINGLE_COMMUNITY_CANNOT_DELETE`. That refusal comes before the ownership check and before sudo mode is verified, so a non-owner of such a guild receives the 400 rather than the 403.
 
 ### Path parameters
 
@@ -824,7 +824,7 @@ The operation snapshots the membership's first join time, leave time, and any ac
 
 Remaining guild sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove) and the leaving account's sessions receive [Guild Delete](/gateway/events/#guild-delete).
 
-Fluxer leaves the guild's read states and per-guild settings in place. The membership row is destroyed with everything on it, so the guild nickname, guild avatar, guild banner, bio, pronouns, accent colour, and roles do not survive the leave. Rejoining within the retention window restores an unexpired communication timeout and nothing else. No audit log entry is recorded, and an `X-Audit-Log-Reason` header on this request is read and discarded.
+Fluxer leaves the guild's read states and per-guild settings in place. The membership row is destroyed with everything on it, so the guild nickname, guild avatar, guild banner, bio, pronouns, accent colour, and roles do not survive the leave. Rejoining within the retention window restores an unexpired communication timeout and nothing else. The leave records no audit log entry, and an `X-Audit-Log-Reason` header on this request is read and discarded.
 
 ### Rate limit
 
@@ -885,7 +885,7 @@ The operation deletes the caller's messages in this guild's channels in batches 
 
 Returns the guild's [custom invite URL object](#custom-invite-url-object). Requires membership and [MANAGE_GUILD](/http-api/permissions/).
 
-`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
+`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a non-owner caller also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
 
 ### Path parameters
 
@@ -898,7 +898,7 @@ Returns the guild's [custom invite URL object](#custom-invite-url-object). Requi
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [custom invite URL object](#custom-invite-url-object) | Custom invite URL state was returned |
-| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot exercise `MANAGE_GUILD` |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot use `MANAGE_GUILD` |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, or `MANAGE_GUILD` is absent |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
 
@@ -916,9 +916,9 @@ Returns the guild's [custom invite URL object](#custom-invite-url-object). Requi
 
 Sets or removes the guild's custom invite code and returns the [custom invite URL selection object](#custom-invite-url-selection-object). Requires membership and [MANAGE_GUILD](/http-api/permissions/). An effective change emits a [Guild Update](/gateway/events/#guild-update) Gateway event to every session that can see the guild.
 
-`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a caller other than the owner also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
+`MANAGE_GUILD` is an [elevated permission](/http-api/permissions/#elevated-permissions). While the guild [MFA level](#mfa-levels) is elevated, a non-owner caller also needs an enrolled authenticator, and receives 400 `TWO_FACTOR_REQUIRED` without one.
 
-A non-null code additionally requires the `VANITY_URL` guild feature and is otherwise rejected with the field code `VANITY_URL_REQUIRES_FEATURE`.
+A non-null code also requires the `VANITY_URL` guild feature and is otherwise rejected with the field code `VANITY_URL_REQUIRES_FEATURE`.
 
 ### Path parameters
 
@@ -946,17 +946,17 @@ Selecting a code claims it in the global invite namespace, and replacing or remo
 | --- | --- | --- |
 | 200 | [custom invite URL selection object](#custom-invite-url-selection-object) | Code was claimed, removed, or already matched |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Code, reserved term policy, feature requirement, or global uniqueness check rejects the request |
-| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot exercise `MANAGE_GUILD` |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Caller cannot use `MANAGE_GUILD` |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the code is blocked, or `MANAGE_GUILD` is absent |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
 
-<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot exercise it, and `INVALID_FORM_BODY` otherwise
+<sup>1</sup> The [error code](/http-api/errors/) is `TWO_FACTOR_REQUIRED` for a caller who holds `MANAGE_GUILD` but cannot use it, and `INVALID_FORM_BODY` otherwise
 
 <sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked code, and `MISSING_PERMISSIONS` for a non-member or a caller lacking `MANAGE_GUILD`
 
 ### Side effects
 
-Supplying the current code, or removing a code when the guild has none, changes nothing, records no audit entry, and emits no Dispatch. Any other request deletes the invite backing the previous code. Where a code was supplied, it claims the new one. It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new code, emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild, and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
+Supplying the current code, or removing a code when the guild has none, changes nothing, records no audit entry, and emits no Dispatch. Any other request deletes the invite backing the previous code. Where a code was supplied, it claims the new one. It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new code. It also emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild, and [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
 
 ### Rate limit
 

@@ -16,12 +16,12 @@ Fluxer evaluates the credential in a fixed order.
 
 1. A request that resolves no account is refused with 401 `UNAUTHORIZED`.
 2. A credential presented with the `Bot` scheme is refused with 401 `UNAUTHORIZED`.
-3. An access token issued to any OAuth2 application other than the built-in Admin application is refused with 403 `ACCESS_DENIED`.
+3. Any access token issued to an OAuth2 application other than the built-in Admin application is refused with 403 `ACCESS_DENIED`.
 4. An account holding neither `admin:authenticate` nor the wildcard `*` is refused with 403 `MISSING_PERMISSIONS`.
 5. An account that clears both gates but satisfies none of the [ACLs](#acl-evaluation) the operation names is refused with 403 `MISSING_ACL`.
 
 :::caution[A denial names no requirement]
-The `MISSING_ACL` body is a fixed sentence that has no ACL name and no requirement list, so a response never discloses which requirement failed.
+The `MISSING_ACL` body is a fixed sentence with no ACL name and no requirement list, so a denial never says which requirement failed.
 :::
 
 No Admin operation declares an OAuth2 scope, an MFA requirement, or a sudo requirement, so none consumes the `X-Fluxer-Sudo-Mode-JWT` header. An accepted credential together with the required ACLs is the complete authorisation boundary.
@@ -60,7 +60,7 @@ A body with none of those fields resolves to no ACL at all and applies no change
 - `add_guild_members` maps to `bulk:add:guild_members`.
 - `schedule_user_deletion` maps to `bulk:delete:users`.
 
-Fluxer bounds every grant separately. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs additionally refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it resolves the target before the bound is evaluated, so an unknown ID fails first with 404 `UNKNOWN_USER`.
+Fluxer bounds every grant separately. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs also refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it resolves the target before the bound is evaluated, so an unknown ID fails first with 404 `UNKNOWN_USER`.
 
 [Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 111 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
 
@@ -116,7 +116,7 @@ An entry stores an acting Admin, a target type, a target ID, an action name, an 
 
 <sup>7</sup> Keys are 1 to 256 characters and values are 0 to 4,000 characters. The keys an operation records are stated by that operation
 
-Fluxer populates the `related_` maps from the acting Admin, from the resolved target, and from the metadata. A metadata key contributes when its value is a decimal integer and its name is `user_id`, `guild_id`, `channel_id`, `target_user_id`, or `admin_user_id`, or ends in `_user_id`, `_guild_id`, or `_channel_id`. An identifier that no longer resolves is omitted from the map.
+Fluxer sets the `related_` maps from the acting Admin, from the resolved target, and from the metadata. A metadata key contributes when its value is a decimal integer and its name is `user_id`, `guild_id`, `channel_id`, `target_user_id`, or `admin_user_id`, or ends in `_user_id`, `_guild_id`, or `_channel_id`. An identifier that no longer resolves is omitted from the map.
 
 An entry has no request method, request path, status, duration, IP address, or field change list. Fluxer never redacts an entry on read, so a caller holding `audit_log:view` reads `audit_log_reason` and every metadata value in full.
 
@@ -222,11 +222,11 @@ An entry has no request method, request path, status, duration, IP address, or f
 
 <sup>2</sup> The target has no snowflake, so `target_id` is `0` and the entry's textual identity is in `metadata`
 
-The field is a free-form string, so a client MUST tolerate a value outside this table.
+The field is a free-form string, so a client MUST accept a value outside this table.
 
 ### Audit actions
 
-An operation records one of the following actions. The field is a free-form string of 1 to 256 characters, so a client MUST tolerate a value outside this table.
+An operation records one of the following actions. The field is a free-form string of 1 to 256 characters, so a client MUST accept a value outside this table.
 
 | Value | Description |
 | --- | --- |
@@ -322,7 +322,7 @@ An operation records one of the following actions. The field is a free-form stri
 | update_voice_server | A registered voice server was updated |
 | verify_email | An email address was marked verified |
 
-<sup>1</sup> The same action name is recorded for two different resources, so `target_type` disambiguates the entry
+<sup>1</sup> The same action name is recorded for two different resources, so `target_type` tells them apart
 
 <a id="audit-reasons-and-effects"></a>
 
@@ -330,7 +330,7 @@ An operation records one of the following actions. The field is a free-form stri
 
 Fluxer reads the `X-Audit-Log-Reason` header once at the boundary, on every request to the API, Admin or not. The header is read raw and never percent-decoded, so a client that URI-encodes the value has the encoded form stored.
 
-Fluxer normalises the value by stripping control and format characters and trimming surrounding whitespace. An absent header, a blank value, and a value whose normalised length exceeds 512 characters all resolve to null. Fluxer never fails a request during this normalisation, so an over-long reason is dropped silently.
+Normalisation strips control and format characters and trims surrounding whitespace. An absent header, a blank value, and a value whose normalised length exceeds 512 characters all resolve to null. Fluxer never fails a request during this normalisation, so an over-long reason is dropped silently.
 
 Fluxer writes the resolved value to `audit_log_reason` on every entry the request records. An operation that records no entry accepts the header and does nothing with it. An Admin resource page marks an operation with the audit reason capability only where an entry stores the value.
 
@@ -502,11 +502,11 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | user:view:dob<sup>6</sup> | Unredacts user dates of birth |
 | user:view:email<sup>6</sup> | Unredacts user email addresses and email verification state |
 | user:view:ip<sup>6</sup> | Unredacts the last active IP address and the location derived from it |
-| user:temp_ban | Applies and lifts an account ban |
+| user:temp_ban | Applies and removes an account ban |
 | user:update:bot_status | Updates bot and system account state |
 | user:update:dob | Updates dates of birth |
 | user:update:email | Updates the email address, marks the address verified, resends verification, and sends a password reset |
-| user:update:flags | Updates account flags and premium flags, and terminates every login session of an account |
+| user:update:flags | Updates account flags and premium flags, and ends every login session of an account |
 | user:update:mfa | Reads and removes a user's WebAuthn credentials, and removes MFA state |
 | user:update:phone | Updates verified phone state |
 | user:update:profile | Clears profile fields |

@@ -31,7 +31,7 @@ The body a completed search returns, holding one page of matching messages.
 
 <sup>2</sup> Contains one entry for each distinct channel represented in `messages`, and never contains a channel with no returned message
 
-<sup>3</sup> Counted over the whole resolved scope. A single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/) reports the number actually returned
+<sup>3</sup> Counted over the whole resolved scope. A single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/) reports the number returned
 
 <sup>4</sup> Present only when the backend produced a cursor. A single channel context, a reconciled offset page, and a Meilisearch instance each return none
 
@@ -61,7 +61,7 @@ The other 200 body. Fluxer returns it when a channel the search needs has never 
 | --- | --- | --- |
 | indexing | boolean | Whether an index the search needed is not queryable yet, always true on this body |
 
-Tell the two bodies apart by the presence of `indexing`, which the result object never has. The request enqueues the missing indexing work, and a later identical request returns ordinary results once that work completes.
+Tell the two bodies apart by the presence of `indexing`, which the result object never has. The request queues the missing indexing work, and a later identical request returns ordinary results once that work completes.
 
 ### Example
 
@@ -71,8 +71,8 @@ Tell the two bodies apart by the presence of `indexing`, which the result object
 }
 ```
 
-:::caution[One stale channel withholds a whole multi-guild search]
-The `all_guilds`, `all`, and `open_dms_and_all_guilds` scopes check the index of every guild channel the caller can read, so a request narrowed to particular channels still receives the search indexing object when any other readable guild channel is unindexed.
+:::caution[One stale channel blocks a whole multi-guild search]
+The `all_guilds`, `all`, and `open_dms_and_all_guilds` scopes check the index of every guild channel the caller can read. A request narrowed to particular channels still receives the search indexing object when any other readable guild channel is unindexed.
 :::
 
 ## Search scopes
@@ -80,11 +80,11 @@ The `all_guilds`, `all`, and `open_dms_and_all_guilds` scopes check the index of
 | Value | Description |
 | --- | --- |
 | current | The single guild named by context_guild_id, or the single channel named by context_channel_id when no guild context is supplied |
-| open_dms<sup>1</sup> | Every direct message and group direct message channel the caller currently has open |
+| open_dms<sup>1</sup> | Every direct message and group direct message channel the caller has open |
 | all_dms | Every direct message and group direct message channel the caller has ever been a recipient of |
-| all_guilds | Every guild the caller is currently a member of |
-| all | Every guild the caller is currently a member of together with the all_dms channel set |
-| open_dms_and_all_guilds | Every guild the caller is currently a member of together with the open_dms channel set |
+| all_guilds | Every guild the caller is a member of |
+| all | Every guild the caller is a member of together with the all_dms channel set |
+| open_dms_and_all_guilds | Every guild the caller is a member of together with the open_dms channel set |
 
 <sup>1</sup> A private channel is open when the caller has not closed it, and a channel named by `context_channel_id` is added to the open set for this request even when it is closed
 
@@ -170,7 +170,7 @@ Searches indexed messages in the resolved scope. Returns a [message search resul
 - An age-restricted guild or single channel context requires an account old enough for age-restricted content, and otherwise returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
 - An instance with no search backend configured returns 403 `FEATURE_TEMPORARILY_DISABLED`.
 
-Every scope that touches a guild channel calls the main Gateway. A Gateway call that times out returns 504 `GATEWAY_TIMEOUT`, a reply that cannot be interpreted returns 502 `BAD_GATEWAY`, and a Gateway that is overloaded or unreachable returns 503 `SERVICE_UNAVAILABLE`.
+Every scope that can include a guild channel calls the main Gateway. A Gateway call that times out returns 504 `GATEWAY_TIMEOUT`, a reply that cannot be interpreted returns 502 `BAD_GATEWAY`, and a Gateway that is overloaded or unreachable returns 503 `SERVICE_UNAVAILABLE`.
 
 ### JSON body
 
@@ -258,7 +258,7 @@ The operation walks the set from the first page to skip stale hits, so a deep of
 A plain text query pages past it. A page beyond that window fails with 500 `INTERNAL_SERVER_ERROR` when `contents` or `exact_phrases` is supplied.
 :::
 
-The two backends read `min_id` and `max_id` differently. An Elasticsearch instance compares the message ID, while a Meilisearch instance compares the whole creation second the bound encodes, so a message created in the same second as the bound is excluded there. An Elasticsearch instance requires at least one `contents` entry to match and replaces `content` with that group. A Meilisearch instance joins the group, `content`, and the quoted phrases into one query string, and requires no entry in particular. Supplying `exact_phrases` without `contents` narrows `content` to the message text alone on Elasticsearch.
+The two backends read `min_id` and `max_id` differently. An Elasticsearch instance compares the message ID. A Meilisearch instance compares the whole creation second the bound encodes, so a message created in the same second as the bound is excluded there. An Elasticsearch instance requires at least one `contents` entry to match and replaces `content` with that group. A Meilisearch instance joins the group, `content`, and the quoted phrases into one query string, and requires no entry in particular. Supplying `exact_phrases` without `contents` narrows `content` to the message text alone on Elasticsearch.
 
 The `current` scope requires one of `context_guild_id` and `context_channel_id`. Supplying neither returns 400 with the field code [CONTEXT_CHANNEL_OR_GUILD_ID_REQUIRED](/http-api/errors/) on the path `context`.
 
@@ -268,11 +268,11 @@ A guild whose NSFW level is age restricted refuses a caller who is not old enoug
 
 A channel context searches only that channel and ignores `channel_ids`, `cursor`, and `include_nsfw`. When the caller cannot read the channel's history and the guild defines no message history cutoff, the search returns an empty result.
 
-The `all_guilds`, `all`, and `open_dms_and_all_guilds` scopes include only guild channels the caller can currently view and read history in. The `open_dms` and `open_dms_and_all_guilds` scopes include the caller's open private channels. The `all_dms` and `all` scopes include every private channel available to the caller unless `channel_ids` narrows the set. A scope that resolves to no channel returns an empty result with a `total` of `0`.
+The `all_guilds`, `all`, and `open_dms_and_all_guilds` scopes include only guild channels the caller can view and read history in. The `open_dms` and `open_dms_and_all_guilds` scopes include the caller's open private channels. The `all_dms` and `all` scopes include every private channel available to the caller unless `channel_ids` narrows the set. A scope that resolves to no channel returns an empty result with a `total` of `0`.
 
 Searchable text is the message content plus the collected embed text, which covers embed titles, descriptions, URLs, author names, provider names, footer text, and field names and values, including nested embeds.
 
-Content moderation scans every string in the body whose field name does not end in `_id` or `_ids`, so a value of at least three characters that matches the instance phrase blocklist or has a blocked URL returns 403 `CONTENT_BLOCKED`.
+Content moderation scans every string in the body whose field name does not end in `_id` or `_ids`. A scanned value of at least three characters that matches the instance phrase blocklist or has a blocked URL returns 403 `CONTENT_BLOCKED`.
 
 ### Response
 
@@ -292,7 +292,7 @@ Content moderation scans every string in the body whose field name does not end 
 
 ### Side effects
 
-When a channel in the resolved scope has never been indexed or its index is stale, the operation enqueues an indexing job for it and returns the [search indexing](#search-indexing-object) object.
+When a channel in the resolved scope has never been indexed or its index is stale, the operation queues an indexing job for it and returns the [search indexing](#search-indexing-object) object.
 
 ### Rate limit
 

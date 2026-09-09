@@ -20,7 +20,7 @@ An `Authorization` credential MUST NOT be copied into a URL. Webhook tokens, sig
 
 ## Authorization header
 
-The header value must have no leading or trailing whitespace, and a padded value never authenticates. A value beginning with `Bot `, `Bearer `, or `Admin ` selects that scheme, and the remainder must be non-empty and must have no surrounding whitespace either. The prefixes match exactly, so any other spelling is not recognised as a scheme.
+The header value must have no leading or trailing whitespace, and a padded value never authenticates. A value beginning with `Bot `, `Bearer `, or `Admin ` selects that scheme, and the rest must be non-empty and must have no surrounding whitespace either. The prefixes match exactly, so any other spelling is not recognised as a scheme.
 
 A value containing no space is parsed as a bare user session token. A value containing a space without a recognised scheme prefix is invalid.
 
@@ -76,7 +76,7 @@ Authorization: Admin fa_1508923117441703936_KaqkNax1BF3YSWHGkEPjDRKeO48jGb9F
 
 <sup>1</sup> The token is opaque and has no client-readable claims
 
-<sup>2</sup> The identifier before the full stop selects which application record to check, and the secret after it is the only part that authorises the request
+<sup>2</sup> The identifier before the full stop selects which application record to check, and only the secret after it authorises the request
 
 <sup>3</sup> A key whose identifier segment is not a decimal integer is invalid
 
@@ -87,12 +87,12 @@ A bot token, an Admin API key, and a client secret cannot be read back after the
 :::
 
 :::note[Rotation invalidates the previous value immediately]
-Rotation applies to a bot token and a client secret, and rotating a bot token also terminates every Gateway session the bot holds. An Admin API key is not rotated. It is revoked and replaced.
+Rotation applies to a bot token and a client secret, and rotating a bot token also ends every Gateway session the bot holds. An Admin API key is not rotated. It is revoked and replaced.
 :::
 
 ## User session tokens
 
-A user session token authenticates an ordinary user account. It is issued by the login, registration, and session exchange operations documented in [Authentication](/http-api/authentication/). A token that does not identify a live session leaves the request unauthenticated. The Gateway accepts a user session token in [Identify](/gateway/commands/#identify).
+A user session token authenticates an ordinary user account. The login, registration, and session exchange operations in [Authentication](/http-api/authentication/) issue it. A token that does not identify a live session leaves the request unauthenticated. The Gateway accepts a user session token in [Identify](/gateway/commands/#identify).
 
 The `Authorization` header holds a single credential. A [sudo mode](#sudo-mode) proof travels separately, in the `X-Fluxer-Sudo-Mode-JWT` header, and it proves that the already resolved account recently re-verified.
 
@@ -170,7 +170,7 @@ While enforcement is active, an operation that uses a locally held credential re
 
 The single sign-on callback returns the same code when the provider claims match no existing account and the instance does not auto-provision.
 
-Enforcement applies at those operations only. It does not gate password change or multi-factor management on an already authenticated account, and enabling it leaves an already issued session token, bot token, OAuth2 access token, or Admin API key valid.
+Enforcement applies at those operations only, and does not gate password change or multi-factor management on an already authenticated account. Enabling it leaves an already issued session token, bot token, OAuth2 access token, or Admin API key valid.
 
 ## Account state gates
 
@@ -209,7 +209,7 @@ Sudo mode is a short-lived proof that the account holder recently re-verified a 
 
 A sudo proof is an HS256 JSON Web Token with the account ID as its subject, the fixed claim `type` set to `sudo`, an issue time, and an expiry five minutes after issue. A client presents it in the `X-Fluxer-Sudo-Mode-JWT` request header. An invalid, expired, or account-mismatched token produces the same response as a missing one.
 
-Fluxer mints a token only for an account holding a multi-factor authenticator, so a password-only account re-verifies for each operation that requires sudo mode. [Create WebAuthn registration options](/http-api/users/mfa/#create-webauthn-registration-options) and [Disable current account](/http-api/users/current-user/#disable-current-account) mint no token and return no header even for a multi-factor account. A bot account satisfies sudo mode immediately. So does an account that has neither a password nor a multi-factor authenticator.
+Fluxer issues a token only for an account holding a multi-factor authenticator, so a password-only account re-verifies for each operation that requires sudo mode. [Create WebAuthn registration options](/http-api/users/mfa/#create-webauthn-registration-options) and [Disable current account](/http-api/users/current-user/#disable-current-account) issue no token and return no header even for a multi-factor account. A bot account satisfies sudo mode immediately. So does an account that has neither a password nor a multi-factor authenticator.
 
 :::note[A sudo proof covers every account session]
 The check covers only the signature, the `type` claim, the subject, and the expiry. Revoking the session that obtained a proof leaves that proof valid.

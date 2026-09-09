@@ -92,7 +92,7 @@ An approved listing. It has every field of the [Admin pending application object
 
 ## Discovery application object
 
-This is the [discovery application object](/http-api/discovery/#discovery-application-object) of the public Discovery resource. Every write on this page answers with it, so a client re-reads the listing after a write to render the enriched guild fields.
+This is the [discovery application object](/http-api/discovery/#discovery-application-object) of the public Discovery resource. Every write on this page answers with it, so a client re-reads the listing after a write to render the enriched guild fields. No response on this page exposes the Admin that approved, rejected, or removed the application.
 
 ### Structure
 
@@ -136,10 +136,6 @@ This is the [discovery application object](/http-api/discovery/#discovery-applic
   "removal_reason": null
 }
 ```
-
-## Reviewer identity
-
-The application records the Admin that approved, rejected, or removed it. No response on this page exposes that value.
 
 ## Discovery categories
 
@@ -309,7 +305,7 @@ Files every named guild under one [discovery category](/http-api/discovery/#disc
 | updated | integer | Number of distinct guilds that were moved |
 | failed_guild_ids<sup>1</sup> | array[snowflake] | Distinct guilds that were not moved |
 
-<sup>1</sup> A guild lands here when it holds no application, when its application is rejected or removed, or when the write failed. The response does not say which, so retry the guild through [Update discovery listing](#update-discovery-listing) to read the error
+<sup>1</sup> A guild lands here when it holds no application, when its application is rejected or removed, or when the write failed. The response does not say which. Retry the guild through [Update discovery listing](#update-discovery-listing) to read the error
 
 ### Response
 
@@ -397,7 +393,7 @@ Removes an approved listing from discovery, strips the guild's discoverable feat
 
 ### JSON body
 
-The operation takes a required body even though it is a DELETE, so a request without one fails body validation.
+The body is required even though this is a DELETE, so a request without one fails body validation.
 
 | Field | Type | Description |
 | --- | --- | --- |

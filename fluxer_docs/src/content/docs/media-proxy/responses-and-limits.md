@@ -37,7 +37,7 @@ Every error a route produces uses `Cache-Control: no-store` and the standard [se
 
 ### Handling contract
 
-The set of reason phrases is open. A client MUST branch on the HTTP status and MUST NOT parse, compare, or pattern-match the body, because a phrase can be reworded and a new condition can introduce one without a version change. A client MUST NOT expect a JSON body on a failure, and MUST NOT expect a failure to name the key, parameter, or field that caused it.
+The set of reason phrases is open. A client MUST branch on the HTTP status and MUST NOT parse, compare, or pattern-match the body. A phrase can be reworded and a new condition can introduce one without a version change. A client MUST NOT expect a JSON body on a failure, and MUST NOT expect a failure to name the key, parameter, or field that caused it.
 
 ## Status registry
 
@@ -88,7 +88,7 @@ Buffered external bodies share one endpoint budget of 500 MiB for every [work ad
 
 Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is limited to 20,000 frames and 1,073,741,824 decoded pixels across all frames. No configuration changes these bounds. [Transformations](/media-proxy/transformations/#transformation-limits) defines the resulting failure statuses.
 
-The upload relay limits a body to the smaller of the capability's declared maximum and the endpoint's configured body limit, which defaults to the same 500 MiB ceiling and can be configured from 1 byte through 5 GiB. A request that declares no `Content-Length` is spooled to disk first, and spooled bodies share an 8 GiB endpoint budget by default.
+The upload relay limits a body to the smaller of the capability's declared maximum and the endpoint's configured body limit. That endpoint limit defaults to the same 500 MiB ceiling and can be configured from 1 byte through 5 GiB. A request that declares no `Content-Length` is spooled to disk first, and spooled bodies share an 8 GiB endpoint budget by default.
 
 An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited to the base64 expansion of the 500 MiB media bound plus 1 MiB. All three answer a larger body with 413.
 
@@ -139,7 +139,7 @@ Every route-produced error response uses `Cache-Control: no-store`, and a succes
 
 ## Range response headers
 
-A complete media response has `Accept-Ranges: bytes`, the representation `Content-Type`, and an exact `Content-Length`<sup>1</sup>. A 206 additionally sets `Content-Range` to the selected interval over the complete size and `Content-Length` to the selected byte count. A 416 has `Content-Range: bytes */{size}` and `Accept-Ranges: bytes` with an empty body.
+A complete media response has `Accept-Ranges: bytes`, the representation `Content-Type`, and an exact `Content-Length`<sup>1</sup>. A 206 also sets `Content-Range` to the selected interval over the complete size and `Content-Length` to the selected byte count. A 416 has `Content-Range: bytes */{size}` and `Accept-Ranges: bytes` with an empty body.
 
 <sup>1</sup> A streamed signed external response omits `Content-Length` when the origin declared none
 

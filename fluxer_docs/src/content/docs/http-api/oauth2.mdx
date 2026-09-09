@@ -103,7 +103,7 @@ The same route can return either one. [Authorise application](#authorise-applica
 
 <sup>3</sup> The client application is unknown, supplied no client secret, or supplied a client secret that does not match the stored hash
 
-<sup>4</sup> The authorisation code or refresh token is unknown, expired, already used, bound to another application, or bound to another redirect URI, or the authorisation code has a PKCE challenge the presented verifier does not prove
+<sup>4</sup> The authorisation code or refresh token is unknown, expired, already used, bound to another application, or bound to another redirect URI, or the authorisation code has a PKCE challenge the presented verifier does not match
 
 ## OAuth2 token object
 
@@ -119,7 +119,7 @@ The access and refresh token pair a successful token exchange returns.
 | refresh_token<sup>2</sup> | string | The refresh token that replaces this pair when it is exchanged |
 | scope | string | The granted scopes, space separated in registry order |
 
-<sup>1</sup> The configured access token lifetime, restated in every successful response
+<sup>1</sup> The configured access token lifetime, repeated in every successful response
 
 <sup>2</sup> Every grant Fluxer issues is bound to a user, so a successful exchange always returns a refresh token
 
@@ -162,7 +162,7 @@ The account identity an application reads with the `identify` scope.
 
 <sup>3</sup> Emitted only when the `email` scope is granted and the account has an address. An unverified address reports false
 
-<sup>4</sup> Declared optional by the response schema and populated on every response
+<sup>4</sup> Declared optional by the response schema and emitted on every response
 
 <sup>5</sup> Emitted on every response although the response schema does not declare it, so a client MUST NOT depend on it
 
@@ -177,7 +177,7 @@ The liveness and scope report Fluxer returns for one presented token.
 | active | boolean | Whether the presented token is live and belongs to the authenticated client |
 | scope? | string | The granted scopes, space separated in registry order |
 | client_id? | snowflake | The ID of the application the token was issued to |
-| username?<sup>1</sup> | string | A reserved member that Fluxer never populates |
+| username?<sup>1</sup> | string | A reserved member that Fluxer never sets |
 | token_type? | string | The kind of token presented, `Bearer` for an access token and `refresh_token` for a refresh token |
 | exp?<sup>2</sup> | integer | The access token expiry time in Unix seconds |
 | iat? | integer | The issue time in Unix seconds |
@@ -191,11 +191,7 @@ The liveness and scope report Fluxer returns for one presented token.
 
 Apart from `username` and `exp`, every optional field above is present when `active` is true and absent when it is false. An active access token has `exp` and an active refresh token does not.
 
-:::note[Several conditions produce the same inactive body]
-The body has only `active` set to false, and names no reason.
-:::
-
-Fluxer reports an unknown token, an expired token, and a token issued to another application as inactive. Introspection never resolves the account behind the token, so an active result reports on the token alone.
+Fluxer reports an unknown token, an expired token, and a token issued to another application as inactive. An inactive body has only `active` set to false, and names no reason. Introspection never resolves the account behind the token, so an active result reports on the token alone.
 
 ## Current OAuth2 authorisation object
 
@@ -230,7 +226,7 @@ The reduced application record in a [current OAuth2 authorisation](#current-oaut
 | bot_require_code_grant | boolean | Whether bot installation requires an OAuth2 code grant |
 | flags<sup>2</sup> | integer | The application flags, always 0 |
 
-<sup>1</sup> Null even when the application's bot has an avatar or biography
+<sup>1</sup> Null even when the application's bot has an avatar or bio
 
 <sup>2</sup> No application flag bit is defined
 
@@ -358,7 +354,7 @@ Without `prompt=none`, the redirect targets the Fluxer consent interface and for
 
 With `prompt=none`, a request that resolves no user redirects with `error=login_required`. Every other silent failure redirects with `error=consent_required`. That covers every failure to issue a code, including an unknown application, an unrecognised scope, a missing or unregistered redirect URI, and a private bot the caller does not own. It also covers a requested non-bot scope the user has not already granted to this application. A silent request that asks only for `bot` skips the prior-grant test.
 
-An error redirect has `error` and the normalised `state` when the caller supplied one. It has no `error_description`, and never the more specific [OAuth2 error code](#oauth2-error-codes) the underlying failure raised.
+An error redirect has `error` and the normalised `state` when the caller supplied one, but no `error_description` and never the more specific [OAuth2 error code](#oauth2-error-codes) the underlying failure raised.
 
 :::caution[An unregistered redirect URI never receives the error]
 The error redirect targets the supplied `redirect_uri` only when the named application has registered that exact string, so this route cannot bounce a browser to an arbitrary origin.
@@ -427,17 +423,13 @@ A guild installation emits [Guild Create](/gateway/events/#guild-create), [Guild
 
 Consent issues one authorisation code bound to the application, user, resolved redirect URI, granted scopes, and PKCE challenge, and returns the callback URL that has it.
 
-With the `bot` scope and a guild target, consent adds the bot to the guild with the bot-invite join source and the caller recorded as inviter. Consent bypasses both the bot account's own guild count limit and the guild ban list. The guild member limit still applies. When a non-zero permission mask is requested, consent also creates one role with exactly those permissions, names the role after the application, and assigns it to the bot.
+With the `bot` scope and a guild target, consent adds the bot to the guild with the bot-invite join source and the caller recorded as inviter. Consent bypasses both the bot account's own guild count limit and the guild ban list. The guild member limit still applies. When a non-zero permission mask is requested, consent also creates one role with exactly the filtered permission mask, names the role after the application, and assigns it to the bot. The installation either succeeds with exactly that mask or fails with a missing-permissions error.
 
 That role is created at position 1 with no colour and is neither hoisted nor mentionable. It consumes a guild role slot and is not removed when the bot leaves. The installation records bot add, role create, and member role update [audit log](/http-api/guild-audit-logs/) entries.
 
 With the `bot` scope and a group direct message target, consent adds the bot as a recipient and stores the recipient-add system message.
 
 When any part of the installation fails, Fluxer cancels the newly issued authorisation code, so the caller never receives a usable code.
-
-:::caution[The installed role has the filtered mask]
-The installation either succeeds with exactly that mask or fails with a missing-permissions error.
-:::
 
 ### Rate limit
 
@@ -506,11 +498,11 @@ When the code is PKCE-bound, an omitted or incorrect verifier is rejected as `in
 | 400 | [error response](/http-api/#error-response) | The form fails validation, including an unsupported `grant_type` |
 | 400<sup>2</sup> | [OAuth2 error](#oauth2-error-response-object) object | Client authentication or the presented grant fails |
 
-<sup>2</sup> Client authentication, the authorisation code, the refresh token, the redirect URI, or a required PKCE verifier is missing or does not prove the grant
+<sup>2</sup> Client authentication, the authorisation code, the refresh token, the redirect URI, or a required PKCE verifier is missing or does not match the grant
 
 An authorisation code is single-use. Fluxer consumes it before it issues the token pair. A replayed code is rejected as an invalid grant. Deleting an account purges every OAuth2 access and refresh token it holds, so a refresh exchange for a deleted account is rejected as an invalid grant as well. An authorisation code issued before the deletion still exchanges until it expires.
 
-Fluxer verifies client authentication before it examines the grant, so an unknown application, an absent client secret, and a wrong client secret are all reported as `invalid_client`.
+Fluxer verifies client authentication before it checks the grant, so an unknown application, an absent client secret, and a wrong client secret are all reported as `invalid_client`.
 
 :::note[No client credentials grant]
 Only `authorization_code` and `refresh_token` exist, and Fluxer issues no token that is unbound to a user.
@@ -532,7 +524,7 @@ A successful exchange issues one access token that expires after 7 days and one 
 
 Returns the [OAuth2 user information](#oauth2-user-information-object) object for the account the token was issued to. Requires the `identify` [scope](#oauth2-scopes).
 
-An OAuth2 bearer access token is required. The `email` scope populates the address fields.
+An OAuth2 bearer access token is required. The `email` scope fills in the address fields.
 
 ### Request headers
 
@@ -645,11 +637,11 @@ A client that presents a refresh token MUST send `token_type_hint=refresh_token`
 
 Fluxer ignores an `Authorization` header that is not well-formed HTTP Basic and reads the client credentials from the form.
 
-An unknown token and a token issued to another application both return 200, so the response never reveals whether a token exists.
+An unknown token and a token issued to another application both return 200, so the response never shows whether a token exists.
 
 ### Side effects
 
-On a match, Fluxer deletes the user's complete token set for the authenticated application. Those tokens stop authenticating requests at once. A token that matched nothing mutates no state.
+On a match, Fluxer deletes the user's complete token set for the authenticated application. Those tokens stop authenticating requests at once. A token that matched nothing changes no state.
 
 No Gateway Dispatch is emitted, so a client holding a revoked token learns of the revocation from its next rejected request.
 
@@ -753,7 +745,7 @@ Revokes the current user's authorisations for several applications.
 | --- | --- | --- |
 | application_ids<sup>1</sup> | array[snowflake] | The IDs of the applications to revoke (1-100) |
 
-<sup>1</sup> Repeated IDs are collapsed before any revocation is performed
+<sup>1</sup> Repeated IDs are collapsed before any revocation is done
 
 ### Response
 

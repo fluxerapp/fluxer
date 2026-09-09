@@ -34,7 +34,7 @@ A client opens the socket, waits for Hello, sends Identify, and then heartbeats 
 }
 ```
 
-`token` and `properties` are the only required fields. The token is the raw account or bot token. It has no HTTP authentication prefix, so a bot sends the token without the `Bot ` prefix the HTTP API requires. [Client commands](/gateway/commands/#identify) defines the rest. Everything the server sends after Ready is a [Dispatch](/gateway/events/#dispatch-delivery), which is one event payload with its name in `t` and its data in `d`.
+`token` and `properties` are the only required fields. The token is the raw account or bot token, with no HTTP authentication prefix, so a bot sends it without the `Bot ` prefix the HTTP API requires. [Client commands](/gateway/commands/#identify) defines the rest. Everything the server sends after Ready is a [Dispatch](/gateway/events/#dispatch-delivery), which is one event payload with its name in `t` and its data in `d`.
 
 ## Protocol version
 
@@ -104,7 +104,7 @@ Snowflakes are decimal strings. See [Snowflakes](/snowflakes/) for the identifie
 
 `zstd-stream` is a continuous stream in both directions. A client MUST feed every server frame to the same decompressor in arrival order and produce every client frame from the same compressor.
 
-The server compresses at level 3, and one WebSocket message has exactly one Gateway payload.
+The server compresses at level 3. One WebSocket message has exactly one Gateway payload.
 
 Hello is already compressed on a connection that negotiated `zstd-stream`, so the first frame such a connection receives is a binary frame.
 
@@ -179,7 +179,7 @@ A connection moves through five states: Opening, Unauthenticated, Starting, Repl
 | Heartbeat. No session is attached, or the payload is `null`, or the attached session accepts the sequence | Send Heartbeat ACK | Same state |
 | Heartbeat deadline. The connection is awaiting an acknowledgement and more than 45,000 ms have passed since the last one | Close with `4009` and reason `Heartbeat timeout` | Closed |
 | Invalid frame or payload. Size, decompression, or decoding validation fails | Close with the applicable close code | Closed |
-| Transport terminates. A session exists | Retain the session for 60,000 ms | Closed |
+| Transport ends. A session exists | Retain the session for 60,000 ms | Closed |
 
 An opcode outside the registry, and a server opcode sent by a client, close with `4001` once a session is attached and with `4003` while the connection is unauthenticated.
 
@@ -196,7 +196,7 @@ The server sends Opcode 10 Hello while accepting the WebSocket.
 }
 ```
 
-The advertised interval is in milliseconds and is authoritative for the connection.
+The interval is in milliseconds and is authoritative for the connection.
 
 Opcode 2 Identify creates a session. A successful Identify sends [Ready](/gateway/events/#ready), whose `session_id` identifies the retained session. Fluxer publishes no separate resume URL, so a Resume reconnects to the same Gateway endpoint the client discovered.
 
@@ -227,9 +227,9 @@ The Gateway also runs its own timer, which ticks every 13,750 ms. On the first t
 
 A client MUST answer the server's Opcode 1 with its own Opcode 1.
 
-The Gateway resets the elapsed time and clears the awaiting state when it accepts a client Heartbeat. Its own Opcode 1 does neither, so the deadline keeps running from the last client Heartbeat.
+An accepted client Heartbeat resets the elapsed time and clears the awaiting state. The server's own Opcode 1 does neither, so the deadline keeps running from the last client Heartbeat.
 
-A heartbeat with a sequence permanently trims every retained Dispatch at or below that sequence from the replay buffer and records it as the acknowledged sequence. A client MUST send the sequence it has actually processed, because a later Resume from a lower sequence closes with `4007`.
+A heartbeat with a sequence permanently trims every retained Dispatch at or below that sequence from the replay buffer and records it as the acknowledged sequence. A client MUST send the sequence it has processed, because a later Resume from a lower sequence closes with `4007`.
 
 ## Resuming a session
 
@@ -297,7 +297,7 @@ A guild belongs to `((guild_id >> 22) % shard_count)`, computed on the integer v
 
 The pair selects the session's guild membership. At Identify, Fluxer filters the account's guild list to the guilds the shard owns, and the session connects only to those.
 
-For a user session, the filtered set is also the [Ready](/gateway/events/#ready) `guilds` array. For a bot session, it is the guild burst of [Guild Create](/gateway/events/#guild-create) and [Guild Delete](/gateway/events/#guild-delete) Dispatches that follows Ready. Ready echoes the accepted pair back as `shard`.
+For a user session, the filtered set is also the [Ready](/gateway/events/#ready) `guilds` array. For a bot session, it is the guild burst of [Guild Create](/gateway/events/#guild-create) and [Guild Delete](/gateway/events/#guild-delete) Dispatches after Ready. Ready echoes the accepted pair back as `shard`.
 
 Fluxer checks only a bot session against the guild ceiling. A bot whose shard owns more than 2,500 guilds closes with `4011` and reason `Sharding required`. A bot that supplies no pair is checked against its whole guild list. A user session is bounded by the 100-session-per-user limit alone, whatever its guild count.
 

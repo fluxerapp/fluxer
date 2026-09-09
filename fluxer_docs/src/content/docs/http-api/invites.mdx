@@ -34,7 +34,7 @@ An invite object describes one code and the target it admits into. The `type` se
 
 <sup>3</sup> Null when the record stores no creator, which is always the case for a custom invite URL
 
-<sup>4</sup> A guild invite reports the counts the main Gateway currently holds, and both are `0` when it holds none
+<sup>4</sup> A guild invite reports the counts the main Gateway holds, and both are `0` when it holds none
 
 <sup>5</sup> Computed from the creation time plus the stored lifetime, and null whenever that lifetime is `0`
 
@@ -80,11 +80,11 @@ The metadata object extends the invite with its creation and usage state. Creati
 | max_uses<sup>2</sup> | integer | The maximum admissions the invite permits, where `0` is unlimited |
 | max_age?<sup>3</sup> | integer | The stored lifetime in seconds, where `0` never expires |
 
-<sup>1</sup> The counter advances only when the admission actually adds the account, so accepting an invite for a target the account already belongs to leaves it unchanged
+<sup>1</sup> The counter advances only when the admission adds the account, so accepting an invite for a target the account already belongs to leaves it unchanged
 
 <sup>2</sup> The value is `0` for every custom invite URL and for any invite created without an explicit maximum
 
-<sup>3</sup> Present only when `type` is `0`, because a group direct message invite reports its expiry solely through `expires_at`
+<sup>3</sup> Present only when `type` is `0`, because a group direct message invite reports its expiry only through `expires_at`
 
 ### Example
 
@@ -111,7 +111,7 @@ The partial channel has only enough identity to describe the target before admis
 | id | snowflake | The ID of the channel |
 | name<sup>1</sup> | ?string | The name of the channel, or null |
 | type | integer | [Channel type](/http-api/channels/#channel-types) |
-| recipients?<sup>2</sup> | array[[partial invite recipient](#partial-invite-recipient-object) object] | The accounts currently in the group direct message |
+| recipients?<sup>2</sup> | array[[partial invite recipient](#partial-invite-recipient-object) object] | The accounts in the group direct message |
 
 <sup>1</sup> A guild channel always stores a name, and a group direct message that stores no name reports null
 
@@ -137,7 +137,7 @@ A partial recipient has only the username.
 
 ## Custom invite URLs
 
-[Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url) creates and replaces a custom invite code and stores it as a guild invite record of type `0`. It has no fixed target channel, creator, maximum uses, or lifetime, so a resolved custom invite URL reports a null `inviter`, a null `expires_at`, `max_uses` of `0`, and `max_age` of `0`. Its channel is the first guild text channel in channel order that the default role can view.
+[Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url) creates and replaces a custom invite code and stores it as a guild invite record of type `0`. It stores no target channel, creator, maximum uses, or lifetime, so a resolved custom invite URL reports a null `inviter`, a null `expires_at`, `max_uses` of `0`, and `max_age` of `0`. Its channel is the first guild text channel in channel order that the default role can view.
 
 A custom invite code is stored lowercased, so [Get invite](#get-invite) and [Accept invite](#accept-invite) resolve it in any case through their lowercase retry. Clearing or replacing the code deletes the invite record outright, and a released code stops resolving immediately.
 
@@ -180,7 +180,7 @@ A record's storage lifetime equals `max_age`. An exhausted record survives until
 
 ### Rate limit
 
-100 requests per 10 seconds for each identity and invite code, on the `invite:read::invite_code` bucket, where the identity is the authenticated account when a credential resolves and otherwise the derived key for the client IP address.
+100 requests per 10 seconds for each identity and invite code, on the `invite:read::invite_code` bucket. The identity is the authenticated account when a credential resolves, and otherwise the derived key for the client IP address.
 
 ## Accept invite
 
@@ -229,7 +229,7 @@ An acceptance attempt against an invite whose maximum uses are already spent del
 
 An account already in the target receives the invite unchanged without consuming a use or emitting a Dispatch. Otherwise `uses` advances exactly once after admission completes, and the record is deleted when that advance spends its last use. A failed admission consumes no use. Fluxer builds the response body after the admission has committed, through the same target resolution [Get invite](#get-invite) performs. A guild invite whose stored target channel has since been deleted therefore admits the account and advances `uses` before the request returns 404 `UNKNOWN_CHANNEL`.
 
-A guild admission creates the membership, records whether the join used a custom invite URL or an instant invite, adds the guild to the caller's settings and folder layout, and marks the membership temporary when the invite is temporary.
+A guild admission creates the membership, records whether the join used a custom invite URL or an instant invite, and adds the guild to the caller's settings and folder layout. A temporary invite marks the membership temporary.
 
 The joining account receives [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is guild-wide and reaches every session connected to the guild, subject to the [event filtering](/gateway/event-filtering/) gates, which suppress it for a passive session in a large guild. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join changes its stored settings, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its `default_hide_muted_channels` setting is enabled. Unless join notifications are suppressed or no system channel exists, the operation creates a join system message and delivers [Message Create](/gateway/events/#message-create).
 
@@ -275,7 +275,7 @@ The invite code can be allocated again later, and every outstanding link with th
 | --- | --- | --- |
 | 204 | empty | Invite was deleted |
 | 400 | [error response](/http-api/#error-response) | The caller is not the creator and the guild requires elevated multi-factor authentication that the caller lacks, and the request returns `TWO_FACTOR_REQUIRED` |
-| 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential and the request returns `ACCESS_DENIED`, or the caller is not a member of the guild, is neither the creator nor a holder of [MANAGE_GUILD](/http-api/permissions/), or does not own the group direct message, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential and the request returns `ACCESS_DENIED`, or the caller is not a guild member, is neither the creator nor a [MANAGE_GUILD](/http-api/permissions/) holder, or does not own the group direct message, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | The named guild no longer exists and the request returns `UNKNOWN_GUILD` |
 | 404 | [error response](/http-api/#error-response) | No record has the code, the record is the guild's current custom invite URL, or a guild invite names no target, each returning `UNKNOWN_INVITE` |
 | 404 | [error response](/http-api/#error-response) | The group direct message no longer exists or the caller is not one of its recipients and the request returns `UNKNOWN_CHANNEL` |
@@ -342,7 +342,7 @@ Every field is optional and nullable, and an omitted or null value takes the sta
 | 403 | [error response](/http-api/#error-response) | Instant invites are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller is not a guild member or lacks [VIEW_CHANNEL](/http-api/permissions/) or [CREATE_INSTANT_INVITE](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist, is pending deletion, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild the channel belongs to no longer exists and the request returns `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, is pending deletion, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the channel's guild no longer exists and the request returns `UNKNOWN_GUILD` |
 
 ### Side effects
 
@@ -390,7 +390,7 @@ The operation is not paginated. Every matching record is returned in one respons
 | 403 | [error response](/http-api/#error-response) | The guild is unavailable to the caller and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The caller is not a guild member, lacks [VIEW_CHANNEL](/http-api/permissions/) or [MANAGE_CHANNELS](/http-api/permissions/), or does not own the group direct message and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist, is pending deletion, the caller is not a recipient of the private channel, or the private channel is not a group direct message, each returning `UNKNOWN_CHANNEL`, or the guild the channel belongs to no longer exists and the request returns `UNKNOWN_GUILD` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, is pending deletion, the caller is not a recipient of the private channel, or the private channel is not a group direct message, each returning `UNKNOWN_CHANNEL`, or the channel's guild no longer exists and the request returns `UNKNOWN_GUILD` |
 
 ### Rate limit
 

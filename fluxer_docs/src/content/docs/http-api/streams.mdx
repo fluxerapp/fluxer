@@ -16,7 +16,7 @@ Starting and stopping a stream is a main Gateway operation. Going live publishes
 
 ## Stream key
 
-A stream key travels as one path segment of 1 through 256 characters. It has exactly three colon-separated segments. The form is `{guild_id}:{channel_id}:{connection_id}` for a guild voice stream and `dm:{channel_id}:{connection_id}` for a private call stream.
+A stream key is one path segment of 1 through 256 characters. It has exactly three colon-separated segments. The form is `{guild_id}:{channel_id}:{connection_id}` for a guild voice stream and `dm:{channel_id}:{connection_id}` for a private call stream.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -44,7 +44,7 @@ That comparison is the last check of the read boundary. Channel lookup, the scop
 
 Two boundaries apply across this page.
 
-Read access matches [Get channel](/http-api/channels/#get-channel) for the [resolved channel](#stream-key). A guild channel additionally requires the [CONNECT](/http-api/permissions/) permission. The caller does not have to own the stream, so any member who can join the channel can read its preview.
+Read access matches [Get channel](/http-api/channels/#get-channel) for the [resolved channel](#stream-key). A guild channel also requires the [CONNECT](/http-api/permissions/) permission. The caller does not have to own the stream, so any member who can join the channel can read its preview.
 
 Mutation access requires everything read access does. A guild channel also requires the [STREAM](/http-api/permissions/) permission. The caller must hold a voice state in exactly the resolved channel and the connection identifier the key names. Fluxer rejects a caller that holds no such voice state with 403 `ACCESS_DENIED`, even when it owns the channel.
 
@@ -52,7 +52,7 @@ Mutation access requires everything read access does. A guild channel also requi
 A caller can record a region and upload a preview for any voice connection it holds, whether or not it is streaming.
 :::
 
-A guild channel resolves before its guild does. A channel row that outlives its guild returns 404 `UNKNOWN_GUILD`. Where the guild record exists and Fluxer cannot resolve the membership state, the route returns 403 `ACCESS_DENIED`, and a caller that is not a member or that lacks [VIEW_CHANNEL](/http-api/permissions/) returns 403 `MISSING_PERMISSIONS`. An unsatisfied age restriction on a guild text, voice, or link channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
+Fluxer resolves a guild channel before its guild. A channel row that outlives its guild returns 404 `UNKNOWN_GUILD`. Where the guild record exists and Fluxer cannot resolve the membership state, the route returns 403 `ACCESS_DENIED`, and a caller that is not a member or that lacks [VIEW_CHANNEL](/http-api/permissions/) returns 403 `MISSING_PERMISSIONS`. An unsatisfied age restriction on a guild text, voice, or link channel returns 403 `NSFW_CONTENT_AGE_RESTRICTED`.
 
 A private channel whose recipient set does not contain the caller returns 404 `UNKNOWN_CHANNEL`. An absent channel returns the same code, so recipient membership is never distinguishable from private channel existence.
 
@@ -206,7 +206,7 @@ When the image should travel out of band, use [Create stream preview upload URL]
 
 Fluxer stores the accepted `content_type` verbatim and returns it from [Get stream preview](#get-stream-preview). When the field is absent, the stored media type is `image/jpeg`.
 
-A `thumbnail` that is not canonical base64 returns 400 `INVALID_STREAM_THUMBNAIL_PAYLOAD`. Fluxer re-encodes the decoded bytes and rejects the value when the result is not what the client sent. The 2000000 character ceiling admits 1500000 decoded bytes, so an oversized JPEG reaches the byte check and returns `FILE_SIZE_TOO_LARGE`. The format check runs before the size check. An oversized payload that is not a JPEG returns `PREVIEW_MUST_BE_JPEG`.
+A `thumbnail` that is not [canonical base64](/topics/uploads/#stream-previews) returns 400 `INVALID_STREAM_THUMBNAIL_PAYLOAD`. Fluxer re-encodes the decoded bytes and rejects the value when the result is not what the client sent. The 2000000 character ceiling admits 1500000 decoded bytes, so an oversized JPEG reaches the byte check and returns `FILE_SIZE_TOO_LARGE`. The format check runs before the size check. An oversized payload that is not a JPEG returns `PREVIEW_MUST_BE_JPEG`.
 
 ### Response
 

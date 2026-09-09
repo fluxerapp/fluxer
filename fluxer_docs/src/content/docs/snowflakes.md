@@ -9,12 +9,12 @@ A snowflake is a 64-bit identifier for a Fluxer resource such as a user, guild, 
 A snowflake is unique within the deployment that issued it. The value stays stable, and Fluxer does not reuse it after the resource is deleted. Separate deployments can issue the same numeric value, so a client MUST scope every snowflake to its deployment.
 
 :::caution[Never parse a snowflake as a JSON number]
-Snowflake values exceed the exact integer range of a JSON double, so parsing one as a number can silently change it. A client MUST parse the string into a 64-bit integer and MUST compare snowflakes as integers, because unequal-length decimal strings do not sort as text.
+Snowflake values exceed a JSON double's exact integer range, so parsing one as a number can silently change it. A client MUST parse the string into a 64-bit integer and MUST compare snowflakes as integers, because unequal-length decimal strings do not sort as text.
 :::
 
 ## Format
 
-A snowflake packs a timestamp, a worker ID, and a sequence into 64 bits. The worker and sequence fields distinguish identifiers minted during the same millisecond. Bit 63 is always zero, so an issued snowflake fits a signed 64-bit integer.
+A snowflake packs a timestamp, a worker ID, and a sequence into 64 bits. The worker and sequence fields distinguish identifiers issued during the same millisecond. Bit 63 is always zero, so an issued snowflake fits a signed 64-bit integer.
 
 | Field | Bits | Description |
 | --- | --- | --- |
@@ -22,15 +22,15 @@ A snowflake packs a timestamp, a worker ID, and a sequence into 64 bits. The wor
 | Worker ID | 21 to 12 | The unsigned allocator worker identifier, from `0` through `1023` |
 | Sequence<sup>2</sup> | 11 to 0 | The unsigned per-worker sequence, from `0` through `4095` |
 
-<sup>1</sup> The timestamp records the instant the identifier was minted, which can fall shortly before the resource exists
+<sup>1</sup> The timestamp records the instant the identifier was issued, which can fall shortly before the resource exists
 
 <sup>2</sup> Sequence order applies only within one worker and one millisecond
 
 The epoch is 1420070400000 milliseconds after the Unix epoch. Every Fluxer instance uses the same value. The lower 22 bits expose allocator details, so a client MUST NOT use them for routing or resource semantics.
 
-One worker issues strictly increasing values. It advances the sequence for each identifier minted during the same millisecond, and it waits for the next millisecond once the sequence passes 4095.
+One worker issues strictly increasing values. It advances the sequence for each identifier issued during the same millisecond, and it waits for the next millisecond once the sequence passes 4095.
 
-A worker whose clock moves backwards keeps minting against the highest millisecond it has already used. An extracted timestamp can therefore fall later than the wall clock at the moment of minting.
+A worker whose clock moves backwards keeps issuing against the highest millisecond it has already used. An extracted timestamp can therefore fall later than the wall clock at the moment of issuing.
 
 ## Extracting a timestamp
 
@@ -65,7 +65,7 @@ Fluxer emits a snowflake as an unsigned decimal string in every JSON body, path 
 
 Both HTTP validation codes are element codes inside a 400 [`INVALID_FORM_BODY`](/http-api/errors/#api-error-code-registry) response. Each Gateway [command](/gateway/commands/) states what its own rejection does, from discarding the field to abandoning the whole command.
 
-A snowflake sent as a JSON number keeps its exact value at any size. A fractional JSON number is an ordinary type failure and reports [`INVALID_FORMAT`](/http-api/errors/#validation-error-code-registry). Fluxer reads an exponent form as the number it denotes, and one above 9007199254740991 reports [`INVALID_SNOWFLAKE_FORMAT`](/http-api/errors/#validation-error-code-registry). Path parameters and query string parameters always arrive as text.
+A snowflake sent as a JSON number keeps its exact value at any size. A fractional JSON number is an ordinary type failure and reports [`INVALID_FORMAT`](/http-api/errors/#validation-error-code-registry). Fluxer reads an exponent form as the number it means, and one above 9007199254740991 reports [`INVALID_SNOWFLAKE_FORMAT`](/http-api/errors/#validation-error-code-registry). Path parameters and query string parameters always arrive as text.
 
 :::note[`0` is the beginning of snowflake time]
 An HTTP pagination cursor accepts `0`. An HTTP path parameter or field that identifies a real resource also accepts `0`, and the request then receives the ordinary not-found result for that resource.
@@ -85,7 +85,7 @@ A collection endpoint that pages over a snowflake-ordered resource accepts a cur
 
 The type of a `before` or `after` cursor follows the operation. [List pinned messages](/http-api/messages/#list-pinned-messages) pages on the pin time, so its `before` is an ISO 8601 timestamp. [List blocklist entries](/admin-api/blocklists/#list-blocklist-entries) pages on the entry value. Its `after` is the stored value of the last entry on the previous page. Each operation states the type of its own cursors.
 
-Because the timestamp occupies the high bits, numeric snowflake order is creation time order at millisecond resolution.
+Because the timestamp uses the high bits, numeric snowflake order is creation time order at millisecond resolution.
 
 :::note[A cursor is a numeric boundary]
 A cursor does not need to identify a resource, so a snowflake derived from a timestamp can delimit a time range without a dedicated timestamp parameter.

@@ -8,7 +8,7 @@ description: Serving a Fluxer instance from nginx, Caddy, Traefik, HAProxy, Apac
 We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
 :::
 
-A reverse proxy takes the HTTPS connection from a browser and passes each request on to Fluxer. Fluxer runs behind any proxy that terminates TLS and forwards WebSocket upgrades.
+Fluxer runs behind any proxy that terminates TLS and forwards WebSocket upgrades.
 
 The stack ships Caddy and runs it by default on `80` and `443`. One extra Compose file stops that and publishes a single plain HTTP port instead. That port already routes every path to the right internal service, so the proxy in front needs one routing rule: send everything to it.
 
@@ -60,7 +60,7 @@ With `FLUXER_PUBLIC_SCHEME=https` the admin CSRF cookie is `__Host-csrf_token`, 
 
 #### Forward WebSocket upgrades
 
-The client connection is on `/gateway` and voice signalling is on `/livekit/*`. Both open as WebSocket upgrades. Check that the handshake completes through whatever is in front of the instance, with your own hostname in place of the one below:
+The client connection is on `/gateway` and voice signalling is on `/livekit/*`. Both open as WebSocket upgrades. Check that the handshake completes through whatever is in front of the instance, with your own hostname in place of `chat.example.com`:
 
 ```bash
 curl -sS -i --http1.1 --max-time 5 \
@@ -87,7 +87,7 @@ The Gateway socket stays open for the life of a client session, so give idle and
 
 #### Pass `Sec-Fetch-Site` through untouched
 
-The browser sends it, and the admin dashboard refuses a mutating request with a cross-site value.
+Browsers send it, and the admin dashboard refuses a mutating request with a cross-site value.
 
 #### Send no `Content-Security-Policy` of its own
 
@@ -115,7 +115,7 @@ FLUXER_PUBLIC_PORT=8443
 
 Your proxy holds the public port, and the overlay pins the edge to plain HTTP on `8080` whatever that port is, so nothing else in `.env` moves with it.
 
-Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states the same address as one string, and an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names puts part of the instance on `chat.example.com:8443` and part on `chat.example.com`, where the web app sends no `Authorization` header across the gap.
+Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states the same address as one string, and an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names puts part of the instance on `chat.example.com:8443` and part on `chat.example.com`, where the web app sends no `Authorization` header across the gap. [The public origin](/operator/configuration/#the-public-origin) has the rest.
 
 ## nginx
 
@@ -348,11 +348,11 @@ networks:
     name: fluxer_fluxer
 ```
 
-Cloudflare appends the visitor address to any `X-Forwarded-For` the visitor sent, so the header can arrive with a forged value in front of the real one. The edge reads the rightmost address that is not in `FLUXER_EDGE_TRUSTED_PROXIES`, which is the one Cloudflare appended. A Transform Rule that sets `X-Forwarded-For` to `cf.connecting_ip` removes the ambiguity outright.
+Cloudflare appends the visitor address to any `X-Forwarded-For` the visitor sent, so the header can arrive with a forged value in front of the real one. The edge reads the rightmost address that is not in `FLUXER_EDGE_TRUSTED_PROXIES`, which is the one Cloudflare appended. A Transform Rule that sets `X-Forwarded-For` to `cf.connecting_ip` removes the ambiguity.
 
 Cloudflare caps a request body at 100 MB on Free and Pro, 200 MB on Business, and 500 MB on Enterprise, and answers 413 above the cap. The cap applies to tunnel traffic, and no `cloudflared` setting raises it. Keep the [`max_attachment_file_size`](/http-api/instance/#limit-keys) limit below the cap for your plan, in the admin dashboard under limit configuration. It defaults to 26214400 bytes for a non-premium account and 524288000 bytes for a premium one, which is above every cap below Enterprise.
 
-A tunnel has the web app, API, Gateway, admin dashboard, media routes, and LiveKit signalling. It has no LiveKit media.
+A tunnel has the web app, API, Gateway, admin dashboard, media routes, and LiveKit signalling, but no LiveKit media.
 
 ## Nginx Proxy Manager
 
@@ -376,7 +376,7 @@ proxy_read_timeout 3600s;
 proxy_send_timeout 3600s;
 ```
 
-Nginx Proxy Manager appends to `X-Forwarded-For`, and the visitor's own value arrives in front of the real address. The edge takes the rightmost entry that is not in `FLUXER_EDGE_TRUSTED_PROXIES`, which is the one Nginx Proxy Manager appended. Users on a LAN or a VPN inside the default `private_ranges` are the exception and resolve to the forged entry, so narrow `FLUXER_EDGE_TRUSTED_PROXIES` to the proxy's address in that layout.
+Nginx Proxy Manager appends to `X-Forwarded-For`, so the visitor's own value arrives in front of the real address. The edge takes the rightmost entry that is not in `FLUXER_EDGE_TRUSTED_PROXIES`, which is the one Nginx Proxy Manager appended. Users on a LAN or a VPN inside the default `private_ranges` are the exception and resolve to the forged entry, so narrow `FLUXER_EDGE_TRUSTED_PROXIES` to the proxy's address in that layout.
 
 ## What the single port routes
 
@@ -440,7 +440,7 @@ Goes to `app-proxy:8080` unchanged.
 
 Pass the query string on `/gateway` through untouched. Clients always send `?v=`, `?encoding=`, `?compress=` and `?stream=`, and `1` is the only version the Gateway accepts.
 
-Apple and Google fetch the two association files themselves at those fixed paths, for saved-password autofill in the iOS apps and link handling in the Android ones. The last entry already has all four, so a proxy that forwards `/` needs no extra rule. A proxy that forwards a named path allowlist has to list these four paths along with everything else that entry covers.
+Apple and Google fetch the two association files at those fixed paths, for saved-password autofill in the iOS apps and link handling in the Android ones. The last entry already has all four, so a proxy that forwards `/` needs no extra rule. A proxy that forwards a named path allowlist has to list these four paths along with everything else that entry covers.
 
 `/_metrics` on the API, Media Proxy, and Gateway, plus `/_health/ready`, `/_health/drain`, and `/_health/undrain` on the Gateway, are gated to loopback and are unreachable through any proxy. The probes that work through a proxy are `/_health`, `/api/_health`, `/gateway/_health`, and `/media/_health`.
 
@@ -462,7 +462,7 @@ FLUXER_EDGE_TRUSTED_PROXIES=private_ranges 203.0.113.10/32
 FLUXER_EDGE_TRUSTED_PROXIES=private_ranges 100.101.102.103/32
 ```
 
-The edge believes a trusted peer without question. Anyone who can open a TCP connection from a trusted address can set `X-Forwarded-For` to any value and be recorded as that address, which defeats bans and rate limits and pollutes abuse detection. Keep the list down to the one address your proxy arrives from. That is also the only correct list on a LAN or VPN deployment, where a visitor whose own address falls inside a wider list is recorded under the proxy's address.
+The edge accepts whatever a trusted peer sends. Anyone who can open a TCP connection from a trusted address can set `X-Forwarded-For` to any value and be recorded as that address, which defeats bans and rate limits and pollutes abuse detection. Keep the list down to the one address your proxy arrives from. That is also the only correct list on a LAN or VPN deployment, where a visitor whose own address falls inside a wider list is recorded under the proxy's address.
 
 Find the address the edge sees a host-side proxy arrive from:
 

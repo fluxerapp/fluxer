@@ -6,9 +6,9 @@ description: Checkout, card preapproval, gift purchase, age verification, refund
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes take payment for premium, verify an account holder's age, and refund the most recent purchase. Each of those finishes on the payment provider's own pages, so a route here creates the provider session and returns its URL for the browser to open. [Receive Stripe webhook](#receive-stripe-webhook) takes the signed events the provider sends back. The [Premium resource](/http-api/premium/) owns entitlement state, mirrored billing data and subscription self-service.
+These routes take payment for premium, verify an account holder's age, and refund the most recent purchase. Each finishes on the payment provider's own pages, so a route here creates the provider session and returns its URL for the browser to open. [Receive Stripe webhook](#receive-stripe-webhook) takes the signed events the provider sends back. The [Premium resource](/http-api/premium/) owns entitlement state, mirrored billing data and subscription self-service.
 
-Every route here is hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. Every route except [receive Stripe webhook](#receive-stripe-webhook) and [continue localised card preapproval](#continue-localised-card-preapproval) is user-only.
+Every route here is hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. All of them are user-only except [receive Stripe webhook](#receive-stripe-webhook) and [continue localised card preapproval](#continue-localised-card-preapproval).
 
 :::note[Every response is a Fluxer object]
 The responses are Fluxer redirect, eligibility, refund and acknowledgement objects. The only payment provider values in them are the identifiers on a [refund](#refund-object).
@@ -24,7 +24,7 @@ One absolute URL that completes a billing operation in a browser. [Create subscr
 | --- | --- | --- |
 | url<sup>1</sup> | string | Absolute URL that completes the operation in a browser |
 
-<sup>1</sup> Ordinarily an externally hosted payment provider session URL. [Create subscription checkout](#create-subscription-checkout) can answer with the Fluxer premium callback URL instead
+<sup>1</sup> Usually an externally hosted payment provider session URL. [Create subscription checkout](#create-subscription-checkout) can answer with the Fluxer premium callback URL instead
 
 ### Example
 
@@ -36,7 +36,7 @@ One absolute URL that completes a billing operation in a browser. [Create subscr
 
 ## Localised card preapproval result object
 
-The state of one card preapproval flow. A localised recurring price is offered only to a card issued in the matching country, so Fluxer creates the paid session only after a separate setup mode session has proven the card country. `status` says which of the four variants the object is, and each variant defines its own members.
+The state of one card preapproval flow. A localised recurring price is offered only to a card issued in the matching country. Fluxer creates the paid session only after a separate setup mode session has proven the card country. `status` says which of the four variants the object is, and each variant defines its own members.
 
 ### Structure
 
@@ -85,7 +85,7 @@ The state of one card preapproval flow. A localised recurring price is offered o
 
 ## Refund eligibility object
 
-The verdict on whether the account's most recent purchase can still be refunded without operator involvement. When no refundable purchase was resolved, `eligible` is false, every invoice member is null, and `cooldown_expires_at` still reports an active cooldown unless the reason is `feature_unavailable`. A client reads `eligible` and `reason` before rendering any amount or timestamp.
+Whether the account's most recent purchase can still be refunded without operator involvement. When no refundable purchase was resolved, `eligible` is false, every invoice member is null, and `cooldown_expires_at` still reports an active cooldown unless the reason is `feature_unavailable`. A client reads `eligible` and `reason` before rendering any amount or timestamp.
 
 ### Structure
 
@@ -137,7 +137,7 @@ The verdict on whether the account's most recent purchase can still be refunded 
 | --- | --- |
 | no_refundable_purchase | The account has no paid invoice with a positive amount and a resolvable payment reference among the invoices considered |
 | outside_refund_window | The latest refundable purchase settled more than 3 days ago |
-| cooldown_active | The account performed a self-service refund less than 30 days ago |
+| cooldown_active | The account made a self-service refund less than 30 days ago |
 | feature_unavailable | The deployment is self-hosted, or the payment provider is not configured, so self-service refunds are not offered |
 
 ## Refund object
@@ -220,7 +220,7 @@ Creates a recurring premium checkout session and returns a [redirect URL](#redir
 
 Fluxer evaluates the lifetime refusal before the unclaimed account, unverified email and purchase flag refusals, so a lifetime Visionary account submitting a recurring price always receives the reason `lifetime` whatever its account state.
 
-An account already holding an `active` or `trialing` subscription can submit a registered recurring non-gift price for the other billing cycle. Fluxer schedules a billing cycle change to the submitted cycle at the end of the current period, exactly as [change subscription billing cycle](/http-api/premium/#change-subscription-billing-cycle) with `effective_at` set to `period_end` does. The response is 200 with `url` set to the Fluxer premium callback URL.
+An account already holding an `active` or `trialing` subscription can submit a registered recurring non-gift price for the other billing cycle. Fluxer then schedules a billing cycle change to the submitted cycle at the end of the current period. That is exactly what [change subscription billing cycle](/http-api/premium/#change-subscription-billing-cycle) with `effective_at` set to `period_end` does. The response is 200 with `url` set to the Fluxer premium callback URL.
 
 The conversion requires a stored billing cycle on the account that differs from the submitted price's cycle. Any other blocking subscription status, no stored billing cycle, and a matching cycle all still produce 403 `PREMIUM_PURCHASE_BLOCKED`. When scheduling the change fails, the caller receives that failure.
 
@@ -235,12 +235,12 @@ A blocked purchase always fails on [create localised card preapproval](#create-l
 | price_id | string | Registered recurring price ID (1-256 characters) |
 | country_code?<sup>1</sup> | string | Two-letter country used to select the regional price catalogue (2 characters) |
 | client_geoip_country_code?<sup>2</sup> | string | Two-letter country the client previously observed for itself (2 characters) |
-| eu_withdrawal_waiver_accepted?<sup>3</sup> | boolean | Whether the digital content withdrawal waiver was expressly accepted |
+| eu_withdrawal_waiver_accepted?<sup>3</sup> | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
 | pricing_mode? | string | Either `localized` or `base` (default `localized`) |
 | payment_method?<sup>4</sup> | string | Either `card`, `pix` or `upi` (default `card`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 
-<sup>1</sup> Required whenever the resolved price is not denominated in USD or EUR, and validated against the price catalogue for that country
+<sup>1</sup> Required whenever the resolved price is not in USD or EUR, and validated against the price catalogue for that country
 
 <sup>2</sup> Read to resolve the effective country for the withdrawal waiver, and recorded with the payment
 
@@ -261,7 +261,7 @@ A blocked purchase always fails on [create localised card preapproval](#create-l
 
 ### Side effects
 
-The operation creates a payment provider customer when the account has none, records the customer identifier on the account, and reconciles the account's stored subscription identifier with whatever the provider reports for that customer. Where a blocking subscription can still provision premium, Fluxer repairs the account's premium type, start, end, cancellation flag, billing cycle and grace deadline before it refuses the request.
+The operation creates a payment provider customer when the account has none and records the customer identifier on the account. It also reconciles the account's stored subscription identifier with whatever the provider reports for that customer. Where a blocking subscription can still grant premium, Fluxer repairs the account's premium type, start, end, cancellation flag, billing cycle and grace deadline before it refuses the request.
 
 It then creates an externally hosted checkout with terms of service consent, the withdrawal waiver text attached to that consent, automatic tax, tax identifier collection and promotion codes. It records a pending payment row with the resolved countries and the waiver decision.
 
@@ -282,7 +282,7 @@ Creates a setup mode session that captures and verifies a card before a localise
 ### Limitations
 
 - The claimed account, verified email and purchase flag requirements of [create subscription checkout](#create-subscription-checkout) apply unchanged, with the same codes.
-- An absent `country_code`, a `pricing_mode` of `base`, and a resolved price that is not a recurring price denominated in a currency other than USD and EUR each return 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
+- An absent `country_code`, a `pricing_mode` of `base`, and a resolved price that is not a recurring price in a currency other than USD and EUR each return 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
 - The submitted price is always recurring, so the lifetime block and the existing subscription block both apply and return 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `lifetime` or `existing_subscription`.
 
 ### JSON body
@@ -292,7 +292,7 @@ Creates a setup mode session that captures and verifies a card before a localise
 | price_id | string | Registered localised recurring price ID (1-256 characters) |
 | country_code<sup>1</sup> | string | Two-letter country used to select the regional price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country the client previously observed for itself (2 characters) |
-| eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was expressly accepted |
+| eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
 | pricing_mode?<sup>2</sup> | string | Either `localized` or `base` (default `localized`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 
@@ -315,9 +315,9 @@ A submitted `payment_method` is validated against the enum and then discarded. T
 
 ### Side effects
 
-The operation creates a payment provider customer when necessary and reconciles subscription state exactly as [create subscription checkout](#create-subscription-checkout) does, then creates an externally hosted setup session restricted to cards.
+The operation creates a payment provider customer when the account has none and reconciles subscription state exactly as [create subscription checkout](#create-subscription-checkout) does, then creates an externally hosted setup session restricted to cards.
 
-It also records a preapproval flow keyed by a freshly generated continuation token, holding the price, country, business flag, waiver decision and observed countries. The flow expires one day after its most recent state change. The token is returned in the session's success callback URL.
+It also records a preapproval flow keyed by a newly generated continuation token, holding the price, country, business flag, waiver decision and observed countries. The flow expires one day after its most recent state change. The token is returned in the session's success callback URL.
 
 The flow stays pending until [receive Stripe webhook](#receive-stripe-webhook) processes the matching completion event. It is approved only when the card issuing country equals the pricing country. Otherwise the flow records a [preapproval rejection reason](#preapproval-rejection-reasons), and for `country_mismatch` the detected country. No entitlement changes.
 
@@ -341,7 +341,7 @@ An empty token, an unknown token, and a token whose one-day flow has expired are
 - A recorded price that no longer belongs to the recorded country catalogue returns 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
 - The claimed account, verified email, purchase flag, lifetime and existing subscription refusals all apply to the account that opened the flow.
 
-Creating the paid session repeats the complete preparation [create subscription checkout](#create-subscription-checkout) performs, against the account, price and country recorded on the flow.
+Creating the paid session repeats the complete preparation that [create subscription checkout](#create-subscription-checkout) does, against the account, price and country recorded on the flow.
 
 :::caution[Approval is resolved once]
 One continuation at a time can resolve an approved flow. While one call creates the paid session, another call for the same flow is reported as `pending`.
@@ -394,11 +394,11 @@ Neither the lifetime block nor the existing subscription block applies here, so 
 | price_id | string | Registered gift price ID (1-256 characters) |
 | country_code?<sup>1</sup> | string | Two-letter country used to select the regional gift price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country the client previously observed for itself (2 characters) |
-| eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was expressly accepted |
+| eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
 | pricing_mode? | string | Either `localized` or `base` (default `localized`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 
-<sup>1</sup> Required whenever the resolved gift price is not denominated in USD or EUR
+<sup>1</sup> Required whenever the resolved gift price is not in USD or EUR
 
 A submitted `pix` or `upi` is validated against the enum and then discarded. The session restricts no payment method type, so the provider offers whatever the deployment's provider account accepts for the resolved currency.
 
@@ -450,7 +450,7 @@ The session requests 3-D Secure authentication on the card and takes no payment.
 
 The operation creates a payment provider customer when necessary, records the customer identifier on the account, and creates an externally hosted setup session restricted to cards.
 
-Adult age verification is granted only after [receive Stripe webhook](#receive-stripe-webhook) processes the matching completion event and confirms a credit card. That later grant sets the age-verified adult flag and sends [User Update](/gateway/events/#user-update) to every session owned by the account.
+Adult age verification is granted only after [receive Stripe webhook](#receive-stripe-webhook) processes the matching completion event and confirms a credit card. The grant sets the age-verified adult flag and sends [User Update](/gateway/events/#user-update) to every session owned by the account.
 
 ### Rate limit
 
@@ -464,7 +464,7 @@ Returns the [refund eligibility](#refund-eligibility-object) object for the auth
 
 A deployment with no configured payment provider answers with `eligible` false and the reason `feature_unavailable`. Otherwise the operation lists the five most recent invoices for the account's payment provider customer and selects the first that is paid, has a positive amount, and resolves a payment intent or a charge.
 
-A provider listing failure is logged and treated as no refundable purchase, and the request still succeeds. An account that has never had a payment provider customer provisioned is treated the same way.
+A provider listing failure is logged and treated as no refundable purchase, and the request still succeeds. An account that has never had a payment provider customer created is treated the same way.
 
 :::note[The same object appears inside premium state]
 [Get premium state](/http-api/premium/#get-premium-state) returns this object as `billing.refund_eligibility`, computed from the mirrored invoices, so the two can disagree while the mirror is behind.
@@ -515,7 +515,7 @@ Once the provider confirms the refund succeeded, the subscription that produced 
 | 403 | [error response](/http-api/#error-response) | The purchase is outside the refund window, or the refund cooldown is active |
 | 404 | [error response](/http-api/#error-response) | The authenticated account record no longer exists |
 
-<sup>1</sup> The payment provider is not configured, or the payment method could not be determined or the provider rejected the refund, both of which return `STRIPE_ERROR`
+<sup>1</sup> The payment provider is not configured, or the payment method could not be determined, or the provider rejected the refund. The last two return `STRIPE_ERROR`
 
 ### Side effects
 
@@ -533,12 +533,12 @@ A confirmed refund that cancels the account's current subscription clears the st
 
 <RouteHeader method="POST" path="/v1/stripe/webhook" unauthenticated />
 
-Authenticates a payment provider event against the exact raw request body and enqueues it for asynchronous processing, returning a [webhook received](#webhook-received-object) object. The signature header is the credential.
+Authenticates a payment provider event against the exact raw request body and queues it for asynchronous processing, returning a [webhook received](#webhook-received-object) object. The signature header is the credential.
 
 ### Limitations
 
 - A missing signature header returns 400 `STRIPE_WEBHOOK_SIGNATURE_MISSING`.
-- A deployment with no configured payment provider client or webhook secret then returns 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`.
+- A deployment with no payment provider client or webhook secret configured then returns 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`.
 - A signature header that does not verify returns 401 `STRIPE_WEBHOOK_SIGNATURE_INVALID`.
 
 The route verifies the signature with the payment provider library's default timestamp tolerance.
@@ -557,18 +557,18 @@ A proxy that re-encodes, reorders or pretty-prints the payload invalidates the s
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [webhook received](#webhook-received-object) object | The event was authenticated and enqueued |
+| 200 | [webhook received](#webhook-received-object) object | The event was authenticated and queued |
 | 400 | [error response](/http-api/#error-response) | The signature header is missing, or webhook processing is not configured for this deployment |
 | 401 | [error response](/http-api/#error-response) | The signature did not verify against the raw body |
-| 500 | [error response](/http-api/#error-response) | The event could not be enqueued |
+| 500 | [error response](/http-api/#error-response) | The event could not be queued |
 
 ### Side effects
 
-The response precedes fulfilment, and a redelivered event is applied once.
+The response comes before processing, and a redelivered event is applied once.
 
-A recognised event first refreshes the local mirror of its provider object, covering customers, products, prices, checkout sessions, subscriptions, invoices, payment intents, payment methods, charges, refunds and disputes. That mirror is what [Get premium state](/http-api/premium/#get-premium-state) reads.
+A recognised event first refreshes the local mirror of its provider object, covering customers, products, prices, checkout sessions, subscriptions, invoices, payment intents, payment methods, charges, refunds and disputes. [Get premium state](/http-api/premium/#get-premium-state) reads that mirror.
 
-Later processing can create a purchased gift, grant or extend premium, settle or fail a checkout, update invoice failure state, record or clear the post-cancellation grace deadline, apply subscription changes, and resolve a card preapproval. It also completes a donation and sends its confirmation email, and completes adult age verification. A dispute or fraud warning reverses a gift and emails the redeemer whose entitlement was withdrawn, and a dispute that closes in Fluxer's favour restores the account and emails that account holder. A refund reverses entitlement and settles the self-service refund.
+Later processing can create a purchased gift, grant or extend premium, settle or fail a checkout, and update invoice failure state. It can also record or clear the post-cancellation grace deadline, apply subscription changes, resolve a card preapproval, complete a donation and send its confirmation email, and complete adult age verification. A dispute or fraud warning reverses a gift and emails the redeemer whose entitlement was withdrawn. A dispute that closes in Fluxer's favour restores the account and emails that account holder. A refund reverses entitlement and settles the self-service refund.
 
 Each account-addressed message is sent only when the receiving account has an email address. The resulting account changes reach connected sessions as [User Update](/gateway/events/#user-update).
 

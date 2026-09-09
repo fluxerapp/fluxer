@@ -173,7 +173,7 @@ Returns one [archive](#archive-object) object. Requires an ACL covering the subj
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | A lookup was performed, whether or not it resolved |
+| 200 | response body | A lookup was done, whether or not it resolved |
 | 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without an ACL covering the subject type |
 
 ### Side effects
@@ -191,7 +191,7 @@ The read issues no download grant.
 Issues a temporary download URL for a completed archive. Returns an [archive download](#archive-download-object) object on success. Requires an ACL covering the subject type.
 
 :::caution[The grant is an unauthenticated bearer URL]
-The URL has its own signature and works for seven days for anyone who holds it. No operation revokes it, and it is bound to no Admin account. Each repeat of the operation issues a further independent grant.
+The URL has its own signature and works for seven days for anyone who holds it. It is bound to no Admin account, and no operation revokes it. Each repeat of the operation issues a further independent grant.
 :::
 
 ### Path parameters
@@ -213,7 +213,7 @@ The URL has its own signature and works for seven days for anyone who holds it. 
 
 <sup>1</sup> `HARVEST_FAILED` while `failed_at` is set, `HARVEST_NOT_READY` while the archive has no completion time or no stored object, and `HARVEST_EXPIRED` once `expires_at` has passed, tested in that order
 
-<sup>2</sup> The archive record stops being readable at `expires_at`, so an archive past its expiry answers `UNKNOWN_HARVEST` rather than `HARVEST_EXPIRED`
+<sup>2</sup> The archive record stops being readable at `expires_at`, so an archive past its expiry answers `UNKNOWN_HARVEST`, not `HARVEST_EXPIRED`
 
 ### Side effects
 

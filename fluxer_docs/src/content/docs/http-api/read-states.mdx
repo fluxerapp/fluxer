@@ -24,13 +24,13 @@ An account holds at most one read state per channel, keyed by the account and th
 | last_pin_timestamp<sup>2</sup> | ?ISO8601 timestamp | The time of the last acknowledged pin, or null when pins have never been acknowledged |
 | version?<sup>3</sup> | string | The read state version as a canonical decimal unsigned 64-bit string |
 
-<sup>1</sup> The value the last acknowledgement stored, incremented by the server as new mentions arrive. It is never recomputed from message history
+<sup>1</sup> The value the last acknowledgement stored, incremented by the server as new mentions arrive and never recomputed from message history
 
 <sup>2</sup> Neither operation on this page writes it, so an acknowledged pin timestamp survives every message acknowledgement
 
 <sup>3</sup> Present on every entry the API returns. The value is always `0`
 
-An acknowledgement creates an entry. So does [Acknowledge pins](/http-api/messages/#acknowledge-pins), and so does the server when a mention arrives in a channel the account has no entry for. A pin acknowledgement writes only `last_pin_timestamp`, and the entry it creates reports `last_message_id` as null. The entry the server creates for a mention starts from the channel's own baseline watermark, which is the snowflake of the channel ID itself, so every message already in the channel stays unread.
+An acknowledgement creates an entry. So does [Acknowledge pins](/http-api/messages/#acknowledge-pins), and so does the server when a mention arrives in a channel the account has no entry for. A pin acknowledgement writes only `last_pin_timestamp`, and the entry it creates reports `last_message_id` as null. The entry the server creates for a mention starts from the channel's own baseline watermark, the snowflake of the channel ID itself, so every message already in the channel stays unread.
 
 [Clear channel read state](/http-api/messages/#clear-channel-read-state) deletes the whole entry, so it drops the watermark and the mention count along with the pin timestamp.
 
@@ -106,7 +106,7 @@ One entry in the body of [Mark channels as read](#mark-channels-as-read). It nam
 
 Applies 1 through 100 [read state acknowledgement objects](#read-state-acknowledgement-object) to the current account's aggregate and returns the resulting [read state](#read-state-object) entries. User-only. Emits one [Message ACK](/gateway/events/#message-ack) Gateway event to the caller's own sessions for each submitted entry.
 
-The route resolves no channel and evaluates no permission. The write mutates only the caller's own read states.
+The route resolves no channel and evaluates no permission. The write changes only the caller's own read states.
 
 ### JSON body
 
@@ -128,7 +128,7 @@ The route resolves no channel and evaluates no permission. The write mutates onl
 When no entry sets `manual` and no entry has a `mention_count` above `0`, Fluxer applies the whole list through the batched path [Mark channels as read](#mark-channels-as-read) uses.
 :::
 
-A list with one manual entry or one positive mention count takes the entry-by-entry path in submitted order, and a later entry naming the same channel is evaluated against the earlier entry's result.
+A list with one manual entry or one positive mention count takes the entry-by-entry path in submitted order. On that path, a later entry naming the same channel is evaluated against the earlier entry's result.
 
 ### Response
 

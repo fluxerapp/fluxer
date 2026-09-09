@@ -33,7 +33,7 @@ The Media Proxy canonicalises nothing and issues no redirect, so two spellings o
 | effort?<sup>5</sup> | integer | The WebP encoder effort for an attachment request |
 | download? | boolean | Whether the response uses attachment disposition |
 
-<sup>1</sup> An empty, unparsable, zero, or over-bound value returns 400. Any integer from 1 through 16,384 is accepted
+<sup>1</sup> An empty, unparsable, zero, or too large value returns 400. Any integer from 1 through 16,384 is accepted
 
 <sup>2</sup> No value is rejected. An absent or unparsable value selects 128, a parsable value snaps to the ladder, and the result is then clamped by [asset size selection](#asset-size-selection)
 
@@ -57,7 +57,7 @@ Transformations never enlarge an image.
 
 `width` alone scales proportionally to the requested width, and `height` alone scales proportionally to the requested height. A fit inside a rectangle uses the smaller of the two ratios, so a dimension requested larger than the source still shrinks when the other requested dimension is smaller than the source.
 
-A cover crop scales a still image to cover the requested rectangle and crops it centrally. The Media Proxy applies one to an attachment or signed external request that supplies both `width` and `height`, and to every emoji or sticker asset. Every other image asset fits inside the selected square and preserves its full aspect ratio.
+A cover crop scales a still image to cover the requested rectangle and crops it centrally. It applies to an attachment or signed external request that supplies both `width` and `height`, and to every emoji or sticker asset. Every other image asset fits inside the selected square and preserves its full aspect ratio.
 
 :::note[An animated transformation fits the whole frame]
 The Media Proxy downgrades a cover crop to a plain fit whenever it opens the decoder for every page. An animated emoji or sticker is fitted inside its square.
@@ -158,13 +158,13 @@ The Media Proxy returns the original bytes when the source already has the selec
 
 An `effort` value forces encoding, and a `quality` value forces encoding for every source except GIF. With neither `width` nor `height`, an animated attachment or signed external request for the source's own GIF, WebP, or APNG format bypasses both tests and can still reuse the original animation.
 
-The Media Proxy derives the response `Content-Type` from the content when the stored media type is empty, is case-insensitively `application/octet-stream`, or is outside the set `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/apng`, `image/avif`, `image/heic`, `image/heif`, `image/jxl`, and `image/svg+xml`. An original response can therefore use a different media type from the stored metadata. A stored media type from that set is trusted even when it disagrees with the bytes and is served unchanged.
+The response `Content-Type` comes from the content when the stored media type is empty, is case-insensitively `application/octet-stream`, or is outside the set `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/apng`, `image/avif`, `image/heic`, `image/heif`, `image/jxl`, and `image/svg+xml`. An original response can therefore use a different media type from the stored metadata. A stored media type from that set is trusted even when it disagrees with the bytes and is served unchanged.
 
 ## Transformation limits
 
-Proxied or stored media is limited to 500 MiB. A stored object above that bound returns 413, and so does an external origin that declares or delivers more. The same bound applies to a transforming request and to every buffer it produces.
+A stored object above the [500 MiB media bound](/media-proxy/responses-and-limits/#request-and-media-limits) returns 413, and so does an external origin that declares or delivers more. The same bound applies to a transforming request and to every buffer it produces.
 
-Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is additionally limited to 20,000 decoded frames and 1,073,741,824 decoded pixels across all frames. These bounds are fixed. Exceeding a decoded image or animation limit fails the transformation.
+Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is also limited to 20,000 decoded frames and 1,073,741,824 decoded pixels across all frames. These bounds are fixed. Exceeding a decoded image or animation limit fails the transformation.
 
 Animated WebP and animated APNG output is bounded again at encode time, and exceeding one of those bounds truncates the output. The encoder stops adding frames after 20,000 frames, or once the accumulated frame delays reach 30,000 ms of playback, and emits the frames it already has. An operator can configure the frame cap from 1 through 100,000 and the playback cap from 100 through 600,000 ms. Animated GIF output has neither cap on either of its paths, so the decode limits above are its only bound.
 

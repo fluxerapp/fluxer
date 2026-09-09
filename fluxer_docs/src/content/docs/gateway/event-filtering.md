@@ -39,7 +39,7 @@ The guild resolves each event to one of these recipient sets.
 
 <sup>2</sup> The channel is read from the payload's `channel_id`, and from a nested `channel.id` when that field is absent. An invite payload with neither field reaches no session
 
-Every one of those sets also excludes a session whose connection to the guild is still in flight, so a session receives none of the events above until the guild has given it that initial state.
+Every one of those sets excludes a session that has not yet received the guild's initial state.
 
 Channel visibility is `VIEW_CHANNEL` on the channel, plus two extensions. A category is visible when at least one of its children is visible. A user with a live voice connection in a channel keeps virtual access to it whenever the channel would otherwise stop being visible. That covers a role or overwrite change removing `VIEW_CHANNEL`, and a move into a channel the user cannot view. Virtual access is keyed by user, so it applies to every session of that user. It is dropped when the user's voice connection to the channel ends.
 
@@ -102,7 +102,7 @@ The override applies to every session, including a bot session. A bot suppresses
 
 A session that no longer shares a viewable channel with the subject is dropped from that subject's subscriber set, so a client that regains access MUST resend `members` to restore delivery. Each `members` array replaces the session's previous subscription set for that guild.
 
-The session holds a presence back in two cases. Every presence that arrives before [Ready](/gateway/events/#ready) is held. Fluxer releases the queue once it has dispatched Ready. A held presence whose subject already appears in the Ready `presences` array is dropped, and the session sends the rest in one burst. When Ready has not been dispatched within 10,000 milliseconds of session start, a fallback timer releases the queue. After that the session buffers a guild presence whose `guild_id` names a guild it is not connected to, and an account-scoped presence for a user that is neither a friend nor a recipient of a group direct message it belongs to.
+A session holds a presence back in two cases. It holds every presence that arrives before [Ready](/gateway/events/#ready), and releases the queue once it has dispatched Ready. A held presence whose subject already appears in the Ready `presences` array is dropped, and the session sends the rest in one burst. When Ready has not been dispatched within 10,000 milliseconds of session start, a fallback timer releases the queue. After that the session holds a guild presence whose `guild_id` names a guild it is not connected to, and an account-scoped presence for a user that is neither a friend nor a recipient of a group direct message it belongs to.
 
 A bot session holds no friend or group direct message presence subscriptions, so a bot receives a presence through this guild path alone.
 
@@ -137,7 +137,7 @@ A session that identified with a `shard` pair whose `shard_id` is not 0 drops ev
 
 Account-level traffic, direct message traffic, relationship changes, and calls therefore never reach a session on a shard other than 0.
 
-A session on shard 0, and a session that identified without a `shard` pair, filter nothing at this gate. Fluxer still applies guild ownership at Identify, as [Sharding](/gateway/overview/#sharding) describes, so a shard 0 session is only ever connected to the guilds its shard owns.
+Sessions on shard 0, and sessions that identified without a `shard` pair, filter nothing at this gate. Fluxer still applies guild ownership at Identify, as [Sharding](/gateway/overview/#sharding) describes, so a shard 0 session is only ever connected to the guilds its shard owns.
 
 ## What a bot should send
 

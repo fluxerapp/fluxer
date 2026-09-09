@@ -21,7 +21,7 @@ Read the release notes between the version you run and the one you are moving to
 
 ## Match the images to the stack files
 
-The images come from `FLUXER_IMAGE_TAG` in `.env`. The stack files come from a git ref, which is a branch or a tag in the Fluxer repository. The installer derives that ref from the image tag: `main` when the tag is `v1` or `latest`, and the tag string itself for anything else. `--ref` overrides the derivation. `docker compose pull` never updates a stack file, and refreshing a stack file never moves an image.
+The images come from `FLUXER_IMAGE_TAG` in `.env`. The stack files come from a git ref, which is a branch or a tag in the Fluxer repository. The installer derives that ref from the image tag: `main` for `v1` or `latest`, and the tag string itself for anything else. `--ref` overrides the derivation. `docker compose pull` never updates a stack file, and refreshing a stack file never moves an image.
 
 The repository holds no ref by the name of a pinned image tag. A release tags each image on its own, as `fluxer-api@2026.813.205040`, so pass `--ref` with that tag or with the commit it points at. Without that override the download fails with exit 4.
 
@@ -63,9 +63,9 @@ To write it by hand, run the generator in a shell:
 printf '\nFLUXER_ERLANG_COOKIE=%s\n' "$(openssl rand -hex 32)" >> .env
 ```
 
-Run that as a command. Pasting `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env` as text stores those characters as the value, because Compose reads a line literally and runs nothing in it. The leading newline keeps the key on its own line. An editor can leave the last line of `.env` without a newline, and the two would otherwise join.
+Pasting `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env` as text stores those characters as the value, because Compose reads a line literally and runs nothing in it. The leading newline keeps the key on its own line. An editor can leave the last line of `.env` without a newline, and the two would otherwise join.
 
-`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. The line has been in `.env.example` for a while as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. `--update` replaces an absent or `CHANGE_ME` value with a generated one before it reads anything. Both services read the same value from one `.env` line. A `CHANGE_ME` value stops `api` at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes`, and an empty one with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
+`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. `.env.example` has shipped it as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. `--update` replaces an absent or `CHANGE_ME` value with a generated one before it reads anything. Both services read the same value from one `.env` line. A `CHANGE_ME` value stops `api` at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes`, and an empty one with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
 
 To write it by hand, run the generator in a shell the same way:
 
@@ -87,7 +87,7 @@ The supported way to hold a local choice is a separate file, listed in `COMPOSE_
 COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
 ```
 
-Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory. An override file is never backed up with them, and it belongs wherever the rest of the configuration lives.
+Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory. An override file is never backed up with them, so keep it wherever the rest of the configuration lives.
 
 `.env` needs no such file. The only value either upgrade mode replaces there is `FLUXER_IMAGE_TAG`, and the Mint step adds a required key the file does not hold at all.
 
@@ -200,8 +200,6 @@ Each upgrade writes one record directory, named `record-` and a UTC stamp, under
 
 The five stack files sit in the record beside them, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
 
-The dump costs no downtime. The uploads copy stops the stack, and the script starts the stack again on the old images before it goes any further.
-
 Nothing else is copied. The dump covers `postgres-data`. The other five volumes either rebuild themselves or hold queued work, and [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists all seven with what each one holds.
 
 Put a dump on a timer as well. On Linux and macOS, this crontab line writes one a night and keeps two weeks of them:
@@ -210,7 +208,7 @@ Put a dump on a timer as well. On Linux and macOS, this crontab line writes one 
 15 3 * * * cd /srv/fluxer && docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > "backups/fluxer-$(date -u +\%Y\%m\%dT\%H\%M\%SZ).dump" && find backups -name 'fluxer-*.dump' -mtime +14 -delete
 ```
 
-`/srv/fluxer` stands for the directory holding `.env`. Write it as an absolute path, because cron does not expand `~`. An unescaped `%` in a crontab is a newline, which is why every one of them has a backslash.
+`/srv/fluxer` stands for the directory holding `.env`. Write it as an absolute path, because cron does not expand `~`. An unescaped `%` in a crontab is a newline, which is why every one above has a backslash.
 
 ## Run a data store outside the stack
 
@@ -244,13 +242,13 @@ sh install.sh --rollback
 
 On Windows it is `.\install.ps1 -Rollback`. It takes the newest record, puts back the images and the stack files it holds, recreates, restarts `edge`, and verifies. `--dry-run` prints that plan too.
 
-A rollback never pulls, so it needs the old images still on the host. Run [Reclaim disk](#reclaim-disk) only after an upgrade satisfies you.
+A rollback never pulls, so it needs the old images still on the host. Run [Reclaim disk](#reclaim-disk) only once the upgrade is known good.
 
-The database does not move. `api`, `worker`, `users-shard` and `messages-shard` apply schema work in place while they start, and an older image does not undo it. Across a release that changed the schema, the dump in the record is the only way back, and putting it back is a decision you make.
+The database does not move. `api`, `worker`, `users-shard` and `messages-shard` apply schema work in place while they start, and an older image does not undo it. Across a release that changed the schema, the dump in the record is the only way back, and a rollback never puts it back for you.
 
 ## Restore a backup
 
-Both artifacts go back with the stack stopped, so nothing writes while they are replaced. Name your own record directory in place of the one below.
+Both artifacts go back with the stack stopped, so nothing writes while they are replaced. Name your own record directory instead of the one below.
 
 The database restores from the custom-format dump:
 
@@ -285,7 +283,7 @@ docker run --rm -v fluxer_seaweedfs-data:/data \
 docker compose up -d
 ```
 
-`tar` extracts over whatever is already on the volume, so the `find` empties it first. In PowerShell write `${PWD}` in place of `$PWD`. Success is an existing attachment URL answering 200 again. The `fluxer_` prefix is the Compose project name, which `docker-compose.yml` sets to `fluxer`.
+`tar` extracts over whatever is already on the volume, so the `find` empties it first. In PowerShell write `${PWD}` instead of `$PWD`. Success is an existing attachment URL answering 200 again. The `fluxer_` prefix is the Compose project name, which `docker-compose.yml` sets to `fluxer`.
 
 ## Move to a new Postgres major version
 
@@ -321,7 +319,7 @@ Run `sh install.sh --update` afterwards to finish the move on the refreshed file
 
 A pinned instance also pins its stack files. [Match the images to the stack files](#match-the-images-to-the-stack-files) has the `--ref` a pinned tag needs.
 
-The tag applies only to the eleven Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs`, and `livekit` are pinned inside `docker-compose.yml` and move only when an upgrade refreshes that file.
+The tag applies only to the eleven Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs` and `livekit` are pinned in `docker-compose.yml`, and they move only when an upgrade refreshes that file.
 
 ## Change the domain or the passkey relying party
 
@@ -341,7 +339,7 @@ Each upgrade leaves the previous images behind, which adds up to a few gigabytes
 docker image prune -f
 ```
 
-On the default moving tag, the pull moves `v1` onto the new images and leaves the ones it replaced untagged, so this removes them. A rollback on a moving tag needs those images. Prune only once the upgrade satisfies you. A pinned release keeps its own tag and survives the prune. Remove one of those by naming its tag in `docker image rm`.
+On the default moving tag, the pull moves `v1` onto the new images and leaves the ones it replaced untagged, so this removes them. A rollback on a moving tag needs those images. Prune only once the upgrade is known good. A pinned release keeps its own tag and survives the prune. Remove one of those by naming its tag in `docker image rm`.
 
 `docker system prune -a` reclaims more. It also deletes every image that no container references, including ones unrelated to Fluxer.
 

@@ -6,7 +6,7 @@ description: Safety report submission, the category registries, and the DSA noti
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A safety report tells moderators that a message, a user, or a guild broke the rules, and any user account can file one. A Digital Services Act notice needs no account, only a verified email address. The [Admin Reports API](/admin-api/reports/) covers reading, triaging, and closing a stored report.
+A safety report tells moderators that a message, a user, or a guild broke the rules, and any user account can file one. Digital Services Act notices need no account, only a verified email address. The [Admin Reports API](/admin-api/reports/) covers reading, triaging, and closing a stored report.
 
 | Operation | Credential | Target |
 | --- | --- | --- |
@@ -35,17 +35,17 @@ Every route bucket is keyed by the authenticated user ID when a credential resol
 
 The instance-wide content filter screens the JSON body of [Report message](#report-message), [Report user](#report-user), [Report guild](#report-guild), and [Create DSA report](#create-dsa-report) before the route runs. A string of at least 3 characters matching the instance phrase blocklist, or a URL matching the instance URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. The `ticket`, `channel_id`, `message_id`, `user_id`, and `guild_id` members are exempt, and so is any value shorter than 3 characters.
 
-:::note[The screen precedes the bucket and the credential check]
-A blocked body returns `CONTENT_BLOCKED` rather than `RATE_LIMITED` or `UNAUTHORIZED`. [Send DSA report email](#send-dsa-report-email) and [Verify DSA report email](#verify-dsa-report-email) are exempt by path, so a submitted address is never scanned.
+:::note[Screening precedes bucket and credential checks]
+A blocked body returns `CONTENT_BLOCKED`, not `RATE_LIMITED` or `UNAUTHORIZED`. [Send DSA report email](#send-dsa-report-email) and [Verify DSA report email](#verify-dsa-report-email) are exempt by path, so a submitted address is never scanned.
 :::
 
 ## Submission side effects
 
-Every accepted submission writes one report and returns a [report object](#report-object). Submission emits no Gateway Dispatch.
+Every accepted submission writes one report and returns it as a [report object](#report-object). Only [Report message](#report-message) refuses a repeat, returning 409 `CONFLICT` when the same reporter reports the same message twice. Every accepted [Report user](#report-user) and [Report guild](#report-guild) request writes a new report, and nothing deduplicates a repeat submission. Submission emits no Gateway Dispatch.
 
 ## Report object
 
-The receipt Fluxer returns when it records a submission.
+Fluxer returns this receipt when it records a submission.
 
 ### Structure
 
@@ -301,9 +301,7 @@ Creates and returns a [report object](#report-object) for another user, optional
 
 ### Side effects
 
-The operation writes one report recording the reporter's account ID and the email address on that account, the reported user's ID and avatar hash, and, when `guild_id` is supplied, the guild's ID, name, icon hash, NSFW flag, and content warning state. No message evidence is captured and no media bytes are copied.
-
-Every accepted request writes a new report, and nothing deduplicates a repeat submission.
+The operation writes one report. It records the reporter's account ID and email address, and the reported user's ID and avatar hash. A supplied `guild_id` adds the guild's ID, name, icon hash, NSFW flag, and content warning state. No message evidence is captured and no media bytes are copied.
 
 ### Rate limit
 
@@ -340,7 +338,7 @@ A reporter satisfying none of them returns 403 `CANNOT_REPORT_GUILD`.
 
 <sup>1</sup> Read only after the member check and the `DISCOVERABLE` check both fail
 
-This route reads the bare code and accepts no invite URL. A code that resolves to no invite, or to an invite for another guild, returns 403 `CANNOT_REPORT_GUILD` rather than a 404.
+This route reads the bare code and accepts no invite URL. A code that resolves to no invite, or to an invite for another guild, returns 403 `CANNOT_REPORT_GUILD`, not a 404.
 
 ### Response
 
@@ -358,9 +356,7 @@ This route reads the bare code and accepts no invite URL. A code that resolves t
 
 ### Side effects
 
-The operation writes one report recording the reporter's account ID and the email address on that account, the guild's ID, name, and icon hash, the guild's NSFW flag and content warning state, and the supplied invite code when one was sent. No message evidence is captured and no media bytes are copied.
-
-Every accepted request writes a new report, and nothing deduplicates a repeat submission.
+The operation writes one report. It records the reporter's account ID and email address, the guild's ID, name, icon hash, NSFW flag, and content warning state, and the invite code when one was sent. No message evidence is captured and no media bytes are copied.
 
 ### Rate limit
 
@@ -398,7 +394,7 @@ The operation stores one verification record for the normalised address. The rec
 Fluxer attempts delivery inside the request and discards the outcome. The operation creates no ticket and emits no Gateway Dispatch.
 
 :::caution[A 200 covers every delivery outcome]
-The response is 200 when the provider accepts the message, when it refuses the message, when the address was previously recorded as a hard bounce, and when the instance has email delivery switched off entirely.
+The response is 200 when the provider accepts the message and when it refuses it. It is 200 for an address recorded as a hard bounce, and on an instance with email delivery switched off.
 :::
 
 ### Rate limit
@@ -513,7 +509,7 @@ An unknown code returns 404 `UNKNOWN_INVITE`. A code that resolves to an invite 
 
 ### Side effects
 
-The operation resolves the target, deletes the ticket, and writes one report under a freshly generated [snowflake](/snowflakes/). A message notice captures the same conversation window as [Report message](#report-message), including the byte copy of every attachment, and applies no permission filtering to it. A user notice records the reported user's ID and avatar hash and nothing else about the target. A guild notice records the guild's ID, name, icon hash, NSFW flag, content warning state, and the sanitised invite code when one was supplied.
+The operation resolves the target, deletes the ticket, and writes one report under a newly generated [snowflake](/snowflakes/). A message notice captures the same conversation window as [Report message](#report-message), including the byte copy of every attachment, and applies no permission filtering to it. A user notice records the reported user's ID and avatar hash and nothing else about the target. A guild notice records the guild's ID, name, icon hash, NSFW flag, content warning state, and the sanitised invite code when one was supplied.
 
 Every notice also records `additional_info`, the reporter's legal name, country of residence, and the verified address behind the ticket. A notice has no account ID even when the request presented a credential, and it discards `reporter_fluxer_tag`.
 

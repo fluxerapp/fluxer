@@ -165,12 +165,12 @@ A message report captures the reported message together with at most 25 messages
 | id | snowflake | The ID of the message |
 | channel_id<sup>1</sup> | string | The channel the captured messages were read from |
 | channel_nsfw<sup>2</sup> | ?boolean | The current NSFW state of that channel |
-| channel_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The channel content warning level |
+| channel_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The channel [content warning level](/http-api/channels/#content-warning-levels) |
 | channel_content_warning_text?<sup>3</sup> <sup>4</sup> | ?string | The channel content warning text |
 | guild_id<sup>5</sup> | ?snowflake | The guild the report is scoped to, or null when the report names none |
 | guild_nsfw_level<sup>2</sup> | ?integer | The current guild [NSFW level](/http-api/guilds/#nsfw-levels) |
 | guild_nsfw?<sup>3</sup> <sup>4</sup> | ?boolean | Whether the guild is marked NSFW |
-| guild_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The guild content warning level |
+| guild_content_warning_level?<sup>3</sup> <sup>4</sup> | ?integer | The guild [content warning level](/http-api/guilds/#guild-content-warning-levels) |
 | guild_content_warning_text?<sup>3</sup> <sup>4</sup> | ?string | The guild content warning text |
 | content | string | The captured message content, empty when the message had none |
 | timestamp<sup>6</sup> | ISO8601 timestamp | When the message was sent |

@@ -6,7 +6,7 @@ description: TOTP, backup codes, WebAuthn credentials, and sudo mode.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Multi-factor authentication asks for a second proof of identity after the account password. Fluxer accepts a TOTP authenticator app and WebAuthn credentials such as a passkey. A one-use backup code stands in for a TOTP code, and [sudo mode](#sudo-mode) reuses these factors to guard every security-sensitive operation across the API.
+Multi-factor authentication asks for a second proof of identity after the account password. Fluxer accepts a TOTP authenticator app and WebAuthn credentials such as a passkey. A one-use backup code works instead of a TOTP code, and [sudo mode](#sudo-mode) reuses these factors to protect every security-sensitive operation in the API.
 
 Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the two sudo routes.
 
@@ -21,7 +21,7 @@ Fluxer validates a TOTP code as a six-digit HMAC-SHA-1 one-time password over a 
 The client generates the secret, presents it to the user, and submits it with a code derived from it when calling [Enable TOTP MFA](#enable-totp-mfa). Fluxer never generates or returns a TOTP secret.
 
 :::caution[A TOTP code can pass twice]
-Fluxer rejects a second presentation of an accepted code for 30 seconds. The skew keeps a code valid up to 90 seconds, so it passes again once those 30 seconds lapse. Wait for the next time step.
+Fluxer rejects an accepted code for 30 seconds if it is sent again. The skew keeps a code valid up to 90 seconds, so it passes again once those 30 seconds lapse. Wait for the next time step.
 :::
 
 ## Backup code contract
@@ -34,7 +34,7 @@ Enabling TOTP issues 10 codes without deleting anything first. An account that a
 
 A backup code has exactly three entry points: the `mfa_code` field of the [sudo verification object](#sudo-verification-object) with `mfa_method` set to `totp`, the `code` field of [Disable TOTP MFA](#disable-totp-mfa), and the `code` field of [complete login with TOTP](/http-api/authentication/#complete-login-with-totp). Every other code field rejects it. All three accept a current authenticator code or an unconsumed backup code. [Enable TOTP MFA](#enable-totp-mfa) validates only against the secret being enrolled.
 
-Every entry point requires the account to hold a TOTP secret. An account whose only authenticator is a WebAuthn credential can still regenerate backup codes, but holds no secret, so none of the three entry points accepts one.
+Every entry point requires the account to hold a TOTP secret. An account whose only authenticator is WebAuthn holds no TOTP secret, so none of the three entry points accepts a backup code, though the account can still regenerate the set.
 
 :::caution[An uppercase backup code with spaces still matches]
 Fluxer lowercases the submitted value and each stored code, then removes every character outside `a-z` and `0-9`. `abcdefgh` and `AbCd EfGh` both match the issued code `abcd-efgh`.
@@ -46,13 +46,13 @@ Keep the TOTP secret and every backup code out of logs, analytics, URLs, and oth
 
 ## Backup codes challenge
 
-An account that lost its saved backup codes reads the set back through an emailed challenge. [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) opens a ticket and emails a code. [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) exchanges that code for the current set and a proof. [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) then presents the ticket and the proof to replace the set. [Resend MFA backup codes challenge code](#resend-mfa-backup-codes-challenge-code) sends a fresh code at any point before verification.
+An account that lost its saved backup codes reads the set back through an emailed challenge. [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) opens a ticket and emails a code. [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) exchanges that code for the current set and a proof. [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) then presents the ticket and the proof to replace the set. [Resend MFA backup codes challenge code](#resend-mfa-backup-codes-challenge-code) sends a fresh code any time before verification.
 
 [Sudo mode](#sudo-mode) applies to none of the four, so a user who no longer has the authenticator app still reaches the codes through the email address. The account needs a verified email address and TOTP enabled. Only [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) checks the address, and [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) checks TOTP a second time.
 
-A ticket is a version 4 UUID and lives 30 minutes from its last write. Starting the challenge, resending the code, and verifying the code each write the ticket. Regeneration reads it and writes nothing, so the window runs from the verification that preceded it. A ticket Fluxer no longer holds, or one opened by another account, fails with `INVALID_OR_EXPIRED_TICKET`.
+A ticket is a version 4 UUID and is valid for 30 minutes from its last write. Starting the challenge, resending the code, and verifying the code each write the ticket. Regeneration reads it and writes nothing, so the window runs from the verification that preceded it. A ticket Fluxer no longer holds, or one opened by another account, fails with `INVALID_OR_EXPIRED_TICKET`.
 
-A verification code is eight characters drawn from the uppercase Latin alphabet and the decimal digits, written as two four-character groups separated by a hyphen. A code lives 10 minutes from the moment it is sent, and each send replaces the code the previous send issued.
+A verification code is eight characters drawn from the uppercase Latin alphabet and the decimal digits, written as two four-character groups separated by a hyphen. A code is valid for 10 minutes from the moment it is sent, and each send replaces the code the previous send issued.
 
 :::note[A lowercase code with no hyphen still matches]
 Fluxer trims the submitted value, uppercases it, and removes every hyphen before it compares. A wrong value fails with `INVALID_VERIFICATION_CODE` on the path `code`.
@@ -71,7 +71,7 @@ Each operation passes through its own route bucket and, separately, through one 
 | Code verification | 5 attempts per 15 minutes for each ticket | [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) |
 | Regeneration | 5 attempts per 15 minutes for each ticket | [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) |
 
-Fluxer refuses a resend for 30 seconds after the previous send on the same ticket, and that refusal is HTTP 429 with a `Retry-After` computed from the exact moment the next send becomes available. It is independent of the route bucket and of the two 15-minute send controls.
+Fluxer refuses a resend for 30 seconds after the previous send on the same ticket. That refusal is HTTP 429 with a `Retry-After` computed from the moment the next send becomes available. It is independent of the route bucket and of the two 15-minute send controls.
 
 ## Sudo mode
 
@@ -80,7 +80,7 @@ Sudo mode is a short-lived proof that the human in front of the session is still
 The sudo token is an HS256 JSON Web Token with a lifetime of exactly five minutes. Its subject is the account [snowflake](/snowflakes/), and verification rejects a token whose subject is any other account. The token is opaque, and it is not bound to the session that obtained it. Fluxer generates one only when the account has at least one MFA authenticator and the request proved identity with MFA.
 
 :::caution[The echoed header repeats the request value]
-When Fluxer generates no fresh token, it echoes the request's `X-Fluxer-Sudo-Mode-JWT` value back unchanged and never re-signs it, so the window never slides. Fluxer echoes the value even when it fails verification.
+When Fluxer issues no fresh token it echoes the request's `X-Fluxer-Sudo-Mode-JWT` value back unchanged and never re-signs it, so the five-minute window never slides. Fluxer echoes the value even when it fails verification.
 :::
 
 The accepted proof depends on the authenticators the account has configured.
@@ -88,7 +88,7 @@ The accepted proof depends on the authenticators the account has configured.
 | Account state | Accepted proof |
 | --- | --- |
 | No authenticator | `password` |
-| Any authenticator | `mfa_method` with its matching material, because `password` is no longer accepted |
+| Any authenticator | `mfa_method` with its matching fields, because `password` is no longer accepted |
 | Neither an authenticator nor a password credential | Nothing, and eligible sudo operations pass |
 
 The `totp` method reads `mfa_code` as a current authenticator code or an unconsumed backup code and requires the account to hold a TOTP secret. The `webauthn` method reads `webauthn_response` and `webauthn_challenge` together and requires a registered credential.
@@ -97,7 +97,7 @@ A request that has no accepted proof fails with 403 `SUDO_MODE_REQUIRED`. Its bo
 
 The `totp` method also consumes a per-account allowance of 10 multi-factor attempts in 15 minutes, shared by every sudo-gated operation on every resource. Fluxer charges the allowance before it checks the code, so a wrong code and a correct code both draw on it. A correct code resets the counter to zero. While it is exhausted, a correct code returns the same `INVALID_MFA_CODE` entry as a wrong one. The `webauthn` method draws on no allowance. The login MFA allowances on [HTTP authentication](/http-api/authentication/) are counted separately.
 
-Fluxer returns an issued or echoed token in the `X-Fluxer-Sudo-Mode-JWT` response header. A client retains it and presents it through the same header on every later sudo-gated operation.
+Fluxer returns an issued or echoed token in the `X-Fluxer-Sudo-Mode-JWT` response header. A client keeps it and sends it in the same header on every later sudo-gated operation.
 
 ## Sudo mode methods object
 
@@ -175,7 +175,7 @@ A backup code is two four-character groups separated by a hyphen. Each group is 
 
 ## MFA backup codes challenge object
 
-The state of a freshly created backup codes challenge ticket.
+The state of a newly created backup codes challenge ticket.
 
 ### Structure
 
@@ -187,7 +187,7 @@ The state of a freshly created backup codes challenge ticket.
 
 ## MFA backup codes verification object
 
-The backup codes and the proof a verified challenge hands back.
+The backup codes and the proof a verified challenge returns.
 
 ### Structure
 
@@ -215,7 +215,7 @@ Fluxer verifies every assertion against the relying party identifier and the all
 
 <sup>1</sup> Null until the credential completes a login, MFA, or sudo assertion for the first time
 
-The credential's public key, signature counter, and reported transports are never returned.
+Fluxer never returns the credential's public key, signature counter, or reported transports.
 
 ## WebAuthn credential descriptor object
 
@@ -325,7 +325,7 @@ Fluxer accepts additional credential property fields.
 
 ## WebAuthn authentication options object
 
-Fluxer returns this object from every operation that issues a WebAuthn authentication challenge: sudo verification here, and the two login option operations on [HTTP authentication](/http-api/authentication/).
+Every operation that issues a WebAuthn authentication challenge returns this object: sudo verification here, and the two login option operations on [HTTP authentication](/http-api/authentication/).
 
 ### Structure
 
@@ -341,7 +341,7 @@ Fluxer returns this object from every operation that issues a WebAuthn authentic
 
 <sup>2</sup> Every operation emits the fixed value `60000`, a standard PublicKeyCredential request option
 
-<sup>3</sup> Sudo options list every credential currently registered to the account. The field is absent only on the discoverable login route
+<sup>3</sup> Sudo options list every credential registered to the account. The field is absent only on the discoverable login route
 
 <sup>4</sup> Sudo options and MFA login completion request `discouraged`. Discoverable login requests and verifies `required`
 
@@ -457,7 +457,7 @@ Fluxer checks sudo mode first, so an account that already holds a WebAuthn crede
 
 ### JSON body
 
-The body extends the [sudo verification object](#sudo-verification-object) with the fields below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body extends the [sudo verification object](#sudo-verification-object) with the fields below, and an existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -490,11 +490,11 @@ TOTP is enabled and 10 backup codes are issued. Any backup code the account alre
 
 Disables TOTP for the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required in addition to this route's `code` field. Emits a [User Update](/gateway/events/#user-update) Gateway event.
 
-The account needs TOTP already enabled and is otherwise refused with 400 `TWO_FACTOR_REQUIRED`. A verified email is not required, so an account whose address later became unverified can still remove its authenticator.
+TOTP must already be enabled, or the request is refused with 400 `TWO_FACTOR_REQUIRED`. A verified email is not required, so an account whose address later became unverified can still remove its authenticator.
 
 ### JSON body
 
-The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -516,7 +516,7 @@ Disabling TOTP invalidates every backup code on the account, including the code 
 
 ### Side effects
 
-TOTP is disabled and every backup code stops working. The TOTP authenticator type is removed, along with the unassigned legacy authenticator value `1` if the account still had it. The resulting authenticator types are also applied to every bot account owned by the user. [User Update](/gateway/events/#user-update) reaches the user's sessions and each owned bot whose authenticator types changed.
+TOTP is disabled and every backup code stops working. Fluxer removes the TOTP authenticator type, along with the unassigned legacy authenticator value `1` when the account still held it. The resulting authenticator types are also applied to every bot account owned by the user. [User Update](/gateway/events/#user-update) goes to the user's sessions and each owned bot whose authenticator types changed.
 
 ### Rate limit
 
@@ -530,7 +530,7 @@ Returns an [MFA backup codes](#mfa-backup-codes-object) object, replacing the se
 
 Neither a verified email nor an authenticator is required, so an account with no MFA at all can prove sudo mode with its password and use this operation.
 
-A backup code presented as `mfa_code` to satisfy sudo mode is consumed. With `regenerate` false it comes back with `consumed` set to true. With `regenerate` true it is deleted with the rest of the previous set and does not appear.
+A backup code sent as `mfa_code` to satisfy sudo mode is consumed. With `regenerate` false it comes back with `consumed` set to true. With `regenerate` true it is deleted with the rest of the previous set and does not appear.
 
 :::caution[Regeneration replaces the previous set immediately]
 Every code from the previous set is invalid as soon as an operation with `regenerate` set to true returns. The deletion and the insertion are separate writes, so the account holds no backup code at all between them.
@@ -538,7 +538,7 @@ Every code from the previous set is invalid as soon as an operation with `regene
 
 ### JSON body
 
-The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -666,7 +666,7 @@ The ticket stores a fresh proof and its code is cleared. The response holds ever
 
 Replaces the account's backup codes with 10 new ones and returns an [MFA backup codes](#mfa-backup-codes-object) object. Sudo mode is not required.
 
-The ticket and its proof are the only authorisation. The account needs TOTP enabled and is otherwise refused with 400 `TWO_FACTOR_REQUIRED`.
+The ticket and its proof are the only authorisation. Without TOTP enabled the request is refused with 400 `TWO_FACTOR_REQUIRED`.
 
 A ticket holding no proof returns `INVALID_OR_EXPIRED_TICKET` on the path `verification_proof`, and a proof that does not match returns `INVALID_PROOF_TOKEN`.
 
@@ -727,7 +727,7 @@ This operation sets no `X-Fluxer-Sudo-Mode-JWT` response header.
 
 ### JSON body
 
-The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 ### Response
 
@@ -799,7 +799,7 @@ A verified email is not required.
 
 ### JSON body
 
-The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body extends the [sudo verification object](#sudo-verification-object) with the field below, and an existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -837,7 +837,7 @@ A verified email is not required.
 
 ### JSON body
 
-The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 :::caution[Removing the final credential removes an authenticator]
 Deleting the account's last WebAuthn credential removes the WebAuthn authenticator type. Without TOTP the account then has no MFA authenticator, and sudo mode falls back to the account password.

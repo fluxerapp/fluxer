@@ -10,7 +10,7 @@ We are grateful to everyone supporting the project through [Fluxer Plutonium](ht
 
 Fluxer reads its settings from environment variables. They live in a file named `.env`, in the same directory as `docker-compose.yml`.
 
-A first run touches two sections. [Core identity and public address](#core-identity-and-public-address) has `FLUXER_DOMAIN`, the hostname people type into a browser. [Secrets you must generate](#secrets-you-must-generate) has the values that ship as `CHANGE_ME`. Everything after those two is optional and already has a working value, so read it when you want to change something.
+A first run touches two sections. [Core identity and public address](#core-identity-and-public-address) has `FLUXER_DOMAIN`, the hostname people type into a browser. [Secrets you must generate](#secrets-you-must-generate) has the values that ship as `CHANGE_ME`. Everything after those two is optional and already has a working value.
 
 The installer in [Get started](/operator/get-started/) writes `.env` for you and fills in every secret. [Upgrading](/operator/upgrading/) covers moving between releases.
 
@@ -25,7 +25,7 @@ POSTGRES_PASSWORD=ab$$cd
 POSTGRES_PASSWORD='ab$cd'
 ```
 
-Double quotes do not escape it. `docker compose config` prints a literal `$` back as `$$`, so a value that reads `ab$$cd` in that output is the correct one. The secrets the installer generates are hex or base64 and hold no `$`, so this reaches an instance through a password, an API key or an SMTP secret pasted in by hand.
+Double quotes do not escape it. `docker compose config` prints a literal `$` back as `$$`. A value that reads `ab$$cd` in that output is the correct one. The secrets the installer generates are hex or base64 and hold no `$`, so this reaches an instance through a password, an API key or an SMTP secret pasted in by hand.
 
 A container's environment is fixed when the container is created, and `api` and `worker` cache their configuration at first load. Either way a change needs the process restarted, which `docker compose up -d` does by recreating the service.
 
@@ -175,7 +175,7 @@ Nothing in the stack reads `X-Forwarded-Proto` or `X-Forwarded-Host`. Every abso
 
 It ships commented out. When it is unset, Compose builds those names from `FLUXER_PUBLIC_SCHEME` and `FLUXER_DOMAIN`, and each service puts `FLUXER_PUBLIC_PORT` back into the endpoints it derives.
 
-A non-default port therefore needs nothing here. `FLUXER_PUBLIC_PORT` is where the port of the public address goes, and the rest of the stack follows it. The comment block under the first three lines of `.env.example` says what each layout needs.
+A non-default port therefore needs nothing here. `FLUXER_PUBLIC_PORT` sets the port of the public address, and the rest of the stack follows it. The comment block under the first three lines of `.env.example` says what each layout needs.
 
 Set `FLUXER_PUBLIC_ORIGIN` only to write the address out in one place, and then repeat the port `FLUXER_PUBLIC_PORT` names and the host `FLUXER_DOMAIN` names inside it. An `.env` whose two spellings disagree names two addresses. Half the instance answers on one and half on the other, and the web app sends no `Authorization` header to an API that is not on its own origin.
 
@@ -305,7 +305,7 @@ No default. Which Compose files are loaded. Read by Docker Compose itself. Set i
 
 ## Client IP
 
-The edge resolves one client address and rewrites `X-Forwarded-For` to it on every upstream hop, so no service reads what a visitor sent. When the peer is outside `FLUXER_EDGE_TRUSTED_PROXIES`, the edge uses the peer address and discards the header. When the peer is inside it, the edge takes the rightmost header entry that is not itself trusted, so a proxy that appends still delivers the real caller. A client whose own address is inside the list resolves to the proxy, which is why [Trusted proxies](/operator/reverse-proxy/#trusted-proxies) tells a LAN or VPN deployment to narrow it.
+The edge resolves one client address per request and rewrites `X-Forwarded-For` to it on every upstream hop, so no service reads what a visitor sent. When the peer is outside `FLUXER_EDGE_TRUSTED_PROXIES`, the edge uses the peer address and discards the header. When the peer is inside the list, the edge takes the rightmost header entry that is not itself trusted, so a proxy that appends still delivers the real caller. A client whose own address is inside the list resolves to the proxy, which is why [Trusted proxies](/operator/reverse-proxy/#trusted-proxies) tells a LAN or VPN deployment to narrow it.
 
 All are optional.
 
@@ -341,7 +341,7 @@ These three pick which container images Compose pulls. All are optional.
 | FLUXER_REGISTRY | `ghcr.io/${FLUXER_REGISTRY_OWNER}` |
 | FLUXER_IMAGE_TAG | `v1` |
 
-`FLUXER_REGISTRY_OWNER` is the owner segment of the image names and falls back to `fluxerapp`. `FLUXER_REGISTRY` is the registry images are pulled from and falls back to `ghcr.io/` followed by the owner. `FLUXER_IMAGE_TAG` is the tag every Fluxer image uses and falls back to `v1`.
+`FLUXER_REGISTRY_OWNER` is the owner segment of the image names and falls back to `fluxerapp`. `FLUXER_REGISTRY` is the registry images are pulled from and falls back to `ghcr.io/` followed by the owner. `FLUXER_IMAGE_TAG` is the tag on every Fluxer image and falls back to `v1`.
 
 These affect only the eleven Fluxer images. `docker-compose.yml` pins the `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs`, and `livekit` images, and `.env` cannot change them.
 
@@ -693,7 +693,7 @@ Default `7881`. The TCP media port. Read by Compose only. Compose publishes it o
 
 Default `7882`. The UDP media port, published and passed to LiveKit as `rtc.udp_port` the same way.
 
-LiveKit media does not traverse the edge. Compose publishes both media ports directly, so both must stay open in the host firewall and be forwarded to the host when it sits behind NAT. Compose points LiveKit at the webhook target `http://api:8080/webhooks/livekit` and configures no TURN server. A client that cannot use UDP falls back to ICE-TCP on the TCP port.
+LiveKit media does not go through the edge. Compose publishes both media ports directly, so both must stay open in the host firewall and be forwarded to the host when it sits behind NAT. Compose points LiveKit at the webhook target `http://api:8080/webhooks/livekit` and configures no TURN server. A client that cannot use UDP falls back to ICE-TCP on the TCP port.
 
 Moving a media port is one line in `.env` followed by `docker compose up -d livekit`. Compose puts the same value on the host side of the mapping, on the container side, and on the `rtc` port LiveKit advertises in the ICE candidates it hands to clients.
 
@@ -735,7 +735,7 @@ Default `60000`. Grace before culling a LiveKit-only participant. Milliseconds.
 
 Email is off by default, and two conditions turn it on. The switch must be on, and the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
 
-The same two conditions turn on a DNS check at registration. The check runs when email is on by the rule above, so the dashboard switch and the SMTP values decide it along with the variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
+The same two conditions turn on a DNS check at registration. The check runs when email is on by the rule above. The dashboard switch and the SMTP values decide it along with the variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
 
 #### `FLUXER_EMAIL_ENABLED`
 
@@ -974,7 +974,7 @@ Default empty. The ipinfo key. Paired with `FLUXER_RISK_INTEGRATION_ENABLED`.
 
 #### `FLUXER_ACCOUNT_POLICY_DSL`
 
-No default. The account risk policy. JSON. Malformed JSON fails startup, and a well-formed policy with unknown keys surfaces at use.
+No default. The account risk policy. JSON. Malformed JSON fails startup, and an unknown key in a well-formed policy surfaces when the policy runs.
 
 #### `FLUXER_RISK_TOR_BLOCK_ALL_RELAYS`
 
@@ -1040,7 +1040,7 @@ A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXE
 
 The lower ceilings mean background lookups stop first and critical lookups stop last. The counters live in the key-value store under `ipinfo:budget:burst:` and `ipinfo:budget:month:`. A shed lookup returns an unavailable result and raises no error, and any key-value failure admits the lookup at every priority, so a cache outage never stops an admin ban or the auto-banner.
 
-Two names let the local MaxMind databases answer the registration risk lookup. `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` is off by default and only `1` or `true`, in any letter case, turns it on. `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` is a comma-separated list of ASN numbers, empty by default, and non-numeric entries are dropped. The list is empty out of the box, so the pre-screen does nothing until an operator fills it in. An IP skips ipinfo only when the local city database returns a country, the local ASN database returns a number, that number is in the list, and the ASN organization name is not a commercial privacy provider, an education network or a cellular network. Everything else still goes to ipinfo.
+Two names let the local MaxMind databases answer the registration risk lookup. `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` is off by default and only `1` or `true`, in any letter case, turns it on. `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` is a comma-separated list of ASN numbers, empty by default, and non-numeric entries are dropped. The pre-screen therefore does nothing until an operator fills the list in. An IP skips ipinfo only when the local city database returns a country, the local ASN database returns a number, that number is in the list, and the ASN organization name is not a commercial privacy provider, an education network or a cellular network. Everything else still goes to ipinfo.
 
 ## Limits
 
@@ -1516,7 +1516,7 @@ The Gateway entrypoint derives the scheduler counts before the BEAM starts. It r
 
 The two clamp bounds reach the Gateway from `.env`. To pin the count, set `FLUXER_ERLANG_SCHEDULERS` on the `gateway` service in `docker-compose.yml`, which skips the clamp.
 
-The Gateway protocol version is `1`. The Gateway answers any other value in `?v=` with 101, then a close frame reading `Invalid API version`.
+The Gateway protocol version is `1`. The Gateway answers any other value in `?v=` with 101, then a close frame reading `Invalid API version`. [Gateway overview](/gateway/overview/) has the close code.
 
 The Gateway reads every `FLUXER_GATEWAY_` name straight from the environment, so all of them work.
 
@@ -1596,9 +1596,9 @@ Every name below goes in `.env`. `app-proxy` reads its environment at container 
 
 `FLUXER_CSP_EXTRA_DEFAULT_SRC`, `FLUXER_CSP_EXTRA_CONNECT_SRC`, `FLUXER_CSP_EXTRA_IMG_SRC`, `FLUXER_CSP_EXTRA_MEDIA_SRC`, `FLUXER_CSP_EXTRA_FONT_SRC`, `FLUXER_CSP_EXTRA_SCRIPT_SRC`, `FLUXER_CSP_EXTRA_STYLE_SRC`, `FLUXER_CSP_EXTRA_FRAME_SRC`, `FLUXER_CSP_EXTRA_WORKER_SRC`, and `FLUXER_CSP_EXTRA_MANIFEST_SRC` take one or more sources separated by commas, spaces, tabs, or newlines. Blank entries and sources the directive already lists are dropped. `FLUXER_CSP_REPORT_URI` sets a single `report-uri` value.
 
-`object-src`, `base-uri`, and `frame-ancestors` are fixed and have no override. `app-proxy` reads the discovery document and adds the static CDN endpoint, the media endpoint, and the origins of the configured branding images, so a stack on one hostname needs no extra sources. The usual reason to set one is a voice server on another hostname, which needs its WebSocket origin in `FLUXER_CSP_EXTRA_CONNECT_SRC`. [Voice media does not use the proxy](/operator/reverse-proxy/#voice-media-does-not-use-the-proxy) has that line in place.
+`object-src`, `base-uri`, and `frame-ancestors` are fixed and have no override. `app-proxy` reads the discovery document and adds the static CDN endpoint, the media endpoint, and the origins of the configured branding images. A stack on one hostname therefore needs no extra sources. The usual reason to set one is a voice server on another hostname, which needs its WebSocket origin in `FLUXER_CSP_EXTRA_CONNECT_SRC`. [Voice media does not use the proxy](/operator/reverse-proxy/#voice-media-does-not-use-the-proxy) has that line in place.
 
-A front proxy must not add a Content-Security-Policy of its own.
+A front proxy must not add a [Content-Security-Policy of its own](/operator/reverse-proxy/#send-no-content-security-policy-of-its-own).
 
 ## Keys in .env.example that no service reads
 
@@ -1759,7 +1759,7 @@ The edge and LiveKit are the only services that publish ports. The edge publishe
 
 `api` is the one service an operator configures directly, through the shared environment block. `worker`, `gateway`, `app-proxy`, and `media-proxy` are touched rarely, `worker` for lane concurrency, `app-proxy` for CSP extras, and `media-proxy` for transform limits. The edge takes only the three `FLUXER_EDGE_` variables, `postgres` only the password, `meilisearch` only the master key, `valkey` only the two `FLUXER_VALKEY_` tuning values, and `livekit` only the key pair and the two port variables. `static-proxy` reads no environment variables, and the remaining services need none.
 
-The five internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. `FLUXER_SVC_SHARD_COUNT` is fixed at `1` in the shipped stack.
+The five internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. The shipped stack fixes `FLUXER_SVC_SHARD_COUNT` at `1`.
 
 ## Resources
 
@@ -1767,7 +1767,7 @@ Every service has a memory limit and four also have a memory reservation, all un
 
 A limit is a ceiling. The limits below sum to 16.75 GiB and the stack does not need a host that large, because a container costs what it touches.
 
-`deploy.resources.reservations.memory` becomes the container's cgroup v2 `memory.low`, which biases kernel reclaim toward other containers under host pressure. It reserves nothing on its own.
+`deploy.resources.reservations.memory` becomes the container's cgroup v2 `memory.low`, which biases kernel reclaim towards other containers under host pressure. It reserves nothing on its own.
 
 All are optional.
 
@@ -1943,7 +1943,7 @@ Default `192mb`. The dataset ceiling. Bounds stored keys only. Client buffers, r
 
 #### `FLUXER_VALKEY_MAXMEMORY_POLICY`
 
-Default `noeviction`. What happens to a write above the ceiling. Under `noeviction` an over-limit write returns an OOM error to the caller. Under any eviction policy Valkey can drop the two deletion queues and the distributed locks. The worker rebuilds both queues from the users table within a day, and every lock has a TTL.
+Default `noeviction`. What happens to a write above the ceiling. Under `noeviction` an over-limit write returns an OOM error to the caller. Under any eviction policy Valkey can drop the two deletion queues and the distributed locks. Every lock has a TTL, and the worker rebuilds both queues from the users table within a day. [Volumes and buckets](#volumes-and-buckets) has what dropping a queue costs.
 
 No service sets a CPU limit, a CPU reservation or `cpu_shares`, so every container sees the host's full CPU count. Bound the Gateway's scheduler count with `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`, or pin it with `FLUXER_ERLANG_SCHEDULERS` and `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS` from [Gateway settings](#gateway-settings).
 
@@ -1999,7 +1999,7 @@ At 4 GB the api heap ceiling is 396 MB and the worker heap ceiling is 332 MB. Th
 
 ## Routing
 
-The edge is the only HTTP entry point, and every route is served from the one public hostname. It rewrites each path before handing it to an upstream. [What the single port routes](/operator/reverse-proxy/#what-the-single-port-routes) has that path table, and [What every proxy must do](/operator/reverse-proxy/#what-every-proxy-must-do) has the requirements for anything in front of the edge.
+The edge is the only HTTP entry point, and every route is served from the one public hostname. It rewrites each path before handing it to an upstream. [What the single port routes](/operator/reverse-proxy/#what-the-single-port-routes) has the path table, and [What every proxy must do](/operator/reverse-proxy/#what-every-proxy-must-do) has the requirements for anything in front of the edge.
 
 None of the variables on this page change that routing. The `Caddyfile` is a bind mount, so an edit to it takes `docker compose restart edge`.
 

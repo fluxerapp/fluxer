@@ -16,7 +16,7 @@ When a deployment disables them, the plan request and the completion request bot
 
 [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) takes from 1 through 10 attachment declarations. Each is a client-chosen `id`, a `filename`, an exact `file_size` in bytes, and a `content_type`. A user session credential and a bot token are accepted, and an OAuth2 bearer credential is rejected with 403 `ACCESS_DENIED`.
 
-The channel must support messages, and any other channel type returns 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`. A guild channel additionally requires [SEND_MESSAGES](/http-api/permissions/) and [ATTACH_FILES](/http-api/permissions/), returning 403 `MISSING_PERMISSIONS` otherwise, and a caller under a communication timeout receives 403 `COMMUNICATION_DISABLED`.
+The channel must support messages, and any other channel type returns 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`. A guild channel also requires [SEND_MESSAGES](/http-api/permissions/) and [ATTACH_FILES](/http-api/permissions/), returning 403 `MISSING_PERMISSIONS` otherwise, and a caller under a communication timeout receives 403 `COMMUNICATION_DISABLED`.
 
 Fluxer then checks every declared size on its own against the `max_attachment_file_size` limit resolved for the caller and the guild. A size above it returns 400 `FILE_SIZE_TOO_LARGE` with the resolved ceiling before anything is planned. That limit defaults to 26214400 bytes, the 25 MiB non-premium allowance, and to 524288000 bytes, the 500 MiB premium allowance. A bot credential is clamped to 52428800 bytes, the 50 MiB bot ceiling, even when the resolved limit is higher.
 
@@ -47,7 +47,7 @@ The direct storage capability signs the exact byte count, so a `PUT` of any othe
 
 A singlepart transfer sends the whole file and must send the entry's `content_type` as its `Content-Type` header. The relay takes the media type from its capability and ignores the header. A multipart part transfer sends only that part's bytes and has no signed media type.
 
-The instance decides per request whether to relay. It resolves the caller's country from the client IP address and issues a direct storage URL only when that country is on the deployment's direct-upload list. Every other caller, including one whose geolocation lookup fails, receives a URL on the [upload relay](/media-proxy/upload-relay/). A client treats both shapes the same way and MUST NOT parse, rewrite, or reorder the query string of either.
+The instance decides per request whether to relay. It resolves the caller's country from the client IP address and issues a direct storage URL only when that country is on the deployment's direct-upload list. Every other caller receives a URL on the [upload relay](/media-proxy/upload-relay/), including one whose country cannot be resolved. A client treats both shapes the same way and MUST NOT parse, rewrite, or reorder the query string of either.
 
 ### Capability lifetimes
 
@@ -65,7 +65,7 @@ An issued upload URL authorises writing one object or one part. A client treats 
 
 ## Completing a multipart upload
 
-[Complete attachment upload](/http-api/messages/#complete-attachment-upload) finalises from 1 through 10 multipart uploads. Each entry names the `upload_filename` and the `upload_id` from the plan. The caller sends no part list and no entity tags. The server lists the parts the storage backend has already accepted, sorts them by part number, and assembles them in that order.
+[Complete attachment upload](/http-api/messages/#complete-attachment-upload) finishes from 1 through 10 multipart uploads. Each entry names the `upload_filename` and the `upload_id` from the plan. The caller sends no part list and no entity tags. The server lists the parts the storage backend has already accepted, sorts them by part number, and assembles them in that order.
 
 The channel, permission, and communication checks of the plan request run again, and the operation answers 403 `FEATURE_TEMPORARILY_DISABLED` when pre-uploads are switched off.
 
@@ -78,7 +78,7 @@ Two failures are reported as [validation error object](/http-api/#validation-err
 
 <sup>1</sup> An upload another identity planned, one planned for another channel, one planned as singlepart, and one a message has already consumed are all reported this way, so a caller cannot probe another identity's upload state
 
-<sup>2</sup> The multipart upload is aborted before the error is returned
+<sup>2</sup> Fluxer aborts the multipart upload before it returns the error
 
 Fluxer then sums the listed part sizes. A total above the resolved file size limit aborts the upload and returns 400 `FILE_SIZE_TOO_LARGE`. A storage failure during assembly aborts it as well. An aborted upload discards its parts, and its `upload_filename` can never be claimed, so a client requests a new plan for the file.
 
@@ -112,7 +112,7 @@ The operation answers 204 once the image is accepted. Fluxer absorbs a transient
 
 Nothing inspects the bytes written through that capability. A relay capability still refuses a declared length above `max_bytes` with 413, and a direct storage capability enforces nothing beyond its signed media type. A publisher encodes a valid JPEG of at most 1000000 bytes itself.
 
-[Get stream preview](/http-api/streams/#get-stream-preview) returns the current image bytes with `Cache-Control: no-store, private`, and [Delete stream preview](/http-api/streams/#delete-stream-preview) removes it. The stored preview record expires one day after the inline upload that wrote it, or one day after the call that issued the capability, and using a capability again does not extend it. A read past that point answers an empty 404 even when the object is still in storage.
+[Get stream preview](/http-api/streams/#get-stream-preview) returns the current image bytes with `Cache-Control: no-store, private`, and [Delete stream preview](/http-api/streams/#delete-stream-preview) removes it. The stored preview record expires one day after the inline upload that wrote it, or one day after the call that issued the capability. Using a capability again does not extend it. A read past that point answers an empty 404 even when the object is still in storage.
 
 ## Failures
 

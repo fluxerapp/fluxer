@@ -35,9 +35,7 @@ Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
 
 Every instance-wide name other than `discovery` deletes its documents before the first batch is written, so search over that index is incomplete for the whole run.
 
-:::note[A `discovery` rebuild updates documents in place]
-The guild documents stay searchable for the whole run.
-:::
+A `discovery` rebuild instead updates the existing guild documents in place, so those documents stay searchable for the whole run.
 
 ## Search index refresh object
 

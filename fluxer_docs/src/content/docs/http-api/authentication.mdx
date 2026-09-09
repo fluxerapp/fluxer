@@ -20,15 +20,15 @@ Most operations need no `Authorization` credential, because the request has a on
 
 Every route has a route bucket and is also subject to the [global HTTP limit](/topics/rate-limits/). A route bucket is keyed by the authenticated user when the request has a resolvable credential and by the client IP address otherwise. Bucket or global denial returns 429 `RATE_LIMITED`.
 
-An invalid JSON shape returns 400 `INVALID_FORM_BODY` with [validation error object](/http-api/#validation-error-object) entries in `errors`. An unexpected failure returns 500 `INTERNAL_SERVER_ERROR`. Every enumerated code on this page is registered in the [error registry](/http-api/errors/), and every snowflake field is the decimal string form defined by [Snowflakes](/snowflakes/).
+An invalid JSON shape returns 400 `INVALID_FORM_BODY` with [validation error object](/http-api/#validation-error-object) entries in `errors`. An unexpected failure returns 500 `INTERNAL_SERVER_ERROR`. Every enumerated code on this page is registered in [Errors](/http-api/errors/), and every snowflake field is the decimal string form defined by [Snowflakes](/snowflakes/).
 
-When SSO is both enabled and enforced, every local authentication operation returns 403 `SSO_REQUIRED`. The SSO status route, SSO start and completion, logout, both session routes, and every handoff route stay available under enforcement.
+When SSO is both enabled and enforced, every local authentication operation returns 403 `SSO_REQUIRED`. The SSO status route, SSO start and completion, logout, both session routes, and every handoff route stay available under enforcement. Every other route on this page is a local authentication operation.
 
 :::caution[SSO enforcement precedes every other check]
 The enforcement check runs before CAPTCHA verification, before the route rate limit, before authentication, and before body validation. An enforced instance therefore answers a malformed or unauthenticated local authentication request with 403 `SSO_REQUIRED`.
 :::
 
-A successful sign-in creates one authentication session and issues its token. Fluxer sets no ceiling on live sessions and evicts none when a further session starts, so an account accumulates one session per sign-in until it revokes them through [terminate authentication sessions](#terminate-authentication-sessions).
+A successful sign-in creates one authentication session and issues its token. Fluxer sets no ceiling on live sessions and evicts none when a further session starts, so an account holds one session per sign-in until it revokes them through [terminate authentication sessions](#terminate-authentication-sessions).
 
 Revoking a session, whether the account revoked it or an administrator terminated it, stops its token authenticating requests. Its main Gateway connection receives [Invalid Session](/gateway/overview/#invalid-session) with `d: false` and stays open, unauthenticated. No Gateway Dispatch is emitted for the revocation itself, so a client learns of it from that frame or from the next request that fails to authenticate.
 
@@ -64,7 +64,7 @@ The public single sign-on state. The same object is embedded by the [instance di
 
 | Field | Type | Description |
 | --- | --- | --- |
-| enabled<sup>1</sup> | boolean | Whether SSO can currently be started on this instance |
+| enabled<sup>1</sup> | boolean | Whether SSO can be started on this instance |
 | enforced<sup>2</sup> | boolean | Whether SSO is required for every user |
 | display_name | ?string | The configured provider display name, or null when none is set |
 | redirect_uri | string | The default OAuth2 redirect URI used for the provider callback |
@@ -105,7 +105,7 @@ SSO completion always issues a session. It extends the [authentication token res
 <sup>1</sup> The value is the empty string when [start SSO](#start-sso) received no `redirect_to` or when the supplied value did not survive sanitisation
 
 :::note[SSO completion never issues an MFA challenge]
-Completion does not consult the account's second factor and cannot return an [MFA challenge response](#mfa-challenge-response). A client MUST NOT branch on an `mfa` member here.
+Completion does not check the account's second factor and cannot return an [MFA challenge response](#mfa-challenge-response). A client MUST NOT branch on an `mfa` member here.
 :::
 
 ## Registration pending approval response object
@@ -153,7 +153,7 @@ There is no backup code completion route and `backup_code` never appears in `all
 
 Both WebAuthn option operations return a PublicKeyCredential request options object that a browser passes straight to its credential request. The [WebAuthn authentication options object](/http-api/users/mfa/#webauthn-authentication-options-object) on the Multi-factor authentication resource defines its fields, together with its [WebAuthn credential descriptor](/http-api/users/mfa/#webauthn-credential-descriptor-object) and [WebAuthn client extension inputs](/http-api/users/mfa/#webauthn-client-extension-inputs-object) objects.
 
-A challenge issued for MFA completion is additionally bound to its ticket and account, so it cannot be replayed against discoverable login. The MFA route lists every registered credential for the resolved account in `allowCredentials`, while the discoverable route omits the member because discovery happens at the authenticator.
+A challenge issued for MFA completion is also bound to its ticket and account, so it cannot be replayed against discoverable login. The MFA route lists every registered credential for the resolved account in `allowCredentials`. The discoverable route omits the member, because discovery happens at the authenticator.
 
 <a id="webauthn-assertion"></a>
 
@@ -195,7 +195,7 @@ The parsed device metadata recorded for a session or a pending handoff.
 | device | string | The device class, either `mobile` or `desktop` |
 | location? | ?[client location](#client-location-object) object | The approximate geolocation derived from the recorded IP address |
 
-<sup>1</sup> A native or Electron client reports null, and a session created by an unparseable request reports null. A handoff omits the member entirely
+<sup>1</sup> A native or Electron client reports null, as does a session created by an unparseable request. A handoff omits the member entirely
 
 Fluxer recognises a native Fluxer client from a `User-Agent` beginning `Fluxer Android`, `Fluxer iOS`, `Fluxer Linux`, `Fluxer Desktop`, or `Fluxer Client`.
 
@@ -227,7 +227,7 @@ The result of checking a password reset token without consuming it.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| valid<sup>1</sup> | boolean | Whether the token is currently valid and unexpired |
+| valid<sup>1</sup> | boolean | Whether the token is valid and unexpired |
 
 <sup>1</sup> A password reset token expires one hour after it is issued
 
@@ -248,7 +248,7 @@ The state of one IP authorisation ticket, as observed by the device whose sign-i
 
 ## Username suggestions object
 
-The username candidates derived from a display name.
+Username candidates derived from a display name.
 
 ### Structure
 
@@ -329,7 +329,7 @@ The operation stays available while SSO is enforced. It shares the `auth:sso:sta
 
 Creates one SSO state with PKCE and nonce material. Authentication is not required. Returns an [SSO start](#sso-start-object) object.
 
-The returned `authorization_url` is the configured provider authorisation endpoint with `response_type` set to `code`, the configured `client_id` and `scope`, the resolved `redirect_uri`, the returned `state`, and a freshly generated `nonce`. It also has a `code_challenge` computed as the base64url SHA-256 digest of the state's code verifier, with `code_challenge_method` set to `S256`.
+The returned `authorization_url` is the configured provider authorisation endpoint with `response_type` set to `code`, the configured `client_id` and `scope`, the resolved `redirect_uri`, the returned `state`, and a newly generated `nonce`. It also has a `code_challenge` computed as the base64url SHA-256 digest of the state's code verifier, with `code_challenge_method` set to `S256`.
 
 ### JSON body
 
@@ -338,7 +338,7 @@ The returned `authorization_url` is the configured provider authorisation endpoi
 | redirect_to?<sup>1</sup> | ?string | The post-authentication redirect to bind to the state |
 | redirect_uri?<sup>2</sup> | ?string | The provider callback URI to use instead of the configured default |
 
-<sup>1</sup> Fluxer sanitises the value before binding it to the state and discards a value that does not survive, which the eventual [SSO completion response](#sso-completion-response-object) reports as the empty string. Sanitisation keeps the trimmed value only when it begins with a single `/`, is at most 2,048 characters, and contains no carriage return or line feed
+<sup>1</sup> Fluxer sanitises the value before binding it to the state and discards a value that does not survive, which the [SSO completion response](#sso-completion-response-object) reports as the empty string. Sanitisation keeps the trimmed value only when it begins with a single `/`, is at most 2,048 characters, and contains no carriage return or line feed
 
 <sup>2</sup> The two accepted values are the instance default reported as `redirect_uri` by [get SSO status](#get-sso-status) and the mobile callback `fluxer://auth/sso/callback`, and any other value returns the field code `INVALID_URL_FORMAT`. The accepted value is bound to the state and reused at the token exchange
 
@@ -355,7 +355,7 @@ The returned `authorization_url` is the configured provider authorisation endpoi
 
 ### Side effects
 
-The returned state can be completed once and lives for ten minutes. It binds the PKCE verifier, nonce, redirect, and callback URI to the flow. No account state changes and no Gateway Dispatch is emitted.
+The returned state can be completed once and lives for ten minutes. It binds the PKCE verifier, nonce, redirect, and callback URI to the flow. No account state changes. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -377,11 +377,11 @@ Consumes the SSO state, exchanges the authorisation code, verifies the identity 
 <sup>1</sup> The state is consumed on the first call that resolves it, so a repeated request with the same state returns the field code `INVALID_OR_EXPIRED_SSO_STATE`
 
 :::note[Identity binding is one-to-one]
-A provider subject is bound to exactly one Fluxer account, and an account accepts exactly one provider subject. Presenting a subject that is already linked to a different account, or presenting a new subject for an account that already holds a different linked subject, returns the field code `SSO_IDENTITY_MISMATCH`.
+A provider subject is bound to exactly one Fluxer account, and an account accepts exactly one provider subject. A subject already linked to a different account, or a new subject for an account that already holds a different linked subject, returns the field code `SSO_IDENTITY_MISMATCH`.
 :::
 
 :::caution[A verified provider email adopts a local account]
-When the subject is not yet linked, Fluxer resolves the account by the verified email address in the provider claim. It adopts any existing account holding that address and binds the subject to it, whether or not that account has a password or an enrolled authenticator. An operator therefore MUST enable SSO only for a provider that controls the addresses it asserts, because a provider asserting an arbitrary verified address takes over the matching local account.
+When the subject is not yet linked, Fluxer adopts any existing account holding the verified email address in the provider claim and binds the subject to it, whether or not that account has a password or an authenticator. A provider that asserts an arbitrary verified address therefore takes over the matching local account. An operator MUST enable SSO only for a provider that controls the addresses it asserts.
 :::
 
 Fluxer refuses the adoption only when the account already holds a different provider subject.
@@ -419,7 +419,7 @@ Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` a
 
 Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event when an invite or instance community admission takes effect.
 
-This is a local authentication operation and it verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. Registration permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment that relaxes registration rate limits disables them.
+Registration verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment that relaxes registration rate limits disables them.
 
 ### Request headers
 
@@ -455,11 +455,11 @@ This is a local authentication operation and it verifies [CAPTCHA](/topics/captc
 
 <sup>3</sup> The password is checked against the public breached-password corpus described under [reset a password](#reset-a-password), and a match returns the field code `PASSWORD_IS_TOO_COMMON`
 
-<sup>4</sup> The field is required when the instance [collects date of birth](/http-api/instance/#public-registration-fields-object). An absent or blank value, and a value in `YYYY-MM-DD` shape that is not a real calendar date, return the field code `INVALID_DATE_OF_BIRTH_FORMAT`. A value that is not ten characters in `YYYY-MM-DD` shape fails schema validation with the field code `STRING_LENGTH_EXACT` or `INVALID_FORMAT`
+<sup>4</sup> The field is required when the instance [collects date of birth](/http-api/instance/#public-registration-fields-object). An absent or blank value, or a value in `YYYY-MM-DD` shape that is not a real calendar date, returns the field code `INVALID_DATE_OF_BIRTH_FORMAT`. A value that is not ten characters in `YYYY-MM-DD` shape fails schema validation with the field code `STRING_LENGTH_EXACT` or `INVALID_FORMAT`
 
 <sup>5</sup> A false or absent value returns the field code `MUST_AGREE_TO_TOS_AND_PRIVACY_POLICY` on the official instance and on any instance that publishes a terms or privacy document
 
-<sup>6</sup> A code supplied on an instance with administrator registration URLs disabled, and a code that does not resolve, both return 400 `REGISTRATION_URL_INVALID`. A valid code overrides the closed registration mode and supplies its own approval setting in place of the instance approval mode
+<sup>6</sup> A code supplied on an instance with administrator registration URLs disabled, and a code that does not resolve, both return 400 `REGISTRATION_URL_INVALID`. A valid code overrides the closed registration mode and replaces the instance approval mode with its own approval setting
 
 Fluxer resolves the region from the client IP address, and an age below the minimum for that region returns the field code `MUST_BE_MINIMUM_AGE`. That minimum is 13 years unless account policy sets a different minimum for the region, and the applied minimum appears only in the localised message.
 
@@ -502,7 +502,7 @@ Approval mode registration creates no guild membership and no authentication ses
 
 Validates local email and password credentials. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when no second factor and no IP approval are outstanding, and an [MFA challenge response](#mfa-challenge-response) when the account has a second factor.
 
-This is a local authentication operation and it verifies CAPTCHA when CAPTCHA is enabled. Login additionally permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per email address in 15 minutes. Every admitted attempt consumes both allowances, whether or not the credentials turn out to be correct, and a successful login clears neither.
+Login verifies CAPTCHA when CAPTCHA is enabled. It also permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per email address in 15 minutes. Every admitted attempt consumes both allowances, whether or not the credentials turn out to be correct, and a successful login clears neither.
 
 ### Request headers
 
@@ -535,15 +535,15 @@ An unknown email address and an incorrect password both return the same paired f
 
 A new client IP address on an account that has neither a second factor nor the app store reviewer flag returns 403 `IP_AUTHORIZATION_REQUIRED`. That error body has `ip_authorization_required` set to true, the `ticket` used by the three IP authorisation operations, the account `email`, and `resend_available_in` set to 30 seconds.
 
-When the instance has disabled new-IP authorisation or sends no email, Fluxer authorises the client IP address silently and the login proceeds. An account that already has a second factor never enters IP authorisation.
+When the instance has disabled new-IP authorisation or sends no email, Fluxer authorises the client IP address silently and the login continues. An account that already has a second factor never enters IP authorisation.
 
 Account policy can return 403 `REGISTRATION_PENDING_APPROVAL`, 403 `REGISTRATION_REJECTED`, 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
 :::note[A verified password reactivates the account]
-A correct password on an account the user had disabled clears the disabled state. A correct password on an account with a pending self-scheduled deletion cancels that deletion. Both happen during the login, before any second factor is requested, with no confirmation step and no reactivation ticket.
+On an account the user had disabled, a correct password clears the disabled state. On an account with a pending self-scheduled deletion, a correct password cancels that deletion. Both happen during the login, before any second factor is requested, with no confirmation step and no reactivation ticket.
 :::
 
-The login clears an expired temporary suspension the same way. It does not clear a live temporary or permanent administrator suspension, and returns that suspension's 403 instead.
+The login clears an expired temporary suspension the same way, but returns the 403 of a live temporary or permanent administrator suspension without clearing it.
 
 ### Response
 
@@ -572,7 +572,7 @@ A successful login with no outstanding MFA or IP approval creates one authentica
 
 Consumes an MFA ticket and validates a time-based one-time password or an unconsumed backup code, then creates the session. Authentication is not required. Returns an [authentication token response](#authentication-token-response).
 
-This is a local authentication operation. MFA verification additionally permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts.
+MFA verification also permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts.
 
 ### JSON body
 
@@ -611,8 +611,6 @@ Success consumes the ticket, clears the per-account and per-ticket failed-attemp
 
 Resolves the account from an MFA ticket and creates a challenge restricted to that account's registered credentials. Authentication is not required. Returns a [WebAuthn authentication options](#webauthn-authentication-options) object.
 
-This is a local authentication operation.
-
 ### JSON body
 
 | Field | Type | Description |
@@ -636,7 +634,7 @@ A client MUST still complete the returned challenge through [complete login with
 
 ### Side effects
 
-The operation issues a one-use WebAuthn challenge valid for five minutes and bound to this MFA flow, account, and ticket. It changes no account state and emits no Gateway Dispatch.
+The operation issues a one-use WebAuthn challenge valid for five minutes and bound to this MFA flow, account, and ticket. It changes no account state. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -647,8 +645,6 @@ The operation issues a one-use WebAuthn challenge valid for five minutes and bou
 <RouteHeader method="POST" path="/v1/auth/login/mfa/webauthn" unauthenticated />
 
 Consumes the MFA ticket, verifies the WebAuthn assertion against the challenge, and creates the session. Authentication is not required. Returns an [authentication token response](#authentication-token-response).
-
-This is a local authentication operation.
 
 ### JSON body
 
@@ -691,8 +687,6 @@ Success consumes the challenge and the ticket, records the credential's new sign
 
 Creates a challenge for passwordless authentication with a discoverable credential. Authentication is not required. Returns a [WebAuthn authentication options](#webauthn-authentication-options) object.
 
-This is a local authentication operation.
-
 The request has no body. The response omits `allowCredentials` and requests `required` user verification.
 
 ### Response
@@ -707,7 +701,7 @@ The request has no body. The response omits `allowCredentials` and requests `req
 
 ### Side effects
 
-The operation issues a one-use discoverable WebAuthn challenge valid for five minutes and bound to the discoverable context alone. It changes no account state and emits no Gateway Dispatch.
+The operation issues a one-use discoverable WebAuthn challenge valid for five minutes and bound to the discoverable context alone. It changes no account state. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -718,8 +712,6 @@ The operation issues a one-use discoverable WebAuthn challenge valid for five mi
 <RouteHeader method="POST" path="/v1/auth/webauthn/authenticate" unauthenticated />
 
 Resolves the account from the presented credential ID, verifies the assertion with user verification required, applies account suspension policy, and creates the session. Authentication is not required. Returns an [authentication token response](#authentication-token-response).
-
-This is a local authentication operation.
 
 ### JSON body
 
@@ -760,7 +752,7 @@ Success consumes the challenge, records the credential's new signature counter a
 
 Revokes the session identified by the user session token in the `Authorization` header. Returns 204 with no body.
 
-The request has no body. The operation requires a credential that resolves to an account, and it admits one flagged for suspicious activity. An absent, malformed, or unknown token returns 401 `UNAUTHORIZED`. An OAuth2 bearer token returns 403 `ACCESS_DENIED`. A bot token is accepted and revokes nothing, because a bot holds no session.
+The request has no body. The operation requires a credential that resolves to an account, and it admits one flagged for suspicious activity. An absent, malformed, or unknown token returns 401 `UNAUTHORIZED`. An OAuth2 bearer token returns 403 `ACCESS_DENIED`. A bot holds no session, so a bot token is accepted and revokes nothing.
 
 :::note[Logging out revokes exactly the calling session]
 The account's other sessions, its OAuth2 grants, and any outstanding MFA ticket, IP authorisation ticket, or desktop handoff all survive. Use [terminate authentication sessions](#terminate-authentication-sessions) to revoke other sessions.
@@ -779,7 +771,7 @@ The account's other sessions, its OAuth2 grants, and any outstanding MFA ticket,
 
 ### Side effects
 
-Revoking a live session ends its Gateway session. The connection receives Invalid Session with `d: false` and stays open, unauthenticated. No Gateway Dispatch is emitted for the revocation.
+Revoking this session ends its Gateway session as [shared behaviour](#shared-behaviour) states. No Gateway Dispatch is emitted for the revocation.
 
 ### Rate limit
 
@@ -790,8 +782,6 @@ Revoking a live session ends its Gateway session. The connection receives Invali
 <RouteHeader method="POST" path="/v1/auth/verify" unauthenticated />
 
 Consumes an email verification token and marks the account's current address verified. Authentication is not required. Returns 204 with no body.
-
-This is a local authentication operation.
 
 ### JSON body
 
@@ -830,8 +820,6 @@ The operation marks the current address verified, clears its bounced state, and 
 
 Issues and sends a new email verification token for the authenticated account. Requires a user session token for an ordinary user. Returns 204 with no body.
 
-An account locked by suspicious activity is still permitted. This is a local authentication operation.
-
 The request has no body. When the current address is already verified and no reverification suspicious activity flag is set, the operation returns 204 and sends nothing.
 
 ### Response
@@ -847,7 +835,7 @@ The request has no body. When the current address is already verified and no rev
 
 ### Side effects
 
-The operation creates one 64-character verification token bound to the account and its current address, valid for 24 hours, and sends the verification message. Previously issued verification tokens remain valid. It emits no Gateway Dispatch.
+The operation creates one 64-character verification token bound to the account and its current address, valid for 24 hours, and sends the verification message. Previously issued verification tokens remain valid. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -859,7 +847,7 @@ The operation creates one 64-character verification token bound to the account a
 
 Accepts a password recovery request for an email address. Authentication is not required. Returns 204 with no body.
 
-This is a local authentication operation and it verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both the client IP address and email address allowances before it validates the address, and exhausting either returns 429.
+Password recovery verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both the client IP address and email address allowances before it validates the address, and exhausting either returns 429.
 
 ### Request headers
 
@@ -897,7 +885,7 @@ An address that resolves to no account produces the same 204 response as an addr
 
 ### Side effects
 
-Fluxer sends one 64-character reset token by email to an address that resolves to an account. The token is bound to that account and its current address, and it is valid for one hour. Nothing else changes and no Gateway Dispatch is emitted.
+Fluxer sends one 64-character reset token by email to an address that resolves to an account. The token is bound to that account and its current address, and it is valid for one hour. Nothing else changes. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -909,8 +897,6 @@ Fluxer sends one 64-character reset token by email to an address that resolves t
 
 Checks a reset token without consuming it. Authentication is not required. Returns a [password reset validity](#password-reset-validity-object) object.
 
-This is a local authentication operation.
-
 ### Path parameters
 
 | Field | Type | Description |
@@ -920,7 +906,7 @@ This is a local authentication operation.
 A well-formed token that is unknown, already consumed, or bound to a deleted account returns the same object with `valid` set to false.
 
 :::caution[Validity does not promise the reset succeeds]
-The check resolves the token and confirms that its account exists and is not deleted. A token this operation reports as valid is still refused there for a bot account, for an account under a live temporary suspension, or for a replacement password in the breached-password corpus.
+The check resolves the token and confirms that its account exists and is not deleted. The reset itself still refuses a valid token for a bot account, for an account under a live temporary suspension, or for a replacement password in the breached-password corpus.
 :::
 
 ### Response
@@ -936,7 +922,7 @@ The check resolves the token and confirms that its account exists and is not del
 
 ### Side effects
 
-This read does not consume the token, mutate account state, or emit a Gateway Dispatch.
+This read does not consume the token or change account state. No Gateway Dispatch is emitted.
 
 :::caution[The token travels in the path]
 A token in the path reaches proxy logs, browser history, and referrer headers. A client SHOULD read the token from the recovery link and send it in this one request, and SHOULD NOT route the user's browser to the API path directly.
@@ -952,8 +938,6 @@ A token in the path reaches proxy logs, browser history, and referrer headers. A
 
 Consumes a valid reset token and replaces the account password, then issues a new session or an MFA challenge. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when the account has no second factor, and an [MFA challenge response](#mfa-challenge-response) when it has one.
 
-This is a local authentication operation.
-
 ### JSON body
 
 | Field | Type | Description |
@@ -966,13 +950,13 @@ This is a local authentication operation.
 An unknown or already consumed token, and a token bound to a deleted account, return the field code `INVALID_OR_EXPIRED_RESET_TOKEN`. A live temporary suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. A permanent suspension returns the field code `INVALID_OR_EXPIRED_RESET_TOKEN` and never 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
 :::note[The breached-password check is an outbound request]
-The corpus is the public Pwned Passwords range service at `https://api.pwnedpasswords.com`, which is not configurable. Fluxer sends only the first five hexadecimal characters of the candidate password's SHA-1 digest to that service. The check fails open.
+The corpus is the public Pwned Passwords range service at `https://api.pwnedpasswords.com`, which is not configurable. Fluxer sends only the first five hexadecimal characters of the candidate password's SHA-1 digest to that service.
 :::
 
 Fluxer treats the password as unbreached when the service returns a non-success status, returns a malformed body, or does not answer inside five seconds. The same check runs during [registration](#register-an-account) and [email reversion](#revert-an-email-change).
 
 :::caution[Resetting a password revokes every existing session]
-A successful reset terminates every authentication session on the account, including the one that any other device is holding. The reset then issues one fresh session of its own, unless the account has a second factor, in which case it issues an MFA ticket and the session follows the factor.
+A successful reset terminates every authentication session on the account, including the one any other device is holding. It then issues one fresh session. An account with a second factor instead receives an MFA ticket, and the session follows the factor.
 :::
 
 ### Response
@@ -988,7 +972,7 @@ A successful reset terminates every authentication session on the account, inclu
 
 ### Side effects
 
-The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token. Every terminated session's Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. Other outstanding reset tokens are not invalidated, so a second recovery link issued earlier still works.
+The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token. Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states. Other outstanding reset tokens are not invalidated, so a second recovery link issued earlier still works.
 
 An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the MFA completion creates the session.
 
@@ -1002,7 +986,7 @@ An account with no second factor then receives one new session and its token. An
 
 Consumes the token delivered to the previous email address, restores that address, replaces the password, and rebuilds the account's credential state. Returns an [authentication token response](#authentication-token-response). Emits a [User Update](/gateway/events/#user-update) Gateway event.
 
-The token is valid for 24 hours after the address change that issued it. This is a local authentication operation.
+The token is valid for 24 hours after the address change that issued it.
 
 ### JSON body
 
@@ -1014,7 +998,7 @@ The token is valid for 24 hours after the address change that issued it. This is
 <sup>1</sup> The value becomes the account's new password, and Fluxer checks it against the public breached-password corpus, returning the field code `PASSWORD_IS_TOO_COMMON` on a match
 
 :::danger[Reversion destroys every other credential]
-Completing a reversion terminates every authentication session, clears the account's entire second-factor enrolment, and replaces the authorised IP address set with the single IP address that made the request. Any other device, passkey, or backup code held by whoever performed the original email change stops working immediately, and none of it can be restored.
+Completing a reversion terminates every authentication session and clears the account's entire second-factor enrolment. The authorised IP address set becomes the requesting IP address alone. Any other device, passkey, or backup code held by whoever made the original email change stops working immediately, and none of it can be restored.
 :::
 
 An unknown or already consumed token, and a token bound to an account that no longer exists, return the field code `INVALID_OR_EXPIRED_REVERT_TOKEN`. Account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`, and a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
@@ -1034,9 +1018,9 @@ Fluxer checks the replacement password against the same breached-password corpus
 
 ### Side effects
 
-The operation restores the previous email address and marks it verified, sets the replacement password, clears the TOTP secret and every authenticator type, deletes every MFA backup code and every registered WebAuthn credential, and terminates every authentication session. It clears the authorised IP address set and then authorises the requesting client IP address alone.
+The operation restores the previous email address and marks it verified, sets the replacement password, and terminates every authentication session. Fluxer also clears the TOTP secret and every authenticator type, and deletes every MFA backup code and every registered WebAuthn credential. It then clears the authorised IP address set and authorises the requesting client IP address alone.
 
-Every terminated session's Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. [User Update](/gateway/events/#user-update) is emitted for the account, and Fluxer records the contact change.
+Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states. [User Update](/gateway/events/#user-update) is emitted for the account, and Fluxer records the contact change.
 
 The operation then creates one new authentication session and returns it.
 
@@ -1049,8 +1033,6 @@ The operation then creates one new authentication session and returns it.
 <RouteHeader method="GET" path="/v1/auth/sessions" />
 
 Lists every live authentication session belonging to the authenticated account, newest activity first. Requires a user session token for an ordinary user. Returns an array of [authentication session](#authentication-session-object) objects.
-
-An account locked by suspicious activity is still permitted.
 
 The request has no body and takes no parameters.
 
@@ -1067,7 +1049,7 @@ The request has no body and takes no parameters.
 
 ### Side effects
 
-This read does not mutate session state and emits no Gateway Dispatch.
+This read does not change session state. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -1079,7 +1061,7 @@ This read does not mutate session state and emits no Gateway Dispatch.
 
 Deletes the named authentication sessions. Requires a user session token for an ordinary user, and [sudo mode](/http-api/users/mfa/#sudo-mode). Returns 204 with no body.
 
-An account locked by suspicious activity is still permitted. The caller MUST send a valid sudo token in the `X-Fluxer-Sudo-Mode-JWT` header, or supply a password or MFA proof in the body.
+The caller MUST send a valid sudo token in the `X-Fluxer-Sudo-Mode-JWT` header, or supply a password or MFA proof in the body.
 
 ### JSON body
 
@@ -1101,7 +1083,7 @@ An account locked by suspicious activity is still permitted. The caller MUST sen
 A `totp` method reads `mfa_code` as an authenticator code and accepts an unconsumed backup code in its place. A `webauthn` method reads `webauthn_response` and `webauthn_challenge` together, and it accepts only a challenge that was issued for the sudo context.
 
 :::caution[The caller can delete its own session]
-The operation deletes exactly the sessions identified by the supplied `id_hash` values. Because `current` is false on every entry, a client that wants to keep its own session MUST compare the base64url SHA-256 digest of its own token against `id_hash` and omit that identifier. Revoking the calling credential still returns 204.
+The operation deletes exactly the sessions identified by the supplied `id_hash` values. `current` is false on every entry, so a client that wants to keep its own session MUST omit its own `id_hash`. Revoking the calling credential still returns 204.
 :::
 
 Missing or unusable proof returns 403 `SUDO_MODE_REQUIRED`, whose error body has top-level `has_mfa` and `methods` members, and `methods` reports whether `totp` and `webauthn` are available.
@@ -1124,7 +1106,7 @@ An account that has neither a password nor a second factor satisfies sudo mode w
 
 ### Side effects
 
-Each named session is deleted, and its Gateway connection receives Invalid Session with `d: false` and stays open, unauthenticated. A fresh MFA proof mints a new sudo token, while an accepted incoming token is echoed unchanged. Fluxer sets whichever token results in the `X-Fluxer-Sudo-Mode-JWT` response header. A password proof on an account with no second factor mints no token, so the header is not set unless the request already had one. No Gateway Dispatch is emitted.
+Each named session is deleted and loses its Gateway session as [shared behaviour](#shared-behaviour) states. A fresh MFA proof issues a new sudo token, while an accepted incoming token is echoed unchanged. Fluxer sets whichever token results in the `X-Fluxer-Sudo-Mode-JWT` response header. A password proof on an account with no second factor issues no token, so the header is not set unless the request already had one. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -1136,15 +1118,13 @@ Each named session is deleted, and its Gateway connection receives Invalid Sessi
 
 Consumes the authorisation token delivered by email, authorises the pending client IP address, and completes the waiting login. Authentication is not required. Returns 204 with no body.
 
-This is a local authentication operation.
-
 ### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
 | token | string | The authorisation token delivered by email |
 
-An unknown, expired, already consumed, or account-mismatched token returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TOKEN`. A token that resolves to an account that no longer exists returns 404 `UNKNOWN_USER`, and one that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`. Session creation additionally rejects an account that has not been admitted or is suspended, with the codes listed under [log in with a password](#log-in-with-a-password).
+An unknown, expired, already consumed, or account-mismatched token returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TOKEN`. A token that resolves to an account that no longer exists returns 404 `UNKNOWN_USER`, and one that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`. Session creation also rejects an account that has not been admitted or is suspended, with the codes listed under [log in with a password](#log-in-with-a-password).
 
 ### Response
 
@@ -1160,7 +1140,7 @@ An unknown, expired, already consumed, or account-mismatched token returns the f
 
 ### Side effects
 
-The operation adds the pending client IP address to the account's authorised set and creates one authentication session using the IP address, user agent, and reported operating system captured when the login was attempted. It consumes the authorisation token and the ticket for the pending login.
+The operation adds the pending client IP address to the account's authorised set and creates one authentication session. That session takes the IP address, user agent, and reported operating system captured when the login was attempted. It consumes the authorisation token and the ticket for the pending login.
 
 The session token is then published against the ticket and remains readable by [poll IP authorisation](#poll-ip-authorisation) for 60 seconds. The caller of this operation receives 204 and no token of its own. No Gateway Dispatch is emitted.
 
@@ -1173,8 +1153,6 @@ The session token is then published against the ticket and remains readable by [
 <RouteHeader method="POST" path="/v1/auth/ip-authorization/resend" unauthenticated />
 
 Sends the authorisation message for an outstanding IP authorisation ticket again. Authentication is not required. Returns 204 with no body.
-
-This is a local authentication operation.
 
 ### JSON body
 
@@ -1203,7 +1181,7 @@ There is no retry key. A client that loses the response cannot tell whether the 
 
 ### Side effects
 
-Fluxer sends the authorisation message to the address associated with the login attempt and marks the ticket's single resend used whether or not delivery succeeds. No account state changes and no Gateway Dispatch is emitted.
+Fluxer sends the authorisation message to the address associated with the login attempt and marks the ticket's single resend used whether or not delivery succeeds. No account state changes. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -1214,8 +1192,6 @@ Fluxer sends the authorisation message to the address associated with the login 
 <RouteHeader method="GET" path="/v1/auth/ip-authorization/poll" unauthenticated />
 
 Reads the login result associated with an IP authorisation ticket. Authentication is not required. Returns an [IP authorisation poll](#ip-authorisation-poll-object) object.
-
-This is a local authentication operation.
 
 ### Query parameters
 
@@ -1251,7 +1227,7 @@ Repeated polling returns the same token, so anyone holding the ticket within the
 
 Derives username candidates from a display name. Authentication is not required. Returns a [username suggestions](#username-suggestions-object) object.
 
-This is a local authentication operation. It shares the `auth:register` bucket, which permits 10 requests per 10 seconds.
+The route shares the `auth:register` bucket, which permits 10 requests per 10 seconds.
 
 ### JSON body
 
@@ -1260,7 +1236,7 @@ This is a local authentication operation. It shares the `auth:register` bucket, 
 | global_name | string | The display name after normalisation (1-32 characters) |
 
 :::note[A returned candidate can be taken before use]
-The operation performs no availability check and holds nothing. Registration allocates its own discriminator regardless of the suggestion.
+The operation does no availability check and holds nothing. Registration allocates its own discriminator regardless of the suggestion.
 :::
 
 ### Response
@@ -1276,7 +1252,7 @@ The operation performs no availability check and holds nothing. Registration all
 
 ### Side effects
 
-This read does not reserve a username, mutate account state, or emit a Gateway Dispatch.
+This read reserves no username and changes no account state. No Gateway Dispatch is emitted.
 
 ## Initiate desktop handoff
 
@@ -1304,7 +1280,7 @@ The request has no body. Fluxer derives the device metadata shown to the approvi
 
 ### Side effects
 
-The handoff remains pending for five minutes and records the initiating device's client IP address, user agent, and reported operating system. Initiation creates no session and emits no Gateway Dispatch.
+The handoff remains pending for five minutes and records the initiating device's client IP address, user agent, and reported operating system. Initiation creates no session. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -1324,10 +1300,10 @@ Fluxer counts failed code attempts against the client IP address and blocks it a
 | --- | --- | --- |
 | code<sup>1</sup> | string | The handoff code |
 
-<sup>1</sup> Fluxer normalises the value by removing hyphens and whitespace and upper-casing the remainder, and the normalised result is exactly 12 characters from the handoff alphabet
+<sup>1</sup> Fluxer normalises the value by removing hyphens and whitespace and upper-casing the rest, and the normalised result is exactly 12 characters from the handoff alphabet
 
 :::caution[A successful lookup makes the code completable]
-Reading the handoff information marks the code as inspected but does not approve the transfer. [Complete desktop handoff](#complete-desktop-handoff) rejects a code that has never been inspected. An approving client MUST show the initiating device information and obtain explicit user confirmation before it calls the completion operation.
+Reading the handoff information marks the code as inspected but does not approve the transfer. [Complete desktop handoff](#complete-desktop-handoff) rejects a code that has never been inspected. An approving client MUST show the initiating device information and obtain explicit user confirmation before completion.
 :::
 
 Anyone who can reach the API and knows the code can mark it inspected. Declining the request in a client discards only what that client is showing, and the inspected state remains until the handoff is completed or the code expires.
@@ -1346,7 +1322,7 @@ A code that is not exactly 12 characters from the handoff alphabet after hyphens
 
 ### Side effects
 
-A successful lookup consumes one of the code's three lookups and records the code as inspected, which is the state [complete desktop handoff](#complete-desktop-handoff) requires. That record lasts for the remaining life of the code, and only completion and cancellation remove it. An expired result records one failed attempt against the client IP address. No account state changes and no Gateway Dispatch is emitted.
+A successful lookup consumes one of the code's three lookups and records the code as inspected, which is the state [complete desktop handoff](#complete-desktop-handoff) requires. That record lasts for the remaining life of the code, and only completion and cancellation remove it. An expired result records one failed attempt against the client IP address. No account state changes. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -1378,9 +1354,9 @@ Fluxer reads that token from the `Authorization` header, or from the body `token
 Sending the token in `token` puts a live credential into a JSON payload. A client SHOULD use the `Authorization` header and omit `token`.
 :::
 
-A token that resolves to no live session returns 401 `INVALID_TOKEN`. A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. A code that has never been inspected through [get desktop handoff information](#get-desktop-handoff-information), an unknown or already completed code, and a request from a client IP address that has exhausted its failed-attempt allowance all return the same error code. A code whose five minutes have elapsed is discarded with its handoff and returns `INVALID_HANDOFF_CODE`. `HANDOFF_CODE_EXPIRED` is returned only when the stored handoff is still present after its five minutes.
+A token that resolves to no live session returns 401 `INVALID_TOKEN`. A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. A code that has never been inspected through [get desktop handoff information](#get-desktop-handoff-information) returns that same error code. So do an unknown or already completed code and a request from a client IP address that has exhausted its failed-attempt allowance. A code whose five minutes have elapsed is discarded with its handoff and returns `INVALID_HANDOFF_CODE`. `HANDOFF_CODE_EXPIRED` is returned only when the stored handoff is still present after its five minutes.
 
-Session creation can additionally return 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED` for a bot account, 403 `REGISTRATION_PENDING_APPROVAL` or 403 `REGISTRATION_REJECTED` for an account that has not been admitted, and the suspension codes listed under [log in with a password](#log-in-with-a-password) for a suspended account.
+Session creation can also return 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED` for a bot account, and 403 `REGISTRATION_PENDING_APPROVAL` or 403 `REGISTRATION_REJECTED` for an account that has not been admitted. A suspended account returns the suspension codes listed under [log in with a password](#log-in-with-a-password).
 
 ### Response
 
@@ -1418,7 +1394,7 @@ Reports the state of a handoff to the device that initiated it. Authentication i
 | code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
 
 :::note[This route never returns the token]
-A completed handoff reports `pending` here, because the token needs `poll_secret`. Read it with [get desktop handoff status with the poll secret](#get-desktop-handoff-status-with-the-poll-secret).
+The token needs `poll_secret`, so a completed handoff reports `pending` here. Read it with [get desktop handoff status with the poll secret](#get-desktop-handoff-status-with-the-poll-secret).
 :::
 
 The code is the only credential this route checks. The initiating device MUST poll for the completion itself.

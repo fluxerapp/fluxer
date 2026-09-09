@@ -48,7 +48,7 @@ One object is one row of the ledger. No operation on this page changes any field
 | payload<sup>11</sup> | ?string | The JSON rendering of the job input |
 | result | ?string | Always null |
 
-<sup>1</sup> The task reports progress at its own cadence, and a task that never reports leaves all three null for its whole run. A bulk task reports once before it starts, again after every 25 entities, and once when it finishes, except for `schedule_user_deletion`, which reports after every 10 accounts, and the file SHA bulk ban, which reports after every 50 hashes
+<sup>1</sup> The task reports progress at its own pace, and a task that never reports leaves all three null for its whole run. A bulk task reports once before it starts, again after every 25 entities, and once when it finishes, except for `schedule_user_deletion`, which reports after every 10 accounts, and the file SHA bulk ban, which reports after every 50 hashes
 
 <sup>2</sup> Written only when the job is dead-lettered. A single failed delivery that is redelivered leaves it null
 
@@ -56,7 +56,7 @@ One object is one row of the ledger. No operation on this page changes any field
 
 <sup>4</sup> Only [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job) and the file SHA bulk ban record one, so a system DM broadcast, an archive, and a search index rebuild all report null
 
-<sup>5</sup> The reason the queueing operation resolved from `X-Audit-Log-Reason`. A blank or over-length header resolves to null there, and the queueing operation still succeeds
+<sup>5</sup> The reason the queueing operation resolved from `X-Audit-Log-Reason`. A blank or too-long header resolves to null there, and the queueing operation still succeeds
 
 <sup>6</sup> Present as soon as the job is queued
 

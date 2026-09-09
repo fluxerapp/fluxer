@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries live on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
 
-A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`. An existing guild that does not hold the caller as a member returns 403 `MISSING_PERMISSIONS`. Fluxer refuses a guild an operator has marked unavailable with 403 `MISSING_ACCESS` before the route runs. [Transfer guild ownership](#transfer-guild-ownership) is the one exception to the 404, and returns 403 `ACCESS_DENIED` for a guild whose record survives without a Gateway process.
+A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`. An existing guild where the caller is not a member returns 403 `MISSING_PERMISSIONS`. Fluxer refuses a guild an operator has marked unavailable with 403 `MISSING_ACCESS` before the route runs. [Transfer guild ownership](#transfer-guild-ownership) is the one exception to the 404, and returns 403 `ACCESS_DENIED` for a guild whose record survives without a Gateway process.
 
 The two modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
 
@@ -76,7 +76,7 @@ A client compares `communication_disabled_until` against the current time, becau
 
 ## Guild member profile flags
 
-A guild profile asset has three states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below suppresses inheritance and renders the default.
+A guild profile asset has three states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below blocks inheritance and renders the default.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ The request body shared by [Modify current guild member](#modify-current-guild-m
 
 A `roles` entry that does not resolve to an existing role of the guild is dropped from the replacement, so a request naming only unknown roles clears the member's role set.
 
-An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. Fluxer then checks the decoded bytes against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760, and the same ceiling covers both fields. The decoded image must also pass the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
+An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. Fluxer then checks the decoded bytes against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760. The same limit applies to both fields. The decoded image must also pass the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
 
 Null and any `communication_disabled_until` that is not in the future both clear the timeout. A time more than 365.25 days ahead returns `TIMEOUT_CANNOT_EXCEED_365_DAYS`, and a value that passes the schema but is not a real instant returns `INVALID_TIMEOUT_VALUE`. `timeout_reason` has no effect unless `communication_disabled_until` is also supplied.
 
@@ -139,7 +139,7 @@ Omitting `connection_id` applies the move or the disconnect to every voice conne
 
 Returns a page of [guild member objects](#guild-member-object) in ascending user ID order. Requires membership of the guild and no permission.
 
-This route consults no permission bit, including [VIEW_CHANNEL_MEMBERS](/http-api/permissions/).
+This route checks no permission bit, including [VIEW_CHANNEL_MEMBERS](/http-api/permissions/).
 
 ### Path parameters
 
@@ -233,14 +233,14 @@ Modifies the authenticated account's own membership and returns the resulting [g
 
 - Changing the nickname requires [CHANGE_NICKNAME](/http-api/permissions/).
 - Supplying `channel_id` requires [MOVE_MEMBERS](/http-api/permissions/), even for the caller's own membership.
-- Supplying `mute` requires [MUTE_MEMBERS](/http-api/permissions/) and supplying `deaf` requires [DEAFEN_MEMBERS](/http-api/permissions/).
+- Supplying `mute` requires [MUTE_MEMBERS](/http-api/permissions/), and `deaf` requires [DEAFEN_MEMBERS](/http-api/permissions/).
 - Supplying `nick`, `avatar`, `banner`, `bio`, `pronouns`, `accent_color`, or `profile_flags` requires a verified email address, and a bot account is exempt. An unverified account is rejected with 403 `PROFILE_EMAIL_VERIFICATION_REQUIRED`.
 
-A caller without `CHANGE_NICKNAME` does not fail the request. Fluxer discards the nickname change and applies every other supplied field. A member who holds the permission but is currently timed out is rejected with 403 `COMMUNICATION_DISABLED`.
+A caller without `CHANGE_NICKNAME` does not fail the request. Fluxer discards the nickname change and applies every other supplied field. A member who holds the permission but is timed out is rejected with 403 `COMMUNICATION_DISABLED`.
 
 A supplied `nick`, `bio`, or `pronouns` is scanned against the instance phrase, URL, and profile substring blocklists, and a match returns 403 `CONTENT_BLOCKED`.
 
-Guild avatar, banner, biography, and accent colour additionally require the instance-configured `feature_per_guild_profiles` [limit](/http-api/instance/#limit-keys) for the calling account. Fluxer discards any of those fields supplied without that capability and applies every other field. Pronouns, `profile_flags`, and `mention_flags` do not require it.
+Guild avatar, banner, biography, and accent colour also require the instance-configured `feature_per_guild_profiles` [limit](/http-api/instance/#limit-keys) for the calling account. Fluxer discards any of those fields supplied without that capability and applies every other field. Pronouns, `profile_flags`, and `mention_flags` do not require it.
 
 A `channel_id` destination must be a guild voice channel, and the caller must hold both [VIEW_CHANNEL](/http-api/permissions/) and [CONNECT](/http-api/permissions/) there. Supplying `channel_id` for a member with no live voice connection returns 400 `USER_NOT_IN_VOICE`. Supplying `mute` or `deaf` for such a member succeeds, stores the flags, and emits no voice Dispatch.
 
@@ -250,7 +250,7 @@ Fluxer rejects a supplied `communication_disabled_until` with 403 `MISSING_PERMI
 Avatar, banner, biography, pronouns, and accent colour each have a limit of 25 changes per 30 minutes for each authenticated user and guild. Exhausting one returns 400 `INVALID_FORM_BODY` and applies no field at all.
 :::
 
-The avatar and banner limits are consumed whenever the field is present. The biography, pronouns, and accent colour limits are consumed only when the supplied value differs from the stored one. The field code is `AVATAR_CHANGED_TOO_MANY_TIMES`, `BANNER_CHANGED_TOO_MANY_TIMES`, `BIO_CHANGED_TOO_MANY_TIMES`, `PRONOUNS_CHANGED_TOO_MANY_TIMES`, or `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES`.
+Avatar and banner consume their limit whenever the field is present. Biography, pronouns, and accent colour consume theirs only when the supplied value differs from the stored one. The field code is `AVATAR_CHANGED_TOO_MANY_TIMES`, `BANNER_CHANGED_TOO_MANY_TIMES`, `BIO_CHANGED_TOO_MANY_TIMES`, `PRONOUNS_CHANGED_TOO_MANY_TIMES`, or `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES`.
 
 ### Path parameters
 
@@ -277,11 +277,11 @@ The body is a [guild member update object](#guild-member-update-object) without 
 
 ### Side effects
 
-The operation updates the membership, replaces any supplied guild avatar or banner, updates member search results, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, and emits [Guild Member Update](/gateway/events/#guild-member-update).
+Fluxer updates the membership, replaces any supplied guild avatar or banner, updates member search results, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, and emits [Guild Member Update](/gateway/events/#guild-member-update).
 
 The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The audit entry and Dispatch are produced even when the resulting membership is unchanged, and an entry whose change list is empty is published without a `changes` member.
 
-Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, whatever the number of connections it touched, and emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
+Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, however many connections it touched. It emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
 
 Fluxer emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) for every audit entry. A request that fails after uploading a new avatar or banner leaves the previous asset in place.
 
@@ -305,15 +305,15 @@ Modifies another member's guild state and returns the resulting [guild member ob
 
 A supplied `nick` is scanned against the instance phrase, URL, and profile substring blocklists, and a match returns 403 `CONTENT_BLOCKED`.
 
-Hierarchy authority over the target is not consulted for `roles`, so a caller who outranks every affected role can replace the role set of a member who outranks them. The everyone role in the array is rejected with the field code `INVALID_ROLE_ID`.
+Hierarchy authority over the target is not checked for `roles`, so a caller who outranks every affected role can replace the role set of a member who outranks them. The everyone role in the array is rejected with the field code `INVALID_ROLE_ID`.
 
 Fluxer never checks the target's own permissions in the destination, so a member can be moved into a channel they could not join themselves. Disconnecting sets `channel_id` to null and requires the same permission.
 
 Supplying `channel_id` for a target with no live voice connection, or a `connection_id` that is not one of the target's own, returns 400 `USER_NOT_IN_VOICE`. Supplying `mute` or `deaf` for such a target succeeds and stores the flags. A destination that does not exist returns the field code `CHANNEL_DOES_NOT_EXIST`, and one that is not a voice channel `CHANNEL_MUST_BE_VOICE`.
 
-`MANAGE_ROLES` and `MODERATE_MEMBERS` are [elevated permissions](/http-api/permissions/#elevated-permissions), so replacing `roles` or applying `communication_disabled_until` additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+`MANAGE_ROLES` and `MODERATE_MEMBERS` are [elevated permissions](/http-api/permissions/#elevated-permissions). When the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller who is not the guild owner also needs an enrolled multi-factor authenticator to replace `roles` or apply `communication_disabled_until`.
 
-A caller addressing their own user ID here falls under the self-targeted rules of [Modify current guild member](#modify-current-guild-member) for the guild profile fields. The body remains the complete update object, so `roles` is accepted. Replacing their own role set still requires `MANAGE_ROLES` and hierarchy authority, and `communication_disabled_until` is still rejected with 403 `MISSING_PERMISSIONS`.
+A caller addressing their own user ID here follows the self-targeted rules of [Modify current guild member](#modify-current-guild-member) for the guild profile fields. The body remains the complete update object, so `roles` is accepted. Replacing their own role set still requires `MANAGE_ROLES` and hierarchy authority, and `communication_disabled_until` is still rejected with 403 `MISSING_PERMISSIONS`.
 
 :::note[Guild profile fields belong to their own account]
 `avatar`, `banner`, `bio`, `pronouns`, `accent_color`, `profile_flags`, and `mention_flags` describe the target's own profile, so a moderator cannot set them. Supplying one for another member leaves it unwritten, and the request still applies every field the caller may set.
@@ -364,7 +364,7 @@ The operation has the same membership, audit, search, [Guild Member Update](/gat
 
 Removes a member from the guild and returns 204 with an empty body. Requires membership, [KICK_MEMBERS](/http-api/permissions/), and role hierarchy authority over the target. Emits a [Guild Member Remove](/gateway/events/#guild-member-remove) Gateway event.
 
-`KICK_MEMBERS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+`KICK_MEMBERS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who is not the guild owner needs an enrolled multi-factor authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated.
 
 The caller and the guild owner cannot be removed through this operation, and both are reported as 404 `UNKNOWN_MEMBER`.
 
@@ -410,9 +410,9 @@ Transfers guild ownership to another current member and returns the updated [gui
 
 - No permission bit substitutes for ownership.
 - The target must be a current member.
-- The target must not be a bot account, and a bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
+- A bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
 
-The operation requires sudo mode as described by the [sudo verification fields](/http-api/guilds/#sudo-verification-fields), which a bot credential satisfies without a proof. Fluxer verifies sudo mode before ownership, so a member who is not the owner still has to prove sudo mode before receiving 403 `MISSING_PERMISSIONS`. An account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names the second factors the account holds.
+The operation requires sudo mode as described by the [sudo verification fields](/http-api/guilds/#sudo-verification-fields), which a bot credential satisfies without a proof. Fluxer verifies sudo mode before ownership, so a member who is not the owner must still prove sudo mode before receiving 403 `MISSING_PERMISSIONS`. An account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names the second factors the account holds.
 
 ### Path parameters
 
@@ -470,7 +470,7 @@ Adds one role to a member and returns 204 with an empty body. Requires membershi
 - The guild owner bypasses the permission and the hierarchy check.
 - The everyone role cannot be assigned and is rejected with the field code `INVALID_ROLE_ID`.
 
-`MANAGE_ROLES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
+`MANAGE_ROLES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who is not the guild owner needs an enrolled multi-factor authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated.
 
 The guild owner receives 404 `UNKNOWN_ROLE` for a role that does not exist in the guild. Any other caller receives 403 `MISSING_PERMISSIONS`.
 
@@ -516,7 +516,7 @@ Removes one role from a member and returns 204 with an empty body. Requires memb
 - The guild owner bypasses the permission and the hierarchy check.
 - The everyone role cannot be removed and is rejected with the field code `INVALID_ROLE_ID`.
 
-`MANAGE_ROLES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it additionally requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner. A role that does not exist is reported exactly as it is for [Add guild member role](#add-guild-member-role).
+`MANAGE_ROLES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who is not the guild owner needs an enrolled multi-factor authenticator while the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated. A role that does not exist is reported the same way as for [Add guild member role](#add-guild-member-role).
 
 ### Path parameters
 

@@ -6,7 +6,7 @@ description: Proving control of a phone number over outbound SMS or an inbound c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Phone verification proves that the current account controls a phone number. The account either receives a one-time code over outbound SMS, or texts an issued challenge code to a Fluxer number. Success sets the account's verified phone state, which the phone [required actions](/http-api/users/#required-actions) and the `VERY_HIGH` guild [verification level](/http-api/guilds/#verification-levels) consult.
+Phone verification proves that the current account controls a phone number. The account either receives a one-time code over outbound SMS, or texts an issued challenge code to a Fluxer number. Success sets the account's verified phone state, which the phone [required actions](/http-api/users/#required-actions) and the `VERY_HIGH` guild [verification level](/http-api/guilds/#verification-levels) check.
 
 Every route here needs a non-bot user session, and each one admits a session with suspicious account state.
 
@@ -73,7 +73,7 @@ Keep phone numbers, verification codes, and challenge codes out of logs, analyti
 
 | Order | Condition | Verdict |
 | --- | --- | --- |
-| 1 | The lookup could not be performed<sup>1</sup> | Refused with `INVALID_PHONE_NUMBER` |
+| 1 | The lookup could not be done<sup>1</sup> | Refused with `INVALID_PHONE_NUMBER` |
 | 2 | The provider reports the number as invalid | Refused with `INVALID_PHONE_NUMBER` |
 | 3 | The line type is `fixedVoip` or `nonFixedVoip` | Inbound, reason `voip` |
 | 4 | The number starts with `+1` and its numbering plan area is Canadian | Inbound, reason `canadian` |
@@ -235,7 +235,7 @@ Further controls bound outbound delivery to 3 sends per 6 hours for each account
 | 403 | [error response](/http-api/#error-response) | The account is not eligible and the request returns `PHONE_ADD_NOT_ELIGIBLE` |
 | 429<sup>1</sup> | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Risk controls, a provider throttle, or an account or per-number send control denies the request, which returns `PHONE_RATE_LIMIT_EXCEEDED` |
 
-<sup>1</sup> A phone denial uses the rate limit envelope with `code` set to `PHONE_RATE_LIMIT_EXCEEDED` rather than the `RATE_LIMITED` an ordinary route denial returns
+<sup>1</sup> A phone denial uses the rate limit envelope with `code` set to `PHONE_RATE_LIMIT_EXCEEDED`. An ordinary route denial returns `RATE_LIMITED`
 
 On the 429, `X-RateLimit-Scope` reports `shared` when the per-number control or a number-scoped provider throttle produced the denial.
 
@@ -304,7 +304,7 @@ A number can complete verification twice, and each success refreshes that record
 | 403 | [error response](/http-api/#error-response) | The account is not eligible and the request returns `PHONE_ADD_NOT_ELIGIBLE` |
 | 429<sup>1</sup> | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A provider throttle denies the request, which returns `PHONE_RATE_LIMIT_EXCEEDED` |
 
-<sup>1</sup> A phone denial uses the rate limit envelope with `code` set to `PHONE_RATE_LIMIT_EXCEEDED` rather than the `RATE_LIMITED` an ordinary route denial returns
+<sup>1</sup> A phone denial uses the rate limit envelope with `code` set to `PHONE_RATE_LIMIT_EXCEEDED`. An ordinary route denial returns `RATE_LIMITED`
 
 On the 429, `X-RateLimit-Scope` reports `shared` when a number-scoped provider throttle produced the denial.
 
@@ -353,7 +353,7 @@ The body is an empty object. Fluxer reads an absent or empty body as an empty ob
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [user](/http-api/users/#user-object) object | The escape ran, wholly or up to the per-request limit |
+| 200 | [user](/http-api/users/#user-object) object | The escape ran, fully or up to the per-request limit |
 | 400 | [error response](/http-api/#error-response) | The escape is unavailable and the request returns `PHONE_GATE_ESCAPE_UNAVAILABLE` |
 
 ### Side effects

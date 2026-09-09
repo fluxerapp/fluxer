@@ -6,7 +6,7 @@ description: Guild search, detail, mutation, deletion, membership, expressions, 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. Most of them need no membership in the guild and no guild permission, and [Remove guild member](#remove-guild-member) and [Ban guild member](#ban-guild-member) are the exceptions.
+Admin guild operations read and change the guilds the public [Guilds](/http-api/guilds/) resource exposes. Most need no membership in the guild and no guild permission. [Remove guild member](#remove-guild-member) and [Ban guild member](#ban-guild-member) are the exceptions.
 
 [Archives](/admin-api/archives/) owns the archive lifecycle and the downloads.
 
@@ -18,7 +18,7 @@ Reads use the `admin:lookup` bucket, which permits 200 requests per minute for e
 
 ## Admin guild object
 
-The compact guild representation returned by [List guilds](#list-guilds) and by [List user guilds](/admin-api/users/#list-user-guilds). It has no channel or role state.
+The compact guild representation returned by [List guilds](#list-guilds) and by [List user guilds](/admin-api/users/#list-user-guilds), with no channel or role state.
 
 ### Structure
 
@@ -146,7 +146,7 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 
 ## Admin guild update object
 
-The guild state [Update guild](#update-guild) reads back after applying the request. It has no channel, role, or owner identity state.
+The guild state [Update guild](#update-guild) reads back after applying the request, with no channel, role, or owner identity state.
 
 ### Structure
 
@@ -163,7 +163,7 @@ The guild state [Update guild](#update-guild) reads back after applying the requ
 
 ## Admin guild expression object
 
-One custom emoji or one sticker of a guild, together with a resolvable media URL. The two listings return the same shape.
+A custom emoji or a sticker of a guild, with a resolvable media URL. The two listings return the same shape.
 
 ### Structure
 
@@ -292,7 +292,7 @@ Returns one guild with its channels and roles. Requires `guild:lookup`.
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | A lookup was performed, whether or not it resolved |
+| 200 | response body | A lookup was done, whether or not it resolved |
 
 ### Rate limit
 
@@ -308,11 +308,11 @@ This is the only way to change the owner of a guild without acting as its curren
 
 Fluxer evaluates authorisation in two stages and reads the body between them. The account first needs at least one of `guild:update:name`, `guild:update:settings`, `guild:update:features`, `guild:update:vanity`, and `guild:transfer_ownership`. The validated body then selects a set of ACLs and every one of them is required, so a body with `name` and `nsfw` needs both `guild:update:name` and `guild:update:settings`. The wildcard satisfies both stages.
 
-- `guild:update:name` is selected by `name`.
-- `guild:update:settings` is selected by `fields`, `verification_level`, `mfa_level`, `nsfw_level`, `nsfw`, `content_warning_level`, `content_warning_text`, `explicit_content_filter`, `default_message_notifications`, and `disabled_operations`.
-- `guild:update:features` is selected by `add_features` and `remove_features`.
-- `guild:update:vanity` is selected by `vanity_url_code`.
-- `guild:transfer_ownership` is selected by `new_owner_id`.
+- `name` selects `guild:update:name`.
+- `fields`, `verification_level`, `mfa_level`, `nsfw_level`, `nsfw`, `content_warning_level`, `content_warning_text`, `explicit_content_filter`, `default_message_notifications`, and `disabled_operations` select `guild:update:settings`.
+- `add_features` and `remove_features` select `guild:update:features`.
+- `vanity_url_code` selects `guild:update:vanity`.
+- `new_owner_id` selects `guild:transfer_ownership`.
 
 A body with no field at all selects nothing, so an empty patch applies no change.
 
@@ -379,7 +379,7 @@ The groups run in a fixed order: image clears, settings, features, name, custom 
 
 ### Side effects
 
-Clearing an image field queues the previous stored object for deletion. Replacing the custom invite code deletes the invite record holding the previous code and creates one for the new code, while sending null deletes the previous record without creating another.
+Clearing an image field queues the previous stored object for deletion. Replacing the custom invite code deletes the invite record holding the previous code and creates one for the new code. Sending null deletes the previous record without creating another.
 
 Supplying `add_features` or `remove_features` reconciles an existing discovery application. The application is approved when [DISCOVERABLE](/http-api/guilds/#guild-features) becomes present and it is not already approved, and it is marked removed when `DISCOVERABLE` becomes absent and it was approved. A guild that has never applied for [discovery](/admin-api/discovery/) gains no application.
 
@@ -517,9 +517,9 @@ Only the Admin ACL is evaluated.
 
 ### Side effects
 
-Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not consulted, so a banned user can be admitted. The suspicious activity phone gate does not run. The per-user guild limit and the guild member limit are still enforced.
+Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not checked, so a banned user can be admitted. The suspicious activity phone gate does not run. The per-user guild limit and the guild member limit are still enforced.
 
-[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, the user's sessions are joined to the guild on the main Gateway, and the member enters guild member search when the guild has an indexed member set. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no usable system channel. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
+[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, and the user's sessions are joined to the guild on the main Gateway. The member enters guild member search when the guild has an indexed member set. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no usable system channel. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
 
 A user who is already a member keeps their existing membership. No membership is created, no counter moves, and no Dispatch is emitted. The Admin audit entry is still written.
 
@@ -561,7 +561,7 @@ The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions
 
 Fluxer snapshots the membership metadata, including any communication timeout, so that a later rejoin restores it. It then deletes the membership, decreases the recorded member count by one, and detaches the user from the guild on the main Gateway. The member is removed from guild member search when the guild has an indexed member set.
 
-[Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason, and the write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
+[Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
 
 The removal creates no ban record, so the user can rejoin.
 
@@ -611,18 +611,18 @@ The acting account must hold [BAN_MEMBERS](/http-api/permissions/) in the guild,
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_MEMBER` because the target is the acting account, or `UNKNOWN_USER` because the user does not exist |
 
 :::caution[The ban can also delete messages]
-The ban removes current membership and blocks later joins until its expiry or explicit removal. Messages inside the resolved deletion window are permanently deleted and are not restored when the ban ends.
+A ban removes current membership and blocks later joins until its expiry or explicit removal. Messages inside the resolved deletion window are permanently deleted and are not restored when the ban ends.
 :::
 
 ### Side effects
 
-The ban record names the acting Admin account as moderator and has the expiry, the reason, the target's last known IP address unless that address is on the ban exemption list, and the target's lowercased email address. While the ban exists the guild also blocks that address and that email, as described by [Guild moderation](/http-api/guild-moderation/#guild-ban-object), and removing the ban releases both.
+The ban record names the acting Admin account as moderator. It has the expiry, the reason, the target's lowercased email address, and the target's last known IP address unless that address is on the ban exemption list. While the ban exists the guild also blocks that address and that email, as described by [Guild moderation](/http-api/guild-moderation/#guild-ban-object), and removing the ban releases both.
 
 A positive deletion window queues a background job that deletes the target's matching messages after the response, which fires [Message Delete Bulk](/gateway/events/#message-delete-bulk) as deletion progresses.
 
-[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. A target who was a member is then removed, which decreases the recorded member count, detaches the user from the guild on the main Gateway, removes the member from guild member search, and fires [Guild Member Remove](/gateway/events/#guild-member-remove). The ban path snapshots no membership metadata, so a communication timeout in force at the moment of the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log, and it emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
+[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. A target who was a member is then removed. That decreases the recorded member count, detaches the user from the guild on the main Gateway, removes the member from guild member search, and fires [Guild Member Remove](/gateway/events/#guild-member-remove). The ban path snapshots no membership metadata, so a communication timeout in force at the moment of the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log, and it emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
 
-One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member`, the banned user as the target, and the guild ID, user ID, `delete_message_days` value, and any supplied reason and duration in the metadata.
+One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member`, and the banned user as the target. Its metadata has the guild ID, the user ID, the `delete_message_days` value, and any supplied reason and duration.
 
 ### Rate limit
 
@@ -751,7 +751,7 @@ Every entry in `processed` records its own Admin audit entry, with the numeric I
 
 Returns one page of the guild's own in-app audit log, without requiring guild membership or [VIEW_AUDIT_LOG](/http-api/permissions/). Requires `guild:audit_log:view`.
 
-The page has the same shape and the same semantics as the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including the message deletion consolidation that operation performs.
+The page has the same shape and semantics as the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including its message deletion consolidation.
 
 ### Path parameters
 

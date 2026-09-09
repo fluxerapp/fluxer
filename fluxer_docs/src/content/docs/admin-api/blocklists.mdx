@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A blocklist is a stored set of values Fluxer checks account access and user content against. Nine lists exist. Each has one canonical value form, one matching rule, and its own stored fields. Fluxer canonicalises every value before storage and before every check.
 
-Each list has its own three [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission, so an account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
+Each list has its own three [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
 
 Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
 
@@ -18,19 +18,19 @@ Fluxer synchronises disposable email domains from external feeds every six hours
 
 ## Blocklist types
 
-`ip`, `email`, and `email-domain-suspicious` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` and `email-domain-suspicious` store nothing but the value, while an `ip` row also stores a ban kind, a reason, an expiry, and its creation time.
+`ip`, `email`, and `email-domain-suspicious` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` and `email-domain-suspicious` store nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, and its creation time.
 
 | Value | Description |
 | --- | --- |
 | ip<sup>1</sup> | IPv4 addresses, IPv6 addresses, and CIDR ranges denied service |
-| email<sup>2</sup> | Exact email addresses barred from registration and from being set on an account |
+| email<sup>2</sup> | Exact email addresses blocked from registration and from being set on an account |
 | email-domain-suspicious<sup>2</sup> <sup>3</sup> | Email domains that allow registration and require the new account to verify a phone number first |
-| phrase<sup>4</sup> | Phrases barred from content |
-| url<sup>5</sup> | Absolute `http` and `https` URLs barred from being posted |
-| url-domain<sup>6</sup> | Domains barred from being linked |
-| file-sha<sup>7</sup> | SHA-256 hashes barred from being uploaded |
-| avatar-hash<sup>8</sup> | Avatar hashes barred from being set |
-| profile-substring<sup>4</sup> <sup>9</sup> | Substrings barred from one named profile field |
+| phrase<sup>4</sup> | Phrases blocked from content |
+| url<sup>5</sup> | Absolute `http` and `https` URLs blocked from being posted |
+| url-domain<sup>6</sup> | Domains blocked from being linked |
+| file-sha<sup>7</sup> | SHA-256 hashes blocked from being uploaded |
+| avatar-hash<sup>8</sup> | Avatar hashes blocked from being set |
+| profile-substring<sup>4</sup> <sup>9</sup> | Substrings blocked from one named profile field |
 
 <sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, or when the high blast-radius carrier network check matches, and records both refusals in the Admin audit log
 
@@ -38,7 +38,7 @@ Fluxer synchronises disposable email domains from external feeds every six hours
 
 <sup>3</sup> Fluxer never shows the list to the account holder, who sees only the verified-phone gate. A domain must match `^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$`
 
-<sup>4</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. Match time also normalises inserted whitespace, punctuation, and compatibility glyphs
+<sup>4</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. Match time also normalises inserted whitespace, punctuation, and compatibility characters
 
 <sup>5</sup> Canonicalised before storage. A value Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url`
 
@@ -46,11 +46,11 @@ Fluxer synchronises disposable email domains from external feeds every six hours
 
 <sup>7</sup> Stored as lowercase hexadecimal
 
-<sup>8</sup> Stored as the 8-character hash with any `a_` animation prefix stripped and the remainder lowercased, so the animated and static forms of one avatar are the same row
+<sup>8</sup> Stored as the 8-character hash with any `a_` animation prefix stripped and the rest lowercased, so the animated and static forms of one avatar are the same row
 
 <sup>9</sup> The only scoped list. Scope and substring together identify a row, so the same substring can be stored once per [scope](#profile-substring-scopes)
 
-The fields a list accepts differ from list to list, and so does the operation set. Read the `fields` array and the three `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
+The fields and the operations a list accepts differ from list to list. Read the `fields` array and the three `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
 
 ## Content blocklist categories
 
@@ -92,14 +92,14 @@ Every `url`, `url-domain`, `file-sha`, and `avatar-hash` row has a severity. A r
 
 ## Blocklist object
 
-One entry of the blocklist catalogue returned by [List blocklists](#list-blocklists). The catalogue is a constant of the release and reports no counts.
+One entry of the blocklist catalogue returned by [List blocklists](#list-blocklists). The catalogue is fixed in each release and reports no counts.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | list_type | string | The [blocklist type](#blocklist-types) this entry describes |
-| description | string | The human-readable summary of what the blocklist matches and how it matches |
+| description | string | The human-readable summary of what the blocklist matches and how |
 | value_field<sup>1</sup> | string | The request body field that has the value when adding |
 | fields<sup>2</sup> | array[string] | The field names rows of this blocklist accept beyond the value (at most 8) |
 | scoped<sup>3</sup> | boolean | Whether rows are scoped to a profile field and every operation has a scope |
@@ -160,7 +160,7 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 
 <sup>2</sup> Non-null only on `profile-substring`
 
-<sup>3</sup> Non-null only on `url`, `url-domain`, `file-sha`, and `avatar-hash`, where `category` and `severity` are always populated
+<sup>3</sup> Non-null only on `url`, `url-domain`, `file-sha`, and `avatar-hash`, where `category` and `severity` are always set
 
 <sup>4</sup> Non-null only on `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
 
@@ -170,7 +170,7 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 
 <sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) is written as a permanent ban, so it reads back with the reason `platform_admin_enforcement` and a null `expires_at`
 
-<sup>8</sup> Both null on `email`, `email-domain-suspicious`, and `phrase`, which store nothing but the value. `created_by_user_id` is additionally null on `ip`
+<sup>8</sup> Both null on `email`, `email-domain-suspicious`, and `phrase`, which store nothing but the value. `created_by_user_id` is also null on `ip`
 
 :::note[The audit entry records the accepted reason]
 An `avatar-hash` or `profile-substring` write accepts `reason`, and both lists then report `reason` as null in this object.
@@ -236,7 +236,7 @@ The body of [Add blocklist entry](#add-blocklist-entry) is a union resolved by t
 
 Each field is a string, except `hashes` and `substrings`, which are `array[string]`.
 
-`avatar-hash` deduplicates the array after canonicalisation. `profile-substring` does not, so a substring repeated in one request is written once and audited once per occurrence, and a value that canonicalises to an empty string is skipped.
+`avatar-hash` deduplicates the array after canonicalisation. `profile-substring` does not, so a substring repeated in one request is written once and audited once per occurrence. A `profile-substring` value that canonicalises to an empty string is skipped.
 
 ### Additional fields
 
@@ -267,7 +267,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 
 <RouteHeader method="GET" path="/v1/admin/blocklists" />
 
-Returns one [blocklist](#blocklist-object) object for every blocklist this instance maintains. Requires any one of the nine `check` permissions.
+Returns one [blocklist](#blocklist-object) object for every blocklist this instance keeps. Requires any one of the nine `check` permissions.
 
 The response is identical for every Admin.
 
@@ -373,7 +373,7 @@ The response has no body, so it does not report the canonical form that was stor
 
 The written rows take effect for subsequent blocklist decisions. For every list except `email` and `email-domain-suspicious`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
 
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded per written value, with that value in its metadata. Fluxer records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt` or `ban_ip_skipped_cgnat`, before it returns the 400.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. It records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt` or `ban_ip_skipped_cgnat`, before it returns the 400.
 
 ### Rate limit
 
@@ -383,7 +383,7 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded per wr
 
 <RouteHeader method="PUT" path="/v1/admin/blocklists/{list_type}/entries" auditReason />
 
-Enqueues a background job that adds up to 10000 SHA-256 hashes to the `file-sha` blocklist and returns the job ID immediately. Requires `ban:file_sha:add`.
+Queues a background job that adds up to 10000 SHA-256 hashes to the `file-sha` blocklist and returns the job ID immediately. Requires `ban:file_sha:add`.
 
 Only `file-sha` accepts this operation, reported as `supports_bulk_create` by [List blocklists](#list-blocklists). Every other list type returns 400 `INVALID_FORM_BODY`.
 
@@ -416,11 +416,11 @@ Only `file-sha` accepts this operation, reported as `supports_bulk_create` by [L
 
 The operation returns before any hash is written. Read progress and the final counts from [Get job](/admin-api/jobs/#get-job), and stop the job with [Cancel job](/admin-api/jobs/#cancel-job). The job reports progress every 50 hashes and finishes with a summary naming how many were written and how many failed.
 
-Every hash is written with the category `manual`, the severity `2`, and a null content type, source URL, and note. The bulk path accepts no metadata, so a hash that needs any of those goes through [Add blocklist entry](#add-blocklist-entry) or takes a later [Update blocklist entry](#update-blocklist-entry).
+Every hash is written with the category `manual`, the severity `2`, and a null content type, source URL, and note. The bulk path accepts no metadata, so a hash that needs any of those goes through [Add blocklist entry](#add-blocklist-entry) or a later [Update blocklist entry](#update-blocklist-entry).
 
 ### Side effects
 
-The job lowercases each hash and writes it as an upsert. It publishes one refresh notice after the last hash, so a job cancelled part way leaves the hashes it wrote invisible to other nodes until a later write or the twelve-hourly feed sync publishes one. No Gateway Dispatch is emitted.
+The job lowercases each hash and writes it as an upsert. It publishes one refresh notice after the last hash, so a job cancelled part way leaves the hashes it wrote invisible to other nodes. They become visible on a later write, or on the feed sync that runs every twelve hours. No Gateway Dispatch is emitted.
 
 The job records one aggregate [Admin audit entry](/admin-api/#admin-audit-entry-object) under the action `bulk_ban_file_shas`, with the submitted, successful, and failed counts. A cancelled job records none.
 
@@ -465,7 +465,7 @@ The body is selected by `list_type`.
 
 The operation is idempotent and reports no counts. A value with no stored row still returns 204. Read the list before and after to tell a removal from a no-op.
 
-`avatar-hash` deduplicates the array after canonicalisation. `profile-substring` does not, so a substring repeated in one request is removed once and audited once per occurrence, and a value that canonicalises to an empty string is skipped.
+`avatar-hash` deduplicates the array after canonicalisation. `profile-substring` does not, so a substring repeated in one request is removed once and audited once per occurrence. A `profile-substring` value that canonicalises to an empty string is skipped.
 
 ### Side effects
 
@@ -507,7 +507,7 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 | ip<sup>3</sup> <sup>4</sup> | The address itself, any stored CIDR range containing it, and any stored address the instance treats as the same origin |
 | email | Exact match on the lowercased address |
 | email-domain-suspicious<sup>5</sup> | Exact match on the lowercased domain |
-| phrase | Normalised phrase matching, so an obfuscated form of a stored phrase still reads as blocked |
+| phrase | Normalised phrase matching, so a disguised form of a stored phrase still reads as blocked |
 | url<sup>6</sup> | Exact match on the canonicalised URL |
 | url-domain | Exact match on the lowercased hostname |
 | file-sha | Exact match on the lowercased hexadecimal digest |
@@ -520,7 +520,7 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 
 <sup>5</sup> A domain the account policy exempts from contact-domain reputation reads as not blocked even while a row exists
 
-<sup>6</sup> This check does not consult the `url-domain` list, so a URL blocked in practice by a stored domain reads as not blocked. Check the hostname separately
+<sup>6</sup> This check does not read the `url-domain` list, so a URL that a stored domain blocks reads as not blocked. Check the hostname separately
 
 ### Response
 
@@ -567,7 +567,7 @@ The body is the creation shape of the selected blocklist with the value field re
 | reason?<sup>5</sup> | string | The reason (1-1024 characters) |
 | notes?<sup>6</sup> | string | The internal note (1-1024 characters) |
 
-<sup>1</sup> Required by `profile-substring`. This operation takes no query parameters, so the scope travels in the body, and every other blocklist ignores it there
+<sup>1</sup> Required by `profile-substring`. This operation takes no query parameters, so the scope goes in the body, and every other blocklist ignores it there
 
 <sup>2</sup> Accepted only by `url`, `url-domain`, `file-sha`, and `avatar-hash`
 
@@ -600,7 +600,7 @@ Changing the `scope` of a `profile-substring` row writes a second row under the 
 
 The written fields take effect for subsequent matches, and the write publishes a refresh notice. No Gateway Dispatch is emitted.
 
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded under the same action an add records, with the canonical value. The audit entry has no previous values of the changed fields.
+The write records one [Admin audit entry](/admin-api/#admin-audit-entry-object) under the same action an add records, with the canonical value but no previous values of the changed fields.
 
 ### Rate limit
 
@@ -638,13 +638,13 @@ Removes one row from the selected blocklist. Returns 204 with an empty body. Req
 
 On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
 
-The operation is idempotent. A value with no stored row returns 204 and still records an Admin audit entry, so this operation never returns 404 and never reports whether anything was removed.
+Removal is idempotent. A value with no stored row returns 204 and still records an Admin audit entry, so this operation never returns 404 and never reports whether anything was removed.
 
 ### Side effects
 
-The removed row stops affecting subsequent blocklist decisions, and other nodes stop applying it after a short propagation delay for every list except `email` and `email-domain-suspicious`. A value can remain blocked by another matching row, such as a single address covered by a stored CIDR range. No Gateway Dispatch is emitted.
+The removed row stops affecting subsequent blocklist decisions. For every list except `email` and `email-domain-suspicious`, other nodes stop applying it after a short propagation delay. A value can remain blocked by another matching row, such as a single address covered by a stored CIDR range. No Gateway Dispatch is emitted.
 
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the canonical value in its metadata.
+The removal records one [Admin audit entry](/admin-api/#admin-audit-entry-object), with the canonical value in its metadata.
 
 ### Rate limit
 
@@ -666,7 +666,7 @@ This is a shortcut over [Add blocklist entry](#add-blocklist-entry) for blocking
 
 ### JSON body
 
-Both fields are optional. An empty body and `{}` are both valid requests.
+Both fields are optional, so an empty body and `{}` are both valid requests.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -698,7 +698,7 @@ Every account using that image shares the same truncated prefix, so blocking the
 
 The hash takes effect for subsequent avatar uploads, and the write publishes a refresh notice. No Gateway Dispatch is emitted.
 
-One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded under the action `ban_avatar_hash`, with the stored hash and the supplied reason.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) under the action `ban_avatar_hash`, with the stored hash and the supplied reason.
 
 ### Rate limit
 

@@ -108,7 +108,7 @@ Fluxer omits an entry whose channel the caller cannot reach. An entry that needs
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[message](/http-api/messages/#message-object) object] | Readable mentions were returned |
-| 403 | [error response](/http-api/#error-response) | A retained entry sits in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel the account has not verified for, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | A retained entry is in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel the account has not verified for, returning `NSFW_CONTENT_AGE_RESTRICTED` |
 
 ### Rate limit
 
@@ -202,7 +202,7 @@ A guild configuring [message_history_cutoff](/http-api/guilds/#guild-object) sti
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[saved message](#saved-message-object) object] | Saved entries were returned |
-| 403 | [error response](/http-api/#error-response) | A stored entry sits in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | A stored entry is in a guild whose membership state cannot be resolved, returning `ACCESS_DENIED`, or in an age-restricted channel, returning `NSFW_CONTENT_AGE_RESTRICTED` |
 
 ### Side effects
 
@@ -274,7 +274,7 @@ No current access to the channel is required.
 
 ### Side effects
 
-Fluxer issues the delete unconditionally, and [Saved Message Delete](/gateway/events/#saved-message-delete) reaches the caller's own sessions on every accepted request, including one naming a message the account never saved. The saved entry is removed and the message stays in its channel.
+Fluxer always issues the delete, and [Saved Message Delete](/gateway/events/#saved-message-delete) reaches the caller's own sessions on every accepted request, including one naming a message the account never saved. The saved entry is removed and the message stays in its channel.
 
 ### Rate limit
 
@@ -337,13 +337,13 @@ Neither scope includes the caller's personal notes channel, so this operation ca
 | 202 | empty | Deletion was accepted for asynchronous processing |
 | 400 | [error response](/http-api/#error-response) | The date range or context selection is invalid, or a supplied sudo proof is wrong and the request returns `INVALID_PASSWORD`, `PASSWORD_NOT_SET`, or `INVALID_MFA_CODE` |
 | 403 | [error response](/http-api/#error-response) | No accepted sudo proof is present and the request returns `SUDO_MODE_REQUIRED` |
-| 500 | [error response](/http-api/#error-response) | Deletion could not be enqueued |
+| 500 | [error response](/http-api/#error-response) | Deletion could not be queued |
 
 ### Side effects
 
 An account holding an MFA authenticator that proved sudo mode with MFA receives a fresh proof in the response header. A request that already had a valid proof gets that same token echoed back without an extended lifetime.
 
-Fluxer enqueues the work with at most 5 attempts. As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs, and the deleted messages' attachments are permanently removed.
+Fluxer queues the work with at most 5 attempts. As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs, and the deleted messages' attachments are permanently removed.
 
 On completion the system account sends the caller a direct message in the account locale reporting the total deleted message count and the number of channels touched. That message arrives through the ordinary [Message Create](/gateway/events/#message-create) Dispatch.
 
@@ -367,7 +367,7 @@ The schedule targets every message the caller authored before the scheduled mome
 
 ### JSON body
 
-The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). It has no other field, and an existing proof travels in the `X-Fluxer-Sudo-Mode-JWT` request header.
+The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object) and has no other field. An existing proof is in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 ### Response
 

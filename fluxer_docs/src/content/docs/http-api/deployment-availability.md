@@ -12,7 +12,7 @@ The API decides registration once at process start from the deployment configura
 
 ## Deployment kind
 
-Every deployment reports its kind in `self_hosted` on the [instance features object](/http-api/instance/#instance-features-object), which the unauthenticated [instance discovery document](/http-api/instance/#get-instance-discovery) publishes before a client holds any credential. `self_hosted` alone decides whether the API registers the routes below.
+Every deployment reports its kind in `self_hosted` on the [instance features object](/http-api/instance/#instance-features-object). The unauthenticated [instance discovery document](/http-api/instance/#get-instance-discovery) publishes it before a client holds any credential. `self_hosted` alone decides whether the API registers the routes below.
 
 `stripe_enabled` on the same object reports the payment provider toggle alone. A hosted deployment that reports it false still serves every route in the table below. A deployment reporting `stripe_enabled` true with no provider secret key configured behaves exactly like one reporting it false.
 
@@ -66,6 +66,6 @@ Without a provider client, the answer depends on the operation. An operation tha
 
 A route every deployment registers can still produce a different answer on a self-hosted instance. Each operation page documents that difference.
 
-Premium state is the clearest case. Every deployment registers [Get premium state](/http-api/premium/#get-premium-state) and [Set premium perks disabled](/http-api/premium/#set-premium-perks-disabled). A self-hosted instance still reports premium state and still records the perks-disabled flag. The response repeats the deployment kind in `self_hosted` on the [effective premium state object](/http-api/premium/#effective-premium-state-object). That flag alone does not make `is_premium` true, because a self-hosted deployment grants premium to every account only while its instance [premium mode](/admin-api/instance/#premium-modes) is `everyone`. While that mode is in force it also overrides the perks-disabled flag, so `is_premium` stays true while `premium_perks_disabled` is true.
+Premium state is the clearest case. Every deployment registers [Get premium state](/http-api/premium/#get-premium-state) and [Set premium perks disabled](/http-api/premium/#set-premium-perks-disabled). A self-hosted instance still reports premium state and still records the perks-disabled flag. The response repeats the deployment kind in `self_hosted` on the [effective premium state object](/http-api/premium/#effective-premium-state-object). That flag alone does not make `is_premium` true. A self-hosted deployment grants premium to every account only while its instance [premium mode](/admin-api/instance/#premium-modes) is `everyone`. That mode also overrides the perks-disabled flag, so `is_premium` stays true while `premium_perks_disabled` is true.
 
 The other instance feature flags published by [instance discovery](/http-api/instance/#instance-features-object) work the same way. `voice_enabled`, `presigned_attachment_uploads`, and `emails_enabled` each switch off a capability that the surrounding routes still expose, so a client reads the flag.

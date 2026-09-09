@@ -102,7 +102,7 @@ Naming a category as the preceding sibling places the moved channel after that c
 
 Returns every [channel object](/http-api/channels/#channel-object) in the guild that the authenticated member can see. Membership is the only requirement.
 
-Fluxer evaluates [channel visibility](/http-api/permissions/#permission-computation) per channel. A channel is included when the member holds [VIEW_CHANNEL](/http-api/permissions/) in it, or when the member currently holds temporary access to it through a voice transition. A category is included when at least one child grants the member `VIEW_CHANNEL`. A member with no visible channel receives an empty array.
+Fluxer evaluates [channel visibility](/http-api/permissions/#permission-computation) per channel. A channel is included when the member holds [VIEW_CHANNEL](/http-api/permissions/) in it, or when the member holds temporary access to it through a voice transition. A category is included when at least one child grants the member `VIEW_CHANNEL`. A member with no visible channel receives an empty array.
 
 :::note[Every visible channel arrives in one body]
 The route accepts no limit and no cursor. Each entry is a complete channel object whose `permission_overwrites` array is always present and always complete.
@@ -136,7 +136,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 ### Limitations
 
-- Supplying `permission_overwrites` additionally requires [MANAGE_ROLES](/http-api/permissions/) at guild level.
+- Supplying `permission_overwrites` also requires [MANAGE_ROLES](/http-api/permissions/) at guild level.
 
 `MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
 
@@ -169,7 +169,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 <sup>1</sup> Normalisation strips control, join, bidirectional, and tag code points, collapses whitespace runs to one space, and trims. An empty result is rejected with `NAME_EMPTY_AFTER_NORMALIZATION`
 
-<sup>2</sup> A text channel name is additionally lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
+<sup>2</sup> A text channel name is also lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
 
 <sup>3</sup> An `http` or `https` URL of at most 2048 characters with a host and no embedded credentials. It is stored for every channel type
 
@@ -214,9 +214,9 @@ Only the allowed mask is compared, so a supplied deny is stored without any auth
 
 ### Side effects
 
-The operation consumes one guild channel slot and, when a parent is supplied, one slot in that category. It creates a [`CHANNEL_CREATE`](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason, plus one [`CHANNEL_OVERWRITE_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry for every stored overwrite, whether that overwrite was supplied or inherited.
+The operation consumes one guild channel slot and, when a parent is supplied, one slot in that category. It creates a [`CHANNEL_CREATE`](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason, plus one [`CHANNEL_OVERWRITE_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry for every stored overwrite, whether that overwrite was supplied or inherited. Reaching either channel limit fails the request without consuming a slot.
 
-It emits [Channel Create](/gateway/events/#channel-create) with the complete channel object only to sessions that can view the new channel. Reaching either channel limit fails the request without consuming a slot.
+It emits [Channel Create](/gateway/events/#channel-create) with the complete channel object only to sessions that can view the new channel.
 
 ### Rate limit
 
@@ -230,7 +230,7 @@ Applies a guild channel hierarchy update and returns 204 with an empty body. Req
 
 ### Limitations
 
-- Setting `lock_permissions` on an entry that changes the parent additionally requires [MANAGE_ROLES](/http-api/permissions/) in the moved channel.
+- Setting `lock_permissions` on an entry that changes the parent also requires [MANAGE_ROLES](/http-api/permissions/) in the moved channel.
 - The operation records no guild audit log entry, so an `X-Audit-Log-Reason` header has no effect.
 
 `MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
@@ -239,7 +239,7 @@ The request takes a guild-wide lock for its duration. A request that arrives whi
 
 Fluxer resolves every channel, parent, and sibling named by any entry once before the first entry runs, so a request naming an unknown identifier anywhere applies nothing. After that check, each entry is committed as it is applied. A request that fails partway leaves the entries it already applied in place. Moving a category moves the channels inside it as one block, and that block is excluded from the sibling list an entry indexes into.
 
-Each entry flattens the complete guild hierarchy so that each root channel appears in position order, each category is immediately followed by its children, and each category's children put text and link channels before voice channels. Fluxer lifts the moved channel out of that list, together with its children when it is a category, and reinserts it at its destination. It then renumbers the result densely from 1 through the channel count.
+Each entry flattens the complete guild hierarchy into one list. In that list, each root channel appears in position order, each category is immediately followed by its children, and each category's children put text and link channels before voice channels. Fluxer lifts the moved channel out of that list, together with its children when it is a category, and reinserts it at its destination. It then renumbers the result densely from 1 through the channel count.
 
 :::note[Renumbering can rewrite a channel no entry named]
 An entry that changes the flattened order renumbers the guild's complete hierarchy, so a channel the request never mentioned can end up at a new position. An entry whose flattened result matches the list it started from writes nothing.
@@ -269,7 +269,7 @@ The check inspects the moved channel alone, and only inside its current parent a
 | 400<sup>1</sup><sup>2</sup> | [error response](/http-api/#error-response) | An entry is structurally invalid, the destination category is full, or the caller has no enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `MANAGE_CHANNELS`, is not a member of the guild, or set `lock_permissions` without sufficient authority in the moved channel, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
-| 423 | [error response](/http-api/#error-response) | Another hierarchy update currently owns this guild, returning `GENERAL_ERROR` |
+| 423 | [error response](/http-api/#error-response) | Another hierarchy update owns this guild, returning `GENERAL_ERROR` |
 
 <sup>1</sup> A structural failure returns `INVALID_FORM_BODY` and names the field with `CHANNEL_NOT_FOUND`, `INVALID_CHANNEL_ID`, `INVALID_PARENT_CHANNEL`, `PARENT_MUST_BE_CATEGORY`, `CATEGORIES_CANNOT_HAVE_PARENTS`, `PRECEDING_CHANNEL_MUST_SHARE_PARENT`, `CANNOT_POSITION_CHANNEL_RELATIVE_TO_ITSELF`, or `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`. A full destination category returns the top-level `MAX_CATEGORY_CHANNELS`
 

@@ -87,7 +87,7 @@ The result has no `avatar`, `banner`, `accent_color`, `mute`, `deaf`, `communica
 
 ## Guild member search supplemental object
 
-A guild member search supplemental object has the join provenance the [guild member object](/http-api/guild-members/#guild-member-object) never exposes. Only a caller that can already manage the guild reads it.
+A guild member search supplemental object has the join source the [guild member object](/http-api/guild-members/#guild-member-object) never exposes. Only a caller that can already manage the guild reads it.
 
 ### Structure
 
@@ -121,7 +121,7 @@ One search returns this envelope. Every field is always present.
 
 <sup>3</sup> A true value always comes with an empty `members` array and both counts at zero
 
-An Elasticsearch instance reports the true `total_result_count`. A Meilisearch instance reports an estimate that saturates at 10000. In a very large guild that value can be lower than the true number of matches.
+An Elasticsearch instance reports the true `total_result_count`. A Meilisearch instance reports an estimate that caps at 10000. In a very large guild that value can be lower than the true number of matches.
 
 ### Example
 
@@ -149,7 +149,7 @@ Searches the guild member index. Returns a [guild member search response](#guild
 
 A guild that does not exist returns 404 `UNKNOWN_GUILD`.
 
-[List guild members](/http-api/guild-members/#list-guild-members) needs only membership and returns the complete member object for everyone. The permissions above gate the filtering, the sorting, the deep paging, and the [supplemental](#guild-member-search-supplemental-object) join provenance.
+[List guild members](/http-api/guild-members/#list-guild-members) needs only membership and returns the complete member object for everyone. The permissions above gate the filtering, the sorting, the deep paging, and the [supplemental](#guild-member-search-supplemental-object) join source.
 
 ### Path parameters
 
@@ -212,7 +212,7 @@ Elasticsearch walks past its 10000 document window with an internal cursor and s
 
 <sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked body string, and `MISSING_PERMISSIONS` otherwise
 
-An index that has never been built, or that predates the instance forced reindex point, returns 200 with an empty page and `indexing` set to true, and the request schedules the rebuild. The same empty body with `indexing` false covers a guild whose record disappeared between the membership check and the index read, an instance with no search backend configured, and an instance still initialising. This operation never returns `FEATURE_TEMPORARILY_DISABLED`.
+An index that has never been built, or that predates the instance forced reindex point, returns 200 with an empty page and `indexing` set to true, and the request schedules the rebuild. The same empty body with `indexing` false covers a guild whose record disappeared between the membership check and the index read, an instance with no search backend configured, and an instance still starting up. This operation never returns `FEATURE_TEMPORARILY_DISABLED`.
 
 :::note[`indexing` false does not mean zero matches]
 True means the rebuild is scheduled and the page is empty for that reason alone. False covers a genuine zero-match search and every other index that could not answer.
@@ -220,7 +220,7 @@ True means the rebuild is scheduled and the page is empty for that reason alone.
 
 ### Side effects
 
-The route enqueues a rebuild of the guild's member index when the guild has never been indexed or was last indexed before the instance forced reindex point.
+The route queues a rebuild of the guild's member index when the guild has never been indexed or was last indexed before the instance forced reindex point.
 
 ### Rate limit
 

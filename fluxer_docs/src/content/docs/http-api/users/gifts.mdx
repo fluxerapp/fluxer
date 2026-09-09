@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 The gift inventory lists the premium gift codes the current account created, with the redemption state of each. The [Gifts resource](/http-api/gifts/) has public gift lookup and redemption, and the [Billing resource](/http-api/billing/) has gift purchase.
 
-A self-hosted deployment answers this route with 404 `NOT_FOUND`, as [deployment availability](/http-api/deployment-availability/) describes.
+A self-hosted deployment returns 404 `NOT_FOUND` here, as [deployment availability](/http-api/deployment-availability/) describes.
 
 A code enters this inventory only through a completed gift checkout with the payment provider. The Admin API records a code it issues against the system account, so that code never appears in any account's inventory.
 
@@ -40,7 +40,7 @@ One gift code created by the current account, with its redemption state. A compl
 
 <sup>2</sup> One of `days`, `weeks`, `months`, or `years`. A purchased code has only `months` or `years`, because a term dividing evenly into years is normalised to years
 
-<sup>3</sup> A purchased code always has `1`, because the only gift products are one month and one year. The value `0` denotes a lifetime grant, and no current operation issues one
+<sup>3</sup> A purchased code always has `1`, because the only gift products are one month and one year. The value `0` means a lifetime grant, and no current operation issues one
 
 <sup>4</sup> A code issued while repairing a lost checkout notification has the checkout time, so the value can predate the moment the code appeared
 

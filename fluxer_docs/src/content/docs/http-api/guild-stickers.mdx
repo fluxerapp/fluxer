@@ -35,7 +35,7 @@ A guild sticker object is the complete stored form of one sticker. The stored im
 
 <sup>2</sup> Detected from the submitted image at creation, and copied unchanged by [Clone guild sticker](#clone-guild-sticker)
 
-<sup>3</sup> Present only on [List guild stickers](#list-guild-stickers), where it is populated for every caller and requires no permission
+<sup>3</sup> Present only on [List guild stickers](#list-guild-stickers), where it is set for every caller and requires no permission
 
 A sticker is always a guild sticker, and `animated` alone describes its format. The object has no sticker type, format type, or availability field.
 
@@ -76,7 +76,7 @@ The item shape shared by [Create guild sticker](#create-guild-sticker) and each 
 
 <sup>3</sup> A data URL prefix is accepted and everything up to the first comma is removed before any bound applies
 
-The remaining encoded portion is bounded to 699052 characters, which encodes a full 524288 byte image, and a longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`.
+The remaining encoded part is bounded to 699052 characters, which encodes a full 524288 byte image, and a longer value returns the validation code `BASE64_LENGTH_INVALID` at the `image` path. A value that is not canonical base64 with correct padding returns `INVALID_BASE64_FORMAT`.
 
 Decoded bytes are at most the operator-configured `sticker_max_size` [limit key](/http-api/instance/#limit-keys) value, resolved against the guild's complete feature set and defaulting to 524288. A larger image is rejected on the `image` path with `IMAGE_SIZE_EXCEEDS_LIMIT`, whose message names the resolved ceiling. An image over 524289 bytes exceeds the 699052 character bound and returns `BASE64_LENGTH_INVALID`, so a configured value above 524289 never applies.
 
@@ -168,7 +168,7 @@ One response has the complete collection. The operation is not paginated. A stic
 
 Creates one sticker from submitted image data and returns its [guild sticker object](#guild-sticker-object) without `user`. Requires membership of the guild and [CREATE_EXPRESSIONS](/http-api/permissions/). Emits a [Guild Stickers Update](/gateway/events/#guild-stickers-update) Gateway event.
 
-The admission checks run in a fixed order. Fluxer scans the submitted name, description, and tags for prohibited content, then resolves guild existence and membership, then `CREATE_EXPRESSIONS`, then the slot limit, and only then the image. A guild at its slot limit therefore returns `MAX_STICKERS` even when the image would also have been rejected.
+Admission checks run in a fixed order. Fluxer scans the submitted name, description, and tags for prohibited content, then resolves guild existence and membership, then `CREATE_EXPRESSIONS`, then the slot limit, and only then the image. A guild at its slot limit therefore returns `MAX_STICKERS` even when the image would also have been rejected.
 
 The slot limit is the operator-configured [max_guild_stickers](/http-api/instance/#limit-keys) value resolved against the guild's complete feature set, defaulting to 500. A guild with [UNLIMITED_STICKERS](/http-api/guilds/#guild-features) bypasses that configuration and receives a fixed ceiling of 999999.
 
@@ -248,7 +248,7 @@ The global body screen runs before the batch starts and ignores strings shorter 
 
 ### Side effects
 
-Each successful item consumes one guild sticker slot, stores its image, and writes the supplied audit reason into its [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry. A failed item leaves no sticker, audit entry, or slot consumption.
+Each successful item consumes one guild sticker slot, stores its image, and writes the supplied audit reason into its [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry. A failed item leaves no sticker or audit entry and consumes no slot.
 
 Fluxer emits one [Guild Stickers Update](/gateway/events/#guild-stickers-update) after the batch when at least one item succeeded, with the guild's complete sticker collection. A batch in which no item succeeded emits nothing.
 

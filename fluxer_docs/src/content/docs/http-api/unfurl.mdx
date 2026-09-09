@@ -12,7 +12,7 @@ The route is user-only. Fluxer rejects a bot token and an OAuth2 bearer credenti
 
 ## Site resolvers
 
-Fluxer walks a fixed chain of resolvers in the order below. A resolver runs only when the URL matches it, and the first resolver that produces at least one embed wins. Fluxer skips a resolver that produces nothing and a resolver whose own fetch fails, then tries the next match. An unavailable provider therefore degrades to the generic resolver.
+Fluxer walks a fixed chain of resolvers in the order below. A resolver runs only when the URL matches it, and the first resolver that produces at least one embed wins. Fluxer skips a resolver that produces nothing and a resolver whose own fetch fails, then tries the next match. An unavailable provider therefore falls back to the generic resolver.
 
 | Resolver | Matched URL | Source |
 | --- | --- | --- |
@@ -102,7 +102,7 @@ The route always asks for the explicit media classifier, so a media object the c
 
 The message path asks the same way, except in a channel that permits explicit media, where the classifier is disabled for every resolver. The same URL can resolve to differently flagged media there.
 
-The message path also extracts its candidate URLs from message text. It drops anything inside a code span or code fence and anything wrapped in angle brackets. It skips a Fluxer invite, the invite host, the gift host, the web application host, the marketing host under `/channels/` and `/theme/`, and the instance's configured `unfurl_ignored_hosts`. It then unfurls at most the first five surviving URLs. One message has at most 10 embeds, and Fluxer scans every resolved URL and media URL for banned content before it attaches an embed. A scan that blocks the content deletes the message.
+That path also extracts its candidate URLs from message text. It drops anything inside a code span or code fence and anything wrapped in angle brackets. It skips a Fluxer invite, the invite host, the gift host, the web application host, the marketing host under `/channels/` and `/theme/`, and the instance's configured `unfurl_ignored_hosts`. It then unfurls at most the first five surviving URLs. One message has at most 10 embeds, and Fluxer scans every resolved URL and media URL for banned content before it attaches an embed. A scan that blocks the content deletes the message.
 
 :::note[This route applies none of the message-path filtering]
 It resolves precisely the URL in the request body and returns the complete resolver output, with no URL extraction, no embed cap, and no banned-content scan.
@@ -126,4 +126,4 @@ The operation fetches the supplied URL, can call a provider API for a matched si
 
 ### Rate limit
 
-10 requests per minute for each authenticated user, on the `unfurl:debug` bucket. Fluxer charges the bucket before it checks the credential, and keys it on the caller's address when no valid credential is present. An unauthenticated caller therefore consumes it and receives 429 `RATE_LIMITED` rather than 401 once it is exhausted.
+10 requests per minute for each authenticated user, on the `unfurl:debug` bucket. Fluxer charges the bucket before it checks the credential, and keys it on the caller's address when no valid credential is present. An unauthenticated caller therefore consumes it and receives 429 `RATE_LIMITED` once it is exhausted, not 401.

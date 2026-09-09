@@ -14,7 +14,7 @@ The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `A
 A friendship is a FRIEND record on both accounts. A pending request is `OUTGOING_REQUEST` on the sender and `INCOMING_REQUEST` on the recipient. A block exists only on the account that created it, so the blocked account observes nothing.
 :::
 
-A deleted account has the deleted flag with no pending deletion timestamp. An account inside a scheduled deletion window has a timestamp, so it stays a valid friend request target.
+A deleted account has the deleted flag with no pending deletion timestamp, and is not a valid friend request target. An account inside a scheduled deletion window has a timestamp, so it stays a valid target.
 
 ## Relationship object
 
@@ -86,7 +86,7 @@ A bulk ignore result reports how many incoming friend requests one call removed.
 
 ## Relationship limit
 
-The `max_relationships` limit governs the combined number of friendship, block, and pending request records one account holds. Fluxer resolves it from the account's traits and premium state, so the value can be higher for a premium account. The fallback is 1000 when the deployment resolves no rule. The registry entry is listed under [limit keys](/http-api/instance/#limit-keys).
+The `max_relationships` limit controls the combined number of friendship, block, and pending request records one account holds. Fluxer resolves it from the account's traits and premium state, so the value can be higher for a premium account. The fallback is 1000 when the deployment resolves no rule. The registry entry is listed under [limit keys](/http-api/instance/#limit-keys).
 
 Fluxer refuses the write once the stored record count reaches the resolved value. It checks the caller and the target independently, and a request fails when either has reached that value.
 
@@ -162,7 +162,7 @@ Admission is ordered. The deployment direct message policy runs first, so an ord
 
 The caller's own ID returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_SELF`. An unresolved target returns 404 `UNKNOWN_USER`. A deleted target returns 400 `FRIEND_REQUEST_BLOCKED`.
 
-Fluxer consults the current relationship state next. A pending request from the target is accepted. An existing friendship or outgoing request is returned unchanged. The rules that follow apply to a genuinely new request alone, so they never refuse an existing friend.
+Fluxer checks the current relationship state next. A pending request from the target is accepted. An existing friendship or outgoing request is returned unchanged. The rules that follow apply to a genuinely new request alone, so they never refuse an existing friend.
 
 The remaining rules reject an unclaimed caller with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS` and an unverified email with 403 `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`. A bot target is rejected with 400 `FRIEND_REQUEST_BLOCKED` unless it has `FRIENDLY_BOT`. A target with the internal app store reviewer flag is rejected with the same code.
 
@@ -171,7 +171,7 @@ A target the caller has blocked returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCK
 <sup>1</sup> The friend source evaluation is skipped when the target has no stored settings, which admits the request as though the target permitted requests from anyone
 
 :::caution[A flagged caller receives an indistinguishable success]
-A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags), or one whose send trips the deployment's direct contact spam policy, gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record, and [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
+A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags), or one whose send trips the deployment's direct contact spam policy, gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record. [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
 :::
 
 That path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. The policy path can also set the `SPAMMER` flag on the caller, which makes every later send one-sided.
@@ -194,7 +194,7 @@ The body can be omitted, in which case it is treated as an empty object.
 | --- | --- | --- |
 | staff_force_accept?<sup>1</sup> | boolean | Whether the friendship is created immediately without a pending request |
 
-<sup>1</sup> Honoured only when the caller has the `STAFF` flag, and a caller without it is treated as though the member were absent. The stored flag governs, so hidden staff status still qualifies
+<sup>1</sup> Honoured only when the caller has the `STAFF` flag, and a caller without it is treated as though the member were absent. Fluxer reads the stored flag, so hidden staff status still qualifies
 
 ### Response
 
@@ -261,7 +261,7 @@ The body can be omitted, in which case it is treated as an empty object and acce
 
 Acceptance replaces the pending records with FRIEND records on both accounts and emits [Relationship Update](/gateway/events/#relationship-update) to each. It then opens the pair's direct message channel for both accounts, creating the channel when none exists, and emits [Channel Create](/gateway/events/#channel-create) to each account whose open state changed. No other relationship operation opens one.
 
-Blocking replaces the caller's existing friendship or pending request with a BLOCKED record. Removing a friendship or an outgoing request also removes the target's reciprocal record and emits [Relationship Remove](/gateway/events/#relationship-remove) to the target. Removing an incoming request touches the caller's record alone. [Relationship Add](/gateway/events/#relationship-add) then reaches the caller for the block. Blocking an already blocked target changes nothing. Blocking never closes or deletes the pair's direct message channel.
+Blocking replaces the caller's existing friendship or pending request with a BLOCKED record. Removing a friendship or an outgoing request also removes the target's reciprocal record, and [Relationship Remove](/gateway/events/#relationship-remove) reaches the target. Removing an incoming request touches the caller's record alone. [Relationship Add](/gateway/events/#relationship-add) then reaches the caller for the block. Blocking an already blocked target changes nothing. Blocking never closes or deletes the pair's direct message channel.
 
 ### Rate limit
 

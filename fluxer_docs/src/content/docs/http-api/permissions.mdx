@@ -82,7 +82,7 @@ Every permission response field uses the decimal representation of an unsigned 6
 
 A value that is not a run of decimal digits is rejected with the validation code `INVALID_INTEGER_FORMAT`, and one above the maximum with `INTEGER_OUT_OF_INT64_RANGE`. A JSON number cannot represent the full 64-bit range, so a client MUST parse and combine masks with unsigned 64-bit integer arithmetic and MUST NOT compare them with string equality.
 
-Fluxer discards a bit it does not define. A role mutation intersects the requested mask with the set of defined bits before authorisation. An unassigned bit never appears in a response. A channel permission overwrite uses the same mask and the same defined-bit set, and Fluxer does not filter bits by channel type, so an overwrite can name a permission its channel does not use.
+Fluxer discards a bit it does not define. A role mutation intersects the requested mask with the set of defined bits before authorisation. An unassigned bit never appears in a response. A channel permission overwrite uses the same mask and the same defined-bit set. Fluxer does not filter bits by channel type, so an overwrite can name a permission its channel does not use.
 
 ### Feature-gated permission bits
 
@@ -98,9 +98,9 @@ On [Create guild role](#create-guild-role), a request that supplies `permissions
 
 ## Elevated permissions
 
-`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, and `MODERATE_MEMBERS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner exercises them without an enrolled authenticator.
+`KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, and `MODERATE_MEMBERS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner uses them without an enrolled authenticator.
 
-An operation that asserts an elevated permission the caller holds but cannot exercise returns 400 `TWO_FACTOR_REQUIRED`. The check runs after Fluxer has confirmed the permission itself, so a caller who lacks the permission outright receives 403 `MISSING_PERMISSIONS` instead.
+An operation that asserts an elevated permission the caller holds but cannot use returns 400 `TWO_FACTOR_REQUIRED`. The check runs after Fluxer has confirmed the permission itself, so a caller who lacks the permission outright receives 403 `MISSING_PERMISSIONS` instead.
 
 [List guild roles](#list-guild-roles) asserts no permission, so it never produces `TWO_FACTOR_REQUIRED`.
 
@@ -119,13 +119,13 @@ Otherwise Fluxer starts from the permissions of the everyone role, whose [snowfl
 When no channel was named, the union is the final result. When a channel was named, Fluxer applies that channel's stored [permission overwrites](/http-api/channels/#permission-overwrite-object) to the union in this order:
 
 1. The everyone role overwrite, by removing its denied bits and then adding its allowed bits.
-2. The overwrites targeting roles assigned to the member, accumulated into one union of allowed bits and one union of denied bits and applied as a single step in the same order. An allow on any one of the member's roles defeats a deny on another.
+2. The overwrites targeting roles assigned to the member, combined into one union of allowed bits and one union of denied bits and applied as a single step in the same order. An allow on any one of the member's roles defeats a deny on another.
 3. The member overwrite, again denied bits first and allowed bits second.
 
 When the named channel does not exist in the guild, Fluxer leaves the guild-level union unchanged.
 
 :::caution[`ADMINISTRATOR` grants every bit and skips overwrites]
-No deny overwrite in any channel restricts a member who holds the bit. Removing `ADMINISTRATOR` from every role they hold is the only remedy.
+No deny overwrite in any channel restricts a member who holds the bit. Removing `ADMINISTRATOR` from every role they hold is the only fix.
 :::
 
 A guild channel is visible when its channel-scoped mask contains `VIEW_CHANNEL`, or when the member holds temporary access through an in-flight voice or call transition. A category is also visible when the mask of at least one child channel contains `VIEW_CHANNEL`. Temporary access applies only to the channel it was granted on.
@@ -179,7 +179,7 @@ Roles are named permission masks that a guild assigns to any number of its membe
 | mentionable | boolean | Whether a member without `MENTION_EVERYONE` can mention the role |
 | unicode_emoji?<sup>3</sup> | ?string | The Unicode emoji shown beside the role name |
 
-<sup>1</sup> The everyone role is always at position 0, and every other role occupies a dense position from 1 through the number of remaining roles after any hierarchy mutation
+<sup>1</sup> The everyone role is always at position 0, and every other role has a dense position from 1 through the number of remaining roles after any hierarchy mutation
 
 <sup>2</sup> A null value means the role has no explicit member list position, and the role is then ordered by its hierarchy `position` instead
 
@@ -311,7 +311,7 @@ Creates a role and returns its [guild role object](#guild-role-object). Requires
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [guild role object](#guild-role-object) | Role was created |
-| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED`, or the guild role limit is reached and the request returns `MAX_GUILD_ROLES` |
+| 400 | [error response](/http-api/#error-response) | The caller cannot use `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED`, or the guild role limit is reached and the request returns `MAX_GUILD_ROLES` |
 | 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or requested a permission they do not hold, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD` |
 
@@ -331,7 +331,7 @@ Modifies one role and returns its [guild role object](#guild-role-object). Requi
 
 ### Limitations
 
-- A caller who is not the guild owner additionally requires [hierarchy authority](#role-hierarchy) over the target role and cannot grant a permission absent from their own effective guild permissions.
+- A caller who is not the guild owner also requires [hierarchy authority](#role-hierarchy) over the target role and cannot grant a permission absent from their own effective guild permissions.
 
 The everyone role is a valid target.
 
@@ -370,7 +370,7 @@ Every field is optional, and an omitted field leaves the stored value unchanged.
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [guild role object](#guild-role-object) | Role was modified, or every supplied value already matched the stored value |
-| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | The caller cannot use `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, does not outrank the target role, or requested a permission they do not hold, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`, or the role does not exist and returns `UNKNOWN_ROLE` |
 
@@ -391,14 +391,14 @@ Reorders the role hierarchy and returns 204 with an empty body. Requires [MANAGE
 ### Limitations
 
 - The caller needs [hierarchy authority](#role-hierarchy) over every role whose entry supplies a position differing from that role's stored `position`.
-- An entry that omits the field or restates the stored value is accepted without that check.
+- An entry that omits the field or repeats the stored value is accepted without that check.
 
 Fluxer holds a guild-wide lock while the operation runs, so a concurrent position write on the same guild returns 423 `GENERAL_ERROR`.
 
-Every role the caller can manage is sorted by its requested position in descending order, with a role that supplied no position keeping its stored position as the sort key and any remaining tie resolved by the current order. Fluxer then puts those roles back into the same set of slots they held before, so a role the caller cannot manage never moves. Every role other than the everyone role is then renumbered to a dense position. The highest-ranked role receives the number of roles other than the everyone role, the lowest-ranked role receives 1, and the everyone role stays at 0.
+Every role the caller can manage is sorted by its requested position in descending order. A role that supplied no position keeps its stored position as the sort key, and any remaining tie is resolved by the current order. Fluxer then puts those roles back into the same set of slots they held before, so a role the caller cannot manage never moves. Every role other than the everyone role is then renumbered to a dense position. The highest-ranked role receives the number of roles other than the everyone role, the lowest-ranked role receives 1, and the everyone role stays at 0.
 
 :::note[A requested position is an ordering key]
-The dense renumbering that follows the sort decides the stored value, so it can differ from the one requested. A client reads the resulting `position` from the [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) payload.
+Dense renumbering after the sort decides the stored value, so it can differ from the one requested. A client reads the resulting `position` from the [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) payload.
 :::
 
 ### Path parameters
@@ -409,21 +409,21 @@ The dense renumbering that follows the sort decides the stored value, so it can 
 
 ### JSON body
 
-The top-level body is an array of [role position objects](#role-position-object). The everyone role cannot appear in the array and is rejected with the validation code `CANNOT_REORDER_EVERYONE_ROLE`, and a role that does not exist in the guild is rejected with `INVALID_ROLE_ID`. Both checks run over the whole array before the hierarchy check and before any write.
+The top-level body is an array of [role position objects](#role-position-object). An entry naming the everyone role is rejected with the validation code `CANNOT_REORDER_EVERYONE_ROLE`, and a role that does not exist in the guild is rejected with `INVALID_ROLE_ID`. Both checks run over the whole array before the hierarchy check and before any write.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Positions were applied|
-| 400 | [error response](/http-api/#error-response) | An entry names the everyone role or a role that does not exist, or the caller cannot exercise `MANAGE_ROLES` because of the guild MFA level|
+| 400 | [error response](/http-api/#error-response) | An entry names the everyone role or a role that does not exist, or the caller cannot use `MANAGE_ROLES` because of the guild MFA level|
 | 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or supplied a position differing from the stored `position` of a role they do not outrank, each returning `MISSING_PERMISSIONS`|
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`|
 | 423 | [error response](/http-api/#error-response) | Another position write holds the guild lock, returning `GENERAL_ERROR` with `Retry-After: 2` |
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose position changed and emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose position changed. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch.
 
 ### Rate limit
 
@@ -457,14 +457,14 @@ The top-level body is an array of [role hoist position objects](#role-hoist-posi
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Hoist positions were applied|
-| 400 | [error response](/http-api/#error-response) | An entry names the everyone role or a role that does not exist, or the caller cannot exercise `MANAGE_ROLES` because of the guild MFA level|
+| 400 | [error response](/http-api/#error-response) | An entry names the everyone role or a role that does not exist, or the caller cannot use `MANAGE_ROLES` because of the guild MFA level|
 | 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or does not outrank a named role, each returning `MISSING_PERMISSIONS`|
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`|
 | 423 | [error response](/http-api/#error-response) | Another hoist position write holds the guild lock, returning `GENERAL_ERROR` with `Retry-After: 2` |
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role whose hoist position changed and emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with the changed roles to every session that can see the guild. Reasserting the current positions changes nothing, creates no audit entry, and emits no Dispatch.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role whose hoist position changed. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with the changed roles to every session that can see the guild. Setting the current positions again changes nothing, creates no audit entry, and emits no Dispatch.
 
 ### Rate limit
 
@@ -495,14 +495,14 @@ The request has no body.
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Hoist positions were cleared, or no role had one|
-| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED`|
+| 400 | [error response](/http-api/#error-response) | The caller cannot use `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED`|
 | 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member or lacks `MANAGE_ROLES`, each returning `MISSING_PERMISSIONS`|
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`|
 | 423 | [error response](/http-api/#error-response) | Another hoist position write holds the guild lock, returning `GENERAL_ERROR` with `Retry-After: 2` |
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose hoist position is cleared and emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose hoist position is cleared. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
 
 ### Rate limit
 
@@ -516,7 +516,7 @@ Deletes one role and returns 204 with an empty body. Requires [MANAGE_ROLES](#pe
 
 ### Limitations
 
-- A caller who is not the guild owner additionally requires [hierarchy authority](#role-hierarchy) over the target role.
+- A caller who is not the guild owner also requires [hierarchy authority](#role-hierarchy) over the target role.
 - The everyone role cannot be deleted.
 
 ### Path parameters
@@ -533,7 +533,7 @@ The request has no body.
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Role was deleted |
-| 400 | [error response](/http-api/#error-response) | The caller cannot exercise `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | The caller cannot use `MANAGE_ROLES` because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | Bearer credential is used and returns `ACCESS_DENIED`, the guild is unavailable and returns `MISSING_ACCESS`, or the caller is not a member, lacks `MANAGE_ROLES`, or does not outrank the target role, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and returns `UNKNOWN_GUILD`, or the role does not exist or is the everyone role, each returning `UNKNOWN_ROLE` |
 
@@ -543,7 +543,7 @@ A deleted role cannot be restored, and its permissions, colour, and hoist state 
 
 ### Side effects
 
-The operation removes the role from every member that held it, removes the role record, frees the guild role slot it occupied, and creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason. It emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. Subsequent member reads and [Guild Member Update](/gateway/events/#guild-member-update) payloads reflect the removed role.
+The operation removes the role from every member that held it, removes the role record, and frees the guild role slot it occupied. It creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason and emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. Subsequent member reads and [Guild Member Update](/gateway/events/#guild-member-update) payloads reflect the removed role.
 
 ### Rate limit
 

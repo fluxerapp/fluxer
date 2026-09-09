@@ -12,7 +12,7 @@ Nearly every route declares its own bucket. A bucket name can have a path parame
 
 Every bucket is also keyed by the caller's identity. An authenticated request is keyed by the account and its credential kind, and an OAuth2 bearer credential is keyed by the owning application as well. A session, a bot token, an Admin API key, and each bearer application therefore draw on separate allowances for the same account.
 
-A request that resolves no account is keyed by the client IP address, exactly for IPv4 and by the `/64` for IPv6, so clients in the same `/64` share an allowance. Where the deployment is configured to read the address from a header the request does not have, it is refused with 403 `FORBIDDEN` before any bucket is evaluated.
+A request that resolves no account is keyed by the client IP address, exactly for IPv4 and by the `/64` for IPv6, so clients in the same `/64` share an allowance. Where the deployment is configured to read the address from a header the request does not have, Fluxer refuses the request with 403 `FORBIDDEN` before evaluating any bucket.
 
 Fluxer also evaluates a route bucket against the global bucket unless the route declares that bucket exempt. The global bucket is keyed by the same identity, so a request that resolves no account consumes the global allowance of its client IP address.
 
@@ -24,7 +24,7 @@ The global window is one second. The default allowance is 50 requests per second
 
 Some operations enforce a further limit inside the handler. `RATE_LIMIT_BYPASS` exempts an account from none of them. [Limits enforced inside a handler](#limits-enforced-inside-a-handler) has the complete set.
 
-The global bucket is evaluated first. A route bucket is consumed only after the global check admits the request.
+A route bucket is consumed only after the global bucket admits the request.
 
 :::note[An allowance drains continuously]
 Every bucket is a leaky bucket. It admits at most the declared limit at once and refills continuously at that limit for each declared window, so a client that exhausts an allowance can send again as soon as enough of it has drained.
@@ -43,7 +43,7 @@ Four routes charge a second bucket. [Create private channel](/http-api/users/pri
 [Delete guild emoji](/http-api/guild-emojis/#delete-guild-emoji) and [Delete guild sticker](/http-api/guild-stickers/#delete-guild-sticker) declare both of their buckets ahead of the authentication policy and the request validation, so an unauthenticated or malformed request consumes the second bucket too. The `guild:emoji:delete:daily::guild_id` and `guild:sticker:delete:daily::guild_id` buckets draw on the global allowance, and one delete request evaluates it twice.
 
 :::caution[A global denial revokes a user session]
-When the global bucket denies a request authenticated by a user session token belonging to a non-bot account, Fluxer revokes that session token before writing the 429 and the client must authenticate again. A bot token, an OAuth2 access token, and an Admin API key are never revoked this way, and a route bucket denial never revokes a credential.
+When the global bucket denies a request authenticated by a non-bot account's user session token, Fluxer revokes that token before writing the 429. The client must authenticate again. A bot token, an OAuth2 access token, and an Admin API key are never revoked this way, and a route bucket denial never revokes a credential.
 :::
 
 A deployment can disable both buckets through instance configuration. While they are disabled, no response has an `X-RateLimit-*` header and no request is refused with 429 `RATE_LIMITED`. That switch also turns off the two login allowances. Every other [limit enforced inside a handler](#limits-enforced-inside-a-handler) stays in force.
@@ -63,7 +63,7 @@ The denial body has the two members of the ordinary [error response](/http-api/#
 
 <sup>1</sup> A limit enforced outside the route bucket middleware can reuse this body with its own code. [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) is the only live one, reporting `PHONE_RATE_LIMIT_EXCEEDED`
 
-<sup>2</sup> The locale is the one resolved for the request, which the account setting selects ahead of [Accept-Language](/http-api/#standard-request-headers)
+<sup>2</sup> The locale [resolved](/topics/locales/#negotiation) for the request, which the account setting selects ahead of [Accept-Language](/http-api/#standard-request-headers)
 
 <sup>3</sup> Never below 0.001, falling back to the whole-second `Retry-After` value when no fractional delay was computed
 
