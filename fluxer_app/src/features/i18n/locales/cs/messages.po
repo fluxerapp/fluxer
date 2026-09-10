@@ -355,7 +355,7 @@ msgstr "{count, plural, one {# záložka} few {# záložky} many {# záložek} o
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# komunita nalezena} other {# komunit nalezeno} few {# komunity nalezeny}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1951
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# komunita je dočasně nedostupná kvůli poruše \"flux kondenzátoru\".} few {# komunity jsou dočasně nedostupné kvůli poruše \"flux kondenzátoru\".} many {# komunit je dočasně nedostupných kvůli poruše \"flux kondenzátoru\".} other {# komunit je dočasně nedostupných kvůli poruše \"flux kondenzátoru\".}}"
 
@@ -959,6 +959,16 @@ msgstr "Předplatitel {premiumProductFullName} od {premiumSinceFormatted}"
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:58
 msgid "{premiumProductName} badge privacy"
 msgstr "Soukromí odznaku {premiumProductName}"
+
+#. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
+#: src/features/premium/config/PriceAnnouncementCampaign.ts:13
+msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
+msgstr "{premiumProductName} teď stojí méně. Od {effectiveDate} přejděte z {currentPrice} na {newPrice} měsíčně a dnes se nic neúčtuje."
+
+#. Nagbar body shown to yearly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are yearly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
+#: src/features/premium/config/PriceAnnouncementCampaign.ts:19
+msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
+msgstr "{premiumProductName} je nyní levnější. Přejděte z {currentPrice} na {newPrice} ročně od {effectiveDate} a dnes vám nic nebude účtováno."
 
 #. Link label that opens the premium perks list. premiumProductName is the premium plan name.
 #: src/features/app/components/dialogs/components/PerksButton.tsx:10
@@ -1884,6 +1894,11 @@ msgstr "název hostitele, např. {exampleDomain}"
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Pro uživatele Linuxu je k dispozici aktualizace. Vyberte formát balíčku pro tento systém a aplikace {productName} jej uloží lokálně."
 
+#. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
+msgstr "Je k dispozici nižší cena. Přechod začne platit <0>{listPriceEffectiveDate}</0> a nic jiného se nezmění."
+
 #. Duration label component for an elapsed call. Shown when the call lasted about a minute.
 #: src/features/channel/components/CallMessage.tsx:35
 msgid "a minute"
@@ -2176,7 +2191,7 @@ msgstr "Akce"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:370
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -2835,19 +2850,19 @@ msgstr "Ovládací prvky zarovnání jsou dostupné pouze na širších obrazovk
 msgid "All"
 msgstr "Vše"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:522
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Všechny <0/> za <1>{effectiveMonthlyPrice}/měsíc</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:469
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Vše <0/> za <1>{effectiveYearlyPrice}/rok</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:490
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:565
 msgid "All <0/> included with your subscription."
 msgstr "Všechny <0/> jsou součástí vašeho předplatného."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:437
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Vše <0/>, navždy. Žádné účtování, žádná obnovení."
 
@@ -5732,6 +5747,11 @@ msgstr "Zrušit, pokud si chcete vybrat jiné uživatelské jméno."
 msgid "Cancel import"
 msgstr "Zrušit import"
 
+#. Billing button that cancels a scheduled move to a lower subscription price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:819
+msgid "Cancel price change"
+msgstr "Zrušit změnu ceny"
+
 #. Accessible label and tooltip for the cancel-reply button in the reply bar.
 #: src/features/channel/components/ChannelReplyBar.tsx:66
 msgid "Cancel reply"
@@ -5743,13 +5763,13 @@ msgid "Cancel request"
 msgstr "Zrušit žádost"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:668
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
 msgid "Cancel scheduled switch"
 msgstr "Zrušit plánovanou změnu"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:683
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:842
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:138
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
@@ -5759,13 +5779,18 @@ msgstr "Zrušit předplatné"
 msgid "Cancel subscription?"
 msgstr "Zrušit předplatné?"
 
+#. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:645
+msgid "Cancel the scheduled change to move to the current price instead."
+msgstr "Zrušit naplánovanou změnu a místo toho přejít na aktuální cenu."
+
 #. Button or menu action label in the channel and chat message upload progress. Keep it concise.
 #: src/features/channel/components/MessageUploadProgress.tsx:21
 msgid "Cancel upload"
 msgstr "Zrušit nahrávání"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:823
 msgid "Cancel yearly upgrade"
 msgstr "Zrušit roční upgrade"
 
@@ -5775,7 +5800,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "Zrušit žádost o přátelství pro uživatele {displayName}?"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:358
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:433
 msgid "Canceling"
 msgstr "Ruší se"
 
@@ -5784,7 +5809,7 @@ msgstr "Ruší se"
 msgid "Cancellation"
 msgstr "Zrušení"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:424
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:499
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Zruší se k <0>{cancelDate}</0>. <1/> Zůstanou aktivní až do té doby."
 
@@ -6075,7 +6100,7 @@ msgid "Change password form"
 msgstr "Formulář pro změnu hesla"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:362
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:437
 msgid "Change scheduled"
 msgstr "Změna naplánována"
 
@@ -8881,19 +8906,24 @@ msgid "Couldn't cancel the friend request. Try again."
 msgstr "Nepodařilo se zrušit žádost o přátelství. Zkuste to znovu."
 
 #. Title of the generic fallback error modal shown when canceling a scheduled Plutonium billing cycle change fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:84
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:86
 msgid "Couldn't cancel your pending billing change"
 msgstr "Nepodařilo se zrušit čekající změnu fakturace"
 
 #. Title of the generic fallback error modal shown when cancelling a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:24
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:26
 msgid "Couldn't cancel your subscription"
 msgstr "Předplatné se nepodařilo zrušit"
 
 #. Title of the generic fallback error modal shown when changing the Plutonium billing cycle fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:78
 msgid "Couldn't change your billing cycle"
 msgstr "Nepodařilo se změnit fakturační cyklus"
+
+#. Title of the generic fallback error modal shown when moving a Plutonium subscription down to the current price fails.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:111
+msgid "Couldn't change your price"
+msgstr "Nepodařilo se změnit vaši cenu"
 
 #. Modal title shown when a user-initiated update check fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:104
@@ -9013,7 +9043,7 @@ msgid "Couldn't duplicate this channel"
 msgstr "Nepodařilo se zkopírovat tento kanál"
 
 #. Title of the generic fallback error modal shown when ending the Plutonium grace period fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:36
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:38
 msgid "Couldn't end your grace period"
 msgstr "Nepodařilo se ukončit zkušební období"
 
@@ -9091,7 +9121,7 @@ msgstr "Nepodařilo se otevřít výsledek hledání"
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:12
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
 msgid "Couldn't open the billing portal"
@@ -9110,7 +9140,7 @@ msgid "Couldn't process image"
 msgstr "Nepodařilo se zpracovat obrázek"
 
 #. Title of the generic fallback error modal shown when reactivating a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:50
 msgid "Couldn't reactivate your subscription"
 msgstr "Nepodařilo se znovu aktivovat vaše předplatné"
 
@@ -9991,7 +10021,7 @@ msgstr "Vlastní…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:608
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:748
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Zákaznický portál"
@@ -12955,7 +12985,7 @@ msgid "End date"
 msgstr "Datum konce"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:695
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:854
 msgid "End grace now"
 msgstr "Ukončit odklad hned"
 
@@ -13559,7 +13589,7 @@ msgstr "Vyprší po"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:348
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:41
 #: src/features/invite/components/InviteListItem.tsx:30
@@ -13596,7 +13626,7 @@ msgstr "Platnost vypršela {date}"
 msgid "Expired on {earliest}"
 msgstr "Platnost vypršela {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:379
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "Platnost vypršela dne <0>{expiredDate}</0>. <1/> již nejsou aktivní. Můžete se kdykoli znovu přihlásit k odběru."
 
@@ -15206,7 +15236,7 @@ msgstr "GIFy se nepodařilo načíst"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:368
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -15346,7 +15376,7 @@ msgstr "Dárek: brzy vyprší"
 msgid "Gift: grace period (still have access)"
 msgstr "Dárek: ochranná lhůta (stále máte přístup)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:409
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:484
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Darováno <0/> do <1>{giftEndDate}</1>. Automaticky se neobnovuje. Pro prodloužení uplatněte další dárkové kódy."
 
@@ -15510,7 +15540,7 @@ msgid "Got it"
 msgstr "Rozumím"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:350
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 msgid "Grace period"
 msgstr "Ochranná lhůta"
 
@@ -18254,8 +18284,8 @@ msgstr "Levá bublina"
 msgid "Legacy emoji slots"
 msgstr "Staré sloty pro emoji"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:462
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:484
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:537
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Legacy rate"
 msgstr "Původní cena"
 
@@ -18334,7 +18364,7 @@ msgstr "Knihovna: {count} z {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:366
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:441
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:19
 msgid "Lifetime"
 msgstr "Doživotní"
@@ -20239,11 +20269,11 @@ msgstr "Měsíčně"
 msgid "Monthly {monthlyPrice}"
 msgstr "Měsíčně {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:542
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:629
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Měsíční fakturace začíná dne <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:535
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Měsíční fakturace začíná <0>{pendingChangeDate}</0>. První měsíční poplatek: {pendingInitialPriceLabel}. Budoucí měsíční obnovení: {pendingRecurringPriceLabel}/měsíc."
 
@@ -21082,6 +21112,16 @@ msgstr "Nový mikrofon"
 msgid "New password"
 msgstr "Nové heslo"
 
+#. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
+msgid "New price scheduled for <0>{pendingChangeDate}</0>."
+msgstr "Nová cena naplánována na <0>{pendingChangeDate}</0>."
+
+#. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:587
+msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
+msgstr "Nová cena naplánovaná na <0>{pendingChangeDate}</0>. Obnovení budou od té doby stát {pendingTargetPriceLabel}."
+
 #. Default name for a newly created role in the community roles settings tab. Short label.
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
@@ -21847,7 +21887,7 @@ msgstr "Nelíbí se vám? Kdykoli to můžete vypnout."
 #. Short label in the Plutonium self serve refund section. Keep the tone plain and specific.
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/state/NewDeviceMonitoring.tsx:31
 msgid "Not now"
@@ -22074,6 +22114,11 @@ msgstr "Zapnuto"
 msgctxt "audit-log-boolean-value"
 msgid "On"
 msgstr "Zapnuto"
+
+#. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:372
+msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
+msgstr "Dne <0>{listPriceEffectiveDate}</0> se vaše předplatné přesune z {listPriceCurrentLabel} na {listPriceNewLabel}. Dnes vám nic nebude účtováno a zbytek vašeho předplatného zůstane beze změny."
 
 #. Short label in the display tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:22
@@ -23328,7 +23373,7 @@ msgid "Perks"
 msgstr "Výhody"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:354
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:429
 msgid "Perks paused"
 msgstr "Výhody pozastaveny"
 
@@ -24792,7 +24837,7 @@ msgstr "Reakce"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:744
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Znovu aktivovat"
@@ -25019,7 +25064,7 @@ msgid "Redeem for yourself"
 msgstr "Uplatnit pro sebe"
 
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
 msgid "Redeem gift code"
 msgstr "Uplatnit dárkový kód"
 
@@ -25717,7 +25762,7 @@ msgstr "Prahová hodnota obnovení (dny)"
 msgid "Renew window (days)"
 msgstr "Období obnovení (dny)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:699
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Obnoví se dne <0>{renewalDate}.</0>"
 
@@ -26445,8 +26490,8 @@ msgstr "Obnovit okno"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:596
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:736
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:740
 msgid "Resubscribe"
 msgstr "Znovu se přihlásit k odběru"
 
@@ -29764,26 +29809,31 @@ msgid "Something went wrong loading members. Try again later."
 msgstr "Při načítání členů se něco pokazilo. Zkuste to prosím později."
 
 #. Body of the generic fallback error modal shown when canceling a scheduled Plutonium billing cycle change fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:89
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:91
 msgid "Something went wrong while canceling your pending billing change. Please try again in a moment."
 msgstr "Při rušení čekající změny fakturace došlo k chybě. Zkuste to prosím za chvíli znovu."
 
 #. Body of the generic fallback error modal shown when cancelling a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:28
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:30
 msgid "Something went wrong while cancelling your subscription. Please try again in a moment."
 msgstr "Při rušení předplatného došlo k chybě. Zkuste to prosím za chvíli znovu."
 
 #. Body of the generic fallback error modal shown when changing the Plutonium billing cycle fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:82
 msgid "Something went wrong while changing your billing cycle. Please try again in a moment."
 msgstr "Při změně fakturačního cyklu došlo k chybě. Zkuste to prosím za chvíli znovu."
+
+#. Body of the generic fallback error modal shown when moving a Plutonium subscription down to the current price fails.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:116
+msgid "Something went wrong while changing your price. Please try again in a moment."
+msgstr "Něco se pokazilo při změně ceny. Zkuste to prosím za chvíli znovu."
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:48
 msgid "Something went wrong while connecting your account. You can close this tab and try again."
 msgstr "Při propojování účtu se něco pokazilo. Můžete zavřít tuto kartu a zkusit to znovu."
 
 #. Body of the generic fallback error modal shown when ending the Plutonium grace period fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:40
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:42
 msgid "Something went wrong while ending your grace period. Please try again in a moment."
 msgstr "Při ukončování zkušebního období se něco pokazilo. Zkuste to prosím za chvíli znovu."
 
@@ -29802,7 +29852,7 @@ msgstr "Při načítání protokolu aktivit se vyskytla chyba."
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:16
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
 msgid "Something went wrong while opening the billing portal. Please try again in a moment."
@@ -29814,7 +29864,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "Při přípravě této nálepky se něco pokazilo. Zkuste jiný soubor nebo to zkuste znovu za chvíli."
 
 #. Body of the generic fallback error modal shown when reactivating a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:52
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:54
 msgid "Something went wrong while reactivating your subscription. Please try again in a moment."
 msgstr "Při opětovné aktivaci vašeho předplatného se něco pokazilo. Zkuste to prosím za chvíli znovu."
 
@@ -30963,6 +31013,16 @@ msgstr "Přepínání mezi globálním profilem a profily pro jednotlivé komuni
 msgid "Switch device"
 msgstr "Přepnout zařízení"
 
+#. Button confirming a move of an active subscription down to the current price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:65
+msgid "Switch price"
+msgstr "Změnit cenu"
+
+#. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:804
+msgid "Switch to {listPriceNewLabel}"
+msgstr "Přejít na {listPriceNewLabel}"
+
 #. Tooltip on the density toggle when currently in dense mode.
 #. Tooltip on the layout toggle button in the role editor that switches the permission list to comfy layout.
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/LayoutToggleButtons.tsx:25
@@ -30983,13 +31043,13 @@ msgstr "Přepnout na přímé zadávání"
 
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:54
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:646
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:787
 msgid "Switch to monthly"
 msgstr "Přepnout na měsíční platbu"
 
 #. Billing confirmation title for changing an active subscription to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:49
 msgid "Switch to monthly billing?"
 msgstr "Přepnout na měsíční fakturaci?"
 
@@ -31030,6 +31090,11 @@ msgstr "Přepnout na předchozí komunitu nebo zprávy"
 msgid "Switch to single column"
 msgstr "Přepnout na jeden sloupec"
 
+#. Billing confirmation title for moving an active subscription down to the current price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:61
+msgid "Switch to the new price?"
+msgstr "Přepnout na novou cenu?"
+
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:290
 msgid "Switch to this account"
 msgstr "Přepnout na tento účet"
@@ -31047,13 +31112,13 @@ msgstr "Přepnout na dva sloupce"
 
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:50
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:642
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:783
 msgid "Switch to yearly"
 msgstr "Přepnout na roční"
 
 #. Billing confirmation title for changing an active subscription to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:42
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:45
 msgid "Switch to yearly billing?"
 msgstr "Přepnout na roční fakturaci?"
 
@@ -31285,23 +31350,23 @@ msgstr "Štítky ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Štítky musí mít 2 až {maxLength} znaků a musí být alfanumerické."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:242
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:291
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Vstoupí v platnost při příštím obnovení. Z vaší aktuální měsíční platby odečteme kredit {creditLabel}, takže váš první roční poplatek bude <0>{firstRenewalPriceLabel}</0>. Budoucí roční obnovení budou za {renewalPrice}/rok."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:251
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Vstoupí v platnost při příštím obnovení. Do té doby zůstane vaše předplatné měsíční a vaše další obnovení bude <0>{renewalPrice}/rok</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:260
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Vstoupí v platnost při příštím obnovení. Do té doby zůstane vaše předplatné roční a vaše další obnovení bude <0>{renewalPrice}/měsíc</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:279
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Vstoupí v platnost okamžitě. Může být uplatněna poměrná úprava prostřednictvím {PAYMENT_PROVIDER_NAME}. Vaše další obnovení bude <0>{renewalPrice}/měsíc</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:270
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:319
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Vstoupí v platnost okamžitě. Může být účtován poměrný poplatek prostřednictvím {PAYMENT_PROVIDER_NAME}. Vaše další obnovení bude <0>{renewalPrice}/rok</0>."
 
@@ -31726,6 +31791,11 @@ msgstr "Název byl vrácen na původní. Zkuste to prosím za chvíli znovu."
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:63
 msgid "The new channel will reuse the permissions from <0>{channelLabel}</0>."
 msgstr "Nový kanál znovu použije oprávnění z <0>{channelLabel}</0>."
+
+#. Toast success shown when a move down to the current price was already scheduled by an earlier request. {effectiveDate} is the localized date the new price starts.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:101
+msgid "The new price is already scheduled for {effectiveDate}."
+msgstr "Nová cena je již naplánovaná na {effectiveDate}."
 
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:58
 msgid "The new voice channel will reuse the permissions, user limit, and bitrate from <0>{channelLabel}</0>."
@@ -36152,7 +36222,7 @@ msgid "Visibility"
 msgstr "Viditelnost"
 
 #. Audit log community feature label for the Visionary premium feature.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:341
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:158
 msgid "Visionary"
 msgstr "Visionář"
@@ -36648,6 +36718,11 @@ msgstr "Do této země neposíláme ověřovací SMS. Zkuste mobilní číslo z 
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Pro tento účet jsme našli stávající předplatné {premiumProductFullName}. Spravujte ho v zabezpečeném platebním portálu, kde můžete aktualizovat platební údaje nebo zkontrolovat stav obnovení. Pokud jste právě zaplatili, počkejte minutu a znovu otevřete tuto stránku."
+
+#. Nagbar body announcing a price cut to people in Brazil who do not have a paid subscription. {premiumProductName} is the short paid product name. {monthlyPrice} and {yearlyPrice} are currency amounts already formatted and localized by code; never write an amount into the translation. Keep the tone calm and plain.
+#: src/features/premium/config/PriceAnnouncementCampaign.ts:7
+msgid "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
+msgstr "V Brazílii jsme snížili cenu {premiumProductName}. Nyní je to {monthlyPrice} měsíčně nebo {yearlyPrice} ročně."
 
 #. Required-action modal intro text for a generic verification requirement. productName is inserted by code. Keep it calm and concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:210
@@ -37284,15 +37359,15 @@ msgstr "Ročně {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Roční dárek"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:529
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:616
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Roční upgrade je naplánován na <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:601
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Roční upgrade naplánován na <0>{pendingChangeDate}</0>. První roční poplatek: {pendingInitialPriceLabel} po kreditu {pendingCreditPriceLabel}. Budoucí roční obnovení: {pendingRecurringPriceLabel}/rok."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:521
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:608
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Roční upgrade naplánován na <0>{pendingChangeDate}</0>. První roční poplatek: {pendingInitialPriceLabel}. Budoucí roční obnovení: {pendingRecurringPriceLabel}/rok."
 
@@ -38081,12 +38156,12 @@ msgid "You're in the voice channel"
 msgstr "Jste v hlasovém kanálu"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:37
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:40
 msgid "You're on a legacy rate no longer available to new subscribers."
 msgstr "Používáte starší tarif, který již není k dispozici pro nové předplatitele."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price; current list price is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:32
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:35
 msgid "You're on a legacy rate. The current price for this plan is {currentSubscriptionListPriceLabel}."
 msgstr "Používáte starší tarif. Aktuální cena tohoto plánu je {currentSubscriptionListPriceLabel}."
 
@@ -38367,7 +38442,7 @@ msgid "Your GPU encodes this in hardware."
 msgstr "Vaše GPU to kóduje hardwarově."
 
 #. Body text in the Plutonium subscription actions. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:32
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:34
 msgid "Your grace period has ended."
 msgstr "Vaše odkladná lhůta skončila."
 
@@ -38467,7 +38542,7 @@ msgid "Your payment was successful. You can now close this tab and return to the
 msgstr "Platba proběhla úspěšně. Nyní můžete zavřít tuto kartu a vrátit se do aplikace."
 
 #. Toast success shown after a scheduled Plutonium billing cycle change is canceled.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:72
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:74
 msgid "Your pending billing change has been canceled."
 msgstr "Vaše čekající změna fakturace byla zrušena."
 
@@ -38517,7 +38592,12 @@ msgstr "Sdílení obrazovky se nepodařilo publikovat s kompatibilním video kod
 msgid "Your stream is still live"
 msgstr "Váš stream je stále aktivní"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:393
+#. Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:106
+msgid "Your subscription can't move to the new price right now."
+msgstr "Vaše předplatné se momentálně nemůže přesunout na novou cenu."
+
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:468
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Vaše předplatné skončilo, ale <0/> zůstane aktivní do <1>{graceDate}</1>. Znovu se přihlaste před tímto datem, abyste si zachovali historii předplatného."
 
@@ -38527,26 +38607,26 @@ msgid "Your subscription failed to renew, but you still have access to {premiumP
 msgstr "Vaše předplatné se nepodařilo obnovit, ale stále máte přístup k výhodám {premiumProductName} až do {formattedGraceDate}. Jednejte hned, jinak přijdete o všechny výhody."
 
 #. Body text in the Plutonium subscription actions. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:46
 msgid "Your subscription has been reactivated."
 msgstr "Vaše předplatné bylo znovu aktivováno."
 
 #. Toast success shown after a Plutonium subscription is set to cancel at the end of the billing period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:20
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:22
 msgid "Your subscription has been set to cancel at the end of your billing period."
 msgstr "Vaše předplatné bude zrušeno na konci fakturačního období."
 
 #. Toast success shown after a Plutonium subscription is switched from yearly to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:60
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:62
 msgid "Your subscription has been switched to monthly billing."
 msgstr "Vaše předplatné bylo změněno na měsíční fakturaci."
 
 #. Toast success shown after a Plutonium subscription is switched from monthly to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:56
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:58
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Vaše předplatné bylo změněno na roční fakturaci."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Vaše předplatné je aktivní, ale výhody jsou dočasně pozastaveny."
 
@@ -38560,13 +38640,23 @@ msgstr "Vaše předplatné je již nastaveno na zrušení na konci fakturačníh
 msgid "Your subscription isn't set to cancel, so there's nothing to reactivate."
 msgstr "Vaše předplatné není nastaveno ke zrušení, takže není co znovu aktivovat."
 
+#. Toast success shown after a Plutonium subscription is scheduled to move down to the current price. {effectiveDate} is the localized date the new price starts.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:96
+msgid "Your subscription moves to the new price on {effectiveDate}."
+msgstr "Vaše předplatné přechází na novou cenu {effectiveDate}."
+
+#. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
+msgstr "Vaše předplatné stále končí <0>{cancelDate}</0>. Aktuální cena je nyní {listPriceNewLabel}. Pokud znovu aktivujete, můžete na ni přejít odsud."
+
 #. Toast success shown after a Plutonium subscription is scheduled to switch to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:68
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:70
 msgid "Your subscription will switch to monthly billing at the next renewal."
 msgstr "Vaše předplatné se při příštím obnovení přepne na měsíční fakturaci."
 
 #. Toast success shown after a Plutonium subscription is scheduled to switch to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:64
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:66
 msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "Vaše předplatné se při příštím obnovení změní na roční fakturaci."
 

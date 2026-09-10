@@ -355,7 +355,7 @@ msgstr "{count, plural, one {# 個書籤} other {# 個書籤}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1951
+#: src/features/app/components/layout/GuildsLayout.tsx:1953
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}因時空電容器故障，暫時無法使用"
 
@@ -959,6 +959,16 @@ msgstr "自 {premiumSinceFormatted} 起訂閱 {premiumProductFullName}"
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:58
 msgid "{premiumProductName} badge privacy"
 msgstr "{premiumProductName} 徽章隱私設定"
+
+#. Nagbar body shown to monthly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are monthly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
+#: src/features/premium/config/PriceAnnouncementCampaign.ts:13
+msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
+msgstr "{premiumProductName} 現在更便宜了。從每月 {currentPrice} 調整為每月 {newPrice}，生效日期為 {effectiveDate}，今天不會收取任何費用。"
+
+#. Nagbar body shown to yearly subscribers who are still billed the older, higher price after a price cut. {premiumProductName} is the short paid product name. {currentPrice} and {newPrice} are yearly currency amounts already formatted and localized by code, and {effectiveDate} is a date already formatted and localized by code; never write an amount or a date into the translation. Keep the tone calm and plain.
+#: src/features/premium/config/PriceAnnouncementCampaign.ts:19
+msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
+msgstr "{premiumProductName} 現在價格更優惠。從每年 {currentPrice} 調整為每年 {newPrice}，生效日期為 {effectiveDate}，今天不會收取任何費用。"
 
 #. Link label that opens the premium perks list. premiumProductName is the premium plan name.
 #: src/features/app/components/dialogs/components/PerksButton.tsx:10
@@ -1884,6 +1894,11 @@ msgstr "主機名稱，例如 {exampleDomain}"
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "有一個 Linux 桌面更新可用。請選擇此系統的套件格式，{productName} 會將其儲存到本地。"
 
+#. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
+msgstr "有較低的價格可供選擇。切換將於 <0>{listPriceEffectiveDate}</0> 生效，且不會改變其他任何設定。"
+
 #. Duration label component for an elapsed call. Shown when the call lasted about a minute.
 #: src/features/channel/components/CallMessage.tsx:35
 msgid "a minute"
@@ -2176,7 +2191,7 @@ msgstr "動作"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:370
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -2835,19 +2850,19 @@ msgstr "對齊控制項僅適用於較寬的螢幕"
 msgid "All"
 msgstr "全部"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:522
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "全部 <0/> 只要 <1>{effectiveMonthlyPrice}/月</1>。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:469
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "全部 <0/>，每年只要 <1>{effectiveYearlyPrice}</1>。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:490
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:565
 msgid "All <0/> included with your subscription."
 msgstr "您的訂閱方案包含所有<0/>。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:437
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "永久擁有所有 <0/>。無須付費，無須續訂。"
 
@@ -5732,6 +5747,11 @@ msgstr "如果你想選擇其他使用者名稱，請取消。"
 msgid "Cancel import"
 msgstr "取消匯入"
 
+#. Billing button that cancels a scheduled move to a lower subscription price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:819
+msgid "Cancel price change"
+msgstr "取消價格變更"
+
 #. Accessible label and tooltip for the cancel-reply button in the reply bar.
 #: src/features/channel/components/ChannelReplyBar.tsx:66
 msgid "Cancel reply"
@@ -5743,13 +5763,13 @@ msgid "Cancel request"
 msgstr "取消邀請"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:668
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
 msgid "Cancel scheduled switch"
 msgstr "取消排定的切換"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:683
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:842
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:138
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
@@ -5759,13 +5779,18 @@ msgstr "取消訂閱"
 msgid "Cancel subscription?"
 msgstr "取消訂閱？"
 
+#. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:645
+msgid "Cancel the scheduled change to move to the current price instead."
+msgstr "取消已排定的變更，改為目前的價格。"
+
 #. Button or menu action label in the channel and chat message upload progress. Keep it concise.
 #: src/features/channel/components/MessageUploadProgress.tsx:21
 msgid "Cancel upload"
 msgstr "取消上傳"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:823
 msgid "Cancel yearly upgrade"
 msgstr "取消年度升級"
 
@@ -5775,7 +5800,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "要取消對 {displayName} 的好友邀請嗎？"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:358
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:433
 msgid "Canceling"
 msgstr "正在取消"
 
@@ -5784,7 +5809,7 @@ msgstr "正在取消"
 msgid "Cancellation"
 msgstr "取消"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:424
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:499
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "將於 <0>{cancelDate}</0> 取消。<1/> 在此之前仍會保持啟用。"
 
@@ -6075,7 +6100,7 @@ msgid "Change password form"
 msgstr "變更密碼表單"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:362
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:437
 msgid "Change scheduled"
 msgstr "已排定變更"
 
@@ -8881,19 +8906,24 @@ msgid "Couldn't cancel the friend request. Try again."
 msgstr "無法取消好友邀請。請再試一次。"
 
 #. Title of the generic fallback error modal shown when canceling a scheduled Plutonium billing cycle change fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:84
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:86
 msgid "Couldn't cancel your pending billing change"
 msgstr "無法取消您待處理的帳單變更"
 
 #. Title of the generic fallback error modal shown when cancelling a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:24
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:26
 msgid "Couldn't cancel your subscription"
 msgstr "無法取消您的訂閱"
 
 #. Title of the generic fallback error modal shown when changing the Plutonium billing cycle fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:78
 msgid "Couldn't change your billing cycle"
 msgstr "無法變更您的帳單週期"
+
+#. Title of the generic fallback error modal shown when moving a Plutonium subscription down to the current price fails.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:111
+msgid "Couldn't change your price"
+msgstr "無法變更您的價格"
 
 #. Modal title shown when a user-initiated update check fails.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:104
@@ -9013,7 +9043,7 @@ msgid "Couldn't duplicate this channel"
 msgstr "無法複製此頻道"
 
 #. Title of the generic fallback error modal shown when ending the Plutonium grace period fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:36
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:38
 msgid "Couldn't end your grace period"
 msgstr "無法結束寬限期"
 
@@ -9091,7 +9121,7 @@ msgstr "無法開啟搜尋結果"
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:12
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
 msgid "Couldn't open the billing portal"
@@ -9110,7 +9140,7 @@ msgid "Couldn't process image"
 msgstr "無法處理圖片"
 
 #. Title of the generic fallback error modal shown when reactivating a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:50
 msgid "Couldn't reactivate your subscription"
 msgstr "無法重新啟用您的訂閱"
 
@@ -9991,7 +10021,7 @@ msgstr "自訂…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:608
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:748
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "客戶服務入口網站"
@@ -12955,7 +12985,7 @@ msgid "End date"
 msgstr "結束日期"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:695
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:854
 msgid "End grace now"
 msgstr "立即結束寬限期"
 
@@ -13559,7 +13589,7 @@ msgstr "有效期限"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:348
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:41
 #: src/features/invite/components/InviteListItem.tsx:30
@@ -13596,7 +13626,7 @@ msgstr "於 {date} 到期"
 msgid "Expired on {earliest}"
 msgstr "已於 {earliest} 到期"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:379
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "於 <0>{expiredDate}</0> 到期。<1/> 已不再啟用。您可以隨時重新訂閱。"
 
@@ -15206,7 +15236,7 @@ msgstr "GIF 無法載入"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:368
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -15346,7 +15376,7 @@ msgstr "贈禮：即將到期"
 msgid "Gift: grace period (still have access)"
 msgstr "贈禮：寬限期（仍可存取）"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:409
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:484
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "贈送 <0/>，直到 <1>{giftEndDate}</1>。不會自動續訂。兌換更多禮物代碼以延長。"
 
@@ -15510,7 +15540,7 @@ msgid "Got it"
 msgstr "我知道了"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:350
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 msgid "Grace period"
 msgstr "寬限期"
 
@@ -18254,8 +18284,8 @@ msgstr "左側工具提示"
 msgid "Legacy emoji slots"
 msgstr "舊版表情符號欄位"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:462
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:484
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:537
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Legacy rate"
 msgstr "舊費率"
 
@@ -18334,7 +18364,7 @@ msgstr "媒體庫：{count} / {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:366
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:441
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:19
 msgid "Lifetime"
 msgstr "終身"
@@ -20239,11 +20269,11 @@ msgstr "每月"
 msgid "Monthly {monthlyPrice}"
 msgstr "每月 {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:542
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:629
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "月費方案將於 <0>{pendingChangeDate}</0> 開始計費。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:535
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "月費方案將於 <0>{pendingChangeDate}</0> 開始。首次月費：{pendingInitialPriceLabel}。之後每月續訂：{pendingRecurringPriceLabel}/月。"
 
@@ -21082,6 +21112,16 @@ msgstr "新的麥克風"
 msgid "New password"
 msgstr "新密碼"
 
+#. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
+msgid "New price scheduled for <0>{pendingChangeDate}</0>."
+msgstr "新價格將於 <0>{pendingChangeDate}</0> 生效。"
+
+#. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:587
+msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
+msgstr "新價格預計於 <0>{pendingChangeDate}</0> 生效。之後續訂將為 {pendingTargetPriceLabel}。"
+
 #. Default name for a newly created role in the community roles settings tab. Short label.
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:48
 msgid "New role"
@@ -21847,7 +21887,7 @@ msgstr "不喜歡？隨時都能關閉。"
 #. Short label in the Plutonium self serve refund section. Keep the tone plain and specific.
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/state/NewDeviceMonitoring.tsx:31
 msgid "Not now"
@@ -22074,6 +22114,11 @@ msgstr "開啟"
 msgctxt "audit-log-boolean-value"
 msgid "On"
 msgstr "開啟"
+
+#. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:372
+msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
+msgstr "自 <0>{listPriceEffectiveDate}</0> 起，您的訂閱將從 {listPriceCurrentLabel} 變更為 {listPriceNewLabel}。今日不會收取任何費用，您訂閱的其他部分將保持不變。"
 
 #. Short label in the display tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:22
@@ -23328,7 +23373,7 @@ msgid "Perks"
 msgstr "福利"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:354
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:429
 msgid "Perks paused"
 msgstr "福利已暫停"
 
@@ -24792,7 +24837,7 @@ msgstr "心情回應"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:744
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "重新啟用"
@@ -25019,7 +25064,7 @@ msgid "Redeem for yourself"
 msgstr "兌換給自己"
 
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
 msgid "Redeem gift code"
 msgstr "兌換禮物代碼"
 
@@ -25717,7 +25762,7 @@ msgstr "續約門檻（天）"
 msgid "Renew window (days)"
 msgstr "續約視窗（天）"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:699
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "續訂於 <0>{renewalDate}</0>"
 
@@ -26445,8 +26490,8 @@ msgstr "還原視窗"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:596
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:600
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:736
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:740
 msgid "Resubscribe"
 msgstr "重新訂閱"
 
@@ -29764,26 +29809,31 @@ msgid "Something went wrong loading members. Try again later."
 msgstr "載入成員時發生錯誤。請稍後再試。"
 
 #. Body of the generic fallback error modal shown when canceling a scheduled Plutonium billing cycle change fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:89
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:91
 msgid "Something went wrong while canceling your pending billing change. Please try again in a moment."
 msgstr "取消您待處理的帳單變更時發生錯誤。請稍後再試一次。"
 
 #. Body of the generic fallback error modal shown when cancelling a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:28
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:30
 msgid "Something went wrong while cancelling your subscription. Please try again in a moment."
 msgstr "取消訂閱時發生錯誤。請稍後再試一次。"
 
 #. Body of the generic fallback error modal shown when changing the Plutonium billing cycle fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:80
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:82
 msgid "Something went wrong while changing your billing cycle. Please try again in a moment."
 msgstr "變更帳單週期時發生錯誤。請稍後再試一次。"
+
+#. Body of the generic fallback error modal shown when moving a Plutonium subscription down to the current price fails.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:116
+msgid "Something went wrong while changing your price. Please try again in a moment."
+msgstr "變更價格時發生問題。請稍後再試。"
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:48
 msgid "Something went wrong while connecting your account. You can close this tab and try again."
 msgstr "連結帳號時發生錯誤。您可以關閉此分頁再試一次。"
 
 #. Body of the generic fallback error modal shown when ending the Plutonium grace period fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:40
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:42
 msgid "Something went wrong while ending your grace period. Please try again in a moment."
 msgstr "結束寬限期時發生錯誤。請稍後再試一次。"
 
@@ -29802,7 +29852,7 @@ msgstr "載入活動記錄時發生問題。"
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:16
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
 msgid "Something went wrong while opening the billing portal. Please try again in a moment."
@@ -29814,7 +29864,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "準備貼圖時發生錯誤。請嘗試其他檔案，或稍後再試一次。"
 
 #. Body of the generic fallback error modal shown when reactivating a Plutonium subscription fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:52
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:54
 msgid "Something went wrong while reactivating your subscription. Please try again in a moment."
 msgstr "重新啟用訂閱時發生錯誤。請稍後再試一次。"
 
@@ -30963,6 +31013,16 @@ msgstr "切換您的全域個人檔案和各社群個人檔案"
 msgid "Switch device"
 msgstr "切換裝置"
 
+#. Button confirming a move of an active subscription down to the current price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:65
+msgid "Switch price"
+msgstr "切換價格"
+
+#. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:804
+msgid "Switch to {listPriceNewLabel}"
+msgstr "切換至 {listPriceNewLabel}"
+
 #. Tooltip on the density toggle when currently in dense mode.
 #. Tooltip on the layout toggle button in the role editor that switches the permission list to comfy layout.
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/LayoutToggleButtons.tsx:25
@@ -30983,13 +31043,13 @@ msgstr "切換為直接輸入"
 
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:54
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:646
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:787
 msgid "Switch to monthly"
 msgstr "改為月繳"
 
 #. Billing confirmation title for changing an active subscription to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:49
 msgid "Switch to monthly billing?"
 msgstr "要改為按月計費嗎？"
 
@@ -31030,6 +31090,11 @@ msgstr "切換到上一個社群或訊息"
 msgid "Switch to single column"
 msgstr "切換成單欄顯示"
 
+#. Billing confirmation title for moving an active subscription down to the current price.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:61
+msgid "Switch to the new price?"
+msgstr "要切換到新價格嗎？"
+
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:290
 msgid "Switch to this account"
 msgstr "切換到此帳號"
@@ -31047,13 +31112,13 @@ msgstr "切換成兩欄顯示"
 
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:50
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:642
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:783
 msgid "Switch to yearly"
 msgstr "改成年繳"
 
 #. Billing confirmation title for changing an active subscription to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:42
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:45
 msgid "Switch to yearly billing?"
 msgstr "要改成年繳嗎？"
 
@@ -31285,23 +31350,23 @@ msgstr "標籤 ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "標籤長度必須介於 2 到 {maxLength} 個字元，且只能包含英數字元。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:242
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:291
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "將於下次續訂時生效。我們會從您目前的月付款中抵扣 {creditLabel}，因此您的首次年費為 <0>{firstRenewalPriceLabel}</0>。之後每年的續訂費用為 {renewalPrice}/年。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:251
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "將於下次續訂時生效。您的訂閱在此之前仍為月繳，下次續訂時將變為 <0>{renewalPrice}/年</0>。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:260
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "將於下次續訂時生效。您的訂閱將維持年繳方案直到下次續訂，屆時您的續訂價格將會是 <0>{renewalPrice}/月</0>。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:279
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "立即生效。系統可能會透過 {PAYMENT_PROVIDER_NAME} 按比例調整。您的下一次續訂將為 <0>{renewalPrice}/月</0>。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:270
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:319
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "立即生效。{PAYMENT_PROVIDER_NAME}可能會收取按比例計算的費用。您的下次續訂將是<0>{renewalPrice}/年</0>。"
 
@@ -31726,6 +31791,11 @@ msgstr "名稱已還原。請稍後再試一次。"
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:63
 msgid "The new channel will reuse the permissions from <0>{channelLabel}</0>."
 msgstr "新頻道將會重複使用<0>{channelLabel}</0>的權限設定。"
+
+#. Toast success shown when a move down to the current price was already scheduled by an earlier request. {effectiveDate} is the localized date the new price starts.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:101
+msgid "The new price is already scheduled for {effectiveDate}."
+msgstr "新價格已排定於 {effectiveDate} 生效。"
 
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:58
 msgid "The new voice channel will reuse the permissions, user limit, and bitrate from <0>{channelLabel}</0>."
@@ -36152,7 +36222,7 @@ msgid "Visibility"
 msgstr "誰能看見"
 
 #. Audit log community feature label for the Visionary premium feature.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:341
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:158
 msgid "Visionary"
 msgstr "遠見者"
@@ -36648,6 +36718,11 @@ msgstr "我們不向此國家/地區傳送驗證簡訊。請嘗試使用其他�
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "我們發現此帳號已有 {premiumProductFullName} 訂閱。請前往安全帳務入口網站管理訂閱，以更新付款詳細資料或查看續訂狀態。如果您剛完成付款，請稍候一分鐘再重新開啟此頁面。"
+
+#. Nagbar body announcing a price cut to people in Brazil who do not have a paid subscription. {premiumProductName} is the short paid product name. {monthlyPrice} and {yearlyPrice} are currency amounts already formatted and localized by code; never write an amount into the translation. Keep the tone calm and plain.
+#: src/features/premium/config/PriceAnnouncementCampaign.ts:7
+msgid "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
+msgstr "我們在巴西調降了 {premiumProductName} 的價格。現在每月是 {monthlyPrice}，每年是 {yearlyPrice}。"
 
 #. Required-action modal intro text for a generic verification requirement. productName is inserted by code. Keep it calm and concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:210
@@ -37284,15 +37359,15 @@ msgstr "每年 {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "年度贈禮"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:529
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:616
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "預計於 <0>{pendingChangeDate}</0> 升級為年繳方案。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:601
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "預計於 <0>{pendingChangeDate}</0> 升級為年繳方案。首次年繳費用：{pendingInitialPriceLabel}（抵用金折抵 {pendingCreditPriceLabel}）。後續每年續訂費用：{pendingRecurringPriceLabel}/年。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:521
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:608
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "排定於 <0>{pendingChangeDate}</0> 升級為年繳。首次年繳費用：{pendingInitialPriceLabel}。未來每年續訂：{pendingRecurringPriceLabel}/年。"
 
@@ -38081,12 +38156,12 @@ msgid "You're in the voice channel"
 msgstr "您已在語音頻道中"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:37
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:40
 msgid "You're on a legacy rate no longer available to new subscribers."
 msgstr "您目前使用的是舊費率，新訂閱者無法再享有此費率。"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price; current list price is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:32
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:35
 msgid "You're on a legacy rate. The current price for this plan is {currentSubscriptionListPriceLabel}."
 msgstr "您目前享有舊版費率。此方案目前的價格為 {currentSubscriptionListPriceLabel}。"
 
@@ -38367,7 +38442,7 @@ msgid "Your GPU encodes this in hardware."
 msgstr "您的 GPU 以硬體編碼此內容。"
 
 #. Body text in the Plutonium subscription actions. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:32
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:34
 msgid "Your grace period has ended."
 msgstr "您的寬限期已結束。"
 
@@ -38467,7 +38542,7 @@ msgid "Your payment was successful. You can now close this tab and return to the
 msgstr "付款成功。您現在可以關閉此分頁並返回應用程式。"
 
 #. Toast success shown after a scheduled Plutonium billing cycle change is canceled.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:72
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:74
 msgid "Your pending billing change has been canceled."
 msgstr "您待處理的帳單變更已取消。"
 
@@ -38517,7 +38592,12 @@ msgstr "由於無法使用相容的視訊轉碼器發布您的螢幕畫面，因
 msgid "Your stream is still live"
 msgstr "你的直播仍在進行中"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:393
+#. Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:106
+msgid "Your subscription can't move to the new price right now."
+msgstr "您的訂閱目前無法移至新價格。"
+
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:468
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "您的訂閱已結束，但 <0/> 會保持啟用狀態直到 <1>{graceDate}</1>。請在此之前重新訂閱，以保留您的訂閱者歷史記錄。"
 
@@ -38527,26 +38607,26 @@ msgid "Your subscription failed to renew, but you still have access to {premiumP
 msgstr "您的訂閱續訂失敗，但您仍可使用 {premiumProductName} 的所有福利，直到 {formattedGraceDate} 為止。請立即採取行動，否則您將失去所有福利。"
 
 #. Body text in the Plutonium subscription actions. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:46
 msgid "Your subscription has been reactivated."
 msgstr "您的訂閱已重新啟用。"
 
 #. Toast success shown after a Plutonium subscription is set to cancel at the end of the billing period.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:20
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:22
 msgid "Your subscription has been set to cancel at the end of your billing period."
 msgstr "您的訂閱已設定為在帳單週期結束時取消。"
 
 #. Toast success shown after a Plutonium subscription is switched from yearly to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:60
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:62
 msgid "Your subscription has been switched to monthly billing."
 msgstr "您的訂閱已改為按月計費。"
 
 #. Toast success shown after a Plutonium subscription is switched from monthly to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:56
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:58
 msgid "Your subscription has been switched to yearly billing."
 msgstr "您的訂閱方案已改為按年計費。"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "您的訂閱已啟用，但福利暫時停止。"
 
@@ -38560,13 +38640,23 @@ msgstr "您的訂閱已設定在帳單週期結束時取消。"
 msgid "Your subscription isn't set to cancel, so there's nothing to reactivate."
 msgstr "您的訂閱未設定為取消，因此沒有任何項目可以重新啟用。"
 
+#. Toast success shown after a Plutonium subscription is scheduled to move down to the current price. {effectiveDate} is the localized date the new price starts.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:96
+msgid "Your subscription moves to the new price on {effectiveDate}."
+msgstr "您的訂閱將於 {effectiveDate} 起調整為新價格。"
+
+#. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
+msgstr "您的訂閱將於 <0>{cancelDate}</0> 結束。目前的價格為 {listPriceNewLabel}。如果您重新啟用，可以從這裡切換。"
+
 #. Toast success shown after a Plutonium subscription is scheduled to switch to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:68
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:70
 msgid "Your subscription will switch to monthly billing at the next renewal."
 msgstr "您的訂閱將在下次續訂時切換為按月計費。"
 
 #. Toast success shown after a Plutonium subscription is scheduled to switch to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:64
+#: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:66
 msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "您的訂閱將在下次續訂時切換為按年計費。"
 

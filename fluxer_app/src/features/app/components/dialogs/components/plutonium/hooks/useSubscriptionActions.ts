@@ -5,6 +5,8 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
+import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
+import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback, useState} from 'react';
@@ -91,6 +93,31 @@ const CANCEL_PENDING_CHANGE_FAILED_MESSAGE_DESCRIPTOR = msg({
 	comment:
 		'Body of the generic fallback error modal shown when canceling a scheduled Plutonium billing cycle change fails.',
 });
+const YOUR_SUBSCRIPTION_WILL_MOVE_TO_THE_NEW_PRICE_DESCRIPTOR = msg({
+	message: 'Your subscription moves to the new price on {effectiveDate}.',
+	comment:
+		'Toast success shown after a Plutonium subscription is scheduled to move down to the current price. {effectiveDate} is the localized date the new price starts.',
+});
+const THE_NEW_PRICE_IS_ALREADY_SCHEDULED_DESCRIPTOR = msg({
+	message: 'The new price is already scheduled for {effectiveDate}.',
+	comment:
+		'Toast success shown when a move down to the current price was already scheduled by an earlier request. {effectiveDate} is the localized date the new price starts.',
+});
+const SWITCH_TO_LIST_PRICE_UNAVAILABLE_DESCRIPTOR = msg({
+	message: "Your subscription can't move to the new price right now.",
+	comment:
+		'Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.',
+});
+const SWITCH_TO_LIST_PRICE_FAILED_TITLE_DESCRIPTOR = msg({
+	message: "Couldn't change your price",
+	comment:
+		'Title of the generic fallback error modal shown when moving a Plutonium subscription down to the current price fails.',
+});
+const SWITCH_TO_LIST_PRICE_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: 'Something went wrong while changing your price. Please try again in a moment.',
+	comment:
+		'Body of the generic fallback error modal shown when moving a Plutonium subscription down to the current price fails.',
+});
 const logger = new Logger('useSubscriptionActions');
 export const useSubscriptionActions = (countryCode?: string | null) => {
 	const {i18n} = useLingui();
@@ -100,6 +127,7 @@ export const useSubscriptionActions = (countryCode?: string | null) => {
 	const [loadingEndGrace, setLoadingEndGrace] = useState(false);
 	const [loadingChangeBillingCycle, setLoadingChangeBillingCycle] = useState<'monthly' | 'yearly' | null>(null);
 	const [loadingCancelPendingChange, setLoadingCancelPendingChange] = useState(false);
+	const [loadingSwitchToListPrice, setLoadingSwitchToListPrice] = useState(false);
 	const handleOpenCustomerPortal = useCallback(async () => {
 		setLoadingPortal(true);
 		try {
@@ -213,6 +241,36 @@ export const useSubscriptionActions = (countryCode?: string | null) => {
 		},
 		[countryCode, i18n],
 	);
+	const handleSwitchToListPrice = useCallback(async () => {
+		setLoadingSwitchToListPrice(true);
+		try {
+			const result = await PremiumCommands.switchSubscriptionToListPrice();
+			await PremiumCommands.refreshPremiumState(countryCode ?? undefined);
+			if (result.status === 'ineligible') {
+				logger.warn('List price switch refused', {reason: result.reason});
+				ToastCommands.error(i18n._(SWITCH_TO_LIST_PRICE_UNAVAILABLE_DESCRIPTOR));
+				return;
+			}
+			const effectiveDate = getFormattedLongDate(result.effective_at, LocaleUtils.getCurrentLocale());
+			ToastCommands.success(
+				result.status === 'already_scheduled'
+					? i18n._(THE_NEW_PRICE_IS_ALREADY_SCHEDULED_DESCRIPTOR, {effectiveDate})
+					: i18n._(YOUR_SUBSCRIPTION_WILL_MOVE_TO_THE_NEW_PRICE_DESCRIPTOR, {effectiveDate}),
+			);
+		} catch (error) {
+			logger.error('Failed to switch subscription to the current list price', error);
+			showPremiumActionErrorModal(
+				error,
+				{
+					fallbackTitle: SWITCH_TO_LIST_PRICE_FAILED_TITLE_DESCRIPTOR,
+					fallbackMessage: SWITCH_TO_LIST_PRICE_FAILED_MESSAGE_DESCRIPTOR,
+				},
+				'app.plutonium.use-subscription-actions.switch-to-list-price.generic-error-modal',
+			);
+		} finally {
+			setLoadingSwitchToListPrice(false);
+		}
+	}, [countryCode, i18n]);
 	const handleCancelPendingSubscriptionChange = useCallback(async () => {
 		setLoadingCancelPendingChange(true);
 		try {
@@ -240,11 +298,13 @@ export const useSubscriptionActions = (countryCode?: string | null) => {
 		loadingEndGrace,
 		loadingChangeBillingCycle,
 		loadingCancelPendingChange,
+		loadingSwitchToListPrice,
 		handleOpenCustomerPortal,
 		handleCancelSubscription,
 		handleEndPremiumGracePeriod,
 		handleReactivateSubscription,
 		handleChangeSubscriptionBillingCycle,
 		handleCancelPendingSubscriptionChange,
+		handleSwitchToListPrice,
 	};
 };

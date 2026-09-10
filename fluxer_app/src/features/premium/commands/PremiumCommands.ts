@@ -14,6 +14,7 @@ import type {
 	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
+	SwitchToListPriceResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 
 const logger = new Logger('Premium');
@@ -348,6 +349,18 @@ export async function changeSubscriptionBillingCycle(
 		logger.info('Subscription billing cycle changed', {billingCycle, effectiveAt});
 	} catch (error) {
 		logger.error('Failed to change subscription billing cycle', error);
+		throw error;
+	}
+}
+
+export async function switchSubscriptionToListPrice(): Promise<SwitchToListPriceResponse> {
+	try {
+		const response = await http.post<SwitchToListPriceResponse>(Endpoints.PREMIUM_SWITCH_TO_LIST_PRICE);
+		invalidateCurrentSubscriptionPriceCache();
+		logger.info('Subscription list price switch requested', response.body);
+		return response.body;
+	} catch (error) {
+		logger.error('Failed to switch subscription to the current list price', error);
 		throw error;
 	}
 }

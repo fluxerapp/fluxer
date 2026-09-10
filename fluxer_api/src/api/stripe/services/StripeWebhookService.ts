@@ -309,6 +309,10 @@ export class StripeWebhookService {
 				await this.safeMirrorUpsert(event, () => this.billingRepository.paymentMethods.markDetached(pm.id, new Date()));
 				break;
 			}
+			case 'mandate.updated': {
+				await this.handleMandateUpdated(event.data.object as Stripe.Mandate);
+				break;
+			}
 			case 'payment_intent.created':
 			case 'payment_intent.processing':
 			case 'payment_intent.succeeded':
@@ -367,6 +371,18 @@ export class StripeWebhookService {
 				Logger.debug({eventType: event.type, eventId: event.id}, 'Stripe webhook event type not handled');
 			}
 		}
+	}
+
+	private async handleMandateUpdated(mandate: Stripe.Mandate): Promise<void> {
+		if (mandate.status !== 'inactive') {
+			return;
+		}
+		const paymentMethodId =
+			typeof mandate.payment_method === 'string' ? mandate.payment_method : (mandate.payment_method?.id ?? null);
+		Logger.warn(
+			{mandateId: mandate.id, paymentMethodId, status: mandate.status},
+			'Stripe mandate is no longer active; recurring payments on this payment method will fail',
+		);
 	}
 
 	private async resolveRefundCustomerId(refund: Stripe.Refund): Promise<string | null> {

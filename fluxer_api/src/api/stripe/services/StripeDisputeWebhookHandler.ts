@@ -5,11 +5,13 @@ import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type Stripe from 'stripe';
+import type {UserRow} from '../../database/types/UserTypes';
 import type {IDonationRepository} from '../../donation/IDonationRepository';
 import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
 import type {UserCacheService} from '../../infrastructure/UserCacheService';
 import {Logger} from '../../Logger';
+import {getBillingRepository} from '../../middleware/ServiceRegistry';
 import type {GiftCode} from '../../models/GiftCode';
 import type {User} from '../../models/User';
 import type {IUserRepository} from '../../user/IUserRepository';
@@ -18,6 +20,8 @@ import {mapUserToPrivateResponse} from '../../user/UserMappers';
 import {extractId} from '../StripeUtils';
 import type {StripeGiftReversalHandler} from './StripeGiftReversalHandler';
 import type {StripePaymentFraudService} from './StripePaymentFraudService';
+
+export const REFUND_ALLOWANCE_CLAIM_PREFIX = 'refund-allowance';
 
 export class StripeDisputeWebhookHandler {
 	constructor(
@@ -105,7 +109,7 @@ export class StripeDisputeWebhookHandler {
 			}
 			Logger.debug(
 				{userId: payment.userId},
-				'User unsuspended after chargeback withdrawal - 30 day purchase block applied',
+				'User unsuspended after chargeback withdrawal - 30 day self-serve refund cooldown applied',
 			);
 		}
 	}
@@ -167,25 +171,94 @@ export class StripeDisputeWebhookHandler {
 			);
 			user = foundUser;
 		}
-		if (!user.firstRefundAt) {
-			const updatedUser = await this.userRepository.patchUpsert(user.id, {first_refund_at: new Date()}, user.toRow());
-			await this.dispatchUser(updatedUser);
+		const claimKeys = await this.resolveRefundAllowanceClaimKeys(charge);
+		if (claimKeys.length === 0) {
 			Logger.debug(
 				{userId: user.id, chargeId: charge.id, paymentIntentId},
-				'First refund recorded - 30 day purchase block applied',
+				'Refund was issued by Fluxer - not counted against the user refund allowance',
 			);
-		} else {
-			const updatedUser = await this.userRepository.patchUpsert(
-				user.id,
-				{premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED},
-				user.toRow(),
-			);
-			await this.dispatchUser(updatedUser);
-			Logger.debug(
-				{userId: user.id, chargeId: charge.id, paymentIntentId},
-				'Second refund recorded - permanent purchase block applied',
-			);
+			return;
 		}
+		const claimedKeys: Array<string> = [];
+		let alreadyCounted = false;
+		for (const claimKey of claimKeys) {
+			const claim = await getBillingRepository().webhookEvents.tryClaim(claimKey);
+			if (claim === 'claimed') {
+				claimedKeys.push(claimKey);
+			} else {
+				alreadyCounted = true;
+			}
+		}
+		if (alreadyCounted) {
+			for (const claimKey of claimedKeys) {
+				await getBillingRepository().webhookEvents.markProcessed(claimKey);
+			}
+			Logger.debug(
+				{userId: user.id, chargeId: charge.id, paymentIntentId, claimKeys},
+				'Refund already counted against the user refund allowance',
+			);
+			return;
+		}
+		const isFirstRefund = !user.firstRefundAt;
+		const patch: Partial<UserRow> = isFirstRefund
+			? {first_refund_at: new Date()}
+			: {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		let updatedUser: User;
+		try {
+			updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
+		} catch (error) {
+			for (const claimKey of claimedKeys) {
+				await getBillingRepository().webhookEvents.releaseClaim(claimKey);
+			}
+			throw error;
+		}
+		for (const claimKey of claimedKeys) {
+			await getBillingRepository().webhookEvents.markProcessed(claimKey);
+		}
+		await this.dispatchUser(updatedUser);
+		Logger.debug(
+			{userId: user.id, chargeId: charge.id, paymentIntentId},
+			isFirstRefund
+				? 'First refund recorded - 30 day self-serve refund cooldown applied'
+				: 'Second refund recorded - permanent purchase block applied',
+		);
+	}
+
+	private async resolveRefundAllowanceClaimKeys(charge: Stripe.Charge): Promise<Array<string>> {
+		const chargeClaimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${charge.id}`;
+		const inlined = charge.refunds?.data ?? [];
+		const refunds = (
+			inlined.length > 0
+				? inlined.map((refund) => ({
+						id: refund.id,
+						createdAtMs: refund.created * 1000,
+						status: refund.status,
+						rejectionReason: refund.metadata?.rejection_reason ?? null,
+					}))
+				: (await getBillingRepository().refunds.listByCharge(charge.id)).map((row) => ({
+						id: row.provider_id,
+						createdAtMs: row.stripe_created_at?.getTime() ?? 0,
+						status: row.status,
+						rejectionReason: row.metadata?.get('rejection_reason') ?? null,
+					}))
+		).filter((refund) => refund.status !== 'failed' && refund.status !== 'canceled');
+		if (refunds.length === 0) {
+			Logger.warn(
+				{chargeId: charge.id},
+				'No refund records found for refunded charge; counting the charge once against the user refund allowance',
+			);
+			return [chargeClaimKey];
+		}
+		const customerRefunds = refunds
+			.filter((refund) => refund.rejectionReason === null)
+			.sort((left, right) => left.createdAtMs - right.createdAtMs || left.id.localeCompare(right.id));
+		const earliest = customerRefunds[0];
+		const latest = customerRefunds[customerRefunds.length - 1];
+		if (!earliest || !latest) {
+			return [];
+		}
+		const latestClaimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${latest.id}`;
+		return latest.id === earliest.id ? [chargeClaimKey, latestClaimKey] : [latestClaimKey];
 	}
 
 	private async handleGiftChargeback(giftCode: GiftCode, dispute: Stripe.Dispute): Promise<void> {

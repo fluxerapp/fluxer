@@ -106,6 +106,9 @@ export const usePremiumData = (
 		currentSubscriptionPrice,
 		currentSubscriptionPriceLabel,
 		currentSubscriptionListPriceLabel,
-		isCurrentSubscriptionGrandfathered: currentSubscriptionPrice?.is_grandfathered ?? false,
+		isCurrentSubscriptionGrandfathered:
+			currentSubscriptionPrice?.is_grandfathered === true &&
+			(currentSubscriptionPrice.list_amount_minor == null ||
+				currentSubscriptionPrice.list_amount_minor > currentSubscriptionPrice.amount_minor),
 	};
 };

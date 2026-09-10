@@ -122,6 +122,7 @@ export const Endpoints = {
 	PREMIUM_REACTIVATE_SUBSCRIPTION: '/premium/reactivate-subscription',
 	PREMIUM_CHANGE_SUBSCRIPTION: '/premium/change-subscription',
 	PREMIUM_CANCEL_PENDING_SUBSCRIPTION_CHANGE: '/premium/cancel-pending-subscription-change',
+	PREMIUM_SWITCH_TO_LIST_PRICE: '/premium/switch-to-list-price',
 	PREMIUM_GRACE_END: '/premium/grace/end',
 	PREMIUM_REFUND_ELIGIBILITY: '/premium/refund-eligibility',
 	PREMIUM_REFUND_LATEST: '/premium/refund-latest',

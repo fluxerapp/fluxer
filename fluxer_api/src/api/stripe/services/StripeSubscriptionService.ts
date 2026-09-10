@@ -10,7 +10,10 @@ import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment
 import {StripeSubscriptionAlreadyCancelingError} from '@fluxer/errors/src/domains/payment/StripeSubscriptionAlreadyCancelingError';
 import {StripeSubscriptionNotCancelingError} from '@fluxer/errors/src/domains/payment/StripeSubscriptionNotCancelingError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {CurrentSubscriptionPriceResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import type {
+	CurrentSubscriptionPriceResponse,
+	SwitchToListPriceResponse,
+} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
@@ -25,7 +28,7 @@ import type {User} from '../../models/User';
 import type {IUserRepository} from '../../user/IUserRepository';
 import {mapUserToPrivateResponse} from '../../user/UserMappers';
 import type {Currency} from '../../utils/CurrencyUtils';
-import type {RecurringBillingCycle} from '../ProductRegistry';
+import type {ProductInfo, RecurringBillingCycle} from '../ProductRegistry';
 import {
 	getPrimarySubscriptionItem,
 	getSubscriptionEntitlementPeriodEndUnix,
@@ -36,12 +39,80 @@ import {extractId} from '../StripeUtils';
 
 type BillingCycleChangeEffectiveAt = 'now' | 'period_end';
 
+const CHARGEABLE_SUBSCRIPTION_STATUSES = new Set<Stripe.Subscription.Status>(['active', 'trialing']);
+
+function mapStripeIds(values: Array<string | {id: string}> | null | undefined): Array<string> | null {
+	const ids = (values ?? []).map((value) => extractId(value)).filter((id): id is string => id !== null);
+	return ids.length > 0 ? ids : null;
+}
+
+function mapSchedulePhaseDiscounts(
+	discounts:
+		| Array<{
+				coupon: string | {id: string} | null;
+				discount: unknown;
+				promotion_code: string | {id: string} | null;
+		  }>
+		| null
+		| undefined,
+): Array<Stripe.SubscriptionScheduleUpdateParams.Phase.Discount> | null {
+	const mapped = (discounts ?? [])
+		.map((discount): Stripe.SubscriptionScheduleUpdateParams.Phase.Discount | null => {
+			const coupon = extractId(discount.coupon);
+			if (coupon) {
+				return {coupon};
+			}
+			const promotionCode = extractId(discount.promotion_code);
+			if (promotionCode) {
+				return {promotion_code: promotionCode};
+			}
+			return typeof discount.discount === 'string' ? {discount: discount.discount} : null;
+		})
+		.filter((discount): discount is Stripe.SubscriptionScheduleUpdateParams.Phase.Discount => discount !== null);
+	return mapped.length > 0 ? mapped : null;
+}
+
+function mapSchedulePhaseAddInvoiceItems(
+	addInvoiceItems: Array<Stripe.SubscriptionSchedule.Phase.AddInvoiceItem> | null | undefined,
+): Array<Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem> | null {
+	const mapped = (addInvoiceItems ?? [])
+		.map((addInvoiceItem) => {
+			const price = extractId(addInvoiceItem.price);
+			if (!price) {
+				return null;
+			}
+			const mappedItem: Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem = {
+				price,
+				quantity: addInvoiceItem.quantity ?? 1,
+				period: addInvoiceItem.period,
+			};
+			const taxRates = mapStripeIds(addInvoiceItem.tax_rates);
+			if (taxRates) {
+				mappedItem.tax_rates = taxRates;
+			}
+			const discounts = mapSchedulePhaseDiscounts(addInvoiceItem.discounts);
+			if (discounts) {
+				mappedItem.discounts = discounts;
+			}
+			if (addInvoiceItem.metadata) {
+				mappedItem.metadata = addInvoiceItem.metadata;
+			}
+			return mappedItem;
+		})
+		.filter(
+			(addInvoiceItem): addInvoiceItem is Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem =>
+				addInvoiceItem !== null,
+		);
+	return mapped.length > 0 ? mapped : null;
+}
+
 export class StripeSubscriptionService {
 	constructor(
 		private stripe: Stripe | null,
 		private userRepository: IUserRepository,
 		private productRegistry: {
 			getRecurringSubscriptionPriceId: (billingCycle: RecurringBillingCycle, currency: string) => string | null;
+			getProduct: (priceId: string) => ProductInfo | null;
 		},
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
@@ -251,7 +322,7 @@ export class StripeSubscriptionService {
 				return;
 			}
 			await this.stripe.subscriptionSchedules.release(schedule.id, {
-				preserve_cancel_date: false,
+				preserve_cancel_date: Boolean(subscription.cancel_at || subscription.cancel_at_period_end),
 			});
 			const releasedSubscription = await this.stripe.subscriptions.retrieve(subscription.id, {
 				expand: ['items.data.price'],
@@ -268,7 +339,7 @@ export class StripeSubscriptionService {
 				);
 			}
 			const patch: Record<string, unknown> = {
-				premium_will_cancel: false,
+				premium_will_cancel: Boolean(releasedSubscription.cancel_at || releasedSubscription.cancel_at_period_end),
 			};
 			const computedPremiumUntil = getSubscriptionPremiumPeriodEnd(releasedSubscription);
 			if (computedPremiumUntil) {
@@ -433,6 +504,142 @@ export class StripeSubscriptionService {
 		}
 	}
 
+	async switchToCurrentListPrice(userId: UserID): Promise<SwitchToListPriceResponse> {
+		if (!this.stripe) {
+			throw new StripePaymentNotAvailableError();
+		}
+		const user = await this.userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		if (!user.stripeSubscriptionId) {
+			throw new StripeNoActiveSubscriptionError();
+		}
+		const lockKey = `list_price_switch_lock:${user.id}`;
+		const lockToken = await this.cacheService.acquireLock(
+			lockKey,
+			StripeSubscriptionService.LIST_PRICE_SWITCH_LOCK_TTL_SECONDS,
+		);
+		if (!lockToken) {
+			Logger.debug(
+				{userId, subscriptionId: user.stripeSubscriptionId, lockKey},
+				'List price switch skipped because another switch is already in flight',
+			);
+			return {status: 'ineligible', reason: 'switch_in_progress'};
+		}
+		try {
+			const subscription = await this.stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
+				expand: ['items.data.price', 'schedule'],
+			});
+			const item = getPrimarySubscriptionItem(subscription);
+			if (!item?.id || !item.price?.recurring || !item.price.currency || item.price.unit_amount == null) {
+				return {status: 'ineligible', reason: 'unsupported_subscription'};
+			}
+			if (!CHARGEABLE_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+				return {status: 'ineligible', reason: 'subscription_not_chargeable'};
+			}
+			if (subscription.cancel_at != null || subscription.cancel_at_period_end) {
+				return {status: 'ineligible', reason: 'subscription_cancelling'};
+			}
+			const billingCycle = this.getBillingCycleFromInterval(item.price.recurring.interval);
+			if (!billingCycle) {
+				return {status: 'ineligible', reason: 'unsupported_subscription'};
+			}
+			const currency = item.price.currency.toUpperCase() as Currency;
+			const targetPriceId = this.productRegistry.getRecurringSubscriptionPriceId(billingCycle, currency);
+			if (!targetPriceId) {
+				return {status: 'ineligible', reason: 'no_list_price'};
+			}
+			if (targetPriceId === item.price.id) {
+				return {status: 'ineligible', reason: 'already_on_list_price'};
+			}
+			const targetProduct = this.productRegistry.getProduct(targetPriceId);
+			if (!targetProduct || targetProduct.currency !== currency) {
+				return {status: 'ineligible', reason: 'no_list_price'};
+			}
+			const targetAmountMinor = await this.getListPriceAmountMinor(targetPriceId);
+			const currentAmountMinor = item.price.unit_amount;
+			if (targetAmountMinor == null) {
+				return {status: 'ineligible', reason: 'no_list_price'};
+			}
+			if (targetAmountMinor >= currentAmountMinor) {
+				return {status: 'ineligible', reason: 'not_a_price_decrease'};
+			}
+			const periodEnd = getSubscriptionEntitlementPeriodEndUnix(subscription, item);
+			if (!periodEnd || periodEnd <= Math.floor(Date.now() / 1000)) {
+				return {status: 'ineligible', reason: 'missing_period_end'};
+			}
+			const switched = {
+				effective_at: new Date(periodEnd * 1000).toISOString(),
+				target_price_id: targetPriceId,
+				target_amount_minor: targetAmountMinor,
+				current_amount_minor: currentAmountMinor,
+				currency,
+			};
+			const schedule = await this.loadSubscriptionSchedule(subscription.schedule);
+			const pendingSchedule =
+				schedule && (schedule.status === 'active' || schedule.status === 'not_started') ? schedule : null;
+			if (pendingSchedule) {
+				if (this.subscriptionScheduleHasFutureTargetPrice(pendingSchedule, targetPriceId)) {
+					Logger.debug(
+						{userId, subscriptionId: subscription.id, scheduleId: pendingSchedule.id, targetPriceId},
+						'List price switch already scheduled for period end',
+					);
+					return {status: 'already_scheduled', ...switched};
+				}
+				if (pendingSchedule.end_behavior === 'cancel') {
+					return {status: 'ineligible', reason: 'cancellation_managed_by_schedule'};
+				}
+				if (this.subscriptionScheduleHasPendingBillingCycleChange(pendingSchedule, subscription)) {
+					return {status: 'ineligible', reason: 'conflicting_pending_change'};
+				}
+			}
+			await this.scheduleBillingCycleChangeAtPeriodEnd({
+				user,
+				subscription,
+				item,
+				currentBillingCycle: billingCycle,
+				targetBillingCycle: billingCycle,
+				targetPriceId,
+				clearCancellation: false,
+			});
+			Logger.debug(
+				{
+					userId,
+					subscriptionId: subscription.id,
+					billingCycle,
+					currency,
+					currentPriceId: item.price.id,
+					targetPriceId,
+					currentAmountMinor,
+					targetAmountMinor,
+					periodEnd,
+				},
+				'Subscription switch to current list price scheduled for period end',
+			);
+			return {status: 'scheduled', ...switched};
+		} catch (error: unknown) {
+			Logger.error(
+				{error, userId, subscriptionId: user.stripeSubscriptionId},
+				'Failed to switch subscription to the current list price',
+			);
+			if (error instanceof StripeError || error instanceof StripeInvalidProductConfigurationError) {
+				throw error;
+			}
+			const message = error instanceof Error ? error.message : 'Failed to switch subscription to the list price';
+			throw new StripeError(message);
+		} finally {
+			try {
+				const released = await this.cacheService.releaseLock(lockKey, lockToken);
+				if (!released) {
+					Logger.warn({userId, lockKey}, 'List price switch lock token no longer matched on release');
+				}
+			} catch (error) {
+				Logger.error({error, userId, lockKey}, 'Failed to release list price switch lock');
+			}
+		}
+	}
+
 	private async scheduleBillingCycleChangeAtPeriodEnd({
 		user,
 		subscription,
@@ -440,6 +647,7 @@ export class StripeSubscriptionService {
 		currentBillingCycle,
 		targetBillingCycle,
 		targetPriceId,
+		clearCancellation = true,
 	}: {
 		user: User;
 		subscription: Stripe.Subscription;
@@ -447,6 +655,7 @@ export class StripeSubscriptionService {
 		currentBillingCycle: RecurringBillingCycle;
 		targetBillingCycle: RecurringBillingCycle;
 		targetPriceId: string;
+		clearCancellation?: boolean;
 	}): Promise<void> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
@@ -456,7 +665,7 @@ export class StripeSubscriptionService {
 			throw new StripeError('Subscription is missing a future period end for scheduled billing cycle change');
 		}
 		let currentSubscription = subscription;
-		if (subscription.cancel_at || subscription.cancel_at_period_end) {
+		if (clearCancellation && (subscription.cancel_at || subscription.cancel_at_period_end)) {
 			currentSubscription = await this.stripe.subscriptions.update(
 				subscription.id,
 				this.getClearCancellationUpdateParams(subscription) ?? {proration_behavior: 'none'},
@@ -491,7 +700,6 @@ export class StripeSubscriptionService {
 			firstInvoiceCredit?.price_data?.unit_amount != null ? -firstInvoiceCredit.price_data.unit_amount : null;
 		const targetPhase: Stripe.SubscriptionScheduleUpdateParams.Phase = {
 			start_date: periodEnd,
-			billing_cycle_anchor: 'phase_start',
 			items: [
 				{
 					price: targetPriceId,
@@ -500,6 +708,9 @@ export class StripeSubscriptionService {
 			],
 			proration_behavior: 'none',
 		};
+		if (currentBillingCycle !== targetBillingCycle) {
+			targetPhase.billing_cycle_anchor = 'phase_start';
+		}
 		if (firstInvoiceCredit) {
 			targetPhase.add_invoice_items = [firstInvoiceCredit];
 			targetPhase.metadata = {
@@ -508,7 +719,7 @@ export class StripeSubscriptionService {
 			};
 		}
 		await this.stripe.subscriptionSchedules.update(schedule.id, {
-			end_behavior: 'release',
+			end_behavior: clearCancellation ? 'release' : schedule.end_behavior,
 			proration_behavior: 'none',
 			metadata: {
 				user_id: user.id.toString(),
@@ -516,14 +727,33 @@ export class StripeSubscriptionService {
 			},
 			phases: [currentPhase, targetPhase],
 		});
+		let scheduledSubscription = currentSubscription;
+		if (!clearCancellation) {
+			scheduledSubscription = await this.stripe.subscriptions.retrieve(currentSubscription.id, {
+				expand: ['items.data.price'],
+			});
+			try {
+				await getBillingRepository().subscriptions.upsertFromStripe(scheduledSubscription, {
+					knownUserId: user.id,
+					snapshotCapturedAt: new Date(),
+				});
+			} catch (mirrorErr) {
+				Logger.error(
+					{mirrorErr, subId: scheduledSubscription.id},
+					'Mirror upsert failed after scheduling a period-end price change; reconciler will heal',
+				);
+			}
+		}
 		const patch: Record<string, unknown> = {
-			premium_will_cancel: false,
+			premium_will_cancel: clearCancellation
+				? false
+				: Boolean(scheduledSubscription.cancel_at || scheduledSubscription.cancel_at_period_end),
 		};
-		const computedPremiumUntil = getSubscriptionPremiumPeriodEnd(currentSubscription);
+		const computedPremiumUntil = getSubscriptionPremiumPeriodEnd(scheduledSubscription);
 		if (computedPremiumUntil) {
 			patch['premium_until'] = computedPremiumUntil;
 		}
-		const updatedCustomerId = extractId(currentSubscription.customer);
+		const updatedCustomerId = extractId(scheduledSubscription.customer);
 		if (updatedCustomerId && updatedCustomerId !== user.stripeCustomerId) {
 			patch['stripe_customer_id'] = updatedCustomerId;
 		}
@@ -532,7 +762,7 @@ export class StripeSubscriptionService {
 		Logger.debug(
 			{
 				userId: user.id,
-				subscriptionId: currentSubscription.id,
+				subscriptionId: scheduledSubscription.id,
 				scheduleId: schedule.id,
 				fromBillingCycle: currentBillingCycle,
 				toBillingCycle: targetBillingCycle,
@@ -742,12 +972,28 @@ export class StripeSubscriptionService {
 					if (!price) {
 						return null;
 					}
-					return {
+					const mappedItem: Stripe.SubscriptionScheduleUpdateParams.Phase.Item = {
 						price,
 						quantity: phaseItem.quantity ?? 1,
 					};
+					const itemTaxRates = mapStripeIds(phaseItem.tax_rates);
+					if (itemTaxRates) {
+						mappedItem.tax_rates = itemTaxRates;
+					}
+					const itemDiscounts = mapSchedulePhaseDiscounts(phaseItem.discounts);
+					if (itemDiscounts) {
+						mappedItem.discounts = itemDiscounts;
+					}
+					if (phaseItem.metadata) {
+						mappedItem.metadata = phaseItem.metadata;
+					}
+					if (phaseItem.billing_thresholds?.usage_gte != null) {
+						mappedItem.billing_thresholds = {usage_gte: phaseItem.billing_thresholds.usage_gte};
+					}
+					return mappedItem;
 				})
-				.filter((phaseItem): phaseItem is {price: string; quantity: number} => phaseItem !== null) ?? [];
+				.filter((phaseItem): phaseItem is Stripe.SubscriptionScheduleUpdateParams.Phase.Item => phaseItem !== null) ??
+			[];
 		const currentPhase: Stripe.SubscriptionScheduleUpdateParams.Phase = {
 			start_date: phase?.start_date ?? subscription.start_date ?? subscription.created,
 			end_date: periodEnd,
@@ -762,6 +1008,99 @@ export class StripeSubscriptionService {
 						],
 			proration_behavior: 'none',
 		};
+		if (phase) {
+			const phaseDiscounts = mapSchedulePhaseDiscounts(phase.discounts);
+			if (phaseDiscounts) {
+				currentPhase.discounts = phaseDiscounts;
+			}
+			const defaultTaxRates = mapStripeIds(phase.default_tax_rates);
+			if (defaultTaxRates) {
+				currentPhase.default_tax_rates = defaultTaxRates;
+			}
+			if (phase.metadata) {
+				currentPhase.metadata = phase.metadata;
+			}
+			if (phase.currency) {
+				currentPhase.currency = phase.currency;
+			}
+			if (phase.description != null) {
+				currentPhase.description = phase.description;
+			}
+			if (phase.collection_method) {
+				currentPhase.collection_method = phase.collection_method;
+			}
+			if (phase.application_fee_percent != null) {
+				currentPhase.application_fee_percent = phase.application_fee_percent;
+			}
+			const defaultPaymentMethod = extractId(phase.default_payment_method);
+			if (defaultPaymentMethod) {
+				currentPhase.default_payment_method = defaultPaymentMethod;
+			}
+			const onBehalfOf = extractId(phase.on_behalf_of);
+			if (onBehalfOf) {
+				currentPhase.on_behalf_of = onBehalfOf;
+			}
+			if (phase.automatic_tax) {
+				const automaticTax: Stripe.SubscriptionScheduleUpdateParams.Phase.AutomaticTax = {
+					enabled: phase.automatic_tax.enabled,
+				};
+				if (phase.automatic_tax.liability) {
+					automaticTax.liability = {type: phase.automatic_tax.liability.type};
+					const liabilityAccount = extractId(phase.automatic_tax.liability.account);
+					if (liabilityAccount) {
+						automaticTax.liability.account = liabilityAccount;
+					}
+				}
+				currentPhase.automatic_tax = automaticTax;
+			}
+			if (phase.invoice_settings) {
+				const invoiceSettings: Stripe.SubscriptionScheduleUpdateParams.Phase.InvoiceSettings = {};
+				const accountTaxIds = mapStripeIds(phase.invoice_settings.account_tax_ids);
+				if (accountTaxIds) {
+					invoiceSettings.account_tax_ids = accountTaxIds;
+				}
+				if (phase.invoice_settings.days_until_due != null) {
+					invoiceSettings.days_until_due = phase.invoice_settings.days_until_due;
+				}
+				if (phase.invoice_settings.issuer) {
+					invoiceSettings.issuer = {type: phase.invoice_settings.issuer.type};
+					const issuerAccount = extractId(phase.invoice_settings.issuer.account);
+					if (issuerAccount) {
+						invoiceSettings.issuer.account = issuerAccount;
+					}
+				}
+				if (Object.keys(invoiceSettings).length > 0) {
+					currentPhase.invoice_settings = invoiceSettings;
+				}
+			}
+			if (phase.billing_thresholds) {
+				const billingThresholds: Stripe.SubscriptionScheduleUpdateParams.Phase.BillingThresholds = {};
+				if (phase.billing_thresholds.amount_gte != null) {
+					billingThresholds.amount_gte = phase.billing_thresholds.amount_gte;
+				}
+				if (phase.billing_thresholds.reset_billing_cycle_anchor != null) {
+					billingThresholds.reset_billing_cycle_anchor = phase.billing_thresholds.reset_billing_cycle_anchor;
+				}
+				if (Object.keys(billingThresholds).length > 0) {
+					currentPhase.billing_thresholds = billingThresholds;
+				}
+			}
+			if (phase.transfer_data) {
+				const destination = extractId(phase.transfer_data.destination);
+				if (destination) {
+					currentPhase.transfer_data = {destination};
+					if (phase.transfer_data.amount_percent != null) {
+						currentPhase.transfer_data.amount_percent = phase.transfer_data.amount_percent;
+					}
+				}
+			}
+			if (phase.start_date > now) {
+				const addInvoiceItems = mapSchedulePhaseAddInvoiceItems(phase.add_invoice_items);
+				if (addInvoiceItems) {
+					currentPhase.add_invoice_items = addInvoiceItems;
+				}
+			}
+		}
 		const trialEnd = subscription.trial_end;
 		if (trialEnd != null && trialEnd > now) {
 			if (trialEnd >= periodEnd) {
@@ -769,6 +1108,10 @@ export class StripeSubscriptionService {
 			} else {
 				currentPhase.trial_end = trialEnd;
 			}
+		}
+		const phaseIsTrial = currentPhase.trial === true || currentPhase.trial_end != null;
+		if (phase?.billing_cycle_anchor && !(phaseIsTrial && phase.billing_cycle_anchor === 'phase_start')) {
+			currentPhase.billing_cycle_anchor = phase.billing_cycle_anchor;
 		}
 		return currentPhase;
 	}
@@ -1026,6 +1369,7 @@ export class StripeSubscriptionService {
 	private static readonly CURRENT_PRICE_CACHE_TTL_SECONDS = seconds('5 minutes');
 	private static readonly LIST_PRICE_CACHE_TTL_SECONDS = seconds('1 hour');
 	private static readonly PRICE_CACHE_PRODUCE_TIMEOUT_MS = 90000;
+	private static readonly LIST_PRICE_SWITCH_LOCK_TTL_SECONDS = seconds('30 seconds');
 	private static readonly USER_TRIAL_LOCK_TTL_SECONDS = seconds('30 seconds');
 	private static readonly USER_TRIAL_LOCK_MAX_WAIT_MS = 15000;
 	private static readonly USER_TRIAL_LOCK_RETRY_DELAY_MS = 100;

@@ -2,6 +2,7 @@
 
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {Config} from '../Config';
+import {Logger} from '../Logger';
 import type {Currency} from '../utils/CurrencyUtils';
 
 export enum ProductType {
@@ -22,10 +23,66 @@ export interface ProductInfo {
 	billingCycle?: RecurringBillingCycle;
 }
 
+const LEGACY_SLOT_SHAPES: Record<string, Omit<ProductInfo, 'currency'> | undefined> = {
+	monthly: {
+		type: ProductType.MONTHLY_SUBSCRIPTION,
+		premiumType: UserPremiumTypes.SUBSCRIPTION,
+		durationMonths: 1,
+		isGift: false,
+		billingCycle: 'monthly',
+	},
+	yearly: {
+		type: ProductType.YEARLY_SUBSCRIPTION,
+		premiumType: UserPremiumTypes.SUBSCRIPTION,
+		durationMonths: 12,
+		isGift: false,
+		billingCycle: 'yearly',
+	},
+	gift_1_month: {
+		type: ProductType.GIFT_1_MONTH,
+		premiumType: UserPremiumTypes.SUBSCRIPTION,
+		durationMonths: 1,
+		isGift: true,
+	},
+	gift_1_year: {
+		type: ProductType.GIFT_1_YEAR,
+		premiumType: UserPremiumTypes.SUBSCRIPTION,
+		durationMonths: 12,
+		isGift: true,
+	},
+};
+
+const LEGACY_SLOT_CURRENCIES: Record<string, Currency | undefined> = {
+	usd: 'USD',
+	eur: 'EUR',
+	brl: 'BRL',
+	inr: 'INR',
+	pln: 'PLN',
+	try: 'TRY',
+};
+
+function parseLegacySlot(slot: string): ProductInfo | null {
+	const separatorIndex = slot.lastIndexOf('_');
+	if (separatorIndex <= 0) {
+		return null;
+	}
+	const shape = LEGACY_SLOT_SHAPES[slot.slice(0, separatorIndex)];
+	const currency = LEGACY_SLOT_CURRENCIES[slot.slice(separatorIndex + 1).toLowerCase()];
+	if (!shape || !currency) {
+		return null;
+	}
+	return {...shape, currency};
+}
+
 export class ProductRegistry {
 	private products = new Map<string, ProductInfo>();
 
 	constructor() {
+		this.registerConfiguredProducts();
+		this.registerLegacyProducts();
+	}
+
+	private registerConfiguredProducts(): void {
 		const prices = Config.stripe.prices;
 		if (!prices) return;
 		this.registerProduct(prices.monthlyUsd, {
@@ -208,6 +265,32 @@ export class ProductRegistry {
 			isGift: true,
 			currency: 'TRY',
 		});
+	}
+
+	private registerLegacyProducts(): void {
+		const legacyPrices = Config.stripe.legacyPrices;
+		if (!legacyPrices) return;
+		if (typeof legacyPrices !== 'object' || Array.isArray(legacyPrices)) {
+			Logger.warn({}, 'Ignoring legacy Stripe price configuration that is not an object of slot names to price ids');
+			return;
+		}
+		for (const [slot, priceIds] of Object.entries(legacyPrices)) {
+			if (!Array.isArray(priceIds)) {
+				Logger.warn({slot}, 'Ignoring legacy Stripe price slot that is not a list of price IDs');
+				continue;
+			}
+			const info = parseLegacySlot(slot);
+			if (!info) {
+				Logger.warn({slot}, 'Ignoring legacy Stripe price slot with an unrecognised name or currency');
+				continue;
+			}
+			for (const priceId of priceIds) {
+				if (!priceId || this.products.has(priceId)) {
+					continue;
+				}
+				this.products.set(priceId, info);
+			}
+		}
 	}
 
 	private registerProduct(priceId: string | undefined, info: ProductInfo): void {

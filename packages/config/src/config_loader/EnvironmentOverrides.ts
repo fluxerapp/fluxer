@@ -297,6 +297,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_STRIPE_SECRET_KEY: {path: ['integrations', 'stripe', 'secret_key']},
 	FLUXER_STRIPE_WEBHOOK_SECRET: {path: ['integrations', 'stripe', 'webhook_secret']},
 	FLUXER_STRIPE_PRICES: {path: ['integrations', 'stripe', 'prices'], parse: parseEnvValue},
+	FLUXER_STRIPE_LEGACY_PRICES: {path: ['integrations', 'stripe', 'legacy_prices'], parse: parseEnvValue},
 	FLUXER_STRIPE_PRICE_MONTHLY_USD: {path: ['integrations', 'stripe', 'prices', 'monthly_usd']},
 	FLUXER_STRIPE_PRICE_MONTHLY_EUR: {path: ['integrations', 'stripe', 'prices', 'monthly_eur']},
 	FLUXER_STRIPE_PRICE_MONTHLY_BRL: {path: ['integrations', 'stripe', 'prices', 'monthly_brl']},

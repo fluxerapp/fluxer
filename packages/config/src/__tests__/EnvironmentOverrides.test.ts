@@ -155,4 +155,85 @@ describe('buildNamedFluxerEnvOverrides', () => {
 			'FLUXER_LIVEKIT_DEFAULT_REGION must be valid JSON',
 		);
 	});
+
+	test('parses the legacy Stripe price map onto integrations.stripe.legacy_prices', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_LEGACY_PRICES:
+				'{"monthly_brl":["price_old_monthly_brl","price_older_monthly_brl"],"yearly_brl":["price_old_yearly_brl"],"monthly_try":["price_archived_monthly_try"],"gift_1_month_brl":["price_old_gift_1_month_brl"],"gift_1_year_brl":["price_old_gift_1_year_brl"]}',
+		});
+
+		expect(overrides).toMatchObject({
+			integrations: {
+				stripe: {
+					legacy_prices: {
+						monthly_brl: ['price_old_monthly_brl', 'price_older_monthly_brl'],
+						yearly_brl: ['price_old_yearly_brl'],
+						monthly_try: ['price_archived_monthly_try'],
+						gift_1_month_brl: ['price_old_gift_1_month_brl'],
+						gift_1_year_brl: ['price_old_gift_1_year_brl'],
+					},
+				},
+			},
+		});
+	});
+
+	test('the legacy Stripe price map does not disturb the live price map', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_new_monthly_brl"}',
+			FLUXER_STRIPE_LEGACY_PRICES: '{"monthly_brl":["price_old_monthly_brl"]}',
+		});
+
+		const stripe = (overrides.integrations as {stripe: Record<string, unknown>}).stripe;
+		expect(stripe.prices).toEqual({monthly_brl: 'price_new_monthly_brl'});
+		expect(stripe.legacy_prices).toEqual({monthly_brl: ['price_old_monthly_brl']});
+	});
+
+	test('rejects malformed JSON for the legacy Stripe price map', () => {
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_STRIPE_LEGACY_PRICES: '{"monthly_brl":['})).toThrow(
+			'FLUXER_STRIPE_LEGACY_PRICES must be valid JSON',
+		);
+	});
+
+	test('an individual Stripe price env var wins over the blob, and the blob keys it does not name survive', () => {
+		// The deploy runbook flips one slot at a time with FLUXER_STRIPE_PRICE_* while the blob stays
+		// pinned to the previous release. The individual variable is declared after the blob, so it is
+		// merged into the blob rather than replaced by it.
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES:
+				'{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl","monthly_usd":"price_blob_monthly_usd"}',
+			FLUXER_STRIPE_PRICE_MONTHLY_BRL: 'price_individual_monthly_brl',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_brl: 'price_individual_monthly_brl',
+			yearly_brl: 'price_blob_yearly_brl',
+			monthly_usd: 'price_blob_monthly_usd',
+		});
+	});
+
+	test('several individual Stripe price env vars merge into the blob together', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl"}',
+			FLUXER_STRIPE_PRICE_MONTHLY_BRL: 'price_individual_monthly_brl',
+			FLUXER_STRIPE_PRICE_YEARLY_BRL: 'price_individual_yearly_brl',
+			FLUXER_STRIPE_PRICE_MONTHLY_EUR: 'price_individual_monthly_eur',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_brl: 'price_individual_monthly_brl',
+			yearly_brl: 'price_individual_yearly_brl',
+			monthly_eur: 'price_individual_monthly_eur',
+		});
+	});
+
+	test('the Stripe price blob applies on its own when no individual price var is set', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl"}',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_brl: 'price_blob_monthly_brl',
+			yearly_brl: 'price_blob_yearly_brl',
+		});
+	});
 });

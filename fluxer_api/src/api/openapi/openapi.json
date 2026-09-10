@@ -13628,6 +13628,73 @@
 				]
 			}
 		},
+		"/premium/switch-to-list-price": {
+			"post": {
+				"operationId": "switch_subscription_to_list_price",
+				"summary": "Switch subscription to the current list price",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SwitchToListPriceResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Switch subscription to the current list price"}},
+				"description": "Moves the authenticated user's grandfathered premium subscription down to the current list price for the same currency and billing cycle, effective at the end of the current billing period. The target price is resolved on the server and the switch is refused unless it lowers the amount charged.",
+				"security": [{"sessionToken": []}]
+			}
+		},
 		"/premium/visionary/rejoin": {
 			"post": {
 				"operationId": "rejoin_visionary_guild",
@@ -32194,6 +32261,7 @@
 							"pending_subscription_change": {
 								"anyOf": [{"$ref": "#/components/schemas/PendingSubscriptionChangeResponse"}, {"type": "null"}]
 							},
+							"list_price_switch": {"$ref": "#/components/schemas/ListPriceSwitchState"},
 							"subscription": {
 								"anyOf": [{"$ref": "#/components/schemas/PremiumBillingSubscriptionResponse"}, {"type": "null"}]
 							},
@@ -32209,6 +32277,7 @@
 							"stripe_customer_id",
 							"current_subscription_price",
 							"pending_subscription_change",
+							"list_price_switch",
 							"subscription",
 							"invoices",
 							"invoices_has_more",
@@ -32241,6 +32310,12 @@
 								"type": "string",
 								"description": "Stripe subscription schedule ID managing the pending change"
 							},
+							"change_kind": {
+								"enum": ["billing_cycle", "price"],
+								"type": "string",
+								"x-enumNames": ["billing_cycle", "price"],
+								"description": "Whether the pending change moves the billing cycle or only the price within the same cycle"
+							},
 							"current_billing_cycle": {
 								"anyOf": [
 									{"enum": ["monthly", "yearly"], "type": "string", "x-enumNames": ["monthly", "yearly"]},
@@ -32262,6 +32337,10 @@
 							"target_price_id": {
 								"anyOf": [{"type": "string"}, {"type": "null"}],
 								"description": "Stripe price ID that will be used after the change"
+							},
+							"target_amount_minor": {
+								"anyOf": [{"type": "integer", "format": "int53"}, {"type": "null"}],
+								"description": "Unit amount of the price that will be used after the change, in the currency minor unit"
 							},
 							"currency": {
 								"anyOf": [
@@ -32289,11 +32368,13 @@
 						},
 						"required": [
 							"schedule_id",
+							"change_kind",
 							"current_billing_cycle",
 							"target_billing_cycle",
 							"effective_at",
 							"current_price_id",
 							"target_price_id",
+							"target_amount_minor",
 							"currency",
 							"initial_amount_minor",
 							"recurring_amount_minor",
@@ -32301,6 +32382,104 @@
 						]
 					},
 					{"type": "null"}
+				]
+			},
+			"ListPriceSwitchState": {
+				"type": "object",
+				"properties": {
+					"available": {
+						"type": "boolean",
+						"description": "Whether the authenticated user can move their subscription down to the current list price right now"
+					},
+					"reason": {
+						"anyOf": [{"$ref": "#/components/schemas/ListPriceSwitchIneligibilityReason"}, {"type": "null"}],
+						"description": "Why the switch is unavailable, when available is false"
+					},
+					"pending": {
+						"type": "boolean",
+						"description": "Whether a switch to the current list price is already scheduled"
+					},
+					"current_price_id": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Stripe price ID the subscription is billed against today"
+					},
+					"current_amount_minor": {
+						"anyOf": [{"type": "integer", "format": "int53"}, {"type": "null"}],
+						"description": "Amount the subscription is billed today, in the currency minor unit"
+					},
+					"list_price_id": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Current list Stripe price ID for the same cycle and currency"
+					},
+					"list_amount_minor": {
+						"anyOf": [{"type": "integer", "format": "int53"}, {"type": "null"}],
+						"description": "Current list price for the same cycle and currency, in the currency minor unit"
+					},
+					"currency": {
+						"anyOf": [
+							{
+								"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+								"type": "string",
+								"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"]
+							},
+							{"type": "null"}
+						],
+						"description": "Currency of both the current and the list amount"
+					},
+					"billing_cycle": {
+						"anyOf": [
+							{"enum": ["monthly", "yearly"], "type": "string", "x-enumNames": ["monthly", "yearly"]},
+							{"type": "null"}
+						],
+						"description": "Recurring billing cycle the switch applies to"
+					},
+					"effective_at": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "ISO timestamp the switch takes effect, which is the end of the current billing period"
+					}
+				},
+				"required": [
+					"available",
+					"reason",
+					"pending",
+					"current_price_id",
+					"current_amount_minor",
+					"list_price_id",
+					"list_amount_minor",
+					"currency",
+					"billing_cycle",
+					"effective_at"
+				]
+			},
+			"ListPriceSwitchIneligibilityReason": {
+				"enum": [
+					"feature_unavailable",
+					"no_active_subscription",
+					"subscription_not_chargeable",
+					"unsupported_subscription",
+					"no_list_price",
+					"already_on_list_price",
+					"not_a_price_decrease",
+					"subscription_cancelling",
+					"cancellation_managed_by_schedule",
+					"conflicting_pending_change",
+					"missing_period_end",
+					"switch_in_progress"
+				],
+				"type": "string",
+				"x-enumNames": [
+					"feature_unavailable",
+					"no_active_subscription",
+					"subscription_not_chargeable",
+					"unsupported_subscription",
+					"no_list_price",
+					"already_on_list_price",
+					"not_a_price_decrease",
+					"subscription_cancelling",
+					"cancellation_managed_by_schedule",
+					"conflicting_pending_change",
+					"missing_period_end",
+					"switch_in_progress"
 				]
 			},
 			"PremiumBillingSubscriptionResponse": {
@@ -32543,6 +32722,134 @@
 					"subscription_id",
 					"status"
 				]
+			},
+			"SwitchToListPriceResponse": {
+				"oneOf": [
+					{"$ref": "#/components/schemas/ScheduledSwitchToListPriceResponse"},
+					{"$ref": "#/components/schemas/AlreadyScheduledSwitchToListPriceResponse"},
+					{"$ref": "#/components/schemas/IneligibleSwitchToListPriceResponse"}
+				]
+			},
+			"ScheduledSwitchToListPriceResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["scheduled"],
+						"description": "The switch was scheduled for the end of the current billing period"
+					},
+					"effective_at": {"type": "string", "description": "ISO timestamp the switch takes effect"},
+					"target_price_id": {
+						"type": "string",
+						"description": "Stripe price ID the subscription will be billed against after the switch"
+					},
+					"target_amount_minor": {
+						"type": "integer",
+						"format": "int53",
+						"description": "Amount billed after the switch, in the currency minor unit"
+					},
+					"current_amount_minor": {
+						"type": "integer",
+						"format": "int53",
+						"description": "Amount billed before the switch, in the currency minor unit"
+					},
+					"currency": {
+						"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"type": "string",
+						"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"description": "Currency of both amounts"
+					}
+				},
+				"required": [
+					"status",
+					"effective_at",
+					"target_price_id",
+					"target_amount_minor",
+					"current_amount_minor",
+					"currency"
+				]
+			},
+			"AlreadyScheduledSwitchToListPriceResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["already_scheduled"],
+						"description": "The switch was already scheduled by an earlier request"
+					},
+					"effective_at": {"type": "string", "description": "ISO timestamp the switch takes effect"},
+					"target_price_id": {
+						"type": "string",
+						"description": "Stripe price ID the subscription will be billed against after the switch"
+					},
+					"target_amount_minor": {
+						"type": "integer",
+						"format": "int53",
+						"description": "Amount billed after the switch, in the currency minor unit"
+					},
+					"current_amount_minor": {
+						"type": "integer",
+						"format": "int53",
+						"description": "Amount billed before the switch, in the currency minor unit"
+					},
+					"currency": {
+						"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"type": "string",
+						"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"description": "Currency of both amounts"
+					}
+				},
+				"required": [
+					"status",
+					"effective_at",
+					"target_price_id",
+					"target_amount_minor",
+					"current_amount_minor",
+					"currency"
+				]
+			},
+			"IneligibleSwitchToListPriceResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"enum": ["ineligible"],
+						"description": "The subscription cannot be moved to the current list price"
+					},
+					"reason": {
+						"enum": [
+							"feature_unavailable",
+							"no_active_subscription",
+							"subscription_not_chargeable",
+							"unsupported_subscription",
+							"no_list_price",
+							"already_on_list_price",
+							"not_a_price_decrease",
+							"subscription_cancelling",
+							"cancellation_managed_by_schedule",
+							"conflicting_pending_change",
+							"missing_period_end",
+							"switch_in_progress"
+						],
+						"type": "string",
+						"x-enumNames": [
+							"feature_unavailable",
+							"no_active_subscription",
+							"subscription_not_chargeable",
+							"unsupported_subscription",
+							"no_list_price",
+							"already_on_list_price",
+							"not_a_price_decrease",
+							"subscription_cancelling",
+							"cancellation_managed_by_schedule",
+							"conflicting_pending_change",
+							"missing_period_end",
+							"switch_in_progress"
+						],
+						"description": "Why the switch was refused"
+					}
+				},
+				"required": ["status", "reason"]
 			},
 			"ReadStateAckResponse": {
 				"type": "object",

@@ -18,6 +18,7 @@ import {
 	PriceIdsResponse,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
+	SwitchToListPriceResponse,
 	UrlResponse,
 	WebhookReceivedResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
@@ -492,6 +493,27 @@ export function StripeController(app: HonoApp) {
 			const {billing_cycle, effective_at} = ctx.req.valid('json');
 			await ctx.get('stripeService').changeSubscriptionBillingCycle(userId, billing_cycle, effective_at);
 			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/premium/switch-to-list-price',
+		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_CHANGE),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'switch_subscription_to_list_price',
+			summary: 'Switch subscription to the current list price',
+			description:
+				"Moves the authenticated user's grandfathered premium subscription down to the current list price for the same currency and billing cycle, effective at the end of the current billing period. The target price is resolved on the server and the switch is refused unless it lowers the amount charged.",
+			responseSchema: SwitchToListPriceResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: 'Premium',
+		}),
+		async (ctx) => {
+			const userId = ctx.get('user').id;
+			const result = await ctx.get('stripeService').switchSubscriptionToCurrentListPrice(userId);
+			return ctx.json(result);
 		},
 	);
 	app.post(

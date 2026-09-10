@@ -268,6 +268,7 @@ export interface MasterConfig {
 			secret_key: string;
 			webhook_secret: string;
 			prices?: Record<string, string | undefined>;
+			legacy_prices?: Record<string, Array<string> | undefined>;
 		};
 		ncmec: {
 			enabled: boolean;

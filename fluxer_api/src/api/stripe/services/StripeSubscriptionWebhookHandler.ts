@@ -65,6 +65,14 @@ export class StripeSubscriptionWebhookHandler {
 			Logger.error({invoiceId: invoice.id, billingReason}, 'No subscription ID found in subscription invoice');
 			throw new StripeError('Invoice missing subscription id');
 		}
+		const donor = await this.donationRepository.findDonorByStripeSubscriptionId(subscriptionId);
+		if (donor) {
+			Logger.debug(
+				{invoiceId: invoice.id, eventId, subscriptionId, donorEmail: donor.email},
+				'Skipping invoice payment for donation subscription',
+			);
+			return;
+		}
 		if (this.isSubscriptionUpdateInvoice(invoice)) {
 			Logger.debug(
 				{

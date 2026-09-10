@@ -64,6 +64,14 @@ interface StripeApiMockConfig {
 	paymentMethods?: Record<string, Partial<MockStripePaymentMethod>>;
 	setupIntents?: Record<string, Partial<MockStripeSetupIntent>>;
 	subscriptions?: Record<string, Partial<MockStripeSubscriptionState>>;
+	prices?: Record<string, MockStripePriceOverrides>;
+}
+
+interface MockStripePriceOverrides {
+	unit_amount?: number;
+	currency?: string;
+	interval?: 'month' | 'year';
+	product?: string;
 }
 
 interface SubscriptionScheduleParams {
@@ -302,6 +310,7 @@ interface MockStripeSubscriptionState {
 	customer: string;
 	trial_end: number | null;
 	price_id: string;
+	unit_amount: number;
 	currency: string;
 	interval: 'month' | 'year';
 	item_id: string;
@@ -808,6 +817,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			customer: 'cus_test_1',
 			trial_end: null,
 			price_id: 'price_test_1',
+			unit_amount: 2500,
 			currency: 'usd',
 			interval: 'month',
 			item_id: 'si_test_1',
@@ -856,7 +866,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 						price: {
 							id: subState.price_id,
 							object: 'price',
-							unit_amount: 2500,
+							unit_amount: subState.unit_amount,
 							currency: subState.currency,
 							recurring: {
 								interval: subState.interval,
@@ -1703,28 +1713,31 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 		http.get(`${STRIPE_API_BASE}/v1/prices/:id`, ({params}) => {
 			const {id} = params;
 			const normalizedPriceId = String(id).toLowerCase();
+			const overrides = config.prices?.[String(id)];
 			return HttpResponse.json({
 				id,
 				object: 'price',
 				active: true,
-				currency: normalizedPriceId.includes('eur')
-					? 'eur'
-					: normalizedPriceId.includes('brl')
-						? 'brl'
-						: normalizedPriceId.includes('inr')
-							? 'inr'
-							: normalizedPriceId.includes('pln')
-								? 'pln'
-								: normalizedPriceId.includes('try')
-									? 'try'
-									: 'usd',
-				unit_amount: normalizedPriceId.includes('year') ? 4999 : 499,
+				currency:
+					overrides?.currency ??
+					(normalizedPriceId.includes('eur')
+						? 'eur'
+						: normalizedPriceId.includes('brl')
+							? 'brl'
+							: normalizedPriceId.includes('inr')
+								? 'inr'
+								: normalizedPriceId.includes('pln')
+									? 'pln'
+									: normalizedPriceId.includes('try')
+										? 'try'
+										: 'usd'),
+				unit_amount: overrides?.unit_amount ?? (normalizedPriceId.includes('year') ? 4999 : 499),
 				type: 'recurring',
 				recurring: {
-					interval: normalizedPriceId.includes('year') ? 'year' : 'month',
+					interval: overrides?.interval ?? (normalizedPriceId.includes('year') ? 'year' : 'month'),
 					interval_count: 1,
 				},
-				product: 'prod_test_1',
+				product: overrides?.product ?? 'prod_test_1',
 				livemode: false,
 				created: Math.floor(Date.now() / 1000) - 365 * 24 * 60 * 60,
 			});

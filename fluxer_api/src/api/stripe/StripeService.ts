@@ -7,6 +7,7 @@ import type {
 	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
+	SwitchToListPriceResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import Stripe from 'stripe';
@@ -199,6 +200,10 @@ export class StripeService {
 		effectiveAt: 'now' | 'period_end' = 'now',
 	): Promise<void> {
 		return this.subscriptionService.changeBillingCycle(userId, billingCycle, effectiveAt);
+	}
+
+	async switchSubscriptionToCurrentListPrice(userId: UserID): Promise<SwitchToListPriceResponse> {
+		return this.subscriptionService.switchToCurrentListPrice(userId);
 	}
 
 	async cancelPendingSubscriptionChange(userId: UserID): Promise<void> {

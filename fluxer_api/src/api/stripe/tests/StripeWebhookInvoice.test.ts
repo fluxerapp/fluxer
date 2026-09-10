@@ -4,12 +4,14 @@ import crypto from 'node:crypto';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {createUserID} from '../../BrandedTypes';
 import {Config} from '../../Config';
+import {Logger} from '../../Logger';
 import {getBillingRepository} from '../../middleware/ServiceRegistry';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {NoopLogger} from '../../test/mocks/NoopLogger';
 import {
 	createInvoiceFinalizationFailedEvent,
 	createInvoicePaidEvent,
@@ -41,16 +43,24 @@ const MOCK_PRICES = {
 	gift1YearEur: 'price_gift_1_year_eur',
 };
 
+const LEGACY_MONTHLY_BRL_PRICE = 'price_legacy_monthly_brl';
+const LEGACY_YEARLY_BRL_PRICE = 'price_legacy_yearly_brl';
+const UNMAPPED_PRICE = 'price_retired_unmapped_brl';
+const MANDATE_REVOKED_WARNING =
+	'Stripe mandate is no longer active; recurring payments on this payment method will fail';
+
 describe('Stripe Webhook - Invoice Events', () => {
 	let harness: ApiTestHarness;
 	let stripeHandlers: StripeApiHandlers;
 	let originalWebhookSecret: string | undefined;
 	let originalPrices: typeof Config.stripe.prices | undefined;
+	let originalLegacyPrices: typeof Config.stripe.legacyPrices | undefined;
 	beforeAll(async () => {
 		harness = await createApiTestHarness();
 		setupSyncStripeWebhookWorker();
 		originalWebhookSecret = Config.stripe.webhookSecret;
 		originalPrices = Config.stripe.prices;
+		originalLegacyPrices = Config.stripe.legacyPrices;
 		Config.stripe.webhookSecret = 'whsec_test_secret';
 		Config.stripe.prices = MOCK_PRICES;
 		stripeHandlers = createStripeApiHandlers();
@@ -60,9 +70,11 @@ describe('Stripe Webhook - Invoice Events', () => {
 		await harness.shutdown();
 		Config.stripe.webhookSecret = originalWebhookSecret;
 		Config.stripe.prices = originalPrices;
+		Config.stripe.legacyPrices = originalLegacyPrices;
 	});
 	beforeEach(async () => {
 		await harness.resetData();
+		Config.stripe.legacyPrices = undefined;
 		stripeHandlers.reset();
 		server.use(...stripeHandlers.handlers);
 	});
@@ -104,7 +116,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 		subscriptionId: string;
 		priceId: string;
 		productType: string;
-	}): Promise<void> {
+	}): Promise<string> {
 		const {userId, subscriptionId, priceId, productType} = params;
 		const checkoutSessionId = `cs_test_${crypto.randomUUID()}`;
 		const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
@@ -127,6 +139,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 			currency: 'usd',
 			completed_at: new Date(),
 		});
+		return checkoutSessionId;
 	}
 	async function setSubscriptionUserState(params: {
 		accountUserId: string;
@@ -854,6 +867,367 @@ describe('Stripe Webhook - Invoice Events', () => {
 				.execute();
 			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
 			expect(me.premium_until).not.toBeNull();
+		});
+	});
+	describe('renewals on retired prices', () => {
+		test('renews a subscription whose price is only known to the legacy price map', async () => {
+			Config.stripe.legacyPrices = {monthly_brl: [LEGACY_MONTHLY_BRL_PRICE]};
+			const account = await createTestAccount(harness);
+			const subscriptionId = 'sub_legacy_brl_renewal';
+			const customerId = 'cus_legacy_brl_renewal';
+			const invoiceId = 'in_legacy_brl_renewal';
+			const checkoutSessionId = await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: LEGACY_MONTHLY_BRL_PRICE,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			const currentPeriodStart = Math.floor(Date.now() / 1000) - 2 * 24 * 60 * 60;
+			server.use(
+				...createStripeApiHandlers({
+					subscriptions: {
+						[subscriptionId]: {
+							customer: customerId,
+							price_id: LEGACY_MONTHLY_BRL_PRICE,
+							currency: 'brl',
+							interval: 'month',
+							item_id: 'si_legacy_brl_renewal',
+							current_period_start: currentPeriodStart,
+							current_period_end: currentPeriodStart + 30 * 24 * 60 * 60,
+						},
+					},
+				}).handlers,
+			);
+			const result = await sendWebhook({
+				type: 'invoice.payment_succeeded',
+				data: {
+					object: {
+						id: invoiceId,
+						billing_reason: 'subscription_cycle',
+						customer: customerId,
+						parent: {subscription_details: {subscription: subscriptionId}},
+					},
+				},
+			});
+			expect(result.received).toBe(true);
+			const me = await createBuilder<{
+				premium_billing_cycle: string | null;
+				premium_type: number | null;
+				premium_until: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(me.premium_billing_cycle).toBe('monthly');
+			expect(me.premium_until).not.toBeNull();
+			expect(new Date(me.premium_until!).toISOString()).toBe(
+				new Date((currentPeriodStart + 30 * 24 * 60 * 60) * 1000).toISOString(),
+			);
+			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
+			const payment = await new PaymentRepository().getPaymentByCheckoutSession(checkoutSessionId);
+			expect(payment?.invoiceId).toBe(invoiceId);
+		});
+		test('renews a subscription whose retired price sits in a legacy slot alongside other price ids', async () => {
+			Config.stripe.legacyPrices = {
+				monthly_brl: ['price_legacy_monthly_brl_older', LEGACY_MONTHLY_BRL_PRICE],
+				yearly_brl: [LEGACY_YEARLY_BRL_PRICE],
+			};
+			const account = await createTestAccount(harness);
+			const subscriptionId = 'sub_legacy_brl_yearly_renewal';
+			const customerId = 'cus_legacy_brl_yearly_renewal';
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: LEGACY_YEARLY_BRL_PRICE,
+				productType: ProductType.YEARLY_SUBSCRIPTION,
+			});
+			const currentPeriodStart = Math.floor(Date.now() / 1000) - 2 * 24 * 60 * 60;
+			server.use(
+				...createStripeApiHandlers({
+					subscriptions: {
+						[subscriptionId]: {
+							customer: customerId,
+							price_id: LEGACY_YEARLY_BRL_PRICE,
+							currency: 'brl',
+							interval: 'year',
+							item_id: 'si_legacy_brl_yearly_renewal',
+							current_period_start: currentPeriodStart,
+							current_period_end: currentPeriodStart + 365 * 24 * 60 * 60,
+						},
+					},
+				}).handlers,
+			);
+			const result = await sendWebhook({
+				type: 'invoice.payment_succeeded',
+				data: {
+					object: {
+						id: 'in_legacy_brl_yearly_renewal',
+						billing_reason: 'subscription_cycle',
+						customer: customerId,
+						parent: {subscription_details: {subscription: subscriptionId}},
+					},
+				},
+			});
+			expect(result.received).toBe(true);
+			const me = await createBuilder<{
+				premium_billing_cycle: string | null;
+				premium_type: number | null;
+				premium_until: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(me.premium_billing_cycle).toBe('yearly');
+			expect(new Date(me.premium_until!).toISOString()).toBe(
+				new Date((currentPeriodStart + 365 * 24 * 60 * 60) * 1000).toISOString(),
+			);
+		});
+		test('still rejects a renewal whose price is in neither the configured nor the legacy price map', async () => {
+			Config.stripe.legacyPrices = {monthly_brl: [LEGACY_MONTHLY_BRL_PRICE]};
+			const account = await createTestAccount(harness);
+			const subscriptionId = 'sub_unmapped_price_renewal';
+			const customerId = 'cus_unmapped_price_renewal';
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: UNMAPPED_PRICE,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			await createBuilder(harness, account.token)
+				.post(`/test/users/${account.userId}/premium`)
+				.body({
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: customerId,
+				})
+				.execute();
+			const currentPeriodStart = Math.floor(Date.now() / 1000) - 2 * 24 * 60 * 60;
+			server.use(
+				...createStripeApiHandlers({
+					subscriptions: {
+						[subscriptionId]: {
+							customer: customerId,
+							price_id: UNMAPPED_PRICE,
+							currency: 'brl',
+							interval: 'month',
+							item_id: 'si_unmapped_price_renewal',
+							current_period_start: currentPeriodStart,
+							current_period_end: currentPeriodStart + 30 * 24 * 60 * 60,
+						},
+					},
+				}).handlers,
+			);
+			await sendWebhookExpectStripeError({
+				type: 'invoice.payment_succeeded',
+				data: {
+					object: {
+						id: 'in_unmapped_price_renewal',
+						billing_reason: 'subscription_cycle',
+						customer: customerId,
+						parent: {subscription_details: {subscription: subscriptionId}},
+					},
+				},
+			});
+			const me = await createBuilder<{
+				premium_type: number | null;
+				premium_until: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.NONE);
+			expect(me.premium_until).toBeNull();
+		});
+		test('lets an authored price win over a legacy entry that claims the same price id', async () => {
+			Config.stripe.legacyPrices = {yearly_brl: [MOCK_PRICES.monthlyUsd]};
+			const account = await createTestAccount(harness);
+			const subscriptionId = 'sub_authored_wins_over_legacy';
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			const result = await sendWebhook({
+				type: 'invoice.payment_succeeded',
+				data: {
+					object: {
+						id: 'in_authored_wins_over_legacy',
+						billing_reason: 'subscription_cycle',
+						parent: {subscription_details: {subscription: subscriptionId}},
+					},
+				},
+			});
+			expect(result.received).toBe(true);
+			const me = await createBuilder<{
+				premium_billing_cycle: string | null;
+				premium_type: number | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(me.premium_billing_cycle).toBe('monthly');
+		});
+	});
+	describe('donation subscription guard', () => {
+		test('does not extend premium for an invoice on a donation subscription', async () => {
+			const account = await createTestAccount(harness);
+			const subscriptionId = 'sub_donation_recurring';
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			const {DonationRepository} = await import('../../donation/DonationRepository');
+			await new DonationRepository().createDonor({
+				email: 'donor-invoice-guard@example.com',
+				stripeCustomerId: 'cus_donation_recurring',
+				stripeSubscriptionId: subscriptionId,
+				subscriptionAmountCents: 1000,
+				subscriptionCurrency: 'usd',
+				subscriptionInterval: 'month',
+				subscriptionCurrentPeriodEnd: null,
+			});
+			const result = await sendWebhook({
+				type: 'invoice.payment_succeeded',
+				data: {
+					object: {
+						id: 'in_donation_recurring',
+						billing_reason: 'subscription_cycle',
+						customer: 'cus_donation_recurring',
+						parent: {subscription_details: {subscription: subscriptionId}},
+					},
+				},
+			});
+			expect(result.received).toBe(true);
+			const me = await createBuilder<{
+				premium_type: number | null;
+				premium_until: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.NONE);
+			expect(me.premium_until).toBeNull();
+		});
+		test('still renews when only the donor customer id matches and the subscription id does not', async () => {
+			const account = await createTestAccount(harness);
+			const sharedCustomerId = 'cus_donor_and_subscriber';
+			const premiumSubscriptionId = 'sub_premium_beside_donation';
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId: premiumSubscriptionId,
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			const {DonationRepository} = await import('../../donation/DonationRepository');
+			await new DonationRepository().createDonor({
+				email: 'donor-and-subscriber@example.com',
+				stripeCustomerId: sharedCustomerId,
+				stripeSubscriptionId: 'sub_donation_beside_premium',
+				subscriptionAmountCents: 1000,
+				subscriptionCurrency: 'usd',
+				subscriptionInterval: 'month',
+				subscriptionCurrentPeriodEnd: null,
+			});
+			const result = await sendWebhook({
+				type: 'invoice.payment_succeeded',
+				data: {
+					object: {
+						id: 'in_premium_beside_donation',
+						billing_reason: 'subscription_cycle',
+						customer: sharedCustomerId,
+						parent: {subscription_details: {subscription: premiumSubscriptionId}},
+					},
+				},
+			});
+			expect(result.received).toBe(true);
+			const me = await createBuilder<{
+				premium_type: number | null;
+				premium_until: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(me.premium_until).not.toBeNull();
+		});
+	});
+	describe('mandate.updated', () => {
+		function captureLoggerWarnings(): {
+			messages: Array<unknown>;
+			restore: () => void;
+		} {
+			const activeLogger = Logger.child({}) as unknown as NoopLogger;
+			expect(activeLogger).toBeInstanceOf(NoopLogger);
+			const messages: Array<unknown> = [];
+			const spy = vi.spyOn(activeLogger, 'warn').mockImplementation((...args: Array<unknown>) => {
+				messages.push(args[args.length - 1]);
+			});
+			return {messages, restore: () => spy.mockRestore()};
+		}
+		function revocationWarnings(messages: Array<unknown>): Array<unknown> {
+			return messages.filter((message) => message === MANDATE_REVOKED_WARNING);
+		}
+		test('logs the revocation warning and leaves premium untouched when a mandate goes inactive', async () => {
+			const account = await createTestAccount(harness);
+			const premiumUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+			await createBuilder(harness, account.token)
+				.post(`/test/users/${account.userId}/premium`)
+				.body({
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					premium_until: premiumUntil.toISOString(),
+					stripe_subscription_id: 'sub_pix_mandate',
+					stripe_customer_id: 'cus_pix_mandate',
+				})
+				.execute();
+			const warnings = captureLoggerWarnings();
+			try {
+				const result = await sendWebhook({
+					type: 'mandate.updated',
+					data: {
+						object: {
+							id: 'mandate_test_inactive',
+							object: 'mandate',
+							status: 'inactive',
+							payment_method: 'pm_pix_mandate',
+							type: 'multi_use',
+						},
+					},
+				});
+				expect(result.received).toBe(true);
+				expect(revocationWarnings(warnings.messages)).toHaveLength(1);
+			} finally {
+				warnings.restore();
+			}
+			const me = await createBuilder<{
+				premium_type: number | null;
+				premium_until: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(me.premium_until).toBe(premiumUntil.toISOString());
+		});
+		test('does not log the revocation warning for a pending or still-active mandate', async () => {
+			const warnings = captureLoggerWarnings();
+			try {
+				for (const status of ['pending', 'active'] as const) {
+					const result = await sendWebhook({
+						type: 'mandate.updated',
+						data: {
+							object: {
+								id: `mandate_test_${status}`,
+								object: 'mandate',
+								status,
+								payment_method: {id: 'pm_pix_mandate', object: 'payment_method', type: 'pix'},
+								type: 'multi_use',
+							},
+						},
+					});
+					expect(result.received).toBe(true);
+				}
+				expect(revocationWarnings(warnings.messages)).toHaveLength(0);
+			} finally {
+				warnings.restore();
+			}
 		});
 	});
 });

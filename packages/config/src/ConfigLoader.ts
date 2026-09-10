@@ -221,6 +221,7 @@ function defaultConfig(): MasterConfig {
 				secret_key: '',
 				webhook_secret: '',
 				prices: {},
+				legacy_prices: {},
 			},
 			ncmec: {
 				enabled: false,

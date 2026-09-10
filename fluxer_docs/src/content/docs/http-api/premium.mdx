@@ -731,6 +731,71 @@ A scheduled change becomes visible as `billing.pending_subscription_change` in [
 
 5 requests per minute for each authenticated user, on the `stripe:subscription:change` bucket.
 
+## Switch subscription to the list price
+
+<RouteHeader method="POST" path="/v1/premium/switch-to-list-price" />
+
+Moves a subscription that still bills on a retired price onto the current list price for the same currency and [billing cycle](#billing-cycles), taking effect at the end of the current period. The request takes no body: the target price is resolved on the server, so a client cannot name the price it moves to.
+
+The switch only ever lowers the amount charged. When the current list price is the same as, or higher than, the price the subscription bills on, the request is refused rather than applied.
+
+Nothing is charged when the switch is scheduled. The billing date does not move, the billing cycle does not change, and no proration is invoiced or credited.
+
+A deployment that configures no payment provider receives 400 `STRIPE_PAYMENT_NOT_AVAILABLE`, an account with no stored subscription receives 400 `STRIPE_NO_ACTIVE_SUBSCRIPTION`, and a provider failure receives 400 `STRIPE_ERROR`.
+
+:::note[A subscription that is already cancelling is refused]
+A subscription set to cancel has no next billing period, so the switch would have nothing to apply to. It is refused with `subscription_cancelling` and the pending cancellation is left untouched.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [switch result](#switch-result) | The switch was scheduled, was already scheduled, or was refused |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The payment provider is not configured, the account has no stored subscription, or the provider rejected the request |
+| 404 | [error response](/http-api/#error-response) | The authenticated account record no longer exists and the request returns `UNKNOWN_USER` |
+
+<sup>1</sup> A refusal that the account can act on is reported as a 200 with `status` `ineligible`, not as an error
+
+### Switch result
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | `scheduled`, `already_scheduled`, or `ineligible` |
+| effective_at<sup>1</sup> | ISO8601 timestamp | The end of the current period, when the switch takes effect |
+| target_price_id<sup>1</sup> | string | The price ID the subscription bills on after the switch |
+| target_amount_minor<sup>1</sup> | integer | The amount billed after the switch, in the minor unit of `currency` |
+| current_amount_minor<sup>1</sup> | integer | The amount billed before the switch, in the minor unit of `currency` |
+| currency<sup>1</sup> | string | [Display currency](#display-currencies) of both amounts |
+| reason<sup>2</sup> | string | Why the switch was refused |
+
+<sup>1</sup> Present when `status` is `scheduled` or `already_scheduled`
+
+<sup>2</sup> Present when `status` is `ineligible`
+
+### Refusal reasons
+
+- `feature_unavailable`: the deployment configures no payment provider
+- `no_active_subscription`: the account has no stored subscription
+- `subscription_not_chargeable`: the subscription is neither active nor trialing
+- `unsupported_subscription`: the subscription has no recurring primary item with a resolvable amount, currency and interval
+- `no_list_price`: no list price is configured for that currency and billing cycle
+- `already_on_list_price`: the subscription already bills on the current list price
+- `not_a_price_decrease`: the current list price is not lower than the price the subscription bills on
+- `subscription_cancelling`: the subscription is set to cancel, so it has no next billing period
+- `cancellation_managed_by_schedule`: the subscription schedule ends by cancelling the subscription
+- `conflicting_pending_change`: a different change is already scheduled
+- `missing_period_end`: the subscription has no future period end
+- `switch_in_progress`: another switch for the same account is still being applied
+
+### Side effects
+
+A scheduled switch becomes visible as `billing.pending_subscription_change` with `change_kind` `price` in [get premium state](#get-premium-state), and `billing.list_price_switch` reports `pending`. Every account session receives [User Update](/gateway/events/#user-update). A pending cancellation is never cleared by this route.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `stripe:subscription:change` bucket.
+
 ## Cancel pending subscription change
 
 <RouteHeader method="POST" path="/v1/premium/cancel-pending-subscription-change" />

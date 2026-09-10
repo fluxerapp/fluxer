@@ -153,6 +153,8 @@ message NagbarDismissals {
   map<string, bool> pending_bulk_deletion = 15;
   map<string, bool> invites_disabled = 16;
   map<string, bool> guild_mfa_requirement = 17;
+  map<string, bool> price_announcement = 18;
+  map<string, bool> legacy_price_opt_in = 19;
 }
 
 message DismissedUpsells {

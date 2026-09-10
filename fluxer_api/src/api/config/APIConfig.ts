@@ -248,6 +248,7 @@ export interface APIConfig {
 			gift1YearPln?: string;
 			gift1YearTry?: string;
 		};
+		legacyPrices?: Record<string, Array<string> | undefined>;
 	};
 	bunny: {
 		purgeEnabled: boolean;

@@ -920,6 +920,12 @@ Default `{}`. Every price ID at once. JSON object. The individual price variable
 
 Twenty-eight individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_` and `FLUXER_STRIPE_PRICE_YEARLY_` in USD, EUR, BRL, INR, PLN, and TRY, `FLUXER_STRIPE_PRICE_VISIONARY_` and `FLUXER_STRIPE_PRICE_GIFT_VISIONARY_` in USD and EUR, and `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in the same six currencies.
 
+#### `FLUXER_STRIPE_LEGACY_PRICES`
+
+Default `{}`. Retired price IDs, keyed by the same slot names `FLUXER_STRIPE_PRICES` uses, each mapped to a list: `{"monthly_brl": ["price_..."]}`. JSON object. A subscription still billing on one of these keeps renewing, while the localized checkout catalog is still built from `FLUXER_STRIPE_PRICES` alone.
+
+Repricing a slot is ordered, and the order is not reversible without failed invoices. Create the new price in Stripe, move the ID it replaces into this variable, roll the API, and only then point `FLUXER_STRIPE_PRICES` at the new price. A price ID that neither variable names is unknown to the API: a renewal invoice on it fails the webhook with `Unknown product for invoice renewal`, a checkout completing on it fails with `Unknown price ID for checkout session`, and both keep failing until the ID is registered. The API answers Stripe as soon as the signature verifies and hands the event to `worker`, so the retries are the `processStripeWebhook` job's own: the Stripe dashboard shows the delivery as succeeded and the error is in the `worker` logs. Keep a retired ID listed for as long as any subscription still bills on it, which for a yearly price is at least a year after the switch.
+
 ## Moderation and abuse
 
 All are optional.

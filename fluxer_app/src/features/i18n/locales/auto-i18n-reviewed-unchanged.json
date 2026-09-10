@@ -1294,6 +1294,9 @@
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
       },
       {
+        "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
+      },
+      {
         "msgid": "AV1"
       },
       {
@@ -1381,6 +1384,12 @@
         "msgid": "Camera access is needed for device previews"
       },
       {
+        "msgid": "Cancel price change"
+      },
+      {
+        "msgid": "Cancel the scheduled change to move to the current price instead."
+      },
+      {
         "msgid": "Capture card"
       },
       {
@@ -1442,6 +1451,9 @@
       },
       {
         "msgid": "Could not load the instance configuration. Try reloading the page."
+      },
+      {
+        "msgid": "Couldn't change your price"
       },
       {
         "msgid": "Couldn't connect to voice. Please try again."
@@ -1681,6 +1693,12 @@
         "msgid": "Neko cat that chases your cursor"
       },
       {
+        "msgid": "New price scheduled for <0>{pendingChangeDate}</0>."
+      },
+      {
+        "msgid": "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
+      },
+      {
         "msgid": "No application windows found"
       },
       {
@@ -1694,6 +1712,9 @@
       },
       {
         "msgid": "Nothing to search for"
+      },
+      {
+        "msgid": "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
       },
       {
         "msgid": "Open Settings"
@@ -2026,6 +2047,9 @@
         "msgid": "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
       },
       {
+        "msgid": "Something went wrong while changing your price. Please try again in a moment."
+      },
+      {
         "msgid": "Static Neko"
       },
       {
@@ -2042,6 +2066,15 @@
       },
       {
         "msgid": "Stream quality"
+      },
+      {
+        "msgid": "Switch price"
+      },
+      {
+        "msgid": "Switch to the new price?"
+      },
+      {
+        "msgid": "Switch to {listPriceNewLabel}"
       },
       {
         "msgid": "Symbol"
@@ -2069,6 +2102,9 @@
       },
       {
         "msgid": "The message to send."
+      },
+      {
+        "msgid": "The new price is already scheduled for {effectiveDate}."
       },
       {
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
@@ -2146,6 +2182,9 @@
         "msgid": "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
       },
       {
+        "msgid": "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
+      },
+      {
         "msgid": "We'll send a verification code to your email before you can view your backup codes."
       },
       {
@@ -2188,6 +2227,15 @@
         "msgid": "Your new nickname, or leave blank to reset it."
       },
       {
+        "msgid": "Your subscription can't move to the new price right now."
+      },
+      {
+        "msgid": "Your subscription moves to the new price on {effectiveDate}."
+      },
+      {
+        "msgid": "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
+      },
+      {
         "msgid": "farewell"
       },
       {
@@ -2222,6 +2270,12 @@
       },
       {
         "msgid": "{name} copy"
+      },
+      {
+        "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
+      },
+      {
+        "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
       },
       {
         "msgid": "{productName} application logo"

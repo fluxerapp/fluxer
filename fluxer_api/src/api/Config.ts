@@ -395,6 +395,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 						gift1YearTry: master.integrations.stripe.prices.gift_1_year_try,
 					}
 				: undefined,
+			legacyPrices: master.integrations.stripe.legacy_prices,
 		},
 		bunny: {
 			purgeEnabled: master.integrations.bunny.purge_enabled,

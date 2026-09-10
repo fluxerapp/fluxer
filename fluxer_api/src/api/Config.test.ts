@@ -81,6 +81,22 @@ function withUploadRelaySecret(master: MasterConfig, secretBase64: string): Mast
 	};
 }
 
+function withStripeLegacyPrices(
+	master: MasterConfig,
+	legacyPrices: Record<string, Array<string> | undefined> | undefined,
+): MasterConfig {
+	return {
+		...master,
+		integrations: {
+			...master.integrations,
+			stripe: {
+				...master.integrations.stripe,
+				legacy_prices: legacyPrices,
+			},
+		},
+	};
+}
+
 describe('buildAPIConfigFromMaster upload relay secret', () => {
 	let master: MasterConfig;
 	beforeAll(async () => {
@@ -109,5 +125,44 @@ describe('buildAPIConfigFromMaster upload relay secret', () => {
 		expect(buildAPIConfigFromMaster(master).mediaProxy.uploadRelay.relaySecretBase64).toBe(
 			master.services.media_proxy.upload_relay.secret_base64,
 		);
+	});
+});
+
+describe('buildAPIConfigFromMaster stripe legacy prices', () => {
+	let master: MasterConfig;
+	beforeAll(async () => {
+		master = await loadConfig();
+	});
+
+	it('carries the retired stripe price map from master config onto the api config', () => {
+		const legacyPrices = {
+			monthly_brl: ['price_retired_monthly_brl'],
+			yearly_brl: ['price_retired_yearly_brl_a', 'price_retired_yearly_brl_b'],
+			monthly_try: ['price_1TMYpdFPC94Os7FdZVRx98Up'],
+		};
+		expect(buildAPIConfigFromMaster(withStripeLegacyPrices(master, legacyPrices)).stripe.legacyPrices).toEqual(
+			legacyPrices,
+		);
+	});
+
+	it('carries the retired price map even when no live prices are configured', () => {
+		const withoutPrices: MasterConfig = {
+			...master,
+			integrations: {
+				...master.integrations,
+				stripe: {
+					...master.integrations.stripe,
+					prices: undefined,
+					legacy_prices: {monthly_try: ['price_1TMYpdFPC94Os7FdZVRx98Up']},
+				},
+			},
+		};
+		const config = buildAPIConfigFromMaster(withoutPrices);
+		expect(config.stripe.prices).toBeUndefined();
+		expect(config.stripe.legacyPrices).toEqual({monthly_try: ['price_1TMYpdFPC94Os7FdZVRx98Up']});
+	});
+
+	it('leaves the retired price map undefined when master config does not set one', () => {
+		expect(buildAPIConfigFromMaster(withStripeLegacyPrices(master, undefined)).stripe.legacyPrices).toBeUndefined();
 	});
 });
