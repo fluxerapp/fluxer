@@ -4889,7 +4889,7 @@ msgstr "帳單週期"
 
 #. Accordion title in the premium billing panel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:50
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:104
 msgid "Billing history"
 msgstr "帳單記錄"
@@ -18817,7 +18817,7 @@ msgid "Manage nicknames"
 msgstr "管理暱稱"
 
 #. Billing button that opens Stripe customer portal for payment-method management only.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:40
 msgid "Manage payment methods"
 msgstr "管理付款方式"
 
@@ -38324,10 +38324,6 @@ msgstr "您的個人資料隱私設定有限，因此即使啟用「所有人」
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:34
 msgid "Your purchased gifts"
 msgstr "您已購買的禮物"
-
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:32
-msgid "Your recent invoices. To change the payment method for your subscription, add or choose one in the billing portal and make it the default."
-msgstr "您最近的帳單。若要變更訂閱的付款方式，請在帳務入口網站中新增或選擇一個付款方式，並將其設為預設。"
 
 #. Short label in the region display names. Keep it concise.
 #: src/features/user/utils/UserGeo.ts:7

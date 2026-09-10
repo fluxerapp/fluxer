@@ -4889,7 +4889,7 @@ msgstr "Ciclu de facturare"
 
 #. Accordion title in the premium billing panel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:50
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:104
 msgid "Billing history"
 msgstr "Istoricul plăților"
@@ -18817,7 +18817,7 @@ msgid "Manage nicknames"
 msgstr "Gestionează poreclele"
 
 #. Billing button that opens Stripe customer portal for payment-method management only.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:40
 msgid "Manage payment methods"
 msgstr "Gestionează metodele de plată"
 
@@ -38324,10 +38324,6 @@ msgstr "Confidențialitatea profilului tău este limitată, astfel încât unele
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:34
 msgid "Your purchased gifts"
 msgstr "Cadourile tale cumpărate"
-
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:32
-msgid "Your recent invoices. To change the payment method for your subscription, add or choose one in the billing portal and make it the default."
-msgstr "Facturile tale recente. Pentru a schimba metoda de plată pentru abonamentul tău, adaugă sau alege una în portalul de facturare și seteaz-o ca implicită."
 
 #. Short label in the region display names. Keep it concise.
 #: src/features/user/utils/UserGeo.ts:7

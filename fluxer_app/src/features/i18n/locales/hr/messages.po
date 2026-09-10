@@ -4889,7 +4889,7 @@ msgstr "Obračunsko razdoblje"
 
 #. Accordion title in the premium billing panel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:50
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:104
 msgid "Billing history"
 msgstr "Povijest naplate"
@@ -18817,7 +18817,7 @@ msgid "Manage nicknames"
 msgstr "Upravljanje nadimcima"
 
 #. Billing button that opens Stripe customer portal for payment-method management only.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:40
 msgid "Manage payment methods"
 msgstr "Upravljanje načinima plaćanja"
 
@@ -38324,10 +38324,6 @@ msgstr "Vaše postavke privatnosti profila su ograničene, pa čak i kada je oda
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:34
 msgid "Your purchased gifts"
 msgstr "Vaši kupljeni darovi"
-
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:32
-msgid "Your recent invoices. To change the payment method for your subscription, add or choose one in the billing portal and make it the default."
-msgstr "Vaši nedavni računi. Za promjenu načina plaćanja za vašu pretplatu, dodajte ili odaberite jedan na portalu za naplatu i postavite ga kao zadani."
 
 #. Short label in the region display names. Keep it concise.
 #: src/features/user/utils/UserGeo.ts:7

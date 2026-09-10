@@ -4889,7 +4889,7 @@ msgstr "Ciclo de facturación"
 
 #. Accordion title in the premium billing panel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:50
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:104
 msgid "Billing history"
 msgstr "Historial de facturación"
@@ -18817,7 +18817,7 @@ msgid "Manage nicknames"
 msgstr "Gestionar apodos"
 
 #. Billing button that opens Stripe customer portal for payment-method management only.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:40
 msgid "Manage payment methods"
 msgstr "Gestionar métodos de pago"
 
@@ -38324,10 +38324,6 @@ msgstr "La privacidad de tu perfil es limitada, por lo que algunas personas segu
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:34
 msgid "Your purchased gifts"
 msgstr "Tus regalos comprados"
-
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:32
-msgid "Your recent invoices. To change the payment method for your subscription, add or choose one in the billing portal and make it the default."
-msgstr "Tus facturas recientes. Para cambiar el método de pago de tu suscripción, añade o elige uno en el portal de facturación y establécelo como predeterminado."
 
 #. Short label in the region display names. Keep it concise.
 #: src/features/user/utils/UserGeo.ts:7

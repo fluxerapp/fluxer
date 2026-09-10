@@ -4889,7 +4889,7 @@ msgstr "รอบบิล"
 
 #. Accordion title in the premium billing panel.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:50
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:104
 msgid "Billing history"
 msgstr "ประวัติการเรียกเก็บเงิน"
@@ -18817,7 +18817,7 @@ msgid "Manage nicknames"
 msgstr "จัดการชื่อเล่น"
 
 #. Billing button that opens Stripe customer portal for payment-method management only.
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:40
 msgid "Manage payment methods"
 msgstr "จัดการวิธีการชำระเงิน"
 
@@ -38324,10 +38324,6 @@ msgstr "ความเป็นส่วนตัวของโปรไฟล
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:34
 msgid "Your purchased gifts"
 msgstr "ของขวัญที่คุณซื้อ"
-
-#: src/features/app/components/dialogs/components/plutonium/PurchaseHistorySection.tsx:32
-msgid "Your recent invoices. To change the payment method for your subscription, add or choose one in the billing portal and make it the default."
-msgstr "ใบแจ้งหนี้ล่าสุดของคุณ หากต้องการเปลี่ยนวิธีการชำระเงินสำหรับการสมัครสมาชิก ให้เพิ่มหรือเลือกวิธีการชำระเงินในพอร์ทัลการเรียกเก็บเงินและตั้งเป็นค่าเริ่มต้น"
 
 #. Short label in the region display names. Keep it concise.
 #: src/features/user/utils/UserGeo.ts:7

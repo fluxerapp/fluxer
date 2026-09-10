@@ -49,12 +49,6 @@
 	color: var(--text-primary);
 }
 
-.description {
-	font-size: 0.8125rem;
-	line-height: 1.25rem;
-	color: var(--text-primary-muted);
-}
-
 @media (min-width: 768px) {
 	.description {
 		font-size: 0.875rem;
