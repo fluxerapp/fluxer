@@ -113,7 +113,10 @@ export function setupSyncStripeWebhookWorker(): void {
 	setInjectedWorkerService(new SyncTaskWorkerService({processStripeWebhook}));
 }
 
+let originalWebhookSecretDescriptor: PropertyDescriptor | undefined;
+
 export function mockStripeWebhookSecret(secret = 'whsec_test'): void {
+	originalWebhookSecretDescriptor ??= Object.getOwnPropertyDescriptor(Config.stripe, 'webhookSecret');
 	Object.defineProperty(Config.stripe, 'webhookSecret', {
 		get: () => secret,
 		configurable: true,
@@ -121,6 +124,11 @@ export function mockStripeWebhookSecret(secret = 'whsec_test'): void {
 }
 
 export function restoreStripeWebhookSecret(): void {
+	if (originalWebhookSecretDescriptor) {
+		Object.defineProperty(Config.stripe, 'webhookSecret', originalWebhookSecretDescriptor);
+		originalWebhookSecretDescriptor = undefined;
+		return;
+	}
 	delete (
 		Config.stripe as {
 			webhookSecret?: string;
