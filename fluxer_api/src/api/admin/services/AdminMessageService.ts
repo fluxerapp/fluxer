@@ -229,14 +229,11 @@ export class AdminMessageService {
 			hitsPerPage: limit,
 			page: 1,
 		});
-		const messageEntries = result.hits.map((hit) => ({
-			channelId: createChannelID(BigInt(hit.channelId)),
-			messageId: createMessageID(BigInt(hit.id)),
-		}));
-		const resolvedMessages = await Promise.all(
-			messageEntries.map(({channelId, messageId}) => this.getMessageResponseForAdmin(channelId, messageId)),
-		);
-		const messageResponses = resolvedMessages.filter((message): message is MessageResponse => message !== null);
+		const messageResponses = await createMessageResponseDataService().buildMessages({
+			userId: createUserID(0n),
+			messages: result.messages,
+			access: await this.getMessageResponseAccessForAdmin(channelId),
+		});
 		const attachmentStatuses = await this.getAttachmentStatusesForMessages(messageResponses);
 		const priorReports = await this.getPriorReportsForMessages(messageResponses);
 		const adminMessages = messageResponses.map((message) =>
@@ -278,19 +275,6 @@ export class AdminMessageService {
 			before: params.before,
 			after: params.after,
 			around: params.around,
-			access,
-		});
-	}
-
-	private async getMessageResponseForAdmin(
-		channelId: ChannelID,
-		messageId: MessageID,
-	): Promise<MessageResponse | null> {
-		const access = await this.getMessageResponseAccessForAdmin(channelId);
-		return createMessageResponseDataService().getMessage({
-			userId: createUserID(0n),
-			channelId,
-			messageId,
 			access,
 		});
 	}

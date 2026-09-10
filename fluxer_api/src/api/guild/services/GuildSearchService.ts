@@ -156,7 +156,7 @@ export class GuildSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,
@@ -238,7 +238,7 @@ export class GuildSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,

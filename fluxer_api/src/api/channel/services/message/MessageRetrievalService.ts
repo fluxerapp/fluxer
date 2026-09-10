@@ -4,11 +4,10 @@ import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants'
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {MessageResponse, MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
 import type {AttachmentID, ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createMessageID} from '../../../BrandedTypes';
 import type {UserCacheService} from '../../../infrastructure/UserCacheService';
 import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
 import type {Channel} from '../../../models/Channel';
@@ -192,29 +191,19 @@ export class MessageRetrievalService {
 			hitsPerPage,
 			page,
 		});
-		const messageEntries = result.hits.map((hit) => ({
-			channelId: createChannelID(BigInt(hit.channelId)),
-			messageId: createMessageID(BigInt(hit.id)),
-		}));
 		const access = {
 			sourceGuildId: channel.guildId,
 			messageHistoryCutoff: !hasReadHistory ? (authChannel.guild?.message_history_cutoff ?? null) : null,
 			canReadMessageHistory: hasReadHistory,
 		};
-		const responseDataService = createMessageResponseDataService();
-		const foundMessages = await Promise.all(
-			messageEntries.map(({channelId, messageId}) =>
-				responseDataService.getMessage({
-					userId,
-					channelId,
-					messageId,
-					access,
-				}),
-			),
+		const builtMessages = await createMessageResponseDataService().buildMessages({
+			userId,
+			messages: result.messages,
+			access,
+		});
+		const messageResponses = builtMessages.map(
+			({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage,
 		);
-		const messageResponses = foundMessages
-			.filter((message): message is MessageResponse => message !== null)
-			.map(({referenced_message: _referencedMessage, ...searchMessage}) => searchMessage);
 		return {
 			channels: messageResponses.length > 0 ? [await this.mapSearchChannelResponse(channel, userId, requestCache)] : [],
 			messages: messageResponses,
