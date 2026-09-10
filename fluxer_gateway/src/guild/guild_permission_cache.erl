@@ -134,15 +134,25 @@ get_snapshot(_) ->
     {error, not_found}.
 
 -spec snapshot_with_live_members(guild_state()) -> {ok, guild_state()} | {error, not_found}.
-snapshot_with_live_members(#{data := #{members_ets := Tab}} = Snapshot) when
-    is_reference(Tab)
-->
+snapshot_with_live_members(Snapshot) ->
+    case snapshot_member_table(Snapshot) of
+        Tab when is_reference(Tab) -> live_member_table_snapshot(Tab, Snapshot);
+        undefined -> {ok, Snapshot}
+    end.
+
+-spec live_member_table_snapshot(ets:tid(), guild_state()) ->
+    {ok, guild_state()} | {error, not_found}.
+live_member_table_snapshot(Tab, Snapshot) ->
     case ets:info(Tab, owner) of
         undefined -> {error, not_found};
         _ -> {ok, Snapshot}
-    end;
-snapshot_with_live_members(Snapshot) ->
-    {ok, Snapshot}.
+    end.
+
+-spec snapshot_member_table(guild_state()) -> ets:tid() | undefined.
+snapshot_member_table(#{data := Data}) when is_map(Data) ->
+    data_member_table(Data);
+snapshot_member_table(_Snapshot) ->
+    undefined.
 
 -spec safe_member_read(fun(() -> {ok, term()})) -> {ok, term()} | {error, not_found}.
 safe_member_read(Read) ->
@@ -155,10 +165,11 @@ safe_member_read(Read) ->
 -spec project_member(guild_state(), map() | undefined) -> map() | undefined.
 project_member(_Snapshot, undefined) ->
     undefined;
-project_member(#{data := #{members_ets := Tab}}, Member) when is_reference(Tab) ->
-    strip_member(Member);
-project_member(_Snapshot, Member) ->
-    Member.
+project_member(Snapshot, Member) ->
+    case snapshot_member_table(Snapshot) of
+        Tab when is_reference(Tab) -> strip_member(Member);
+        undefined -> Member
+    end.
 
 -spec ensure_table() -> ok.
 ensure_table() ->
@@ -196,16 +207,25 @@ with_member_source(Data, Base) ->
     end.
 
 -spec shared_member_table(guild_data()) -> {ok, ets:tid()} | none.
-shared_member_table(#{members_ets := Tab}) when is_reference(Tab) ->
-    Readable =
-        members_ets_enabled() andalso ets:info(Tab, type) =:= set andalso
-            lists:member(ets:info(Tab, protection), [public, protected]),
-    case Readable of
-        true -> {ok, Tab};
-        false -> none
-    end;
-shared_member_table(_Data) ->
-    none.
+shared_member_table(Data) ->
+    case {members_ets_enabled(), data_member_table(Data)} of
+        {true, Tab} when is_reference(Tab) -> readable_member_table(Tab);
+        _ -> none
+    end.
+
+-spec readable_member_table(ets:tid()) -> {ok, ets:tid()} | none.
+readable_member_table(Tab) ->
+    case {ets:info(Tab, type), ets:info(Tab, protection)} of
+        {set, public} -> {ok, Tab};
+        {set, protected} -> {ok, Tab};
+        _ -> none
+    end.
+
+-spec data_member_table(guild_data()) -> ets:tid() | undefined.
+data_member_table(#{members_ets := Tab}) ->
+    Tab;
+data_member_table(_Data) ->
+    undefined.
 
 -spec members_ets_enabled() -> boolean().
 members_ets_enabled() ->
