@@ -10,6 +10,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::thread;
+use std::time::Duration;
 
 pub(crate) const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
@@ -321,9 +323,34 @@ struct GitRef {
     name: String,
 }
 
+const PUBLISH_ATTEMPTS: u64 = 3;
+
 pub async fn run(args: ReleaseArgs) -> Result<()> {
     match args.command {
-        ReleaseCommand::Publish(args) => publish(args),
+        ReleaseCommand::Publish(args) => retry_publish(
+            PUBLISH_ATTEMPTS,
+            |attempt| thread::sleep(Duration::from_secs(attempt * 15)),
+            || publish(args.clone()),
+        ),
+    }
+}
+
+fn retry_publish(
+    attempts: u64,
+    mut wait: impl FnMut(u64),
+    mut publish: impl FnMut() -> Result<()>,
+) -> Result<()> {
+    let mut attempt = 1;
+    loop {
+        match publish() {
+            Ok(()) => return Ok(()),
+            Err(error) if attempt < attempts => {
+                eprintln!("Release publish attempt {attempt} of {attempts} failed: {error:#}");
+                wait(attempt);
+                attempt += 1;
+            }
+            Err(error) => return Err(error),
+        }
     }
 }
 
@@ -1009,4 +1036,63 @@ fn release_body(previous_sha: &str, source_sha: &str) -> String {
 
 fn desktop_channel(component: &str) -> Option<&str> {
     component.strip_prefix("fluxer-desktop-")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::anyhow;
+
+    #[test]
+    fn retry_publish_retries_until_a_publish_succeeds() {
+        let mut calls = 0;
+        let mut waits = Vec::new();
+        let result = retry_publish(
+            3,
+            |attempt| waits.push(attempt),
+            || {
+                calls += 1;
+                if calls < 3 {
+                    Err(anyhow!("unexpected end of JSON input"))
+                } else {
+                    Ok(())
+                }
+            },
+        );
+        assert!(result.is_ok());
+        assert_eq!(calls, 3);
+        assert_eq!(waits, vec![1, 2]);
+    }
+
+    #[test]
+    fn retry_publish_returns_the_last_error_without_waiting_after_it() {
+        let mut calls = 0;
+        let mut waits = Vec::new();
+        let result = retry_publish(
+            3,
+            |attempt| waits.push(attempt),
+            || {
+                calls += 1;
+                Err(anyhow!("attempt {calls} failed"))
+            },
+        );
+        assert_eq!(result.unwrap_err().to_string(), "attempt 3 failed");
+        assert_eq!(calls, 3);
+        assert_eq!(waits, vec![1, 2]);
+    }
+
+    #[test]
+    fn retry_publish_does_not_retry_a_successful_publish() {
+        let mut calls = 0;
+        let result = retry_publish(
+            3,
+            |_| panic!("a successful publish must not wait"),
+            || {
+                calls += 1;
+                Ok(())
+            },
+        );
+        assert!(result.is_ok());
+        assert_eq!(calls, 1);
+    }
 }
