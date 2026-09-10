@@ -308,7 +308,7 @@ export async function createMessageSnapshotsForForward(
 	return [new MessageSnapshotModel(snapshotData)];
 }
 
-function collectEmbedReferencedAttachmentCdnKeys(message: Message): Array<string> {
+function collectEmbedReferencedAttachmentCdnKeys(message: Message, ownKeys: ReadonlySet<string>): Array<string> {
 	const mediaPrefix = `${Config.endpoints.media}/`;
 	const keys = new Set<string>();
 	const consider = (url: string | null | undefined): void => {
@@ -316,7 +316,7 @@ function collectEmbedReferencedAttachmentCdnKeys(message: Message): Array<string
 			return;
 		}
 		const key = url.slice(mediaPrefix.length);
-		if (key.startsWith('attachments/')) {
+		if (ownKeys.has(key)) {
 			keys.add(key);
 		}
 	};
@@ -342,6 +342,11 @@ export async function purgeMessageAttachments(
 ): Promise<void> {
 	const cdnKeys = new Set<string>();
 	const cdnUrls: Array<string> = [];
+	const ownedCdnKeys = new Set<string>(
+		collectMessageAttachments(message).map((attachment) =>
+			makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename),
+		),
+	);
 	for (const attachment of collectMessageAttachments(message)) {
 		const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
 		if (cdnKeys.has(cdnKey)) {
@@ -352,7 +357,7 @@ export async function purgeMessageAttachments(
 			cdnUrls.push(makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename));
 		}
 	}
-	for (const embedKey of collectEmbedReferencedAttachmentCdnKeys(message)) {
+	for (const embedKey of collectEmbedReferencedAttachmentCdnKeys(message, ownedCdnKeys)) {
 		if (cdnKeys.has(embedKey)) {
 			continue;
 		}
