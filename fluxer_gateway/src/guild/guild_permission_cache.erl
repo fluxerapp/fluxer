@@ -85,8 +85,9 @@ safe_ets_delete(GuildId) ->
 get_permissions(GuildId, UserId, ChannelId) when is_integer(GuildId), is_integer(UserId) ->
     case get_snapshot(GuildId) of
         {ok, Snapshot} ->
-            Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, Snapshot),
-            {ok, Permissions};
+            safe_member_read(fun() ->
+                {ok, guild_permissions:get_member_permissions(UserId, ChannelId, Snapshot)}
+            end);
         {error, not_found} ->
             {error, not_found}
     end;
@@ -97,8 +98,9 @@ get_permissions(_, _, _) ->
 has_member(GuildId, UserId) when is_integer(GuildId), is_integer(UserId) ->
     case get_snapshot(GuildId) of
         {ok, Snapshot} ->
-            Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
-            {ok, Member =/= undefined};
+            safe_member_read(fun() ->
+                {ok, guild_permissions:find_member_by_user_id(UserId, Snapshot) =/= undefined}
+            end);
         {error, not_found} ->
             {error, not_found}
     end;
@@ -109,7 +111,10 @@ has_member(_, _) ->
 get_member(GuildId, UserId) when is_integer(GuildId), is_integer(UserId) ->
     case get_snapshot(GuildId) of
         {ok, Snapshot} ->
-            {ok, guild_permissions:find_member_by_user_id(UserId, Snapshot)};
+            safe_member_read(fun() ->
+                Member = guild_permissions:find_member_by_user_id(UserId, Snapshot),
+                {ok, project_member(Snapshot, Member)}
+            end);
         {error, not_found} ->
             {error, not_found}
     end;
@@ -121,12 +126,39 @@ get_snapshot(GuildId) when is_integer(GuildId) ->
     ensure_table(),
     case ets:lookup(?TABLE, GuildId) of
         [{GuildId, Snapshot}] ->
-            {ok, Snapshot};
+            snapshot_with_live_members(Snapshot);
         [] ->
             {error, not_found}
     end;
 get_snapshot(_) ->
     {error, not_found}.
+
+-spec snapshot_with_live_members(guild_state()) -> {ok, guild_state()} | {error, not_found}.
+snapshot_with_live_members(#{data := #{members_ets := Tab}} = Snapshot) when
+    is_reference(Tab)
+->
+    case ets:info(Tab, owner) of
+        undefined -> {error, not_found};
+        _ -> {ok, Snapshot}
+    end;
+snapshot_with_live_members(Snapshot) ->
+    {ok, Snapshot}.
+
+-spec safe_member_read(fun(() -> {ok, term()})) -> {ok, term()} | {error, not_found}.
+safe_member_read(Read) ->
+    try
+        Read()
+    catch
+        error:badarg -> {error, not_found}
+    end.
+
+-spec project_member(guild_state(), map() | undefined) -> map() | undefined.
+project_member(_Snapshot, undefined) ->
+    undefined;
+project_member(#{data := #{members_ets := Tab}}, Member) when is_reference(Tab) ->
+    strip_member(Member);
+project_member(_Snapshot, Member) ->
+    Member.
 
 -spec ensure_table() -> ok.
 ensure_table() ->
@@ -135,25 +167,52 @@ ensure_table() ->
 -spec strip_data(guild_data()) -> guild_data().
 strip_data(Data) when is_map(Data) ->
     Guild = strip_guild(maps:get(<<"guild">>, Data, #{})),
-    Members = memoised_strip_members(maps:get(<<"members">>, Data, #{})),
     Roles = strip_roles(maps:get(<<"roles">>, Data, [])),
     Channels = strip_channels(maps:get(<<"channels">>, Data, [])),
     ChannelIndex = strip_channel_index(maps:get(<<"channel_index">>, Data, #{})),
     MemberRoleIndex = maps:get(<<"member_role_index">>, Data, #{}),
     RolePermsCache = maps:get(role_perms_cache, Data, #{}),
     OverwritePermsCache = maps:get(overwrite_perms_cache, Data, #{}),
-    #{
+    with_member_source(Data, #{
         <<"guild">> => Guild,
-        <<"members">> => Members,
         <<"roles">> => Roles,
         <<"channels">> => Channels,
         <<"channel_index">> => ChannelIndex,
         <<"member_role_index">> => MemberRoleIndex,
         role_perms_cache => RolePermsCache,
         overwrite_perms_cache => OverwritePermsCache
-    };
+    });
 strip_data(Data) ->
     Data.
+
+-spec with_member_source(guild_data(), guild_data()) -> guild_data().
+with_member_source(Data, Base) ->
+    case shared_member_table(Data) of
+        {ok, Tab} ->
+            _ = erlang:erase(?STRIPPED_MEMBERS_MEMO),
+            Base#{<<"members">> => #{}, members_ets => Tab};
+        none ->
+            Base#{<<"members">> => memoised_strip_members(maps:get(<<"members">>, Data, #{}))}
+    end.
+
+-spec shared_member_table(guild_data()) -> {ok, ets:tid()} | none.
+shared_member_table(#{members_ets := Tab}) when is_reference(Tab) ->
+    Readable =
+        members_ets_enabled() andalso ets:info(Tab, type) =:= set andalso
+            lists:member(ets:info(Tab, protection), [public, protected]),
+    case Readable of
+        true -> {ok, Tab};
+        false -> none
+    end;
+shared_member_table(_Data) ->
+    none.
+
+-spec members_ets_enabled() -> boolean().
+members_ets_enabled() ->
+    case application:get_env(fluxer_gateway, permission_cache_members_ets, true) of
+        false -> false;
+        _ -> true
+    end.
 
 -spec member_projection_changed(user_id() | undefined, guild_data(), guild_data()) -> boolean().
 member_projection_changed(UserId, OldData, NewData) when is_integer(UserId) ->
