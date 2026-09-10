@@ -4,10 +4,6 @@ import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
-export const PricingModeEnum = z.enum(['localized', 'base']);
-
-export type PricingMode = z.infer<typeof PricingModeEnum>;
-
 export const WebhookReceivedResponse = z.object({
 	received: z.boolean().describe('Whether the webhook was successfully received'),
 });
@@ -40,8 +36,11 @@ export const PriceIdsResponse = z.object({
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
 
 export const PriceIdsQueryRequest = z.object({
-	country_code: createStringType(2, 2).optional().describe('Two-letter country code for regional pricing'),
-	pricing_mode: PricingModeEnum.optional().describe('Whether to resolve localized or standard USD/EUR pricing'),
+	country_code: createStringType(2, 2)
+		.optional()
+		.describe(
+			'Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
+		),
 });
 
 export type PriceIdsQueryRequest = z.infer<typeof PriceIdsQueryRequest>;
@@ -358,7 +357,6 @@ const PremiumBillingState = z.object({
 export const PremiumPricingState = z.object({
 	country_code: createStringType(2, 2).nullable().describe('Country code used to resolve localized prices'),
 	localized: PriceIdsResponse.nullable().describe('Localized checkout prices resolved from mirrored billing data'),
-	base: PriceIdsResponse.nullable().describe('Standard USD/EUR checkout prices resolved from mirrored billing data'),
 });
 
 export type PremiumPricingState = z.infer<typeof PremiumPricingState>;
@@ -373,7 +371,11 @@ export const PremiumStateResponse = z.object({
 export type PremiumStateResponse = z.infer<typeof PremiumStateResponse>;
 
 export const PremiumStateQueryRequest = z.object({
-	country_code: createStringType(2, 2).optional().describe('Two-letter country code for regional pricing'),
+	country_code: createStringType(2, 2)
+		.optional()
+		.describe(
+			'Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
+		),
 });
 
 export type PremiumStateQueryRequest = z.infer<typeof PremiumStateQueryRequest>;

@@ -272,16 +272,6 @@ msgstr "{backgroundCount} / {maxBackgroundImages} prilagođenih pozadina"
 msgid "{backgroundCount} / {maxBackgroundImages} custom backgrounds"
 msgstr "{backgroundCount} / {maxBackgroundImages} prilagođenih pozadina"
 
-#. Plutonium gift checkout guidance for Poland. Explains that BLIK works for gifts but not for recurring subscriptions.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:53
-msgid "{blikPaymentMethod} can be used for one-time PLN gift payments, even though it does not support subscriptions in {paymentProviderName} checkout."
-msgstr "{blikPaymentMethod} se može koristiti za jednokratna plaćanja poklona u PLN-u, iako ne podržava pretplate u naplati {paymentProviderName}."
-
-#. Plutonium subscription checkout guidance for Poland. Clarifies that BLIK is not available for recurring subscriptions.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:181
-msgid "{blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout."
-msgstr "{blikPaymentMethod} ne podržava pretplate pri naplati putem {paymentProviderName}."
-
 #. Accessible label for a category row in the Discovery search sidebar. {categoryLabel} is the category name and {count} is how many communities match the current search in it. Both are inserted by code.
 #: src/features/discovery/discovery/DiscoverySearchFilters.tsx:37
 msgid "{categoryLabel}, {count, plural, one {# community} other {# communities}}"
@@ -850,16 +840,6 @@ msgstr "{lineCount, plural, one {# redak} few {# retka} other {# redaka}}"
 msgid "{matchCount, plural, one {# match} other {# matches}}"
 msgstr "{matchCount, plural, one {# podudaranje} other {# podudaranja}}"
 
-#. Plutonium gift checkout guidance for Portugal. Explains that MB WAY can be used for one-time EUR gift purchases.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:83
-msgid "{mbWayPaymentMethod} can be used for one-time EUR gift payments when {paymentProviderName} offers it on the checkout page."
-msgstr "{mbWayPaymentMethod} se može koristiti za jednokratna darovna plaćanja u EUR-ima kada to {paymentProviderName} nudi na stranici za naplatu."
-
-#. Plutonium subscription checkout guidance for Portugal. Explains that MB WAY cannot be used for recurring subscriptions.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:103
-msgid "{mbWayPaymentMethod} is a one-time payment method in {paymentProviderName} checkout, so it is not a recurring subscription path here."
-msgstr "{mbWayPaymentMethod} je jednokratna metoda plaćanja u naplati putem {paymentProviderName}, tako da ovdje nije put za ponavljajuću pretplatu."
-
 #. Community tooltip stat showing the total member count. memberCount is already localized for display; rawMemberCount controls plural grammar.
 #: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:36
 msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
@@ -936,19 +916,9 @@ msgid "{overrideCount, plural, one {# override} other {# overrides}}"
 msgstr "{overrideCount, plural, one {# izmjena} other {# izmjene}}"
 
 #. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:181
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then continue you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} će prvo provjeriti ispunjava li vaša kartica uvjete za lokalizirane cijene, a zatim će vas preusmjeriti na plaćanje. Vratite se na {productName} nakon što to dovršite."
-
-#. Plutonium gift checkout guidance for Brazil. Explains that Pix is available for one-time gift purchases via the payment provider.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:24
-msgid "{pixPaymentMethod} can be used for one-time BRL payments when {paymentProviderName} offers it on the checkout page."
-msgstr "{pixPaymentMethod} se može koristiti za jednokratna BRL plaćanja kada ga {paymentProviderName} nudi na stranici za naplatu."
-
-#. Plutonium subscription checkout guidance for Brazil. Explains that recurring Pix avoids card verification.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:140
-msgid "{pixPaymentMethod} can skip the card verification step when {paymentProviderName} offers recurring {pixPaymentMethod2} for your checkout."
-msgstr "{pixPaymentMethod} može preskočiti korak provjere kartice kada {paymentProviderName} nudi ponavljajuće plaćanje putem {pixPaymentMethod2} za vašu naplatu."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:51
@@ -1347,16 +1317,6 @@ msgstr "{unreadCount}+ novih poruka od {compactTime}"
 msgid "{unreadCount}+ new since {shortTime}"
 msgstr "{unreadCount}+ novih od {shortTime}"
 
-#. Plutonium gift checkout guidance for India. Explains that UPI is available for one-time gift purchases via the payment provider.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:39
-msgid "{upiPaymentMethod} can be used for one-time INR payments when {paymentProviderName} offers it on the checkout page."
-msgstr "{upiPaymentMethod} se može koristiti za jednokratna plaćanja u INR-u kada ga {paymentProviderName} nudi na stranici za naplatu."
-
-#. Plutonium subscription checkout guidance for India. Explains that recurring UPI avoids card verification.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:160
-msgid "{upiPaymentMethod} can skip the card verification step when {paymentProviderName} offers recurring {upiPaymentMethod2} for your checkout."
-msgstr "{upiPaymentMethod} može preskočiti korak provjere kartice kada {paymentProviderName} nudi ponavljajuće {upiPaymentMethod2} za vašu naplatu."
-
 #. System message in a group DM when a member adds another user. username is the actor, userName is the added user.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:100
 msgid "{username} added {userName} to the group."
@@ -1408,7 +1368,7 @@ msgid "{username} started a call."
 msgstr "{username} je započeo poziv."
 
 #. Short label in the channel and chat embed you tube. Keep it concise. Preserve {youtubeProviderName}; it is inserted by code.
-#: src/features/channel/components/embeds/media/EmbedYouTube.tsx:34
+#: src/features/channel/components/embeds/media/EmbedYouTube.tsx:35
 msgid "{youtubeProviderName} video"
 msgstr "Videozapis s usluge {youtubeProviderName}"
 
@@ -1532,10 +1492,6 @@ msgstr "<0>Uklonjen</0> nadimak {0}."
 msgid "<0>Removed</0> the vanity URL."
 msgstr "<0>Uklonjen</0> prilagođeni URL."
 
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:84
-msgid "<0>Saved media</0>: uploaded, taggable, searchable, and persistent, but counts against your saved media limit."
-msgstr "<0>Spremljeni medij</0>: prenesen, može se označiti, pretraživati i trajan je, ali se uračunava u vaše ograničenje spremljenog medija."
-
 #. Activity-log sentence. A moderator removed voice deafen from a member, meaning the member can hear others again. Preserve the rich-text tags.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:489
 msgid "<0>Undeafened</0> the member."
@@ -1544,10 +1500,6 @@ msgstr "<0>Uklonjeno prigušivanje zvuka</0> za člana."
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:499
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>Uklonjena blokada zvuka</0> za člana."
-
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:72
-msgid "<0>URL-only favorites (default)</0>: synced across your devices, no upload, doesn't count against saved media. The original media may disappear if its host removes it."
-msgstr "<0>Favoriti samo s URL-om (zadano)</0>: sinkronizirano na svim vašim uređajima, bez prijenosa, ne računa se u spremljene medije. Izvorni medij može nestati ako ga njegov davatelj ukloni."
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:167
@@ -1586,14 +1538,14 @@ msgstr "1 minuta"
 msgid "1 month"
 msgstr "1 mjesec"
 
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:119
 msgid "1 month {giftMonthlyPrice}"
 msgstr "1 mjesec {giftMonthlyPrice}"
 
 #. Billing plan title for a one-month gift subscription.
 #. Short label in the Plutonium gift section. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/GiftSection.tsx:34
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:68
+#: src/features/app/components/dialogs/components/plutonium/GiftSection.tsx:32
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:66
 msgid "1 month gift"
 msgstr "Poklon za 1 mjesec"
 
@@ -1639,14 +1591,14 @@ msgstr "1 tjedan"
 msgid "1 year"
 msgstr "1 godina"
 
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:128
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:103
 msgid "1 year {giftYearlyPrice}"
 msgstr "1 godina {giftYearlyPrice}"
 
 #. Billing plan title for a one-year gift subscription.
 #. Short label in the Plutonium gift section. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/GiftSection.tsx:26
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:60
+#: src/features/app/components/dialogs/components/plutonium/GiftSection.tsx:24
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:58
 msgid "1 year gift"
 msgstr "Poklon za 1 godinu"
 
@@ -3940,7 +3892,7 @@ msgid "Arrow keys review suggestions. Enter selects, Escape clears, Tab moves on
 msgstr "Tipke sa strelicama pregledavaju prijedloge. Enter odabire, Escape briše, Tab pomiče dalje."
 
 #. Purchase mode option for buying a gift subscription for another user.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:32
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:30
 msgid "As a gift"
 msgstr "Kao poklon"
 
@@ -5770,12 +5722,12 @@ msgstr "Poništi zakazanu promjenu"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:842
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:138
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:127
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Otkaži pretplatu"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:131
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:120
 msgid "Cancel subscription?"
 msgstr "Otkaži pretplatu?"
 
@@ -5866,26 +5818,6 @@ msgstr "Kartica nije prihvatljiva"
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:261
 msgid "Card verification was canceled. You can close this tab and return to the app."
 msgstr "Potvrda kartice je otkazana. Možete zatvoriti ovu karticu i vratiti se u aplikaciju."
-
-#. Plutonium subscription checkout guidance for Brazil. Explains that BRL card subscriptions need a verification step and a Brazil-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:134
-msgid "Cards can keep BRL pricing after a quick {paymentProviderName} verification, but the card must be issued in Brazil."
-msgstr "Kartice mogu zadržati cijene u BRL-u nakon brze provjere putem {paymentProviderName}, ali kartica mora biti izdana u Brazilu."
-
-#. Plutonium subscription checkout guidance for India. Explains that INR card subscriptions need a verification step and an India-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:154
-msgid "Cards can keep INR pricing after a quick {paymentProviderName} verification, but the card must be issued in India."
-msgstr "Kartice mogu zadržati cijene u INR-u nakon brze provjere putem {paymentProviderName}, ali kartica mora biti izdana u Indiji."
-
-#. Plutonium subscription checkout guidance for Poland. Explains that PLN card subscriptions need a verification step and a Poland-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:175
-msgid "Cards can keep PLN pricing after a quick {paymentProviderName} verification, but the card must be issued in Poland."
-msgstr "Kartice mogu zadržati cijenu u PLN-u nakon brze provjere putem usluge {paymentProviderName}, ali kartica mora biti izdana u Poljskoj."
-
-#. Plutonium subscription checkout guidance for Türkiye. Explains that TRY card subscriptions need a verification step and a Türkiye-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:195
-msgid "Cards can keep TRY pricing after a quick {paymentProviderName} verification, but the card must be issued in Türkiye."
-msgstr "Kartice mogu zadržati TRY cijene nakon brze provjere putem {paymentProviderName}, ali kartica mora biti izdana u Turskoj."
 
 #. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
@@ -6564,12 +6496,12 @@ msgid "Checkout"
 msgstr "Naplata"
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:147
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Naplata je blokirana za ovaj račun. Obratite se {supportEmail} ako trebate pomoć."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:143
 msgid "Checkout unavailable"
 msgstr "Naplata nedostupna"
 
@@ -6737,7 +6669,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Odaberite kako će se prikazivati vrijeme u aplikaciji"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Odaberite način plaćanja za ovu pretplatu."
 
@@ -6756,7 +6688,7 @@ msgid "Choose one verification method. Either method can clear this check."
 msgstr "Odaberite jednu metodu provjere. Bilo koja metoda može ukloniti ovu provjeru."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:196
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
 msgid "Choose payment method"
 msgstr "Odaberite način plaćanja"
 
@@ -6946,7 +6878,7 @@ msgstr "Preuzmite svoj račun da biste se pridružili glasovnim kanalima čiji n
 
 #. Billing tooltip shown when an unclaimed account cannot start premium checkout. premiumProductFullName is the full paid product name.
 #. Plutonium upsell CTA tooltip shown to guests/unclaimed accounts: claiming the account is required before purchase. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:15
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:13
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:17
 msgid "Claim your account to purchase {premiumProductFullName}."
 msgstr "Preuzmite svoj račun za kupnju proizvoda {premiumProductFullName}."
@@ -7935,7 +7867,7 @@ msgid "Complete one of the verification paths below to continue using {productNa
 msgstr "Dovršite jedan od putova provjere u nastavku kako biste nastavili koristiti {productName}."
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:178
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:177
 msgid "Complete payment"
 msgstr "Dovrši plaćanje"
 
@@ -8392,7 +8324,7 @@ msgid "Continue"
 msgstr "Nastavi"
 
 #. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:89
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:88
 msgid "Continue to checkout"
 msgstr "Nastavi na plaćanje"
 
@@ -9120,7 +9052,7 @@ msgstr "Nije moguće otvoriti rezultat pretraživanja"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -9267,7 +9199,7 @@ msgid "Couldn't start {blueskyProviderName} authorisation"
 msgstr "Nije moguće pokrenuti autorizaciju za {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:151
 msgid "Couldn't start checkout"
 msgstr "Nije moguće pokrenuti naplatu"
 
@@ -12989,11 +12921,11 @@ msgstr "Datum završetka"
 msgid "End grace now"
 msgstr "Završi poček sada"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:160
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:149
 msgid "End grace period"
 msgstr "Završi prijelazno razdoblje"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:153
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 msgid "End grace period now?"
 msgstr "Završiti poček sada?"
 
@@ -13418,16 +13350,6 @@ msgstr "escape za <0><1>odustajanje</1></0>"
 #: src/features/moderation/components/report/OptionDescriptors.ts:139
 msgid "Estonia"
 msgstr "Estonija"
-
-#. Plutonium gift checkout panel title for buyers in Portugal paying with EUR.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:79
-msgid "EUR gift checkout"
-msgstr "Naplata EUR poklona"
-
-#. Plutonium subscription checkout panel title for subscribers in Portugal paying with EUR.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:99
-msgid "EUR subscription checkout"
-msgstr "Naplata EUR pretplate"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:46
@@ -14630,7 +14552,7 @@ msgid "For british eyes only..."
 msgstr "Samo za britanske oči..."
 
 #. Purchase mode option for buying a subscription for the current user.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:28
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:26
 msgid "For me"
 msgstr "Za mene"
 
@@ -16314,11 +16236,6 @@ msgstr "Koliko dugo će biti isključeni."
 msgid "How much of the member's recent message history to delete."
 msgstr "Koliko nedavnih poruka člana želite izbrisati."
 
-#. Confirmation prompt in the channel and chat favorite gif first time prompt modal.
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:14
-msgid "How should we save your GIF favorites?"
-msgstr "Kako želite spremiti svoje omiljene GIF-ove?"
-
 #. Short label in the message history threshold content. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:20
 msgid "How this works"
@@ -16447,20 +16364,10 @@ msgstr "Postavke neaktivnosti"
 msgid "Idle timeout"
 msgstr "Istek neaktivnosti"
 
-#. Plutonium subscription checkout guidance for Brazil. Offers USD as a fallback when Pix is not available or standard pricing is preferred.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:145
-msgid "If {pixPaymentMethod} is unavailable or you prefer standard pricing, you can switch to USD at any time."
-msgstr "Ako {pixPaymentMethod} nije dostupan ili preferirate standardne cijene, u bilo kojem trenutku možete se prebaciti na USD."
-
 #. IAR modal: inline routing hint shown under reasons that overlap with child safety.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:88
 msgid "If a minor is involved, use \"{childSafetyReasonName}\" instead."
 msgstr "Ako je maloljetnik uključen, umjesto toga upotrijebite \"{childSafetyReasonName}\"."
-
-#. Plutonium subscription checkout guidance for India. Offers USD as a fallback when recurring UPI is not available.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:165
-msgid "If recurring {upiPaymentMethod} is unavailable or you prefer standard pricing, you can switch to USD at any time."
-msgstr "Ako ponavljajuće plaćanje putem {upiPaymentMethod} nije dostupno ili preferirate standardne cijene, u bilo kojem trenutku možete se prebaciti na USD."
 
 #. IAR modal: inline safety note for self-harm reports.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:369
@@ -16521,26 +16428,6 @@ msgstr "Ako ovo odbacite, obavijesti za stolno računalo uvijek možete omogući
 msgid "If you don't remember this preference, we'll only hide the popout for this session. You can change this any time in {audioVideoSettingsPath}."
 msgstr "Ako se ne sjećate ove postavke, sakrit ćemo skočni prozor samo za ovu sesiju. To možete promijeniti bilo kada u {audioVideoSettingsPath}."
 
-#. Plutonium gift checkout guidance for Brazil. Clarifies that BRL card payments require a Brazil-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:30
-msgid "If you pay with a card in BRL, it still needs to be issued in Brazil for the purchase to stay eligible."
-msgstr "Ako plaćate karticom u BRL-u, ona i dalje mora biti izdana u Brazilu kako bi kupnja ostala prihvatljiva."
-
-#. Plutonium gift checkout guidance for India. Clarifies that INR card payments require an India-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:45
-msgid "If you pay with a card in INR, it still needs to be issued in India for the purchase to stay eligible."
-msgstr "Ako plaćate karticom u INR-u, ona i dalje mora biti izdana u Indiji da bi kupnja ostala prihvatljiva."
-
-#. Plutonium gift checkout guidance for Poland. Clarifies that PLN card payments require a Poland-issued card.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:59
-msgid "If you pay with a card in PLN, it still needs to be issued in Poland for the purchase to stay eligible."
-msgstr "Ako plaćate karticom u PLN-u, ona i dalje mora biti izdana u Poljskoj da bi kupnja ostala prihvatljiva."
-
-#. Plutonium subscription checkout guidance. Offers USD as a fallback option.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:207
-msgid "If you prefer, you can switch to standard USD pricing instead."
-msgstr "Ako želite, možete se prebaciti na standardne cijene u USD-u."
-
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:354
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "Ako spremite ovo korisničko ime, vaša će se oznaka nasumično ponovno generirati kada vaš {PREMIUM_PRODUCT_NAME} istekne dana <0>{premiumExpiresAtLabel}</0>, osim ako se ne obnovi."
@@ -16552,11 +16439,6 @@ msgstr "Ako spremite ovo korisničko ime, vaša će se oznaka nasumično ponovno
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:64
 msgid "If you want to export your data or delete your messages first, please visit {privacyDashboardPath} before proceeding."
 msgstr "Ako želite izvesti svoje podatke ili prvo izbrisati poruke, posjetite {privacyDashboardPath} prije nego što nastavite."
-
-#. Plutonium subscription checkout guidance for Poland. Suggests a PLN gift or standard EUR if the subscriber wants BLIK.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:186
-msgid "If you want to use {blikPaymentMethod}, buy a PLN gift instead, or switch to standard EUR pricing."
-msgstr "Ako želite koristiti {blikPaymentMethod}, kupite PLN poklon ili se prebacite na standardnu cijenu u EUR."
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:76
 msgid "If you'd like these members to access historical messages after a specific date, enable this feature and choose a threshold below."
@@ -17954,7 +17836,7 @@ msgstr "Zadrži animacije, reprodukciju GIF-ova, efekte lebdenja i alatne savjet
 msgid "Keep Free and Premium tiers. You can customize the tiers later."
 msgstr "Zadržite besplatnu i premium razinu. Razine možete prilagoditi kasnije."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:151
 msgid "Keep grace period"
 msgstr "Zadrži poček"
 
@@ -17968,7 +17850,7 @@ msgstr "Zadrži Nekicu mirnu"
 msgid "Keep running"
 msgstr "Nastavi raditi"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:140
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:129
 msgid "Keep subscription"
 msgstr "Zadrži pretplatu"
 
@@ -18671,10 +18553,6 @@ msgstr "Učitavanje..."
 msgid "Loading…"
 msgstr "Učitavanje…"
 
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:454
-msgid "Local {localizedCurrencyLabel}"
-msgstr "Lokalni {localizedCurrencyLabel}"
-
 #. Short label in the theme studio assets section. Keep it concise.
 #: src/features/theme_studio/sections/AssetsSection.tsx:60
 msgid "Local file references"
@@ -18705,50 +18583,10 @@ msgstr "Format lokalnog vremena"
 msgid "Localization"
 msgstr "Lokalizacija"
 
-#. Plutonium gift checkout panel title for buyers in Brazil who selected localized BRL pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:20
-msgid "Localized BRL gift checkout"
-msgstr "Lokalizirana naplata BRL poklona"
-
-#. Plutonium subscription checkout panel title for subscribers in Brazil with localized BRL pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:130
-msgid "Localized BRL subscription checkout"
-msgstr "Naplata pretplate u BRL-u"
-
 #. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:192
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:191
 msgid "Localized card verification is not available right now. Try again later."
 msgstr "Lokalizirana provjera kartice trenutačno nije dostupna. Pokušajte ponovno kasnije."
-
-#. Plutonium gift checkout panel title for buyers in India who selected localized INR pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:35
-msgid "Localized INR gift checkout"
-msgstr "Lokalizirana naplata poklona u INR valuti"
-
-#. Plutonium subscription checkout panel title for subscribers in India with localized INR pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:150
-msgid "Localized INR subscription checkout"
-msgstr "Naplata pretplate u INR-u"
-
-#. Plutonium gift checkout panel title for buyers in Poland who selected localized PLN pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:49
-msgid "Localized PLN gift checkout"
-msgstr "Naplata poklona PLN-a"
-
-#. Plutonium subscription checkout panel title for subscribers in Poland with localized PLN pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:171
-msgid "Localized PLN subscription checkout"
-msgstr "Naplata pretplate za Plutonium"
-
-#. Plutonium gift checkout panel title for buyers in Türkiye who selected localized TRY pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:64
-msgid "Localized TRY gift checkout"
-msgstr "Lokalizirana naplata TRY poklona"
-
-#. Plutonium subscription checkout panel title for subscribers in Türkiye with localized TRY pricing.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:191
-msgid "Localized TRY subscription checkout"
-msgstr "Naplata pretplate u TRY valuti"
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:194
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:151
@@ -20260,12 +20098,12 @@ msgstr "Mjesec"
 
 #. Billing plan title for a monthly recurring subscription.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:36
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:34
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:51
 msgid "Monthly"
 msgstr "Mjesečno"
 
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:93
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:68
 msgid "Monthly {monthlyPrice}"
 msgstr "Mjesečno {monthlyPrice}"
 
@@ -22338,7 +22176,7 @@ msgid "Open {settingsMenuName} settings"
 msgstr "Otvori postavke {settingsMenuName}"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:38
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:36
 msgid "Open {title}"
 msgstr "Otvori {title}"
 
@@ -22589,7 +22427,7 @@ msgid "Open in community"
 msgstr "Otvori u zajednici"
 
 #. Button or menu action label in the channel and chat embed you tube. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedYouTube.tsx:30
+#: src/features/channel/components/embeds/media/EmbedYouTube.tsx:31
 msgid "Open in new tab"
 msgstr "Otvori u novoj kartici"
 
@@ -22911,7 +22749,7 @@ msgid "Other devices"
 msgstr "Ostali uređaji"
 
 #. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:73
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:72
 msgid "Other methods"
 msgstr "Ostale metode"
 
@@ -23262,12 +23100,12 @@ msgid "Paused by reduced motion. Turn on to keep GIFs playing."
 msgstr "Pauzirano zbog smanjenog kretanja. Uključite za nastavak reprodukcije GIF-ova."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
 msgid "Pay with {pixPaymentMethod} automático to authorize recurring charges directly from your Brazilian bank. Or choose use card to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Plaćajte putem {pixPaymentMethod} automatski kako biste odobrili ponavljajuće naplate izravno iz svoje brazilske banke. Ili odaberite plaćanje karticom za unos kreditne kartice na sljedećem zaslonu davatelja {paymentProviderName}."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose use card to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Plaćajte putem {upiPaymentMethod} kako biste postavili e-nalog usklađen s RBI-jem iz svoje indijske banke. Ili odaberite plaćanje karticom za unos kreditne kartice na sljedećem zaslonu davatelja {paymentProviderName}."
 
@@ -23323,7 +23161,7 @@ msgid "Per member, across all devices."
 msgstr "Po korisniku, na svim uređajima."
 
 #. Billing cadence label for a monthly subscription price.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:40
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:38
 msgid "per month"
 msgstr "mjesečno"
 
@@ -23333,7 +23171,7 @@ msgid "Per sound volume"
 msgstr "Glasnoća po zvuku"
 
 #. Billing cadence label for a yearly subscription price.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:46
 msgid "per year"
 msgstr "godišnje"
 
@@ -23763,7 +23601,7 @@ msgstr "Reproduciraj odabir"
 #. Short label in the channel and chat embed video. Keep it concise.
 #. Short label in the channel and chat embed you tube. Keep it concise.
 #: src/features/channel/components/embeds/media/EmbedVideo.tsx:64
-#: src/features/channel/components/embeds/media/EmbedYouTube.tsx:26
+#: src/features/channel/components/embeds/media/EmbedYouTube.tsx:27
 #: src/features/voice/components/media_player/components/VideoPlayer.tsx:62
 msgid "Play video"
 msgstr "Reproduciraj videozapis"
@@ -24175,14 +24013,9 @@ msgid "Pricing"
 msgstr "Cijene"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:166
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
 msgid "Pricing is still loading."
 msgstr "Cijene se još učitavaju."
-
-#. Accessible group label for the pricing toggle (localized vs standard) in Plutonium checkout. Not visible on screen.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:221
-msgid "Pricing preference"
-msgstr "Postavke cijena"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:162
 msgid "Primary"
@@ -24537,7 +24370,7 @@ msgid "Purchase history"
 msgstr "Povijest kupnje"
 
 #. Accessible label for switching between self purchase and gift purchase.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:24
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:22
 msgid "Purchase mode"
 msgstr "Način kupnje"
 
@@ -24555,12 +24388,12 @@ msgid "Purchased gifts"
 msgstr "Kupljeni darovi"
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Kupnje su onemogućene za ovaj račun. Obratite se na {supportEmail} ako mislite da je došlo do pogreške."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
 msgid "Purchases unavailable"
 msgstr "Kupnje nedostupne"
 
@@ -24894,11 +24727,11 @@ msgstr "Pročitajte dokumentaciju ({domain})"
 msgid "Reading speed"
 msgstr "Brzina čitanja"
 
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:64
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
 msgid "Ready to buy a gift?"
 msgstr "Želite kupiti poklon?"
 
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:64
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
 msgid "Ready to upgrade?"
 msgstr "Spremni za nadogradnju?"
 
@@ -26933,9 +26766,9 @@ msgstr "Spremi"
 #. Price badge comparing a one-year gift to monthly gifts.
 #. Price badge comparing yearly billing to monthly billing.
 #. Short label in the Plutonium gift section. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/components/plutonium/GiftSection.tsx:30
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:52
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:64
+#: src/features/app/components/dialogs/components/plutonium/GiftSection.tsx:28
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:50
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:62
 msgid "Save 17%"
 msgstr "Uštedite 17 %"
 
@@ -27813,7 +27646,7 @@ msgid "Select friends"
 msgstr "Odaberi prijatelje"
 
 #. Button label in the gif picker grid item when picking a GIF for an avatar, banner, or video background. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:52
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:50
 msgid "Select GIF {title}"
 msgstr "Odaberi GIF {title}"
 
@@ -28027,7 +27860,7 @@ msgid "Send friend request"
 msgstr "Pošalji zahtjev za prijateljstvo"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:47
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:45
 msgid "Send GIF {title}"
 msgstr "Pošalji GIF {title}"
 
@@ -29851,7 +29684,7 @@ msgstr "Došlo je do pogreške pri učitavanju dnevnika aktivnosti."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -29886,7 +29719,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Nešto je pošlo po zlu prilikom slanja e-pošte za provjeru. Pokušajte ponovno za nekoliko trenutaka."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:155
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Nešto je pošlo po zlu prilikom pokretanja naplate. Pokušajte ponovno za nekoliko trenutaka."
 
@@ -30267,20 +30100,6 @@ msgstr "Kontrole za osoblje"
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Standard"
 msgstr "Standardno"
-
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:460
-msgid "Standard {baseCurrencyLabel}"
-msgstr "Standardno {baseCurrencyLabel}"
-
-#. Plutonium gift checkout panel title when the buyer opted into the standard (non-localized) currency. The currency code is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:89
-msgid "Standard {baseCurrencyLabel} gift checkout"
-msgstr "Standardna naplata poklona u valuti {baseCurrencyLabel}"
-
-#. Plutonium subscription checkout panel title when the subscriber opted into the standard (non-localized) currency. The currency code is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:114
-msgid "Standard {baseCurrencyLabel} pricing"
-msgstr "Standardna cijena u {baseCurrencyLabel}"
 
 #. Required-action modal notice for inbound phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
@@ -30822,13 +30641,13 @@ msgstr "Ukloni parametre praćenja iz URL-ova"
 
 #. Premium checkout error shown when Stripe cannot verify a card for localized pricing. productName is the app name.
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:34
-msgid "Stripe could not verify this card for localized pricing. Use another card or return to {productName} and choose another payment method or the standard price."
-msgstr "Stripe nije mogao potvrditi ovu karticu za lokalizirane cijene. Upotrijebite drugu karticu ili se vratite u {productName} i odaberite drugi način plaćanja ili standardnu cijenu."
+msgid "Stripe could not verify this card for localized pricing. Use another card, or return to {productName} and choose another payment method."
+msgstr "Stripe nije mogao potvrditi ovu karticu za lokalizirane cijene. Upotrijebite drugu karticu ili se vratite na {productName} i odaberite drugi način plaćanja."
 
 #. Premium checkout error shown when card country does not match billing country. productName is the app name.
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:22
-msgid "Stripe reported a card issued in {countryName}. To pay in this localized currency, use a card issued in your billing country, choose another payment method, or return to {productName} and switch to the standard price."
-msgstr "Stripe je prijavio karticu izdanu u državi {countryName}. Za plaćanje u ovoj lokaliziranoj valuti upotrijebite karticu izdanu u državi naplate, odaberite drugi način plaćanja ili se vratite u {productName} i prebacite se na standardnu cijenu."
+msgid "Stripe reported a card issued in {countryName}. To pay in this localized currency, use a card issued in your billing country, or return to {productName} and choose another payment method."
+msgstr "Stripe je prijavio karticu izdanu u {countryName}. Da biste platili u ovoj lokaliziranoj valuti, upotrijebite karticu izdanu u vašoj zemlji naplate ili se vratite na {productName} i odaberite drugi način plaćanja."
 
 #. Codec description in the screen share codec policy menu. Technical surface; keep Chromium as a literal proper noun.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:15
@@ -30862,7 +30681,7 @@ msgid "Subscription"
 msgstr "Pretplata"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:125
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:124
 msgid "Subscription already exists"
 msgstr "Pretplata već postoji"
 
@@ -30987,11 +30806,6 @@ msgstr "Prebaci račun"
 #: src/features/app/components/floating/UserAreaPopout.tsx:677
 msgid "Switch accounts"
 msgstr "Promijeni račun"
-
-#. Plutonium gift checkout guidance. Reminds the buyer they can revert to localized pricing. The currency code is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:94
-msgid "Switch back to {localizedCurrencyLabel} if you prefer the localized price instead."
-msgstr "Vratite se na {localizedCurrencyLabel} ako vam je draža lokalizirana cijena."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:45
@@ -31954,16 +31768,6 @@ msgstr "Trenutačno nema uloga za dodjeljivanje u ovoj zajednici, ali možete st
 msgid "There are no webhooks configured for this channel. Create a webhook to allow external applications to post messages."
 msgstr "Nema konfiguriranih web-dojavnika za ovaj kanal. Stvorite web-dojavnik kako biste vanjskim aplikacijama omogućili objavljivanje poruka."
 
-#. Plutonium gift checkout guidance for Türkiye. Notes that no local wallet method is currently available; card is the main option.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:74
-msgid "There is no app-based local payment method surfaced here today, so card checkout is the main path."
-msgstr "Danas ovdje nema lokalnog načina plaćanja putem aplikacije, tako da je plaćanje karticom glavni način."
-
-#. Plutonium subscription checkout guidance for Türkiye. Notes that no local wallet method is available; card is the main option.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:201
-msgid "There is no app-based local subscription method surfaced here today, so local card checkout is the main path."
-msgstr "Danas ovdje nema dostupne lokalne metode pretplate putem aplikacije, tako da je plaćanje lokalnom karticom glavni način."
-
 #. Destructive notice on the confirm step of the data-deletion carousel modal.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:125
 msgid "There is no recovery once this starts. We will DM you when it finishes."
@@ -32071,8 +31875,8 @@ msgstr "Ovo se ne može poništiti. Uklanjanjem aplikacije briše se i njezin bo
 
 #. Premium checkout error shown when card country does not match billing country and Stripe did not provide the issuing country. productName is the app name.
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:28
-msgid "This card does not match your billing country, so it cannot be used for this localized currency. Use a local card, choose another payment method, or return to {productName} and switch to the standard price."
-msgstr "Ova kartica ne odgovara vašoj zemlji naplate, stoga se ne može koristiti za ovu lokaliziranu valutu. Upotrijebite lokalnu karticu, odaberite drugi način plaćanja ili se vratite na {productName} i prebacite se na standardnu cijenu."
+msgid "This card does not match your billing country, so it cannot be used for this localized currency. Use a local card, or return to {productName} and choose another payment method."
+msgstr "Ova kartica se ne podudara s vašom zemljom naplate, stoga se ne može koristiti za ovu lokaliziranu valutu. Upotrijebite lokalnu karticu ili se vratite na {productName} i odaberite drugi način plaćanja."
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
 #: src/features/app/components/layout/ChannelListContent.tsx:79
@@ -32579,7 +32383,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Ovaj je birač dostupan samo u aplikaciji za stolna računala."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:170
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:169
 msgid "This plan isn't available. Contact support."
 msgstr "Ovaj plan nije dostupan. Obratite se podršci."
 
@@ -32633,11 +32437,6 @@ msgstr "ova uloga"
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:36
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "Ovako izgledaju pretpregledi poveznica: {linkPreviewExampleUrl}"
-
-#. Plutonium subscription checkout guidance. Notes that the standard path skips localized verification and offers a way back.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:124
-msgid "This skips localized card verification. Switch back to {localizedCurrencyLabel} if you prefer the local price."
-msgstr "Ovo preskače lokaliziranu provjeru kartice. Prebacite se natrag na {localizedCurrencyLabel} ako vam je draža lokalna cijena."
 
 #. Error message in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:85
@@ -33447,11 +33246,6 @@ msgstr "Pokušajte s drugim filtrima ili pojmovima za pretraživanje."
 msgid "Try editing your message again."
 msgstr "Pokušajte ponovno urediti poruku."
 
-#. Plutonium gift checkout guidance for Türkiye. Clarifies one-time-only nature and Türkiye card issuance requirement.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:68
-msgid "TRY gifts are one-time payments. Cards charged in TRY still need to be issued in Türkiye for the purchase to stay eligible."
-msgstr "TRY darovi su jednokratna plaćanja. Kartice naplaćene u TRY-u i dalje moraju biti izdane u Turskoj kako bi kupnja ostala prihvatljiva."
-
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "Pokušajte potražiti nešto poput \"tema\", \"obavijesti\" ili \"privatnost\""
@@ -34186,7 +33980,7 @@ msgstr "Otključajte prilagođene emojije u izravnim porukama uz {premiumProduct
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Otključajte HD dijeljenje zaslona uz {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:200
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Otključajte veća ograničenja i ekskluzivne značajke, a istovremeno podržite neovisnu komunikacijsku platformu."
 
@@ -34653,7 +34447,7 @@ msgid "Updater state"
 msgstr "Stanje ažuriranja"
 
 #. Short label in the channel and chat gif picker grid item. Keep it concise.
-#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:43
+#: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:41
 msgid "Updating favorites…"
 msgstr "Ažuriranje favorita…"
 
@@ -34663,7 +34457,7 @@ msgid "Upgrade"
 msgstr "Nadogradnja"
 
 #. Checkout button for starting a paid subscription.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:54
 msgid "Upgrade now"
 msgstr "Nadogradi sada"
 
@@ -34912,7 +34706,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Koristite {everyoneMention}/{hereMention} i {rolesMention}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
 msgid "Use {pixPaymentMethod}"
 msgstr "Koristi {pixPaymentMethod}"
 
@@ -34927,7 +34721,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Koristite {query} gdje treba umetnuti tekst za prijevod."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
 msgid "Use {upiPaymentMethod}"
 msgstr "Koristi {upiPaymentMethod}"
 
@@ -34935,11 +34729,6 @@ msgstr "Koristi {upiPaymentMethod}"
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:42
 msgid "Use {url} where the image URL should be inserted."
 msgstr "Koristite {url} gdje treba umetnuti URL slike."
-
-#. Plutonium subscription checkout guidance for Portugal. Suggests using a card for recurring billing or a gift for one-time EUR payments.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:109
-msgid "Use a card for the subscription, or buy a gift instead if you want a one-time EUR payment method."
-msgstr "Koristite karticu za pretplatu ili kupite poklon ako želite jednokratno plaćanje u EUR."
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryCutoffSection.tsx:24
 msgid "Use a dedicated modal to set a message history threshold date for members who don't have the {readMessageHistoryPermissionLabel} permission."
@@ -34966,7 +34755,7 @@ msgid "Use actual value"
 msgstr "Koristi stvarnu vrijednost"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
 msgid "Use alternative method"
 msgstr "Upotrijebite drugi način"
 
@@ -35002,7 +34791,7 @@ msgid "Use browser locale for time format"
 msgstr "Koristi regionalne postavke preglednika za format vremena"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:204
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
 msgid "Use card"
 msgstr "Koristi karticu"
 
@@ -35100,32 +34889,32 @@ msgid "Use light theme"
 msgstr "Koristi svijetlu temu"
 
 #. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:200
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:199
 msgid "Use local card"
 msgstr "Koristi lokalnu karticu"
 
 #. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
 msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Upotrijebite lokalnu karticu za provjeru kartice izdane u Brazilu prije plaćanja BRL-om. Odaberite druge metode ako radije želite isprobati {pixPaymentMethod} ili drugi način plaćanja koji {paymentProviderName} nudi na sljedećem zaslonu."
 
 #. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
 msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Upotrijebite lokalnu karticu za provjeru kartice izdane u Indiji prije plaćanja u INR-u. Odaberite druge metode ako radije želite isprobati {upiPaymentMethod} ili drugi način plaćanja koji {paymentProviderName} nudi na sljedećem zaslonu."
 
 #. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:83
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:82
 msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
 msgstr "Upotrijebite lokalnu karticu za provjeru kartice izdane u Poljskoj prije plaćanja u PLN-u. {blikPaymentMethod} ne podržava pretplate u {paymentProviderName} naplati, stoga nastavite samo ako umjesto toga želite standardni zaslon za plaćanje {paymentProviderName2}."
 
 #. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:94
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:93
 msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
 msgstr "Upotrijebite lokalnu karticu za provjeru kartice izdane u Turskoj prije plaćanja u TRY valuti. Ovdje ne postoji lokalna metoda pretplate putem aplikacije, pa će vas nastavak odvesti na standardni zaslon za plaćanje davatelja {paymentProviderName}."
 
 #. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:100
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:99
 msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
 msgstr "Upotrijebite lokalnu karticu za provjeru kartice izdane u vašoj zemlji naplate prije plaćanja. Odaberite druge metode za bilo koji drugi način plaćanja koji {paymentProviderName} nudi na sljedećem zaslonu."
 
@@ -35155,10 +34944,6 @@ msgstr "Koristi telefon"
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:238
 msgid "Use reverification text"
 msgstr "Koristi tekst za ponovnu provjeru"
-
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:103
-msgid "Use saved media"
-msgstr "Koristi spremljene medije"
 
 #. Primary action button in the trimmer modal: accept the current selection and upload it.
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:35
@@ -35235,10 +35020,6 @@ msgstr "Koristite ovo za rješavanje problema s klijentom ili prikupljanje zapis
 #: src/features/app/components/setup/SetupWizardSteps.tsx:997
 msgid "Use TLS"
 msgstr "Koristi TLS"
-
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:111
-msgid "Use URL-only (recommended)"
-msgstr "Koristi samo URL (preporučeno)"
 
 #. One-line camera permission explanation in the macOS permissions modal.
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:44
@@ -35501,16 +35282,6 @@ msgstr "Koristi se stvarno stanje"
 msgid "Using actual verification state"
 msgstr "Upotreba stvarnog stanja provjere"
 
-#. Compact summary line shown in Plutonium checkout when localized pricing is active. The currency code is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:211
-msgid "Using localized {localizedCurrencyLabel} pricing."
-msgstr "Koristite lokalizirane cijene u valuti {localizedCurrencyLabel}."
-
-#. Compact summary line shown in Plutonium checkout when standard pricing is active. The currency code is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:216
-msgid "Using standard {baseCurrencyLabel} pricing."
-msgstr "Koristi se standardna cijena u valuti {baseCurrencyLabel}."
-
 #. Lowercase fallback label in the activity log for a generic changed value.
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:53
 msgid "value"
@@ -35661,7 +35432,7 @@ msgid "Verify"
 msgstr "Potvrdi"
 
 #. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:173
 msgid "Verify card"
 msgstr "Potvrdite karticu"
 
@@ -35765,7 +35536,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Potvrdite svoju e-poštu prije slanja zahtjeva za prijateljstvo."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:105
 msgid "Verify your email first"
 msgstr "Prvo potvrdite svoju e-poštu"
 
@@ -36243,7 +36014,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA traka s obavijestima"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary već uključuje trajni pristup, tako da pretplata nije potrebna. I dalje možete kupovati darove za druge."
 
@@ -36715,7 +36486,7 @@ msgid "We don't send verification texts to this country. Try a mobile number fro
 msgstr "Ne šaljemo verifikacijske SMS-ove u ovu državu. Pokušajte s brojem iz druge države ili se obratite podršci."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:129
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Pronašli smo postojeću pretplatu {premiumProductFullName} za ovaj račun. Upravljajte njome u sigurnom portalu za naplatu kako biste ažurirali podatke o plaćanju ili provjerili status obnove. Ako ste upravo platili, pričekajte minutu i ponovno otvorite ovu stranicu."
 
@@ -36778,10 +36549,6 @@ msgstr "Izradit ćemo arhivu za preuzimanje svih poruka koje ste ikada poslali i
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:116
 msgid "We'll build a downloadable archive that matches the filters below and email you when it's ready. The download link in that email expires after 7 days."
 msgstr "Izradit ćemo arhivu za preuzimanje koja odgovara donjim filtrima i poslat ćemo vam e-poštu kada bude spremna. Veza za preuzimanje u toj e-pošti istječe nakon 7 dana."
-
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:93
-msgid "We'll only ask once."
-msgstr "Pitat ćemo samo jednom."
 
 #. Success toast shown after a bulk message deletion job is queued.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:50
@@ -37345,12 +37112,12 @@ msgstr "Godina"
 
 #. Billing plan title for a yearly recurring subscription.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/PricingSection.tsx:42
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:55
 msgid "Yearly"
 msgstr "Godišnje"
 
-#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:109
+#: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:84
 msgid "Yearly {yearlyPrice}"
 msgstr "Godišnje {yearlyPrice}"
 
@@ -37440,7 +37207,7 @@ msgid "You are now a developer!"
 msgstr "Sada ste programer!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:187
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Sada idete na {paymentProviderName} kako biste dovršili plaćanje. Vratite se na {productName} nakon što ga dovršite."
 
@@ -37453,11 +37220,6 @@ msgstr "Prijavljeni ste kao administrator instance. Sljedeći koraci konfigurira
 #: src/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar.tsx:12
 msgid "You are using a {releaseChannel} build of {productName}."
 msgstr "Koristite {releaseChannel} međuverziju aplikacije {productName}."
-
-#. Plutonium subscription checkout guidance. States that the standard (non-localized) price applies. The currency code is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:119
-msgid "You are using the full standard {baseCurrencyLabel} price instead of localized pricing."
-msgstr "Koristite punu standardnu cijenu u valuti {baseCurrencyLabel} umjesto lokalizirane cijene."
 
 #. Placeholder shown when the user has no communities to filter.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:159
@@ -37534,10 +37296,6 @@ msgstr "I dalje možete izraditi račun ili se prijaviti. Ako se pozivnice ponov
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:326
 msgid "You can still email {supportEmail} for a human review at any time."
 msgstr "Uvijek nas možeš kontaktirati na {supportEmail} za ljudski pregled."
-
-#: src/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal.tsx:62
-msgid "You can store starred GIFs as URL-only favorites or upload them to your saved media. Pick the one that fits how you use them. You can change it any time in {mediaSettingsPath}."
-msgstr "Označene GIF-ove možete pohraniti kao favorite samo s URL-om ili ih prenijeti u spremljene medije. Odaberite opciju koja vam najviše odgovara. Možete je promijeniti bilo kada u {mediaSettingsPath}."
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:288
 msgid "You can use links, emoji, and markdown."
@@ -37835,11 +37593,11 @@ msgstr "Još nikoga niste blokirali."
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "Upravo ste pritisnuli tipku Tab. Način rada tipkovnice sada je uključen, tako da se možete kretati kroz {productName} bez miša."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:133
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:122
 msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
 msgstr "Zadržavate svoje pogodnosti do sljedećeg datuma obnove, a zatim imate razdoblje od 3 dana za ponovnu pretplatu i zadržavanje povijesti pretplate."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:155
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Odmah gubite sve pogodnosti {PREMIUM_PRODUCT_NAME} i vaša se povijest pretplate poništava. Ovo se ne može poništiti."
 
@@ -37966,7 +37724,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Morate potvrditi svoju adresu e-pošte prije nego što možete započeti izravnu poruku."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:109
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Morate potvrditi svoju e-poštu prije nego što možete kupiti {premiumProductFullName}."
 
@@ -38052,7 +37810,7 @@ msgid "You're already friends with this user."
 msgstr "Već ste prijatelji s ovim korisnikom."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
 msgid "You're already Visionary"
 msgstr "Već ste Vizionar"
 
@@ -38092,7 +37850,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Previše ste puta pokušali. Pričekajte {duration} prije nego što pokušate ponovno."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:159
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "Trenutno ste na poklon pretplati. Neće se automatski obnoviti. Možete iskoristiti više poklon kodova kako biste je produžili. Pretplate s automatskom obnovom mogu se pokrenuti nakon što istekne vaše poklon razdoblje."
 

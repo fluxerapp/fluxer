@@ -736,7 +736,7 @@ if (optionalityAdvisories.length > 0) {
 	console.log('  Both current lines were adjudicated by hand. ZERO documentation bugs: in each');
 	console.log('  case the page is MORE precise than a bare ? marker can be.');
 	console.log('    POST /stripe/checkout/subscription/preapproval requires country_code in the');
-	console.log('      handler (StripeCheckoutService.ts:322 throws when it is absent) while the');
+	console.log('      handler (StripeCheckoutService.ts:310 throws when no country resolves) while the');
 	console.log('      shared CreateCheckoutSessionRequest requires only price_id.');
 	console.log('    PATCH /admin/discovery/applications/{guild_id} takes a discriminated union.');
 	console.log('      reason is required when status is rejected and optional when it is approved,');

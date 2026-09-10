@@ -236,11 +236,10 @@ A blocked purchase always fails on [create localised card preapproval](#create-l
 | country_code?<sup>1</sup> | string | Two-letter country used to select the regional price catalogue (2 characters) |
 | client_geoip_country_code?<sup>2</sup> | string | Two-letter country the client previously observed for itself (2 characters) |
 | eu_withdrawal_waiver_accepted?<sup>3</sup> | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
-| pricing_mode? | string | Either `localized` or `base` (default `localized`) |
 | payment_method?<sup>4</sup> | string | Either `card`, `pix` or `upi` (default `card`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 
-<sup>1</sup> Required whenever the resolved price is not in USD or EUR, and validated against the price catalogue for that country
+<sup>1</sup> Read only when Fluxer cannot geolocate the request, because the request-time geolocation country wins. The resolved country is required whenever the price is not in USD or EUR, and the price is validated against the catalogue for that country, so a client cannot buy outside the catalogue of the country it is browsing from
 
 <sup>2</sup> Read to resolve the effective country for the withdrawal waiver, and recorded with the payment
 
@@ -282,7 +281,7 @@ Creates a setup mode session that captures and verifies a card before a localise
 ### Limitations
 
 - The claimed account, verified email and purchase flag requirements of [create subscription checkout](#create-subscription-checkout) apply unchanged, with the same codes.
-- An absent `country_code`, a `pricing_mode` of `base`, and a resolved price that is not a recurring price in a currency other than USD and EUR each return 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
+- An unresolvable country, meaning a request Fluxer cannot geolocate that also omits `country_code`, and a resolved price that is not a recurring price in a currency other than USD and EUR each return 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
 - The submitted price is always recurring, so the lifetime block and the existing subscription block both apply and return 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `lifetime` or `existing_subscription`.
 
 ### JSON body
@@ -293,12 +292,9 @@ Creates a setup mode session that captures and verifies a card before a localise
 | country_code<sup>1</sup> | string | Two-letter country used to select the regional price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country the client previously observed for itself (2 characters) |
 | eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
-| pricing_mode?<sup>2</sup> | string | Either `localized` or `base` (default `localized`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 
-<sup>1</sup> Declared optional by the shared request schema, and this operation refuses a request that omits it
-
-<sup>2</sup> A submitted `base` returns 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`
+<sup>1</sup> Declared optional by the shared request schema, and this operation refuses a request that resolves no country. The request-time geolocation country wins, so this value is read only when Fluxer cannot geolocate the request
 
 A submitted `payment_method` is validated against the enum and then discarded. The setup session is always restricted to cards.
 
@@ -307,11 +303,11 @@ A submitted `payment_method` is validated against the enum and then discarded. T
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [redirect URL](#redirect-url-object) object | The setup session was created |
-| 400<sup>3</sup> | [error response](/http-api/#error-response) | The country, the price, the account, or the payment provider blocks the setup session |
+| 400<sup>2</sup> | [error response](/http-api/#error-response) | The country, the price, the account, or the payment provider blocks the setup session |
 | 403 | [error response](/http-api/#error-response) | The email address is unverified, or the purchase is blocked |
 | 404 | [error response](/http-api/#error-response) | The authenticated account record no longer exists |
 
-<sup>3</sup> The country or pricing mode is not localised, the price is unknown or not valid for the resolved catalogue, the account is unclaimed, the payment provider is not configured, or the payment provider rejected the request and returns `STRIPE_ERROR`
+<sup>2</sup> The country is absent, the price is unknown or not valid for the resolved catalogue, the account is unclaimed, the payment provider is not configured, or the payment provider rejected the request and returns `STRIPE_ERROR`
 
 ### Side effects
 
@@ -395,10 +391,9 @@ Neither the lifetime block nor the existing subscription block applies here, so 
 | country_code?<sup>1</sup> | string | Two-letter country used to select the regional gift price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country the client previously observed for itself (2 characters) |
 | eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
-| pricing_mode? | string | Either `localized` or `base` (default `localized`) |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |
 
-<sup>1</sup> Required whenever the resolved gift price is not in USD or EUR
+<sup>1</sup> Read only when Fluxer cannot geolocate the request, because the request-time geolocation country wins. The resolved country is required whenever the gift price is not in USD or EUR
 
 A submitted `pix` or `upi` is validated against the enum and then discarded. The session restricts no payment method type, so the provider offers whatever the deployment's provider account accepts for the resolved currency.
 

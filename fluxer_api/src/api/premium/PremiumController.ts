@@ -10,6 +10,7 @@ import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../RateLimitConfig';
 import type {HonoApp} from '../types/HonoEnv';
+import {lookupGeoip} from '../utils/IpUtils';
 import {Validator} from '../Validator';
 
 export function PremiumController(app: HonoApp) {
@@ -32,7 +33,8 @@ export function PremiumController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.get('user').id;
 			const {country_code} = ctx.req.valid('query');
-			const state = await ctx.get('stripeService').getPremiumState(userId, country_code);
+			const geoip = await lookupGeoip(ctx.req.raw);
+			const state = await ctx.get('stripeService').getPremiumState(userId, geoip.countryCode ?? country_code);
 			return ctx.json(state);
 		},
 	);

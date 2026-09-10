@@ -22,7 +22,7 @@ Every route except [get price IDs](#get-price-ids) is user-only. A [self-hosted 
 | [Billing subscription](#billing-subscription-object) | One mirrored subscription |
 | [Billing invoice](#billing-invoice-object) | One mirrored invoice |
 | [Billing payment method](#billing-payment-method-object) | One mirrored payment method |
-| [Premium pricing state](#premium-pricing-state-object) | Both resolved checkout catalogues |
+| [Premium pricing state](#premium-pricing-state-object) | The resolved checkout catalogue |
 
 :::note[Billing history is mirrored from the payment provider]
 [Get premium state](#get-premium-state) returns the mirrored invoices, payment methods and subscription fields. [Create customer portal](#create-customer-portal) is the externally hosted interface for changing any of them.
@@ -430,7 +430,7 @@ One mirrored stored payment method. A non-card method reports every card member 
 
 ## Premium pricing state object
 
-The checkout catalogue resolved for the request. A client can render prices without a second call to [get price IDs](#get-price-ids). Fluxer resolves both catalogues on every request, so one response has both a localised price and its USD or EUR equivalent.
+The checkout catalogue resolved for the request. A client can render prices without a second call to [get price IDs](#get-price-ids). Fluxer resolves one catalogue on every request, and a country with its own localised currency always resolves to that currency.
 
 ### Structure
 
@@ -438,9 +438,8 @@ The checkout catalogue resolved for the request. A client can render prices with
 | --- | --- | --- |
 | country_code<sup>1</sup> | ?string | The country used to resolve the prices |
 | localized<sup>2</sup> | ?[price IDs](#price-ids-object) object | The localised catalogue, or null when it cannot be resolved |
-| base<sup>2</sup> | ?[price IDs](#price-ids-object) object | The base USD or EUR catalogue, or null when it cannot be resolved |
 
-<sup>1</sup> The `country_code` query value uppercased, or null when it was omitted
+<sup>1</sup> The request-time geolocation country, falling back to the `country_code` query value uppercased, or null when neither resolves
 
 <sup>2</sup> Null unless the deployment configures a complete recurring pair and a complete gift pair for the currency preferences that apply, so one missing gift price nulls the whole catalogue. The amounts come from the mirrored price rows
 
@@ -450,7 +449,7 @@ Fluxer reports an unresolvable catalogue as null here, and the request still suc
 
 <RouteHeader method="GET" path="/v1/premium/price-ids" unauthenticated />
 
-Returns the [price IDs](#price-ids-object) object for a country and pricing mode. A supplied credential only keys the rate limit, so an unrecognised credential falls back to the client IP address.
+Returns the [price IDs](#price-ids-object) object for a country. A supplied credential only keys the rate limit, so an unrecognised credential falls back to the client IP address.
 
 The deployment must configure a complete recurring pair and a complete gift pair for at least one currency that the requested country prefers. Fluxer answers 400 `STRIPE_ERROR` when it does not.
 
@@ -459,11 +458,8 @@ The deployment must configure a complete recurring pair and a complete gift pair
 | Field | Type | Description |
 | --- | --- | --- |
 | country_code?<sup>1</sup> | string | The two-letter country used to select the regional price catalogue |
-| pricing_mode?<sup>2</sup> | string | Either `localized` or `base` (default `localized`) |
 
-<sup>1</sup> Fluxer trims surrounding whitespace and requires exactly two characters, and any other length fails validation with `STRING_LENGTH_EXACT`. Omitting it resolves the default currency preference order
-
-<sup>2</sup> `base` restricts resolution to the deployment's base currency preferences, which is how a client reads USD or EUR pricing for a country that has its own localised catalogue
+<sup>1</sup> Fluxer trims surrounding whitespace and requires exactly two characters, and any other length fails validation with `STRING_LENGTH_EXACT`. The request-time geolocation country wins, so this value is read only when Fluxer cannot geolocate the request, and the default currency preference order applies when neither resolves
 
 ### Response
 
@@ -498,7 +494,7 @@ This route derives `current_subscription_price` from the mirrored subscription a
 | --- | --- | --- |
 | country_code?<sup>1</sup> | string | The two-letter country used to resolve `pricing` |
 
-<sup>1</sup> Fluxer trims surrounding whitespace and requires exactly two characters. Omitting it resolves `pricing` against the default currency preference order and reports `pricing.country_code` as null
+<sup>1</sup> Fluxer trims surrounding whitespace and requires exactly two characters. The request-time geolocation country wins, so this value is read only when Fluxer cannot geolocate the request. When neither resolves, `pricing` falls back to the default currency preference order and `pricing.country_code` is null
 
 ### Response
 

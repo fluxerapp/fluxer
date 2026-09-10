@@ -92,7 +92,6 @@ export function StripeController(app: HonoApp) {
 				country_code,
 				client_geoip_country_code,
 				eu_withdrawal_waiver_accepted,
-				pricing_mode,
 				payment_method,
 				is_business,
 			} = ctx.req.valid('json');
@@ -105,7 +104,6 @@ export function StripeController(app: HonoApp) {
 				clientGeoipCountryCode: client_geoip_country_code,
 				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				pricingMode: pricing_mode,
 				paymentMethod: payment_method,
 				isBusiness: is_business,
 			});
@@ -129,14 +127,8 @@ export function StripeController(app: HonoApp) {
 		}),
 		Validator('json', CreateCheckoutSessionRequest),
 		async (ctx) => {
-			const {
-				price_id,
-				country_code,
-				client_geoip_country_code,
-				eu_withdrawal_waiver_accepted,
-				pricing_mode,
-				is_business,
-			} = ctx.req.valid('json');
+			const {price_id, country_code, client_geoip_country_code, eu_withdrawal_waiver_accepted, is_business} =
+				ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const checkoutUrl = await ctx.get('stripeService').createLocalizedCardPreapprovalSession({
 				userId,
@@ -145,7 +137,6 @@ export function StripeController(app: HonoApp) {
 				clientGeoipCountryCode: client_geoip_country_code,
 				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				pricingMode: pricing_mode,
 				isBusiness: is_business,
 			});
 			return ctx.json({url: checkoutUrl});
@@ -187,14 +178,8 @@ export function StripeController(app: HonoApp) {
 		}),
 		Validator('json', CreateCheckoutSessionRequest),
 		async (ctx) => {
-			const {
-				price_id,
-				country_code,
-				client_geoip_country_code,
-				eu_withdrawal_waiver_accepted,
-				pricing_mode,
-				is_business,
-			} = ctx.req.valid('json');
+			const {price_id, country_code, client_geoip_country_code, eu_withdrawal_waiver_accepted, is_business} =
+				ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const checkoutUrl = await ctx.get('stripeService').createCheckoutSession({
 				userId,
@@ -204,7 +189,6 @@ export function StripeController(app: HonoApp) {
 				clientGeoipCountryCode: client_geoip_country_code,
 				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				pricingMode: pricing_mode,
 				isBusiness: is_business,
 			});
 			return ctx.json({url: checkoutUrl});
@@ -301,8 +285,9 @@ export function StripeController(app: HonoApp) {
 			tags: 'Premium',
 		}),
 		async (ctx) => {
-			const {country_code, pricing_mode} = ctx.req.valid('query');
-			const priceIds = await ctx.get('stripeService').getPriceIds(country_code, pricing_mode);
+			const {country_code} = ctx.req.valid('query');
+			const geoipCountryCode = await getPurchaseGeoipCountryCode(ctx.req.raw);
+			const priceIds = await ctx.get('stripeService').getPriceIds(geoipCountryCode ?? country_code);
 			return ctx.json(priceIds);
 		},
 	);

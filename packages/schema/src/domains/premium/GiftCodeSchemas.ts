@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PricingModeEnum} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -11,7 +10,11 @@ export type CheckoutPaymentMethod = z.infer<typeof CheckoutPaymentMethodEnum>;
 
 export const CreateCheckoutSessionRequest = z.object({
 	price_id: createStringType().describe('The Stripe price ID for the subscription plan'),
-	country_code: createStringType(2, 2).optional().describe('Two-letter country code used for regional pricing'),
+	country_code: createStringType(2, 2)
+		.optional()
+		.describe(
+			'Two-letter country code used for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
+		),
 	client_geoip_country_code: createStringType(2, 2)
 		.optional()
 		.describe('Two-letter country code observed by the client GeoIP store before checkout'),
@@ -19,7 +22,6 @@ export const CreateCheckoutSessionRequest = z.object({
 		.boolean()
 		.optional()
 		.describe('Whether the EU/EEA digital content withdrawal waiver was expressly accepted before checkout'),
-	pricing_mode: PricingModeEnum.optional().describe('Whether to use localized or standard USD/EUR pricing rules'),
 	payment_method: CheckoutPaymentMethodEnum.optional().describe(
 		'Preferred payment method. card (default) uses the account Payment Method Configuration. pix requires a BRL recurring price and enables Pix Automático. upi requires an INR recurring price and enables RBI-compliant UPI mandates.',
 	),

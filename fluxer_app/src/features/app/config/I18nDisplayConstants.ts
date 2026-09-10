@@ -23,7 +23,6 @@ export const MACOS_SCREEN_RECORDING_PERMISSION_NAME = 'Screen Recording';
 export const PIX_PAYMENT_METHOD = 'Pix';
 export const UPI_PAYMENT_METHOD = 'UPI';
 export const BLIK_PAYMENT_METHOD = 'BLIK';
-export const MB_WAY_PAYMENT_METHOD = 'MB WAY';
 export const SUPPORT_EMAIL = 'support@fluxer.app';
 export const SUPPORT_EMAIL_MAILTO = `mailto:${SUPPORT_EMAIL}`;
 export const I18N_EMAIL = 'i18n@fluxer.app';

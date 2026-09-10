@@ -13342,13 +13342,10 @@
 						"name": "country_code",
 						"in": "query",
 						"required": false,
-						"schema": {"type": "string", "description": "Two-letter country code for regional pricing"}
-					},
-					{
-						"name": "pricing_mode",
-						"in": "query",
-						"required": false,
-						"schema": {"$ref": "#/components/schemas/PricingModeEnum"}
+						"schema": {
+							"type": "string",
+							"description": "Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins."
+						}
 					}
 				]
 			}
@@ -13623,7 +13620,10 @@
 						"name": "country_code",
 						"in": "query",
 						"required": false,
-						"schema": {"type": "string", "description": "Two-letter country code for regional pricing"}
+						"schema": {
+							"type": "string",
+							"description": "Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins."
+						}
 					}
 				]
 			}
@@ -32622,13 +32622,9 @@
 					"localized": {
 						"anyOf": [{"$ref": "#/components/schemas/PriceIdsResponse"}, {"type": "null"}],
 						"description": "Localized checkout prices resolved from mirrored billing data"
-					},
-					"base": {
-						"anyOf": [{"$ref": "#/components/schemas/PriceIdsResponse"}, {"type": "null"}],
-						"description": "Standard USD/EUR checkout prices resolved from mirrored billing data"
 					}
 				},
-				"required": ["country_code", "localized", "base"]
+				"required": ["country_code", "localized"]
 			},
 			"PriceIdsResponse": {
 				"type": "object",
@@ -32687,7 +32683,6 @@
 				},
 				"required": ["disabled"]
 			},
-			"PricingModeEnum": {"enum": ["localized", "base"], "type": "string", "x-enumNames": ["localized", "base"]},
 			"SelfServeRefundResponse": {
 				"type": "object",
 				"properties": {
@@ -34016,7 +34011,10 @@
 				"type": "object",
 				"properties": {
 					"price_id": {"type": "string", "description": "The Stripe price ID for the subscription plan"},
-					"country_code": {"type": "string", "description": "Two-letter country code used for regional pricing"},
+					"country_code": {
+						"type": "string",
+						"description": "Two-letter country code used for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins."
+					},
 					"client_geoip_country_code": {
 						"type": "string",
 						"description": "Two-letter country code observed by the client GeoIP store before checkout"
@@ -34025,7 +34023,6 @@
 						"type": "boolean",
 						"description": "Whether the EU/EEA digital content withdrawal waiver was expressly accepted before checkout"
 					},
-					"pricing_mode": {"$ref": "#/components/schemas/PricingModeEnum"},
 					"payment_method": {"$ref": "#/components/schemas/CheckoutPaymentMethodEnum"},
 					"is_business": {
 						"type": "boolean",
@@ -36836,7 +36833,7 @@
 						"description": "Controls who sees the full profile: all guild members, only small-guild members, or only friends"
 					},
 					"synced_preferences": {
-						"anyOf": [{"type": "string", "maxLength": 349528}, {"type": "null"}],
+						"anyOf": [{"type": "string", "maxLength": 699052}, {"type": "null"}],
 						"description": "Account-wide client preferences as a base64-encoded protobuf snapshot. Replaces the entire stored snapshot; pass null to clear it."
 					}
 				}

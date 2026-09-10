@@ -13,7 +13,6 @@ import type {
 	PremiumPricingState,
 	PremiumStateResponse,
 	PriceIdsResponse,
-	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundIneligibilityReason,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
@@ -33,13 +32,7 @@ import type {User} from '../../models/User';
 import type {IUserRepository} from '../../user/IUserRepository';
 import {checkHasActivePaidPremium} from '../../user/UserHelpers';
 import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {
-	type Currency,
-	getBaseCurrencyPreferences,
-	getBaseGiftCurrencyPreferences,
-	getCurrencyPreferences,
-	getGiftCurrencyPreferences,
-} from '../../utils/CurrencyUtils';
+import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '../../utils/CurrencyUtils';
 import type {RecurringBillingCycle} from '../ProductRegistry';
 import {ProductRegistry} from '../ProductRegistry';
 import {getPrimarySubscriptionItem} from '../StripeSubscriptionPeriod';
@@ -743,22 +736,15 @@ export class PremiumStateService {
 
 	private async resolvePricing(countryCode: string | null | undefined): Promise<PremiumPricingState> {
 		const normalizedCountryCode = normalizeCountryCode(countryCode);
-		const [localized, base] = await Promise.all([
-			this.resolvePriceIds(normalizedCountryCode, 'localized'),
-			this.resolvePriceIds(normalizedCountryCode, 'base'),
-		]);
+		const localized = await this.resolvePriceIds(normalizedCountryCode);
 		return {
 			country_code: normalizedCountryCode,
 			localized,
-			base,
 		};
 	}
 
-	private async resolvePriceIds(
-		countryCode: string | null,
-		pricingMode: PricingMode,
-	): Promise<PriceIdsResponse | null> {
-		const resolved = this.resolveConfiguredPriceIds(countryCode, pricingMode);
+	private async resolvePriceIds(countryCode: string | null): Promise<PriceIdsResponse | null> {
+		const resolved = this.resolveConfiguredPriceIds(countryCode);
 		if (!resolved) return null;
 		const [monthlyPrice, yearlyPrice, gift1MonthPrice, gift1YearPrice] = await Promise.all([
 			resolved.monthly ? this.billingRepository.prices.findById(resolved.monthly) : null,
@@ -775,11 +761,9 @@ export class PremiumStateService {
 		};
 	}
 
-	private resolveConfiguredPriceIds(countryCode: string | null, pricingMode: PricingMode): ResolvedPriceIds | null {
-		const recurringCurrencyPreferences =
-			pricingMode === 'base' ? getBaseCurrencyPreferences(countryCode) : getCurrencyPreferences(countryCode);
-		const giftCurrencyPreferences =
-			pricingMode === 'base' ? getBaseGiftCurrencyPreferences(countryCode) : getGiftCurrencyPreferences(countryCode);
+	private resolveConfiguredPriceIds(countryCode: string | null): ResolvedPriceIds | null {
+		const recurringCurrencyPreferences = getCurrencyPreferences(countryCode);
+		const giftCurrencyPreferences = getGiftCurrencyPreferences(countryCode);
 		const recurringPrices = this.resolveRecurringPriceIds(recurringCurrencyPreferences);
 		const giftPrices = this.resolveGiftPriceIds(giftCurrencyPreferences);
 		if (!recurringPrices || !giftPrices) return null;

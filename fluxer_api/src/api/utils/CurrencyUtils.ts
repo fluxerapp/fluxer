@@ -31,21 +31,6 @@ export function getCurrencyPreferences(countryCode: string | null | undefined): 
 	return ['USD', 'EUR'];
 }
 
-export function getBaseCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
-	if (!countryCode) {
-		return ['USD', 'EUR'];
-	}
-	const upperCode = countryCode.toUpperCase();
-	if (isEuEeaCountryCode(upperCode)) {
-		return ['EUR', 'USD'];
-	}
-	return ['USD', 'EUR'];
-}
-
 export function getGiftCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
 	return getCurrencyPreferences(countryCode);
-}
-
-export function getBaseGiftCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
-	return getBaseCurrencyPreferences(countryCode);
 }

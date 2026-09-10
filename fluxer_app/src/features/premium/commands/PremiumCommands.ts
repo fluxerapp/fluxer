@@ -11,7 +11,6 @@ import type {
 	LocalizedCardPreapprovalContinueResponse,
 	PremiumStateResponse,
 	PriceIdsResponse,
-	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
 	SwitchToListPriceResponse,
@@ -50,15 +49,12 @@ async function resolvePremiumStateCountryCode(countryCode?: string): Promise<str
 	return normalizedCountryCode(GeoIP.countryCode ?? undefined);
 }
 
-function priceIdsCacheKey(countryCode: string | undefined, pricingMode: PricingMode): string {
-	return `${countryCode ?? 'default'}:${pricingMode}`;
+function priceIdsCacheKey(countryCode: string | undefined): string {
+	return countryCode ?? 'default';
 }
 
-function priceIdsQuery(countryCode: string | undefined, pricingMode: PricingMode): Record<string, string> {
-	return {
-		...(countryCode ? {country_code: countryCode} : {}),
-		pricing_mode: pricingMode,
-	};
+function priceIdsQuery(countryCode: string | undefined): Record<string, string> {
+	return countryCode ? {country_code: countryCode} : {};
 }
 
 function checkoutEndpoint(isGift: boolean): string {
@@ -69,29 +65,22 @@ function checkoutSessionBody(
 	priceId: string,
 	countryCode: string | undefined,
 	isGift: boolean,
-	pricingMode: PricingMode,
 	paymentMethod?: CheckoutPaymentMethod,
 ): Record<string, string> {
 	return {
 		price_id: priceId,
 		...(countryCode ? {country_code: countryCode} : {}),
 		...(countryCode ? {client_geoip_country_code: countryCode} : {}),
-		pricing_mode: pricingMode,
 		...(paymentMethod && !isGift ? {payment_method: paymentMethod} : {}),
 	};
 }
 
-function preapprovalSessionBody(
-	priceId: string,
-	countryCode: string,
-	pricingMode: PricingMode,
-): Record<string, string> {
+function preapprovalSessionBody(priceId: string, countryCode: string): Record<string, string> {
 	const normalized = normalizedCountryCode(countryCode) ?? countryCode;
 	return {
 		price_id: priceId,
 		country_code: normalized,
 		client_geoip_country_code: normalized,
-		pricing_mode: pricingMode,
 	};
 }
 
@@ -104,9 +93,9 @@ async function postAndInvalidate(endpoint: string, body?: Record<string, string>
 	invalidateCurrentSubscriptionPriceCache();
 }
 
-export async function fetchPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): Promise<PriceIds> {
+export async function fetchPriceIds(countryCode?: string): Promise<PriceIds> {
 	const country = normalizedCountryCode(countryCode);
-	const cacheKey = priceIdsCacheKey(country, pricingMode);
+	const cacheKey = priceIdsCacheKey(country);
 	const cachedEntry = priceIdsCache.get(cacheKey);
 	if (cachedEntry?.value && cachedEntry.fetchedAt && Date.now() - cachedEntry.fetchedAt < PRICE_IDS_CACHE_TTL_MS) {
 		return cachedEntry.value;
@@ -117,7 +106,7 @@ export async function fetchPriceIds(countryCode?: string, pricingMode: PricingMo
 	const request = (async () => {
 		try {
 			const response = await http.get<PriceIds>(Endpoints.PREMIUM_PRICE_IDS, {
-				query: priceIdsQuery(country, pricingMode),
+				query: priceIdsQuery(country),
 			});
 			logger.debug('Price IDs fetched', response.body);
 			priceIdsCache.set(cacheKey, {
@@ -215,6 +204,9 @@ export async function refreshPremiumState(countryCode?: string): Promise<Premium
 	}
 	try {
 		const state = await fetchPremiumState(countryCode);
+		if (Users.currentUser?.id !== currentUserId) {
+			return state;
+		}
 		if (currentUserId) {
 			PremiumState.setState(currentUserId, state);
 		}
@@ -228,10 +220,13 @@ export async function refreshPremiumState(countryCode?: string): Promise<Premium
 }
 
 export async function setPremiumPerksDisabled(disabled: boolean): Promise<PremiumStateResponse> {
+	const currentUserId = Users.currentUser?.id;
 	const response = await http.patch<PremiumStateResponse>(Endpoints.PREMIUM_PERKS_DISABLED, {
 		body: {disabled} satisfies PremiumPerksDisabledRequest,
 	});
-	const currentUserId = Users.currentUser?.id;
+	if (Users.currentUser?.id !== currentUserId) {
+		return response.body;
+	}
 	if (currentUserId) {
 		PremiumState.setState(currentUserId, response.body);
 	}
@@ -256,15 +251,14 @@ export async function createCheckoutSession(
 	priceId: string,
 	countryCode?: string,
 	isGift: boolean = false,
-	pricingMode: PricingMode = 'localized',
 	paymentMethod?: CheckoutPaymentMethod,
 ): Promise<string> {
 	try {
 		const country = normalizedCountryCode(countryCode);
 		const response = await http.post<UrlResponse>(checkoutEndpoint(isGift), {
-			body: checkoutSessionBody(priceId, country, isGift, pricingMode, paymentMethod),
+			body: checkoutSessionBody(priceId, country, isGift, paymentMethod),
 		});
-		logger.info('Checkout session created', {priceId, countryCode, isGift, pricingMode, paymentMethod});
+		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod});
 		return response.body.url;
 	} catch (error) {
 		logger.error('Checkout session creation failed', error);
@@ -272,16 +266,12 @@ export async function createCheckoutSession(
 	}
 }
 
-export async function createLocalizedCardPreapprovalSession(
-	priceId: string,
-	countryCode: string,
-	pricingMode: PricingMode = 'localized',
-): Promise<string> {
+export async function createLocalizedCardPreapprovalSession(priceId: string, countryCode: string): Promise<string> {
 	try {
 		const response = await http.post<UrlResponse>(Endpoints.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL, {
-			body: preapprovalSessionBody(priceId, countryCode, pricingMode),
+			body: preapprovalSessionBody(priceId, countryCode),
 		});
-		logger.info('Localized card preapproval session created', {priceId, countryCode, pricingMode});
+		logger.info('Localized card preapproval session created', {priceId, countryCode});
 		return response.body.url;
 	} catch (error) {
 		logger.error('Localized card preapproval session creation failed', error);

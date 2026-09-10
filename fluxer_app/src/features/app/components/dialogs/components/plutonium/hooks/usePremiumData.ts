@@ -2,7 +2,7 @@
 
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {CurrentSubscriptionPrice, PriceIds} from '@app/features/premium/commands/PremiumCommands';
-import {formatMinorUnitPrice, type PricingMode} from '@app/features/premium/utils/PricingUtils';
+import {formatMinorUnitPrice} from '@app/features/premium/utils/PricingUtils';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import type {PremiumStateResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import {useMemo} from 'react';
@@ -35,35 +35,19 @@ export interface PremiumData {
 	yearlyPrice: string;
 	giftMonthlyPrice: string;
 	giftYearlyPrice: string;
-	localizedPriceIds: PriceIds | null;
-	basePriceIds: PriceIds | null;
-	hasPricingChoice: boolean;
-	selectedPricingMode: PricingMode;
-	localizedCurrency: string | null;
-	baseCurrency: string | null;
 	currentSubscriptionPrice: CurrentSubscriptionPrice | null;
 	currentSubscriptionPriceLabel: string | null;
 	currentSubscriptionListPriceLabel: string | null;
 	isCurrentSubscriptionGrandfathered: boolean;
 }
 
-export const usePremiumData = (
-	_countryCode: string | null,
-	pricingMode: PricingMode = 'localized',
-	{
-		premiumState = null,
-	}: {
-		premiumState?: PremiumStateResponse | null;
-	} = {},
-): PremiumData => {
+export const usePremiumData = ({
+	premiumState = null,
+}: {
+	premiumState?: PremiumStateResponse | null;
+} = {}): PremiumData => {
 	const locale = LocaleUtils.getCurrentLocale();
-	const localizedPriceIds = premiumState?.pricing.localized ?? null;
-	const basePriceIds = premiumState?.pricing.base ?? null;
-	const hasPricingChoice =
-		typeof localizedPriceIds?.currency === 'string' &&
-		typeof basePriceIds?.currency === 'string' &&
-		localizedPriceIds.currency !== basePriceIds.currency;
-	const priceIds = pricingMode === 'base' && hasPricingChoice ? basePriceIds : localizedPriceIds;
+	const priceIds = premiumState?.pricing.localized ?? null;
 	const monthlyPrice = useMemo(() => {
 		return formatPriceLabel(priceIds?.monthly_amount_minor, priceIds?.currency, locale);
 	}, [locale, priceIds?.currency, priceIds?.monthly_amount_minor]);
@@ -97,12 +81,6 @@ export const usePremiumData = (
 		yearlyPrice,
 		giftMonthlyPrice,
 		giftYearlyPrice,
-		localizedPriceIds,
-		basePriceIds,
-		hasPricingChoice,
-		selectedPricingMode: pricingMode,
-		localizedCurrency: localizedPriceIds?.currency ?? null,
-		baseCurrency: hasPricingChoice ? (basePriceIds?.currency ?? null) : null,
 		currentSubscriptionPrice,
 		currentSubscriptionPriceLabel,
 		currentSubscriptionListPriceLabel,

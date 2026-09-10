@@ -5,7 +5,6 @@ import gridStyles from '@app/features/app/components/dialogs/components/PricingG
 import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/components/PurchaseDisclaimer';
 import styles from '@app/features/app/components/dialogs/components/plutonium/GiftSection.module.css';
 import {SectionHeader} from '@app/features/app/components/dialogs/components/plutonium/PlutoniumSectionHeader';
-import {PricingContextPanel} from '@app/features/app/components/dialogs/components/plutonium/PricingContextPanel';
 import {PurchaseDisabledWrapper} from '@app/features/app/components/dialogs/components/plutonium/PurchaseDisabledWrapper';
 import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {
@@ -16,7 +15,6 @@ import {
 	SHARE_PREMIUM_EXPERIENCE_DESCRIPTOR,
 	VIEW_PREMIUM_PERKS_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
-import type {PricingMode} from '@app/features/premium/utils/PricingUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowDownIcon} from '@phosphor-icons/react';
@@ -38,12 +36,6 @@ const MESSAGE_1_MONTH_GIFT_DESCRIPTOR = msg({
 
 interface GiftSectionProps {
 	giftSectionRef: React.RefObject<HTMLDivElement | null>;
-	countryCode: string | null;
-	pricingMode: PricingMode;
-	setPricingMode: (value: PricingMode) => void;
-	hasPricingChoice: boolean;
-	localizedCurrency: string | null;
-	baseCurrency: string | null;
 	giftMonthlyPrice: string;
 	giftYearlyPrice: string;
 	loadingCheckout: boolean;
@@ -55,12 +47,6 @@ interface GiftSectionProps {
 export const GiftSection: React.FC<GiftSectionProps> = observer(
 	({
 		giftSectionRef,
-		countryCode,
-		pricingMode,
-		setPricingMode,
-		hasPricingChoice,
-		localizedCurrency,
-		baseCurrency,
 		giftMonthlyPrice,
 		giftYearlyPrice,
 		loadingCheckout,
@@ -81,16 +67,6 @@ export const GiftSection: React.FC<GiftSectionProps> = observer(
 							premiumProductName: PREMIUM_PRODUCT_NAME,
 						})}
 						data-flx="app.plutonium.gift-section.section-header"
-					/>
-					<PricingContextPanel
-						countryCode={countryCode}
-						pricingMode={pricingMode}
-						setPricingMode={setPricingMode}
-						hasPricingChoice={hasPricingChoice}
-						localizedCurrency={localizedCurrency}
-						baseCurrency={baseCurrency}
-						isGiftMode
-						data-flx="app.plutonium.gift-section.pricing-context-panel"
 					/>
 					<div className={gridStyles.gridWrapper} data-flx="app.plutonium.gift-section.div--2">
 						<div className={gridStyles.gridTwoColumns} data-flx="app.plutonium.gift-section.div--3">

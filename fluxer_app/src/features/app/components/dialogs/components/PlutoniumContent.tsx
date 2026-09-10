@@ -29,7 +29,6 @@ import {
 	FREE_VS_PREMIUM_DESCRIPTOR,
 	VERIFY_EMAIL_TO_PURCHASE_PREMIUM_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
-import type {PricingMode} from '@app/features/premium/utils/PricingUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -51,7 +50,6 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 	const locale = LocaleUtils.getCurrentLocale();
 	const mobileLayoutState = MobileLayout;
 	const [isGiftMode, setIsGiftMode] = useState(defaultGiftMode);
-	const [pricingMode, setPricingMode] = useState<PricingMode>('localized');
 	const giftSectionRef = useRef<HTMLDivElement | null>(null);
 	const perksSectionRef = useRef<HTMLDivElement | null>(null);
 	const countryCode = GeoIP.countryCode;
@@ -66,14 +64,11 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 		yearlyPrice,
 		giftMonthlyPrice,
 		giftYearlyPrice,
-		hasPricingChoice,
-		localizedCurrency,
-		baseCurrency,
 		currentSubscriptionPrice,
 		currentSubscriptionPriceLabel,
 		currentSubscriptionListPriceLabel,
 		isCurrentSubscriptionGrandfathered,
-	} = usePremiumData(countryCode, pricingMode, {premiumState});
+	} = usePremiumData({premiumState});
 	const {
 		loadingPortal,
 		loadingCancel,
@@ -92,15 +87,9 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 	const {loadingCheckout, handleSelectPlan} = useCheckoutActions(
 		priceIds,
 		countryCode,
-		pricingMode,
 		subscriptionStatus.isGiftSubscription,
 		mobileLayoutState.enabled,
 	);
-	useEffect(() => {
-		if (!hasPricingChoice && pricingMode === 'base') {
-			setPricingMode('localized');
-		}
-	}, [hasPricingChoice, pricingMode]);
 	useEffect(() => {
 		if (!currentUser?.id) return;
 		void PremiumCommands.refreshPremiumState(countryCode ?? undefined);
@@ -175,12 +164,6 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 				<PlutoniumUpsellBanner data-flx="app.plutonium-content.plutonium-upsell-banner" />
 				<GiftSection
 					giftSectionRef={giftSectionRef}
-					countryCode={countryCode}
-					pricingMode={pricingMode}
-					setPricingMode={setPricingMode}
-					hasPricingChoice={hasPricingChoice}
-					localizedCurrency={localizedCurrency}
-					baseCurrency={baseCurrency}
 					giftMonthlyPrice={giftMonthlyPrice}
 					giftYearlyPrice={giftYearlyPrice}
 					loadingCheckout={loadingCheckout}
@@ -289,12 +272,6 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 				<PricingSection
 					isGiftMode={isGiftMode}
 					setIsGiftMode={setIsGiftMode}
-					countryCode={countryCode}
-					pricingMode={pricingMode}
-					setPricingMode={setPricingMode}
-					hasPricingChoice={hasPricingChoice}
-					localizedCurrency={localizedCurrency}
-					baseCurrency={baseCurrency}
 					monthlyPrice={monthlyPrice}
 					yearlyPrice={yearlyPrice}
 					giftMonthlyPrice={giftMonthlyPrice}
@@ -308,12 +285,6 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 			) : (
 				<GiftSection
 					giftSectionRef={giftSectionRef}
-					countryCode={countryCode}
-					pricingMode={pricingMode}
-					setPricingMode={setPricingMode}
-					hasPricingChoice={hasPricingChoice}
-					localizedCurrency={localizedCurrency}
-					baseCurrency={baseCurrency}
 					giftMonthlyPrice={giftMonthlyPrice}
 					giftYearlyPrice={giftYearlyPrice}
 					loadingCheckout={loadingCheckout}
@@ -340,12 +311,6 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 			{!subscriptionStatus.isPremium && (
 				<BottomCTASection
 					isGiftMode={isGiftMode}
-					countryCode={countryCode}
-					pricingMode={pricingMode}
-					setPricingMode={setPricingMode}
-					hasPricingChoice={hasPricingChoice}
-					localizedCurrency={localizedCurrency}
-					baseCurrency={baseCurrency}
 					monthlyPrice={monthlyPrice}
 					yearlyPrice={yearlyPrice}
 					giftMonthlyPrice={giftMonthlyPrice}

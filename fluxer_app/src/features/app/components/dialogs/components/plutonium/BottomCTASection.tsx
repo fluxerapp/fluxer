@@ -2,10 +2,8 @@
 
 import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/components/PurchaseDisclaimer';
 import styles from '@app/features/app/components/dialogs/components/plutonium/BottomCTASection.module.css';
-import {PricingContextPanel} from '@app/features/app/components/dialogs/components/plutonium/PricingContextPanel';
 import {PurchaseDisabledWrapper} from '@app/features/app/components/dialogs/components/plutonium/PurchaseDisabledWrapper';
 import {PREMIUM_PRODUCT_FULL_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import type {PricingMode} from '@app/features/premium/utils/PricingUtils';
 import {Button} from '@app/features/ui/button/Button';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -20,12 +18,6 @@ const CLAIM_YOUR_ACCOUNT_TO_PURCHASE_DESCRIPTOR = msg({
 
 interface BottomCTASectionProps {
 	isGiftMode: boolean;
-	countryCode: string | null;
-	pricingMode: PricingMode;
-	setPricingMode: (value: PricingMode) => void;
-	hasPricingChoice: boolean;
-	localizedCurrency: string | null;
-	baseCurrency: string | null;
 	monthlyPrice: string;
 	yearlyPrice: string;
 	giftMonthlyPrice: string;
@@ -39,12 +31,6 @@ interface BottomCTASectionProps {
 export const BottomCTASection: React.FC<BottomCTASectionProps> = observer(
 	({
 		isGiftMode,
-		countryCode,
-		pricingMode,
-		setPricingMode,
-		hasPricingChoice,
-		localizedCurrency,
-		baseCurrency,
 		monthlyPrice,
 		yearlyPrice,
 		giftMonthlyPrice,
@@ -63,17 +49,6 @@ export const BottomCTASection: React.FC<BottomCTASectionProps> = observer(
 				<h2 className={styles.title} data-flx="app.plutonium.bottom-cta-section.title">
 					{isGiftMode ? <Trans>Ready to buy a gift?</Trans> : <Trans>Ready to upgrade?</Trans>}
 				</h2>
-				<PricingContextPanel
-					countryCode={countryCode}
-					pricingMode={pricingMode}
-					setPricingMode={setPricingMode}
-					hasPricingChoice={hasPricingChoice}
-					localizedCurrency={localizedCurrency}
-					baseCurrency={baseCurrency}
-					isGiftMode={isGiftMode}
-					compact
-					data-flx="app.plutonium.bottom-cta-section.pricing-context-panel"
-				/>
 				<div className={styles.buttonContainer} data-flx="app.plutonium.bottom-cta-section.button-container">
 					{!isGiftMode ? (
 						<>

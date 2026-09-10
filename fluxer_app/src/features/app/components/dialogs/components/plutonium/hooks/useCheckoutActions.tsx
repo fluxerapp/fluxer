@@ -18,7 +18,6 @@ import type {CheckoutPaymentMethod, PriceIds} from '@app/features/premium/comman
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {recordPremiumCheckoutReturnIntent} from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
-import type {PricingMode} from '@app/features/premium/utils/PricingUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -246,7 +245,6 @@ function alternativePaymentMethodForCurrency(
 export const useCheckoutActions = (
 	priceIds: PriceIds | null,
 	countryCode: string | null,
-	pricingMode: PricingMode,
 	isGiftSubscription: boolean,
 	mobileEnabled: boolean,
 ) => {
@@ -552,7 +550,6 @@ export const useCheckoutActions = (
 						priceId,
 						countryCode ?? undefined,
 						isGift,
-						pricingMode,
 						paymentMethod,
 					);
 					await openCheckoutUrl(checkoutUrl, {promptKind: 'payment', skipMobilePrompt});
@@ -572,11 +569,7 @@ export const useCheckoutActions = (
 				}
 				setLoadingCheckout(true);
 				try {
-					const checkoutUrl = await PremiumCommands.createLocalizedCardPreapprovalSession(
-						priceId,
-						countryCode,
-						pricingMode,
-					);
+					const checkoutUrl = await PremiumCommands.createLocalizedCardPreapprovalSession(priceId, countryCode);
 					await openCheckoutUrl(checkoutUrl, {
 						promptKind: 'localized_card_preapproval',
 						skipMobilePrompt,
@@ -641,7 +634,6 @@ export const useCheckoutActions = (
 			getAlternativePaymentMethodPrompt,
 			isGiftSubscription,
 			mobileEnabled,
-			pricingMode,
 			i18n,
 		],
 	);
