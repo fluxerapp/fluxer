@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {FavoriteGifFirstTimePromptModal} from '@app/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal';
 import * as FavoriteGifCommands from '@app/features/expressions/commands/FavoriteGifCommands';
 import * as FavoriteMemeCommands from '@app/features/expressions/commands/FavoriteMemeCommands';
 import {AddFavoriteMemeModal} from '@app/features/expressions/components/modals/AddFavoriteMemeModal';
@@ -106,17 +105,6 @@ export function useMediaFavorite({
 						});
 					}
 				};
-				if (!FavoriteGif.hasSeenFavoriteGifFirstTimePrompt && !isFavorited) {
-					ModalCommands.push(
-						modal(() => (
-							<FavoriteGifFirstTimePromptModal
-								onConfirm={performToggle}
-								data-flx="messaging.use-media-favorite.toggle-favorite.favorite-gif-first-time-prompt-modal"
-							/>
-						)),
-					);
-					return;
-				}
 				performToggle();
 				return;
 			}

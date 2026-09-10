@@ -3,7 +3,6 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import {safePause, safePlay, useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
-import {FavoriteGifFirstTimePromptModal} from '@app/features/channel/components/pickers/gif/FavoriteGifFirstTimePromptModal';
 import type {GifPickerGridItemData} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
 import {PickerThumbnail} from '@app/features/channel/components/pickers/shared/PickerThumbnail';
 import {usePooledVideo} from '@app/features/channel/components/pickers/shared/usePooledVideo';
@@ -24,7 +23,6 @@ import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {modal, push} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
@@ -400,17 +398,6 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 	const handleFavoriteClick = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (isFavoritePending) return;
-		if (!FavoriteGif.hasSeenFavoriteGifFirstTimePrompt && !isFavorited) {
-			push(
-				modal(() => (
-					<FavoriteGifFirstTimePromptModal
-						onConfirm={() => void performFavoriteToggle()}
-						data-flx="channel.pickers.gif.gif-picker-grid-item.handle-favorite-click.favorite-gif-first-time-prompt-modal"
-					/>
-				)),
-			);
-			return;
-		}
 		void performFavoriteToggle();
 	};
 	const favoriteTooltipText = (() => {

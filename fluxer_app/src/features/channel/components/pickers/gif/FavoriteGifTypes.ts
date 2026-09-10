@@ -105,4 +105,24 @@ export function pickCanonicalPreviewFormat(
 	return null;
 }
 
+export const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
+
+export function slimFavoriteGifEntry(entry: FavoriteGifEntry): FavoriteGifEntry {
+	const best = pickBestPreviewFormat(entry.media, 'any', {
+		cssWidth: PREVIEW_TILE_CSS_WIDTH,
+		devicePixelRatio: STORED_PREVIEW_DEVICE_PIXEL_RATIO,
+	});
+	if (best == null) {
+		return Object.keys(entry.media).length === 0 ? entry : {...entry, media: {}};
+	}
+	return {
+		...entry,
+		proxy_url: best.format.proxy_src,
+		width: best.format.width,
+		height: best.format.height,
+		content_type: inferFormatContentType(best.key),
+		media: {},
+	};
+}
+
 export {inferFormatContentType};

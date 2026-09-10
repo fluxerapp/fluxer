@@ -11,7 +11,7 @@ export type {SyncedPreferences} from '@fluxer/schema/src/gen/fluxer/user/prefere
 export {SyncedPreferencesSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 
 export const EMPTY_SYNCED_PREFERENCES_ENCODED = '';
-export const SYNCED_PREFERENCES_MAX_BYTES = 256 * 1024;
+export const SYNCED_PREFERENCES_MAX_BYTES = 512 * 1024;
 export const SYNCED_PREFERENCES_MAX_ENCODED_LENGTH = Math.ceil(SYNCED_PREFERENCES_MAX_BYTES / 3) * 4;
 const BASE64_PATTERN = /^[A-Za-z0-9+/_-]*={0,2}$/;
 

@@ -2,7 +2,11 @@
 
 import {create} from '@bufbuild/protobuf';
 import {MAX_GROUP_DM_OTHER_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
-import {encodeSyncedPreferences, SyncedPreferencesSchema} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
+import {
+	encodeSyncedPreferences,
+	SYNCED_PREFERENCES_MAX_ENCODED_LENGTH,
+	SyncedPreferencesSchema,
+} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {
 	CreatePrivateChannelRequest,
 	CustomStatusPayload,
@@ -60,8 +64,12 @@ describe('UserSettingsUpdateRequest synced_preferences', () => {
 			false,
 		);
 	});
+	it('accepts a string at exactly the size cap', () => {
+		const atCap = 'A'.repeat(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH);
+		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: atCap}).success).toBe(true);
+	});
 	it('rejects strings exceeding the size cap', () => {
-		const oversized = 'A'.repeat(400000);
+		const oversized = 'A'.repeat(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH + 1);
 		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: oversized}).success).toBe(false);
 	});
 });

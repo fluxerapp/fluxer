@@ -125,12 +125,13 @@ describe('User Settings synced_preferences', () => {
 	});
 	test('reports TOO_LARGE for a snapshot inside the encoded-length bound but over the byte cap', async () => {
 		const account = await createTestAccount(harness);
+		const baseEntries = Math.floor((SYNCED_PREFERENCES_MAX_BYTES - 8192) / 1006);
 		const build = (tailLength: number) =>
 			encodeSyncedPreferences(
 				create(SyncedPreferencesSchema, {
 					localSpamOverrides: create(LocalUserSpamOverridesSchema, {
 						spammerUserIds: [
-							...Array.from({length: 260}, (_, i) => `${i}-${'x'.repeat(1000)}`),
+							...Array.from({length: baseEntries}, (_, i) => `${i}-${'x'.repeat(1000)}`),
 							'y'.repeat(tailLength),
 						],
 					}),
@@ -138,7 +139,13 @@ describe('User Settings synced_preferences', () => {
 			);
 		let tail = 1;
 		let encoded = build(tail);
-		while (encodedSyncedPreferencesByteLength(encoded) < SYNCED_PREFERENCES_MAX_BYTES + 1 && tail < 8000) {
+		while (encodedSyncedPreferencesByteLength(encoded) <= SYNCED_PREFERENCES_MAX_BYTES) {
+			tail += 512;
+			encoded = build(tail);
+		}
+		tail = Math.max(1, tail - 512);
+		encoded = build(tail);
+		while (encodedSyncedPreferencesByteLength(encoded) <= SYNCED_PREFERENCES_MAX_BYTES) {
 			tail += 1;
 			encoded = build(tail);
 		}
