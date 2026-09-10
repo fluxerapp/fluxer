@@ -131,6 +131,36 @@ Caddyfile
 FILES
 }
 
+fluxer_compose_names() {
+	cat <<'NAMES'
+compose.yaml
+compose.yml
+docker-compose.yml
+docker-compose.yaml
+NAMES
+}
+
+fluxer_compose_name_in() {
+	for fluxer_candidate in $(fluxer_compose_names); do
+		if [ -e "$1/$fluxer_candidate" ]; then
+			printf '%s' "$fluxer_candidate"
+			return 0
+		fi
+	done
+	return 1
+}
+
+fluxer_compose_base='docker-compose.yml'
+fluxer_compose_base_from=''
+
+fluxer_placed_name() {
+	if [ "$1" = 'docker-compose.yml' ]; then
+		printf '%s' "$fluxer_compose_base"
+	else
+		printf '%s' "$1"
+	fi
+}
+
 # The file Compose bind-mounts from the working directory, with the service that
 # mounts it.
 #
@@ -372,15 +402,21 @@ done
 #
 # An install writes a new instance, so it never adopts the working directory.
 if [ -z "$opt_dir" ]; then
+	fluxer_here_compose=$(fluxer_compose_name_in "$(pwd)" || true)
 	if { [ "$opt_update" -eq 1 ] || [ "$opt_rollback" -eq 1 ]; } &&
-		[ -s "$(pwd)/docker-compose.yml" ] && [ -e "$(pwd)/.env" ] &&
-		grep -q '^FLUXER_' "$(pwd)/.env" 2>/dev/null; then
+		[ -n "$fluxer_here_compose" ] && [ -s "$(pwd)/$fluxer_here_compose" ] &&
+		[ -e "$(pwd)/.env" ] && grep -q '^FLUXER_' "$(pwd)/.env" 2>/dev/null; then
 		opt_dir="$(pwd)"
 		fluxer_say "Acting on the instance in $opt_dir, the working directory. Pass --dir to name another."
-	elif [ -n "${HOME:-}" ]; then
-		opt_dir="$HOME/fluxer"
 	else
-		opt_dir="$(pwd)/fluxer"
+		if [ -n "${HOME:-}" ]; then
+			opt_dir="$HOME/fluxer"
+		else
+			opt_dir="$(pwd)/fluxer"
+		fi
+		if [ "$opt_update" -eq 1 ] || [ "$opt_rollback" -eq 1 ]; then
+			fluxer_say "The working directory holds no instance, so this acts on $opt_dir. Pass --dir to name another."
+		fi
 	fi
 fi
 case $opt_dir in
@@ -749,7 +785,7 @@ fluxer_fetch_stack() {
 fluxer_place_stack() {
 	while read -r fluxer_file; do
 		[ -n "$fluxer_file" ] || continue
-		mv "$fluxer_scratch/$fluxer_file.part" "$opt_dir/$fluxer_file"
+		mv "$fluxer_scratch/$fluxer_file.part" "$opt_dir/$(fluxer_placed_name "$fluxer_file")"
 	done < "$fluxer_scratch/files"
 	fluxer_say "Stack files in $opt_dir are at ref $opt_ref."
 }
@@ -759,7 +795,7 @@ fluxer_compose_project() {
 		printf '%s' "$COMPOSE_PROJECT_NAME"
 		return 0
 	fi
-	sed -n 's/^name: *//p' "$opt_dir/docker-compose.yml" | head -n 1
+	sed -n 's/^name: *//p' "$opt_dir/$fluxer_compose_base" | head -n 1
 }
 
 fluxer_project=''
@@ -767,7 +803,7 @@ fluxer_project=''
 fluxer_set_project() {
 	fluxer_project=$(fluxer_compose_project)
 	if [ -z "$fluxer_project" ]; then
-		fluxer_fail 2 "docker-compose.yml in $opt_dir declares no project name, so the volume names cannot be derived."
+		fluxer_fail 2 "$fluxer_compose_base in $opt_dir declares no project name, so the volume names cannot be derived."
 	fi
 }
 
@@ -1104,11 +1140,18 @@ fluxer_require_instance() {
 	if [ ! -e "$opt_dir/.env" ]; then
 		fluxer_fail 2 "No .env in $opt_dir. That directory holds no instance. Run install.sh with neither --update nor --rollback to set one up."
 	fi
-	if [ ! -e "$opt_dir/docker-compose.yml" ]; then
-		fluxer_fail 2 "No docker-compose.yml in $opt_dir. That directory does not hold an instance."
+	fluxer_resolve_compose_base
+	if [ ! -e "$opt_dir/$fluxer_compose_base" ]; then
+		if [ -n "$fluxer_compose_base_from" ]; then
+			fluxer_fail 2 "$fluxer_compose_base_from names $fluxer_compose_base first, and $opt_dir/$fluxer_compose_base is not there. Put that file back, or name the file the instance runs on first in COMPOSE_FILE."
+		fi
+		fluxer_fail 2 "No compose file in $opt_dir. Compose looks for compose.yaml, compose.yml, docker-compose.yml and docker-compose.yaml there, and that directory holds none of them, so it does not hold an instance."
 	fi
-	if [ ! -s "$opt_dir/docker-compose.yml" ]; then
-		fluxer_fail 2 "$opt_dir/docker-compose.yml is empty. A redirect that captured a failed download leaves that, and Compose refuses an empty compose file. Put the file back from a backup or from the record of the last upgrade, then run this again."
+	if [ ! -s "$opt_dir/$fluxer_compose_base" ]; then
+		fluxer_fail 2 "$opt_dir/$fluxer_compose_base is empty. A redirect that captured a failed download leaves that, and Compose refuses an empty compose file. Put the file back from a backup or from the record of the last upgrade, then run this again."
+	fi
+	if [ "$fluxer_compose_base" != 'docker-compose.yml' ]; then
+		fluxer_say "Compose loads $fluxer_compose_base in $opt_dir, so the stack's docker-compose.yml is written to that name."
 	fi
 }
 
@@ -1141,14 +1184,13 @@ fluxer_env_scalar() {
 	printf '%s' "$fluxer_scalar"
 }
 
-fluxer_require_compose_files() {
+fluxer_read_compose_setting() {
 	fluxer_compose_file=${COMPOSE_FILE:-}
 	fluxer_compose_from="the environment"
 	if [ -z "$fluxer_compose_file" ]; then
 		fluxer_compose_file=$(fluxer_env_scalar COMPOSE_FILE)
 		fluxer_compose_from="$opt_dir/.env"
 	fi
-	[ -n "$fluxer_compose_file" ] || return 0
 	fluxer_path_sep=${COMPOSE_PATH_SEPARATOR:-}
 	if [ -z "$fluxer_path_sep" ]; then
 		fluxer_path_sep=$(fluxer_env_scalar COMPOSE_PATH_SEPARATOR)
@@ -1156,6 +1198,36 @@ fluxer_require_compose_files() {
 	if [ -z "$fluxer_path_sep" ]; then
 		fluxer_path_sep=':'
 	fi
+}
+
+fluxer_resolve_compose_base() {
+	fluxer_read_compose_setting
+	fluxer_compose_base_from=''
+	fluxer_rest=$fluxer_compose_file
+	while [ -n "$fluxer_rest" ]; do
+		fluxer_name=${fluxer_rest%%"$fluxer_path_sep"*}
+		case $fluxer_rest in
+			*"$fluxer_path_sep"*) fluxer_rest=${fluxer_rest#*"$fluxer_path_sep"} ;;
+			*) fluxer_rest='' ;;
+		esac
+		[ -n "$fluxer_name" ] || continue
+		fluxer_compose_base=${fluxer_name#./}
+		fluxer_compose_base=${fluxer_compose_base#"$opt_dir"/}
+		fluxer_compose_base_from="COMPOSE_FILE from $fluxer_compose_from"
+		break
+	done
+	if [ -z "$fluxer_compose_base_from" ]; then
+		fluxer_compose_base=$(fluxer_compose_name_in "$opt_dir" || printf '%s' 'docker-compose.yml')
+		return 0
+	fi
+	case $fluxer_compose_base in
+		*/*) fluxer_fail 2 "$fluxer_compose_base_from names $fluxer_name first, and that file is not directly in $opt_dir. This script refreshes only the files in the directory it acts on, so the upgrade would leave the file Compose loads on the old stack. Move it into $opt_dir and name it there, or upgrade by hand." ;;
+	esac
+}
+
+fluxer_require_compose_files() {
+	fluxer_read_compose_setting
+	[ -n "$fluxer_compose_file" ] || return 0
 	fluxer_compose_count=0
 	fluxer_rest=$fluxer_compose_file
 	while [ -n "$fluxer_rest" ]; do
@@ -1185,7 +1257,7 @@ Leave the COMPOSE_FILE line as it is. Without $fluxer_name the edge container bi
 	done
 	if [ "$fluxer_compose_count" -gt 1 ] &&
 		! fluxer_version_ge "$fluxer_compose_version" "$FLUXER_MIN_COMPOSE_OVERLAY"; then
-		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from loads $fluxer_compose_count files and this host runs Compose $fluxer_compose_version. Every overlay this script downloads uses the !override tag, which needs Compose $FLUXER_MIN_COMPOSE_OVERLAY or newer. Upgrade Compose, or load only docker-compose.yml."
+		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from loads $fluxer_compose_count files and this host runs Compose $fluxer_compose_version. Every overlay this script downloads uses the !override tag, which needs Compose $FLUXER_MIN_COMPOSE_OVERLAY or newer. Upgrade Compose, or load only $fluxer_compose_base."
 	fi
 }
 
@@ -1315,10 +1387,11 @@ fluxer_save_current_files() {
 	chmod 600 "$fluxer_record/.env"
 	while read -r fluxer_file; do
 		[ -n "$fluxer_file" ] || continue
-		if [ -s "$opt_dir/$fluxer_file" ]; then
-			cp -p "$opt_dir/$fluxer_file" "$fluxer_record/$fluxer_file"
-		elif [ -e "$opt_dir/$fluxer_file" ]; then
-			fluxer_fail 7 "$opt_dir/$fluxer_file is empty, so the record would hold a file a rollback could not use. Put the file back before upgrading."
+		fluxer_placed="$opt_dir/$(fluxer_placed_name "$fluxer_file")"
+		if [ -s "$fluxer_placed" ]; then
+			cp -p "$fluxer_placed" "$fluxer_record/$fluxer_file"
+		elif [ -e "$fluxer_placed" ]; then
+			fluxer_fail 7 "$fluxer_placed is empty, so the record would hold a file a rollback could not use. Put the file back before upgrading."
 		fi
 	done < "$fluxer_scratch/files"
 }
@@ -1499,7 +1572,7 @@ fluxer_postgres_major() {
 # The refreshed file is still in the scratch directory when this runs, so a
 # refusal here leaves the instance exactly as it was.
 fluxer_guard_postgres_major() {
-	fluxer_old_major=$(fluxer_postgres_major "$opt_dir/docker-compose.yml")
+	fluxer_old_major=$(fluxer_postgres_major "$opt_dir/$fluxer_compose_base")
 	fluxer_new_major=$(fluxer_postgres_major "$fluxer_scratch/docker-compose.yml.part")
 	if [ -z "$fluxer_old_major" ] || [ -z "$fluxer_new_major" ]; then
 		return 0
@@ -1550,7 +1623,7 @@ $(fluxer_compose_error '  ')"
 	while read -r fluxer_file fluxer_service; do
 		[ -n "$fluxer_service" ] || continue
 		if ! grep -qxF "$fluxer_service" "$fluxer_scratch/services"; then
-			fluxer_say "Skipping the restart of $fluxer_service, because the docker-compose.yml in $opt_dir defines no service by that name."
+			fluxer_say "Skipping the restart of $fluxer_service, because the $fluxer_compose_base in $opt_dir defines no service by that name."
 			continue
 		fi
 		fluxer_say "Restarting $fluxer_service, because $fluxer_file is mounted into it and up -d does not reload a mounted file."
@@ -1656,20 +1729,21 @@ fluxer_plan_update() {
 	fluxer_changed=0
 	while read -r fluxer_file; do
 		[ -n "$fluxer_file" ] || continue
-		if [ ! -e "$opt_dir/$fluxer_file" ]; then
-			fluxer_say "    $fluxer_file is new"
+		fluxer_placed=$(fluxer_placed_name "$fluxer_file")
+		if [ ! -e "$opt_dir/$fluxer_placed" ]; then
+			fluxer_say "    $fluxer_placed is new"
 			fluxer_changed=1
-		elif cmp -s "$opt_dir/$fluxer_file" "$fluxer_scratch/$fluxer_file.part"; then
-			fluxer_say "    $fluxer_file is unchanged"
+		elif cmp -s "$opt_dir/$fluxer_placed" "$fluxer_scratch/$fluxer_file.part"; then
+			fluxer_say "    $fluxer_placed is unchanged"
 		else
-			fluxer_say "    $fluxer_file changes"
+			fluxer_say "    $fluxer_placed changes"
 			fluxer_changed=1
 		fi
 	done < "$fluxer_scratch/files"
 	if [ "$fluxer_changed" -eq 0 ]; then
 		fluxer_say "  note          ref $opt_ref moves no stack file"
 	fi
-	fluxer_old_major=$(fluxer_postgres_major "$opt_dir/docker-compose.yml")
+	fluxer_old_major=$(fluxer_postgres_major "$opt_dir/$fluxer_compose_base")
 	fluxer_new_major=$(fluxer_postgres_major "$fluxer_scratch/docker-compose.yml.part")
 	if [ -n "$fluxer_old_major" ] && [ -n "$fluxer_new_major" ] && [ "$fluxer_old_major" != "$fluxer_new_major" ]; then
 		fluxer_say "  refusal       postgres moves from $fluxer_old_major to $fluxer_new_major, which this script does not do"
@@ -1862,7 +1936,7 @@ fluxer_run_rollback() {
 	while read -r fluxer_file; do
 		[ -n "$fluxer_file" ] || continue
 		if [ -s "$fluxer_rollback_dir/$fluxer_file" ]; then
-			cp -p "$fluxer_rollback_dir/$fluxer_file" "$opt_dir/$fluxer_file"
+			cp -p "$fluxer_rollback_dir/$fluxer_file" "$opt_dir/$(fluxer_placed_name "$fluxer_file")"
 		elif [ -e "$fluxer_rollback_dir/$fluxer_file" ]; then
 			fluxer_fail 3 "$fluxer_rollback_dir/$fluxer_file is empty, so restoring it would replace a working file with nothing. Nothing was restored. Take the file from another record or from the ref the record names."
 		fi

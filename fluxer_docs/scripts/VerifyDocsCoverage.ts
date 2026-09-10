@@ -1314,6 +1314,33 @@ console.log('self-hosting guide against deploy/self-hosting');
 		}
 	}
 
+	const COMPOSE_DEFAULT_NAMES = ['compose.yaml', 'compose.yml', 'docker-compose.yml', 'docker-compose.yaml'];
+	const shellComposeNames = shellRows('fluxer_compose_names', 'NAMES', 'the install.sh compose name list');
+	const powershellComposeNames: Array<string> = [];
+	for (const row of powershellRows('FluxerComposeNames', 'the install.ps1 compose name list')) {
+		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
+		if (parsed == null) {
+			problems.push(`the install.ps1 compose name list carries \`${row.trim()}\`, which is not a quoted file name`);
+			continue;
+		}
+		powershellComposeNames.push(parsed[1]);
+	}
+	for (const [script, list] of [
+		['install.sh', shellComposeNames],
+		['install.ps1', powershellComposeNames],
+	] as const) {
+		if (list.join(', ') !== COMPOSE_DEFAULT_NAMES.join(', ')) {
+			problems.push(
+				`${script} resolves compose files as [${list.join(', ')}] and Compose resolves them as [${COMPOSE_DEFAULT_NAMES.join(', ')}]`,
+			);
+		}
+	}
+	if (!shellStackFiles.includes('docker-compose.yml') || !COMPOSE_DEFAULT_NAMES.includes('docker-compose.yml')) {
+		problems.push(
+			'the installers no longer download docker-compose.yml, so the name they map onto an instance is unclear',
+		);
+	}
+
 	const PIPE_TO_SHELL =
 		/(?:curl|wget|iwr|Invoke-WebRequest)[^\n|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh|iex|Invoke-Expression)\b/iu;
 	const docsPages = await walk(DOCS_ROOT);
@@ -1419,10 +1446,15 @@ console.log('self-hosting guide against deploy/self-hosting');
 		await writeFile(path.join(instance, '.env'), 'FLUXER_DOMAIN=x.example\nFLUXER_IMAGE_TAG=2026.813.205040\n');
 		await writeFile(path.join(instance, 'docker-compose.yml'), 'name: fluxer\nservices:\n  api:\n    image: stub\n');
 
-		const plannedRef = (label: string, args: ReadonlyArray<string>): string | null => {
+		const planned = (label: string, args: ReadonlyArray<string>, cwd?: string): string | null => {
 			const run = spawnSync('sh', [path.join(INSTALLER_ROOT, 'install.sh'), ...args], {
+				cwd,
 				encoding: 'utf8',
-				env: {...process.env, PATH: `${stubBin}${path.delimiter}${process.env.PATH ?? ''}`},
+				env: {
+					...process.env,
+					PATH: `${stubBin}${path.delimiter}${process.env.PATH ?? ''}`,
+					...(cwd == null ? {} : {PWD: cwd}),
+				},
 			});
 			if (run.error != null) {
 				problems.push(`install.sh ${label} could not run: ${run.error.message}`);
@@ -1432,7 +1464,15 @@ console.log('self-hosting guide against deploy/self-hosting');
 				problems.push(`install.sh ${label} exited ${String(run.status)}: ${run.stderr.trim()}`);
 				return null;
 			}
-			const line = run.stdout.match(/^ {2}ref\s+(\S+)$/mu);
+			return run.stdout;
+		};
+
+		const plannedRef = (label: string, args: ReadonlyArray<string>): string | null => {
+			const stdout = planned(label, args);
+			if (stdout == null) {
+				return null;
+			}
+			const line = stdout.match(/^ {2}ref\s+(\S+)$/mu);
 			if (line == null) {
 				problems.push(`install.sh ${label} printed no ref line`);
 				return null;
@@ -1470,6 +1510,38 @@ console.log('self-hosting guide against deploy/self-hosting');
 			const resolved = plannedRef(label, args);
 			if (resolved != null && resolved !== expected) {
 				problems.push(`install.sh ${label} plans ref ${resolved}, and the image tag it pairs with wants ${expected}`);
+			}
+		}
+
+		const composeYmlInstance = path.join(sandbox, 'compose-yml-instance');
+		await mkdir(composeYmlInstance, {recursive: true});
+		await writeFile(
+			path.join(composeYmlInstance, '.env'),
+			'FLUXER_DOMAIN=x.example\nFLUXER_IMAGE_TAG=2026.813.205040\n',
+		);
+		await writeFile(path.join(composeYmlInstance, 'compose.yml'), 'name: fluxer\nservices:\n  api:\n    image: stub\n');
+		const COMPOSE_NAME_CASES: ReadonlyArray<readonly [string, ReadonlyArray<string>, string | undefined]> = [
+			[
+				'under --update against a compose.yml instance',
+				['--update', '--dry-run', '--allow-root', '--dir', composeYmlInstance],
+				undefined,
+			],
+			[
+				'under --update standing in a compose.yml instance',
+				['--update', '--dry-run', '--allow-root'],
+				composeYmlInstance,
+			],
+		];
+		for (const [label, args, cwd] of COMPOSE_NAME_CASES) {
+			const stdout = planned(label, args, cwd);
+			if (stdout == null) {
+				continue;
+			}
+			if (!/^ {4}compose\.yml is unchanged$/mu.test(stdout)) {
+				problems.push(`install.sh ${label} does not plan the refreshed stack file onto compose.yml`);
+			}
+			if (/^ {4}docker-compose\.yml is new$/mu.test(stdout)) {
+				problems.push(`install.sh ${label} plans a docker-compose.yml that Compose would never load there`);
 			}
 		}
 	} finally {
