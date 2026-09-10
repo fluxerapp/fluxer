@@ -20,7 +20,7 @@ interface MessageLookupRepository {
 	readonly messages: Pick<IMessageRepository, 'getMessage'>;
 }
 
-export interface MessageSearchLookupResult extends SearchResult<SearchableMessage> {
+interface MessageSearchLookupResult extends SearchResult<SearchableMessage> {
 	messages: Array<Message>;
 }
 
