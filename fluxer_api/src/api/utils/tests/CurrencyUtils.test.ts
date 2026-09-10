@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {describe, expect, it} from 'vitest';
-import {getCurrency} from '../CurrencyUtils';
+import {getCurrency, getCurrencyPreferences, getGiftCurrencyPreferences} from '../CurrencyUtils';
 
 describe('getCurrency', () => {
 	describe('returns USD for non-EEA countries', () => {
@@ -160,5 +160,31 @@ describe('getCurrency', () => {
 		it('uses local currency for Poland', () => {
 			expect(getCurrency('PL')).toBe('PLN');
 		});
+	});
+});
+
+describe('getGiftCurrencyPreferences', () => {
+	it('never offers a localized currency for a localized market', () => {
+		for (const country of ['BR', 'IN', 'PL', 'TR']) {
+			expect(getGiftCurrencyPreferences(country)).not.toContain(getCurrencyPreferences(country)[0]);
+		}
+	});
+	it('uses EUR for EEA countries', () => {
+		expect(getGiftCurrencyPreferences('DE')).toEqual(['EUR', 'USD']);
+		expect(getGiftCurrencyPreferences('PL')).toEqual(['EUR', 'USD']);
+	});
+	it('uses USD everywhere else', () => {
+		expect(getGiftCurrencyPreferences('BR')).toEqual(['USD', 'EUR']);
+		expect(getGiftCurrencyPreferences('IN')).toEqual(['USD', 'EUR']);
+		expect(getGiftCurrencyPreferences('TR')).toEqual(['USD', 'EUR']);
+		expect(getGiftCurrencyPreferences('US')).toEqual(['USD', 'EUR']);
+	});
+	it('uses USD when the country is unknown', () => {
+		expect(getGiftCurrencyPreferences(null)).toEqual(['USD', 'EUR']);
+		expect(getGiftCurrencyPreferences(undefined)).toEqual(['USD', 'EUR']);
+	});
+	it('is case insensitive', () => {
+		expect(getGiftCurrencyPreferences('de')).toEqual(['EUR', 'USD']);
+		expect(getGiftCurrencyPreferences('br')).toEqual(['USD', 'EUR']);
 	});
 });

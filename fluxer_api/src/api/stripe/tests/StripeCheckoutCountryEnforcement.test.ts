@@ -112,6 +112,29 @@ describe('StripeCheckoutCountryEnforcement', () => {
 		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
 	});
 
+	test('rejects a localized gift price even from inside that market', async () => {
+		lookupGeoipMock.mockResolvedValue(geoipCountry('BR'));
+		const token = await createPurchaser();
+		await createBuilder(harness, token)
+			.post('/stripe/checkout/gift')
+			.body({price_id: MOCK_PRICES.gift1MonthBrl, country_code: 'BR'})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.STRIPE_INVALID_PRODUCT_CONFIGURATION)
+			.execute();
+		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
+	});
+
+	test('accepts the base gift price from inside a localized market', async () => {
+		lookupGeoipMock.mockResolvedValue(geoipCountry('BR'));
+		const token = await createPurchaser();
+		const response = await createBuilder<{url: string}>(harness, token)
+			.post('/stripe/checkout/gift')
+			.body({price_id: MOCK_PRICES.gift1MonthUsd, country_code: 'BR'})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(response.url).toContain('checkout.stripe.com');
+		expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(1);
+	});
+
 	test('accepts the localized price for a request that geolocates to that market', async () => {
 		lookupGeoipMock.mockResolvedValue(geoipCountry('BR'));
 		const token = await createPurchaser();

@@ -32,5 +32,8 @@ export function getCurrencyPreferences(countryCode: string | null | undefined): 
 }
 
 export function getGiftCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
-	return getCurrencyPreferences(countryCode);
+	if (countryCode && isEuEeaCountryCode(countryCode.toUpperCase())) {
+		return ['EUR', 'USD'];
+	}
+	return ['USD', 'EUR'];
 }
