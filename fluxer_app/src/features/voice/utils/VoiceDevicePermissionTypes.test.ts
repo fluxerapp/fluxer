@@ -24,13 +24,17 @@ const makeStream = (kinds: Array<'audio' | 'video'>): MediaStream => {
 };
 
 const getUserMediaCalls: Array<MediaStreamConstraints> = [];
+const enumerationHooks: Array<() => void> = [];
 let labelledDevices = false;
 
 const fakeMediaDevices: FakeMediaDevices = {
-	enumerateDevices: async () =>
-		labelledDevices
+	enumerateDevices: async () => {
+		await Promise.resolve();
+		enumerationHooks.shift()?.();
+		return labelledDevices
 			? [makeDevice('audioinput', 'mic-1', 'Studio Mic'), makeDevice('videoinput', 'cam-1', 'Studio Camera')]
-			: [makeDevice('audioinput', 'mic-1', ''), makeDevice('videoinput', 'cam-1', '')],
+			: [makeDevice('audioinput', 'mic-1', ''), makeDevice('videoinput', 'cam-1', '')];
+	},
 	getUserMedia: async (constraints) => {
 		getUserMediaCalls.push(constraints);
 		labelledDevices = true;
@@ -43,12 +47,21 @@ const fakeMediaDevices: FakeMediaDevices = {
 	removeEventListener: () => {},
 };
 
+const fakeElectron = {
+	platform: 'darwin',
+	checkMediaAccess: vi.fn(async () => 'granted'),
+	requestMediaAccess: vi.fn(async () => true),
+};
+
 let originalNavigator: PropertyDescriptor | undefined;
 let originalWindow: PropertyDescriptor | undefined;
 
 beforeEach(() => {
 	getUserMediaCalls.length = 0;
+	enumerationHooks.length = 0;
 	labelledDevices = false;
+	fakeElectron.checkMediaAccess.mockClear();
+	fakeElectron.requestMediaAccess.mockClear();
 	originalNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
 	originalWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
 	Object.defineProperty(globalThis, 'navigator', {
@@ -78,6 +91,13 @@ afterEach(() => {
 const loadManager = async () => {
 	const module = await import('@app/features/voice/utils/VoiceDeviceManager');
 	return module.voiceDeviceManager;
+};
+
+const runAsDesktop = () => {
+	Object.defineProperty(globalThis, 'window', {
+		configurable: true,
+		value: {matchMedia: () => ({matches: false}), electron: fakeElectron},
+	});
 };
 
 describe('voiceDeviceManager permission types', () => {
@@ -110,5 +130,64 @@ describe('voiceDeviceManager permission types', () => {
 		expect(getUserMediaCalls).toEqual([]);
 		expect(state.permissionStatus).toEqual({audio: 'idle', video: 'idle'});
 		expect(state.inputDevices.length).toBeGreaterThan(0);
+	});
+
+	test('a confirmation never asks the browser for access when device labels are hidden', async () => {
+		const manager = await loadManager();
+		const state = await manager.ensureDevices({confirmPermissionTypes: ['audio', 'video'], forceRefresh: true});
+		expect(getUserMediaCalls).toEqual([]);
+		expect(state.permissionStatus).toEqual({audio: 'idle', video: 'idle'});
+	});
+
+	test('a confirmation marks only the confirmed type granted from exposed device labels', async () => {
+		labelledDevices = true;
+		const manager = await loadManager();
+		const state = await manager.ensureDevices({confirmPermissionTypes: ['audio'], forceRefresh: true});
+		expect(getUserMediaCalls).toEqual([]);
+		expect(state.permissionStatus).toEqual({audio: 'granted', video: 'idle'});
+	});
+
+	test('a request that joins an in-flight confirmation of the same type still asks the browser', async () => {
+		const manager = await loadManager();
+		const confirmation = manager.ensureDevices({confirmPermissionTypes: ['audio'], forceRefresh: true});
+		const request = manager.ensureDevices({requestPermissionTypes: ['audio']});
+		const [, state] = await Promise.all([confirmation, request]);
+		expect(getUserMediaCalls).toEqual([{audio: true, video: false}]);
+		expect(state.permissionStatus.audio).toBe('granted');
+	});
+
+	test('confirmations escalated into requests for every type finish within the enumeration pass bound', async () => {
+		const manager = await loadManager();
+		const joins: Array<Promise<unknown>> = [];
+		enumerationHooks.push(
+			() => joins.push(manager.ensureDevices({confirmPermissionTypes: ['audio']})),
+			() => joins.push(manager.ensureDevices({requestPermissionTypes: ['audio']})),
+			() => joins.push(manager.ensureDevices({confirmPermissionTypes: ['video']})),
+			() => {},
+			() => joins.push(manager.ensureDevices({requestPermissionTypes: ['video']})),
+		);
+		const state = await manager.ensureDevices({forceRefresh: true});
+		await Promise.all(joins);
+		expect(getUserMediaCalls).toEqual([{audio: true, video: false}]);
+		expect(state.permissionStatus).toEqual({audio: 'granted', video: 'granted'});
+	});
+
+	test('a confirmation never runs the native permission flow on desktop', async () => {
+		runAsDesktop();
+		const manager = await loadManager();
+		const state = await manager.ensureDevices({confirmPermissionTypes: ['audio'], forceRefresh: true});
+		expect(fakeElectron.checkMediaAccess).not.toHaveBeenCalled();
+		expect(fakeElectron.requestMediaAccess).not.toHaveBeenCalled();
+		expect(getUserMediaCalls).toEqual([]);
+		expect(state.permissionStatus.audio).toBe('idle');
+	});
+
+	test('a request runs the native permission flow on desktop', async () => {
+		runAsDesktop();
+		const manager = await loadManager();
+		const state = await manager.ensureDevices({requestPermissionTypes: ['audio'], forceRefresh: true});
+		expect(fakeElectron.checkMediaAccess).toHaveBeenCalledWith('microphone');
+		expect(getUserMediaCalls).toEqual([]);
+		expect(state.permissionStatus.audio).toBe('granted');
 	});
 });

@@ -55,7 +55,6 @@ import {VoiceLiveKitRoot} from '@app/features/voice/components/VoiceLiveKitRoot'
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useElectronScreenSharePicker} from '@app/features/voice/hooks/useElectronScreenSharePicker';
 import {startScreenSharePiPController} from '@app/features/voice/state/ScreenSharePiPController';
-import {startMediaDeviceStartupPreload} from '@app/features/voice/utils/MediaDeviceStartupPreload';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
 import {useStopFlashFrameOnFocus} from '@app/features/window/hooks/useStopFlashFrameOnFocus';
 import {useWindowEventListeners} from '@app/features/window/hooks/useWindowEventListeners';
@@ -149,7 +148,6 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		};
 	}, []);
 	useEffect(() => startScreenSharePiPController(), []);
-	useEffect(() => startMediaDeviceStartupPreload(), []);
 	useServiceWorkerBadge();
 	useKeybindManager(i18n);
 	useDesktopElectronBridges();
