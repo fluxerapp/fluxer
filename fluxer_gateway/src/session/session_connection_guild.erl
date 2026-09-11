@@ -460,7 +460,8 @@ finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, ReadyFun) ->
 apply_ready_fun(GuildId, GuildPid, ReadyFun, State) ->
     case ReadyFun(State) of
         {noreply, ReadyState} ->
-            {noreply, maybe_replay_guild_subscriptions(GuildId, GuildPid, ReadyState)};
+            ReplayedState = maybe_replay_guild_subscriptions(GuildId, GuildPid, ReadyState),
+            {noreply, session_dm_partners:register_guild(GuildId, GuildPid, ReplayedState)};
         {stop, normal, ReadyState} ->
             {stop, normal, ReadyState}
     end.

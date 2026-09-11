@@ -105,13 +105,32 @@ maybe_flush_pending_presences(relationship_add, Data, State) ->
 maybe_flush_pending_presences(relationship_update, Data, State) ->
     maybe_flush_relationship_pending_presences(Data, State);
 maybe_flush_pending_presences(channel_create, Data, State) ->
-    flush_dm_channel_pending_presences(Data, State);
+    flush_dm_channel_pending_presences(Data, maybe_register_dm_partners(Data, State));
 maybe_flush_pending_presences(channel_update, Data, State) ->
-    flush_dm_channel_pending_presences(Data, State);
+    flush_dm_channel_pending_presences(Data, maybe_register_dm_partners(Data, State));
+maybe_flush_pending_presences(channel_delete, Data, State) ->
+    {maybe_register_dm_partners(Data, State), []};
+maybe_flush_pending_presences(guild_delete, Data, State) ->
+    {forget_deleted_guild(Data, State), []};
 maybe_flush_pending_presences(channel_recipient_add, Data, State) ->
     flush_added_recipient_pending_presences(Data, State);
 maybe_flush_pending_presences(_, _, State) ->
     {State, []}.
+
+-spec maybe_register_dm_partners(term(), session_state()) -> session_state().
+maybe_register_dm_partners(#{<<"type">> := 1}, State) ->
+    session_dm_partners:register_all(State);
+maybe_register_dm_partners(_Data, State) ->
+    State.
+
+-spec forget_deleted_guild(term(), session_state()) -> session_state().
+forget_deleted_guild(#{<<"id">> := RawGuildId}, State) ->
+    case snowflake_id:parse_maybe(RawGuildId) of
+        GuildId when is_integer(GuildId) -> session_dm_partners:forget_guild(GuildId, State);
+        _ -> State
+    end;
+forget_deleted_guild(_Data, State) ->
+    State.
 
 -spec flush_dm_channel_pending_presences(map(), session_state()) ->
     {session_state(), [user_id()]}.
@@ -229,6 +248,7 @@ event_changes_presence_targets(channel_update) -> true;
 event_changes_presence_targets(channel_delete) -> true;
 event_changes_presence_targets(channel_recipient_add) -> true;
 event_changes_presence_targets(channel_recipient_remove) -> true;
+event_changes_presence_targets(guild_delete) -> true;
 event_changes_presence_targets(_) -> false.
 
 -spec sync_presence_targets([user_id()], session_state()) -> session_state().

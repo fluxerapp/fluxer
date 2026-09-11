@@ -238,6 +238,10 @@ handle_info({call_reconnect, ChannelId, Attempt}, State) when
     session_connection:handle_call_reconnect(ChannelId, Attempt, State);
 handle_info({gateway_timing_update, Timings}, State) ->
     {noreply, gateway_timings:merge_state(Timings, State)};
+handle_info({dm_partner_mutual, GuildId, PartnerIds}, State) when
+    is_integer(GuildId), is_list(PartnerIds)
+->
+    session_dm_partners:handle_mutual(GuildId, PartnerIds, State);
 handle_info(Msg, State) ->
     handle_info_lifecycle(Msg, State).
 
