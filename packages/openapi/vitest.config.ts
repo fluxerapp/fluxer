@@ -10,6 +10,7 @@ export default defineConfig({
 		include: ['**/*.{test,spec}.{ts,tsx}'],
 		exclude: ['node_modules', 'dist'],
 		testTimeout: 60000,
+		hookTimeout: 60000,
 		coverage: {
 			provider: 'v8',
 			reporter: ['text', 'json', 'html'],

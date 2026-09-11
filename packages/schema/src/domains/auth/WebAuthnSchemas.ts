@@ -1,3 +1,4 @@
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import type {
 	AuthenticationResponseJSON,
 	PublicKeyCredentialRequestOptionsJSON,
@@ -26,7 +27,7 @@ export const WebAuthnAuthenticationResponse = WebAuthnCredentialBase.extend({
 		signature: z.string(),
 		userHandle: z.string().optional(),
 	}),
-}) satisfies z.ZodType<AuthenticationResponseJSON>;
+}).register(schemaMetadata, {preserveEmptyValues: true}) satisfies z.ZodType<AuthenticationResponseJSON>;
 
 export const WebAuthnRegistrationResponse = WebAuthnCredentialBase.extend({
 	response: z.looseObject({
@@ -37,7 +38,7 @@ export const WebAuthnRegistrationResponse = WebAuthnCredentialBase.extend({
 		publicKeyAlgorithm: z.number().int().optional(),
 		publicKey: z.string().optional(),
 	}),
-}) satisfies z.ZodType<RegistrationResponseJSON>;
+}).register(schemaMetadata, {preserveEmptyValues: true}) satisfies z.ZodType<RegistrationResponseJSON>;
 
 export const WebAuthnAuthenticationOptions = z.looseObject({
 	challenge: z.string(),

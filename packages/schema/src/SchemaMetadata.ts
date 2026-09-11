@@ -18,6 +18,7 @@ interface SchemaMetadata {
 	openEnum?: boolean;
 	bitflagValues?: Array<BitflagEntry>;
 	format?: string;
+	preserveEmptyValues?: boolean;
 }
 
 export const schemaMetadata = z.registry<SchemaMetadata>();

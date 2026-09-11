@@ -13,10 +13,8 @@
 			"features": ["COMMUNITY", "DISCOVERABLE"],
 			"nsfw_level": 0,
 			"nsfw": false,
-			"content_warning_level": null,
-			"content_warning_text": null,
-			"description": "Guild used by admin parity fixtures.",
-			"vanity_url_code": "parity"
+			"content_warning_level": 0,
+			"content_warning_text": null
 		}
 	],
 	"total": 1

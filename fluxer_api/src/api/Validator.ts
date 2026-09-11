@@ -7,9 +7,10 @@ import {
 	type LocalizedValidationError,
 } from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {ValidationError} from '@fluxer/errors/src/domains/core/ValidationError';
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import type {Context, Env, Input, MiddlewareHandler, TypedResponse, ValidationTargets} from 'hono';
 import {getCookie} from 'hono/cookie';
-import type {core, input, output, ZodSafeParseResult, ZodType} from 'zod';
+import {type core, type input, type output, ZodObject, ZodOptional, type ZodSafeParseResult, type ZodType} from 'zod';
 import {requireRequestJsonBody} from './utils/RequestJsonBody';
 import {initializeFluxerErrorMap} from './ZodErrorMap';
 
@@ -44,13 +45,19 @@ function extractVariablesFromIssue(issue: core.$ZodIssue): Record<string, unknow
 	return {name: fieldName};
 }
 
-function convertEmptyValuesToNull(obj: unknown, isRoot = true): unknown {
+function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot = true): unknown {
+	while (schema instanceof ZodOptional) schema = schema.unwrap();
+	if (schema && schemaMetadata.get(schema)?.preserveEmptyValues) return obj;
 	if (typeof obj === 'string' && obj === '') return null;
-	if (Array.isArray(obj)) return obj.map((item) => convertEmptyValuesToNull(item, false));
+	if (Array.isArray(obj)) return obj.map((item) => convertEmptyValuesToNull(item, undefined, false));
 	if (obj !== null && typeof obj === 'object') {
 		if (isEmptyObject(obj) && !isRoot) return null;
+		const shape = schema instanceof ZodObject ? schema.shape : undefined;
 		const processed = Object.fromEntries(
-			Object.entries(obj).map(([key, value]) => [key, convertEmptyValuesToNull(value, false)]),
+			Object.entries(obj).map(([key, value]) => [
+				key,
+				convertEmptyValuesToNull(value, shape && Object.hasOwn(shape, key) ? shape[key] : undefined, false),
+			]),
 		);
 		if (!isRoot && Object.values(processed).every((value) => value === null)) return null;
 		return processed;
@@ -192,7 +199,7 @@ export const Validator = <
 		if (options.pre) {
 			value = await options.pre(value, c, target);
 		}
-		const transformedValue = convertEmptyValuesToNull(value);
+		const transformedValue = convertEmptyValuesToNull(value, schema);
 		const result = await schema.safeParseAsync(transformedValue);
 		if (options.post) {
 			const hookResult = await options.post({...result, target}, c);
