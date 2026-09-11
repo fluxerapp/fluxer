@@ -2,7 +2,7 @@
 
 import type {FluxerCodecAdvertisement} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import type {HardwareEncodeReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const gpuReport: HardwareEncodeReport = {
 	av1: 'hardware',
@@ -77,13 +77,15 @@ const {
 	buildLocalCodecAdvertisements,
 	computeNegotiatedVideoCodec,
 } = await import('./ScreenShareCodecNegotiation');
-const {findStalledVideoDecoder} = await import('@app/features/voice/utils/ScreenShareCodecDiagnostics');
+const {findStalledVideoDecoder, scheduleScreenShareDecoderVerification} = await import(
+	'@app/features/voice/utils/ScreenShareCodecDiagnostics'
+);
 const {getVideoDecoderExclusionsSync, markScreenShareDecodeFailure, resetVideoDecoderExclusions} = await import(
 	'@app/features/voice/utils/VideoDecoderCapabilities'
 );
 const {resetCachedCodecCapabilities} = await import('@app/features/voice/utils/CodecCapabilityDetector');
 
-function stalledScreenShareStats(mimeType: string): RTCStatsReport {
+function screenShareStats(mimeType: string, frames: {framesReceived: number; framesDecoded: number}): RTCStatsReport {
 	const entries: Array<Record<string, unknown>> = [
 		{id: 'codec-1', type: 'codec', mimeType},
 		{
@@ -93,11 +95,21 @@ function stalledScreenShareStats(mimeType: string): RTCStatsReport {
 			codecId: 'codec-1',
 			packetsReceived: 4200,
 			bytesReceived: 3_500_000,
-			framesReceived: 180,
-			framesDecoded: 0,
+			decoderImplementation: 'D3D11VideoDecoder',
+			powerEfficientDecoder: true,
+			...frames,
 		},
 	];
 	return new Map(entries.map((entry) => [entry.id as string, entry])) as unknown as RTCStatsReport;
+}
+
+function stalledScreenShareStats(mimeType: string): RTCStatsReport {
+	return screenShareStats(mimeType, {framesReceived: 180, framesDecoded: 0});
+}
+
+function statsSequence(...reports: Array<RTCStatsReport>): () => Promise<RTCStatsReport | undefined> {
+	const queue = [...reports];
+	return () => Promise.resolve(queue.shift());
 }
 
 function decodeAdvertisedFor(name: 'H264' | 'VP8' | 'VP9'): boolean | undefined {
@@ -162,5 +174,121 @@ describe('a stalled H.264 screen share decode', () => {
 		expect(markScreenShareDecodeFailure('h264', 'screen-share-decode-stalled')).toBe(false);
 		expect(markScreenShareDecodeFailure('vp8', 'screen-share-decode-stalled')).toBe(false);
 		expect(decodeAdvertisedFor('VP8')).toBe(true);
+	});
+});
+
+describe('confirming a screen share decode stall before a codec is withdrawn', () => {
+	beforeEach(() => {
+		vi.useFakeTimers();
+		resetVideoDecoderExclusions();
+		resetCachedCodecCapabilities();
+		ScreenShareCodecNegotiation.dispose();
+	});
+
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
+	it('withdraws nothing from a single stalled sample', async () => {
+		const onDecodeFailure = vi.fn();
+		scheduleScreenShareDecoderVerification(
+			statsSequence(
+				screenShareStats('video/H264', {framesReceived: 180, framesDecoded: 0}),
+				screenShareStats('video/H264', {framesReceived: 240, framesDecoded: 0}),
+			),
+			undefined,
+			onDecodeFailure,
+		);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(onDecodeFailure).not.toHaveBeenCalled();
+		expect(decodeAdvertisedFor('H264')).toBe(true);
+	});
+
+	it('withdraws nothing when packets arrive but no whole frames do', async () => {
+		const onDecodeFailure = vi.fn();
+		scheduleScreenShareDecoderVerification(
+			statsSequence(
+				screenShareStats('video/H264', {framesReceived: 0, framesDecoded: 0}),
+				screenShareStats('video/H264', {framesReceived: 0, framesDecoded: 0}),
+			),
+			undefined,
+			onDecodeFailure,
+		);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(vi.getTimerCount()).toBe(0);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(onDecodeFailure).not.toHaveBeenCalled();
+		expect(decodeAdvertisedFor('H264')).toBe(true);
+	});
+
+	it('withdraws the codec exactly once when a second sample confirms the stall', async () => {
+		const withdrawn: Array<string> = [];
+		scheduleScreenShareDecoderVerification(
+			statsSequence(
+				screenShareStats('video/H264', {framesReceived: 180, framesDecoded: 0}),
+				screenShareStats('video/H264', {framesReceived: 240, framesDecoded: 0}),
+			),
+			undefined,
+			(failure) => {
+				if (markScreenShareDecodeFailure(failure.codec, 'screen-share-decode-stalled')) {
+					withdrawn.push(failure.codec);
+				}
+			},
+		);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(withdrawn).toEqual([]);
+		expect(decodeAdvertisedFor('H264')).toBe(true);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(withdrawn).toEqual(['h264']);
+		expect(decodeAdvertisedFor('H264')).toBe(false);
+	});
+
+	it('withdraws nothing when the second sample decoded a frame', async () => {
+		const onDecodeFailure = vi.fn();
+		scheduleScreenShareDecoderVerification(
+			statsSequence(
+				screenShareStats('video/H264', {framesReceived: 180, framesDecoded: 0}),
+				screenShareStats('video/H264', {framesReceived: 240, framesDecoded: 12}),
+			),
+			undefined,
+			onDecodeFailure,
+		);
+		await vi.advanceTimersByTimeAsync(10000);
+		expect(onDecodeFailure).not.toHaveBeenCalled();
+		expect(decodeAdvertisedFor('H264')).toBe(true);
+	});
+
+	it('withdraws nothing when no new frames arrived between the samples', async () => {
+		const onDecodeFailure = vi.fn();
+		scheduleScreenShareDecoderVerification(
+			statsSequence(
+				screenShareStats('video/H264', {framesReceived: 180, framesDecoded: 0}),
+				screenShareStats('video/H264', {framesReceived: 180, framesDecoded: 0}),
+			),
+			undefined,
+			onDecodeFailure,
+		);
+		await vi.advanceTimersByTimeAsync(10000);
+		expect(onDecodeFailure).not.toHaveBeenCalled();
+		expect(decodeAdvertisedFor('H264')).toBe(true);
+	});
+
+	it('withdraws nothing when the track goes away between the samples', async () => {
+		const onDecodeFailure = vi.fn();
+		const cancel = scheduleScreenShareDecoderVerification(
+			statsSequence(
+				screenShareStats('video/H264', {framesReceived: 180, framesDecoded: 0}),
+				screenShareStats('video/H264', {framesReceived: 240, framesDecoded: 0}),
+			),
+			undefined,
+			onDecodeFailure,
+		);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(vi.getTimerCount()).toBe(1);
+		cancel();
+		expect(vi.getTimerCount()).toBe(0);
+		await vi.advanceTimersByTimeAsync(5000);
+		expect(onDecodeFailure).not.toHaveBeenCalled();
+		expect(decodeAdvertisedFor('H264')).toBe(true);
 	});
 });

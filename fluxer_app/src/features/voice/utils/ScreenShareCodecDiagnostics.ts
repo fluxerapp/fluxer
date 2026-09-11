@@ -46,7 +46,7 @@ export interface StalledVideoDecoderInfo {
 	packetsReceived: number;
 	bytesReceived: number;
 	framesDecoded: number;
-	framesReceived: number | null;
+	framesReceived: number;
 }
 
 function isSoftwareVideoStats(implementation: string | null, powerEfficient: boolean | null): boolean {
@@ -127,11 +127,10 @@ export function findStalledVideoDecoder(stats: RTCStatsReport): StalledVideoDeco
 		if (getStatsKind(report, codecs) !== 'video') continue;
 		const framesDecoded = finiteNumber(report.framesDecoded);
 		if (framesDecoded === null || framesDecoded > 0) continue;
+		const framesReceived = finiteNumber(report.framesReceived);
+		if (framesReceived === null || framesReceived < 1) continue;
 		const packetsReceived = finiteNumber(report.packetsReceived) ?? 0;
 		const bytesReceived = finiteNumber(report.bytesReceived) ?? 0;
-		const framesReceived = finiteNumber(report.framesReceived);
-		const hasVideoPayload = packetsReceived >= 10 || bytesReceived >= 8192 || (framesReceived ?? 0) >= 2;
-		if (!hasVideoPayload) continue;
 		const mimeType = report.codecId ? codecs.get(report.codecId)?.mimeType : undefined;
 		const codec = getVideoCodecFromMimeType(mimeType);
 		if (!codec) continue;
@@ -147,20 +146,49 @@ export function findStalledVideoDecoder(stats: RTCStatsReport): StalledVideoDeco
 	return null;
 }
 
+export function confirmDecodeStall(
+	first: StalledVideoDecoderInfo | null,
+	second: StalledVideoDecoderInfo | null,
+): StalledVideoDecoderInfo | null {
+	if (!first || !second) return null;
+	if (first.codec !== second.codec || first.mimeType !== second.mimeType) return null;
+	if (first.framesDecoded !== 0 || second.framesDecoded !== 0) return null;
+	if (second.framesReceived <= first.framesReceived) return null;
+	return second;
+}
+
 export function scheduleScreenShareDecoderVerification(
 	getStats: () => Promise<RTCStatsReport | undefined>,
 	onComplete?: () => void,
 	onDecodeFailure?: (failure: StalledVideoDecoderInfo) => void,
-): NodeJS.Timeout {
-	return setTimeout(async () => {
+): () => void {
+	let cancelled = false;
+	let timer: ReturnType<typeof setTimeout> | null = null;
+	const scheduleConfirmation = (first: StalledVideoDecoderInfo): void => {
+		timer = setTimeout(async () => {
+			timer = null;
+			try {
+				const stats = await getStats();
+				const confirmed = confirmDecodeStall(first, stats ? findStalledVideoDecoder(stats) : null);
+				if (cancelled || !confirmed) return;
+				logger.warn('Screen share video decode is stalled', confirmed);
+				onDecodeFailure?.(confirmed);
+			} catch (error) {
+				logger.debug('Failed to confirm the screen share decode stall', {error});
+			} finally {
+				if (!cancelled) {
+					onComplete?.();
+				}
+			}
+		}, DECODER_VERIFICATION_DELAY_MS);
+	};
+	timer = setTimeout(async () => {
+		timer = null;
+		let firstStall: StalledVideoDecoderInfo | null = null;
 		try {
 			const stats = await getStats();
 			if (!stats) return;
-			const stalledDecoder = findStalledVideoDecoder(stats);
-			if (stalledDecoder) {
-				logger.warn('Screen share video decode is stalled', stalledDecoder);
-				onDecodeFailure?.(stalledDecoder);
-			}
+			firstStall = findStalledVideoDecoder(stats);
 			const decoder = findSoftwareVideoDecoder(stats);
 			if (!decoder) return;
 			logger.warn('Screen share is using a software decoder', decoder);
@@ -168,7 +196,19 @@ export function scheduleScreenShareDecoderVerification(
 		} catch (error) {
 			logger.debug('Failed to verify screen share decoder', {error});
 		} finally {
-			onComplete?.();
+			if (!cancelled) {
+				if (firstStall) {
+					scheduleConfirmation(firstStall);
+				} else {
+					onComplete?.();
+				}
+			}
 		}
 	}, DECODER_VERIFICATION_DELAY_MS);
+	return () => {
+		cancelled = true;
+		if (!timer) return;
+		clearTimeout(timer);
+		timer = null;
+	};
 }

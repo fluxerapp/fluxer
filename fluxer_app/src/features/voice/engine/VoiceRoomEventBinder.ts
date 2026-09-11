@@ -141,7 +141,7 @@ export function bindRoomEvents(
 ): void {
 	const guard = dependencies.connection.createGuardedHandler;
 	const participantSpeakingDisposers = new Map<string, ParticipantSpeakingDisposer>();
-	const screenShareDecoderVerificationTimers = new Map<string, NodeJS.Timeout>();
+	const screenShareDecoderVerificationCancels = new Map<string, () => void>();
 	const remoteTrackLifecycleDisposers = new Map<string, () => void>();
 	let codecNegotiationDisposer: (() => void) | null = null;
 	let screenShareMigrationDisposer: (() => void) | null = null;
@@ -227,16 +227,16 @@ export function bindRoomEvents(
 	};
 	const clearScreenShareDecoderVerification = (trackSid: string | undefined): void => {
 		if (!trackSid) return;
-		const timer = screenShareDecoderVerificationTimers.get(trackSid);
-		if (!timer) return;
-		clearTimeout(timer);
-		screenShareDecoderVerificationTimers.delete(trackSid);
+		const cancel = screenShareDecoderVerificationCancels.get(trackSid);
+		if (!cancel) return;
+		cancel();
+		screenShareDecoderVerificationCancels.delete(trackSid);
 	};
 	const clearAllScreenShareDecoderVerifications = (): void => {
-		for (const timer of screenShareDecoderVerificationTimers.values()) {
-			clearTimeout(timer);
+		for (const cancel of screenShareDecoderVerificationCancels.values()) {
+			cancel();
 		}
-		screenShareDecoderVerificationTimers.clear();
+		screenShareDecoderVerificationCancels.clear();
 	};
 	const bindCodecNegotiation = (): void => {
 		codecNegotiationDisposer?.();
@@ -258,12 +258,12 @@ export function bindRoomEvents(
 		if (pub.source !== Track.Source.ScreenShare || pub.kind !== Track.Kind.Video) return;
 		clearScreenShareDecoderVerification(pub.trackSid);
 		const trackSid = pub.trackSid;
-		screenShareDecoderVerificationTimers.set(
+		screenShareDecoderVerificationCancels.set(
 			trackSid,
 			scheduleScreenShareDecoderVerification(
 				() => track.getRTCStatsReport(),
 				() => {
-					screenShareDecoderVerificationTimers.delete(trackSid);
+					screenShareDecoderVerificationCancels.delete(trackSid);
 				},
 				(failure) => {
 					if (!markScreenShareDecodeFailure(failure.codec, 'screen-share-decode-stalled')) return;
