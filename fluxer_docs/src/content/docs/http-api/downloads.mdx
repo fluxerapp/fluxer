@@ -153,9 +153,13 @@ Fluxer reads the hash from the sibling `.sha256` object or from the manifest ent
 
 ## Artifact resolution
 
-Fluxer resolves a coordinate to one storage key before it answers. It reads `manifest.json` under the coordinate prefix first and takes the filename that manifest records for the requested format. Fluxer falls back to a listing when that manifest is absent, is not valid JSON, is not a manifest object, describes another coordinate, or names a file storage does not hold. The fallback lists the objects under the prefix and takes the highest version whose filename parses for the requested format.
+Fluxer resolves a coordinate to one storage key before it answers. It reads `manifest.json` under the coordinate prefix first and takes the filename that manifest records for the requested format. Fluxer falls back to a listing when that manifest is absent, is not valid JSON, is not a manifest object, describes another coordinate, names a file storage does not hold, or names a version that is not releasable. The fallback lists the objects under the prefix and takes the highest releasable version whose filename parses for the requested format.
 
 The listing skips any name containing `/` and any name ending in `.sha256`, `.blockmap`, or `.yml`. It also skips `manifest.json`, `RELEASES.json`, and `releases.json`.
+
+A version with no release descriptor at `desktop/{channel}/github-releases/{version}.json` is releasable. A version with a descriptor is releasable only when its readiness marker, `{version}.ready.json` in the same directory, matches the descriptor. The marker matches when its `channel`, `version`, and `release_tag` are the expected values and its `descriptor_sha256` is the SHA-256 of the stored descriptor file.
+
+The fallback checks at most ten versions, newest first. When none of the ten is releasable, it takes the newest of them. Fluxer treats a storage error on the descriptor or the marker as releasable. The check does not apply under `desktop-test/` or on a self-hosted instance. The versioned routes do not check releasability and resolve any stored version.
 
 A coordinate that resolves no file returns 404 with the plain text body `Not Found`.
 
@@ -456,7 +460,7 @@ Returns the [checksum file](#checksum-files) for one released file.
 | 400 | [error response](/http-api/#error-response) | A path or query value fails its schema and the request returns `INVALID_FORM_BODY` |
 | 404 | `Not Found` | No file resolved for the version and format, or no valid hash was found for it |
 
-Fluxer reads the hash from the sibling `.sha256` object for the resolved file. Where that object is absent and the requested version is the newest one at the coordinate, Fluxer uses the manifest hash for that format instead. Any other case returns 404.
+Fluxer reads the hash from the sibling `.sha256` object for the resolved file. Where that object is absent and `manifest.json` names the requested version, Fluxer uses the manifest hash for that format instead. The [releasable](#artifact-resolution) check does not apply here. Any other case returns 404.
 
 ### Response headers
 
