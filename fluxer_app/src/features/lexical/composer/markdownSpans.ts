@@ -658,7 +658,7 @@ function trimCodeFenceInfo(value: string): string {
 	return value.replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, '');
 }
 
-function findCodeBlockClosing(
+export function findCodeBlockClosing(
 	line: string,
 	fence: string,
 	fenceLength: number,

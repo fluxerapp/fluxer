@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {$createComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
+import {
+	$createComposerCustomEmojiNode,
+	$isComposerCustomEmojiNode,
+} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {
 	$createComposerMentionNode,
+	$isComposerMentionNode,
 	type ComposerMentionType,
 } from '@app/features/lexical/composer/nodes/ComposerMentionNode';
-import {$createComposerPlainSegmentNode} from '@app/features/lexical/composer/nodes/ComposerPlainSegmentNode';
-import {$createComposerStandardEmojiNode} from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
+import {
+	$createComposerPlainSegmentNode,
+	$isComposerPlainSegmentNode,
+} from '@app/features/lexical/composer/nodes/ComposerPlainSegmentNode';
+import {
+	$createComposerStandardEmojiNode,
+	$isComposerStandardEmojiNode,
+} from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
 import {$isSyntaxMarkerNode} from '@app/features/lexical/composer/nodes/SyntaxMarkerNode';
 import {
 	$createParagraphNode,
@@ -207,6 +217,24 @@ export function $getTextUpToCursor(): string {
 
 export function $getComposerDisplayText(): string {
 	return $buildDisplayLayout().text;
+}
+
+export function $getComposerScanText(): string {
+	const {text, leaves} = $buildDisplayLayout();
+	let scanText = '';
+	let offset = 0;
+	for (const {node, start, end} of leaves) {
+		if (
+			$isComposerMentionNode(node) ||
+			$isComposerCustomEmojiNode(node) ||
+			$isComposerStandardEmojiNode(node) ||
+			$isComposerPlainSegmentNode(node)
+		) {
+			scanText += text.slice(offset, start) + 'x'.repeat(end - start);
+			offset = end;
+		}
+	}
+	return scanText + text.slice(offset);
 }
 
 function $pointAtDisplayOffset(layout: DisplayLayout, offset: number): DisplayPoint {

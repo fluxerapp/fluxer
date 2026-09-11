@@ -7,6 +7,7 @@ import {
 	type ComposerEmojiResolver,
 	registerComposerEmojiShortcode,
 } from '@app/features/lexical/composer/ComposerEmojiShortcode';
+import {registerComposerEnter} from '@app/features/lexical/composer/ComposerEnter';
 import type {ComposerHandle, ComposerSelectionRange} from '@app/features/lexical/composer/ComposerHandle';
 import {resetComposerHistory} from '@app/features/lexical/composer/ComposerHistory';
 import {registerComposerIMECommandGuard} from '@app/features/lexical/composer/ComposerIME';
@@ -55,7 +56,6 @@ import {
 	$applyOptionalChoice,
 	$applySlotChoice,
 	$applySlotPayload,
-	$focusFirstInvalidSlashSlot,
 	$getActiveOptionalContext,
 	$getActiveSlotAutocompleteContext,
 	$getActiveSlotChoiceContext,
@@ -97,7 +97,6 @@ import {
 	FOCUS_COMMAND,
 	HISTORY_MERGE_TAG,
 	KEY_ARROW_UP_COMMAND,
-	KEY_ENTER_COMMAND,
 } from 'lexical';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -589,35 +588,11 @@ const ComposerInner = ({
 				},
 				COMMAND_PRIORITY_LOW,
 			),
-			editor.registerCommand(
-				KEY_ENTER_COMMAND,
-				(event: KeyboardEvent | null) => {
-					if (typeaheadActiveState.current || event == null) {
-						return false;
-					}
-					if (submitOnEnterRef.current && cb.current.onEnter != null) {
-						if (!event.shiftKey) {
-							event.preventDefault();
-							if ($focusFirstInvalidSlashSlot()) {
-								return true;
-							}
-							cb.current.onEnter();
-							return true;
-						}
-						return false;
-					}
-					if ((event.metaKey || event.ctrlKey) && cb.current.onEnter != null) {
-						event.preventDefault();
-						if ($focusFirstInvalidSlashSlot()) {
-							return true;
-						}
-						cb.current.onEnter();
-						return true;
-					}
-					return false;
-				},
-				COMMAND_PRIORITY_HIGH,
-			),
+			registerComposerEnter(editor, {
+				typeaheadActiveState,
+				getSubmitOnEnter: () => submitOnEnterRef.current,
+				getOnEnter: () => cb.current.onEnter,
+			}),
 			editor.registerCommand(
 				KEY_ARROW_UP_COMMAND,
 				(event: KeyboardEvent | null) => {
