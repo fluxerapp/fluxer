@@ -9,6 +9,7 @@ import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	adjustScreenShareEncodingForCodec,
 	getCodecCapabilityReport,
+	markScreenShareCodecSoftwareEncodeObserved,
 	resolveVideoPublishCodecPolicy,
 	type VideoPublishCodecPolicy,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
@@ -681,7 +682,11 @@ export function scheduleScreenShareEncoderVerification(
 					powerEfficientEncoder: encoder.powerEfficientEncoder,
 					expectedHardware,
 				});
-				if (shouldTriggerSoftwareEncoderWarning(codec)) {
+				const warnAboutSoftwareEncoder = shouldTriggerSoftwareEncoderWarning(codec);
+				if (VoiceSettings.getScreenShareEncoderMode() !== 'software') {
+					markScreenShareCodecSoftwareEncodeObserved(codec);
+				}
+				if (warnAboutSoftwareEncoder) {
 					SoftwareEncoderWarning.triggerWarning(codec, encoder.implementation);
 				}
 			} else {

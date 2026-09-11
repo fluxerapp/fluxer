@@ -7,7 +7,9 @@ import {afterEach, beforeEach, describe, expect, it, type MockInstance, vi} from
 let av1OptIn = false;
 let hevcOptIn = false;
 let desktop = true;
+let platform = 'windows';
 let gpuReport: HardwareEncodeReport | null = null;
+let nativeHardwareEncoder: {backend: string; codecs: ReadonlyArray<string>} | null = null;
 let cameraPreference = 'auto';
 let openH264Status: {enabled: boolean; downloaded: boolean} | null = null;
 let codecCapabilityInfo: MockInstance<(...args: Array<unknown>) => void>;
@@ -25,7 +27,7 @@ vi.mock('@app/features/devtools/utils/DesktopTroubleshootingUtils', () => ({
 }));
 
 vi.mock('@app/features/ui/utils/NativeUtils', () => ({
-	guessPlatform: () => 'windows',
+	guessPlatform: () => platform,
 	isChromiumBrowser: () => true,
 	isDesktop: () => desktop,
 	isFirefoxBrowser: () => false,
@@ -36,8 +38,8 @@ vi.mock('@app/features/voice/utils/GpuEncoderCapabilities', () => ({
 }));
 
 vi.mock('@app/features/voice/utils/NativeHardwareEncoderCapabilities', () => ({
-	getNativeHardwareEncoderCapabilitiesSync: () => null,
-	hasNativeHardwareEncoder: () => false,
+	getNativeHardwareEncoderCapabilitiesSync: () => nativeHardwareEncoder,
+	hasNativeHardwareEncoder: (codec: string) => nativeHardwareEncoder?.codecs.includes(codec) === true,
 	resetNativeHardwareEncoderCapabilities: () => undefined,
 }));
 
@@ -65,6 +67,7 @@ const {
 	getRoomVideoPublishDefaults,
 	isVideoCodecAllowedForPublish,
 	markScreenShareCodecEncodeRuntimeFailure,
+	markScreenShareCodecSoftwareEncodeObserved,
 	resetCachedCodecCapabilities,
 	resolveScreenShareEncoderVerificationAction,
 	resolveVideoPublishCodecPolicy,
@@ -286,5 +289,68 @@ describe('video publish codec policy', () => {
 			});
 			expect(isVideoCodecAllowedForPublish('vp8')).toBe(true);
 		}
+	});
+});
+
+describe('H.264 hardware verdict', () => {
+	beforeEach(() => {
+		av1OptIn = false;
+		hevcOptIn = false;
+		desktop = true;
+		platform = 'windows';
+		gpuReport = null;
+		nativeHardwareEncoder = null;
+		cameraPreference = 'auto';
+		openH264Status = null;
+		senderCodecs = ALL_SENDER_CODECS;
+		resetCachedCodecCapabilities();
+	});
+
+	afterEach(() => {
+		platform = 'windows';
+		nativeHardwareEncoder = null;
+		resetCachedCodecCapabilities();
+	});
+
+	it('treats H.264 as software until the GPU probe has resolved', () => {
+		expect(getCodecCapabilityReport().h264.hardwareAccelerated).toBe('software');
+		expect(selectAutomaticScreenShareCodec('auto')).toEqual({codec: 'vp9', reason: 'software-vp9'});
+	});
+
+	it('does not pick hardware H.264 on a Windows AMD machine whose probe came back software', () => {
+		gpuReport = {...ALL_SOFTWARE, gpuFamily: 'amd-rdna3-plus'};
+		expect(getCodecCapabilityReport().h264.hardwareAccelerated).toBe('software');
+		expect(selectAutomaticScreenShareCodec('auto')).toEqual({codec: 'vp9', reason: 'software-vp9'});
+	});
+
+	it('keeps hardware H.264 on Linux when the probe reported a power efficient encoder', () => {
+		platform = 'linux';
+		gpuReport = {...ALL_SOFTWARE, h264: 'hardware'};
+		expect(getCodecCapabilityReport().h264.hardwareAccelerated).toBe('hardware');
+		expect(selectAutomaticScreenShareCodec('auto')).toEqual({codec: 'h264', reason: 'hardware-h264'});
+	});
+
+	it('does not let a macOS native VideoToolbox encoder stand in for hardware H.264', () => {
+		platform = 'macos';
+		nativeHardwareEncoder = {backend: 'videotoolbox', codecs: ['h264']};
+		const report = getCodecCapabilityReport();
+		expect(report.h264.supported).toBe(true);
+		expect(report.h264.hardwareAccelerated).toBe('software');
+		expect(selectAutomaticScreenShareCodec('auto').reason).not.toBe('hardware-h264');
+	});
+
+	it('still counts a native NVENC encoder as hardware H.264', () => {
+		platform = 'linux';
+		nativeHardwareEncoder = {backend: 'nvenc', codecs: ['h264']};
+		expect(getCodecCapabilityReport().h264.hardwareAccelerated).toBe('hardware');
+		expect(selectAutomaticScreenShareCodec('auto')).toEqual({codec: 'h264', reason: 'hardware-h264'});
+	});
+
+	it('stops selecting hardware H.264 once the session verdict says it encoded in software', () => {
+		gpuReport = {...ALL_SOFTWARE, h264: 'hardware'};
+		expect(selectAutomaticScreenShareCodec('auto')).toEqual({codec: 'h264', reason: 'hardware-h264'});
+		expect(markScreenShareCodecSoftwareEncodeObserved('h264')).toBe(true);
+		expect(getCodecCapabilityReport().h264.hardwareAccelerated).toBe('software');
+		expect(selectAutomaticScreenShareCodec('auto')).toEqual({codec: 'vp9', reason: 'software-vp9'});
 	});
 });
