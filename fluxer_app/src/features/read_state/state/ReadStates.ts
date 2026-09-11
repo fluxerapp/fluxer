@@ -867,7 +867,6 @@ class ReadStates {
 			state.ackedManually = false;
 			state.clearStickyUnread();
 		}
-		this.cancelPendingAckIfCovered(state.channelId, decision.messageId);
 		return {acked: true, messageId: decision.messageId, hadMentions: decision.hadMentions};
 	}
 
