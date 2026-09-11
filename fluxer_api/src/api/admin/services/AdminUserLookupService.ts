@@ -3,6 +3,7 @@
 import type {LookupUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ApiContext} from '../../ApiContext';
 import {createUserID} from '../../BrandedTypes';
+import {isSyntheticUserId} from '../../constants/Core';
 import {Logger} from '../../Logger';
 import {mapUserToAdminResponse} from '../models/UserTypes';
 
@@ -32,7 +33,7 @@ export class AdminUserLookupService {
 		} else if (/^\d+$/.test(query)) {
 			try {
 				const userId = createUserID(BigInt(query));
-				user = await userRepository.findUnique(userId);
+				user = isSyntheticUserId(userId) ? null : await userRepository.findUnique(userId);
 			} catch (error) {
 				Logger.debug({query, error}, 'Failed to lookup user by numeric ID, invalid ID format');
 				user = null;

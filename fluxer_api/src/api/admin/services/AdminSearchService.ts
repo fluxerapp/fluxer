@@ -5,6 +5,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import type {ApiContext} from '../../ApiContext';
 import {createGuildID, createUserID, type UserID} from '../../BrandedTypes';
+import {isSyntheticUserId} from '../../constants/Core';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
 import {Logger} from '../../Logger';
 import {getGuildSearchService, getUserSearchService} from '../../SearchFactory';
@@ -129,12 +130,11 @@ export class AdminSearchService {
 			throw new FeatureTemporarilyDisabledError();
 		}
 		const query = data.query?.trim() || '';
-		const isIdQuery = /^\d+$/.test(query);
+		const directUserId = /^\d+$/.test(query) ? createUserID(BigInt(query)) : null;
+		const canResolveDirectUser = directUserId !== null && !isSyntheticUserId(directUserId) && data.offset === 0;
 		const [searchResult, directUser] = await Promise.all([
 			userSearchService.search(query, {}, {limit: data.limit, offset: data.offset}),
-			isIdQuery && data.offset === 0
-				? userRepository.findUnique(createUserID(BigInt(query))).catch(() => null)
-				: Promise.resolve(null),
+			canResolveDirectUser ? userRepository.findUnique(directUserId).catch(() => null) : Promise.resolve(null),
 		]);
 		const {hits, total} = searchResult;
 		const userIds = hits.map((hit) => createUserID(BigInt(hit.id)));
