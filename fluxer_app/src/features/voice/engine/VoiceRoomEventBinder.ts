@@ -29,7 +29,7 @@ import type {
 	RemoteTrackPublication,
 	Room,
 } from 'livekit-client';
-import {ParticipantEvent, RoomEvent, Track} from 'livekit-client';
+import {ConnectionState, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
 
 const logger = new Logger('VoiceRoomEventBinder');
 
@@ -145,6 +145,7 @@ export function bindRoomEvents(
 	const remoteTrackLifecycleDisposers = new Map<string, () => void>();
 	let codecNegotiationDisposer: (() => void) | null = null;
 	let screenShareMigrationDisposer: (() => void) | null = null;
+	let screenShareNegotiationBound = false;
 	const remoteTrackLifecycleRoleFor = (pub: RemoteTrackPublication): 'remote-screen-share' | 'remote-camera' | null => {
 		if (pub.kind !== Track.Kind.Video) return null;
 		if (pub.source === Track.Source.ScreenShare) return 'remote-screen-share';
@@ -254,6 +255,17 @@ export function bindRoomEvents(
 		ScreenSharePublicationMigration.dispose();
 		screenShareMigrationDisposer = null;
 	};
+	const bindScreenShareNegotiation = (): void => {
+		if (screenShareNegotiationBound) return;
+		screenShareNegotiationBound = true;
+		bindCodecNegotiation();
+		bindScreenShareMigration();
+	};
+	const unbindScreenShareNegotiation = (): void => {
+		screenShareNegotiationBound = false;
+		unbindCodecNegotiation();
+		unbindScreenShareMigration();
+	};
 	const scheduleDecoderVerification = (track: RemoteTrack, pub: RemoteTrackPublication): void => {
 		if (pub.source !== Track.Source.ScreenShare || pub.kind !== Track.Kind.Video) return;
 		clearScreenShareDecoderVerification(pub.trackSid);
@@ -307,8 +319,7 @@ export function bindRoomEvents(
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
-			bindCodecNegotiation();
-			bindScreenShareMigration();
+			bindScreenShareNegotiation();
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
 			await callbacks.onConnected();
@@ -335,8 +346,7 @@ export function bindRoomEvents(
 		guard(attemptId, () => {
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
 			participantSpeakingDisposers.clear();
-			unbindCodecNegotiation();
-			unbindScreenShareMigration();
+			unbindScreenShareNegotiation();
 			clearAllScreenShareDecoderVerifications();
 			clearAllRemoteTrackLifecycleBindings();
 			dependencies.remoteSpeaking.clear();
@@ -610,4 +620,7 @@ export function bindRoomEvents(
 			}
 		}),
 	);
+	if (room.state === ConnectionState.Connected) {
+		guard(attemptId, bindScreenShareNegotiation)();
+	}
 }
