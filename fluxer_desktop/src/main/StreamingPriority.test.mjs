@@ -201,7 +201,7 @@ describe('StreamingPriority GPU scheduling priority', () => {
 					status: 'succeeded',
 					priorityClass: 'high',
 					targets: [
-						{processId: 1000, reasons: ['native-main-encoder-capture']},
+						{processId: 1000, reasons: ['browser-main']},
 						{processId: 2001, reasons: ['renderer']},
 						{processId: 3001, reasons: ['chromium-gpu']},
 						{processId: 3002, reasons: ['chromium-video-encode']},
@@ -352,7 +352,7 @@ describe('StreamingPriority GPU scheduling priority', () => {
 			status: 'native-module-unavailable',
 			priorityClass: 'high',
 			targets: [
-				{processId: 1000, reasons: ['native-main-encoder-capture']},
+				{processId: 1000, reasons: ['browser-main']},
 				{processId: 2001, reasons: ['renderer']},
 				{processId: 3001, reasons: ['chromium-gpu']},
 			],

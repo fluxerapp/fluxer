@@ -22,7 +22,6 @@ import {
 	addLinuxScreenCapturePipeWireFeature,
 	addMacosPreSequoiaScreenCaptureDisabledFeatures,
 	addWindowsHardwareVideoEncodeFeatures,
-	addWindowsWebRtcWgcDisabledFeatures,
 	appendConfiguredChromiumSwitches,
 	appendDisabledChromiumFeatures,
 	appendEnabledBlinkFeature,
@@ -268,7 +267,6 @@ if (launchConfigurationError) {
 	if (process.platform === 'darwin') {
 		addMacosPreSequoiaScreenCaptureDisabledFeatures(disabledChromiumFeatures);
 	}
-	addWindowsWebRtcWgcDisabledFeatures(disabledChromiumFeatures);
 	appendDisabledChromiumFeatures(disabledChromiumFeatures);
 	if (enabledChromiumFeatures.size > 0) {
 		appendEnabledChromiumFeatures(enabledChromiumFeatures);
@@ -279,8 +277,6 @@ if (launchConfigurationError) {
 	}
 	appendLinuxOzonePlatformHint();
 	if (process.platform === 'win32') {
-		app.commandLine.appendSwitch('enable-h264-mf');
-		app.commandLine.appendSwitch('enable-h264-mf-zero-copy');
 		app.setToastActivatorCLSID(WINDOWS_TOAST_ACTIVATOR_CLSID);
 		app.setAppUserModelId(WINDOWS_APP_USER_MODEL_ID);
 	}

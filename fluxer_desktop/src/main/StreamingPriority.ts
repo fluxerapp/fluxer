@@ -16,7 +16,7 @@ const requireModule = createRequire(import.meta.url);
 
 type WindowsGpuSchedulingPriority = 'high' | 'realtime';
 type WindowsGpuPriorityTargetReason =
-	| 'native-main-encoder-capture'
+	| 'browser-main'
 	| 'renderer'
 	| 'tracked-renderer'
 	| 'chromium-gpu'
@@ -308,7 +308,7 @@ function getChromiumProcessTargetReasons(metric: Electron.ProcessMetric): Array<
 
 function collectGpuSchedulingPriorityTargets(webContents?: Electron.WebContents): Array<GpuPriorityTarget> {
 	const targets = new Map<number, Set<WindowsGpuPriorityTargetReason>>();
-	addGpuPriorityTarget(targets, process.pid, 'native-main-encoder-capture');
+	addGpuPriorityTarget(targets, process.pid, 'browser-main');
 	const rendererProcessId = getRendererProcessId(webContents);
 	addGpuPriorityTarget(targets, rendererProcessId, 'renderer');
 	for (const trackedWebContents of streamingPriorityWebContents) {

@@ -53,8 +53,6 @@ const CHROMIUM_RUNTIME_SWITCHES = [
 	'disable-renderer-backgrounding',
 	'disable_nv12_dxgi_video',
 	'enable-libopenh264',
-	'enable-h264-mf',
-	'enable-h264-mf-zero-copy',
 	'force_high_performance_gpu',
 	'force_low_power_gpu',
 	'openh264-library-path',
