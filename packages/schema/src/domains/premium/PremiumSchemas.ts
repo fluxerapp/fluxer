@@ -29,8 +29,10 @@ export const PriceIdsResponse = z.object({
 		.nullish()
 		.describe('Gift 1 month price amount in the currency minor unit'),
 	gift_1_year_amount_minor: z.number().int().nullish().describe('Gift 1 year price amount in the currency minor unit'),
-	currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency for the prices'),
-	gift_currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency for gift prices'),
+	currency: z.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']).describe('Currency for the prices'),
+	gift_currency: z
+		.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
+		.describe('Currency for gift prices'),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
@@ -83,7 +85,9 @@ export const CurrentSubscriptionPriceResponse = z
 	.object({
 		price_id: z.string().describe('The Stripe price ID the user is currently billed against'),
 		amount_minor: z.number().int().describe('The amount the user is actually charged, in the currency minor unit'),
-		currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency of the charged amount'),
+		currency: z
+			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
+			.describe('Currency of the charged amount'),
 		billing_cycle: z.enum(['monthly', 'yearly']).describe('The recurring billing cycle of the active subscription'),
 		is_grandfathered: z
 			.boolean()
@@ -119,7 +123,10 @@ export const PendingSubscriptionChangeResponse = z
 			.int()
 			.nullable()
 			.describe('Unit amount of the price that will be used after the change, in the currency minor unit'),
-		currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).nullable().describe('Currency for the pending change'),
+		currency: z
+			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
+			.nullable()
+			.describe('Currency for the pending change'),
 		initial_amount_minor: z
 			.number()
 			.int()
@@ -187,7 +194,7 @@ export const ListPriceSwitchState = z.object({
 		.nullable()
 		.describe('Current list price for the same cycle and currency, in the currency minor unit'),
 	currency: z
-		.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY'])
+		.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
 		.nullable()
 		.describe('Currency of both the current and the list amount'),
 	billing_cycle: z.enum(['monthly', 'yearly']).nullable().describe('Recurring billing cycle the switch applies to'),
@@ -206,7 +213,9 @@ export const SwitchToListPriceResponse = z.discriminatedUnion('status', [
 		target_price_id: z.string().describe('Stripe price ID the subscription will be billed against after the switch'),
 		target_amount_minor: z.number().int().describe('Amount billed after the switch, in the currency minor unit'),
 		current_amount_minor: z.number().int().describe('Amount billed before the switch, in the currency minor unit'),
-		currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency of both amounts'),
+		currency: z
+			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
+			.describe('Currency of both amounts'),
 	}),
 	z.object({
 		status: z.literal('already_scheduled').describe('The switch was already scheduled by an earlier request'),
@@ -214,7 +223,9 @@ export const SwitchToListPriceResponse = z.discriminatedUnion('status', [
 		target_price_id: z.string().describe('Stripe price ID the subscription will be billed against after the switch'),
 		target_amount_minor: z.number().int().describe('Amount billed after the switch, in the currency minor unit'),
 		current_amount_minor: z.number().int().describe('Amount billed before the switch, in the currency minor unit'),
-		currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency of both amounts'),
+		currency: z
+			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
+			.describe('Currency of both amounts'),
 	}),
 	z.object({
 		status: z.literal('ineligible').describe('The subscription cannot be moved to the current list price'),

@@ -1108,6 +1108,15 @@ export class StripeCheckoutService {
 					yearly: prices.yearlyBrl,
 					currency,
 				};
+			case 'DKK':
+				if (!prices.monthlyDkk || !prices.yearlyDkk) {
+					return null;
+				}
+				return {
+					monthly: prices.monthlyDkk,
+					yearly: prices.yearlyDkk,
+					currency,
+				};
 			case 'INR':
 				if (!prices.monthlyInr || !prices.yearlyInr) {
 					return null;
@@ -1117,6 +1126,15 @@ export class StripeCheckoutService {
 					yearly: prices.yearlyInr,
 					currency,
 				};
+			case 'NOK':
+				if (!prices.monthlyNok || !prices.yearlyNok) {
+					return null;
+				}
+				return {
+					monthly: prices.monthlyNok,
+					yearly: prices.yearlyNok,
+					currency,
+				};
 			case 'PLN':
 				if (!prices.monthlyPln || !prices.yearlyPln) {
 					return null;
@@ -1124,6 +1142,15 @@ export class StripeCheckoutService {
 				return {
 					monthly: prices.monthlyPln,
 					yearly: prices.yearlyPln,
+					currency,
+				};
+			case 'SEK':
+				if (!prices.monthlySek || !prices.yearlySek) {
+					return null;
+				}
+				return {
+					monthly: prices.monthlySek,
+					yearly: prices.yearlySek,
 					currency,
 				};
 			case 'TRY':
@@ -1174,6 +1201,33 @@ export class StripeCheckoutService {
 					gift_1_month: prices.gift1MonthInr,
 					gift_1_year: prices.gift1YearInr,
 					gift_currency: 'INR',
+				};
+			case 'DKK':
+				if (!prices.gift1MonthDkk || !prices.gift1YearDkk) {
+					return null;
+				}
+				return {
+					gift_1_month: prices.gift1MonthDkk,
+					gift_1_year: prices.gift1YearDkk,
+					gift_currency: 'DKK',
+				};
+			case 'NOK':
+				if (!prices.gift1MonthNok || !prices.gift1YearNok) {
+					return null;
+				}
+				return {
+					gift_1_month: prices.gift1MonthNok,
+					gift_1_year: prices.gift1YearNok,
+					gift_currency: 'NOK',
+				};
+			case 'SEK':
+				if (!prices.gift1MonthSek || !prices.gift1YearSek) {
+					return null;
+				}
+				return {
+					gift_1_month: prices.gift1MonthSek,
+					gift_1_year: prices.gift1YearSek,
+					gift_currency: 'SEK',
 				};
 			case 'PLN':
 				if (!prices.gift1MonthPln || !prices.gift1YearPln) {

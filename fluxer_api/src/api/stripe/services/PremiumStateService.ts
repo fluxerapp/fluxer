@@ -104,8 +104,11 @@ function normalizeCurrency(value: string | null | undefined): Currency | null {
 		currency === 'USD' ||
 		currency === 'EUR' ||
 		currency === 'BRL' ||
+		currency === 'DKK' ||
 		currency === 'INR' ||
+		currency === 'NOK' ||
 		currency === 'PLN' ||
+		currency === 'SEK' ||
 		currency === 'TRY'
 	) {
 		return currency;

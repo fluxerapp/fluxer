@@ -801,13 +801,19 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				? 'eur'
 				: normalizedPriceId.includes('brl')
 					? 'brl'
-					: normalizedPriceId.includes('inr')
-						? 'inr'
-						: normalizedPriceId.includes('pln')
-							? 'pln'
-							: normalizedPriceId.includes('try')
-								? 'try'
-								: 'usd',
+					: normalizedPriceId.includes('dkk')
+						? 'dkk'
+						: normalizedPriceId.includes('inr')
+							? 'inr'
+							: normalizedPriceId.includes('nok')
+								? 'nok'
+								: normalizedPriceId.includes('pln')
+									? 'pln'
+									: normalizedPriceId.includes('sek')
+										? 'sek'
+										: normalizedPriceId.includes('try')
+											? 'try'
+											: 'usd',
 			interval: normalizedPriceId.includes('year') ? 'year' : 'month',
 		};
 	}
@@ -1724,13 +1730,19 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 						? 'eur'
 						: normalizedPriceId.includes('brl')
 							? 'brl'
-							: normalizedPriceId.includes('inr')
-								? 'inr'
-								: normalizedPriceId.includes('pln')
-									? 'pln'
-									: normalizedPriceId.includes('try')
-										? 'try'
-										: 'usd'),
+							: normalizedPriceId.includes('dkk')
+								? 'dkk'
+								: normalizedPriceId.includes('inr')
+									? 'inr'
+									: normalizedPriceId.includes('nok')
+										? 'nok'
+										: normalizedPriceId.includes('pln')
+											? 'pln'
+											: normalizedPriceId.includes('sek')
+												? 'sek'
+												: normalizedPriceId.includes('try')
+													? 'try'
+													: 'usd'),
 				unit_amount: overrides?.unit_amount ?? (normalizedPriceId.includes('year') ? 4999 : 499),
 				type: 'recurring',
 				recurring: {

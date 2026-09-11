@@ -56,8 +56,11 @@ const LEGACY_SLOT_CURRENCIES: Record<string, Currency | undefined> = {
 	usd: 'USD',
 	eur: 'EUR',
 	brl: 'BRL',
+	dkk: 'DKK',
 	inr: 'INR',
+	nok: 'NOK',
 	pln: 'PLN',
+	sek: 'SEK',
 	try: 'TRY',
 };
 
@@ -109,6 +112,14 @@ export class ProductRegistry {
 			currency: 'BRL',
 			billingCycle: 'monthly',
 		});
+		this.registerProduct(prices.monthlyDkk, {
+			type: ProductType.MONTHLY_SUBSCRIPTION,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 1,
+			isGift: false,
+			currency: 'DKK',
+			billingCycle: 'monthly',
+		});
 		this.registerProduct(prices.monthlyInr, {
 			type: ProductType.MONTHLY_SUBSCRIPTION,
 			premiumType: UserPremiumTypes.SUBSCRIPTION,
@@ -117,12 +128,28 @@ export class ProductRegistry {
 			currency: 'INR',
 			billingCycle: 'monthly',
 		});
+		this.registerProduct(prices.monthlyNok, {
+			type: ProductType.MONTHLY_SUBSCRIPTION,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 1,
+			isGift: false,
+			currency: 'NOK',
+			billingCycle: 'monthly',
+		});
 		this.registerProduct(prices.monthlyPln, {
 			type: ProductType.MONTHLY_SUBSCRIPTION,
 			premiumType: UserPremiumTypes.SUBSCRIPTION,
 			durationMonths: 1,
 			isGift: false,
 			currency: 'PLN',
+			billingCycle: 'monthly',
+		});
+		this.registerProduct(prices.monthlySek, {
+			type: ProductType.MONTHLY_SUBSCRIPTION,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 1,
+			isGift: false,
+			currency: 'SEK',
 			billingCycle: 'monthly',
 		});
 		this.registerProduct(prices.monthlyTry, {
@@ -157,6 +184,14 @@ export class ProductRegistry {
 			currency: 'BRL',
 			billingCycle: 'yearly',
 		});
+		this.registerProduct(prices.yearlyDkk, {
+			type: ProductType.YEARLY_SUBSCRIPTION,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 12,
+			isGift: false,
+			currency: 'DKK',
+			billingCycle: 'yearly',
+		});
 		this.registerProduct(prices.yearlyInr, {
 			type: ProductType.YEARLY_SUBSCRIPTION,
 			premiumType: UserPremiumTypes.SUBSCRIPTION,
@@ -165,12 +200,28 @@ export class ProductRegistry {
 			currency: 'INR',
 			billingCycle: 'yearly',
 		});
+		this.registerProduct(prices.yearlyNok, {
+			type: ProductType.YEARLY_SUBSCRIPTION,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 12,
+			isGift: false,
+			currency: 'NOK',
+			billingCycle: 'yearly',
+		});
 		this.registerProduct(prices.yearlyPln, {
 			type: ProductType.YEARLY_SUBSCRIPTION,
 			premiumType: UserPremiumTypes.SUBSCRIPTION,
 			durationMonths: 12,
 			isGift: false,
 			currency: 'PLN',
+			billingCycle: 'yearly',
+		});
+		this.registerProduct(prices.yearlySek, {
+			type: ProductType.YEARLY_SUBSCRIPTION,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 12,
+			isGift: false,
+			currency: 'SEK',
 			billingCycle: 'yearly',
 		});
 		this.registerProduct(prices.yearlyTry, {
@@ -208,6 +259,48 @@ export class ProductRegistry {
 			durationMonths: 1,
 			isGift: true,
 			currency: 'INR',
+		});
+		this.registerProduct(prices.gift1MonthDkk, {
+			type: ProductType.GIFT_1_MONTH,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 1,
+			isGift: true,
+			currency: 'DKK',
+		});
+		this.registerProduct(prices.gift1YearDkk, {
+			type: ProductType.GIFT_1_YEAR,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 12,
+			isGift: true,
+			currency: 'DKK',
+		});
+		this.registerProduct(prices.gift1MonthNok, {
+			type: ProductType.GIFT_1_MONTH,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 1,
+			isGift: true,
+			currency: 'NOK',
+		});
+		this.registerProduct(prices.gift1YearNok, {
+			type: ProductType.GIFT_1_YEAR,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 12,
+			isGift: true,
+			currency: 'NOK',
+		});
+		this.registerProduct(prices.gift1MonthSek, {
+			type: ProductType.GIFT_1_MONTH,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 1,
+			isGift: true,
+			currency: 'SEK',
+		});
+		this.registerProduct(prices.gift1YearSek, {
+			type: ProductType.GIFT_1_YEAR,
+			premiumType: UserPremiumTypes.SUBSCRIPTION,
+			durationMonths: 12,
+			isGift: true,
+			currency: 'SEK',
 		});
 		this.registerProduct(prices.gift1MonthPln, {
 			type: ProductType.GIFT_1_MONTH,
@@ -319,11 +412,20 @@ export class ProductRegistry {
 		if (normalizedCurrency === 'brl') {
 			return billingCycle === 'monthly' ? (prices.monthlyBrl ?? null) : (prices.yearlyBrl ?? null);
 		}
+		if (normalizedCurrency === 'dkk') {
+			return billingCycle === 'monthly' ? (prices.monthlyDkk ?? null) : (prices.yearlyDkk ?? null);
+		}
 		if (normalizedCurrency === 'inr') {
 			return billingCycle === 'monthly' ? (prices.monthlyInr ?? null) : (prices.yearlyInr ?? null);
 		}
+		if (normalizedCurrency === 'nok') {
+			return billingCycle === 'monthly' ? (prices.monthlyNok ?? null) : (prices.yearlyNok ?? null);
+		}
 		if (normalizedCurrency === 'pln') {
 			return billingCycle === 'monthly' ? (prices.monthlyPln ?? null) : (prices.yearlyPln ?? null);
+		}
+		if (normalizedCurrency === 'sek') {
+			return billingCycle === 'monthly' ? (prices.monthlySek ?? null) : (prices.yearlySek ?? null);
 		}
 		if (normalizedCurrency === 'try') {
 			return billingCycle === 'monthly' ? (prices.monthlyTry ?? null) : (prices.yearlyTry ?? null);
@@ -348,6 +450,15 @@ export class ProductRegistry {
 		}
 		if (normalizedCurrency === 'inr') {
 			return duration === 'gift_1_month' ? (prices.gift1MonthInr ?? null) : (prices.gift1YearInr ?? null);
+		}
+		if (normalizedCurrency === 'dkk') {
+			return duration === 'gift_1_month' ? (prices.gift1MonthDkk ?? null) : (prices.gift1YearDkk ?? null);
+		}
+		if (normalizedCurrency === 'nok') {
+			return duration === 'gift_1_month' ? (prices.gift1MonthNok ?? null) : (prices.gift1YearNok ?? null);
+		}
+		if (normalizedCurrency === 'sek') {
+			return duration === 'gift_1_month' ? (prices.gift1MonthSek ?? null) : (prices.gift1YearSek ?? null);
 		}
 		if (normalizedCurrency === 'pln') {
 			return duration === 'gift_1_month' ? (prices.gift1MonthPln ?? null) : (prices.gift1YearPln ?? null);

@@ -32064,9 +32064,9 @@
 								"description": "The amount the user is actually charged, in the currency minor unit"
 							},
 							"currency": {
-								"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+								"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 								"type": "string",
-								"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+								"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 								"description": "Currency of the charged amount"
 							},
 							"billing_cycle": {
@@ -32345,9 +32345,9 @@
 							"currency": {
 								"anyOf": [
 									{
-										"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+										"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 										"type": "string",
-										"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"]
+										"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"]
 									},
 									{"type": "null"}
 								],
@@ -32418,9 +32418,9 @@
 					"currency": {
 						"anyOf": [
 							{
-								"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+								"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 								"type": "string",
-								"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"]
+								"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"]
 							},
 							{"type": "null"}
 						],
@@ -32662,15 +32662,15 @@
 						"description": "Gift 1 year price amount in the currency minor unit"
 					},
 					"currency": {
-						"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"type": "string",
-						"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"description": "Currency for the prices"
 					},
 					"gift_currency": {
-						"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"type": "string",
-						"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"description": "Currency for gift prices"
 					}
 				},
@@ -32749,9 +32749,9 @@
 						"description": "Amount billed before the switch, in the currency minor unit"
 					},
 					"currency": {
-						"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"type": "string",
-						"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"description": "Currency of both amounts"
 					}
 				},
@@ -32788,9 +32788,9 @@
 						"description": "Amount billed before the switch, in the currency minor unit"
 					},
 					"currency": {
-						"enum": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"type": "string",
-						"x-enumNames": ["USD", "EUR", "BRL", "INR", "PLN", "TRY"],
+						"x-enumNames": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"],
 						"description": "Currency of both amounts"
 					}
 				},
