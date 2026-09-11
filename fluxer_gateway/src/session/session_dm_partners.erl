@@ -29,11 +29,17 @@ register_all(State) ->
 register_guild(_GuildId, GuildPid, State) ->
     case enabled(State) of
         true ->
-            cast_partners({GuildPid, undefined}, partner_ids(State), State),
-            State;
+            maybe_cast_partners({GuildPid, undefined}, partner_ids(State), State);
         false ->
             State
     end.
+
+-spec maybe_cast_partners(term(), [user_id()], session_state()) -> session_state().
+maybe_cast_partners(_GuildRef, [], State) ->
+    State;
+maybe_cast_partners(GuildRef, Partners, State) ->
+    ok = cast_partners(GuildRef, Partners, State),
+    State.
 
 -spec handle_mutual(guild_id(), [user_id()], session_state()) -> {noreply, session_state()}.
 handle_mutual(GuildId, PartnerIds, State) ->

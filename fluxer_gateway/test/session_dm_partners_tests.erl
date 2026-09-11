@@ -41,6 +41,13 @@ register_guild_sends_direct_partners_to_that_guild_test() ->
         ?assertEqual({update_dm_partners, ?SESSION_ID, [2, 3]}, receive_cast())
     end).
 
+register_guild_without_direct_partners_stays_silent_test() ->
+    with_flag(true, fun() ->
+        State = (state(#{}))#{channels => #{300 => channel(3, [?SELF, 5, 6])}},
+        _ = session_dm_partners:register_guild(?GUILD, self(), State),
+        ?assertEqual(none, receive_cast())
+    end).
+
 register_all_is_inert_when_disabled_test() ->
     with_flag(false, fun() ->
         _ = session_dm_partners:register_all(state(connected())),
