@@ -198,6 +198,41 @@ describe('Guild Features', () => {
 			expect(updatedGuild.features).toContain(GuildFeatures.BANNER);
 			expect(updatedGuild.features).toContain(GuildFeatures.INVITES_DISABLED);
 		});
+		test('should allow toggling CLONE_EMOJI_ENABLED and CLONE_STICKER_ENABLED features', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Clone Opt In Test');
+			const updatedGuild = await updateGuild(harness, account.token, guild.id, {
+				features: [...guild.features, GuildFeatures.CLONE_EMOJI_ENABLED, GuildFeatures.CLONE_STICKER_ENABLED],
+			});
+			expect(updatedGuild.features).toContain(GuildFeatures.CLONE_EMOJI_ENABLED);
+			expect(updatedGuild.features).toContain(GuildFeatures.CLONE_STICKER_ENABLED);
+			const optedOut = await updateGuild(harness, account.token, guild.id, {
+				features: updatedGuild.features.filter(
+					(feature: string) =>
+						feature !== GuildFeatures.CLONE_EMOJI_ENABLED && feature !== GuildFeatures.CLONE_STICKER_ENABLED,
+				),
+			});
+			expect(optedOut.features).not.toContain(GuildFeatures.CLONE_EMOJI_ENABLED);
+			expect(optedOut.features).not.toContain(GuildFeatures.CLONE_STICKER_ENABLED);
+		});
+		test('should reject toggling the deprecated CLONE_EMOJI_DISABLED feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Deprecated Clone Emoji Test');
+			await createBuilder(harness, account.token)
+				.patch(`/guilds/${guild.id}`)
+				.body({features: [...guild.features, GuildFeatures.CLONE_EMOJI_DISABLED]})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+		});
+		test('should reject toggling the deprecated CLONE_STICKER_DISABLED feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Deprecated Clone Sticker Test');
+			await createBuilder(harness, account.token)
+				.patch(`/guilds/${guild.id}`)
+				.body({features: [...guild.features, GuildFeatures.CLONE_STICKER_DISABLED]})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+		});
 		test('should reject toggling non-toggleable features', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Non Toggleable Feature Test');

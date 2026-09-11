@@ -19,7 +19,9 @@ const GUILD_FEATURES: &[&str] = &[
     "AUDIO_BITRATE_384_KBPS",
     "BANNER",
     "CLONE_EMOJI_DISABLED",
+    "CLONE_EMOJI_ENABLED",
     "CLONE_STICKER_DISABLED",
+    "CLONE_STICKER_ENABLED",
     "DETACHED_BANNER",
     "INVITE_SPLASH",
     "INVITES_DISABLED",
@@ -46,6 +48,16 @@ const GUILD_FEATURES: &[&str] = &[
 ];
 
 const HOSTED_ONLY: &[&str] = &["VISIONARY", "VIP_VOICE"];
+
+const DEPRECATED_FEATURES: &[&str] = &["CLONE_EMOJI_DISABLED", "CLONE_STICKER_DISABLED"];
+
+fn feature_label(feature: &str) -> String {
+    if DEPRECATED_FEATURES.contains(&feature) {
+        format!("{feature} (deprecated, no longer enforced)")
+    } else {
+        feature.to_owned()
+    }
+}
 
 pub fn features_tab(
     config: &AdminConfig,
@@ -88,7 +100,7 @@ pub fn features_tab(
                             (checkbox(
                                 "features[]",
                                 feature,
-                                feature,
+                                &feature_label(feature),
                                 guild.features.iter().any(|f| f == feature),
                                 true,
                             ))
@@ -142,7 +154,7 @@ fn features_tab_readonly(guild: &GuildInfo, features_list: &[&str]) -> Markup {
                     @for feature in &enabled {
                         span class="inline-flex items-center rounded-full bg-green-100 \
                                     px-2.5 py-0.5 text-xs font-medium text-green-800" {
-                            (feature)
+                            (feature_label(feature))
                         }
                     }
                     @for feature in &custom {
@@ -168,4 +180,57 @@ fn filtered_features() -> Vec<&'static str> {
         .filter(|f| !HOSTED_ONLY.contains(f))
         .copied()
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn guild_with_features(features: &[&str]) -> GuildInfo {
+        serde_json::from_value(serde_json::json!({
+            "id": "1600000000000000001",
+            "name": "Test Guild",
+            "icon": null,
+            "banner": null,
+            "owner_id": "1500000000000000001",
+            "owner_username": null,
+            "owner_global_name": null,
+            "owner_discriminator": null,
+            "features": features,
+            "nsfw_level": null,
+            "nsfw": null,
+            "content_warning_level": null,
+            "content_warning_text": null,
+            "description": null,
+            "vanity_url_code": null,
+        }))
+        .expect("guild fixture")
+    }
+
+    #[test]
+    fn editor_offers_the_opt_in_clone_features() {
+        assert!(GUILD_FEATURES.contains(&"CLONE_EMOJI_ENABLED"));
+        assert!(GUILD_FEATURES.contains(&"CLONE_STICKER_ENABLED"));
+        assert!(!DEPRECATED_FEATURES.contains(&"CLONE_EMOJI_ENABLED"));
+        assert!(!DEPRECATED_FEATURES.contains(&"CLONE_STICKER_ENABLED"));
+    }
+
+    #[test]
+    fn editor_keeps_the_deprecated_clone_features_clearable() {
+        assert!(GUILD_FEATURES.contains(&"CLONE_EMOJI_DISABLED"));
+        assert!(GUILD_FEATURES.contains(&"CLONE_STICKER_DISABLED"));
+        assert_eq!(
+            feature_label("CLONE_EMOJI_DISABLED"),
+            "CLONE_EMOJI_DISABLED (deprecated, no longer enforced)"
+        );
+        assert_eq!(feature_label("CLONE_EMOJI_ENABLED"), "CLONE_EMOJI_ENABLED");
+    }
+
+    #[test]
+    fn readonly_view_marks_a_stale_flag_as_deprecated() {
+        let guild = guild_with_features(&["CLONE_EMOJI_DISABLED", "CLONE_STICKER_ENABLED"]);
+        let markup = features_tab_readonly(&guild, GUILD_FEATURES).into_string();
+        assert!(markup.contains("CLONE_EMOJI_DISABLED (deprecated, no longer enforced)"));
+        assert!(markup.contains("CLONE_STICKER_ENABLED"));
+    }
 }

@@ -157,7 +157,7 @@ export class EmojiService {
 		const sourceEmoji = await this.guildRepository.getEmojiById(sourceEmojiId);
 		if (!sourceEmoji) throw new UnknownGuildEmojiError();
 		const sourceGuild = await this.guildRepository.findUnique(sourceEmoji.guildId);
-		if (!sourceGuild || sourceGuild.features.has(GuildFeatures.CLONE_EMOJI_DISABLED)) {
+		if (!sourceGuild || !sourceGuild.features.has(GuildFeatures.CLONE_EMOJI_ENABLED)) {
 			throw new MissingAccessError();
 		}
 		const guildData = await this.contentHelpers.getGuildData({userId: user.id, guildId});

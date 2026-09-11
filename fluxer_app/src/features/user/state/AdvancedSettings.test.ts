@@ -20,4 +20,10 @@ describe('Advanced settings', () => {
 		expect(AdvancedSettings.unreadBadgeCustomizationEnabled).toBe(false);
 		expect(AppStorage.getItem('AdvancedSettings:unreadBadgeCustomizationEnabled')).toBeNull();
 	});
+
+	it('defaults the expression clone shortcuts preference to off and stores it under its own key', () => {
+		expect(AdvancedSettings.expressionCloneShortcutsEnabled).toBe(false);
+		AdvancedSettings.setExpressionCloneShortcutsEnabled(true);
+		expect(AppStorage.getItem('AdvancedSettings:expressionCloneShortcutsEnabled')).toBe('true');
+	});
 });

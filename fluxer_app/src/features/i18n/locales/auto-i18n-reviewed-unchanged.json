@@ -1438,6 +1438,12 @@
         "msgid": "Clearing the text of a message with attachments asks to delete the message unless this is on"
       },
       {
+        "msgid": "Clone emoji"
+      },
+      {
+        "msgid": "Clone sticker"
+      },
+      {
         "msgid": "Closed"
       },
       {
@@ -1466,6 +1472,12 @@
       },
       {
         "msgid": "Connection volume controls"
+      },
+      {
+        "msgid": "Copy emoji"
+      },
+      {
+        "msgid": "Copy sticker"
       },
       {
         "msgid": "Could not load the instance configuration. Try reloading the page."
@@ -1543,6 +1555,12 @@
         "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
       },
       {
+        "msgid": "Emoji and sticker cloning shortcuts"
+      },
+      {
+        "msgid": "Emoji cloning enabled"
+      },
+      {
         "msgid": "Empty edit"
       },
       {
@@ -1550,6 +1568,9 @@
       },
       {
         "msgid": "Enable camera access to preview cameras and capture devices before choosing one to stream."
+      },
+      {
+        "msgid": "Enable emoji and sticker cloning shortcuts"
       },
       {
         "msgid": "Enable previews"
@@ -1685,6 +1706,12 @@
       },
       {
         "msgid": "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
+      },
+      {
+        "msgid": "Let others clone your emojis"
+      },
+      {
+        "msgid": "Let others clone your stickers"
       },
       {
         "msgid": "Let people link their Bluesky account to their profile."
@@ -2047,6 +2074,9 @@
         "msgid": "Shorten your about me and try again."
       },
       {
+        "msgid": "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+      },
+      {
         "msgid": "Show connection volume controls"
       },
       {
@@ -2105,6 +2135,9 @@
       },
       {
         "msgid": "Stereo microphone"
+      },
+      {
+        "msgid": "Sticker cloning enabled"
       },
       {
         "msgid": "Still Neko"
@@ -2174,6 +2207,12 @@
       },
       {
         "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
+      },
+      {
+        "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+      },
+      {
+        "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
       },
       {
         "msgid": "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."

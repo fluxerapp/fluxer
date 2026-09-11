@@ -43,7 +43,7 @@ One custom emoji, readable from outside its guild. It adds the owning guild to t
 
 <sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
 
-<sup>5</sup> False exactly when the owning guild has [CLONE_EMOJI_DISABLED](/http-api/guilds/#guild-features)
+<sup>5</sup> True exactly when the owning guild has [CLONE_EMOJI_ENABLED](/http-api/guilds/#guild-features), and false for every other guild
 
 Every member is always present, and no member is nullable.
 
@@ -81,7 +81,7 @@ One sticker, readable from outside its guild. It adds the owning guild to the [g
 
 <sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
 
-<sup>5</sup> False exactly when the owning guild has [CLONE_STICKER_DISABLED](/http-api/guilds/#guild-features)
+<sup>5</sup> True exactly when the owning guild has [CLONE_STICKER_ENABLED](/http-api/guilds/#guild-features), and false for every other guild
 
 Every member is always present, and no member is nullable.
 
@@ -119,7 +119,7 @@ Returns the [emoji metadata object](#emoji-metadata-object) of any guild emoji. 
 <sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for a missing emoji and `UNKNOWN_GUILD` when the emoji record survives but its guild does not
 
 :::caution[Cloning reads the emoji's guild again]
-[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) resolves the source emoji and the source guild again. When the source guild disables cloning between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) resolves the source emoji and the source guild again. When the source guild drops `CLONE_EMOJI_ENABLED` between the two calls, the clone fails with 403 `MISSING_ACCESS`.
 :::
 
 ### Rate limit
@@ -148,7 +148,7 @@ Returns the [sticker metadata object](#sticker-metadata-object) of any guild sti
 <sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_STICKER` for a missing sticker and `UNKNOWN_GUILD` when the sticker record survives but its guild does not
 
 :::caution[Cloning reads the sticker's guild again]
-[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) resolves the source sticker and the source guild again. When the source guild disables cloning between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) resolves the source sticker and the source guild again. When the source guild drops `CLONE_STICKER_ENABLED` between the two calls, the clone fails with 403 `MISSING_ACCESS`.
 :::
 
 ### Rate limit

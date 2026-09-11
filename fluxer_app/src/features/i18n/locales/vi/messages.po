@@ -1638,7 +1638,7 @@ msgid "12-hour"
 msgstr "12 giờ"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:154
 msgid "128 kbps voice quality"
 msgstr "chất lượng thoại 128 kbps"
 
@@ -1691,7 +1691,7 @@ msgid "25 uses"
 msgstr "25 lượt dùng"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:151
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:159
 msgid "256 kbps voice quality"
 msgstr "chất lượng thoại 256 kbps"
 
@@ -1742,7 +1742,7 @@ msgid "32px, 2 members"
 msgstr "32px, 2 thành viên"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:156
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:164
 msgid "384 kbps voice quality"
 msgstr "chất lượng thoại 384 kbps"
 
@@ -3048,14 +3048,6 @@ msgstr "Cho phép nhắc đến vai trò này"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow microphone"
 msgstr "Cho phép truy cập micro"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:56
-msgid "Allow others to clone your emojis"
-msgstr "Cho phép người khác sao chép biểu tượng cảm xúc của bạn"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
-msgid "Allow others to clone your stickers"
-msgstr "Cho phép người khác sao chép sticker của bạn"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -6506,8 +6498,8 @@ msgstr "Ô đánh dấu"
 
 #. Loading label shown while permissions are being verified.
 #. Loading label shown while permissions are being verified.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:29
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:28
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:30
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:29
 msgid "Checking access..."
 msgstr "Đang kiểm tra quyền truy cập..."
 
@@ -7261,23 +7253,33 @@ msgstr "URL ứng dụng khách"
 msgid "Clock"
 msgstr "Đồng hồ"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+msgid "Clone emoji"
+msgstr "Nhân bản biểu tượng cảm xúc"
+
 #. Submenu label listing communities the emoji can be cloned to.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:33
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:34
 msgid "Clone emoji to..."
 msgstr "Nhân bản biểu tượng cảm xúc vào..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+msgid "Clone sticker"
+msgstr "Nhân bản nhãn dán"
+
 #. Submenu label listing communities the sticker can be cloned to.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:32
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:33
 msgid "Clone sticker to…"
 msgstr "Nhân bản sticker vào…"
 
 #. Toast confirming an emoji was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:25
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:26
 msgid "Cloned :{sourceName}: to {targetName}"
 msgstr "Đã nhân bản :{sourceName}: thành {targetName}"
 
 #. Toast confirming a sticker was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:24
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:25
 msgid "Cloned sticker {stickerName} to {targetName}"
 msgstr "Đã sao chép nhãn dán {stickerName} vào {targetName}"
 
@@ -8576,6 +8578,11 @@ msgstr "Sao chép ID cộng đồng"
 msgid "Copy device ID"
 msgstr "Sao chép ID thiết bị"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+msgid "Copy emoji"
+msgstr "Sao chép biểu tượng cảm xúc"
+
 #. Developer-mode action that copies the emoji ID to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:32
 msgid "Copy emoji ID"
@@ -8741,6 +8748,11 @@ msgstr "Sao chép dấu vết ngăn xếp"
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
 msgid "Copy stats JSON"
 msgstr "Sao chép JSON thống kê"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+msgid "Copy sticker"
+msgstr "Sao chép nhãn dán"
 
 #. Developer-mode action that copies the sticker ID to the clipboard.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:32
@@ -10958,7 +10970,7 @@ msgstr "URL đích:"
 #. Audit log community feature label for detached banner layout support.
 #. Short label in the branding section. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:35
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Detached banner"
 msgstr "Đã gỡ biểu ngữ"
 
@@ -12547,6 +12559,11 @@ msgstr "Biểu tượng cảm xúc"
 msgid "emoji {emojiName}"
 msgstr "biểu tượng cảm xúc {emojiName}"
 
+#. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+msgid "Emoji and sticker cloning shortcuts"
+msgstr "Phím tắt sao chép biểu tượng cảm xúc và nhãn dán"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
@@ -12561,6 +12578,11 @@ msgstr "Nút biểu tượng cảm xúc"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:90
 msgid "Emoji cloning disabled"
 msgstr "Sao chép biểu tượng cảm xúc đã tắt"
+
+#. Audit log community feature label indicating emoji cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+msgid "Emoji cloning enabled"
+msgstr "Nhân bản biểu tượng đã bật"
 
 #. Audit log entry label. A custom emoji was added to the community.
 #: src/features/app/config/AuditLogConstants.ts:108
@@ -12607,7 +12629,7 @@ msgid "Emoji slots are full"
 msgstr "Đã đầy ô biểu tượng cảm xúc"
 
 #. Status label shown when the target community has no available emoji slots.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:37
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:38
 msgid "Emoji slots full"
 msgstr "Đã đầy ô biểu tượng cảm xúc"
 
@@ -12741,6 +12763,11 @@ msgstr "Bật chế độ nhà phát triển"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Enable email delivery"
 msgstr "Bật giao email"
+
+#. Short label for the experimental advanced setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls.tsx:27
+msgid "Enable emoji and sticker cloning shortcuts"
+msgstr "Bật phím tắt sao chép biểu tượng cảm xúc và nhãn dán"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
@@ -13709,7 +13736,7 @@ msgid "Expression picker categories"
 msgstr "Danh mục biểu cảm"
 
 #. Audit log community feature label for expression purge tooling.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
 msgid "Expression purge"
 msgstr "Xóa biểu cảm"
 
@@ -14436,7 +14463,7 @@ msgid "Flags"
 msgstr "Cờ"
 
 #. Audit log community feature label for customized text channel naming rules.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
 msgid "Flexible text channel names"
 msgstr "Tên kênh văn bản linh hoạt"
 
@@ -16041,7 +16068,7 @@ msgstr "Ẩn trò chuyện"
 #. Audit log community feature label for hiding the owner crown badge.
 #. Label in the owner crown section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection.tsx:12
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
 msgid "Hide community owner crown"
 msgstr "Ẩn vương miện chủ sở hữu cộng đồng"
 
@@ -17162,7 +17189,7 @@ msgid "Installing desktop update…"
 msgstr "Đang cài đặt bản cập nhật cho máy tính để bàn…"
 
 #. Audit log operation flag label for invite creation.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
 msgid "Instant invites"
 msgstr "Lời mời tức thì"
 
@@ -17445,7 +17472,7 @@ msgid "Invite sent to {guildName}"
 msgstr "Đã gửi lời mời đến {guildName}"
 
 #. Audit log community feature label for invite splash image support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
 msgid "Invite splash"
 msgstr "Ảnh mời"
 
@@ -17535,7 +17562,7 @@ msgstr "Quản trị viên đã tạm dừng lời mời trong cộng đồng n�
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
 #: src/features/channel/components/InviteEmbed.tsx:75
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
 msgid "Invites disabled"
 msgstr "Đã tắt lời mời"
 
@@ -17702,7 +17729,7 @@ msgid "Join method"
 msgstr "Cách tham gia"
 
 #. Audit log system-channel flag label for member join notification posts.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:205
 msgid "Join notifications"
 msgstr "Thông báo tham gia"
 
@@ -18235,7 +18262,7 @@ msgid "Left tooltip"
 msgstr "Chú giải bên trái"
 
 #. Audit log community feature label for the legacy increased custom emoji capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
 msgid "Legacy emoji slots"
 msgstr "Số lượng biểu tượng cảm xúc cũ"
 
@@ -18245,7 +18272,7 @@ msgid "Legacy rate"
 msgstr "Giá cũ"
 
 #. Audit log community feature label for the legacy increased custom sticker capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
 msgid "Legacy sticker slots"
 msgstr "Ô chứa nhãn dán cũ"
 
@@ -18268,6 +18295,14 @@ msgstr "Đọc to mọi tin nhắn đến, bất kể bạn đang mở kênh nà
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
 msgid "Let members of this community DM you"
 msgstr "Cho phép thành viên của cộng đồng này nhắn tin trực tiếp cho bạn"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your emojis"
+msgstr "Cho phép người khác sao chép biểu tượng cảm xúc của bạn"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your stickers"
+msgstr "Cho phép người khác sao chép nhãn dán của bạn"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:297
@@ -19393,7 +19428,7 @@ msgid "Member list unavailable"
 msgstr "Không có danh sách thành viên"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:201
 msgid "Member list updates"
 msgstr "Cập nhật danh sách thành viên"
 
@@ -22154,7 +22189,7 @@ msgstr "Chỉ bạn bè mới có thể gọi cho bạn (được đề xuất)"
 msgid "Only letters, numbers, and underscores"
 msgstr "Chỉ dùng chữ cái, số và dấu gạch dưới"
 
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:84
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:82
 msgid "Only members with the \"{manageCommunityPermissionLabel}\" permission can change this."
 msgstr "Chỉ thành viên có quyền \"{manageCommunityPermissionLabel}\" mới có thể thay đổi mục này."
 
@@ -24535,7 +24570,7 @@ msgid "Push notification inactive timeout"
 msgstr "Thời gian chờ thông báo đẩy không hoạt động"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
 msgid "Push notifications"
 msgstr "Thông báo đẩy"
 
@@ -27979,7 +28014,7 @@ msgstr "Gửi tin nhắn"
 
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "Gửi tin nhắn"
@@ -28734,6 +28769,11 @@ msgstr "Hiển thị cảnh báo nội dung"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:40
 msgid "Show a content warning in this channel"
 msgstr "Hiển thị cảnh báo nội dung trong kênh này"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+msgstr "Hiển thị lối tắt một cú nhấp để sao chép biểu tượng cảm xúc và nhãn dán tùy chỉnh từ các cộng đồng cho phép"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:38
@@ -30455,6 +30495,11 @@ msgstr "Tự động điền nhãn dán"
 msgid "Sticker cloning disabled"
 msgstr "Đã tắt nhân bản nhãn dán"
 
+#. Audit log community feature label indicating sticker cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+msgid "Sticker cloning enabled"
+msgstr "Tính năng sao chép nhãn dán đã được bật"
+
 #. Title of the error modal shown when a sticker remains too large after automatic resizing and compression.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:43
 msgid "Sticker couldn't be compressed enough"
@@ -30490,7 +30535,7 @@ msgid "Sticker slots are full"
 msgstr "Đã hết ô nhãn dán"
 
 #. Status label shown when the target community has no available sticker slots.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:36
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:37
 msgid "Sticker slots full"
 msgstr "Đã đầy ô sticker"
 
@@ -32354,6 +32399,14 @@ msgstr "Đây không phải kênh bạn tìm."
 msgid "This is not the community you're looking for."
 msgstr "Đây không phải cộng đồng bạn tìm kiếm."
 
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "Tính năng này đã tắt cho đến khi bạn bật nó. Khi bật, các thành viên cộng đồng khác có thể sử dụng phím tắt \"Sao chép\" chỉ bằng một cú nhấp chuột trong ứng dụng cho các biểu tượng cảm xúc tùy chỉnh của bạn. Tắt tính năng này sẽ không ngăn bất kỳ ai lưu hình ảnh và tự tải lên."
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:64
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "Tính năng này bị tắt cho đến khi bạn bật nó. Khi bật, thành viên của các cộng đồng khác có thể sử dụng phím tắt \"Sao chép\" chỉ bằng một cú nhấp chuột trong ứng dụng cho các sticker tùy chỉnh của bạn. Tắt tính năng này sẽ không ngăn bất kỳ ai lưu hình ảnh và tự tải lên."
+
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
@@ -33594,7 +33647,7 @@ msgid "Typing avatars"
 msgstr "Ảnh đại diện khi đang nhập"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
 msgid "Typing events"
 msgstr "Sự kiện đang nhập"
 
@@ -33724,12 +33777,12 @@ msgid "Unavailable"
 msgstr "Không khả dụng"
 
 #. Audit log community feature label meaning the community is unavailable to all users.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:165
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
 msgid "Unavailable for everyone"
 msgstr "Không có sẵn cho mọi người"
 
 #. Audit log community feature label meaning only staff can access the community.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
 msgid "Unavailable for everyone but staff"
 msgstr "Chỉ nhân viên mới có thể truy cập"
 
@@ -34061,12 +34114,12 @@ msgid "unknown-role"
 msgstr "unknown-role"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
 msgid "Unlimited emoji"
 msgstr "Biểu tượng cảm xúc không giới hạn"
 
 #. Audit log community feature label for unlimited custom sticker capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
 msgid "Unlimited stickers"
 msgstr "Sticker không giới hạn"
 
@@ -35432,7 +35485,7 @@ msgstr "Giá trị"
 #. Join source label on the community members page. Shown when the member joined via the community vanity URL.
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:5
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:216
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
 msgid "Vanity URL"
 msgstr "URL tùy chỉnh"
 
@@ -35537,7 +35590,7 @@ msgstr "Cộng đồng đã xác minh và đối tác"
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
 #: src/features/guild/components/GuildBadge.tsx:20
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "Cộng đồng đã xác minh"
 
@@ -36098,7 +36151,7 @@ msgid "Violent or graphic content"
 msgstr "Nội dung bạo lực hoặc phản cảm"
 
 #. Audit log community feature label for elevated voice capacity/quality.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:161
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
 msgid "VIP voice"
 msgstr "Thoại VIP"
 
@@ -36109,7 +36162,7 @@ msgstr "Hiển thị"
 
 #. Audit log community feature label for the Visionary premium feature.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -36971,14 +37024,6 @@ msgstr "Có gì mới"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
 msgstr "Khi không đặt ngày giới hạn tùy chỉnh, thành viên không có quyền <0>{readMessageHistoryPermissionLabel}</0> sẽ không xem được tin nhắn cũ. Họ sẽ chỉ thấy tin nhắn theo thời gian thực khi chúng đến và chúng sẽ biến mất khi họ khởi động lại ứng dụng."
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:62
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. This does not prevent them from saving the image and uploading it themselves."
-msgstr "Khi bật, thành viên của các cộng đồng khác có thể dùng lối tắt \"Nhân bản\" một chạm trong ứng dụng cho các biểu tượng cảm xúc tùy chỉnh của bạn. Việc này không ngăn họ lưu hình ảnh và tự tải lên."
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:67
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. This does not prevent them from saving the image and uploading it themselves."
-msgstr "Khi bật, thành viên của các cộng đồng khác có thể dùng lối tắt \"Nhân bản\" một chạm trong ứng dụng cho các nhãn dán tùy chỉnh của bạn. Việc này không ngăn họ lưu hình ảnh và tự tải lên."
 
 #. Description text in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21

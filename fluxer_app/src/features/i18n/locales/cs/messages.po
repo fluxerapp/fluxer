@@ -1638,7 +1638,7 @@ msgid "12-hour"
 msgstr "12hodinový"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:154
 msgid "128 kbps voice quality"
 msgstr "Kvalita hlasu 128 kbps"
 
@@ -1691,7 +1691,7 @@ msgid "25 uses"
 msgstr "25 použití"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:151
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:159
 msgid "256 kbps voice quality"
 msgstr "Kvalita hlasu 256 kbps"
 
@@ -1742,7 +1742,7 @@ msgid "32px, 2 members"
 msgstr "32px, 2 členové"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:156
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:164
 msgid "384 kbps voice quality"
 msgstr "Kvalita hlasu 384 kbps"
 
@@ -3048,14 +3048,6 @@ msgstr "Povolit zmínky pro tuto roli"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow microphone"
 msgstr "Povolit mikrofon"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:56
-msgid "Allow others to clone your emojis"
-msgstr "Povolit ostatním klonovat vaše emoji"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
-msgid "Allow others to clone your stickers"
-msgstr "Povolit ostatním klonovat vaše nálepky"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -6506,8 +6498,8 @@ msgstr "Zaškrtávací políčka"
 
 #. Loading label shown while permissions are being verified.
 #. Loading label shown while permissions are being verified.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:29
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:28
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:30
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:29
 msgid "Checking access..."
 msgstr "Kontroluji přístup..."
 
@@ -7261,23 +7253,33 @@ msgstr "URL klienta"
 msgid "Clock"
 msgstr "Hodiny"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+msgid "Clone emoji"
+msgstr "Klonovat emoji"
+
 #. Submenu label listing communities the emoji can be cloned to.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:33
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:34
 msgid "Clone emoji to..."
 msgstr "Klonovat emoji do..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+msgid "Clone sticker"
+msgstr "Klonovat nálepku"
+
 #. Submenu label listing communities the sticker can be cloned to.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:32
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:33
 msgid "Clone sticker to…"
 msgstr "Kopírovat nálepku do…"
 
 #. Toast confirming an emoji was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:25
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:26
 msgid "Cloned :{sourceName}: to {targetName}"
 msgstr "Zkopírováno :{sourceName}: do {targetName}"
 
 #. Toast confirming a sticker was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:24
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:25
 msgid "Cloned sticker {stickerName} to {targetName}"
 msgstr "Nálepka {stickerName} byla naklonována do komunity {targetName}"
 
@@ -8576,6 +8578,11 @@ msgstr "Kopírovat ID komunity"
 msgid "Copy device ID"
 msgstr "Kopírovat ID zařízení"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+msgid "Copy emoji"
+msgstr "Kopírovat emoji"
+
 #. Developer-mode action that copies the emoji ID to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:32
 msgid "Copy emoji ID"
@@ -8741,6 +8748,11 @@ msgstr "Kopírovat zásobník volání"
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
 msgid "Copy stats JSON"
 msgstr "Kopírovat JSON statistik"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+msgid "Copy sticker"
+msgstr "Kopírovat nálepku"
 
 #. Developer-mode action that copies the sticker ID to the clipboard.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:32
@@ -10958,7 +10970,7 @@ msgstr "Cílová adresa URL:"
 #. Audit log community feature label for detached banner layout support.
 #. Short label in the branding section. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:35
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Detached banner"
 msgstr "Odpojený banner"
 
@@ -12547,6 +12559,11 @@ msgstr "Emoji"
 msgid "emoji {emojiName}"
 msgstr "emoji {emojiName}"
 
+#. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+msgid "Emoji and sticker cloning shortcuts"
+msgstr "Zkratky pro klonování emoji a samolepek"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
@@ -12561,6 +12578,11 @@ msgstr "Tlačítko emoji"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:90
 msgid "Emoji cloning disabled"
 msgstr "Klonování emoji zakázáno"
+
+#. Audit log community feature label indicating emoji cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+msgid "Emoji cloning enabled"
+msgstr "Klonování emoji povoleno"
 
 #. Audit log entry label. A custom emoji was added to the community.
 #: src/features/app/config/AuditLogConstants.ts:108
@@ -12607,7 +12629,7 @@ msgid "Emoji slots are full"
 msgstr "Sloty pro emoji jsou plné"
 
 #. Status label shown when the target community has no available emoji slots.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:37
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:38
 msgid "Emoji slots full"
 msgstr "Sloty pro emoji jsou plné"
 
@@ -12741,6 +12763,11 @@ msgstr "Zapnout režim pro vývojáře"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Enable email delivery"
 msgstr "Povolit doručování e-mailů"
+
+#. Short label for the experimental advanced setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls.tsx:27
+msgid "Enable emoji and sticker cloning shortcuts"
+msgstr "Povolit zkrácené cesty pro klonování emoji a samolepek"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
@@ -13709,7 +13736,7 @@ msgid "Expression picker categories"
 msgstr "Kategorie výběru výrazů"
 
 #. Audit log community feature label for expression purge tooling.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
 msgid "Expression purge"
 msgstr "Vymazat výraz"
 
@@ -14436,7 +14463,7 @@ msgid "Flags"
 msgstr "Vlajky"
 
 #. Audit log community feature label for customized text channel naming rules.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
 msgid "Flexible text channel names"
 msgstr "Flexibilní názvy textových kanálů"
 
@@ -16041,7 +16068,7 @@ msgstr "Skrýt chat"
 #. Audit log community feature label for hiding the owner crown badge.
 #. Label in the owner crown section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection.tsx:12
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
 msgid "Hide community owner crown"
 msgstr "Skrýt korunku vlastníka komunity"
 
@@ -17162,7 +17189,7 @@ msgid "Installing desktop update…"
 msgstr "Instaluje se aktualizace pro počítač…"
 
 #. Audit log operation flag label for invite creation.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
 msgid "Instant invites"
 msgstr "Okamžité pozvánky"
 
@@ -17445,7 +17472,7 @@ msgid "Invite sent to {guildName}"
 msgstr "Pozvánka odeslána do {guildName}"
 
 #. Audit log community feature label for invite splash image support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
 msgid "Invite splash"
 msgstr "Úvodní obrazovka pozvánky"
 
@@ -17535,7 +17562,7 @@ msgstr "Pozvánky jsou v této komunitě pozastaveny administrátorem. Tuto pozv
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
 #: src/features/channel/components/InviteEmbed.tsx:75
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
 msgid "Invites disabled"
 msgstr "Pozvánky zakázány"
 
@@ -17702,7 +17729,7 @@ msgid "Join method"
 msgstr "Způsob připojení"
 
 #. Audit log system-channel flag label for member join notification posts.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:205
 msgid "Join notifications"
 msgstr "Oznámení o připojení"
 
@@ -18235,7 +18262,7 @@ msgid "Left tooltip"
 msgstr "Levá bublina"
 
 #. Audit log community feature label for the legacy increased custom emoji capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
 msgid "Legacy emoji slots"
 msgstr "Staré sloty pro emoji"
 
@@ -18245,7 +18272,7 @@ msgid "Legacy rate"
 msgstr "Původní cena"
 
 #. Audit log community feature label for the legacy increased custom sticker capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
 msgid "Legacy sticker slots"
 msgstr "Staré sloty pro nálepky"
 
@@ -18268,6 +18295,14 @@ msgstr "Nechte si přečíst každou příchozí zprávu, bez ohledu na to, kter
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
 msgid "Let members of this community DM you"
 msgstr "Povolit členům této komunity posílat vám zprávy"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your emojis"
+msgstr "Umožnit ostatním klonovat vaše emotikony"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your stickers"
+msgstr "Umožnit ostatním kopírovat vaše nálepky"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:297
@@ -19393,7 +19428,7 @@ msgid "Member list unavailable"
 msgstr "Seznam členů není k dispozici"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:201
 msgid "Member list updates"
 msgstr "Aktualizace seznamu členů"
 
@@ -22154,7 +22189,7 @@ msgstr "Pouze přátelé vás mohou volat (doporučeno)"
 msgid "Only letters, numbers, and underscores"
 msgstr "Pouze písmena, čísla a podtržítka"
 
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:84
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:82
 msgid "Only members with the \"{manageCommunityPermissionLabel}\" permission can change this."
 msgstr "Změnit to můžou jen členové s oprávněním \"{manageCommunityPermissionLabel}\"."
 
@@ -24535,7 +24570,7 @@ msgid "Push notification inactive timeout"
 msgstr "Časový limit neaktivity push oznámení"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
 msgid "Push notifications"
 msgstr "Oznámení push"
 
@@ -27979,7 +28014,7 @@ msgstr "Odeslat zprávu"
 
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "Odesílat zprávy"
@@ -28734,6 +28769,11 @@ msgstr "Zobrazit upozornění na obsah"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:40
 msgid "Show a content warning in this channel"
 msgstr "Zobrazit v tomto kanálu upozornění na obsah"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+msgstr "Zobrazit zástupce jedním kliknutím pro kopírování vlastních emotikonů a samolepek z komunit, které to umožňují"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:38
@@ -30455,6 +30495,11 @@ msgstr "Automatické doplňování samolepek"
 msgid "Sticker cloning disabled"
 msgstr "Klonování nálepek zakázáno"
 
+#. Audit log community feature label indicating sticker cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+msgid "Sticker cloning enabled"
+msgstr "Klonování samolepek povoleno"
+
 #. Title of the error modal shown when a sticker remains too large after automatic resizing and compression.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:43
 msgid "Sticker couldn't be compressed enough"
@@ -30490,7 +30535,7 @@ msgid "Sticker slots are full"
 msgstr "Sloty na nálepky jsou plné"
 
 #. Status label shown when the target community has no available sticker slots.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:36
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:37
 msgid "Sticker slots full"
 msgstr "Plné sloty na nálepky"
 
@@ -32354,6 +32399,14 @@ msgstr "Tohle není kanál, který hledáte."
 msgid "This is not the community you're looking for."
 msgstr "Tohle není komunita, kterou hledáte."
 
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "Toto je vypnuté, dokud to nezapnete. Když je to zapnuté, členové jiných komunit mohou použít zkratku „Klonovat“ v aplikaci pro vaše vlastní emotikony. Vypnutím nezabráníte nikomu v uložení obrázku a jeho nahrání."
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:64
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "Toto je vypnuté, dokud to nezapnete. Když je to zapnuté, členové jiných komunit mohou použít v aplikaci zkratku „Klonovat“ jedním kliknutím na vaše vlastní nálepky. Vypnutím nezabráníte nikomu v uložení obrázku a jeho nahrání."
+
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
@@ -33594,7 +33647,7 @@ msgid "Typing avatars"
 msgstr "Avatary při psaní"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
 msgid "Typing events"
 msgstr "Události psaní"
 
@@ -33724,12 +33777,12 @@ msgid "Unavailable"
 msgstr "Nedostupné"
 
 #. Audit log community feature label meaning the community is unavailable to all users.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:165
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
 msgid "Unavailable for everyone"
 msgstr "Nedostupné pro všechny"
 
 #. Audit log community feature label meaning only staff can access the community.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
 msgid "Unavailable for everyone but staff"
 msgstr "Nedostupné pro všechny kromě zaměstnanců"
 
@@ -34061,12 +34114,12 @@ msgid "unknown-role"
 msgstr "unknown-role"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
 msgid "Unlimited emoji"
 msgstr "Neomezené emoji"
 
 #. Audit log community feature label for unlimited custom sticker capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
 msgid "Unlimited stickers"
 msgstr "Neomezené nálepky"
 
@@ -35432,7 +35485,7 @@ msgstr "Hodnoty"
 #. Join source label on the community members page. Shown when the member joined via the community vanity URL.
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:5
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:216
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
 msgid "Vanity URL"
 msgstr "Vlastní URL"
 
@@ -35537,7 +35590,7 @@ msgstr "Ověřená a partnerská komunita"
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
 #: src/features/guild/components/GuildBadge.tsx:20
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "Ověřená komunita"
 
@@ -36098,7 +36151,7 @@ msgid "Violent or graphic content"
 msgstr "Násilný nebo explicitní obsah"
 
 #. Audit log community feature label for elevated voice capacity/quality.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:161
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
 msgid "VIP voice"
 msgstr "VIP hlas"
 
@@ -36109,7 +36162,7 @@ msgstr "Viditelnost"
 
 #. Audit log community feature label for the Visionary premium feature.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
 msgid "Visionary"
 msgstr "Visionář"
 
@@ -36971,14 +37024,6 @@ msgstr "Co je nového"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
 msgstr "Pokud není nastaveno vlastní datum prahu, členové bez oprávnění <0>{readMessageHistoryPermissionLabel}</0> nemohou zobrazit žádné historické zprávy. Uvidí pouze zprávy v reálném čase, jak přicházejí, a zmizí, když restartují své klienty."
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:62
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. This does not prevent them from saving the image and uploading it themselves."
-msgstr "Když je tato funkce zapnutá, členové jiných komunit můžou používat zkratku \"Klonovat\" na jedno kliknutí u vašich vlastních emoji. To jim ale nezabrání v tom, aby si obrázek uložili a nahráli ho sami."
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:67
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. This does not prevent them from saving the image and uploading it themselves."
-msgstr "Když je tato funkce zapnutá, členové jiných komunit můžou použít zkratku \"Klonovat\" jedním kliknutím v aplikaci na vaše vlastní nálepky. To jim ale nebrání v tom, aby si obrázek uložili a nahráli ho sami."
 
 #. Description text in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21

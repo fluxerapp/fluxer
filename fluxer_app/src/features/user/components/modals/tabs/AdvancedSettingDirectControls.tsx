@@ -39,7 +39,10 @@ import {
 	HardwareAccelerationControl,
 	NativeTitleBarControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedDesktopControls';
-import {UnreadBadgeCustomizationControl} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
+import {
+	ExpressionCloneShortcutsControl,
+	UnreadBadgeCustomizationControl,
+} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
 import {
 	OpenH264Control,
 	ScreenShareAv1OptInControl,
@@ -92,6 +95,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-preview-behavior',
 	'voice-video-screen-share-encoder-controls',
 	'advanced-unread-badge-customization',
+	'advanced-expression-clone-shortcuts',
 	'client-developer-mode',
 	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
@@ -129,6 +133,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-av1-opt-in',
 	'voice-video-screen-share-hevc-opt-in',
 	'advanced-unread-badge-customization',
+	'advanced-expression-clone-shortcuts',
 	'client-developer-mode',
 	'accessibility-stay-interactive-unfocused',
 	'advanced-native-title-bar',
@@ -304,6 +309,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'advanced-unread-badge-customization':
 			return (
 				<UnreadBadgeCustomizationControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.unread-badge-customization-control" />
+			);
+		case 'advanced-expression-clone-shortcuts':
+			return (
+				<ExpressionCloneShortcutsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.expression-clone-shortcuts-control" />
 			);
 		case 'client-developer-mode':
 			return (

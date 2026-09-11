@@ -240,9 +240,9 @@ Each successful item consumes one guild emoji slot, stores its image, and writes
 
 Copies an existing emoji into the target guild and returns the new [guild emoji object](#guild-emoji-object) without `user`. Requires membership of the target guild and [CREATE_EXPRESSIONS](/http-api/permissions/) there. Emits a [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event in the target guild.
 
-The name, animation state, and stored image bytes are copied server-side, so the caller does not re-upload the image and cannot override any copied value. Membership of the source guild is not required. The source guild must not have [CLONE_EMOJI_DISABLED](/http-api/guilds/#guild-features).
+The name, animation state, and stored image bytes are copied server-side, so the caller does not re-upload the image and cannot override any copied value. Membership of the source guild is not required. The source guild must have [CLONE_EMOJI_ENABLED](/http-api/guilds/#guild-features), which a guild holds only after it opts in.
 
-An unknown source emoji is reported first, then a source guild that is missing or that disables cloning, then target membership and permission, and only then the target slot limit. [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) reports whether a source permits cloning without attempting the operation.
+An unknown source emoji is reported first, then a source guild that is missing or that does not permit cloning, then target membership and permission, and only then the target slot limit. [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) reports whether a source permits cloning without attempting the operation.
 
 The copied bytes are not re-scanned against the banned asset hash list.
 
@@ -264,16 +264,16 @@ The copied bytes are not re-scanned against the banned asset hash list.
 | --- | --- | --- |
 | 200 | [guild emoji](#guild-emoji-object) object | Emoji was cloned |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Target guild is at its emoji slot limit |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | Source guild is missing or disables cloning, the target guild is unavailable, or the caller is not a member of the target guild or lacks `CREATE_EXPRESSIONS` there |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Source guild is missing or does not permit cloning, the target guild is unavailable, or the caller is not a member of the target guild or lacks `CREATE_EXPRESSIONS` there |
 | 404<sup>3</sup> | [error response](/http-api/#error-response) | Source emoji or target guild does not exist |
 
 <sup>1</sup> The [error code](/http-api/errors/) is `MAX_EMOJIS`
 
-<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` when the source guild is missing or has `CLONE_EMOJI_DISABLED` and when the target guild is unavailable, and `MISSING_PERMISSIONS` for a target membership or permission failure
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` when the source guild is missing or lacks `CLONE_EMOJI_ENABLED` and when the target guild is unavailable, and `MISSING_PERMISSIONS` for a target membership or permission failure
 
 <sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for the source emoji and `UNKNOWN_GUILD` for the target guild
 
-A source guild that no longer exists returns 403 `MISSING_ACCESS`, so a caller cannot tell it apart from a source guild that disables cloning.
+A source guild that no longer exists returns 403 `MISSING_ACCESS`, so a caller cannot tell it apart from a source guild that does not permit cloning.
 
 ### Side effects
 

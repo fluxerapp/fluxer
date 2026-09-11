@@ -95,6 +95,14 @@ const STICKER_CLONING_DISABLED_DESCRIPTOR = msg({
 	message: 'Sticker cloning disabled',
 	comment: 'Audit log community feature label indicating sticker cloning is disabled.',
 });
+const EMOJI_CLONING_ENABLED_DESCRIPTOR = msg({
+	message: 'Emoji cloning enabled',
+	comment: 'Audit log community feature label indicating emoji cloning is enabled.',
+});
+const STICKER_CLONING_ENABLED_DESCRIPTOR = msg({
+	message: 'Sticker cloning enabled',
+	comment: 'Audit log community feature label indicating sticker cloning is enabled.',
+});
 const DETACHED_BANNER_DESCRIPTOR = msg({
 	message: 'Detached banner',
 	comment: 'Audit log community feature label for detached banner layout support.',
@@ -425,6 +433,8 @@ const featureLabelMap: Record<string, MessageDescriptor> = {
 	[GuildFeatures.BANNER]: BANNER_DESCRIPTOR,
 	[GuildFeatures.CLONE_EMOJI_DISABLED]: EMOJI_CLONING_DISABLED_DESCRIPTOR,
 	[GuildFeatures.CLONE_STICKER_DISABLED]: STICKER_CLONING_DISABLED_DESCRIPTOR,
+	[GuildFeatures.CLONE_EMOJI_ENABLED]: EMOJI_CLONING_ENABLED_DESCRIPTOR,
+	[GuildFeatures.CLONE_STICKER_ENABLED]: STICKER_CLONING_ENABLED_DESCRIPTOR,
 	[GuildFeatures.DETACHED_BANNER]: DETACHED_BANNER_DESCRIPTOR,
 	[GuildFeatures.INVITE_SPLASH]: INVITE_SPLASH_DESCRIPTOR,
 	[GuildFeatures.INVITES_DISABLED]: INVITES_DISABLED_DESCRIPTOR,

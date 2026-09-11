@@ -1638,7 +1638,7 @@ msgid "12-hour"
 msgstr "12 valandų"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:154
 msgid "128 kbps voice quality"
 msgstr "128 kbps balso kokybė"
 
@@ -1691,7 +1691,7 @@ msgid "25 uses"
 msgstr "25 naudojimų"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:151
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:159
 msgid "256 kbps voice quality"
 msgstr "256 kbps balso kokybė"
 
@@ -1742,7 +1742,7 @@ msgid "32px, 2 members"
 msgstr "32 pikseliai, 2 nariai"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:156
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:164
 msgid "384 kbps voice quality"
 msgstr "384 kbps balso kokybė"
 
@@ -3048,14 +3048,6 @@ msgstr "Leisti paminėjimus šiam vaidmeniui"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow microphone"
 msgstr "Leisti naudoti mikrofoną"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:56
-msgid "Allow others to clone your emojis"
-msgstr "Leisti kitiems klonuoti jūsų jaustukus"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
-msgid "Allow others to clone your stickers"
-msgstr "Leisti kitiems klonuoti jūsų lipdukus"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -6506,8 +6498,8 @@ msgstr "Žymimieji langeliai"
 
 #. Loading label shown while permissions are being verified.
 #. Loading label shown while permissions are being verified.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:29
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:28
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:30
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:29
 msgid "Checking access..."
 msgstr "Tikrinama prieiga..."
 
@@ -7261,23 +7253,33 @@ msgstr "Kliento URL"
 msgid "Clock"
 msgstr "Laikrodis"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+msgid "Clone emoji"
+msgstr "Klonuoti jaustuką"
+
 #. Submenu label listing communities the emoji can be cloned to.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:33
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:34
 msgid "Clone emoji to..."
 msgstr "Klonuoti jaustuką į..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+msgid "Clone sticker"
+msgstr "Klonuoti lipduką"
+
 #. Submenu label listing communities the sticker can be cloned to.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:32
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:33
 msgid "Clone sticker to…"
 msgstr "Kopijuoti lipduką į…"
 
 #. Toast confirming an emoji was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:25
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:26
 msgid "Cloned :{sourceName}: to {targetName}"
 msgstr "Nuklonuota iš :{sourceName}: į {targetName}"
 
 #. Toast confirming a sticker was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:24
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:25
 msgid "Cloned sticker {stickerName} to {targetName}"
 msgstr "Lipdukas \"{stickerName}\" nukopijuotas į \"{targetName}\""
 
@@ -8576,6 +8578,11 @@ msgstr "Kopijuoti bendruomenės ID"
 msgid "Copy device ID"
 msgstr "Kopijuoti įrenginio ID"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+msgid "Copy emoji"
+msgstr "Kopijuoti jaustuką"
+
 #. Developer-mode action that copies the emoji ID to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:32
 msgid "Copy emoji ID"
@@ -8741,6 +8748,11 @@ msgstr "Kopijuoti steko atsekimą"
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
 msgid "Copy stats JSON"
 msgstr "Kopijuoti statistikos JSON"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+msgid "Copy sticker"
+msgstr "Kopijuoti lipduką"
 
 #. Developer-mode action that copies the sticker ID to the clipboard.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:32
@@ -10958,7 +10970,7 @@ msgstr "Paskirties URL:"
 #. Audit log community feature label for detached banner layout support.
 #. Short label in the branding section. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:35
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Detached banner"
 msgstr "Atskirtas reklamjuostės paveikslėlis"
 
@@ -12547,6 +12559,11 @@ msgstr "Jaustukai"
 msgid "emoji {emojiName}"
 msgstr "jaustukas \"{emojiName}\""
 
+#. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+msgid "Emoji and sticker cloning shortcuts"
+msgstr "Emoji ir lipdukų klonavimo spartieji klavišai"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
@@ -12561,6 +12578,11 @@ msgstr "Mygtukas su piktogramomis"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:90
 msgid "Emoji cloning disabled"
 msgstr "Jaustukų klonavimas išjungtas"
+
+#. Audit log community feature label indicating emoji cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+msgid "Emoji cloning enabled"
+msgstr "Emoji klonavimas įjungtas"
 
 #. Audit log entry label. A custom emoji was added to the community.
 #: src/features/app/config/AuditLogConstants.ts:108
@@ -12607,7 +12629,7 @@ msgid "Emoji slots are full"
 msgstr "Jaustukų vietos užpildytos"
 
 #. Status label shown when the target community has no available emoji slots.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:37
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:38
 msgid "Emoji slots full"
 msgstr "Jaustukų vietos užpildytos"
 
@@ -12741,6 +12763,11 @@ msgstr "Įjungti kūrėjo režimą"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Enable email delivery"
 msgstr "Įgalinti el. pašto pristatymą"
+
+#. Short label for the experimental advanced setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls.tsx:27
+msgid "Enable emoji and sticker cloning shortcuts"
+msgstr "Įjungti jaustukų ir lipdukų klonavimo spartininkus"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
@@ -13709,7 +13736,7 @@ msgid "Expression picker categories"
 msgstr "Išraiškų parinkiklio kategorijos"
 
 #. Audit log community feature label for expression purge tooling.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
 msgid "Expression purge"
 msgstr "Išraiškos išvalymas"
 
@@ -14436,7 +14463,7 @@ msgid "Flags"
 msgstr "Vėliavos"
 
 #. Audit log community feature label for customized text channel naming rules.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
 msgid "Flexible text channel names"
 msgstr "Lankstūs teksto kanalo pavadinimai"
 
@@ -16041,7 +16068,7 @@ msgstr "Slėpti pokalbį"
 #. Audit log community feature label for hiding the owner crown badge.
 #. Label in the owner crown section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection.tsx:12
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
 msgid "Hide community owner crown"
 msgstr "Slėpti bendruomenės savininko karūną"
 
@@ -17162,7 +17189,7 @@ msgid "Installing desktop update…"
 msgstr "Diegiamas darbalaukio naujinimas…"
 
 #. Audit log operation flag label for invite creation.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
 msgid "Instant invites"
 msgstr "Momentiniai pakvietimai"
 
@@ -17445,7 +17472,7 @@ msgid "Invite sent to {guildName}"
 msgstr "Kvietimas išsiųstas į \"{guildName}\""
 
 #. Audit log community feature label for invite splash image support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
 msgid "Invite splash"
 msgstr "Kvietimo fonas"
 
@@ -17535,7 +17562,7 @@ msgstr "Administratorius pristabdė kvietimus šioje bendruomenėje. Nors šį k
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
 #: src/features/channel/components/InviteEmbed.tsx:75
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
 msgid "Invites disabled"
 msgstr "Kvietimai išjungti"
 
@@ -17702,7 +17729,7 @@ msgid "Join method"
 msgstr "Prisijungimo būdas"
 
 #. Audit log system-channel flag label for member join notification posts.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:205
 msgid "Join notifications"
 msgstr "Prisijungimo pranešimai"
 
@@ -18235,7 +18262,7 @@ msgid "Left tooltip"
 msgstr "Kairysis patarimas"
 
 #. Audit log community feature label for the legacy increased custom emoji capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
 msgid "Legacy emoji slots"
 msgstr "Senieji jaustukų lizdai"
 
@@ -18245,7 +18272,7 @@ msgid "Legacy rate"
 msgstr "Senasis tarifas"
 
 #. Audit log community feature label for the legacy increased custom sticker capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
 msgid "Legacy sticker slots"
 msgstr "Senieji lipdukų lizdai"
 
@@ -18268,6 +18295,14 @@ msgstr "Tegul kiekviena gaunama žinutė yra perskaitoma, nepriklausomai nuo to,
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
 msgid "Let members of this community DM you"
 msgstr "Leisti šios bendruomenės nariams siųsti jums tiesiogines žinutes"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your emojis"
+msgstr "Leiskite kitiems klonuoti jūsų jaustukus"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your stickers"
+msgstr "Leiskite kitiems klonuoti jūsų lipdukus"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:297
@@ -19393,7 +19428,7 @@ msgid "Member list unavailable"
 msgstr "Narių sąrašas nepasiekiamas"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:201
 msgid "Member list updates"
 msgstr "Narių sąrašo naujinimai"
 
@@ -22154,7 +22189,7 @@ msgstr "Tik draugai gali jums skambinti (rekomenduojama)"
 msgid "Only letters, numbers, and underscores"
 msgstr "Tik raidės, skaičiai ir pabraukimo brūkšniai"
 
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:84
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:82
 msgid "Only members with the \"{manageCommunityPermissionLabel}\" permission can change this."
 msgstr "Tik nariai, turintys leidimą \"{manageCommunityPermissionLabel}\", gali tai pakeisti."
 
@@ -24535,7 +24570,7 @@ msgid "Push notification inactive timeout"
 msgstr "Neaktyvių tiesioginių pranešimų skirtasis laikas"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
 msgid "Push notifications"
 msgstr "Tiesioginiai pranešimai"
 
@@ -27979,7 +28014,7 @@ msgstr "Siųsti žinutę"
 
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "Siųsti žinutes"
@@ -28734,6 +28769,11 @@ msgstr "Rodyti įspėjimą apie turinį"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:40
 msgid "Show a content warning in this channel"
 msgstr "Rodyti įspėjimą apie turinį šiame kanale"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+msgstr "Rodyti vieno paspaudimo nuorodą, leidžiančią nukopijuoti pasirinktinius jaustukus ir lipdukus iš bendruomenių, kurios tai leidžia"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:38
@@ -30455,6 +30495,11 @@ msgstr "Automatinio užpildymo lipdukams"
 msgid "Sticker cloning disabled"
 msgstr "Lipdukų klonavimas išjungtas"
 
+#. Audit log community feature label indicating sticker cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+msgid "Sticker cloning enabled"
+msgstr "Lipdukų klonavimas įjungtas"
+
 #. Title of the error modal shown when a sticker remains too large after automatic resizing and compression.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:43
 msgid "Sticker couldn't be compressed enough"
@@ -30490,7 +30535,7 @@ msgid "Sticker slots are full"
 msgstr "Lipdukų vietos užpildytos"
 
 #. Status label shown when the target community has no available sticker slots.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:36
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:37
 msgid "Sticker slots full"
 msgstr "Lipdukų vietos užpildytos"
 
@@ -32354,6 +32399,14 @@ msgstr "Tai ne tas kanalas, kurio ieškote."
 msgid "This is not the community you're looking for."
 msgstr "Tai ne ta bendruomenė, kurios ieškote."
 
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "Tai išjungta, kol neįjungsite. Kai bus įjungta, kitų bendruomenių nariai galės naudoti programoje esantį „Clon“ spartųjį klavišą savo pasirinktoms jaustukams. Išjungus tai, niekas netrukdys išsaugoti vaizdo ir pačiam jį įkelti."
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:64
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "Tai išjungta, kol neįjungsite. Kai bus įjungta, kitų bendruomenių nariai galės naudoti programoje esantį „Clone“ spartųjį klavišą jūsų pasirinktoms etiketėms. Išjungus tai, niekas netrukdys išsaugoti vaizdą ir jį įkelti patiems."
+
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
@@ -33594,7 +33647,7 @@ msgid "Typing avatars"
 msgstr "Rašančiųjų avatarai"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
 msgid "Typing events"
 msgstr "Rašymo įvykiai"
 
@@ -33724,12 +33777,12 @@ msgid "Unavailable"
 msgstr "Nepasiekiamas"
 
 #. Audit log community feature label meaning the community is unavailable to all users.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:165
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
 msgid "Unavailable for everyone"
 msgstr "Nepasiekiama visiems"
 
 #. Audit log community feature label meaning only staff can access the community.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
 msgid "Unavailable for everyone but staff"
 msgstr "Neprieinama niekam, išskyrus personalą"
 
@@ -34061,12 +34114,12 @@ msgid "unknown-role"
 msgstr "unknown-role"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
 msgid "Unlimited emoji"
 msgstr "Neribotas jaustukų skaičius"
 
 #. Audit log community feature label for unlimited custom sticker capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
 msgid "Unlimited stickers"
 msgstr "Neribotas lipdukų skaičius"
 
@@ -35432,7 +35485,7 @@ msgstr "Reikšmės"
 #. Join source label on the community members page. Shown when the member joined via the community vanity URL.
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:5
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:216
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
 msgid "Vanity URL"
 msgstr "Pasirinktinis URL"
 
@@ -35537,7 +35590,7 @@ msgstr "Patvirtinta ir partnerių bendruomenė"
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
 #: src/features/guild/components/GuildBadge.tsx:20
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "Patvirtinta bendruomenė"
 
@@ -36098,7 +36151,7 @@ msgid "Violent or graphic content"
 msgstr "Smurtinis arba grafinis turinys"
 
 #. Audit log community feature label for elevated voice capacity/quality.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:161
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
 msgid "VIP voice"
 msgstr "VIP balsas"
 
@@ -36109,7 +36162,7 @@ msgstr "Matomumas"
 
 #. Audit log community feature label for the Visionary premium feature.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
 msgid "Visionary"
 msgstr "Vizionarė"
 
@@ -36971,14 +37024,6 @@ msgstr "Kas naujo"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
 msgstr "Kai nenustatyta pasirinktinė riba, nariai, neturintys <0>{readMessageHistoryPermissionLabel}</0> leidimo, negali peržiūrėti jokių ankstesnių žinučių. Jie matys žinutes tik realiuoju laiku, kai jos ateis, ir jos išnyks, kai jie iš naujo paleis savo klientus."
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:62
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. This does not prevent them from saving the image and uploading it themselves."
-msgstr "Kai įjungta, kitų bendruomenių nariai gali naudoti programėlės \"Klonuoti\" nuorodą vienu spustelėjimu jūsų pasirinktiniams jaustukams. Tai netrukdo jiems išsaugoti paveikslėlio ir įkelti jį patiems."
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:67
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. This does not prevent them from saving the image and uploading it themselves."
-msgstr "Kai įjungta, kitų bendruomenių nariai gali naudoti programėlės \"Klonuoti\" nuorodą vienu paspaudimu jūsų pasirinktiniams lipdukams. Tai netrukdo jiems išsaugoti paveikslėlio ir įkelti jį patiems."
 
 #. Description text in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21

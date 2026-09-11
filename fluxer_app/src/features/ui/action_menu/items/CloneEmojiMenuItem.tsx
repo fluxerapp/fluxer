@@ -13,6 +13,7 @@ import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import {createKeyedActionGuard} from '@app/lib/overlay/KeyedActionGuard';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
@@ -50,7 +51,8 @@ export const CloneEmojiMenuItem: React.FC<CloneEmojiMenuItemProps> = observer(({
 	const {i18n} = useLingui();
 	const sourceGuild = emoji.guildId ? Guilds.getGuild(emoji.guildId) : null;
 	const metadataState = emoji.id ? ExpressionMetadata.getEmojiMetadata(emoji.id) : null;
-	const needsMetadataLookup = Boolean(emoji.id) && !sourceGuild;
+	const shortcutEnabled = AdvancedSettings.expressionCloneShortcutsEnabled;
+	const needsMetadataLookup = shortcutEnabled && Boolean(emoji.id) && !sourceGuild;
 	useEffect(() => {
 		if (
 			needsMetadataLookup &&
@@ -63,6 +65,7 @@ export const CloneEmojiMenuItem: React.FC<CloneEmojiMenuItemProps> = observer(({
 			void ExpressionMetadata.fetchEmojiMetadata(emoji.id);
 		}
 	}, [needsMetadataLookup, emoji.id, metadataState]);
+	if (!shortcutEnabled) return null;
 	if (!emoji.id) return null;
 	const emojiId = emoji.id;
 	const sourceName = emoji.uniqueName || emoji.name;
@@ -72,7 +75,7 @@ export const CloneEmojiMenuItem: React.FC<CloneEmojiMenuItemProps> = observer(({
 			? metadataState.data.allowCloning
 			: null;
 	const isLoadingPermission = needsMetadataLookup && (metadataState?.loading ?? false);
-	if (cloningAllowed === false) return null;
+	if (cloningAllowed !== true && !isLoadingPermission) return null;
 	const eligible = Guilds.getGuilds()
 		.filter((guild) => guild.id !== emoji.guildId)
 		.filter((guild) => Permission.can(Permissions.MANAGE_EXPRESSIONS, {guildId: guild.id}))

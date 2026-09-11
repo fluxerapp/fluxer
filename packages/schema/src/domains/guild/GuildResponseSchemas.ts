@@ -60,12 +60,22 @@ export const GuildFeatureSchema = withOpenApiType(
 			[
 				GuildFeatures.CLONE_EMOJI_DISABLED,
 				'CLONE_EMOJI_DISABLED',
-				'Guild has the in-app one-click emoji clone shortcut disabled for non-members',
+				'Deprecated and no longer enforced: emoji cloning is now opt-in through CLONE_EMOJI_ENABLED',
+			],
+			[
+				GuildFeatures.CLONE_EMOJI_ENABLED,
+				'CLONE_EMOJI_ENABLED',
+				'Guild allows non-members to use the in-app one-click emoji clone shortcut',
 			],
 			[
 				GuildFeatures.CLONE_STICKER_DISABLED,
 				'CLONE_STICKER_DISABLED',
-				'Guild has the in-app one-click sticker clone shortcut disabled for non-members',
+				'Deprecated and no longer enforced: sticker cloning is now opt-in through CLONE_STICKER_ENABLED',
+			],
+			[
+				GuildFeatures.CLONE_STICKER_ENABLED,
+				'CLONE_STICKER_ENABLED',
+				'Guild allows non-members to use the in-app one-click sticker clone shortcut',
 			],
 			[GuildFeatures.DETACHED_BANNER, 'DETACHED_BANNER', 'Guild banner is detached from splash'],
 			[GuildFeatures.INVITE_SPLASH, 'INVITE_SPLASH', 'Guild can have an invite splash'],

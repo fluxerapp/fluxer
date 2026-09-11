@@ -1638,7 +1638,7 @@ msgid "12-hour"
 msgstr "12 ชั่วโมง"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:154
 msgid "128 kbps voice quality"
 msgstr "คุณภาพเสียง 128 kbps"
 
@@ -1691,7 +1691,7 @@ msgid "25 uses"
 msgstr "ใช้แล้ว 25 ครั้ง"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:151
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:159
 msgid "256 kbps voice quality"
 msgstr "คุณภาพเสียง 256 kbps"
 
@@ -1742,7 +1742,7 @@ msgid "32px, 2 members"
 msgstr "32px, 2 คน"
 
 #. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:156
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:164
 msgid "384 kbps voice quality"
 msgstr "คุณภาพเสียง 384 kbps"
 
@@ -3048,14 +3048,6 @@ msgstr "อนุญาตให้กล่าวถึงสำหรับบ
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:547
 msgid "Allow microphone"
 msgstr "อนุญาตให้ใช้ไมโครโฟน"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:56
-msgid "Allow others to clone your emojis"
-msgstr "อนุญาตให้ผู้อื่นโคลนอิโมจิของคุณได้"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
-msgid "Allow others to clone your stickers"
-msgstr "อนุญาตให้ผู้อื่นคัดลอกสติกเกอร์ของคุณได้"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -6506,8 +6498,8 @@ msgstr "ช่องทำเครื่องหมาย"
 
 #. Loading label shown while permissions are being verified.
 #. Loading label shown while permissions are being verified.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:29
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:28
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:30
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:29
 msgid "Checking access..."
 msgstr "กำลังตรวจสอบสิทธิ์..."
 
@@ -7261,23 +7253,33 @@ msgstr "URL ไคลเอ็นต์"
 msgid "Clock"
 msgstr "นาฬิกา"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:35
+msgid "Clone emoji"
+msgstr "โคลนอิโมจิ"
+
 #. Submenu label listing communities the emoji can be cloned to.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:33
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:34
 msgid "Clone emoji to..."
 msgstr "คัดลอกอิโมจิไปที่..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:39
+msgid "Clone sticker"
+msgstr "โคลนสติกเกอร์"
+
 #. Submenu label listing communities the sticker can be cloned to.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:32
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:33
 msgid "Clone sticker to…"
 msgstr "คัดลอกสติกเกอร์ไปที่…"
 
 #. Toast confirming an emoji was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:25
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:26
 msgid "Cloned :{sourceName}: to {targetName}"
 msgstr "โคลนอีโมจิ :{sourceName}: ไปยัง {targetName}"
 
 #. Toast confirming a sticker was cloned to a target community.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:24
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:25
 msgid "Cloned sticker {stickerName} to {targetName}"
 msgstr "โคลนสติกเกอร์ {stickerName} ไปยัง {targetName} แล้ว"
 
@@ -8576,6 +8578,11 @@ msgstr "คัดลอก ID ชุมชน"
 msgid "Copy device ID"
 msgstr "คัดลอก ID อุปกรณ์"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:43
+msgid "Copy emoji"
+msgstr "คัดลอกอิโมจิ"
+
 #. Developer-mode action that copies the emoji ID to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:32
 msgid "Copy emoji ID"
@@ -8741,6 +8748,11 @@ msgstr "คัดลอก Stack Trace"
 #: src/features/voice/components/StatsForNerdsCopyDescriptors.ts:5
 msgid "Copy stats JSON"
 msgstr "คัดลอก JSON สถิติ"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:47
+msgid "Copy sticker"
+msgstr "คัดลอกสติกเกอร์"
 
 #. Developer-mode action that copies the sticker ID to the clipboard.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:32
@@ -10958,7 +10970,7 @@ msgstr "ปลายทาง URL:"
 #. Audit log community feature label for detached banner layout support.
 #. Short label in the branding section. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:35
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Detached banner"
 msgstr "แบนเนอร์ที่ไม่ได้ใช้งาน"
 
@@ -12547,6 +12559,11 @@ msgstr "อิโมจิ"
 msgid "emoji {emojiName}"
 msgstr "อิโมจิ {emojiName}"
 
+#. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
+msgid "Emoji and sticker cloning shortcuts"
+msgstr "ทางลัดคัดลอกอิโมจิและสติกเกอร์"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
@@ -12561,6 +12578,11 @@ msgstr "ปุ่มอีโมจิ"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:90
 msgid "Emoji cloning disabled"
 msgstr "ปิดการโคลนอิโมจิแล้ว"
+
+#. Audit log community feature label indicating emoji cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
+msgid "Emoji cloning enabled"
+msgstr "เปิดใช้งานการโคลนอิโมจิ"
 
 #. Audit log entry label. A custom emoji was added to the community.
 #: src/features/app/config/AuditLogConstants.ts:108
@@ -12607,7 +12629,7 @@ msgid "Emoji slots are full"
 msgstr "ช่องอิโมจิเต็มแล้ว"
 
 #. Status label shown when the target community has no available emoji slots.
-#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:37
+#: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:38
 msgid "Emoji slots full"
 msgstr "ช่องอิโมจิเต็ม"
 
@@ -12741,6 +12763,11 @@ msgstr "เปิดโหมดนักพัฒนา"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Enable email delivery"
 msgstr "เปิดใช้งานการส่งอีเมล"
+
+#. Short label for the experimental advanced setting.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls.tsx:27
+msgid "Enable emoji and sticker cloning shortcuts"
+msgstr "เปิดใช้ทางลัดคัดลอกอิโมจิและสติกเกอร์"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
@@ -13709,7 +13736,7 @@ msgid "Expression picker categories"
 msgstr "หมวดหมู่ตัวเลือกการแสดงอารมณ์"
 
 #. Audit log community feature label for expression purge tooling.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
 msgid "Expression purge"
 msgstr "ล้างการแสดงอารมณ์"
 
@@ -14436,7 +14463,7 @@ msgid "Flags"
 msgstr "ธง"
 
 #. Audit log community feature label for customized text channel naming rules.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
 msgid "Flexible text channel names"
 msgstr "ชื่อช่องข้อความที่ยืดหยุ่น"
 
@@ -16041,7 +16068,7 @@ msgstr "ซ่อนแชท"
 #. Audit log community feature label for hiding the owner crown badge.
 #. Label in the owner crown section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection.tsx:12
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
 msgid "Hide community owner crown"
 msgstr "ซ่อนมงกุฎเจ้าของคอมมูนิตี้"
 
@@ -17162,7 +17189,7 @@ msgid "Installing desktop update…"
 msgstr "กำลังติดตั้งการอัปเดตเดสก์ท็อป…"
 
 #. Audit log operation flag label for invite creation.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
 msgid "Instant invites"
 msgstr "คำเชิญทันที"
 
@@ -17445,7 +17472,7 @@ msgid "Invite sent to {guildName}"
 msgstr "ส่งคำเชิญไปที่ {guildName} แล้ว"
 
 #. Audit log community feature label for invite splash image support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
 msgid "Invite splash"
 msgstr "ภาพปกคำเชิญ"
 
@@ -17535,7 +17562,7 @@ msgstr "ผู้ดูแลระบบหยุดการเชิญชว
 #. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
 #: src/features/channel/components/InviteEmbed.tsx:75
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
 msgid "Invites disabled"
 msgstr "ปิดใช้งานคำเชิญแล้ว"
 
@@ -17702,7 +17729,7 @@ msgid "Join method"
 msgstr "วิธีเข้าร่วม"
 
 #. Audit log system-channel flag label for member join notification posts.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:205
 msgid "Join notifications"
 msgstr "การแจ้งเตือนการเข้าร่วม"
 
@@ -18235,7 +18262,7 @@ msgid "Left tooltip"
 msgstr "คำแนะนำด้านซ้าย"
 
 #. Audit log community feature label for the legacy increased custom emoji capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
 msgid "Legacy emoji slots"
 msgstr "ช่องอิโมจิแบบเดิม"
 
@@ -18245,7 +18272,7 @@ msgid "Legacy rate"
 msgstr "เรทราคาเดิม"
 
 #. Audit log community feature label for the legacy increased custom sticker capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
 msgid "Legacy sticker slots"
 msgstr "ช่องสติกเกอร์เดิม"
 
@@ -18268,6 +18295,14 @@ msgstr "ให้ระบบอ่านทุกข้อความที่
 #: src/features/guild/components/modals/GuildPrivacySettingsModal.tsx:17
 msgid "Let members of this community DM you"
 msgstr "อนุญาตให้สมาชิกของคอมมูนิตี้นี้ส่งข้อความส่วนตัวถึงคุณ"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your emojis"
+msgstr "ให้ผู้อื่นคัดลอกอิโมจิของคุณได้"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:55
+msgid "Let others clone your stickers"
+msgstr "ให้ผู้อื่นคัดลอกสติกเกอร์ของคุณได้"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:297
@@ -19393,7 +19428,7 @@ msgid "Member list unavailable"
 msgstr "ไม่สามารถดูรายชื่อสมาชิกได้"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:201
 msgid "Member list updates"
 msgstr "อัปเดตรายชื่อสมาชิก"
 
@@ -22154,7 +22189,7 @@ msgstr "เฉพาะเพื่อนเท่านั้นที่สา
 msgid "Only letters, numbers, and underscores"
 msgstr "เฉพาะตัวอักษร ตัวเลข และขีดล่าง"
 
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:84
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:82
 msgid "Only members with the \"{manageCommunityPermissionLabel}\" permission can change this."
 msgstr "เฉพาะสมาชิกที่มีสิทธิ์ \"{manageCommunityPermissionLabel}\" เท่านั้นที่เปลี่ยนแปลงการตั้งค่านี้ได้"
 
@@ -24535,7 +24570,7 @@ msgid "Push notification inactive timeout"
 msgstr "หมดเวลาการแจ้งเตือนแบบพุชเมื่อไม่ใช้งาน"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
 msgid "Push notifications"
 msgstr "การแจ้งเตือนแบบพุช"
 
@@ -27979,7 +28014,7 @@ msgstr "ส่งข้อความ"
 
 #. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Send messages"
 msgstr "ส่งข้อความ"
@@ -28734,6 +28769,11 @@ msgstr "แสดงคำเตือนเนื้อหา"
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:40
 msgid "Show a content warning in this channel"
 msgstr "แสดงคำเตือนเนื้อหาในช่องนี้"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:51
+msgid "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+msgstr "แสดงทางลัดคลิกเดียวเพื่อคัดลอกอิโมจิและสติกเกอร์แบบกำหนดเองจากชุมชนที่อนุญาต"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:38
@@ -30455,6 +30495,11 @@ msgstr "คำแนะนำในการค้นหา (สติกเก�
 msgid "Sticker cloning disabled"
 msgstr "ปิดการโคลนสติกเกอร์แล้ว"
 
+#. Audit log community feature label indicating sticker cloning is enabled.
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
+msgid "Sticker cloning enabled"
+msgstr "เปิดใช้งานการโคลนสติกเกอร์แล้ว"
+
 #. Title of the error modal shown when a sticker remains too large after automatic resizing and compression.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:43
 msgid "Sticker couldn't be compressed enough"
@@ -30490,7 +30535,7 @@ msgid "Sticker slots are full"
 msgstr "ช่องสติกเกอร์เต็มแล้ว"
 
 #. Status label shown when the target community has no available sticker slots.
-#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:36
+#: src/features/ui/action_menu/items/CloneStickerMenuItem.tsx:37
 msgid "Sticker slots full"
 msgstr "สล็อตสติกเกอร์เต็ม"
 
@@ -32354,6 +32399,14 @@ msgstr "นี่ไม่ใช่ช่องที่คุณกำลัง
 msgid "This is not the community you're looking for."
 msgstr "นี่ไม่ใช่คอมมูนิตี้ที่คุณกำลังมองหา"
 
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:58
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "ปิดอยู่จนกว่าคุณจะเปิดใช้งาน ขณะเปิดใช้งาน สมาชิกชุมชนอื่นสามารถใช้ปุ่มลัด \"โคลน\" ในแอปแบบคลิกเดียวสำหรับอิโมจิที่กำหนดเองของคุณ การปิดจะไม่ป้องกันไม่ให้ใครบันทึกรูปภาพและอัปโหลดด้วยตนเอง"
+
+#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:64
+msgid "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+msgstr "ปิดอยู่จนกว่าคุณจะเปิดใช้งาน ขณะที่เปิดใช้งาน สมาชิกชุมชนอื่นจะสามารถใช้ปุ่มลัด \"โคลน\" ในแอปแบบคลิกเดียวกับสติกเกอร์ที่กำหนดเองของคุณ การปิดใช้งานจะไม่ป้องกันไม่ให้ใครบันทึกรูปภาพและอัปโหลดด้วยตนเอง"
+
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
@@ -33594,7 +33647,7 @@ msgid "Typing avatars"
 msgstr "รูปโปรไฟล์กำลังพิมพ์"
 
 #. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
 msgid "Typing events"
 msgstr "กิจกรรมการพิมพ์"
 
@@ -33724,12 +33777,12 @@ msgid "Unavailable"
 msgstr "ไม่พร้อมใช้งาน"
 
 #. Audit log community feature label meaning the community is unavailable to all users.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:165
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
 msgid "Unavailable for everyone"
 msgstr "ไม่พร้อมใช้งานสำหรับทุกคน"
 
 #. Audit log community feature label meaning only staff can access the community.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
 msgid "Unavailable for everyone but staff"
 msgstr "ไม่พร้อมใช้งานสำหรับทุกคนยกเว้นเจ้าหน้าที่"
 
@@ -34061,12 +34114,12 @@ msgid "unknown-role"
 msgstr "unknown-role"
 
 #. Audit log community feature label for unlimited custom emoji capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
 msgid "Unlimited emoji"
 msgstr "อิโมจิไม่จำกัด"
 
 #. Audit log community feature label for unlimited custom sticker capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
 msgid "Unlimited stickers"
 msgstr "สติกเกอร์ไม่จำกัด"
 
@@ -35432,7 +35485,7 @@ msgstr "ค่า"
 #. Join source label on the community members page. Shown when the member joined via the community vanity URL.
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:5
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:216
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
 msgid "Vanity URL"
 msgstr "URL เฉพาะ"
 
@@ -35537,7 +35590,7 @@ msgstr "คอมมูนิตี้ที่ได้รับการยื
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
 #: src/features/guild/components/GuildBadge.tsx:20
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "คอมมูนิตี้ที่ตรวจสอบแล้ว"
 
@@ -36098,7 +36151,7 @@ msgid "Violent or graphic content"
 msgstr "เนื้อหารุนแรงหรือภาพที่น่าตกใจ"
 
 #. Audit log community feature label for elevated voice capacity/quality.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:161
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
 msgid "VIP voice"
 msgstr "เสียง VIP"
 
@@ -36109,7 +36162,7 @@ msgstr "การมองเห็น"
 
 #. Audit log community feature label for the Visionary premium feature.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
+#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
 msgid "Visionary"
 msgstr "ผู้มีวิสัยทัศน์"
 
@@ -36971,14 +37024,6 @@ msgstr "มีอะไรใหม่"
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:66
 msgid "When a custom threshold date is not set, members without the <0>{readMessageHistoryPermissionLabel}</0> permission cannot view any historical messages. They'll only see messages in real time as they arrive, and they'll disappear when they restart their clients."
 msgstr "หากไม่ได้กำหนดวันที่กำหนดเอง สมาชิกที่ไม่มีสิทธิ์ <0>{readMessageHistoryPermissionLabel}</0> จะไม่สามารถดูข้อความย้อนหลังได้ โดยจะเห็นเฉพาะข้อความแบบเรียลไทม์เมื่อข้อความมาถึง และข้อความจะหายไปเมื่อรีสตาร์ทแอป"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:62
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. This does not prevent them from saving the image and uploading it themselves."
-msgstr "เมื่อเปิดใช้งาน สมาชิกของชุมชนอื่นจะสามารถใช้ปุ่ม \"คัดลอก\" ในแอปเพื่อคัดลอกอิโมจิที่คุณกำหนดเองได้ทันที อย่างไรก็ตาม การตั้งค่านี้ไม่ได้ป้องกันไม่ให้พวกเขาบันทึกรูปภาพและอัปโหลดด้วยตนเอง"
-
-#: src/features/guild/components/modals/guild_tabs/CloneAllowedToggle.tsx:67
-msgid "When enabled, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. This does not prevent them from saving the image and uploading it themselves."
-msgstr "เมื่อเปิดใช้งาน สมาชิกของชุมชนอื่นจะสามารถใช้ทางลัด \"โคลน\" ในแอปเพื่อคัดลอกสติกเกอร์ที่คุณกำหนดเองได้ การดำเนินการนี้ไม่ได้ป้องกันไม่ให้พวกเขาบันทึกรูปภาพและอัปโหลดด้วยตนเอง"
 
 #. Description text in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21

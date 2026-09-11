@@ -262,7 +262,7 @@ Fluxer emits one [Guild Stickers Update](/gateway/events/#guild-stickers-update)
 
 Copies an existing sticker into the target guild and returns the new [guild sticker object](#guild-sticker-object) without `user`. Emits a [Guild Stickers Update](/gateway/events/#guild-stickers-update) Gateway event in the target guild.
 
-The caller needs membership of the target guild and [CREATE_EXPRESSIONS](/http-api/permissions/) there. Membership of the source guild is not required. The source guild must not have [CLONE_STICKER_DISABLED](/http-api/guilds/#guild-features).
+The caller needs membership of the target guild and [CREATE_EXPRESSIONS](/http-api/permissions/) there. Membership of the source guild is not required. The source guild must have [CLONE_STICKER_ENABLED](/http-api/guilds/#guild-features), which a guild holds only after it opts in.
 
 The name, description, tags, animation state, and stored image bytes are copied server-side, so the caller does not re-upload the image and cannot override any copied value.
 
@@ -288,16 +288,16 @@ The availability gate on the target guild runs first. An unknown source sticker 
 | --- | --- | --- |
 | 200 | [guild sticker](#guild-sticker-object) object | Sticker was cloned |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Target guild is at its sticker slot limit |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | Source guild is missing or disables cloning, the target guild is unavailable, or the caller is not a member of the target guild or lacks `CREATE_EXPRESSIONS` there |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Source guild is missing or does not permit cloning, the target guild is unavailable, or the caller is not a member of the target guild or lacks `CREATE_EXPRESSIONS` there |
 | 404<sup>3</sup> | [error response](/http-api/#error-response) | Source sticker or target guild does not exist |
 
 <sup>1</sup> The [error code](/http-api/errors/) is `MAX_STICKERS`
 
-<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` when the source guild is missing or has `CLONE_STICKER_DISABLED` and when the target guild is unavailable, and `MISSING_PERMISSIONS` for a target membership or permission failure
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` when the source guild is missing or lacks `CLONE_STICKER_ENABLED` and when the target guild is unavailable, and `MISSING_PERMISSIONS` for a target membership or permission failure
 
 <sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_STICKER` for the source sticker and `UNKNOWN_GUILD` for the target guild
 
-A source guild that no longer exists returns 403 `MISSING_ACCESS`, so a caller cannot tell it apart from a source guild that disables cloning.
+A source guild that no longer exists returns 403 `MISSING_ACCESS`, so a caller cannot tell it apart from a source guild that does not permit cloning.
 
 ### Side effects
 

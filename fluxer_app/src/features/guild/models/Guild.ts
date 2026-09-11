@@ -451,11 +451,11 @@ export class Guild {
 	}
 
 	get cloneEmojiAllowed(): boolean {
-		return !this.features.has(GuildFeatures.CLONE_EMOJI_DISABLED);
+		return this.features.has(GuildFeatures.CLONE_EMOJI_ENABLED);
 	}
 
 	get cloneStickerAllowed(): boolean {
-		return !this.features.has(GuildFeatures.CLONE_STICKER_DISABLED);
+		return this.features.has(GuildFeatures.CLONE_STICKER_ENABLED);
 	}
 
 	get isLargeGuild(): boolean {

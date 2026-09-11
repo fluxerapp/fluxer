@@ -259,7 +259,7 @@ export class GuildService {
 			guild_id: guild.id.toString(),
 			name: emoji.name,
 			animated: emoji.isAnimated,
-			allow_cloning: !guild.features.has(GuildFeatures.CLONE_EMOJI_DISABLED),
+			allow_cloning: guild.features.has(GuildFeatures.CLONE_EMOJI_ENABLED),
 		};
 	}
 
@@ -272,7 +272,7 @@ export class GuildService {
 			guild_id: guild.id.toString(),
 			name: sticker.name,
 			animated: sticker.animated,
-			allow_cloning: !guild.features.has(GuildFeatures.CLONE_STICKER_DISABLED),
+			allow_cloning: guild.features.has(GuildFeatures.CLONE_STICKER_ENABLED),
 		};
 	}
 

@@ -35,8 +35,8 @@ export const CloneAllowedToggle = observer(({guildId, kind}: CloneAllowedToggleP
 		if (saving || !canManageGuild) return;
 		setSaving(true);
 		try {
-			const feature = kind === 'emoji' ? GuildFeatures.CLONE_EMOJI_DISABLED : GuildFeatures.CLONE_STICKER_DISABLED;
-			await GuildCommands.toggleFeature(guildId, feature, !nextAllowed);
+			const feature = kind === 'emoji' ? GuildFeatures.CLONE_EMOJI_ENABLED : GuildFeatures.CLONE_STICKER_ENABLED;
+			await GuildCommands.toggleFeature(guildId, feature, nextAllowed);
 		} catch (error) {
 			logger.error(`Failed to toggle clone-${kind}-allowed for guild ${guildId}`, error);
 			ModalCommands.push(
@@ -52,21 +52,19 @@ export const CloneAllowedToggle = observer(({guildId, kind}: CloneAllowedToggleP
 		}
 	};
 	const label =
-		kind === 'emoji' ? (
-			<Trans>Allow others to clone your emojis</Trans>
-		) : (
-			<Trans>Allow others to clone your stickers</Trans>
-		);
+		kind === 'emoji' ? <Trans>Let others clone your emojis</Trans> : <Trans>Let others clone your stickers</Trans>;
 	const description =
 		kind === 'emoji' ? (
 			<Trans>
-				When enabled, members of other communities can use the in-app one-click "Clone" shortcut on your custom emojis.
-				This does not prevent them from saving the image and uploading it themselves.
+				This is off until you turn it on. While it is on, members of other communities can use the in-app one-click
+				"Clone" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and
+				uploading it themselves.
 			</Trans>
 		) : (
 			<Trans>
-				When enabled, members of other communities can use the in-app one-click "Clone" shortcut on your custom
-				stickers. This does not prevent them from saving the image and uploading it themselves.
+				This is off until you turn it on. While it is on, members of other communities can use the in-app one-click
+				"Clone" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and
+				uploading it themselves.
 			</Trans>
 		);
 	return (

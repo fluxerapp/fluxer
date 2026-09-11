@@ -171,7 +171,7 @@ export class StickerService {
 		const sourceSticker = await this.guildRepository.getStickerById(sourceStickerId);
 		if (!sourceSticker) throw new UnknownGuildStickerError();
 		const sourceGuild = await this.guildRepository.findUnique(sourceSticker.guildId);
-		if (!sourceGuild || sourceGuild.features.has(GuildFeatures.CLONE_STICKER_DISABLED)) {
+		if (!sourceGuild || !sourceGuild.features.has(GuildFeatures.CLONE_STICKER_ENABLED)) {
 			throw new MissingAccessError();
 		}
 		const guildData = await this.contentHelpers.getGuildData({userId: user.id, guildId});
