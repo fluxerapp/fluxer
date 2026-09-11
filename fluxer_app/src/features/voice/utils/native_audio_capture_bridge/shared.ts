@@ -32,14 +32,16 @@ export type ArmedNativeAudioCapture =
 			kind: 'self-window-web-audio';
 	  };
 
+export type NativeAudioBridgeCleanup = (stopRemote?: boolean, endDetail?: string) => Promise<void>;
+
 export interface NativeAudioBridgeHandle {
 	track: MediaStreamTrack;
-	cleanup: (stopRemote?: boolean) => Promise<void>;
+	cleanup: NativeAudioBridgeCleanup;
 }
 
 export interface ActiveNativeAudioBridge {
 	captureId: string;
-	cleanup: (stopRemote?: boolean) => Promise<void>;
+	cleanup: NativeAudioBridgeCleanup;
 	linuxRule?: NativeAudioRoutingRule;
 	includeSelfWindowAudio?: boolean;
 }

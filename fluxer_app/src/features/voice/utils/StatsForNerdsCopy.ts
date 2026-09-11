@@ -31,6 +31,7 @@ import {
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
+import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
@@ -584,6 +585,7 @@ export async function buildStatsForNerdsCopyPayload(data: StatsForNerdsData): Pr
 		mediaDevices,
 		voiceSettings,
 		voiceSession: summarizeRoom(),
+		recentScreenShares: getRecentScreenShares(),
 		desktop,
 	};
 }
