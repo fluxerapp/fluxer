@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {screenShareWatchAttemptKey} from '@app/features/voice/components/useScreenShareWatchFailure';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import {ScreenShareWatchErrorCode, ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import type {RemoteTrackPublication} from 'livekit-client';
@@ -104,7 +105,7 @@ describe('ScreenShareWatchFailures failure history', () => {
 
 	it('keeps a failure raised by a watch deadline after the viewer stops watching', () => {
 		const streamKey = 'guild-a:channel-a:connection-deadline';
-		const attemptKey = `${streamKey}:1:watch`;
+		const attemptKey = screenShareWatchAttemptKey({streamKey, watchGeneration: 1});
 		ScreenShareWatchFailures.markWatchStarted(streamKey);
 		ScreenShareWatchFailures.ensureAttempt({streamKey}, attemptKey);
 		ScreenShareWatchFailures.setWatchTarget(streamKey, {videoRef: {current: null}});
@@ -122,7 +123,7 @@ describe('ScreenShareWatchFailures failure history', () => {
 
 	it('records the inbound counters of the watched publication alongside the failure', async () => {
 		const streamKey = 'guild-a:channel-a:connection-counters';
-		const attemptKey = `${streamKey}:1:watch`;
+		const attemptKey = screenShareWatchAttemptKey({streamKey, watchGeneration: 1});
 		ScreenShareWatchFailures.markWatchStarted(streamKey);
 		ScreenShareWatchFailures.ensureAttempt({streamKey}, attemptKey);
 		ScreenShareWatchFailures.setWatchTarget(streamKey, {
@@ -160,7 +161,7 @@ describe('ScreenShareWatchFailures failure history', () => {
 
 	it('records the size and readiness of the attached video element', () => {
 		const streamKey = 'guild-a:channel-a:connection-tile';
-		const attemptKey = `${streamKey}:1:watch`;
+		const attemptKey = screenShareWatchAttemptKey({streamKey, watchGeneration: 1});
 		const video = {readyState: 0, videoWidth: 0, videoHeight: 0, clientWidth: 960, clientHeight: 540};
 		ScreenShareWatchFailures.markWatchStarted(streamKey);
 		ScreenShareWatchFailures.ensureAttempt({streamKey}, attemptKey);
@@ -186,7 +187,7 @@ describe('ScreenShareWatchFailures failure history', () => {
 
 	it('leaves the running watch deadline alone when the watch target is registered', () => {
 		const streamKey = 'guild-a:channel-a:connection-target';
-		const attemptKey = `${streamKey}:1:watch`;
+		const attemptKey = screenShareWatchAttemptKey({streamKey, watchGeneration: 1});
 		ScreenShareWatchFailures.markWatchStarted(streamKey);
 		ScreenShareWatchFailures.ensureAttempt({streamKey}, attemptKey);
 		const deadline = watchDeadlineFor(streamKey);
