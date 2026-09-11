@@ -439,12 +439,7 @@ class ReadStates {
 		});
 	}
 
-	handleLoadMessages(action: {
-		channelId: string;
-		isAfter?: boolean;
-		messages: Array<WireMessage>;
-		tailProbeWatermarkId?: string | null;
-	}): void {
+	handleLoadMessages(action: {channelId: string; isAfter?: boolean; messages: Array<WireMessage>}): void {
 		const state = this.get(action.channelId);
 		state.messagesLoaded = true;
 		const messages = Messages.getMessages(action.channelId);
@@ -453,17 +448,6 @@ class ReadStates {
 			state.lastMessageId = newestMessage.id;
 		}
 		const landedOnNewestWindow = messages.hasNewestMessages();
-		if (
-			action.isAfter &&
-			action.tailProbeWatermarkId != null &&
-			action.tailProbeWatermarkId === state.lastMessageId &&
-			action.messages.length === 0 &&
-			landedOnNewestWindow &&
-			newestMessage != null &&
-			isNewerMessageId(state.lastMessageId, newestMessage.id)
-		) {
-			state.lastMessageId = newestMessage.id;
-		}
 		const landedOnAck = state.ackMessageId != null && messages.jumpDestinationId === state.ackMessageId;
 		if (state.hasUnread() || landedOnNewestWindow || landedOnAck) {
 			state.rebuild();

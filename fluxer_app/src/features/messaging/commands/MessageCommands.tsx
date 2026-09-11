@@ -279,7 +279,6 @@ function handleMessageFetchSuccess(
 		channelId,
 		isAfter: pageState.isAfter,
 		messages,
-		tailProbeWatermarkId: tailProbe?.watermarkMessageId ?? null,
 	});
 	MessageReferences.handleMessagesFetchSuccess(channelId, messages);
 	void requestMissingGuildMembers(channelId, messages);
