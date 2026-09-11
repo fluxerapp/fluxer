@@ -49,17 +49,24 @@ pub(crate) fn build_region_body(form: &MultiValueForm) -> serde_json::Value {
     }
     body.insert("is_default".into(), form.bool_value("is_default").into());
     body.insert("vip_only".into(), form.bool_value("vip_only").into());
-    body.insert(
-        "required_guild_features".into(),
-        form.list_values_any(&["required_guild_features[]", "required_guild_features"])
-            .into(),
-    );
-    body.insert(
-        "allowed_guild_ids".into(),
-        form.list_values_any(&["allowed_guild_ids[]", "allowed_guild_ids"])
-            .into(),
-    );
+    insert_submitted_list(&mut body, form, "required_guild_features");
+    insert_submitted_list(&mut body, form, "allowed_guild_ids");
     serde_json::Value::Object(body)
+}
+
+fn insert_submitted_list(
+    body: &mut serde_json::Map<String, serde_json::Value>,
+    form: &MultiValueForm,
+    field: &str,
+) {
+    let repeated = format!("{field}[]");
+    if !form.contains_key(&repeated) && !form.contains_key(field) {
+        return;
+    }
+    body.insert(
+        field.to_owned(),
+        form.list_values_any(&[repeated.as_str(), field]).into(),
+    );
 }
 
 pub(crate) fn build_server_body(form: &MultiValueForm) -> serde_json::Value {
@@ -103,16 +110,8 @@ pub(crate) fn build_server_body(form: &MultiValueForm) -> serde_json::Value {
         }
     }
     body.insert("vip_only".into(), form.bool_value("vip_only").into());
-    body.insert(
-        "required_guild_features".into(),
-        form.list_values_any(&["required_guild_features[]", "required_guild_features"])
-            .into(),
-    );
-    body.insert(
-        "allowed_guild_ids".into(),
-        form.list_values_any(&["allowed_guild_ids[]", "allowed_guild_ids"])
-            .into(),
-    );
+    insert_submitted_list(&mut body, form, "required_guild_features");
+    insert_submitted_list(&mut body, form, "allowed_guild_ids");
     serde_json::Value::Object(body)
 }
 
@@ -263,6 +262,45 @@ mod tests {
             serde_json::json!(["VIP", "VOICE"])
         );
         assert_eq!(body["allowed_guild_ids"], serde_json::json!(["1", "2"]));
+    }
+
+    #[test]
+    fn build_server_body_clears_restriction_lists_the_form_submitted_empty() {
+        let form = MultiValueForm::parse(
+            b"region_id=us-east&server_id=s1&required_guild_features=&allowed_guild_ids=",
+        );
+        let body = build_server_body(&form);
+        assert_eq!(body["required_guild_features"], serde_json::json!([]));
+        assert_eq!(body["allowed_guild_ids"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn build_server_body_leaves_restriction_lists_alone_when_the_form_omits_them() {
+        let form = MultiValueForm::parse(
+            b"region_id=us-east&server_id=s1&endpoint=wss%3A%2F%2Fvoice.example&is_active=false&vip_only=true",
+        );
+        let body = build_server_body(&form);
+        let object = body.as_object().unwrap();
+        assert!(!object.contains_key("required_guild_features"));
+        assert!(!object.contains_key("allowed_guild_ids"));
+        assert_eq!(body["is_active"], serde_json::json!(false));
+    }
+
+    #[test]
+    fn build_region_body_clears_restriction_lists_the_form_submitted_empty() {
+        let form = MultiValueForm::parse(b"id=us-east&required_guild_features=&allowed_guild_ids=");
+        let body = build_region_body(&form);
+        assert_eq!(body["required_guild_features"], serde_json::json!([]));
+        assert_eq!(body["allowed_guild_ids"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn build_region_body_leaves_restriction_lists_alone_when_the_form_omits_them() {
+        let form = MultiValueForm::parse(b"id=us-east&name=US%20East");
+        let body = build_region_body(&form);
+        let object = body.as_object().unwrap();
+        assert!(!object.contains_key("required_guild_features"));
+        assert!(!object.contains_key("allowed_guild_ids"));
     }
 
     #[test]

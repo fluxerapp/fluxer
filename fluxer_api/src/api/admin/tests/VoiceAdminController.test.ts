@@ -313,6 +313,90 @@ describe('VoiceAdminController', () => {
 		expect(cleared.server.soft_connection_limit).toBeNull();
 		expect((await voiceRepository.getServer(regionId, serverId))?.softConnectionLimit).toBeNull();
 	});
+	test('clears voice server restriction lists when empty arrays are supplied', async () => {
+		const admin = await createAdminWithAcls(harness, [
+			AdminACLs.VOICE_REGION_CREATE,
+			AdminACLs.VOICE_SERVER_CREATE,
+			AdminACLs.VOICE_SERVER_UPDATE,
+		]);
+		const regionId = 'voice-region-clear-restrictions';
+		const serverId = 'voice-server-clear-restrictions';
+		await createBuilder<CreateVoiceRegionResponse>(harness, `${admin.token}`)
+			.post('/admin/voice/regions')
+			.body({
+				id: regionId,
+				name: `Region ${regionId}`,
+				emoji: ':earth_americas:',
+				latitude: 1,
+				longitude: 2,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder<CreateVoiceServerResponse>(harness, `${admin.token}`)
+			.post(`/admin/voice/regions/${regionId}/servers`)
+			.body({
+				server_id: serverId,
+				endpoint: 'https://voice-clear.example.com/socket',
+				api_key: 'clear-api-key',
+				api_secret: 'clear-api-secret',
+				required_guild_features: ['VIP_VOICE'],
+				allowed_guild_ids: [1234567890123456789n.toString()],
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const stored = await voiceRepository.getServer(regionId, serverId);
+		expect(Array.from(stored?.restrictions.requiredGuildFeatures ?? [])).toEqual(['VIP_VOICE']);
+		expect(stored?.restrictions.allowedGuildIds.size).toBe(1);
+		const cleared = await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${regionId}/servers/${serverId}`)
+			.body({required_guild_features: [], allowed_guild_ids: []})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(cleared.server.required_guild_features).toEqual([]);
+		expect(cleared.server.allowed_guild_ids).toEqual([]);
+		const persisted = await voiceRepository.getServer(regionId, serverId);
+		expect(persisted?.restrictions.requiredGuildFeatures.size).toBe(0);
+		expect(persisted?.restrictions.allowedGuildIds.size).toBe(0);
+	});
+	test('leaves voice server restriction lists unchanged when they are omitted', async () => {
+		const admin = await createAdminWithAcls(harness, [
+			AdminACLs.VOICE_REGION_CREATE,
+			AdminACLs.VOICE_SERVER_CREATE,
+			AdminACLs.VOICE_SERVER_UPDATE,
+		]);
+		const regionId = 'voice-region-keep-restrictions';
+		const serverId = 'voice-server-keep-restrictions';
+		await createBuilder<CreateVoiceRegionResponse>(harness, `${admin.token}`)
+			.post('/admin/voice/regions')
+			.body({
+				id: regionId,
+				name: `Region ${regionId}`,
+				emoji: ':earth_americas:',
+				latitude: 1,
+				longitude: 2,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder<CreateVoiceServerResponse>(harness, `${admin.token}`)
+			.post(`/admin/voice/regions/${regionId}/servers`)
+			.body({
+				server_id: serverId,
+				endpoint: 'https://voice-keep.example.com/socket',
+				api_key: 'keep-api-key',
+				api_secret: 'keep-api-secret',
+				required_guild_features: ['VIP_VOICE'],
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder<UpdateVoiceServerResponse>(harness, `${admin.token}`)
+			.patch(`/admin/voice/regions/${regionId}/servers/${serverId}`)
+			.body({is_active: false})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const persisted = await voiceRepository.getServer(regionId, serverId);
+		expect(Array.from(persisted?.restrictions.requiredGuildFeatures ?? [])).toEqual(['VIP_VOICE']);
+		expect(persisted?.isActive).toBe(false);
+	});
 	test('rejects a voice server soft connection limit below one', async () => {
 		const admin = await createAdminWithAcls(harness, [AdminACLs.VOICE_REGION_CREATE, AdminACLs.VOICE_SERVER_CREATE]);
 		const regionId = 'voice-region-soft-limit-invalid';
