@@ -125,6 +125,7 @@ export interface LexicalComposerInputProps {
 	slotResolvers?: SlashSlotResolvers;
 	markdown?: boolean;
 	markdownParserFlags?: number;
+	silentMessagePrefix?: boolean;
 	emojiShortcodeResolver?: ComposerEmojiResolver;
 	channelId?: string;
 	guildId?: string;
@@ -230,6 +231,7 @@ const ComposerInner = ({
 	slotResolvers,
 	markdown = true,
 	markdownParserFlags,
+	silentMessagePrefix = false,
 	emojiShortcodeResolver,
 	selectionToolbar = true,
 	submitOnEnter = true,
@@ -509,7 +511,7 @@ const ComposerInner = ({
 			cleanups.push(registerSlashSlotPlugin(editor, () => slotResolversRef.current, typeaheadActiveState));
 			cleanups.push(registerSlashSlotFocus(editor, () => onSlashCommandStateChangeRef.current));
 			if (markdown) {
-				cleanups.push(registerComposerMarkdownHighlight(editor, markdownParserFlags));
+				cleanups.push(registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix));
 			}
 			cleanups.push(
 				registerComposerEmojiShortcode(editor, (shortcodeName) => {
@@ -543,7 +545,7 @@ const ComposerInner = ({
 			{discrete: true, tag: HISTORY_MERGE_TAG},
 		);
 		return mergeRegister(...cleanups);
-	}, [editor, markdown, markdownParserFlags, plainText]);
+	}, [editor, markdown, markdownParserFlags, plainText, silentMessagePrefix]);
 
 	useEffect(() => {
 		return mergeRegister(

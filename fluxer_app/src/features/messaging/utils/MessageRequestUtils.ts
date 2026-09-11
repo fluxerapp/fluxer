@@ -2,6 +2,7 @@
 
 import ChatInputSettings from '@app/features/messaging/state/ChatInputSettings';
 import {convertEmoticonsToEmoji} from '@app/features/messaging/utils/EmoticonConversionUtils';
+import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
 import {maybeSanitizeOutgoingMessage} from '@app/features/messaging/utils/UrlSanitizationUtils';
 import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
@@ -82,12 +83,25 @@ export interface NormalizedMessageContent {
 }
 
 export function normalizeMessageContent(content: string): NormalizedMessageContent {
-	const withoutSilent = removeSilentFlag(content);
+	const silentPrefix = parseSilentMessagePrefix(content);
+	const withoutSilent = silentPrefix == null ? content : content.slice(silentPrefix.end);
 	const converted = applyOutgoingEmoticonConversion(withoutSilent);
 	const sanitized = maybeSanitizeOutgoingMessage(converted);
 	const normalizedContent = hasVisibleMessageContent(sanitized) ? sanitized : '';
-	const flags = getMessageFlags(content);
+	const flags = silentPrefix == null ? 0 : MessageFlags.SUPPRESS_NOTIFICATIONS;
 	return {content: normalizedContent, flags};
+}
+
+export function canSubmitMessage(content: string, hasNonTextContent: boolean): boolean {
+	return hasNonTextContent || normalizeMessageContent(content).content.length > 0;
+}
+
+export function getComposerMessageContent(content: string, isEditingMessageOnMobile: boolean): string {
+	if (isEditingMessageOnMobile) {
+		return content;
+	}
+	const silentPrefix = parseSilentMessagePrefix(content);
+	return silentPrefix == null ? content : content.slice(silentPrefix.end);
 }
 
 export function normalizeMessageEditContent(content: string): string {
@@ -146,21 +160,8 @@ export function buildMessageEditRequest(payload: MessageEditPayload): MessageEdi
 	return requestBody;
 }
 
-const isSilentMessage = (content: string): boolean => {
-	return content.startsWith('@silent ');
-};
-const removeSilentFlag = (content: string): string => {
-	return content.startsWith('@silent ') ? content.replace('@silent ', '') : content;
-};
 const applyOutgoingEmoticonConversion = (content: string): string => {
 	return ChatInputSettings.convertEmoticons ? convertEmoticonsToEmoji(content) : content;
-};
-const getMessageFlags = (content: string): number => {
-	let flags = 0;
-	if (isSilentMessage(content)) {
-		flags |= MessageFlags.SUPPRESS_NOTIFICATIONS;
-	}
-	return flags;
 };
 const shouldIncludeAllowedMentions = (allowedMentions?: AllowedMentions): boolean => {
 	if (!allowedMentions) {

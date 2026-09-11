@@ -4,6 +4,8 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
+import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
+import {canSubmitMessage} from '@app/features/messaging/utils/MessageRequestUtils';
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {formatUploadingAttachmentSummary} from '@app/features/messaging/utils/UploadingAttachmentLabelUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -91,6 +93,12 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 					: undefined;
 			const currentUser = Users.getCurrentUser();
 			if (!channel || !currentUser) return false;
+			const hasNonTextContent =
+				hasAttachments ||
+				stickers.length > 0 ||
+				favoriteMemeId !== undefined ||
+				CloudUpload.getTextareaAttachments(channel.id).length > 0;
+			if (!canSubmitMessage(content, hasNonTextContent)) return false;
 			if (isBlockedBySlowmode(channel)) return false;
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 			if (!MessageCommands.reserveSend(channel.id, nonce)) return false;

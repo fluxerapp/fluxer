@@ -6,6 +6,7 @@ import {parseMarkdownAstWithWasm} from '@app/features/messaging/utils/markdown/p
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {normalizeUrl} from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 import {findUrlEnd} from '@app/features/messaging/utils/markdown/UrlSpanUtils';
+import {parseSilentMessagePrefix} from '@app/features/messaging/utils/SilentMessagePrefix';
 
 export const MarkdownHl = {
 	none: 0,
@@ -20,6 +21,7 @@ export const MarkdownHl = {
 	subtext: 1 << 8,
 	link: 1 << 9,
 	codeBlock: 1 << 10,
+	silent: 1 << 11,
 } as const;
 
 export type MarkdownHlFormat = number;
@@ -121,6 +123,24 @@ export function computeMarkdownHighlightResult(
 		segmentLimit = source.length;
 	}
 	return {spans: coalesce(spans), recovered};
+}
+
+export function markSilentMessagePrefix(spans: Array<MarkdownSpan>, source: string): Array<MarkdownSpan> {
+	const prefix = parseSilentMessagePrefix(source);
+	if (prefix == null) {
+		return spans;
+	}
+	const pieces: Array<MarkdownSpan> = [];
+	for (const span of spans) {
+		const tokenStart = Math.min(Math.max(prefix.tokenStart, span.start), span.end);
+		const tokenEnd = Math.min(Math.max(prefix.tokenEnd, span.start), span.end);
+		pieces.push(
+			{...span, end: tokenStart},
+			{...span, start: tokenStart, end: tokenEnd, format: span.format | MarkdownHl.silent},
+			{...span, start: tokenEnd},
+		);
+	}
+	return coalesce(pieces);
 }
 
 function recoverRange(

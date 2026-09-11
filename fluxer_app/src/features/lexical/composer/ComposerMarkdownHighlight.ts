@@ -6,6 +6,7 @@ import {
 	MarkdownHl,
 	type MarkdownHlFormat,
 	type MarkdownSpan,
+	markSilentMessagePrefix,
 } from '@app/features/lexical/composer/markdownSpans';
 import {$isComposerCommandNode} from '@app/features/lexical/composer/nodes/ComposerCommandNode';
 import {$isComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
@@ -45,6 +46,7 @@ const STYLE_BY_BIT: ReadonlyArray<{bit: number; style: string}> = [
 	{bit: MarkdownHl.subtext, style: 'font-size:0.85em;color:var(--text-muted,var(--text-secondary))'},
 	{bit: MarkdownHl.link, style: 'color:var(--text-link)'},
 	{bit: MarkdownHl.codeBlock, style: 'font-size:0.75em'},
+	{bit: MarkdownHl.silent, style: 'color:var(--markup-mention-text);font-weight:500'},
 ];
 
 const LEXICAL_TEXT_FORMATS: ReadonlyArray<{bit: number; type: TextFormatType}> = [
@@ -77,14 +79,18 @@ function applyMarkdownFormat(node: TextNode, format: MarkdownHlFormat): void {
 	}
 }
 
-export function registerComposerMarkdownHighlight(editor: LexicalEditor, parserFlags?: number): () => void {
+export function registerComposerMarkdownHighlight(
+	editor: LexicalEditor,
+	parserFlags?: number,
+	silentMessagePrefix = false,
+): () => void {
 	return editor.registerNodeTransform(RootNode, (root) => {
 		if (editor.isComposing()) {
 			return;
 		}
 		for (const child of root.getChildren()) {
 			if (child instanceof ParagraphNode) {
-				$reconcileParagraph(child, parserFlags);
+				$reconcileParagraph(child, parserFlags, silentMessagePrefix && child.is(root.getFirstChild()));
 			}
 		}
 	});
@@ -105,7 +111,7 @@ export function $reconcileLineOf(node: TextNode, parserFlags?: number): void {
 	$reconcileParagraph(parent as ParagraphNode, parserFlags);
 }
 
-function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number): void {
+function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number, silentMessagePrefix = false): void {
 	const lines: Array<Array<LexicalNode>> = [];
 	let line: Array<LexicalNode> = [];
 	for (const child of paragraph.getChildren()) {
@@ -119,7 +125,8 @@ function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number): vo
 	lines.push(line);
 	const lineSources = lines.map((nodes) => nodes.map($nodeWireText).join(''));
 	const source = lineSources.join('\n');
-	const spans = computeMarkdownHighlightSpans(source, parserFlags);
+	const markdownSpans = computeMarkdownHighlightSpans(source, parserFlags);
+	const spans = silentMessagePrefix ? markSilentMessagePrefix(markdownSpans, source) : markdownSpans;
 	let lineStart = 0;
 	for (let index = 0; index < lines.length; index += 1) {
 		const nodes = lines[index]!;

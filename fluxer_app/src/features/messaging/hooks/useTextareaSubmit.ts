@@ -26,7 +26,7 @@ import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
+import {canSubmitMessage, hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
 import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -513,7 +513,7 @@ export const useTextareaSubmit = ({
 			);
 			return;
 		}
-		if (!hasVisibleMessageContent(resolvedContent) && uploadAttachmentsLength === 0 && !hasPendingSticker) {
+		if (!canSubmitMessage(resolvedContent, uploadAttachmentsLength > 0 || hasPendingSticker)) {
 			return;
 		}
 		if (replaceCommand) {
