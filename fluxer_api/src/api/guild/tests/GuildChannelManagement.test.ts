@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
@@ -25,6 +26,14 @@ describe('Guild Channel Management', () => {
 	afterEach(async () => {
 		await harness?.shutdown();
 	});
+	async function addGuildFeaturesForTesting(guildId: string, features: Array<string>): Promise<void> {
+		await createBuilder<{
+			success: boolean;
+		}>(harness, '')
+			.post(`/test/guilds/${guildId}/features`)
+			.body({add_features: features})
+			.execute();
+	}
 	describe('Channel Name Updates', () => {
 		test('should normalize channel name with spaces to hyphens', async () => {
 			const account = await createTestAccount(harness);
@@ -582,7 +591,7 @@ describe('Guild Channel Management', () => {
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
 		});
-		test('should reject bitrate above maximum (320000)', async () => {
+		test('should reject bitrate above maximum (384000)', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Test Guild');
 			const voiceChannel = await createChannel(
@@ -594,7 +603,7 @@ describe('Guild Channel Management', () => {
 			);
 			await createBuilder(harness, account.token)
 				.patch(`/channels/${voiceChannel.id}`)
-				.body({type: ChannelTypes.GUILD_VOICE, bitrate: 320001})
+				.body({type: ChannelTypes.GUILD_VOICE, bitrate: 384001})
 				.expect(HTTP_STATUS.BAD_REQUEST)
 				.execute();
 		});
@@ -678,7 +687,7 @@ describe('Guild Channel Management', () => {
 				.execute();
 			expect(data.bitrate).toBe(8000);
 		});
-		test('should accept maximum bitrate (320000)', async () => {
+		test('should clamp bitrate to 96000 without an audio bitrate feature', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Test Guild');
 			const voiceChannel = await createChannel(
@@ -690,9 +699,74 @@ describe('Guild Channel Management', () => {
 			);
 			const data = await createBuilder<ChannelResponse>(harness, account.token)
 				.patch(`/channels/${voiceChannel.id}`)
-				.body({type: ChannelTypes.GUILD_VOICE, bitrate: 320000})
+				.body({type: ChannelTypes.GUILD_VOICE, bitrate: 384000})
 				.execute();
-			expect(data.bitrate).toBe(320000);
+			expect(data.bitrate).toBe(96000);
+		});
+		test('should clamp bitrate to the feature the guild holds', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Test Guild');
+			await addGuildFeaturesForTesting(guild.id, [GuildFeatures.AUDIO_BITRATE_256_KBPS]);
+			const voiceChannel = await createChannel(
+				harness,
+				account.token,
+				guild.id,
+				'voice-channel',
+				ChannelTypes.GUILD_VOICE,
+			);
+			const data = await createBuilder<ChannelResponse>(harness, account.token)
+				.patch(`/channels/${voiceChannel.id}`)
+				.body({type: ChannelTypes.GUILD_VOICE, bitrate: 384000})
+				.execute();
+			expect(data.bitrate).toBe(256000);
+		});
+		test('should accept maximum bitrate (384000) with the 384 kbps feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Test Guild');
+			await addGuildFeaturesForTesting(guild.id, [GuildFeatures.AUDIO_BITRATE_384_KBPS]);
+			const voiceChannel = await createChannel(
+				harness,
+				account.token,
+				guild.id,
+				'voice-channel',
+				ChannelTypes.GUILD_VOICE,
+			);
+			const data = await createBuilder<ChannelResponse>(harness, account.token)
+				.patch(`/channels/${voiceChannel.id}`)
+				.body({type: ChannelTypes.GUILD_VOICE, bitrate: 384000})
+				.execute();
+			expect(data.bitrate).toBe(384000);
+		});
+		test('should store the default bitrate on a new voice channel', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Test Guild');
+			const voiceChannel = await createChannel(
+				harness,
+				account.token,
+				guild.id,
+				'voice-channel',
+				ChannelTypes.GUILD_VOICE,
+			);
+			expect(voiceChannel.bitrate).toBe(64000);
+		});
+		test('should clamp bitrate on create without an audio bitrate feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Test Guild');
+			const data = await createBuilder<ChannelResponse>(harness, account.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({type: ChannelTypes.GUILD_VOICE, name: 'loud-channel', bitrate: 384000})
+				.execute();
+			expect(data.bitrate).toBe(96000);
+		});
+		test('should keep bitrate on create with the 128 kbps feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Test Guild');
+			await addGuildFeaturesForTesting(guild.id, [GuildFeatures.AUDIO_BITRATE_128_KBPS]);
+			const data = await createBuilder<ChannelResponse>(harness, account.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({type: ChannelTypes.GUILD_VOICE, name: 'loud-channel', bitrate: 128000})
+				.execute();
+			expect(data.bitrate).toBe(128000);
 		});
 		test('should accept maximum user limit (99)', async () => {
 			const account = await createTestAccount(harness);
@@ -734,6 +808,7 @@ describe('Guild Channel Management', () => {
 		test('should update both bitrate and user limit together', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Test Guild');
+			await addGuildFeaturesForTesting(guild.id, [GuildFeatures.AUDIO_BITRATE_128_KBPS]);
 			const voiceChannel = await createChannel(
 				harness,
 				account.token,

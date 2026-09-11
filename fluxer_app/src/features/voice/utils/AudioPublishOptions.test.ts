@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
 import {
 	buildMicrophonePublishOptions,
@@ -48,6 +49,15 @@ describe('buildMicrophonePublishOptions', () => {
 			},
 			dtx: false,
 			forceStereo: true,
+			red: true,
+		});
+	});
+	it('pins a call outside a guild to 64 kbps', () => {
+		expect(buildMicrophonePublishOptions(resolveVoiceChannelBitrate(null, null), 'voice')).toEqual({
+			audioPreset: {
+				maxBitrate: 64000,
+				priority: 'high',
+			},
 			red: true,
 		});
 	});

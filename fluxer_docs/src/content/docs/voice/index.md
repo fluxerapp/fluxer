@@ -79,6 +79,8 @@ A call never acks. A refused placement into a direct message or group direct mes
 
 A guild voice channel stores its `bitrate`, `user_limit`, `voice_connection_limit`, and `rtc_region` on the [channel object](/http-api/channels/#channel-object). It also has ordinary messages, pins, and slowmode, so its text history is read and written through the [Messages resource](/http-api/messages/).
 
+A new voice channel stores a `bitrate` of 64000. The ceiling is 96000, and the `AUDIO_BITRATE_128_KBPS`, `AUDIO_BITRATE_256_KBPS`, and `AUDIO_BITRATE_384_KBPS` [guild features](/http-api/guilds/#guild-features) raise it to 128000, 256000, and 384000. A direct message and a group direct message call carry no `bitrate` and always run at 64000.
+
 ### Permissions
 
 | Permission | Effect on voice |

@@ -27348,8 +27348,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -27442,8 +27442,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -27526,8 +27526,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -27610,8 +27610,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -28041,6 +28041,9 @@
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
+					"AUDIO_BITRATE_128_KBPS",
+					"AUDIO_BITRATE_256_KBPS",
+					"AUDIO_BITRATE_384_KBPS",
 					"BANNER",
 					"CLONE_EMOJI_DISABLED",
 					"CLONE_STICKER_DISABLED",
@@ -28071,6 +28074,9 @@
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
 					"Guild can have an animated banner",
+					"Guild can set a voice channel bitrate of up to 128 kbps",
+					"Guild can set a voice channel bitrate of up to 256 kbps",
+					"Guild can set a voice channel bitrate of up to 384 kbps",
 					"Guild can have a banner",
 					"Guild has the in-app one-click emoji clone shortcut disabled for non-members",
 					"Guild has the in-app one-click sticker clone shortcut disabled for non-members",
@@ -28098,7 +28104,7 @@
 					"Guild has large guild overrides enabled",
 					"Guild has increased member capacity enabled"
 				],
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, BANNER, CLONE_EMOJI_DISABLED, CLONE_STICKER_DISABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD (other values allowed)"
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_STICKER_DISABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD (other values allowed)"
 			},
 			"ChannelPartialResponse": {
 				"type": "object",
@@ -30329,8 +30335,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -30397,8 +30403,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -30465,8 +30471,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],
@@ -30533,8 +30539,8 @@
 						"description": "ID of the parent category for this channel"
 					},
 					"bitrate": {
-						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 320000, "format": "int32"}, {"type": "null"}],
-						"description": "Voice channel bitrate in bits per second (8000-320000)"
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000, "format": "int32"}, {"type": "null"}],
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature"
 					},
 					"user_limit": {
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99, "format": "int32"}, {"type": "null"}],

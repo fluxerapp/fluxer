@@ -157,7 +157,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 | topic? | ?string | Channel topic (1-1024 characters) |
 | url?<sup>3</sup> | ?string | Destination URL for a link channel |
 | parent_id?<sup>4</sup> | ?snowflake | Parent category |
-| bitrate?<sup>5</sup> | ?integer | Voice channel bitrate in bits per second (8000-320000, default 64000) |
+| bitrate?<sup>5</sup><sup>11</sup> | ?integer | Voice channel bitrate in bits per second (8000-384000, default 64000) |
 | user_limit?<sup>5</sup><sup>6</sup> | ?integer | Voice channel occupancy limit (0-99, default 0) |
 | voice_connection_limit?<sup>5</sup> | ?integer | Simultaneous voice connections permitted for one user in a voice channel (1-100, default 5) |
 | rate_limit_per_user? | ?integer | Slowmode interval in seconds (0-21600, default 0) |
@@ -186,6 +186,8 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 <sup>9</sup> The value `1` enables the warning on this channel. Every other accepted value stores `0` and inherits from the parent category and then the guild
 
 <sup>10</sup> The value is trimmed, and an empty result is stored as null
+
+<sup>11</sup> The stored value is capped at 96000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap rather than rejected
 
 A value longer than 10000 characters is rejected with `STRING_LENGTH_INVALID` before normalisation runs. A parent that does not exist in this guild returns `INVALID_PARENT_CHANNEL`, and one that is not a category returns `PARENT_MUST_BE_CATEGORY`.
 

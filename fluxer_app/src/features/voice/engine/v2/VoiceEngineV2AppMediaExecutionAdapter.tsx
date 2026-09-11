@@ -6,6 +6,7 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import Channels from '@app/features/channel/state/Channels';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import Guilds from '@app/features/guild/state/Guilds';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {getVoiceContextEntranceSoundScope} from '@app/features/notification/utils/EntranceSoundScopes';
 import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
@@ -117,6 +118,7 @@ import {
 	getActiveVoiceProcessingMode,
 	resolveVoiceProcessingFromStateForDeviceLabel,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
+import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
 import type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2AudioMode,
@@ -606,7 +608,9 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 	}
 
 	private getMicrophonePublishOptions(channelId: string | null): TrackPublishOptions | undefined {
-		const channelBitrate = channelId ? Channels.getChannel(channelId)?.bitrate : null;
+		const channel = channelId ? Channels.getChannel(channelId) : null;
+		const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
+		const channelBitrate = resolveVoiceChannelBitrate(channel?.bitrate, guild?.features);
 		const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
 		return buildMicrophonePublishOptions(channelBitrate, profile.mode);
 	}

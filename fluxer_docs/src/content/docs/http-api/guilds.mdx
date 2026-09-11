@@ -242,7 +242,7 @@ A creation template describes the roles and channels that [Create guild](#create
 | topic? | ?string | Channel topic |
 | position | integer | The sort position of the channel |
 | parent_id?<sup>3</sup> | ?decimal string \| integer | Template-local parent category ID |
-| bitrate?<sup>4</sup> | ?integer | Voice bitrate, defaulting to 64000 for a voice channel |
+| bitrate?<sup>4</sup> | ?integer | Voice bitrate, defaulting to 64000 for a voice channel and capped at 96000 |
 | user_limit?<sup>4</sup> | ?integer | Voice occupancy limit, defaulting to 0 for a voice channel |
 | voice_connection_limit?<sup>4</sup> | ?integer | Per-user voice connection limit, defaulting to 5 for a voice channel |
 | nsfw? | boolean | Whether the channel is age restricted (default false) |
@@ -378,6 +378,9 @@ Each value in the guild's `features` array is a capability or availability flag.
 | --- | --- |
 | ANIMATED_ICON | Guild can use an animated icon |
 | ANIMATED_BANNER | Guild can use an animated banner |
+| AUDIO_BITRATE_128_KBPS<sup>6</sup> | Voice channel bitrate ceiling is raised to 128000 |
+| AUDIO_BITRATE_256_KBPS<sup>6</sup> | Voice channel bitrate ceiling is raised to 256000 |
+| AUDIO_BITRATE_384_KBPS<sup>6</sup> | Voice channel bitrate ceiling is raised to 384000 |
 | BANNER | Guild can use a banner |
 | CLONE_EMOJI_DISABLED<sup>1</sup> | The one-click emoji clone shortcut is disabled for non-members |
 | CLONE_STICKER_DISABLED<sup>1</sup> | The one-click sticker clone shortcut is disabled for non-members |
@@ -414,6 +417,8 @@ Each value in the guild's `features` array is a capability or availability flag.
 <sup>4</sup> An authenticated request whose path opens with `/guilds/{guild_id}` or `/channels/{channel_id}`, where that channel belongs to this guild, is rejected before the operation runs with 403 `MISSING_ACCESS`. `UNAVAILABLE_FOR_EVERYONE` applies to the guild owner exactly as it applies to every other member, while `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` exempts an account with the instance staff flag
 
 <sup>5</sup> The feature raises the default `max_guild_members` limit from 1000000 to 10000000 before the ordered [limit configuration](/http-api/instance/#limit-keys) is checked, so the raised ceiling applies even when no configured rule names the feature
+
+<sup>6</sup> A guild holding none of the three caps a voice channel `bitrate` at 96000. The highest feature the guild holds wins, and a write above the cap is stored at the cap rather than rejected. A guild that loses the feature keeps the stored value, and the next write to `bitrate` lowers it to the cap
 
 ## Custom invite URL object
 

@@ -11,6 +11,7 @@ import {
 	RTC_REGION_ID_MAX_LENGTH,
 	RTC_REGION_ID_MIN_LENGTH,
 	VOICE_CHANNEL_BITRATE_MAX,
+	VOICE_CHANNEL_BITRATE_MAX_STANDARD,
 	VOICE_CHANNEL_BITRATE_MIN,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MAX,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MIN,
@@ -59,7 +60,9 @@ const ChannelCommonBase = z.object({
 		.min(VOICE_CHANNEL_BITRATE_MIN)
 		.max(VOICE_CHANNEL_BITRATE_MAX)
 		.nullish()
-		.describe(`Voice channel bitrate in bits per second (${VOICE_CHANNEL_BITRATE_MIN}-${VOICE_CHANNEL_BITRATE_MAX})`),
+		.describe(
+			`Voice channel bitrate in bits per second (${VOICE_CHANNEL_BITRATE_MIN}-${VOICE_CHANNEL_BITRATE_MAX}), clamped to ${VOICE_CHANNEL_BITRATE_MAX_STANDARD} unless the guild holds an AUDIO_BITRATE feature`,
+		),
 	user_limit: z
 		.number()
 		.int()

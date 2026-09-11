@@ -10,11 +10,13 @@ import {
 	GuildSplashCardAlignment,
 	GuildVerificationLevel,
 	JoinSourceTypes,
+	resolveVoiceChannelBitrate,
 	SystemChannelFlags,
 } from '@fluxer/constants/src/GuildConstants';
 import {
 	MAX_GUILD_CHANNELS,
 	MAX_GUILD_ROLES,
+	VOICE_CHANNEL_BITRATE_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 } from '@fluxer/constants/src/LimitConstants';
 import {DEFAULT_GUILD_FOLDER_ICON} from '@fluxer/constants/src/UserConstants';
@@ -934,7 +936,14 @@ export class GuildOperationsService {
 		addChannel(textCategoryId, ChannelTypes.GUILD_CATEGORY, DEFAULT_TEXT_CATEGORY_NAME, null, 0);
 		addChannel(voiceCategoryId, ChannelTypes.GUILD_CATEGORY, DEFAULT_VOICE_CATEGORY_NAME, null, 1);
 		addChannel(generalChannelId, ChannelTypes.GUILD_TEXT, DEFAULT_TEXT_CHANNEL_NAME, textCategoryId, 0);
-		addChannel(generalVoiceId, ChannelTypes.GUILD_VOICE, DEFAULT_VOICE_CHANNEL_NAME, voiceCategoryId, 0, 64000);
+		addChannel(
+			generalVoiceId,
+			ChannelTypes.GUILD_VOICE,
+			DEFAULT_VOICE_CHANNEL_NAME,
+			voiceCategoryId,
+			0,
+			VOICE_CHANNEL_BITRATE_DEFAULT,
+		);
 		batch.addPrepared(
 			GuildRoles.insert({
 				guild_id: guildId,
@@ -1105,7 +1114,7 @@ export class GuildOperationsService {
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: channel.rate_limit_per_user ?? 0,
-					bitrate: isVoice ? (channel.bitrate ?? 64000) : null,
+					bitrate: isVoice ? resolveVoiceChannelBitrate(channel.bitrate, null) : null,
 					user_limit: isVoice ? (channel.user_limit ?? 0) : null,
 					voice_connection_limit: isVoice
 						? (channel.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT)

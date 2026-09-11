@@ -41,6 +41,21 @@ export const GuildFeatureSchema = withOpenApiType(
 		[
 			[GuildFeatures.ANIMATED_ICON, 'ANIMATED_ICON', 'Guild can have an animated icon'],
 			[GuildFeatures.ANIMATED_BANNER, 'ANIMATED_BANNER', 'Guild can have an animated banner'],
+			[
+				GuildFeatures.AUDIO_BITRATE_128_KBPS,
+				'AUDIO_BITRATE_128_KBPS',
+				'Guild can set a voice channel bitrate of up to 128 kbps',
+			],
+			[
+				GuildFeatures.AUDIO_BITRATE_256_KBPS,
+				'AUDIO_BITRATE_256_KBPS',
+				'Guild can set a voice channel bitrate of up to 256 kbps',
+			],
+			[
+				GuildFeatures.AUDIO_BITRATE_384_KBPS,
+				'AUDIO_BITRATE_384_KBPS',
+				'Guild can set a voice channel bitrate of up to 384 kbps',
+			],
 			[GuildFeatures.BANNER, 'BANNER', 'Guild can have a banner'],
 			[
 				GuildFeatures.CLONE_EMOJI_DISABLED,

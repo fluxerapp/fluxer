@@ -14,6 +14,9 @@ use maud::{Markup, html};
 const GUILD_FEATURES: &[&str] = &[
     "ANIMATED_ICON",
     "ANIMATED_BANNER",
+    "AUDIO_BITRATE_128_KBPS",
+    "AUDIO_BITRATE_256_KBPS",
+    "AUDIO_BITRATE_384_KBPS",
     "BANNER",
     "CLONE_EMOJI_DISABLED",
     "CLONE_STICKER_DISABLED",

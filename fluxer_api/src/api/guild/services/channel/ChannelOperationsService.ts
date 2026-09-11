@@ -2,7 +2,7 @@
 
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {ContentWarningLevel, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {ContentWarningLevel, GuildFeatures, resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
 import {
 	MAX_CHANNELS_PER_CATEGORY,
 	MAX_GUILD_CHANNELS,
@@ -119,12 +119,16 @@ export class ChannelOperationsService {
 			);
 		}
 		let channelName = params.data.name;
-		if (params.data.type === ChannelTypes.GUILD_TEXT) {
+		let guildFeatures: Array<string> | null = null;
+		if (params.data.type === ChannelTypes.GUILD_TEXT || params.data.type === ChannelTypes.GUILD_VOICE) {
 			const guildData = await this.gatewayService.getGuildData({
 				guildId: params.guildId,
 				userId: params.userId,
 			});
-			const hasFlexibleNamesEnabled = guildData.features.includes(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES);
+			guildFeatures = guildData.features;
+		}
+		if (params.data.type === ChannelTypes.GUILD_TEXT) {
+			const hasFlexibleNamesEnabled = (guildFeatures ?? []).includes(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES);
 			if (!hasFlexibleNamesEnabled) {
 				channelName = ChannelNameType.parse(channelName);
 			}
@@ -156,7 +160,10 @@ export class ChannelOperationsService {
 			content_warning_level: requestedContentWarningLevel,
 			content_warning_text: requestedContentWarningText,
 			rate_limit_per_user: params.data.rate_limit_per_user ?? 0,
-			bitrate: params.data.type === ChannelTypes.GUILD_VOICE ? (params.data.bitrate ?? 64000) : null,
+			bitrate:
+				params.data.type === ChannelTypes.GUILD_VOICE
+					? resolveVoiceChannelBitrate(params.data.bitrate, guildFeatures)
+					: null,
 			user_limit: params.data.type === ChannelTypes.GUILD_VOICE ? (params.data.user_limit ?? 0) : null,
 			voice_connection_limit:
 				params.data.type === ChannelTypes.GUILD_VOICE

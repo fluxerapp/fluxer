@@ -370,7 +370,7 @@ Every field is optional, and an omitted field preserves its current value. The f
 | topic?<sup>2</sup> | ?string | The topic of the channel (1-1,024 characters), or null to clear it |
 | url?<sup>3</sup> | ?string | The destination of a guild link channel (1-2,048 characters, `http` or `https`), or null to clear it |
 | parent_id?<sup>4</sup> | ?snowflake | The ID of the parent category, where null or the snowflake `0` moves the channel to the top level |
-| bitrate?<sup>5</sup> | ?integer | The voice bitrate in bits per second (8,000-320,000) |
+| bitrate?<sup>5</sup><sup>13</sup> | ?integer | The voice bitrate in bits per second (8,000-384,000) |
 | user_limit?<sup>5</sup> | ?integer | The voice occupancy limit (0-99, where `0` configures no limit) |
 | voice_connection_limit?<sup>5</sup> | ?integer | The number of simultaneous voice connections one user may hold (1-100) |
 | permission_overwrites?<sup>6</sup> | array[[permission overwrite](#permission-overwrite-object) object] | The complete overwrite collection that replaces the stored one |
@@ -404,6 +404,8 @@ Every field is optional, and an omitted field preserves its current value. The f
 <sup>11</sup> Applied only to a guild text or voice channel. An explicit null preserves the current interval
 
 <sup>12</sup> Applied only to a guild voice channel. Supplying the field at all, including as null, requires [UPDATE_RTC_REGION](/http-api/permissions/)
+
+<sup>13</sup> The stored value is capped at 96,000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap rather than rejected
 
 A `url` that is not an absolute `http` or `https` URL with a host returns 400 `INVALID_FORM_BODY` with the code `INVALID_URL_FORMAT` on the path `url`.
 

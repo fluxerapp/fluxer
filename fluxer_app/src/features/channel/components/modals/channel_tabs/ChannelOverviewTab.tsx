@@ -16,8 +16,10 @@ import {MatureContentSection} from '@app/features/channel/components/modals/chan
 import {RtcRegionSelect} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect';
 import {SlowmodeControl} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl';
 import {
+	BITRATE_KBPS_DEFAULT,
 	CHANNEL_OVERVIEW_TAB_ID,
 	type FormInputs,
+	getMaxBitrateKbps,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import {
 	VoiceConnectionLimitControl,
@@ -81,6 +83,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 		guildId !== null ? Permission.can(Permissions.UPDATE_RTC_REGION, {guildId, channelId}) : false;
 	const canManageChannel = guildId !== null ? Permission.can(Permissions.MANAGE_CHANNELS, {guildId, channelId}) : false;
 	const isVoiceChannel = channel?.type === ChannelTypes.GUILD_VOICE;
+	const maxBitrateKbps = getMaxBitrateKbps(guild?.features);
 	const [rtcRegions, setRtcRegions] = useState<Array<ChannelRtcRegion>>([]);
 	const [isLoadingRegions, setIsLoadingRegions] = useState(false);
 	const form = useForm<FormInputs>({
@@ -92,7 +95,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 			nsfw_override: null,
 			content_warning_level: ContentWarningLevel.INHERIT,
 			content_warning_text: '',
-			bitrate: 64,
+			bitrate: BITRATE_KBPS_DEFAULT,
 			user_limit: 0,
 			voice_connection_limit: VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 			rtc_region: null,
@@ -107,7 +110,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 				nsfw_override: channel.nsfwOverride,
 				content_warning_level: channel.contentWarningLevel ?? ContentWarningLevel.INHERIT,
 				content_warning_text: channel.contentWarningText ?? '',
-				bitrate: channel.bitrate ? Math.round(channel.bitrate / 1000) : 64,
+				bitrate: Math.min(channel.bitrate ? Math.round(channel.bitrate / 1000) : BITRATE_KBPS_DEFAULT, maxBitrateKbps),
 				user_limit: channel.userLimit ?? 0,
 				voice_connection_limit: channel.voiceConnectionLimit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 				rtc_region: channel.rtcRegion ?? null,
@@ -184,7 +187,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 					updateData.rate_limit_per_user = data.slowmode;
 				}
 				if (channel.type === ChannelTypes.GUILD_VOICE) {
-					updateData.bitrate = (data.bitrate ?? 64) * 1000;
+					updateData.bitrate = Math.min(data.bitrate ?? BITRATE_KBPS_DEFAULT, maxBitrateKbps) * 1000;
 					updateData.user_limit = data.user_limit;
 					updateData.voice_connection_limit = data.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT;
 				} else if (channel.type === ChannelTypes.GUILD_LINK) {
@@ -216,7 +219,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 				nsfw_override: data.nsfw_override,
 				content_warning_level: data.content_warning_level,
 				content_warning_text: data.content_warning_text ?? '',
-				bitrate: data.bitrate ?? currentValues.bitrate ?? 64,
+				bitrate: Math.min(data.bitrate ?? currentValues.bitrate ?? BITRATE_KBPS_DEFAULT, maxBitrateKbps),
 				user_limit: data.user_limit ?? currentValues.user_limit ?? 0,
 				voice_connection_limit:
 					data.voice_connection_limit ?? currentValues.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
@@ -224,7 +227,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 			});
 			ToastCommands.createToast({type: 'success', children: <Trans>Channel updated</Trans>});
 		},
-		[canManageChannel, canUpdateRtcRegion, channel, form, commitRemoteValues],
+		[canManageChannel, canUpdateRtcRegion, channel, form, commitRemoteValues, maxBitrateKbps],
 	);
 	const {handleSubmit: handleSave} = useFormSubmit({
 		form,
@@ -309,7 +312,11 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 				{showVoiceSection && (
 					<div className={styles.settingsGroup} data-flx="channel.channel-tabs.channel-overview-tab.settings-group--3">
 						{canManageChannel && (
-							<VoiceSettings form={form} data-flx="channel.channel-tabs.channel-overview-tab.voice-settings" />
+							<VoiceSettings
+								form={form}
+								maxBitrateKbps={maxBitrateKbps}
+								data-flx="channel.channel-tabs.channel-overview-tab.voice-settings"
+							/>
 						)}
 						{canUpdateRtcRegion && (
 							<RtcRegionSelect

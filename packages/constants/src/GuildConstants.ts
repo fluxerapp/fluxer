@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	VOICE_CHANNEL_BITRATE_DEFAULT,
+	VOICE_CHANNEL_BITRATE_MAX_128_KBPS,
+	VOICE_CHANNEL_BITRATE_MAX_256_KBPS,
+	VOICE_CHANNEL_BITRATE_MAX_384_KBPS,
+	VOICE_CHANNEL_BITRATE_MAX_STANDARD,
+	VOICE_CHANNEL_BITRATE_MIN,
+} from '@fluxer/constants/src/LimitConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
 export const GuildVerificationLevel = {
@@ -97,6 +105,9 @@ export const CONTENT_WARNING_TEXT_MAX_LENGTH = 200;
 export const GuildFeatures = {
 	ANIMATED_ICON: 'ANIMATED_ICON',
 	ANIMATED_BANNER: 'ANIMATED_BANNER',
+	AUDIO_BITRATE_128_KBPS: 'AUDIO_BITRATE_128_KBPS',
+	AUDIO_BITRATE_256_KBPS: 'AUDIO_BITRATE_256_KBPS',
+	AUDIO_BITRATE_384_KBPS: 'AUDIO_BITRATE_384_KBPS',
 	BANNER: 'BANNER',
 	CLONE_EMOJI_DISABLED: 'CLONE_EMOJI_DISABLED',
 	CLONE_STICKER_DISABLED: 'CLONE_STICKER_DISABLED',
@@ -126,6 +137,37 @@ export const GuildFeatures = {
 } as const;
 
 export type GuildFeature = ValueOf<typeof GuildFeatures>;
+
+export function getMaxVoiceChannelBitrate(features: Iterable<string> | null | undefined): number {
+	if (features == null) {
+		return VOICE_CHANNEL_BITRATE_MAX_STANDARD;
+	}
+	let maximum = VOICE_CHANNEL_BITRATE_MAX_STANDARD;
+	for (const feature of features) {
+		if (feature === GuildFeatures.AUDIO_BITRATE_384_KBPS) {
+			maximum = Math.max(maximum, VOICE_CHANNEL_BITRATE_MAX_384_KBPS);
+		} else if (feature === GuildFeatures.AUDIO_BITRATE_256_KBPS) {
+			maximum = Math.max(maximum, VOICE_CHANNEL_BITRATE_MAX_256_KBPS);
+		} else if (feature === GuildFeatures.AUDIO_BITRATE_128_KBPS) {
+			maximum = Math.max(maximum, VOICE_CHANNEL_BITRATE_MAX_128_KBPS);
+		}
+	}
+	return maximum;
+}
+
+export function clampVoiceChannelBitrate(bitrate: number, features: Iterable<string> | null | undefined): number {
+	return Math.min(Math.max(bitrate, VOICE_CHANNEL_BITRATE_MIN), getMaxVoiceChannelBitrate(features));
+}
+
+export function resolveVoiceChannelBitrate(
+	bitrate: number | null | undefined,
+	features: Iterable<string> | null | undefined,
+): number {
+	if (typeof bitrate !== 'number' || !Number.isFinite(bitrate) || bitrate <= 0) {
+		return VOICE_CHANNEL_BITRATE_DEFAULT;
+	}
+	return clampVoiceChannelBitrate(Math.round(bitrate), features);
+}
 
 export const JoinSourceTypes = {
 	CREATOR: 0,

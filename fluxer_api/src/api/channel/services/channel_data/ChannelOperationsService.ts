@@ -7,7 +7,7 @@ import {
 	GUILD_TEXT_BASED_CHANNEL_TYPES,
 	Permissions,
 } from '@fluxer/constants/src/ChannelConstants';
-import {ContentWarningLevel, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {ContentWarningLevel, clampVoiceChannelBitrate, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
@@ -260,13 +260,17 @@ export class ChannelOperationsService {
 				validateCapacity: requestedParentId !== null && requestedParentId !== (channel.parentId ?? null),
 			});
 		}
+		let nextBitrate = channel.bitrate;
+		if (data.bitrate !== undefined && channel.type === ChannelTypes.GUILD_VOICE) {
+			nextBitrate = data.bitrate === null ? null : clampVoiceChannelBitrate(data.bitrate, guild.features ?? []);
+		}
 		const updatedChannelData = {
 			...channel.toRow(),
 			name: channelName,
 			topic: data.topic !== undefined ? data.topic : channel.topic,
 			url: data.url !== undefined && channel.type === ChannelTypes.GUILD_LINK ? data.url : channel.url,
 			parent_id: requestedParentId,
-			bitrate: data.bitrate !== undefined && channel.type === ChannelTypes.GUILD_VOICE ? data.bitrate : channel.bitrate,
+			bitrate: nextBitrate,
 			user_limit:
 				data.user_limit !== undefined && channel.type === ChannelTypes.GUILD_VOICE
 					? data.user_limit

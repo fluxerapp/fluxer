@@ -143,6 +143,21 @@ const VERIFIED_GUILD_DESCRIPTOR = msg({
 	message: 'Verified community',
 	comment: 'Audit log community feature label for verified communities.',
 });
+const AUDIO_BITRATE_128_KBPS_DESCRIPTOR = msg({
+	message: '128 kbps voice quality',
+	comment:
+		'Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.',
+});
+const AUDIO_BITRATE_256_KBPS_DESCRIPTOR = msg({
+	message: '256 kbps voice quality',
+	comment:
+		'Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.',
+});
+const AUDIO_BITRATE_384_KBPS_DESCRIPTOR = msg({
+	message: '384 kbps voice quality',
+	comment:
+		'Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.',
+});
 const VIP_VOICE_DESCRIPTOR = msg({
 	message: 'VIP voice',
 	comment: 'Audit log community feature label for elevated voice capacity/quality.',
@@ -404,6 +419,9 @@ export function getSplashAlignmentLabel(value: unknown, i18n: I18n): string | nu
 const featureLabelMap: Record<string, MessageDescriptor> = {
 	[GuildFeatures.ANIMATED_ICON]: ANIMATED_ICON_DESCRIPTOR,
 	[GuildFeatures.ANIMATED_BANNER]: ANIMATED_BANNER_DESCRIPTOR,
+	[GuildFeatures.AUDIO_BITRATE_128_KBPS]: AUDIO_BITRATE_128_KBPS_DESCRIPTOR,
+	[GuildFeatures.AUDIO_BITRATE_256_KBPS]: AUDIO_BITRATE_256_KBPS_DESCRIPTOR,
+	[GuildFeatures.AUDIO_BITRATE_384_KBPS]: AUDIO_BITRATE_384_KBPS_DESCRIPTOR,
 	[GuildFeatures.BANNER]: BANNER_DESCRIPTOR,
 	[GuildFeatures.CLONE_EMOJI_DISABLED]: EMOJI_CLONING_DISABLED_DESCRIPTOR,
 	[GuildFeatures.CLONE_STICKER_DISABLED]: STICKER_CLONING_DISABLED_DESCRIPTOR,
