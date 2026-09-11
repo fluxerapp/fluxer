@@ -20,7 +20,7 @@ msgstr "... activer le mode dense. Chouette !"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:59
+#: src/features/channel/components/UserMessage.tsx:61
 msgid "(edited)"
 msgstr "(modifié)"
 
@@ -461,7 +461,7 @@ msgstr "{count, plural, one {En appel} other {# en appel}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Rejoindre l'appel vidéo (1 participant)} other {Rejoindre l'appel vidéo (# participants)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:655
+#: src/features/voice/components/VoiceParticipantTile.tsx:656
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Continuer à regarder # stream et ajouter celui-ci} other {Continuer à regarder # streams et ajouter celui-ci}}"
 
@@ -2271,7 +2271,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Ajouter un bot à une communauté avec les autorisations demandées"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:91
 msgid "Add a comment (optional)"
 msgstr "Ajouter un commentaire (facultatif)"
 
@@ -2311,7 +2311,7 @@ msgstr "Ajouter un tag"
 msgid "Add a tag and press Enter"
 msgstr "Ajoutez un tag et appuyez sur Entrée"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
 msgid "Add a topic to this channel"
 msgstr "Ajouter un sujet à ce salon"
 
@@ -3747,7 +3747,7 @@ msgid "Apply theme"
 msgstr "Appliquer le thème"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:145
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "Appliquer à toutes les communautés"
 
@@ -4439,7 +4439,7 @@ msgstr "Envoyer automatiquement les GIF depuis le sélecteur sans confirmation"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF behavior preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:37
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:40
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:11
 msgid "Automatically send GIFs when selected"
 msgstr "Envoyer automatiquement les GIF sélectionnés"
@@ -5657,7 +5657,7 @@ msgstr "Impossible de charger des fichiers ici"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:635
+#: src/features/messaging/components/modals/ForwardModal.tsx:636
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -6644,7 +6644,7 @@ msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "Choisissez hCaptcha ou Cloudflare Turnstile pour les défis d'inscription."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
 msgid "Choose how chat moves after you send a message"
 msgstr "Choisissez comment le fil de discussion se déplace après l’envoi d’un message"
 
@@ -6982,7 +6982,7 @@ msgstr "Effacer les maquettes de pièces jointes"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Effacer la commande"
@@ -7004,6 +7004,11 @@ msgstr "Effacer toutes les réactions de ce message ?"
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:86
 msgid "Clear friends search"
 msgstr "Effacer la recherche d'amis"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+msgid "Clear message text"
+msgstr "Effacer le texte des messages"
 
 #. Developer-mode action that removes a mock for one attachment.
 #: src/features/ui/action_menu/MediaContextMenu.tsx:42
@@ -7098,6 +7103,11 @@ msgstr "A effacé le sujet."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
 msgid "Clearer text"
 msgstr "Texte plus clair"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+msgid "Clearing the text of a message with attachments asks to delete the message unless this is on"
+msgstr "Effacer le texte d'un message avec des pièces jointes demande de supprimer le message, sauf si cette option est activée"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
@@ -7557,17 +7567,17 @@ msgid "Commands"
 msgstr "Commandes"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:63
+#: src/features/messaging/components/modals/ForwardModal.tsx:64
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Les commentaires sont désactivés car un ou plusieurs des salons sélectionnés ont le mode lent activé. Le commentaire serait bloqué par le mode lent juste après le transfert."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Les commentaires sont désactivés, car le mode lent est activé dans {forwardChannelDisplayName}. Le commentaire serait bloqué par le mode lent juste après le transfert."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Les commentaires ne sont pas disponibles lorsque le mode lent est activé."
 
@@ -7741,7 +7751,7 @@ msgstr "Nom de la communauté"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "Surnom de la communauté"
@@ -7794,7 +7804,7 @@ msgid "Community profile"
 msgstr "Profil de la communauté"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
 msgid "Community profile updated"
 msgstr "Profil de la communauté mis à jour"
 
@@ -7916,7 +7926,7 @@ msgstr "Bouton Composer"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:190
 msgid "Composer buttons"
 msgstr "Boutons de composition"
@@ -7928,7 +7938,7 @@ msgstr "Mise au point du compositeur"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Configure"
 msgstr "Configurer"
@@ -8002,7 +8012,7 @@ msgstr "Configurer votre badge de profil"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx:181
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
 msgid "Confirm"
 msgstr "Confirmer"
 
@@ -8054,7 +8064,7 @@ msgid "Confirm voice join"
 msgstr "Confirmer la participation vocale"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
 msgid "Confirmation"
 msgstr "Confirmation"
 
@@ -9152,7 +9162,7 @@ msgid "Couldn't ring this person"
 msgstr "Impossible d'appeler cette personne"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:46
+#: src/features/messaging/hooks/useTextareaSubmit.ts:48
 msgid "Couldn't run that command: {detail}"
 msgstr "Impossible d'exécuter cette commande : {detail}"
 
@@ -10567,6 +10577,11 @@ msgstr "Supprimer les messages des autres membres. L'épinglage est géré sépa
 msgid "Delete passkey"
 msgstr "Supprimer la clé d'accès"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+msgid "Delete prompt"
+msgstr "Supprimer"
+
 #. Button or menu action label in the application info section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:56
 msgid "Delete redirect URI"
@@ -11513,7 +11528,7 @@ msgstr "Mode d'affichage"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "Nom affiché"
@@ -11646,7 +11661,7 @@ msgstr "Voulez-vous aussi bloquer les messages directs des membres de vos commun
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:53
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Doc, je viens du futur. Je suis venu ici dans une machine à voyager dans le temps que vous avez inventée. Maintenant, j'ai besoin de votre aide pour retourner en 1985."
 
@@ -12280,7 +12295,7 @@ msgid "Edit translation provider"
 msgstr "Modifier le fournisseur de traduction"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
 msgid "Edit your profile appearance and see a live preview"
 msgstr "Modifiez l'apparence de votre profil et voyez un aperçu en direct"
 
@@ -12501,7 +12516,7 @@ msgid "Emoji autocomplete"
 msgstr "Suggestions d’émojis"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
 msgid "Emoji button"
 msgstr "Bouton emoji"
 
@@ -12580,6 +12595,11 @@ msgstr "Émoticône"
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:142
 msgid "Emoticons"
 msgstr "Émoticônes"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+msgid "Empty edit"
+msgstr "Modification vide"
 
 #. Short label in the app layout favorites channel list content.
 #: src/features/app/components/layout/FavoritesChannelListContent.tsx:70
@@ -12794,7 +12814,7 @@ msgid "Enable self-hosted mode client-side. Hides all premium and billing UI."
 msgstr "Activer le mode auto-hébergé côté client. Masque toutes les interfaces utilisateur premium et de facturation."
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:57
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
 msgid "Enable Shift to expand"
 msgstr "Activer Maj pour développer"
 
@@ -13937,12 +13957,12 @@ msgid "Failed to send code. Try again."
 msgstr "Échec de l'envoi du code. Veuillez réessayer."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:67
+#: src/features/channel/components/UserMessage.tsx:69
 msgid "Failed to send message."
 msgstr "Échec de l'envoi du message."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:63
+#: src/features/channel/components/UserMessage.tsx:65
 msgid "Failed to send message. Hold for options."
 msgstr "Échec de l'envoi du message. Maintenez appuyé pour les options."
 
@@ -14714,7 +14734,7 @@ msgstr "Transférer le média"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:78
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Forward message"
 msgstr "Transférer le message"
 
@@ -15112,7 +15132,7 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
 msgid "GIF button"
 msgstr "Bouton GIF"
 
@@ -15968,7 +15988,7 @@ msgid "Hide avatars"
 msgstr "Masquer les avatars"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:507
 msgid "Hide channels you've muted from community sidebars"
 msgstr "Masquer les salons masqués des barres latérales de la communauté"
 
@@ -16020,7 +16040,7 @@ msgid "Hide members"
 msgstr "Masquer les membres"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:499
 msgid "Hide muted"
 msgstr "Masquer les discussions mises en sourdine"
 
@@ -16031,13 +16051,13 @@ msgstr "Masquer les chaînes mises en sourdine"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:137
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:487
 msgid "Hide muted channels by default"
 msgstr "Masquer les salons mis en sourdine par défaut"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:141
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
 msgid "Hide muted channels by default?"
 msgstr "Masquer les salons mis en sourdine par défaut ?"
 
@@ -17071,7 +17091,7 @@ msgstr "Saisie et texte"
 msgid "Inputs with icons"
 msgstr "Champs avec icônes"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:36
 msgid "Insert emoji"
 msgstr "Insérer un émoji"
 
@@ -17749,7 +17769,7 @@ msgid "Jump to message"
 msgstr "Aller au message"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:54
+#: src/features/channel/components/UserMessage.tsx:56
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Aller au message de {displayName}, envoyé le {formattedDate}"
 
@@ -17830,6 +17850,18 @@ msgstr "Laisser {productName} en arrière-plan quand la fenêtre est fermée"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:377
 msgid "Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused."
 msgstr "Conserver les animations, la lecture des GIF, les effets de survol et les info-bulles lorsqu'une fenêtre est inactive."
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+msgid "Keep attachments"
+msgstr "Conserver les pièces jointes"
+
+#. Label for an advanced message editing preference.
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:15
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+msgid "Keep attachments when clearing an edit"
+msgstr "Conserver les pièces jointes lors de la suppression d'une modification"
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18863,7 +18895,7 @@ msgstr "Mise à jour manuelle de l’application de bureau"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
 msgid "Mark all as read"
 msgstr "Tout marquer comme lu"
 
@@ -18885,7 +18917,7 @@ msgid "Mark all inbox channels as read"
 msgstr "Marquer toutes les conversations comme lues"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:483
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "Marquer immédiatement toutes les chaînes non lues de la boîte de réception comme lues, sans demander de confirmation"
 
@@ -19628,7 +19660,12 @@ msgstr "Mode d'affichage des messages"
 msgid "Message display settings are only available on desktop."
 msgstr "Les paramètres d'affichage des messages ne sont disponibles que sur ordinateur."
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:306
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+msgid "Message editing"
+msgstr "Modification des messages"
+
+#: src/features/messaging/components/modals/ForwardModal.tsx:307
 msgid "Message forwarded"
 msgstr "Message transféré"
 
@@ -19670,14 +19707,14 @@ msgstr "Saisie de message"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:194
 msgid "Message input buttons"
 msgstr "Boutons de saisie de message"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:49
+#: src/features/messaging/components/modals/ForwardModal.tsx:50
 #: src/features/ui/character_counter/CharacterCountMessages.ts:15
 msgid "Message is too long"
 msgstr "Message trop long"
@@ -20503,7 +20540,7 @@ msgstr "masqué"
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:20
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
 #: src/features/voice/components/voice_participant_tile/shared.ts:98
 #: src/lib/overlay/OverlayContextMenu.tsx:24
@@ -20517,7 +20554,7 @@ msgstr "Désactivé par les modérateurs"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
 msgid "Muted channels"
 msgstr "Salons masqués"
@@ -20884,20 +20921,20 @@ msgid "New category"
 msgstr "Nouvelle catégorie"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:149
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "New communities only"
 msgstr "Nouvelles communautés uniquement"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:640
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:650
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "Les nouveaux groupes que vous rejoignez auront automatiquement leurs salons masqués mis en sourdine. Souhaitez-vous également appliquer ce paramètre à tous vos groupes existants ?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:671
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:681
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Les salons mis en sourdine des nouvelles communautés que vous rejoindrez ne seront plus masqués automatiquement. Souhaitez-vous également afficher les salons mis en sourdine dans toutes vos communautés existantes ?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:503
 msgid "New community muted"
 msgstr "Nouvelle communauté masquée"
 
@@ -21184,7 +21221,7 @@ msgstr "Aucune modification à enregistrer"
 msgid "No channels available"
 msgstr "Aucun salon disponible"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:425
+#: src/features/messaging/components/modals/ForwardModal.tsx:426
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Aucun salon trouvé"
@@ -22113,7 +22150,7 @@ msgstr "Seulement ceux sélectionnés"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Seuls les membres Visionary peuvent rejoindre cette communauté. Votre accès a peut-être changé depuis l’ouverture de cet écran."
 
-#: src/features/channel/components/UserMessage.tsx:427
+#: src/features/channel/components/UserMessage.tsx:429
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Seul vous pouvez voir ce message. <0>Ignorer</0>"
 
@@ -22352,7 +22389,7 @@ msgid "Open emoji in browser"
 msgstr "Ouvrir l'emoji dans le navigateur"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:94
+#: src/features/messaging/components/modals/ForwardModal.tsx:95
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Ouvrir le sélecteur d'emojis"
@@ -23402,7 +23439,7 @@ msgid "Pick what appears when you type a colon in the message input"
 msgstr "Choisissez ce qui s’affiche lorsque vous tapez deux-points dans la zone de saisie du message"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
 msgid "Pick which buttons show in the message input"
 msgstr "Choisissez les boutons à afficher dans la zone de saisie des messages"
 
@@ -24174,18 +24211,18 @@ msgstr "Couleur du profil"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "Personnalisation du profil"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
 msgid "Profile customization for {selectedGuildName}"
 msgstr "Personnalisation du profil pour {selectedGuildName}"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
 msgid "Profile customization form"
 msgstr "Formulaire de personnalisation du profil"
 
@@ -24250,7 +24287,7 @@ msgid "Profile type"
 msgstr "Type de profil"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
 msgid "Profile updated"
 msgstr "Profil mis à jour"
 
@@ -24275,7 +24312,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "Promotion ou instructions encourageant l'automutilation ou les troubles alimentaires."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
 msgid "Prompt"
 msgstr "Invite"
 
@@ -24287,7 +24324,7 @@ msgstr "Demander la confirmation pour les nouveaux périphériques audio."
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -26802,7 +26839,7 @@ msgstr "Enregistrer le favori"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF storage preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:41
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:47
 msgid "Save GIF favorites as saved media"
 msgstr "Enregistrer les GIF favoris en tant que médias enregistrés"
@@ -26953,7 +26990,7 @@ msgid "Screen share encoder controls"
 msgstr "Commandes de l’encodeur de partage d’écran"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Partage d’écran terminé"
@@ -27105,15 +27142,15 @@ msgstr "Faites défiler pour voir tous les avantages inclus avec {premiumProduct
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:29
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:178
 msgid "Scroll to bottom"
 msgstr "Faire défiler vers le bas"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:129
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
 msgid "Scroll to bottom when sending a message"
 msgstr "Faire défiler vers le bas lors de l'envoi d'un message"
 
@@ -27182,7 +27219,7 @@ msgid "Search channels"
 msgstr "Rechercher des chaînes"
 
 #. Placeholder text in the channel picker search input of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Search channels or DMs"
 msgstr "Rechercher des salons ou des messages directs"
 
@@ -27776,7 +27813,7 @@ msgid "Send"
 msgstr "Envoyer"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:98
+#: src/features/messaging/components/modals/ForwardModal.tsx:99
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Envoyer ({selectedCount}/{selectionLimit})"
 
@@ -27826,7 +27863,7 @@ msgstr "Envoyer un autre signalement"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:170
 msgid "Send button"
 msgstr "Bouton d'envoi"
@@ -27844,7 +27881,7 @@ msgstr "Envoyer le signalement DSA"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:113
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
 msgid "Send file messages in order"
 msgstr "Envoyer les messages de fichiers dans l'ordre"
@@ -28049,7 +28086,7 @@ msgstr "a envoyé un aperçu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:182
 msgid "Sent messages"
 msgstr "Messages envoyés"
@@ -28589,7 +28626,7 @@ msgid "Shortcuts"
 msgstr "Raccourcis"
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:53
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 msgid "Shorten the message and try again."
 msgstr "Raccourcissez le message et réessayez."
 
@@ -28647,7 +28684,7 @@ msgid "Show active now on the home screen to surface friends active in voice. Yo
 msgstr "Affichez \" Actif maintenant \" sur l'écran d'accueil pour voir les amis en ligne. Vous verrez un aperçu, le contexte du salon, qui est déjà là et un moyen rapide de les rejoindre."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
 msgid "Show attachment expiry indicator"
 msgstr "Afficher l'indicateur d'expiration des pièces jointes"
 
@@ -28698,7 +28735,7 @@ msgid "Show creation date instead of expiration date"
 msgstr "Afficher la date de création au lieu de la date d'expiration"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:89
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
 msgid "Show custom emojis in expression autocomplete"
 msgstr "Afficher les emojis personnalisés dans la saisie semi-automatique des expressions"
 
@@ -28708,17 +28745,17 @@ msgid "Show default avatar, ignoring your global profile"
 msgstr "Afficher l'avatar par défaut, en ignorant votre profil global"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:85
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
 msgid "Show default emojis in expression autocomplete"
 msgstr "Afficher les emojis par défaut dans la saisie semi-automatique des expressions"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:69
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
 msgid "Show delete button"
 msgstr "Afficher le bouton de suppression"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
 msgid "Show download button"
 msgstr "Afficher le bouton de téléchargement"
 
@@ -28745,7 +28782,7 @@ msgstr "Afficher les aperçus des liens et les contenus intégrés"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:121
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show emoji button"
 msgstr "Afficher le bouton emoji"
 
@@ -28755,7 +28792,7 @@ msgid "Show emoji reactions on messages"
 msgstr "Afficher les réactions emoji sur les messages"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
 msgid "Show favorite button"
 msgstr "Afficher le bouton \"Favoris\""
 
@@ -28777,14 +28814,14 @@ msgid "Show focus ring on chat textarea"
 msgstr "Afficher l'anneau de focus sur la zone de texte du chat"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
 msgid "Show GIF indicator"
 msgstr "Afficher l'indicateur GIF"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:101
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "Afficher le bouton GIF"
 
@@ -28794,7 +28831,7 @@ msgid "Show icon when collapsed"
 msgstr "Afficher l'icône lorsque le dossier est réduit"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:157
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 msgid "Show in all communities"
 msgstr "Afficher dans toutes les communautés"
 
@@ -28833,7 +28870,7 @@ msgstr "Afficher 5 max (+5 badge)"
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:105
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show media button"
 msgstr "Afficher le bouton média"
 
@@ -28854,7 +28891,7 @@ msgid "Show menu bar icon"
 msgstr "Afficher l'icône dans la barre de menus"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:45
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
 msgid "Show message action bar"
 msgstr "Afficher la barre d'actions des messages"
 
@@ -28937,7 +28974,7 @@ msgid "Show oldest messages first"
 msgstr "Afficher les messages les plus anciens en premier"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:49
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
 msgid "Show only more button"
 msgstr "Afficher uniquement le bouton Plus"
 
@@ -28962,7 +28999,7 @@ msgid "Show profile timezone settings"
 msgstr "Afficher les paramètres de fuseau horaire du profil"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:53
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show quick reactions"
 msgstr "Afficher les réactions rapides"
 
@@ -28972,7 +29009,7 @@ msgid "Show rich previews for YouTube links."
 msgstr "Afficher des aperçus enrichis pour les liens YouTube."
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:97
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
 msgid "Show saved media in expression autocomplete"
 msgstr "Afficher les médias enregistrés dans la saisie semi-automatique des expressions"
 
@@ -28981,7 +29018,7 @@ msgstr "Afficher les médias enregistrés dans la saisie semi-automatique des ex
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show send button"
 msgstr "Afficher le bouton d'envoi"
 
@@ -28993,12 +29030,12 @@ msgstr "Afficher le contenu masqué au clic"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:117
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show stickers button"
 msgstr "Afficher le bouton des stickers"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:93
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
 msgid "Show stickers in expression autocomplete"
 msgstr "Afficher les stickers dans la saisie semi-automatique des expressions"
 
@@ -29008,7 +29045,7 @@ msgid "Show strikethrough markdown text in a slightly muted color."
 msgstr "Afficher le texte barré en Markdown dans une couleur légèrement atténuée."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
 msgid "Show suppress embeds button"
 msgstr "Afficher le bouton \" Masquer les aperçus \""
 
@@ -29298,14 +29335,14 @@ msgid "Size selection"
 msgstr "Sélection de la taille"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "Passer"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:133
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Ignorer la confirmation \" Tout marquer comme lu \""
 
@@ -29343,7 +29380,7 @@ msgid "Skip this step"
 msgstr "Passer cette étape"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:70
+#: src/app/App.tsx:69
 msgid "Skip to content"
 msgstr "Aller au contenu"
 
@@ -30451,7 +30488,7 @@ msgid "Stop"
 msgstr "Arrêter"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:153
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Stop hiding muted channels by default?"
 msgstr "Arrêter de masquer les salons mis en sourdine par défaut ?"
 
@@ -31635,7 +31672,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "L'URI de redirection fournie doit utiliser HTTP ou HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:109
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:118
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "La source de partage d’écran a cessé d’envoyer des vidéos, votre partage d’écran a donc été arrêté."
@@ -32333,7 +32370,7 @@ msgid "This message no longer exists."
 msgstr "Ce message n’existe plus."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
 msgid "This nickname will only be visible in this community"
 msgstr "Ce surnom ne sera visible que dans cette communauté"
 
@@ -32540,7 +32577,7 @@ msgid "This voice channel is no longer available."
 msgstr "Ce salon vocal n'est plus disponible."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:71
+#: src/features/channel/components/UserMessage.tsx:73
 msgid "This was a {silentMention} message."
 msgstr "Ceci était un message {silentMention}."
 
@@ -32970,7 +33007,7 @@ msgstr "Haut"
 msgid "Top tooltip"
 msgstr "Info-bulle supérieure"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:33
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
 msgid "Topic"
 msgstr "Sujet"
 
@@ -33373,7 +33410,7 @@ msgstr "Activer la confidentialité du streaming"
 
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:10
+#: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:11
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
 msgid "Turn text smileys into emoji"
 msgstr "Activer la conversion des émoticônes en emojis"
@@ -34506,7 +34543,7 @@ msgstr "Importer des éléments"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:109
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:107
 msgid "Upload attachments before sending"
 msgstr "Télécharger des pièces jointes avant d’envoyer"
@@ -35509,22 +35546,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "Vérifiez votre adresse e-mail avant d'ajouter une application d'authentification."
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "Vérifiez votre e-mail avant de modifier votre pseudo de communauté, votre avatar, votre bannière, votre bio, vos pronoms ou la couleur d'accentuation."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, timezone, or {premiumProductName} badge privacy."
 msgstr "Vérifiez votre adresse e-mail avant de modifier votre nom d'utilisateur, votre nom d'affichage, votre avatar, votre bannière, votre bio, vos pronoms, votre fuseau horaire ou la confidentialité de votre badge {premiumProductName}."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "Vérifiez votre e-mail avant de modifier ce profil de communauté. Vous pouvez toujours le prévisualiser ici."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "Vérifiez votre e-mail avant de modifier votre profil. Vous pouvez toujours le prévisualiser ici."
 
@@ -35556,12 +35593,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "Vérifiez votre e-mail pour continuer à utiliser {productName}."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
 msgid "Verify your email to edit this community profile"
 msgstr "Vérifiez votre e-mail pour modifier ce profil de communauté"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
 msgid "Verify your email to edit your profile"
 msgstr "Vérifiez votre e-mail pour modifier votre profil"
 
@@ -36342,12 +36379,12 @@ msgid "Waiting for passkey…"
 msgstr "En attente du passkey…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:69
+#: src/features/messaging/components/modals/ForwardModal.tsx:70
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "En attente de l'expiration du mode lent dans {forwardChannelDisplayName}."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:74
+#: src/features/messaging/components/modals/ForwardModal.tsx:75
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "En attente de l'expiration du mode lent dans un ou plusieurs salons sélectionnés."
 
@@ -37322,7 +37359,7 @@ msgid "You can't befriend yourself"
 msgstr "Vous ne pouvez pas être ami avec vous-même"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
 msgid "You can't change your nickname here"
 msgstr "Vous ne pouvez pas modifier votre pseudo ici"
 
@@ -37572,7 +37609,7 @@ msgid "You have unsaved changes."
 msgstr "Vous avez des modifications non enregistrées."
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "Vous avez des modifications non enregistrées. Enregistrez-les ou réinitialisez-les avant de partir."
 
@@ -38336,7 +38373,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "Votre inscription nécessite une vérification anti-spam supplémentaire avant de pouvoir continuer."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Votre partage d'écran n'a pas pu être publié avec un codec vidéo compatible, il a donc été arrêté. Essayez de partager à nouveau."
@@ -38435,7 +38472,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Votre URL personnalisée a été définie sur {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:122
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Votre encodeur vidéo a cessé d'encoder des images, votre partage d'écran a donc été arrêté. Essayez de partager à nouveau."

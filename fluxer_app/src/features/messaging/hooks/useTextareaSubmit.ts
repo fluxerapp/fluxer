@@ -26,6 +26,7 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
+	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
 import {canSubmitMessage, hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
 import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
@@ -477,11 +478,11 @@ export const useTextareaSubmit = ({
 				clearSegments();
 			};
 			if (!hasVisibleMessageContent(resolvedContent)) {
+				if (isAttachmentOnlyMessage(editingMessage)) {
+					finishMobileEdit();
+					return;
+				}
 				if (canSubmitEmptyMessageEdit(editingMessage)) {
-					if (editingMessage.content.length === 0) {
-						finishMobileEdit();
-						return;
-					}
 					finishMobileEdit();
 					void MessageCommands.edit(
 						channelId,

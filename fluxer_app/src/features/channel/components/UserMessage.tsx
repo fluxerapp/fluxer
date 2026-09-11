@@ -30,6 +30,7 @@ import {hasStyleableMessageText} from '@app/features/messaging/utils/FailedMessa
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
+	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
@@ -196,11 +197,11 @@ export const UserMessage = observer(() => {
 			}
 			const content = dropTrailingEmptyBlockquoteLines(actualContent ?? '').trim();
 			if (!content) {
+				if (isAttachmentOnlyMessage(message)) {
+					finishEditing();
+					return;
+				}
 				if (canSubmitEmptyMessageEdit(message)) {
-					if (message.content.length === 0) {
-						finishEditing();
-						return;
-					}
 					finishEditing();
 					void MessageCommands.edit(
 						channel.id,

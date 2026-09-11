@@ -20,6 +20,7 @@ import {
 	ExpressionAutocompleteControl,
 	HideMutedChannelsByDefaultControl,
 	InputButtonsControl,
+	KeepAttachmentsOnEmptyEditAdvancedControl,
 	MediaButtonsControl,
 	MessageActionBarControl,
 	PreuploadMessageAttachmentsControl,
@@ -76,6 +77,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-expression-autocomplete',
 	'chat-settings-input-buttons',
 	'chat-settings-convert-emoticons',
+	'chat-settings-keep-attachments-on-empty-edit',
 	'chat-settings-preupload-attachments',
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
@@ -115,6 +117,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-strip-tracking',
 	'chat-settings-trust-domains',
 	'chat-settings-convert-emoticons',
+	'chat-settings-keep-attachments-on-empty-edit',
 	'chat-settings-preupload-attachments',
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
@@ -238,6 +241,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'chat-settings-convert-emoticons':
 			return (
 				<ConvertEmoticonsAdvancedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.convert-emoticons-advanced-control" />
+			);
+		case 'chat-settings-keep-attachments-on-empty-edit':
+			return (
+				<KeepAttachmentsOnEmptyEditAdvancedControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.keep-attachments-on-empty-edit-advanced-control" />
 			);
 		case 'chat-settings-preupload-attachments':
 			return (

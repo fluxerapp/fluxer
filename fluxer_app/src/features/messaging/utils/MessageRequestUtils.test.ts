@@ -3,6 +3,8 @@
 import {
 	buildMessageCreateRequest,
 	buildMessageEditRequest,
+	type ComposerSubmitSignals,
+	canSubmitComposerContent,
 	canSubmitMessage,
 	getComposerMessageContent,
 	hasVisibleMessageContent,
@@ -107,6 +109,47 @@ describe('canSubmitMessage', () => {
 	it('accepts visible content with or without @silent', () => {
 		expect(canSubmitMessage('@silent hi', false)).toBe(true);
 		expect(canSubmitMessage('hello', false)).toBe(true);
+	});
+});
+
+function composerSignals(overrides: Partial<ComposerSubmitSignals> = {}): ComposerSubmitSignals {
+	return {
+		inputDisabled: false,
+		isSubmissionBlockedBySlowmode: false,
+		isOverCharacterLimit: false,
+		hasMessageContent: false,
+		hasAttachments: false,
+		hasPendingSticker: false,
+		isEditingMessageOnMobile: false,
+		...overrides,
+	};
+}
+
+describe('canSubmitComposerContent', () => {
+	it('refuses an empty composer that is not editing anything', () => {
+		expect(canSubmitComposerContent(composerSignals())).toBe(false);
+	});
+
+	it('accepts text, attachments and stickers on their own', () => {
+		expect(canSubmitComposerContent(composerSignals({hasMessageContent: true}))).toBe(true);
+		expect(canSubmitComposerContent(composerSignals({hasAttachments: true}))).toBe(true);
+		expect(canSubmitComposerContent(composerSignals({hasPendingSticker: true}))).toBe(true);
+	});
+
+	it('accepts an emptied edit on mobile so that it can ask to delete the message', () => {
+		expect(canSubmitComposerContent(composerSignals({isEditingMessageOnMobile: true}))).toBe(true);
+	});
+
+	it('refuses a disabled, slowed or over-long composer even while editing on mobile', () => {
+		expect(canSubmitComposerContent(composerSignals({isEditingMessageOnMobile: true, inputDisabled: true}))).toBe(
+			false,
+		);
+		expect(
+			canSubmitComposerContent(composerSignals({isEditingMessageOnMobile: true, isSubmissionBlockedBySlowmode: true})),
+		).toBe(false);
+		expect(
+			canSubmitComposerContent(composerSignals({isEditingMessageOnMobile: true, isOverCharacterLimit: true})),
+		).toBe(false);
 	});
 });
 

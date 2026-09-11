@@ -20,7 +20,7 @@ msgstr "... להפעיל מצב צפוף. יפה!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:358
-#: src/features/channel/components/UserMessage.tsx:59
+#: src/features/channel/components/UserMessage.tsx:61
 msgid "(edited)"
 msgstr "(נערך)"
 
@@ -461,7 +461,7 @@ msgstr "{count, plural, one {בשיחה} other {# בשיחה}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {הצטרף לשיחת וידאו (משתתף אחד)} other {הצטרף לשיחת וידאו (# משתתפים)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:655
+#: src/features/voice/components/VoiceParticipantTile.tsx:656
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {המשך/המשיכי לצפות בסטרים # והוסף/הוסיפי את זה} other {המשך/המשיכי לצפות בסטרימים # והוסף/הוסיפי את זה}}"
 
@@ -2271,7 +2271,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "הוספת בוט לקהילה עם הרשאות נדרשות"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:91
 msgid "Add a comment (optional)"
 msgstr "הוסף תגובה (אופציונלי)"
 
@@ -2311,7 +2311,7 @@ msgstr "הוספת תגית"
 msgid "Add a tag and press Enter"
 msgstr "הוסף תגית ולחץ על Enter"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
 msgid "Add a topic to this channel"
 msgstr "הוסף נושא לערוץ זה"
 
@@ -3747,7 +3747,7 @@ msgid "Apply theme"
 msgstr "החל ערכת נושא"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:145
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "Apply to all communities"
 msgstr "החל על כל הקהילות"
 
@@ -4439,7 +4439,7 @@ msgstr "שליחה אוטומטית של קובצי GIF מהבורר ללא אי
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF behavior preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:37
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:40
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:11
 msgid "Automatically send GIFs when selected"
 msgstr "שליחה אוטומטית של קובצי GIF עם הבחירה"
@@ -5657,7 +5657,7 @@ msgstr "לא ניתן להעלות קבצים לכאן"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:635
+#: src/features/messaging/components/modals/ForwardModal.tsx:636
 #: src/features/messaging/components/modals/ImageCropModal.tsx:925
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -6644,7 +6644,7 @@ msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "בחר hCaptcha או Cloudflare Turnstile עבור אתגרי הרשמה."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
 msgid "Choose how chat moves after you send a message"
 msgstr "בחר כיצד הצ'אט יתקדם לאחר שליחת הודעה"
 
@@ -6982,7 +6982,7 @@ msgstr "מחיקת הדמיות קבצים מצורפים"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:131
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "נקה פקודה"
@@ -7004,6 +7004,11 @@ msgstr "למחוק את כל התגובות מההודעה הזו?"
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:86
 msgid "Clear friends search"
 msgstr "נקה חיפוש חברים"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+msgid "Clear message text"
+msgstr "נקה את טקסט ההודעה"
 
 #. Developer-mode action that removes a mock for one attachment.
 #: src/features/ui/action_menu/MediaContextMenu.tsx:42
@@ -7098,6 +7103,11 @@ msgstr "הנושא נוקה."
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:244
 msgid "Clearer text"
 msgstr "טקסט ברור יותר"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+msgid "Clearing the text of a message with attachments asks to delete the message unless this is on"
+msgstr "ניקוי טקסט של הודעה עם קבצים מצורפים מבקש למחוק את ההודעה אלא אם כן אפשרות זו מופעלת"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
@@ -7557,17 +7567,17 @@ msgid "Commands"
 msgstr "פקודות"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:63
+#: src/features/messaging/components/modals/ForwardModal.tsx:64
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "התגובות מושבתות כי באחד או יותר מהערוצים שבחרתם מופעל מצב 'הילוך איטי'. התגובה תיחסם על ידי מצב 'הילוך איטי' מיד לאחר ההעברה."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "התגובות מושבתות כי מצב איטי מופעל ב-{forwardChannelDisplayName}. התגובה תיחסם על ידי מצב איטי מיד לאחר ההעברה."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 msgid "Comments are unavailable while slowmode is on."
 msgstr "התגובות אינן זמינות כשמצב איטי מופעל."
 
@@ -7741,7 +7751,7 @@ msgstr "שם קהילה"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "כינוי בקהילה"
@@ -7794,7 +7804,7 @@ msgid "Community profile"
 msgstr "פרופיל קהילה"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
 msgid "Community profile updated"
 msgstr "פרופיל הקהילה עודכן"
 
@@ -7916,7 +7926,7 @@ msgstr "כפתור עורך ההודעות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:190
 msgid "Composer buttons"
 msgstr "לחצני עורך ההודעות"
@@ -7928,7 +7938,7 @@ msgstr "מיקוד תיבת טקסט"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:161
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
 msgid "Configure"
 msgstr "הגדרות מתקדמות"
@@ -8002,7 +8012,7 @@ msgstr "הגדר את תג הפרופיל שלך"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx:181
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
 msgid "Confirm"
 msgstr "אישור"
 
@@ -8054,7 +8064,7 @@ msgid "Confirm voice join"
 msgstr "אישור הצטרפות קולית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
 msgid "Confirmation"
 msgstr "אישור"
 
@@ -9152,7 +9162,7 @@ msgid "Couldn't ring this person"
 msgstr "לא ניתן להתקשר לאדם זה"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:46
+#: src/features/messaging/hooks/useTextareaSubmit.ts:48
 msgid "Couldn't run that command: {detail}"
 msgstr "לא ניתן היה להריץ את הפקודה: {detail}"
 
@@ -10567,6 +10577,11 @@ msgstr "מחיקת הודעות של חברים אחרים. הצמדה נשלט�
 msgid "Delete passkey"
 msgstr "מחיקת מפתח גישה"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+msgid "Delete prompt"
+msgstr "מחק בקשה"
+
 #. Button or menu action label in the application info section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:56
 msgid "Delete redirect URI"
@@ -11513,7 +11528,7 @@ msgstr "מצב תצוגה"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "שם לתצוגה"
@@ -11646,7 +11661,7 @@ msgstr "האם ברצונך לחסום גם הודעות ישירות מחברי
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:53
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "דוק, אני מהעתיד. הגעתי לכאן במכונת זמן שאתה המצאת. עכשיו, אני צריך את עזרתך כדי לחזור לשנת 1985."
 
@@ -12280,7 +12295,7 @@ msgid "Edit translation provider"
 msgstr "עריכת ספק תרגום"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
 msgid "Edit your profile appearance and see a live preview"
 msgstr "ערוך את מראה הפרופיל שלך וראה תצוגה מקדימה"
 
@@ -12501,7 +12516,7 @@ msgid "Emoji autocomplete"
 msgstr "השלמה אוטומטית של אימוג'י"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
 msgid "Emoji button"
 msgstr "כפתור אימוג'י"
 
@@ -12580,6 +12595,11 @@ msgstr "אמוטיקון"
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:142
 msgid "Emoticons"
 msgstr "אמוטיקונים"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+msgid "Empty edit"
+msgstr "עריכה ריקה"
 
 #. Short label in the app layout favorites channel list content.
 #: src/features/app/components/layout/FavoritesChannelListContent.tsx:70
@@ -12794,7 +12814,7 @@ msgid "Enable self-hosted mode client-side. Hides all premium and billing UI."
 msgstr "הפעל מצב אירוח עצמי בצד הלקוח. מסתיר את כל ממשק המשתמש של הפרימיום והחיוב."
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:57
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:60
 msgid "Enable Shift to expand"
 msgstr "הפעל Shift כדי להרחיב"
 
@@ -13937,12 +13957,12 @@ msgid "Failed to send code. Try again."
 msgstr "שליחת הקוד נכשלה. יש לנסות שוב."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:67
+#: src/features/channel/components/UserMessage.tsx:69
 msgid "Failed to send message."
 msgstr "ההודעה לא נשלחה."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:63
+#: src/features/channel/components/UserMessage.tsx:65
 msgid "Failed to send message. Hold for options."
 msgstr "ההודעה נכשלה. לחץ לחיצה ארוכה לאפשרויות."
 
@@ -14714,7 +14734,7 @@ msgstr "העבר מדיה"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:78
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Forward message"
 msgstr "העברת הודעה"
 
@@ -15112,7 +15132,7 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
 msgid "GIF button"
 msgstr "כפתור GIF"
 
@@ -15968,7 +15988,7 @@ msgid "Hide avatars"
 msgstr "הסתרת תמונות פרופיל"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:507
 msgid "Hide channels you've muted from community sidebars"
 msgstr "הסתר ערוצים שהשתקת מסרגלי הצד של הקהילה"
 
@@ -16020,7 +16040,7 @@ msgid "Hide members"
 msgstr "הסתרת חברים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:499
 msgid "Hide muted"
 msgstr "הסתר מושתקים"
 
@@ -16031,13 +16051,13 @@ msgstr "הסתר ערוצים מושתקים"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:137
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:487
 msgid "Hide muted channels by default"
 msgstr "להסתיר ערוצים מושתקים כברירת מחדל"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:141
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
 msgid "Hide muted channels by default?"
 msgstr "להסתיר ערוצים מושתקים כברירת מחדל?"
 
@@ -17071,7 +17091,7 @@ msgstr "קלט וטקסט"
 msgid "Inputs with icons"
 msgstr "שדות קלט עם אייקונים"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:36
 msgid "Insert emoji"
 msgstr "הוספת אימוג'י"
 
@@ -17749,7 +17769,7 @@ msgid "Jump to message"
 msgstr "קפיצה להודעה"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:54
+#: src/features/channel/components/UserMessage.tsx:56
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "קפוץ להודעה מ-‪{displayName}‬, נשלחה ב-‪{formattedDate}‬"
 
@@ -17830,6 +17850,18 @@ msgstr "השאר את {productName} פועל כשהחלון סגור"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:377
 msgid "Keep animations, GIF playback, hover effects, and tooltips running while the window is unfocused."
 msgstr "שמור על הפעלת אנימציות, קובצי GIF, אפקטי ריחוף וטיפים בזמן שהחלון אינו ממוקד."
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+msgid "Keep attachments"
+msgstr "שמור קבצים מצורפים"
+
+#. Label for an advanced message editing preference.
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:15
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+msgid "Keep attachments when clearing an edit"
+msgstr "שמור קבצים מצורפים בעת ניקוי עריכה"
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18863,7 +18895,7 @@ msgstr "עדכון ידני של היישום למחשב"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
 msgid "Mark all as read"
 msgstr "סמן הכל כנקרא"
 
@@ -18885,7 +18917,7 @@ msgid "Mark all inbox channels as read"
 msgstr "סמן את כל הערוצים בתיבת הדואר הנכנס כנקראו"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:483
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "סמן את כל ערוצי תיבת הדואר הנכנס שלא נקראו כנקראו באופן מיידי, ללא בקשת אישור"
 
@@ -19628,7 +19660,12 @@ msgstr "מצב תצוגת הודעות"
 msgid "Message display settings are only available on desktop."
 msgstr "הגדרות תצוגת ההודעות זמינות רק במחשב."
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:306
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+msgid "Message editing"
+msgstr "עריכת הודעה"
+
+#: src/features/messaging/components/modals/ForwardModal.tsx:307
 msgid "Message forwarded"
 msgstr "ההודעה הועברה"
 
@@ -19670,14 +19707,14 @@ msgstr "קלט הודעה"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:194
 msgid "Message input buttons"
 msgstr "לחצני קלט הודעה"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:49
+#: src/features/messaging/components/modals/ForwardModal.tsx:50
 #: src/features/ui/character_counter/CharacterCountMessages.ts:15
 msgid "Message is too long"
 msgstr "ההודעה ארוכה מדי"
@@ -20503,7 +20540,7 @@ msgstr "מושתק"
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:20
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
 #: src/features/voice/components/voice_participant_tile/shared.ts:98
 #: src/lib/overlay/OverlayContextMenu.tsx:24
@@ -20517,7 +20554,7 @@ msgstr "הושתק על ידי מנהלים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
 msgid "Muted channels"
 msgstr "ערוצים מושתקים"
@@ -20884,20 +20921,20 @@ msgid "New category"
 msgstr "קטגוריה חדשה"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:149
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "New communities only"
 msgstr "קהילות חדשות בלבד"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:640
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:650
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "קהילות חדשות שתצטרף אליהן יסתירו אוטומטית ערוצים מושתקים. האם תרצה להחיל הגדרה זו גם על כל הקהילות הקיימות שלך?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:671
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:681
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "ערוצים מושתקים בקהילות חדשות שאליהן תצטרף לא יוסתרו יותר באופן אוטומטי. האם ברצונך להציג ערוצים מושתקים גם בכל הקהילות הקיימות שלך?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:503
 msgid "New community muted"
 msgstr "קהילה חדשה הושתקה"
 
@@ -21184,7 +21221,7 @@ msgstr "אין שינויים לשמירה"
 msgid "No channels available"
 msgstr "אין ערוצים זמינים"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:425
+#: src/features/messaging/components/modals/ForwardModal.tsx:426
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "לא נמצאו ערוצים"
@@ -22113,7 +22150,7 @@ msgstr "רק הנבחרים"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "רק חברים בעלי מנוי Visionary יכולים להצטרף לקהילה זו. ייתכן שהגישה שלך השתנתה מאז שנפתח המסך הזה."
 
-#: src/features/channel/components/UserMessage.tsx:427
+#: src/features/channel/components/UserMessage.tsx:429
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "הודעה זו גלויה לך בלבד. <0>התעלם</0>"
 
@@ -22352,7 +22389,7 @@ msgid "Open emoji in browser"
 msgstr "פתח אימוג'י בדפדפן"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:94
+#: src/features/messaging/components/modals/ForwardModal.tsx:95
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "פתח בורר אימוג'י"
@@ -23402,7 +23439,7 @@ msgid "Pick what appears when you type a colon in the message input"
 msgstr "בחר מה יופיע כשאתה מקליד נקודתיים בשדה ההודעות"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
 msgid "Pick which buttons show in the message input"
 msgstr "בחר אילו כפתורים יוצגו בשורת ההודעות"
 
@@ -24174,18 +24211,18 @@ msgstr "צבע פרופיל"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "התאמה אישית של הפרופיל"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
 msgid "Profile customization for {selectedGuildName}"
 msgstr "התאמה אישית של פרופיל עבור {selectedGuildName}"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
 msgid "Profile customization form"
 msgstr "טופס התאמה אישית של הפרופיל"
 
@@ -24250,7 +24287,7 @@ msgid "Profile type"
 msgstr "סוג פרופיל"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
 msgid "Profile updated"
 msgstr "הפרופיל עודכן"
 
@@ -24275,7 +24312,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "קידום או הנחיות המעודדים פגיעה עצמית או הפרעות אכילה."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
 msgid "Prompt"
 msgstr "הנחיה"
 
@@ -24287,7 +24324,7 @@ msgstr "בקשה להתקנים חדשים של אודיו."
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -26802,7 +26839,7 @@ msgstr "שמור כמועדף"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced GIF storage preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:41
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:44
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:47
 msgid "Save GIF favorites as saved media"
 msgstr "שמירת גיפים מועדפים כמדיה שמורה"
@@ -26953,7 +26990,7 @@ msgid "Screen share encoder controls"
 msgstr "בקרות מקודד שיתוף מסך"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:104
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "שיתוף מסך הסתיים"
@@ -27105,15 +27142,15 @@ msgstr "גללו למטה כדי לראות את כל ההטבות הכלולו�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:29
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:178
 msgid "Scroll to bottom"
 msgstr "גלול למטה"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:129
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
 msgid "Scroll to bottom when sending a message"
 msgstr "גלול לתחתית בעת שליחת הודעה"
 
@@ -27182,7 +27219,7 @@ msgid "Search channels"
 msgstr "חיפוש ערוצים"
 
 #. Placeholder text in the channel picker search input of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Search channels or DMs"
 msgstr "חיפוש ערוצים או צ'אטים פרטיים"
 
@@ -27776,7 +27813,7 @@ msgid "Send"
 msgstr "שליחה"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:98
+#: src/features/messaging/components/modals/ForwardModal.tsx:99
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "שליחה ({selectedCount}/{selectionLimit})"
 
@@ -27826,7 +27863,7 @@ msgstr "שליחת דיווח נוסף"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:170
 msgid "Send button"
 msgstr "כפתור שליחה"
@@ -27844,7 +27881,7 @@ msgstr "שליחת דיווח DSA"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:113
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
 msgid "Send file messages in order"
 msgstr "שלח הודעות קבצים לפי הסדר"
@@ -28049,7 +28086,7 @@ msgstr "שלח/ה הטמעה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:182
 msgid "Sent messages"
 msgstr "הודעות שנשלחו"
@@ -28589,7 +28626,7 @@ msgid "Shortcuts"
 msgstr "קיצורי דרך"
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:53
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 msgid "Shorten the message and try again."
 msgstr "יש לקצר את ההודעה ולנסות שוב."
 
@@ -28647,7 +28684,7 @@ msgid "Show active now on the home screen to surface friends active in voice. Yo
 msgstr "הצג 'פעילים עכשיו' במסך הבית כדי לראות חברים פעילים בשיחות קוליות. תראה תצוגה מקדימה, את הקשר הערוץ, מי כבר שם, ודרך מהירה להצטרף."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:65
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:68
 msgid "Show attachment expiry indicator"
 msgstr "הצגת חיווי תפוגת קובץ מצורף"
 
@@ -28698,7 +28735,7 @@ msgid "Show creation date instead of expiration date"
 msgstr "הצג תאריך יצירה במקום תאריך תפוגה"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:89
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
 msgid "Show custom emojis in expression autocomplete"
 msgstr "הצגת אימוג'י מותאמים אישית בהשלמה אוטומטית של ביטויים"
 
@@ -28708,17 +28745,17 @@ msgid "Show default avatar, ignoring your global profile"
 msgstr "הצג אווטאר ברירת מחדל, תוך התעלמות מהפרופיל הגלובלי שלך"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:85
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:88
 msgid "Show default emojis in expression autocomplete"
 msgstr "הצגת אימוג'י ברירת מחדל בהשלמה אוטומטית של ביטויים"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:69
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:72
 msgid "Show delete button"
 msgstr "הצגת כפתור המחיקה"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:73
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
 msgid "Show download button"
 msgstr "הצג כפתור הורדה"
 
@@ -28745,7 +28782,7 @@ msgstr "הצג הטמעות ותצוגה מקדימה של קישורי אתרי
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:121
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show emoji button"
 msgstr "הצגת לחצן אימוג'י"
 
@@ -28755,7 +28792,7 @@ msgid "Show emoji reactions on messages"
 msgstr "הצגת תגובות אימוג'י בהודעות"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:77
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
 msgid "Show favorite button"
 msgstr "הצגת כפתור מועדפים"
 
@@ -28777,14 +28814,14 @@ msgid "Show focus ring on chat textarea"
 msgstr "הצגת טבעת מיקוד בשדה הטקסט של הצ׳אט"
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:61
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:64
 msgid "Show GIF indicator"
 msgstr "הצג חיווי GIF"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:101
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "הצגת כפתור ה-GIF-ים"
 
@@ -28794,7 +28831,7 @@ msgid "Show icon when collapsed"
 msgstr "הצג סמל כשהתיקייה מקופלת"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:157
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 msgid "Show in all communities"
 msgstr "הצג בכל הקהילות"
 
@@ -28833,7 +28870,7 @@ msgstr "הצג עד 5 (+5 תג)"
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:105
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show media button"
 msgstr "הצגת כפתור המדיה"
 
@@ -28854,7 +28891,7 @@ msgid "Show menu bar icon"
 msgstr "הצג סמל בשורת התפריטים"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:45
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:48
 msgid "Show message action bar"
 msgstr "הצגת סרגל פעולות ההודעה"
 
@@ -28937,7 +28974,7 @@ msgid "Show oldest messages first"
 msgstr "הצג הודעות ישנות קודם"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:49
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:52
 msgid "Show only more button"
 msgstr "הצג רק את כפתור 'עוד'"
 
@@ -28962,7 +28999,7 @@ msgid "Show profile timezone settings"
 msgstr "הצג הגדרות אזור זמן בפרופיל (אפשרות למפתחים, מיועדת לצוות בלבד)"
 
 #. Short label for an advanced message action bar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:53
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show quick reactions"
 msgstr "הצגת תגובות מהירות"
 
@@ -28972,7 +29009,7 @@ msgid "Show rich previews for YouTube links."
 msgstr "הצג תצוגות מקדימות עשירות לקישורי YouTube."
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:97
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:100
 msgid "Show saved media in expression autocomplete"
 msgstr "הצגת מדיה שמורה בהשלמה אוטומטית של ביטויים"
 
@@ -28981,7 +29018,7 @@ msgstr "הצגת מדיה שמורה בהשלמה אוטומטית של ביטו
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:125
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show send button"
 msgstr "הצגת כפתור השליחה"
 
@@ -28993,12 +29030,12 @@ msgstr "הצג תוכן ספוילר בלחיצה"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:117
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show stickers button"
 msgstr "הצגת כפתור המדבקות"
 
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:93
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:96
 msgid "Show stickers in expression autocomplete"
 msgstr "הצגת מדבקות בהשלמה אוטומטית של הבעות"
 
@@ -29008,7 +29045,7 @@ msgid "Show strikethrough markdown text in a slightly muted color."
 msgstr "הצג טקסט עם קו חוצה (strikethrough) ב-Markdown בצבע מעט מושתק."
 
 #. Short label for an advanced media button preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:81
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:84
 msgid "Show suppress embeds button"
 msgstr "הצגת כפתור השתקת הטמעות"
 
@@ -29298,14 +29335,14 @@ msgid "Size selection"
 msgstr "בחירת גודל"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "דלג"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:133
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "דלג על אישור \"סמן הכל כנקרא\""
 
@@ -29343,7 +29380,7 @@ msgid "Skip this step"
 msgstr "דלג על שלב זה"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:70
+#: src/app/App.tsx:69
 msgid "Skip to content"
 msgstr "דלג לתוכן"
 
@@ -30451,7 +30488,7 @@ msgid "Stop"
 msgstr "עצור"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:153
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Stop hiding muted channels by default?"
 msgstr "להפסיק להסתיר ערוצים מושתקים כברירת מחדל?"
 
@@ -31635,7 +31672,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "ה-redirect_uri שסופק חייב להשתמש ב-HTTP או ב-HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:109
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:118
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "מקור שיתוף המסך הפסיק לשלוח וידאו, ולכן שיתוף המסך שלך הופסק."
@@ -32333,7 +32370,7 @@ msgid "This message no longer exists."
 msgstr "ההודעה הזו כבר לא קיימת."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
 msgid "This nickname will only be visible in this community"
 msgstr "הכינוי הזה יהיה גלוי רק בקהילה הזו"
 
@@ -32540,7 +32577,7 @@ msgid "This voice channel is no longer available."
 msgstr "ערוץ הקולי הזה אינו זמין עוד."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:71
+#: src/features/channel/components/UserMessage.tsx:73
 msgid "This was a {silentMention} message."
 msgstr "זו הייתה הודעה {silentMention}."
 
@@ -32970,7 +33007,7 @@ msgstr "מובילים"
 msgid "Top tooltip"
 msgstr "תיאור כלי עליון"
 
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:33
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:34
 msgid "Topic"
 msgstr "נושא"
 
@@ -33373,7 +33410,7 @@ msgstr "הפעל פרטיות סטרימינג"
 
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:10
+#: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:11
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
 msgid "Turn text smileys into emoji"
 msgstr "הפעל את המרה של סמלים טקסטואליים לאימוג'י"
@@ -34506,7 +34543,7 @@ msgstr "העלאת נכסים"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:109
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:107
 msgid "Upload attachments before sending"
 msgstr "העלה קבצים מצורפים לפני השליחה"
@@ -35509,22 +35546,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "יש לאמת את כתובת האימייל שלך לפני הוספת אפליקציית אימות."
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "אמת את כתובת האימייל שלך לפני שינוי הכינוי, האווטאר, הבאנר, הביו, כינויי הגוף או צבע ההדגשה שלך בקהילה."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, timezone, or {premiumProductName} badge privacy."
 msgstr "יש לאמת את כתובת האימייל שלך לפני שינוי שם המשתמש, שם התצוגה, האווטאר, הבאנר, הביוגרפיה, כינויי הגוף, אזור הזמן או פרטיות התג של {premiumProductName}."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "יש לאמת את כתובת האימייל לפני עריכת פרופיל הקהילה. עדיין ניתן להציג תצוגה מקדימה כאן."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "יש לאמת את כתובת האימייל לפני עריכת הפרופיל. עדיין ניתן להציג תצוגה מקדימה כאן."
 
@@ -35556,12 +35593,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "יש לאמת את כתובת האימייל שלך כדי להמשיך להשתמש ב- {productName}."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
 msgid "Verify your email to edit this community profile"
 msgstr "אמתו את כתובת האימייל שלכם כדי לערוך את פרופיל הקהילה הזה"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
 msgid "Verify your email to edit your profile"
 msgstr "אמתו את כתובת האימייל שלכם כדי לערוך את הפרופיל"
 
@@ -36342,12 +36379,12 @@ msgid "Waiting for passkey…"
 msgstr "ממתין למפתח גישה…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:69
+#: src/features/messaging/components/modals/ForwardModal.tsx:70
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "ממתין שתוקף מצב איטי ב-{forwardChannelDisplayName} יפוג."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:74
+#: src/features/messaging/components/modals/ForwardModal.tsx:75
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "ממתין שתקופת ההגבלה (slowmode) באחד או יותר מהערוצים שנבחרו תסתיים."
 
@@ -37322,7 +37359,7 @@ msgid "You can't befriend yourself"
 msgstr "אי אפשר להתחבר לעצמך"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
 msgid "You can't change your nickname here"
 msgstr "אי אפשר לשנות את הכינוי שלך כאן"
 
@@ -37572,7 +37609,7 @@ msgid "You have unsaved changes."
 msgstr "יש לך שינויים שלא נשמרו."
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "יש לך שינויים שלא נשמרו. שמור או אפס לפני שתעזוב."
 
@@ -38336,7 +38373,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "ההרשמה שלך דורשת בדיקה נוספת למניעת ספאם לפני שתוכל להמשיך."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "לא ניתן היה לפרסם את שיתוף המסך שלך עם קודק וידאו תואם, ולכן הוא הופסק. נסה לשתף שוב."
@@ -38435,7 +38472,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "כתובת ה-URL המותאמת אישית שלך הוגדרה ל-‎{inviteEndpoint}/{vanitySlug}‎"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:122
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "מקודד הווידאו שלך הפסיק לקודד פריימים, ולכן שיתוף המסך שלך הופסק. נסה לשתף שוב."

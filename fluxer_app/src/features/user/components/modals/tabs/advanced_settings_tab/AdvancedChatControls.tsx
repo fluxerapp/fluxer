@@ -16,7 +16,10 @@ import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGr
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import type {SearchEngineMode} from '@app/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal';
-import {ConvertEmoticonsControl} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
+import {
+	ConvertEmoticonsControl,
+	KeepAttachmentsOnEmptyEditControl,
+} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
 import {
 	StripTrackingParametersControl,
 	TrustAllExternalLinksControl,
@@ -278,6 +281,13 @@ export const TrustAllDomainsControl = observer(() => (
 
 export const ConvertEmoticonsAdvancedControl = observer(() => (
 	<ConvertEmoticonsControl compact data-flx="user.advanced-settings-tab.convert-emoticons-control" />
+));
+
+export const KeepAttachmentsOnEmptyEditAdvancedControl = observer(() => (
+	<KeepAttachmentsOnEmptyEditControl
+		compact
+		data-flx="user.advanced-settings-tab.keep-attachments-on-empty-edit-control"
+	/>
 ));
 
 interface SearchProviderSettingsModalProps {

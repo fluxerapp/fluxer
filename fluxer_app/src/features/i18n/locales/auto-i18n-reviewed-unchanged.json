@@ -1417,7 +1417,13 @@
         "msgid": "Clear command"
       },
       {
+        "msgid": "Clear message text"
+      },
+      {
         "msgid": "Clearer text"
+      },
+      {
+        "msgid": "Clearing the text of a message with attachments asks to delete the message unless this is on"
       },
       {
         "msgid": "Closed"
@@ -1483,6 +1489,9 @@
         "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
       },
       {
+        "msgid": "Delete prompt"
+      },
+      {
         "msgid": "Delete user"
       },
       {
@@ -1517,6 +1526,9 @@
       },
       {
         "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
+      },
+      {
+        "msgid": "Empty edit"
       },
       {
         "msgid": "Emulate decode codec (testing)"
@@ -1642,6 +1654,12 @@
         "msgid": "Keep Neko still"
       },
       {
+        "msgid": "Keep attachments"
+      },
+      {
+        "msgid": "Keep attachments when clearing an edit"
+      },
+      {
         "msgid": "Kicked {targetUserTag} from the community"
       },
       {
@@ -1673,6 +1691,9 @@
       },
       {
         "msgid": "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+      },
+      {
+        "msgid": "Message editing"
       },
       {
         "msgid": "Microphone ({deviceLabel})"

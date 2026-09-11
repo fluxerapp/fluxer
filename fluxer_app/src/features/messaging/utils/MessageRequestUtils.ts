@@ -96,6 +96,25 @@ export function canSubmitMessage(content: string, hasNonTextContent: boolean): b
 	return hasNonTextContent || normalizeMessageContent(content).content.length > 0;
 }
 
+export interface ComposerSubmitSignals {
+	inputDisabled: boolean;
+	isSubmissionBlockedBySlowmode: boolean;
+	isOverCharacterLimit: boolean;
+	hasMessageContent: boolean;
+	hasAttachments: boolean;
+	hasPendingSticker: boolean;
+	isEditingMessageOnMobile: boolean;
+}
+
+export function canSubmitComposerContent(signals: ComposerSubmitSignals): boolean {
+	if (signals.inputDisabled || signals.isSubmissionBlockedBySlowmode || signals.isOverCharacterLimit) {
+		return false;
+	}
+	return (
+		signals.hasMessageContent || signals.hasAttachments || signals.hasPendingSticker || signals.isEditingMessageOnMobile
+	);
+}
+
 export function getComposerMessageContent(content: string, isEditingMessageOnMobile: boolean): string {
 	if (isEditingMessageOnMobile) {
 		return content;

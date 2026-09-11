@@ -92,7 +92,11 @@ import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {canAttachFilesInChannel} from '@app/features/messaging/utils/AttachmentPermissionUtils';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import * as FileUploadUtils from '@app/features/messaging/utils/FileUploadUtils';
-import {getComposerMessageContent, hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
+import {
+	canSubmitComposerContent,
+	getComposerMessageContent,
+	hasVisibleMessageContent,
+} from '@app/features/messaging/utils/MessageRequestUtils';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {
 	resolveTypedEmojiShortcodes,
@@ -715,11 +719,15 @@ export const LexicalChannelTextareaContent = observer(
 		const showAttachments = hasAttachments;
 		const showStickers = hasPendingSticker;
 		const isOverCharacterLimit = composerMessageContent.length > maxMessageLength;
-		const canSubmit =
-			!textareaInputDisabled &&
-			!isSubmissionBlockedBySlowmode &&
-			!isOverCharacterLimit &&
-			(hasMessageContent || hasAttachments || hasPendingSticker);
+		const canSubmit = canSubmitComposerContent({
+			inputDisabled: textareaInputDisabled,
+			isSubmissionBlockedBySlowmode,
+			isOverCharacterLimit,
+			hasMessageContent,
+			hasAttachments,
+			hasPendingSticker,
+			isEditingMessageOnMobile,
+		});
 		const {onSubmit} = useTextareaSubmit({
 			channelId: channel.id,
 			guildId: channel.guildId === undefined ? null : channel.guildId,
