@@ -46,7 +46,7 @@ import {
 	setNoiseSuppressionChoice,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
 import {
-	getNoiseSuppressionChoiceLabelDescriptor,
+	getNoiseSuppressionChoiceLabel,
 	STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR,
 	STEREO_MICROPHONE_DESCRIPTOR,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
@@ -284,7 +284,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	const noiseSuppressionOptions: Array<ComboboxOption<VoiceNoiseSuppressionBackend>> =
 		getNoiseSuppressionChoiceValues().map((backend) => ({
 			value: backend,
-			label: i18n._(getNoiseSuppressionChoiceLabelDescriptor(backend)),
+			label: getNoiseSuppressionChoiceLabel(i18n, backend),
 		}));
 	const stereoMicrophoneAvailable = isStereoMicrophoneChoiceAvailable();
 	const setPushToTalkEnabled = (enabled: boolean) => {

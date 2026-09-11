@@ -4709,12 +4709,6 @@ msgstr "תג"
 msgid "Balanced"
 msgstr "מאוזן"
 
-#. Noise suppression option label for the RNNoise backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
-msgctxt "noise-suppression-option"
-msgid "Balanced"
-msgstr "מאוזן"
-
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:129
@@ -5351,7 +5345,7 @@ msgid "Built-in shortcuts"
 msgstr "קיצורי דרך מובנים"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:19
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
 msgid "Built-in suppression from your browser or system."
 msgstr "סינון מובנה מהדפדפן או מהמערכת שלך."
 
@@ -6948,12 +6942,6 @@ msgstr "קבל/י את המתנה שלך כדי להפעיל את המנוי ל-
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "התחזות לאדם, למותג או לארגון אחר."
-
-#. Noise suppression option label for the Speex backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
-msgctxt "noise-suppression-option"
-msgid "Classic"
-msgstr "קלאסי"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -10070,7 +10058,7 @@ msgid "Cut"
 msgstr "גזור"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgid "Cuts audio below a loudness threshold, lowest CPU cost."
 msgstr "חותך אודיו מתחת לסף עוצמה, עלות CPU מינימלית."
 
@@ -13056,9 +13044,7 @@ msgid "English (US)"
 msgstr "אנגלית (ארצות הברית)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:779
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Enhanced"
 msgstr "משופר"
 
@@ -14522,12 +14508,6 @@ msgstr "התמקד באדם זה"
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:27
 msgid "Focus window"
 msgstr "הבא חלון לחזית"
-
-#. Noise suppression option label for the GTCRN speech backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:59
-msgctxt "noise-suppression-option"
-msgid "Focused"
-msgstr "ממוקד"
 
 #. Voice input processing profile optimized for spoken voice.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:197
@@ -18386,7 +18366,7 @@ msgid "Light theme"
 msgstr "ערכת נושא בהירה"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
 msgid "Lightweight classic filter, works on any device."
 msgstr "פילטר קלאסי קל משקל, עובד על כל מכשיר."
 
@@ -20948,12 +20928,12 @@ msgid "Networking and performance"
 msgstr "רשת וביצועים"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Neural filter that removes most background noise."
 msgstr "פילטר נוירוני שמסיר את רוב רעשי הרקע."
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:55
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
 msgid "Neural filter, full audio bandwidth."
 msgstr "פילטר נוירוני, רוחב פס שמע מלא."
 
@@ -21784,7 +21764,7 @@ msgid "Noise"
 msgstr "רעש"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:32
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "סינון רעשים"
@@ -21814,7 +21794,7 @@ msgid "None"
 msgstr "ללא"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:23
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "ללא"
@@ -28127,7 +28107,7 @@ msgid "Sending messages is disabled in this community"
 msgstr "שליחת הודעות מושבתת בקהילה זו"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:72
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
 msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
 msgstr "שולח את שני הערוצים של מיקרופון סטריאו. עובד רק ללא דיכוי או עם דיכוי רגיל."
 
@@ -28142,7 +28122,7 @@ msgid "Sends your audio untouched. Best if you're using external audio software.
 msgstr "שולח את האודיו שלך ללא שינוי. מומלץ אם אתה משתמש בתוכנת אודיו חיצונית."
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:28
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgid "Sends your microphone audio with no suppression."
 msgstr "שולח את אודיו המיקרופון שלך ללא סינון."
 
@@ -30241,11 +30221,6 @@ msgstr "ההתחברות באמצעות SSO פג תוקפה. נסה/נסי שו�
 msgid "Staff controls"
 msgstr "פקדי צוות"
 
-#. Noise suppression option label in the voice tab (browser default). Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
-msgid "Standard"
-msgstr "רגיל"
-
 #. Required-action modal notice for inbound phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
@@ -30447,7 +30422,7 @@ msgid "Step 4"
 msgstr "שלב 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:68
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
 msgid "Stereo microphone"
 msgstr "מיקרופון סטריאו"
 
@@ -30810,7 +30785,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "איכות חזקה בעלות מעבד בינונית. חלופה טובה של Chromium לשיתוף מסך."
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:64
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
 msgid "Strongest neural filter for speech, limits audio to the speech range."
 msgstr "הפילטר הנוירוני החזק ביותר לדיבור, מגביל את האודיו לטווח הדיבור."
 

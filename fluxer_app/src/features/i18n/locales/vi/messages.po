@@ -4709,12 +4709,6 @@ msgstr "Huy hiệu"
 msgid "Balanced"
 msgstr "Cân bằng"
 
-#. Noise suppression option label for the RNNoise backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
-msgctxt "noise-suppression-option"
-msgid "Balanced"
-msgstr "Cân bằng"
-
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:129
@@ -5351,7 +5345,7 @@ msgid "Built-in shortcuts"
 msgstr "Phím tắt tích hợp"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:19
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
 msgid "Built-in suppression from your browser or system."
 msgstr "Tính năng khử tiếng ồn tích hợp từ trình duyệt hoặc hệ thống của bạn."
 
@@ -6948,12 +6942,6 @@ msgstr "Nhận quà của bạn để kích hoạt gói đăng ký {premiumProdu
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "Mạo danh người, thương hiệu hoặc tổ chức khác."
-
-#. Noise suppression option label for the Speex backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
-msgctxt "noise-suppression-option"
-msgid "Classic"
-msgstr "Cổ điển"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -10070,7 +10058,7 @@ msgid "Cut"
 msgstr "Cắt"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgid "Cuts audio below a loudness threshold, lowest CPU cost."
 msgstr "Cắt âm thanh dưới ngưỡng âm lượng, tốn ít CPU nhất."
 
@@ -13056,9 +13044,7 @@ msgid "English (US)"
 msgstr "Tiếng Anh (Mỹ)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:779
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Enhanced"
 msgstr "Nâng cao"
 
@@ -14522,12 +14508,6 @@ msgstr "Tập trung vào người này"
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:27
 msgid "Focus window"
 msgstr "Đưa cửa sổ lên phía trước"
-
-#. Noise suppression option label for the GTCRN speech backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:59
-msgctxt "noise-suppression-option"
-msgid "Focused"
-msgstr "Tập trung"
 
 #. Voice input processing profile optimized for spoken voice.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:197
@@ -18386,7 +18366,7 @@ msgid "Light theme"
 msgstr "Giao diện sáng"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
 msgid "Lightweight classic filter, works on any device."
 msgstr "Bộ lọc cổ điển nhẹ, hoạt động trên mọi thiết bị."
 
@@ -20948,12 +20928,12 @@ msgid "Networking and performance"
 msgstr "Mạng và hiệu suất"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Neural filter that removes most background noise."
 msgstr "Bộ lọc thần kinh giúp loại bỏ hầu hết tiếng ồn xung quanh."
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:55
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
 msgid "Neural filter, full audio bandwidth."
 msgstr "Bộ lọc thần kinh, băng thông âm thanh đầy đủ."
 
@@ -21784,7 +21764,7 @@ msgid "Noise"
 msgstr "Tiếng ồn"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:32
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "Cổng lọc nhiễu"
@@ -21814,7 +21794,7 @@ msgid "None"
 msgstr "Không"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:23
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "Không"
@@ -28127,7 +28107,7 @@ msgid "Sending messages is disabled in this community"
 msgstr "Đã tắt tính năng gửi tin nhắn trong cộng đồng này"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:72
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
 msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
 msgstr "Gửi cả hai kênh của micrô âm thanh nổi. Chỉ hoạt động khi không có hoặc có chế độ khử tiếng ồn tiêu chuẩn."
 
@@ -28142,7 +28122,7 @@ msgid "Sends your audio untouched. Best if you're using external audio software.
 msgstr "Gửi âm thanh của bạn nguyên bản. Tốt nhất nếu bạn đang dùng phần mềm âm thanh bên ngoài."
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:28
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgid "Sends your microphone audio with no suppression."
 msgstr "Gửi âm thanh micrô của bạn mà không cần lọc tiếng ồn."
 
@@ -30241,11 +30221,6 @@ msgstr "Đăng nhập SSO đã hết thời gian. Vui lòng thử lại."
 msgid "Staff controls"
 msgstr "Điều khiển nội bộ"
 
-#. Noise suppression option label in the voice tab (browser default). Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
-msgid "Standard"
-msgstr "Tiêu chuẩn"
-
 #. Required-action modal notice for inbound phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
@@ -30447,7 +30422,7 @@ msgid "Step 4"
 msgstr "Bước 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:68
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
 msgid "Stereo microphone"
 msgstr "Microphone stereo"
 
@@ -30810,7 +30785,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "Chất lượng tốt với chi phí CPU vừa phải. Dự phòng Chromium tốt cho chia sẻ màn hình."
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:64
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
 msgid "Strongest neural filter for speech, limits audio to the speech range."
 msgstr "Bộ lọc thần kinh mạnh nhất cho giọng nói, giới hạn âm thanh trong phạm vi giọng nói."
 

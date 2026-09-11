@@ -4709,12 +4709,6 @@ msgstr "ป้ายกำกับ"
 msgid "Balanced"
 msgstr "สมดุล"
 
-#. Noise suppression option label for the RNNoise backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
-msgctxt "noise-suppression-option"
-msgid "Balanced"
-msgstr "สมดุล"
-
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:129
@@ -5351,7 +5345,7 @@ msgid "Built-in shortcuts"
 msgstr "ปุ่มลัดในตัว"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:19
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
 msgid "Built-in suppression from your browser or system."
 msgstr "การระงับสัญญาณรบกวนในตัวจากเบราว์เซอร์หรือระบบของคุณ"
 
@@ -6948,12 +6942,6 @@ msgstr "รับรหัสของขวัญของคุณเพื่
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "แอบอ้างเป็นบุคคลอื่น แบรนด์ หรือองค์กร"
-
-#. Noise suppression option label for the Speex backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
-msgctxt "noise-suppression-option"
-msgid "Classic"
-msgstr "คลาสสิก"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -10070,7 +10058,7 @@ msgid "Cut"
 msgstr "ตัด"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgid "Cuts audio below a loudness threshold, lowest CPU cost."
 msgstr "ตัดเสียงที่เบากว่าเกณฑ์ที่กำหนด ใช้ CPU น้อยที่สุด"
 
@@ -13056,9 +13044,7 @@ msgid "English (US)"
 msgstr "อังกฤษ (สหรัฐอเมริกา)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:779
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Enhanced"
 msgstr "ปรับปรุงแล้ว"
 
@@ -14522,12 +14508,6 @@ msgstr "โฟกัสคนนี้"
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:27
 msgid "Focus window"
 msgstr "นำหน้าต่างกลับมา"
-
-#. Noise suppression option label for the GTCRN speech backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:59
-msgctxt "noise-suppression-option"
-msgid "Focused"
-msgstr "เน้น"
 
 #. Voice input processing profile optimized for spoken voice.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:197
@@ -18386,7 +18366,7 @@ msgid "Light theme"
 msgstr "ธีมสว่าง"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
 msgid "Lightweight classic filter, works on any device."
 msgstr "ตัวกรองคลาสสิกน้ำหนักเบา ใช้ได้กับทุกอุปกรณ์"
 
@@ -20948,12 +20928,12 @@ msgid "Networking and performance"
 msgstr "เครือข่ายและประสิทธิภาพ"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Neural filter that removes most background noise."
 msgstr "ฟิลเตอร์แบบโครงข่ายประสาทเทียมที่ช่วยลดเสียงรบกวนรอบข้างส่วนใหญ่"
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:55
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
 msgid "Neural filter, full audio bandwidth."
 msgstr "ฟิลเตอร์แบบโครงข่าย, แบนด์วิดท์เสียงเต็ม"
 
@@ -21784,7 +21764,7 @@ msgid "Noise"
 msgstr "เสียงรบกวน"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:32
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "การตัดเสียงรบกวน"
@@ -21814,7 +21794,7 @@ msgid "None"
 msgstr "ไม่มี"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:23
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "ไม่มี"
@@ -28127,7 +28107,7 @@ msgid "Sending messages is disabled in this community"
 msgstr "ปิดการส่งข้อความในคอมมูนิตี้นี้"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:72
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
 msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
 msgstr "ส่งทั้งสองช่องสัญญาณของไมโครโฟนสเตอริโอ ใช้ได้เฉพาะเมื่อไม่มีการลดทอนสัญญาณหรือมีการลดทอนสัญญาณแบบมาตรฐาน"
 
@@ -28142,7 +28122,7 @@ msgid "Sends your audio untouched. Best if you're using external audio software.
 msgstr "ส่งเสียงของคุณโดยไม่มีการปรับแต่ง เหมาะที่สุดหากคุณใช้ซอฟต์แวร์เสียงภายนอก"
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:28
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgid "Sends your microphone audio with no suppression."
 msgstr "ส่งเสียงไมโครโฟนของคุณโดยไม่มีการปรับลด"
 
@@ -30241,11 +30221,6 @@ msgstr "การลงชื่อเข้าใช้ด้วย SSO หม�
 msgid "Staff controls"
 msgstr "เครื่องมือสำหรับเจ้าหน้าที่"
 
-#. Noise suppression option label in the voice tab (browser default). Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
-msgid "Standard"
-msgstr "มาตรฐาน"
-
 #. Required-action modal notice for inbound phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
@@ -30447,7 +30422,7 @@ msgid "Step 4"
 msgstr "ขั้นตอนที่ 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:68
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
 msgid "Stereo microphone"
 msgstr "ไมโครโฟนสเตอริโอ"
 
@@ -30810,7 +30785,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "คุณภาพดีเยี่ยม ใช้ CPU ปานกลาง เหมาะสำหรับแชร์หน้าจอบน Chromium"
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:64
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
 msgid "Strongest neural filter for speech, limits audio to the speech range."
 msgstr "ตัวกรอง Neural ที่แรงที่สุดสำหรับคำพูด จำกัดเสียงให้อยู่ในช่วงคำพูด"
 

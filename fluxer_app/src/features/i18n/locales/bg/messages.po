@@ -4709,12 +4709,6 @@ msgstr "Значка"
 msgid "Balanced"
 msgstr "Балансирано"
 
-#. Noise suppression option label for the RNNoise backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
-msgctxt "noise-suppression-option"
-msgid "Balanced"
-msgstr "Балансирано"
-
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:129
@@ -5351,7 +5345,7 @@ msgid "Built-in shortcuts"
 msgstr "Вградени преки пътища"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:19
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
 msgid "Built-in suppression from your browser or system."
 msgstr "Вградено потискане от вашия браузър или система."
 
@@ -6948,12 +6942,6 @@ msgstr "Активирайте своя подарък, за да получит
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "Представяне за друго лице, марка или организация."
-
-#. Noise suppression option label for the Speex backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
-msgctxt "noise-suppression-option"
-msgid "Classic"
-msgstr "Класически"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -10070,7 +10058,7 @@ msgid "Cut"
 msgstr "Изрежи"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgid "Cuts audio below a loudness threshold, lowest CPU cost."
 msgstr "Отрязва аудио под праг на сила на звука, най-ниска цена на процесора."
 
@@ -13056,9 +13044,7 @@ msgid "English (US)"
 msgstr "Английски (САЩ)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:779
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Enhanced"
 msgstr "Подобрено"
 
@@ -14522,12 +14508,6 @@ msgstr "Фокусирай този човек"
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:27
 msgid "Focus window"
 msgstr "Покажи прозореца"
-
-#. Noise suppression option label for the GTCRN speech backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:59
-msgctxt "noise-suppression-option"
-msgid "Focused"
-msgstr "Фокусиран"
 
 #. Voice input processing profile optimized for spoken voice.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:197
@@ -18386,7 +18366,7 @@ msgid "Light theme"
 msgstr "Светла тема"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
 msgid "Lightweight classic filter, works on any device."
 msgstr "Лек класически филтър, работи на всяко устройство."
 
@@ -20948,12 +20928,12 @@ msgid "Networking and performance"
 msgstr "Мрежа и производителност"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Neural filter that removes most background noise."
 msgstr "Невронен филтър, който премахва повечето фонов шум."
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:55
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
 msgid "Neural filter, full audio bandwidth."
 msgstr "Невронен филтър, пълна аудио честотна лента."
 
@@ -21784,7 +21764,7 @@ msgid "Noise"
 msgstr "Шум"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:32
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "Шумна врата"
@@ -21814,7 +21794,7 @@ msgid "None"
 msgstr "Няма"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:23
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "Без потискане"
@@ -28127,7 +28107,7 @@ msgid "Sending messages is disabled in this community"
 msgstr "Изпращането на съобщения е деактивирано в тази общност"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:72
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
 msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
 msgstr "Изпраща и двата канала на стерео микрофон. Работи само без шумопотискане или със стандартно шумопотискане."
 
@@ -28142,7 +28122,7 @@ msgid "Sends your audio untouched. Best if you're using external audio software.
 msgstr "Изпраща звука ви без промени. Най-добре е, ако използвате външен аудио софтуер."
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:28
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgid "Sends your microphone audio with no suppression."
 msgstr "Изпраща аудиото от микрофона ви без потискане."
 
@@ -30241,11 +30221,6 @@ msgstr "Влизането чрез SSO изтече. Опитайте отно�
 msgid "Staff controls"
 msgstr "Админ контроли"
 
-#. Noise suppression option label in the voice tab (browser default). Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
-msgid "Standard"
-msgstr "Стандартен"
-
 #. Required-action modal notice for inbound phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
@@ -30447,7 +30422,7 @@ msgid "Step 4"
 msgstr "Стъпка 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:68
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
 msgid "Stereo microphone"
 msgstr "Стерео микрофон"
 
@@ -30810,7 +30785,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "Високо качество при умерено натоварване на процесора. Добър резервен вариант за споделяне на екран в Chromium."
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:64
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
 msgid "Strongest neural filter for speech, limits audio to the speech range."
 msgstr "Най-силният неврален филтър за реч, ограничава аудиото до диапазона на речта."
 

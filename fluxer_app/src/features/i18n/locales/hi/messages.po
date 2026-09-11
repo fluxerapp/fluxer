@@ -4709,12 +4709,6 @@ msgstr "बैज"
 msgid "Balanced"
 msgstr "संतुलित"
 
-#. Noise suppression option label for the RNNoise backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
-msgctxt "noise-suppression-option"
-msgid "Balanced"
-msgstr "संतुलित"
-
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:129
@@ -5351,7 +5345,7 @@ msgid "Built-in shortcuts"
 msgstr "बिल्ट-इन शॉर्टकट"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:19
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
 msgid "Built-in suppression from your browser or system."
 msgstr "आपके ब्राउज़र या सिस्टम से अंतर्निहित दमन।"
 
@@ -6948,12 +6942,6 @@ msgstr "अपना उपहार प्राप्त करें और {
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:313
 msgid "Claiming to be another person, brand, or organization."
 msgstr "किसी अन्य व्यक्ति, ब्रांड या संगठन के रूप में दावा करना।"
-
-#. Noise suppression option label for the Speex backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
-msgctxt "noise-suppression-option"
-msgid "Classic"
-msgstr "क्लासिक"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
@@ -10070,7 +10058,7 @@ msgid "Cut"
 msgstr "काटें"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgid "Cuts audio below a loudness threshold, lowest CPU cost."
 msgstr "यह एक लाउडनेस थ्रेशोल्ड से नीचे के ऑडियो को काटता है, सबसे कम CPU लागत।"
 
@@ -13056,9 +13044,7 @@ msgid "English (US)"
 msgstr "अंग्रेज़ी (यूएस)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#. Noise suppression option label in the voice tab (neural filter). Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:779
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Enhanced"
 msgstr "बेहतर"
 
@@ -14522,12 +14508,6 @@ msgstr "इस व्यक्ति पर फ़ोकस करें"
 #: src/features/voice/components/popout/PoppedOutOverlay.tsx:27
 msgid "Focus window"
 msgstr "विंडो को फोकस करें"
-
-#. Noise suppression option label for the GTCRN speech backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:59
-msgctxt "noise-suppression-option"
-msgid "Focused"
-msgstr "फ़ोकस्ड"
 
 #. Voice input processing profile optimized for spoken voice.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:197
@@ -18386,7 +18366,7 @@ msgid "Light theme"
 msgstr "लाइट थीम"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
 msgid "Lightweight classic filter, works on any device."
 msgstr "हल्का क्लासिक फ़िल्टर, किसी भी डिवाइस पर काम करता है।"
 
@@ -20948,12 +20928,12 @@ msgid "Networking and performance"
 msgstr "नेटवर्किंग और परफ़ॉर्मेंस"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
 msgid "Neural filter that removes most background noise."
 msgstr "बैकग्राउंड का ज़्यादातर शोर हटाने वाला न्यूरल फ़िल्टर।"
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:55
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
 msgid "Neural filter, full audio bandwidth."
 msgstr "न्यूरल फ़िल्टर, पूर्ण ऑडियो बैंडविड्थ।"
 
@@ -21784,7 +21764,7 @@ msgid "Noise"
 msgstr "शोर"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:32
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "नॉइज़ गेट"
@@ -21814,7 +21794,7 @@ msgid "None"
 msgstr "कोई नहीं"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:23
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "कोई नहीं"
@@ -28127,7 +28107,7 @@ msgid "Sending messages is disabled in this community"
 msgstr "इस कम्युनिटी में मैसेज भेजना बंद है"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:72
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
 msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
 msgstr "स्टीरियो माइक्रोफ़ोन के दोनों चैनल भेजता है। केवल बिना किसी दमन या मानक दमन के साथ काम करता है।"
 
@@ -28142,7 +28122,7 @@ msgid "Sends your audio untouched. Best if you're using external audio software.
 msgstr "आपकी ऑडियो को बिना किसी बदलाव के भेजता है। यदि आप बाहरी ऑडियो सॉफ़्टवेयर का उपयोग कर रहे हैं तो यह सबसे अच्छा है।"
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:28
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgid "Sends your microphone audio with no suppression."
 msgstr "आपके माइक्रोफ़ोन का ऑडियो बिना किसी दमन के भेजता है।"
 
@@ -30241,11 +30221,6 @@ msgstr "SSO साइन-इन का समय समाप्त हो ग�
 msgid "Staff controls"
 msgstr "स्टाफ़ कंट्रोल"
 
-#. Noise suppression option label in the voice tab (browser default). Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
-msgid "Standard"
-msgstr "सामान्य"
-
 #. Required-action modal notice for inbound phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:461
 msgid "Standard messaging rates from your carrier may apply."
@@ -30447,7 +30422,7 @@ msgid "Step 4"
 msgstr "चरण 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:68
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
 msgid "Stereo microphone"
 msgstr "स्टीरियो माइक्रोफ़ोन"
 
@@ -30810,7 +30785,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "मध्यम CPU लागत पर अच्छी क्वालिटी. स्क्रीन शेयरिंग के लिए अच्छा क्रोमियम फ़ॉलबैक."
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:64
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
 msgid "Strongest neural filter for speech, limits audio to the speech range."
 msgstr "भाषण के लिए सबसे मजबूत न्यूरल फ़िल्टर, ऑडियो को भाषण की सीमा तक सीमित करता है।"
 

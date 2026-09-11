@@ -17,7 +17,7 @@ import {
 	getSelectedNoiseSuppressionChoice,
 	setNoiseSuppressionChoice,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
-import {getNoiseSuppressionChoiceLabelDescriptor} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
+import {getNoiseSuppressionChoiceLabel} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
 import {
 	VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR,
 	VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR,
@@ -98,7 +98,7 @@ export const AudioProcessingModal = observer(() => {
 	const noiseSuppressionOptions: Array<ComboboxOption<VoiceNoiseSuppressionBackend>> =
 		getNoiseSuppressionChoiceValues().map((backend) => ({
 			value: backend,
-			label: i18n._(getNoiseSuppressionChoiceLabelDescriptor(backend)),
+			label: getNoiseSuppressionChoiceLabel(i18n, backend),
 		}));
 	return (
 		<Modal.Root
