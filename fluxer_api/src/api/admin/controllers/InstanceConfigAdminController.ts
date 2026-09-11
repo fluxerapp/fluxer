@@ -271,6 +271,11 @@ export function InstanceConfigAdminController(app: HonoApp) {
 								wordmark_url: readOptionalField(data.app_public.branding, 'wordmark_url'),
 								favicon_url: readOptionalField(data.app_public.branding, 'favicon_url'),
 								theme_color: readOptionalField(data.app_public.branding, 'theme_color'),
+								status_page_url: readOptionalField(data.app_public.branding, 'status_page_url'),
+								status_page_incident_history_url: readOptionalField(
+									data.app_public.branding,
+									'status_page_incident_history_url',
+								),
 							})
 						: undefined,
 					legal: data.app_public.legal

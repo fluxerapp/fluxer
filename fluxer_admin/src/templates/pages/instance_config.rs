@@ -833,6 +833,18 @@ fn app_public_config_section(
                                 app_public.branding.favicon_url.as_deref().unwrap_or(""),
                                 "https://example.com/favicon.ico",
                             ))
+                            (text_input(
+                                "app_status_page_url",
+                                "Status page URL",
+                                app_public.branding.status_page_url.as_deref().unwrap_or(""),
+                                "https://fluxerstatus.com",
+                            ))
+                            (text_input(
+                                "app_status_page_incident_history_url",
+                                "Status page history URL",
+                                app_public.branding.status_page_incident_history_url.as_deref().unwrap_or(""),
+                                "https://fluxerstatus.com/history",
+                            ))
                         }
                         div class="space-y-2" {
                             (checkbox(

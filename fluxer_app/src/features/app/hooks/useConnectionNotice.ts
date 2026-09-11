@@ -4,12 +4,13 @@ import {canSwitchAccountFromStalledConnection} from '@app/features/app/Connectio
 import {isClientBooting, isClientReconnecting} from '@app/features/app/state/ClientReadiness';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import StatusPage from '@app/features/user/state/StatusPage';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useEffect, useState} from 'react';
 
 const BOOT_NOTICE_DELAY_MS = 3_000;
+const STATUS_PAGE_URL = RuntimeConfig.statusPageUrl;
 
 export const ConnectionNoticeTone = Object.freeze({
 	NEUTRAL: 'neutral',
@@ -131,7 +132,7 @@ export function useConnectionNotice(): ConnectionNotice | null {
 	return {
 		tone: ConnectionNoticeTone.NEUTRAL,
 		message: i18n._(CONNECTION_ISSUES_DESCRIPTOR),
-		action: {label: i18n._(VIEW_STATUS_PAGE_DESCRIPTOR), url: ExternalUrls.SERVICE_STATUS},
+		action: STATUS_PAGE_URL ? {label: i18n._(VIEW_STATUS_PAGE_DESCRIPTOR), url: STATUS_PAGE_URL} : null,
 		showSwitchAccount,
 	};
 }

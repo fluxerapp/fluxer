@@ -72,6 +72,8 @@ export interface InstanceBranding {
 	wordmark_url: string | null;
 	favicon_url: string | null;
 	theme_color: string | null;
+	status_page_url: string | null;
+	status_page_incident_history_url: string | null;
 }
 
 export interface InstanceSetup {

@@ -24,6 +24,11 @@ const SCHEDULED_MAINTENANCE_NAGBAR_DESCRIPTOR = msg({
 	comment:
 		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.',
 });
+const SERVICE_INCIDENT_NAGBAR_DESCRIPTOR = msg({
+	message: 'Service incident nagbar',
+	comment:
+		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.',
+});
 const UNCLAIMED_ACCOUNT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Unclaimed account nagbar',
 	comment: 'Developer control label for the unclaimed-account banner.',
@@ -343,6 +348,22 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceScheduledMaintenance && !state.forceHideScheduledMaintenance,
 		forceShowDisabled: (state) => state.forceScheduledMaintenance,
 		forceHideDisabled: (state) => state.forceHideScheduledMaintenance,
+	},
+	{
+		key: 'forceIncident',
+		label: SERVICE_INCIDENT_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceConnectionNotice',
+		forceHideKey: 'forceHideConnectionNotice',
+		resetKeys: ['forceConnectionNotice'],
+		status: (state) =>
+			state.forceConnectionNotice
+				? FORCE_ENABLED
+				: state.forceHideConnectionNotice
+					? FORCE_DISABLED
+					: USING_ACTUAL_STATE,
+		useActualDisabled: (state) => !state.forceConnectionNotice && !state.forceHideConnectionNotice,
+		forceShowDisabled: (state) => state.forceConnectionNotice,
+		forceHideDisabled: (state) => state.forceHideConnectionNotice,
 	},
 	{
 		key: 'forceVoiceSessionRestore',
