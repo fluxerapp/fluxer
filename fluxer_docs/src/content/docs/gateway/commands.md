@@ -260,7 +260,7 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
 | self_mute?<sup>2</sup> | boolean | Whether the client has muted its own microphone (default false) |
 | self_deaf?<sup>2</sup> | boolean | Whether the client has deafened its own output (default false) |
 | self_video?<sup>2</sup> | boolean | Whether the client publishes camera video (default false) |
-| self_stream?<sup>5</sup> | boolean | Whether this connection advertises a screenshare track (default false) |
+| self_stream?<sup>4</sup> | boolean | Whether this connection advertises a screenshare track (default false) |
 | is_mobile?<sup>2</sup> | boolean | Whether this is a mobile voice client (default false) |
 | viewer_stream_keys?<sup>3</sup> | ?array[string] | The stream keys this connection is watching, where an omitted key keeps the current list and null clears it |
 | latitude? | number or string | The client latitude, used to pick a voice region |
@@ -272,9 +272,7 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
 
 <sup>3</sup> Every entry is a stream key whose scope, guild, and channel match this update. An entry that fails that check, or a value that is not an array, refuses the update with `VOICE_INVALID_STATE`, and an entry naming a connection that does not exist refuses it with `VOICE_CONNECTION_NOT_FOUND`
 
-<sup>4</sup> A non-negative integer. Fluxer treats every other value as absent, which disables the staleness check
-
-<sup>5</sup> Only `true` and the string `"true"` set it, and Fluxer publishes `false` when the member lacks `STREAM` in the channel. The screenshare track uses this same connection, so setting the flag issues no grant and sends no [Voice Server Update](/gateway/events/#voice-server-update)
+<sup>4</sup> Only `true` and the string `"true"` set it, and Fluxer publishes `false` when the member lacks `STREAM` in the channel. The screenshare track uses this same connection, so setting the flag issues no grant and sends no [Voice Server Update](/gateway/events/#voice-server-update)
 
 ```json
 {
