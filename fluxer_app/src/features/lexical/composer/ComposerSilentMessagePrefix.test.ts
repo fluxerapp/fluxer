@@ -259,7 +259,7 @@ describe('registerComposerMarkdownHighlight with silentMessagePrefix', () => {
 	it('keeps an autocompleted @everyone mention after @silent', () => {
 		const segment: MentionSegment = {
 			type: 'special',
-			id: 'everyone',
+			id: '@everyone',
 			displayText: '@everyone',
 			actualText: '@everyone',
 			start: 8,

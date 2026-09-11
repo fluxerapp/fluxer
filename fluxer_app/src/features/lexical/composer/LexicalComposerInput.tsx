@@ -17,6 +17,10 @@ import {registerComposerPlainText} from '@app/features/lexical/composer/Composer
 import {$hydrateComposerFromDraft, $projectComposer} from '@app/features/lexical/composer/ComposerSerialization';
 import {registerComposerSoftWrapDeletion} from '@app/features/lexical/composer/ComposerSoftWrapDeletion';
 import {
+	COMPOSER_RESCAN_TAG,
+	registerComposerSpecialMention,
+} from '@app/features/lexical/composer/ComposerSpecialMention';
+import {
 	type ComposerTypeaheadActiveState,
 	registerComposerTypeaheadModifierGuard,
 } from '@app/features/lexical/composer/ComposerTypeaheadModifierGuard';
@@ -127,6 +131,7 @@ export interface LexicalComposerInputProps {
 	markdownParserFlags?: number;
 	silentMessagePrefix?: boolean;
 	emojiShortcodeResolver?: ComposerEmojiResolver;
+	specialMentionsAllowed: boolean;
 	channelId?: string;
 	guildId?: string;
 	selectionToolbar?: boolean;
@@ -233,6 +238,7 @@ const ComposerInner = ({
 	markdownParserFlags,
 	silentMessagePrefix = false,
 	emojiShortcodeResolver,
+	specialMentionsAllowed,
 	selectionToolbar = true,
 	submitOnEnter = true,
 	focusRingTarget,
@@ -481,7 +487,7 @@ const ComposerInner = ({
 						$hydrateComposerFromDraft(display, segments, plainTextRef.current);
 						$selectComposerOffset(display.length);
 					},
-					{discrete: true},
+					{discrete: true, tag: COMPOSER_RESCAN_TAG},
 				);
 				resetComposerHistory(editor);
 			},
@@ -546,6 +552,11 @@ const ComposerInner = ({
 		);
 		return mergeRegister(...cleanups);
 	}, [editor, markdown, markdownParserFlags, plainText, silentMessagePrefix]);
+
+	useLayoutEffect(
+		() => registerComposerSpecialMention(editor, specialMentionsAllowed, plainText),
+		[editor, plainText, specialMentionsAllowed],
+	);
 
 	useEffect(() => {
 		return mergeRegister(

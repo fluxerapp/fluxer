@@ -40,6 +40,11 @@ import type {ComposerInsertPayload} from '@app/features/lexical/composer/compose
 import {normalizeSlotAutocompleteQuery as normalizeSlotQuery} from '@app/features/lexical/composer/SlashSlotAutocompleteQuery';
 import type {SlashOptionalContext, SlashSlotAutocompleteContext} from '@app/features/lexical/composer/slashSlots';
 import {
+	areSpecialMentionsAllowed,
+	createSpecialMentionPayload,
+	hasOpenCodeFence,
+} from '@app/features/lexical/composer/specialMentions';
+import {
 	type GifAutocompleteSearchState,
 	selectAutocompleteGifResults,
 	useAutocompleteGifSearch,
@@ -256,10 +261,7 @@ export function useLexicalAutocomplete({
 		? `${autocompleteTrigger.type}:${autocompleteTrigger.match.index == null ? -1 : autocompleteTrigger.match.index}:${autocompleteTrigger.match[0]}:${autocompleteTrigger.matchedText}`
 		: '';
 	const autocompleteQuery = useMemo(() => getAutocompleteQuery(autocompleteTrigger), [autocompleteTrigger]);
-	const hasOpenCodeBlock = useMemo(() => {
-		const match = textUpToCursor.match(/```/g);
-		return match != null && match.length > 0 && match.length % 2 !== 0;
-	}, [textUpToCursor]);
+	const hasOpenCodeBlock = useMemo(() => hasOpenCodeFence(textUpToCursor), [textUpToCursor]);
 
 	const memberSearchRank = useMemo(() => buildMemberSearchRank(memberSearchResults), [memberSearchResults]);
 	const slotMemberSearchRank = useMemo(() => buildMemberSearchRank(slotMemberSearchResults), [slotMemberSearchResults]);
@@ -291,6 +293,12 @@ export function useLexicalAutocomplete({
 
 	const canMentionEveryone =
 		allowSpecialMentions !== false && channel != null && Permission.can(Permissions.MENTION_EVERYONE, channel);
+	const specialMentionsAllowed = areSpecialMentionsAllowed(
+		channel,
+		allowSpecialMentions,
+		allowedTriggers,
+		canMentionEveryone,
+	);
 	const canUseCommand = useCallback(
 		(command: Command) => {
 			if (command.type === 'simple') {
@@ -373,7 +381,7 @@ export function useLexicalAutocomplete({
 						.map((id) => Users.getUser(id))
 						.filter((user): user is User => user != null);
 					const userOptions = filterDMUsers(users, parsedQuery);
-					options = channel.isPersonalNotes() ? userOptions : [...userOptions, ...SPECIAL_MENTIONS];
+					options = specialMentionsAllowed ? [...userOptions, ...SPECIAL_MENTIONS] : userOptions;
 				} else {
 					const recentSpeakers =
 						matchedText.length === 0 ? buildRecentSpeakerOptions(channel, MENTION_RESULT_LIMIT) : [];
@@ -399,7 +407,7 @@ export function useLexicalAutocomplete({
 							kind: 'role' as const,
 							role,
 						}));
-					const specialMentions = canMentionEveryone
+					const specialMentions = specialMentionsAllowed
 						? SPECIAL_MENTIONS.filter((mention) => {
 								if (queryForMatching.length === 0) {
 									return true;
@@ -538,6 +546,7 @@ export function useLexicalAutocomplete({
 		memberSearchRank,
 		memberSearchResults,
 		permissionVersion,
+		specialMentionsAllowed,
 	]);
 
 	useEffect(() => {
@@ -751,6 +760,7 @@ export function useLexicalAutocomplete({
 		handleSelect,
 		autocompleteQuery: resolvedAutocompleteQuery,
 		isSlotMenu,
+		specialMentionsAllowed,
 	};
 }
 
@@ -960,7 +970,7 @@ function optionToPayload(option: AutocompleteOption, channel: Channel | null): C
 		};
 	}
 	if (isSpecialMention(option)) {
-		return {kind: 'mention', mentionType: 'special', id: option.kind, display: option.kind, wire: option.kind};
+		return createSpecialMentionPayload(option.kind);
 	}
 	if (isChannel(option)) {
 		return {

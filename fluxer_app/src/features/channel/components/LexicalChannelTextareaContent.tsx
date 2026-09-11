@@ -497,6 +497,7 @@ export const LexicalChannelTextareaContent = observer(
 			isSlotMenu,
 			onCursorMove,
 			handleSelect,
+			specialMentionsAllowed,
 		} = useLexicalAutocomplete({
 			channel,
 			handleRef,
@@ -1348,6 +1349,7 @@ export const LexicalChannelTextareaContent = observer(
 										initialSegments={initialDraftRef.current.segments}
 										slotResolvers={slotResolvers}
 										emojiShortcodeResolver={composerEmojiResolver}
+										specialMentionsAllowed={specialMentionsAllowed}
 										channelId={channel.id}
 										guildId={channel.guildId}
 										submitOnEnter={!mobileLayout.enabled}

@@ -272,7 +272,7 @@ function mentionPresentation(format: MarkdownHlFormat): ComposerMentionPresentat
 	return presentation;
 }
 
-function $nodeWireText(node: LexicalNode): string {
+export function $nodeWireText(node: LexicalNode): string {
 	if (
 		$isComposerMentionNode(node) ||
 		$isComposerCustomEmojiNode(node) ||
