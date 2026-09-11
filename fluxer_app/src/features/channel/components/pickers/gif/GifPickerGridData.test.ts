@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {describe, expect, it} from 'vitest';
+import type {FavoriteGifEntry} from './FavoriteGifTypes';
 import {buildGifPickerGridData} from './GifPickerGridData';
 import type {FavoriteAwareGif} from './GifPickerTypes';
 
@@ -19,7 +20,84 @@ function gif(id: string, width = 200, height = 120): FavoriteAwareGif {
 	};
 }
 
+const OPAQUE_PROXY_URL =
+	'https://media.test/external/sig/v2/aHR0cHM6Ly9zdGF0aWMua2xpcHkuY29tL2lpLzhjLzZhL2E4LzVsU2U1SFBCLndlYm0';
+
+function slimFavorite(overrides: Partial<FavoriteGifEntry> = {}): FavoriteGifEntry {
+	return {
+		url: 'https://klipy.com/gifs/doc-brown-bttf',
+		proxy_url: OPAQUE_PROXY_URL,
+		width: 640,
+		height: 360,
+		media: {},
+		content_type: 'video/webm',
+		placeholder: null,
+		...overrides,
+	};
+}
+
 describe('GifPickerGridData', () => {
+	it('carries the stored content type of a slimmed favorite into its tile', () => {
+		const data = buildGifPickerGridData({
+			surface: 'favorites',
+			loading: false,
+			columns: 3,
+			provider: 'klipy',
+			featured: {gifs: [], categories: []},
+			gifs: [],
+			favoriteGifs: [slimFavorite()],
+			favoriteMemes: [],
+			useSavedMediaForGifFavorites: false,
+			featuredFavoritePreviewSeed: 0,
+			favoriteTitle: 'Favorites',
+			trendingTitle: 'Trending',
+		});
+		expect(data[0]).toMatchObject({
+			type: 'gif',
+			gif: {proxy_src: OPAQUE_PROXY_URL, contentType: 'video/webm'},
+		});
+	});
+
+	it('carries the stored content type of a slimmed favorite into the featured favorites tile', () => {
+		const data = buildGifPickerGridData({
+			surface: 'featured',
+			loading: false,
+			columns: 3,
+			provider: 'klipy',
+			featured: {gifs: [gif('featured')], categories: []},
+			gifs: [],
+			favoriteGifs: [slimFavorite()],
+			favoriteMemes: [],
+			useSavedMediaForGifFavorites: false,
+			featuredFavoritePreviewSeed: 0,
+			favoriteTitle: 'Favorites',
+			trendingTitle: 'Trending',
+		});
+		expect(data[0]).toMatchObject({
+			type: 'category',
+			previewProxySrc: OPAQUE_PROXY_URL,
+			previewContentType: 'video/webm',
+		});
+	});
+
+	it('takes the content type of the saved media standing in for an empty favorites tile', () => {
+		const data = buildGifPickerGridData({
+			surface: 'featured',
+			loading: false,
+			columns: 3,
+			provider: 'klipy',
+			featured: {gifs: [gif('featured')], categories: []},
+			gifs: [],
+			favoriteGifs: [],
+			favoriteMemes: [{contentType: 'video/mp4', url: 'meme-0'}],
+			useSavedMediaForGifFavorites: true,
+			featuredFavoritePreviewSeed: 0,
+			favoriteTitle: 'Favorites',
+			trendingTitle: 'Trending',
+		});
+		expect(data[0]).toMatchObject({type: 'category', previewProxySrc: 'meme-0', previewContentType: 'video/mp4'});
+	});
+
 	it('keeps featured data deterministic while choosing preview tiles', () => {
 		const data = buildGifPickerGridData({
 			surface: 'featured',

@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import {safePause, safePlay, useGifVideoPool} from '@app/features/channel/components/GifVideoPool';
+import {resolvesToVideo} from '@app/features/channel/components/pickers/gif/GifPickerMediaKind';
 import type {GifPickerGridItemData} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
 import {PickerThumbnail} from '@app/features/channel/components/pickers/shared/PickerThumbnail';
 import {usePooledVideo} from '@app/features/channel/components/pickers/shared/usePooledVideo';
@@ -52,30 +53,6 @@ const SELECT_GIF_DESCRIPTOR = msg({
 	comment:
 		'Button label in the gif picker grid item when picking a GIF for an avatar, banner, or video background. Keep it concise. Preserve {title}; it is inserted by code.',
 });
-const VIDEO_FILE_EXTENSION_REGEX = /\.(mp4|webm|mov|m4v)(?:$|\?)/iu;
-const IMAGE_FILE_EXTENSION_REGEX = /\.(gif|webp|png|jpe?g|avif)(?:$|\?)/iu;
-
-function testSourcePath(value: string, pattern: RegExp): boolean {
-	try {
-		const url = new URL(value);
-		return pattern.test(url.pathname);
-	} catch {
-		return pattern.test(value);
-	}
-}
-
-function isVideoSourceUrl(value: string): boolean {
-	return testSourcePath(value, VIDEO_FILE_EXTENSION_REGEX);
-}
-
-function statesItsMediaKind(value: string): boolean {
-	return testSourcePath(value, VIDEO_FILE_EXTENSION_REGEX) || testSourcePath(value, IMAGE_FILE_EXTENSION_REGEX);
-}
-
-function resolvesToVideo(proxySrc: string, mediaSourceUrl: string | null): boolean {
-	if (statesItsMediaKind(proxySrc)) return isVideoSourceUrl(proxySrc);
-	return mediaSourceUrl !== null && isVideoSourceUrl(mediaSourceUrl);
-}
 
 export const GifPickerGridItem = observer(function GifPickerGridItem({
 	item,
@@ -126,6 +103,11 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		if (item.type === 'category') return item.previewUrl;
 		return null;
 	})();
+	const mediaContentType = (() => {
+		if (item.type === 'gif') return item.gif.contentType ?? '';
+		if (item.type === 'category') return item.previewContentType ?? '';
+		return '';
+	})();
 	const thumbnailPlaceholder = (() => {
 		if (item.type !== 'gif') return null;
 		if (item.gif.placeholder) return item.gif.placeholder;
@@ -133,7 +115,10 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 		return FavoriteGif.findByUrl(lookupUrl)?.placeholder ?? null;
 	})();
 	const usesVideoElement =
-		!isSkeleton && proxySrc !== null && proxySrc.length > 0 && resolvesToVideo(proxySrc, mediaSourceUrl);
+		!isSkeleton &&
+		proxySrc !== null &&
+		proxySrc.length > 0 &&
+		resolvesToVideo(mediaContentType, proxySrc, mediaSourceUrl);
 	const videoThumbHashURL = decodeThumbHashDataURL(usesVideoElement ? thumbnailPlaceholder : null);
 	const hasThumbnailContent = (proxySrc !== null && proxySrc.length > 0) || thumbnailPlaceholder !== null;
 	const videoRef = usePooledVideo({
