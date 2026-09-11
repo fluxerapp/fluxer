@@ -9,6 +9,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailabilityWithGuildFallback} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import ChannelMemberCount from '@app/features/guild/state/ChannelMemberCount';
 import Guilds from '@app/features/guild/state/Guilds';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {
 	type LexicalMessageCommandResolution,
@@ -446,7 +447,7 @@ export const useTextareaSubmit = ({
 		let actualContent = displayToActual(value).trim();
 		if (composerHandle !== null) {
 			lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
-			actualContent = composerHandle.getWireValue().trim();
+			actualContent = dropTrailingEmptyBlockquoteLines(composerHandle.getWireValue()).trim();
 		}
 		const resolvedContent = resolveTypedEmojiContent(actualContent);
 		let parsedCommand: CommandUtils.ParsedCommand | null = null;

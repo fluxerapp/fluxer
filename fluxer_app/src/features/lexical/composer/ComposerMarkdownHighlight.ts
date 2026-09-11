@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {findBlockquoteMarkerEnds} from '@app/features/lexical/composer/blockquoteLines';
+import {
+	$rewriteMultilineBlockquoteMarker,
+	$snapCaretOutOfBlockquoteMarker,
+	$splitComposerLines,
+	$syncComposerBlockquoteLines,
+} from '@app/features/lexical/composer/ComposerBlockquote';
 import {$captureSelectionOffsets, $selectComposerRange} from '@app/features/lexical/composer/composerOffsets';
 import {
 	computeMarkdownHighlightSpans,
@@ -8,6 +15,11 @@ import {
 	type MarkdownSpan,
 	markSilentMessagePrefix,
 } from '@app/features/lexical/composer/markdownSpans';
+import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
+import {
+	$createComposerBlockquoteMarkerNode,
+	$isComposerBlockquoteMarkerNode,
+} from '@app/features/lexical/composer/nodes/ComposerBlockquoteMarkerNode';
 import {$isComposerCommandNode} from '@app/features/lexical/composer/nodes/ComposerCommandNode';
 import {$isComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {
@@ -24,7 +36,6 @@ import {
 	$createTextNode,
 	$getNodeByKey,
 	$getSelection,
-	$isLineBreakNode,
 	$isNodeSelection,
 	$isRangeSelection,
 	$setSelection,
@@ -42,7 +53,6 @@ const STYLE_BY_BIT: ReadonlyArray<{bit: number; style: string}> = [
 		style: 'background-color:var(--background-modifier-active,rgba(0,0,0,0.15));border-radius:0.1875rem',
 	},
 	{bit: MarkdownHl.heading, style: 'font-weight:700'},
-	{bit: MarkdownHl.blockquote, style: 'color:var(--text-secondary)'},
 	{bit: MarkdownHl.subtext, style: 'font-size:0.85em;color:var(--text-muted,var(--text-secondary))'},
 	{bit: MarkdownHl.link, style: 'color:var(--text-link)'},
 	{bit: MarkdownHl.codeBlock, style: 'font-size:0.75em'},
@@ -98,6 +108,7 @@ export function registerComposerMarkdownHighlight(
 
 type Desired =
 	| {role: 'marker'; text: string}
+	| {role: 'quote'; text: string}
 	| {role: 'content'; text: string; format: MarkdownHlFormat}
 	| {role: 'keep'; node: LexicalNode};
 
@@ -105,31 +116,26 @@ type BuildableDesired = Exclude<Desired, {role: 'keep'}>;
 
 export function $reconcileLineOf(node: TextNode, parserFlags?: number): void {
 	const parent = node.getParent();
-	if (parent == null || parent.getType() !== 'paragraph') {
+	const block = $isComposerBlockquoteLineNode(parent) ? parent.getParent() : parent;
+	if (block == null || block.getType() !== 'paragraph') {
 		return;
 	}
-	$reconcileParagraph(parent as ParagraphNode, parserFlags);
+	$reconcileParagraph(block as ParagraphNode, parserFlags);
 }
 
 function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number, silentMessagePrefix = false): void {
-	const lines: Array<Array<LexicalNode>> = [];
-	let line: Array<LexicalNode> = [];
-	for (const child of paragraph.getChildren()) {
-		if ($isLineBreakNode(child)) {
-			lines.push(line);
-			line = [];
-		} else {
-			line.push(child);
-		}
-	}
-	lines.push(line);
-	const lineSources = lines.map((nodes) => nodes.map($nodeWireText).join(''));
+	const lines = $splitComposerLines(paragraph);
+	const lineSources = lines.map((line) => line.nodes.map($nodeWireText).join(''));
 	const source = lineSources.join('\n');
 	const markdownSpans = computeMarkdownHighlightSpans(source, parserFlags);
+	const quoteMarkerEnds = findBlockquoteMarkerEnds(source, markdownSpans);
+	if ($rewriteMultilineBlockquoteMarker(lines, lineSources, quoteMarkerEnds)) {
+		return;
+	}
 	const spans = silentMessagePrefix ? markSilentMessagePrefix(markdownSpans, source) : markdownSpans;
 	let lineStart = 0;
 	for (let index = 0; index < lines.length; index += 1) {
-		const nodes = lines[index]!;
+		const nodes = lines[index]!.nodes;
 		const lineSource = lineSources[index]!;
 		const lineEnd = lineStart + lineSource.length;
 		if (nodes.length > 0) {
@@ -140,9 +146,16 @@ function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number, sil
 					end: Math.min(span.end, lineEnd) - lineStart,
 				}))
 				.filter((span) => span.end > span.start);
-			$reconcileLine(nodes, parserFlags, lineSource, lineSpans);
+			$reconcileLine(nodes, parserFlags, lineSource, lineSpans, quoteMarkerEnds[index]);
 		}
 		lineStart = lineEnd + 1;
+	}
+	$syncComposerBlockquoteLines(
+		paragraph,
+		quoteMarkerEnds.map((end) => end > 0),
+	);
+	if (quoteMarkerEnds.some((end) => end > 0)) {
+		$snapCaretOutOfBlockquoteMarker();
 	}
 }
 
@@ -161,6 +174,7 @@ function $reconcileLine(
 	parserFlags?: number,
 	precomputedSource?: string,
 	precomputedSpans?: Array<MarkdownSpan>,
+	quoteMarkerEnd = 0,
 ): void {
 	const desired: Array<Desired> = [];
 	const source = precomputedSource == null ? line.map($nodeWireText).join('') : precomputedSource;
@@ -210,7 +224,16 @@ function $reconcileLine(
 					continue;
 				}
 				const text = source.slice(start, end);
-				desired.push(span.role === 'marker' ? {role: 'marker', text} : {role: 'content', text, format: span.format});
+				const previous = desired[desired.length - 1];
+				if (span.role === 'marker' && span.start < quoteMarkerEnd) {
+					if (previous != null && previous.role === 'quote') {
+						previous.text += text;
+					} else {
+						desired.push({role: 'quote', text});
+					}
+				} else {
+					desired.push(span.role === 'marker' ? {role: 'marker', text} : {role: 'content', text, format: span.format});
+				}
 			}
 		} else {
 			desired.push({role: 'keep', node});
@@ -309,8 +332,12 @@ function $descriptorsMatch(line: Array<LexicalNode>, desired: Array<Desired>): b
 		if (!(node instanceof TextNode) || node.getTextContent() !== want.text) {
 			return false;
 		}
-		if (want.role === 'marker') {
-			if (!$isSyntaxMarkerNode(node)) {
+		if (want.role === 'quote') {
+			if (!$isComposerBlockquoteMarkerNode(node)) {
+				return false;
+			}
+		} else if (want.role === 'marker') {
+			if (!$isSyntaxMarkerNode(node) || $isComposerBlockquoteMarkerNode(node)) {
 				return false;
 			}
 		} else if ($isSyntaxMarkerNode(node) || !$contentNodeMatchesFormat(node, want.format)) {
@@ -321,6 +348,9 @@ function $descriptorsMatch(line: Array<LexicalNode>, desired: Array<Desired>): b
 }
 
 function $buildDescriptorNode(desired: BuildableDesired): TextNode {
+	if (desired.role === 'quote') {
+		return $createComposerBlockquoteMarkerNode(desired.text);
+	}
 	if (desired.role === 'marker') {
 		return $createSyntaxMarkerNode(desired.text);
 	}

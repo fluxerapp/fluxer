@@ -9,6 +9,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
@@ -145,7 +146,7 @@ export const ChannelOverviewTopicEditor = observer(
 				});
 			}, [actualTopic, form, isTopicInitialized]);
 			const handleTopicChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
-				setActualTopic(wire);
+				setActualTopic(dropTrailingEmptyBlockquoteLines(wire));
 			}, []);
 			const handleTopicEmojiSelect = useCallback((emoji: FlatEmoji, shiftKey: boolean) => {
 				const composer = composerRef.current;

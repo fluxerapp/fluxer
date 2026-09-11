@@ -11,6 +11,8 @@ import {
 	$wrapComposerSelection,
 } from '@app/features/lexical/composer/composerOffsets';
 import {DEFAULT_COMPOSER_MARKDOWN_FLAGS} from '@app/features/lexical/composer/markdownSpans';
+import {ComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
+import {ComposerBlockquoteMarkerNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteMarkerNode';
 import {
 	$isComposerCustomEmojiNode,
 	ComposerCustomEmojiNode,
@@ -261,7 +263,13 @@ const PARSER_ROWS: Array<[text: string, start: number, end: number, content: str
 function createComposer(): LexicalEditor {
 	const editor = createEditor({
 		namespace: 'code-block-wrap-test',
-		nodes: [ComposerCustomEmojiNode, ComposerMentionNode, SyntaxMarkerNode],
+		nodes: [
+			ComposerBlockquoteLineNode,
+			ComposerBlockquoteMarkerNode,
+			ComposerCustomEmojiNode,
+			ComposerMentionNode,
+			SyntaxMarkerNode,
+		],
 		onError: (error) => {
 			throw error;
 		},

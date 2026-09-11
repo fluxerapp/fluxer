@@ -6,6 +6,7 @@ import {
 	$createComposerInsertNode,
 	$selectComposerRange,
 } from '@app/features/lexical/composer/composerOffsets';
+import {$getComposerLineNodes} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {ComposerMentionNode} from '@app/features/lexical/composer/nodes/ComposerMentionNode';
 import {ComposerPlainSegmentNode} from '@app/features/lexical/composer/nodes/ComposerPlainSegmentNode';
 import {$isSyntaxMarkerNode} from '@app/features/lexical/composer/nodes/SyntaxMarkerNode';
@@ -93,7 +94,7 @@ function $convertSpecialMention(root: RootNode, plainText: boolean): void {
 			source += '\n';
 			displayLength += 1;
 		}
-		for (const child of $isElementNode(block) ? block.getChildren() : [block]) {
+		for (const child of $isElementNode(block) ? $getComposerLineNodes(block) : [block]) {
 			if (
 				$isTextNode(child) &&
 				child.isSimpleText() &&

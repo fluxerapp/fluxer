@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AutocompleteOption, AutocompleteType} from '@app/features/channel/components/AutocompleteTypes';
+import {registerComposerBlockquote} from '@app/features/lexical/composer/ComposerBlockquote';
 import {registerComposerClipboardCommands} from '@app/features/lexical/composer/ComposerClipboard';
 import {registerComposerCodeIndent} from '@app/features/lexical/composer/ComposerCodeIndent';
 import {
@@ -40,6 +41,8 @@ import {
 } from '@app/features/lexical/composer/composerOffsets';
 import styles from '@app/features/lexical/composer/LexicalMessageComposer.module.css';
 import {DEFAULT_COMPOSER_MARKDOWN_FLAGS} from '@app/features/lexical/composer/markdownSpans';
+import {ComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
+import {ComposerBlockquoteMarkerNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteMarkerNode';
 import {ComposerCommandNode} from '@app/features/lexical/composer/nodes/ComposerCommandNode';
 import {ComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {ComposerMentionNode} from '@app/features/lexical/composer/nodes/ComposerMentionNode';
@@ -105,6 +108,8 @@ import {useCallback, useEffect, useImperativeHandle, useLayoutEffect, useMemo, u
 const THEME: InitialConfigType['theme'] = {
 	paragraph: styles.paragraph,
 	syntaxMarker: styles.marker,
+	composerBlockquoteLine: styles.blockquoteLine,
+	composerBlockquoteMarker: styles.blockquoteMarker,
 	composerMention: clsx(styles.mentionHost, markupStyles.inlineFormat),
 	composerCustomEmoji: styles.emojiHost,
 	composerCommand: styles.command,
@@ -209,6 +214,8 @@ export const LexicalComposerInput = observer((props: LexicalComposerInputProps) 
 			SlashSeparatorNode,
 			SlashOptionalHintNode,
 			SyntaxMarkerNode,
+			ComposerBlockquoteLineNode,
+			ComposerBlockquoteMarkerNode,
 		],
 		theme: THEME,
 	};
@@ -517,6 +524,7 @@ const ComposerInner = ({
 			cleanups.push(registerSlashSlotFocus(editor, () => onSlashCommandStateChangeRef.current));
 			if (markdown) {
 				cleanups.push(registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix));
+				cleanups.push(registerComposerBlockquote(editor));
 			}
 			cleanups.push(
 				registerComposerEmojiShortcode(editor, (shortcodeName) => {

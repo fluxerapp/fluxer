@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {BlockquoteLine} from '@app/features/lexical/composer/blockquoteLines';
 import {type CodeBlockWrapPlan, planCodeBlockWrap} from '@app/features/lexical/composer/codeBlockWrap';
+import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
+import {$isComposerBlockquoteMarkerNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteMarkerNode';
 import {
 	$createComposerCustomEmojiNode,
 	$isComposerCustomEmojiNode,
@@ -199,6 +202,41 @@ function $captureSelectionOffsetsFromLayout(layout: DisplayLayout): ComposerSele
 	};
 }
 
+export interface ComposerBlockquoteState {
+	scanText: string;
+	selection: ComposerSelectionOffsets | null;
+	lines: Array<BlockquoteLine>;
+}
+
+function blockquoteLinesFromLayout(layout: DisplayLayout): Array<BlockquoteLine> {
+	const lines: Array<BlockquoteLine> = [];
+	for (const leaf of layout.leaves) {
+		const parent = leaf.node.getParent();
+		if (
+			!$isComposerBlockquoteMarkerNode(leaf.node) ||
+			!$isComposerBlockquoteLineNode(parent) ||
+			!leaf.node.is(parent.getFirstChild())
+		) {
+			continue;
+		}
+		const boundaries = layout.elementBoundaries.get(parent.getKey());
+		if (boundaries == null) {
+			continue;
+		}
+		lines.push({start: leaf.start, contentStart: leaf.end, end: boundaries[boundaries.length - 1]!});
+	}
+	return lines;
+}
+
+export function $getComposerBlockquoteState(): ComposerBlockquoteState {
+	const layout = $buildDisplayLayout();
+	return {
+		scanText: scanTextFromLayout(layout),
+		selection: $captureSelectionOffsetsFromLayout(layout),
+		lines: blockquoteLinesFromLayout(layout),
+	};
+}
+
 export function $getComposerSelectionRange(): {start: number; end: number} | null {
 	const offsets = $captureSelectionOffsets();
 	if (offsets == null) {
@@ -220,10 +258,6 @@ export function $getComposerDisplayText(): string {
 	return $buildDisplayLayout().text;
 }
 
-export function $getComposerScanText(): string {
-	return scanTextFromLayout($buildDisplayLayout());
-}
-
 function scanTextFromLayout({text, leaves}: DisplayLayout): string {
 	let scanText = '';
 	let offset = 0;
@@ -239,6 +273,10 @@ function scanTextFromLayout({text, leaves}: DisplayLayout): string {
 		}
 	}
 	return scanText + text.slice(offset);
+}
+
+export function $getComposerScanText(): string {
+	return scanTextFromLayout($buildDisplayLayout());
 }
 
 function $pointAtDisplayOffset(layout: DisplayLayout, offset: number): DisplayPoint {

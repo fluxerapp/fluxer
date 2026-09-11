@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {$getComposerLineNodes} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {
 	$createComposerCommandNode,
 	$isComposerCommandNode,
@@ -227,7 +228,7 @@ export function $projectComposer(): ComposerProjection {
 			wire += block.getTextContent();
 			continue;
 		}
-		for (const child of block.getChildren()) {
+		for (const child of $getComposerLineNodes(block)) {
 			if ($isLineBreakNode(child)) {
 				display += '\n';
 				wire += '\n';

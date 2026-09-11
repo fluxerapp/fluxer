@@ -22,6 +22,7 @@ export const MarkdownHl = {
 	link: 1 << 9,
 	codeBlock: 1 << 10,
 	silent: 1 << 11,
+	blockquoteMarker: 1 << 12,
 } as const;
 
 export type MarkdownHlFormat = number;
@@ -793,20 +794,21 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 	while (ctx.source[trimmedStart] === ' ' || ctx.source[trimmedStart] === '\t' || ctx.source[trimmedStart] === '\r') {
 		trimmedStart += 1;
 	}
-	const markerRanges: Array<{start: number; end: number}> = [];
+	const markerRanges: Array<{start: number; end: number; quote: boolean}> = [];
+	const blankRanges: Array<{start: number; end: number}> = [];
 	const sourceOffsets: Array<number> = [];
 	let virtualSource = '';
 	let blockEnd = start;
 	if (ctx.source.startsWith('>>> ', trimmedStart)) {
 		const contentStart = trimmedStart + 4;
-		markerRanges.push({start, end: contentStart});
+		markerRanges.push({start, end: contentStart, quote: true});
 		virtualSource = ctx.source.slice(contentStart);
 		for (let position = contentStart; position < ctx.source.length; position += 1) {
 			sourceOffsets.push(position);
 		}
 		blockEnd = ctx.source.length;
 	} else {
-		const lines: Array<{start: number; end: number; contentStart: number}> = [];
+		const lines: Array<{start: number; end: number; prefixEnd: number; contentStart: number}> = [];
 		let lineStart = start;
 		while (lineStart <= ctx.source.length) {
 			const newline = ctx.source.indexOf('\n', lineStart);
@@ -820,7 +822,7 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 			}
 			const rest = ctx.source.slice(quoteStart + 2, lineEnd);
 			const contentStart = /^[ \t\r]*$/.test(rest) ? lineEnd : quoteStart + 2;
-			lines.push({start: lineStart, end: lineEnd, contentStart});
+			lines.push({start: lineStart, end: lineEnd, prefixEnd: quoteStart + 2, contentStart});
 			if (newline < 0) {
 				break;
 			}
@@ -832,10 +834,13 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 		}
 		for (let index = 0; index < lines.length; index += 1) {
 			const line = lines[index]!;
-			markerRanges.push({start: line.start, end: line.contentStart});
+			markerRanges.push({start: line.start, end: line.prefixEnd, quote: true});
+			if (line.contentStart > line.prefixEnd) {
+				blankRanges.push({start: line.prefixEnd, end: line.contentStart});
+			}
 			let repeatedPrefix = line.contentStart;
 			while (ctx.source.startsWith('> ', repeatedPrefix) && repeatedPrefix < line.end) {
-				markerRanges.push({start: repeatedPrefix, end: repeatedPrefix + 2});
+				markerRanges.push({start: repeatedPrefix, end: repeatedPrefix + 2, quote: false});
 				repeatedPrefix += 2;
 			}
 			for (let position = line.contentStart; position < line.end; position += 1) {
@@ -890,12 +895,18 @@ function alignBlockquote(children: Array<Node>, format: MarkdownHlFormat, ctx: A
 				return;
 			}
 			roles[sourceOffset - start] = span.role;
-			formats[sourceOffset - start] = span.format;
+			formats[sourceOffset - start] = span.format & ~MarkdownHl.blockquoteMarker;
 		}
 	}
 	for (const range of markerRanges) {
 		for (let position = range.start; position < range.end; position += 1) {
 			roles[position - start] = 'marker';
+			formats[position - start] = range.quote ? format | MarkdownHl.blockquoteMarker : format;
+		}
+	}
+	for (const range of blankRanges) {
+		for (let position = range.start; position < range.end; position += 1) {
+			roles[position - start] = 'content';
 			formats[position - start] = format;
 		}
 	}
@@ -933,7 +944,7 @@ function alignAlert(format: MarkdownHlFormat, ctx: AlignContext): void {
 		}
 		const newline = ctx.source.indexOf('\n', ctx.pos);
 		const lineEnd = newline < 0 ? ctx.source.length : newline;
-		pushMarker(ctx, quoteStart + 2 - ctx.pos, bodyFormat);
+		pushMarker(ctx, quoteStart + 2 - ctx.pos, bodyFormat | MarkdownHl.blockquoteMarker);
 		if (firstLine) {
 			const close = ctx.source.indexOf(']', ctx.pos);
 			if (!ctx.source.startsWith('[!', ctx.pos) || close < 0 || close >= lineEnd) {

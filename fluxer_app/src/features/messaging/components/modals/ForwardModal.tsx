@@ -12,6 +12,7 @@ import Channels from '@app/features/channel/state/Channels';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {MessageForwardFailedModal} from '@app/features/messaging/components/alerts/MessageForwardFailedModal';
@@ -225,7 +226,7 @@ export const ForwardModal = observer(
 			return selectedChannel == null ? null : selectedChannel;
 		}, [mostRecentlySelectedChannelId]);
 		const handleCommentChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
-			setActualOptionalMessage(wire);
+			setActualOptionalMessage(dropTrailingEmptyBlockquoteLines(wire));
 		}, []);
 		const isCommentOverLimit = actualOptionalMessage.length > user.maxMessageLength;
 		const isSendBlockedBySlowmode = slowmodeActiveSelectedChannelOptions.length > 0;
