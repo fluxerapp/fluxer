@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRequire} from 'node:module';
-import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {isPortableMode} from '@electron/common/UserDataPath';
 import {destroyDesktopTray} from '@electron/main/DesktopTray';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
+import {
+	DOWNLOAD_PAGE_URL,
+	getManualDownloadOptions,
+	getManualDownloadUrl,
+	MANUAL_DESKTOP_FORMATS,
+	type ManualDesktopFormat,
+	type ManualLatestFile,
+	type ManualLatestInfo,
+	UPDATE_BASE_URL,
+	type UpdaterDownloadOption,
+} from '@electron/main/UpdaterDownloads';
 import {setQuitting} from '@electron/main/Window';
 import {app, autoUpdater, type BrowserWindow, ipcMain} from 'electron';
 import log from 'electron-log';
 import type {UpdateInfo} from 'velopack';
 
 type UpdaterContext = 'user' | 'background' | 'focus';
-type UpdaterDownloadOption = {
-	format: ManualDesktopFormat;
-	label: string;
-	url: string;
-	suggestedName?: string;
-	sha256?: string | null;
-};
 type UpdaterEvent =
 	| {
 			type: 'checking';
@@ -63,17 +66,6 @@ type UpdaterEvent =
 	  };
 
 const requireModule = createRequire(import.meta.url);
-type DesktopDownloadArch = 'x64' | 'arm64';
-
-function getDesktopDownloadArch(arch: NodeJS.Architecture): DesktopDownloadArch {
-	return arch === 'arm64' ? 'arm64' : 'x64';
-}
-
-const DESKTOP_DOWNLOAD_ARCH = getDesktopDownloadArch(process.arch);
-const UPDATE_API_ENDPOINT = BUILD_CHANNEL === 'canary' ? 'https://api.canary.fluxer.app' : 'https://api.fluxer.app';
-const UPDATE_BASE_URL = `${UPDATE_API_ENDPOINT}/dl/desktop/${BUILD_CHANNEL}/${process.platform}/${DESKTOP_DOWNLOAD_ARCH}`;
-const DOWNLOAD_PAGE_URL =
-	BUILD_CHANNEL === 'canary' ? 'https://canary.fluxer.app/download' : 'https://fluxer.app/download';
 
 let lastContext: UpdaterContext = 'background';
 let pendingVelopackUpdate: UpdateInfo | null = null;
@@ -85,12 +77,6 @@ const UPDATE_DOWNLOAD_MAX_ATTEMPTS = 5;
 const UPDATE_DOWNLOAD_RETRY_BASE_DELAY_MS = 3000;
 const UPDATE_DOWNLOAD_RETRY_MAX_DELAY_MS = 60000;
 const ELECTRON_DOWNLOAD_MAX_RETRIES = 4;
-
-const MANUAL_DESKTOP_FORMATS = ['setup', 'dmg', 'zip', 'appimage', 'deb', 'rpm', 'tar_gz'] as const;
-
-type ManualDesktopFormat = (typeof MANUAL_DESKTOP_FORMATS)[number];
-type ManualLatestFile = {url: string; sha256: string | null};
-type LinuxManualDesktopFormat = Extract<ManualDesktopFormat, 'appimage' | 'deb' | 'rpm' | 'tar_gz'>;
 
 function send(win: BrowserWindow | null, event: UpdaterEvent) {
 	win?.webContents.send('updater-event', event);
@@ -399,12 +385,6 @@ function registerElectronUpdater(getMainWindow: () => BrowserWindow | null): voi
 	});
 }
 
-type ManualLatestInfo = {
-	version: string;
-	pubDate: string | null;
-	files: Partial<Record<ManualDesktopFormat, ManualLatestFile>>;
-};
-
 let manualLatestCache: {at: number; info: ManualLatestInfo} | null = null;
 
 const MANUAL_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -451,90 +431,6 @@ function parseManualLatestFiles(value: unknown): Partial<Record<ManualDesktopFor
 		};
 	}
 	return files;
-}
-
-function getManualDownloadFormatPreference(): Array<ManualDesktopFormat> {
-	if (process.platform === 'linux') {
-		return ['appimage', 'deb', 'rpm', 'tar_gz'];
-	}
-	if (process.platform === 'darwin') {
-		return ['dmg', 'zip'];
-	}
-	if (process.platform === 'win32') {
-		return ['setup'];
-	}
-	return [];
-}
-
-const LINUX_MANUAL_FORMAT_LABELS: Record<LinuxManualDesktopFormat, string> = {
-	appimage: 'AppImage',
-	deb: 'DEB package',
-	rpm: 'RPM package',
-	tar_gz: 'tar.gz archive',
-};
-
-const LINUX_MANUAL_FORMAT_EXTENSIONS: Record<LinuxManualDesktopFormat, string> = {
-	appimage: '.AppImage',
-	deb: '.deb',
-	rpm: '.rpm',
-	tar_gz: '.tar.gz',
-};
-
-const LINUX_MANUAL_ARCH_TOKENS: Record<LinuxManualDesktopFormat, Record<DesktopDownloadArch, string>> = {
-	appimage: {x64: 'x86_64', arm64: 'arm64'},
-	deb: {x64: 'amd64', arm64: 'arm64'},
-	rpm: {x64: 'x86_64', arm64: 'aarch64'},
-	tar_gz: {x64: 'x64', arm64: 'arm64'},
-};
-
-function isLinuxManualDesktopFormat(format: ManualDesktopFormat): format is LinuxManualDesktopFormat {
-	return format === 'appimage' || format === 'deb' || format === 'rpm' || format === 'tar_gz';
-}
-
-function buildManualLatestDownloadUrl(format: ManualDesktopFormat): string {
-	return `${UPDATE_BASE_URL}/latest/${format}`;
-}
-
-function getArtifactProductName(): string {
-	return BUILD_CHANNEL === 'canary' ? 'Fluxer-Canary' : 'Fluxer';
-}
-
-function getManualUpdateSuggestedName(format: LinuxManualDesktopFormat, version: string): string {
-	const archToken = LINUX_MANUAL_ARCH_TOKENS[format][DESKTOP_DOWNLOAD_ARCH];
-	const extension = LINUX_MANUAL_FORMAT_EXTENSIONS[format];
-	return `${getArtifactProductName()}-${version}-linux-${archToken}${extension}`;
-}
-
-function getManualDownloadOptions(info: ManualLatestInfo): Array<UpdaterDownloadOption> {
-	if (process.platform !== 'linux') {
-		return [];
-	}
-	return getManualDownloadFormatPreference()
-		.filter(isLinuxManualDesktopFormat)
-		.map((format) => {
-			const file = info.files[format];
-			return {
-				format,
-				label: LINUX_MANUAL_FORMAT_LABELS[format],
-				url: buildManualLatestDownloadUrl(format),
-				suggestedName: getManualUpdateSuggestedName(format, info.version),
-				sha256: file?.sha256 ?? null,
-			};
-		});
-}
-
-function getManualDownloadUrl(info: ManualLatestInfo): string {
-	const [preferredOption] = getManualDownloadOptions(info);
-	if (preferredOption) {
-		return preferredOption.url;
-	}
-	for (const format of getManualDownloadFormatPreference()) {
-		const url = info.files[format]?.url;
-		if (url) {
-			return url;
-		}
-	}
-	return DOWNLOAD_PAGE_URL;
 }
 
 async function fetchManualLatest(options: {forceRefresh?: boolean} = {}): Promise<ManualLatestInfo> {
