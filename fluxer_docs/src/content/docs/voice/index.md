@@ -71,9 +71,7 @@ A grant is issued when a connection opens, when it moves to another channel, and
 
 The grant `token` is issued for the media server and consumed by the media connection alone. No route on this API accepts it.
 
-Fluxer reports a guild refusal as [Voice State Ack](/gateway/events/#voice-state-ack) with a `status` of `rejected` and an `error_code` naming the exact reason, and only a command with a `mutation_id` receives one. A refused placement without it produces no Dispatch, so a client that needs to observe a guild refusal MUST send `mutation_id`.
-
-A call never acks. A refused placement into a direct message or group direct message call produces no Dispatch whether or not the command had `mutation_id`. A client observes that refusal only as the absence of a grant.
+Fluxer reports a refusal by sending no Dispatch. A client observes a refused placement only as the absence of a grant.
 
 ## Guild voice channels
 

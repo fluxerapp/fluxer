@@ -91,22 +91,6 @@ voice_state_update_connection_not_found_test() ->
         Request, State, {error, not_found, voice_connection_not_found}
     ).
 
-voice_state_update_connection_not_found_returns_rejected_ack_test() ->
-    State = base_test_state(),
-    Request = #{
-        user_id => 10,
-        channel_id => 100,
-        connection_id => <<"missing-conn">>,
-        mutation_id => <<"m-missing-connection">>,
-        runtime_epoch => <<"epoch-1">>,
-        base_version => 0
-    },
-    Ack = rejected_voice_state_ack(Request, State),
-    ?assertEqual(<<"rejected">>, maps:get(<<"status">>, Ack)),
-    ?assertEqual(0, maps:get(<<"server_version">>, Ack)),
-    ?assertEqual(#{}, maps:get(<<"canonical_state">>, Ack)),
-    ?assertEqual(<<"VOICE_CONNECTION_NOT_FOUND">>, maps:get(<<"error_code">>, Ack)).
-
 voice_state_update_invalid_viewer_stream_keys_test() ->
     State = connected_state(<<"10">>),
     Request = #{
@@ -146,98 +130,6 @@ voice_state_update_rejects_dm_scope_viewer_stream_key_test() ->
     assert_voice_state_update_error(
         Request, State, {error, validation_error, voice_invalid_state}
     ).
-
-voice_state_update_viewer_stream_keys_missing_connection_returns_rejected_ack_test() ->
-    VoiceStates = #{
-        <<"conn-1">> => #{
-            <<"channel_id">> => <<"100">>,
-            <<"connection_id">> => <<"conn-1">>,
-            <<"user_id">> => <<"10">>,
-            <<"version">> => 2
-        }
-    },
-    State = maps:put(voice_states, VoiceStates, base_test_state()),
-    Request = #{
-        user_id => 10,
-        channel_id => 100,
-        connection_id => <<"conn-1">>,
-        mutation_id => <<"m-missing-watched">>,
-        runtime_epoch => <<"epoch-1">>,
-        base_version => 2,
-        viewer_stream_keys => [<<"999:100:missing-conn">>]
-    },
-    Ack = rejected_voice_state_ack(Request, State),
-    ?assertEqual(<<"rejected">>, maps:get(<<"status">>, Ack)),
-    ?assertEqual(<<"VOICE_CONNECTION_NOT_FOUND">>, maps:get(<<"error_code">>, Ack)).
-
-voice_state_update_stale_base_version_returns_rejected_ack_test() ->
-    VoiceStates = #{
-        <<"conn-1">> => #{
-            <<"channel_id">> => <<"100">>,
-            <<"connection_id">> => <<"conn-1">>,
-            <<"user_id">> => <<"10">>,
-            <<"version">> => 5
-        }
-    },
-    State = maps:put(voice_states, VoiceStates, base_test_state()),
-    Request = #{
-        user_id => 10,
-        channel_id => 100,
-        connection_id => <<"conn-1">>,
-        mutation_id => <<"m1">>,
-        runtime_epoch => <<"epoch-1">>,
-        base_version => 3
-    },
-    Ack = rejected_voice_state_ack(Request, State),
-    ?assertEqual(<<"rejected">>, maps:get(<<"status">>, Ack)),
-    ?assertEqual(5, maps:get(<<"server_version">>, Ack)),
-    ?assertEqual(<<"stale_base_version">>, maps:get(<<"error_code">>, Ack)).
-
-voice_state_update_stale_base_version_no_superseded_arm_test() ->
-    VoiceStates = #{
-        <<"conn-2">> => #{
-            <<"channel_id">> => <<"100">>,
-            <<"connection_id">> => <<"conn-2">>,
-            <<"user_id">> => <<"10">>,
-            <<"version">> => 10
-        }
-    },
-    State = maps:put(voice_states, VoiceStates, base_test_state()),
-    Request = #{
-        user_id => 10,
-        channel_id => 100,
-        connection_id => <<"conn-2">>,
-        mutation_id => <<"m-reg">>,
-        runtime_epoch => <<"epoch-reg">>,
-        base_version => 7
-    },
-    Ack = rejected_voice_state_ack(Request, State),
-    ?assertEqual(<<"rejected">>, maps:get(<<"status">>, Ack)),
-    ?assertEqual(10, maps:get(<<"server_version">>, Ack)),
-    ?assertEqual(<<"stale_base_version">>, maps:get(<<"error_code">>, Ack)).
-
-voice_state_update_invalid_viewer_stream_keys_returns_rejected_ack_test() ->
-    VoiceStates = #{
-        <<"conn-1">> => #{
-            <<"channel_id">> => <<"100">>,
-            <<"connection_id">> => <<"conn-1">>,
-            <<"user_id">> => <<"10">>,
-            <<"version">> => 2
-        }
-    },
-    State = maps:put(voice_states, VoiceStates, base_test_state()),
-    Request = #{
-        user_id => 10,
-        channel_id => 100,
-        connection_id => <<"conn-1">>,
-        mutation_id => <<"m2">>,
-        runtime_epoch => <<"epoch-1">>,
-        base_version => 2,
-        viewer_stream_keys => 123
-    },
-    Ack = rejected_voice_state_ack(Request, State),
-    ?assertEqual(<<"rejected">>, maps:get(<<"status">>, Ack)),
-    ?assertEqual(<<"VOICE_INVALID_STATE">>, maps:get(<<"error_code">>, Ack)).
 
 voice_state_update_guild_id_missing_test() ->
     State0 = base_test_state(),
@@ -487,9 +379,3 @@ viewer_keys(State) ->
 
 assert_voice_state_update_error(Request, State, Error) ->
     {reply, Error, _} = guild_voice_connection:voice_state_update(Request, State).
-
--spec rejected_voice_state_ack(map(), map()) -> map().
-rejected_voice_state_ack(Request, State) ->
-    {reply, #{ack := #{} = Ack, success := false}, _} =
-        guild_voice_connection:voice_state_update(Request, State),
-    Ack.

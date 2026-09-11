@@ -36,7 +36,6 @@ import {
 	selectMediaEngineGatewayErrorDecision,
 	shouldCancelMediaEngineReconnectForServerVoiceStateRemoval,
 	shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval,
-	shouldNotifyCameraUserLimitRejection,
 	shouldRunMediaEngineDeferredDisconnect,
 	transitionMediaEngineFacadeSnapshot,
 } from '@app/features/voice/engine/MediaEngineFacadeStateMachine';
@@ -47,7 +46,6 @@ import {
 	CLAIM_YOUR_ACCOUNT_TO_START_OR_JOIN_1_DESCRIPTOR,
 	DEFERRED_DISCONNECT_TIMEOUT_MS,
 	RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR,
-	VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR,
 	VOICE_CHANNEL_NO_LONGER_AVAILABLE_DESCRIPTOR,
 	VOICE_CONNECTION_FAILED_DESCRIPTOR,
 	VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR,
@@ -136,7 +134,6 @@ import {VoiceEngineV2AppStatsHostAdapter} from '@app/features/voice/engine/v2/Vo
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import voiceEngineV2AppVoiceStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import type {DisplayScreenShareCaptureContext} from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import type {VoiceStateAckPayload} from '@app/features/voice/events/VoiceStateAck';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import {type ChannelE2EEStatus, computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -156,7 +153,6 @@ import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProce
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import type {
 	VoiceEngineV2AudioMode,
 	VoiceEngineV2CameraOptions,
@@ -1923,41 +1919,6 @@ class MediaEngineFacade extends Store {
 		Record<string, Readonly<Record<string, Readonly<Record<string, NormalizedVoiceState>>>>>
 	> {
 		return voiceEngineV2AppVoiceStateAdapter.getAllVoiceStates();
-	}
-
-	handleGatewayVoiceStateAck(data: VoiceStateAckPayload): void {
-		if (shouldNotifyCameraUserLimitRejection({status: data.status, errorCode: data.error_code})) {
-			this.handleCameraUserLimitRejection();
-		}
-		const canonicalState = data.canonical_state;
-		if (!canonicalState?.channel_id || !canonicalState.connection_id) {
-			logger.debug('Ignoring voice state ack without canonical connection state', {
-				mutationId: data.mutation_id,
-				status: data.status,
-				guildId: data.guild_id,
-				channelId: data.channel_id,
-				connectionId: data.connection_id,
-			});
-			return;
-		}
-		this.applyEngineGatewayEcho(
-			this.toEngineGatewayVoiceState(canonicalState, canonicalState.guild_id ?? data.guild_id ?? null),
-		);
-	}
-
-	private handleCameraUserLimitRejection(): void {
-		logger.warn('Camera enable rejected by the gateway camera user limit', {
-			limit: VOICE_CHANNEL_CAMERA_USER_LIMIT,
-		});
-		void this.setCameraEnabled(false, {sendUpdate: false}).catch((error) => {
-			logger.warn('Failed to turn the camera back off after a camera user limit rejection', {error});
-		});
-		if (!this.i18n) return;
-		this.showVoiceErrorModal(
-			VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR,
-			'voice.media-engine-facade.camera-user-limit-error-modal',
-			{voiceChannelCameraUserLimit: VOICE_CHANNEL_CAMERA_USER_LIMIT},
-		);
 	}
 
 	private toEngineGatewayVoiceState(

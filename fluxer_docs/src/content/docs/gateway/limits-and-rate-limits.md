@@ -110,7 +110,7 @@ Identify accepts at most 256 `ignored_events` entries. A longer array closes wit
 
 ## Voice admission
 
-Voice admission follows the enclosing guild, DM, group DM, channel, and permission rules. A refusal is reported as [Voice State Ack](/gateway/events/#voice-state-ack) with an `error_code` and closes nothing. A Voice State Update that has no `mutation_id` produces no event when it is refused.
+Voice admission follows the enclosing guild, DM, group DM, channel, and permission rules. A refusal produces no event and closes nothing.
 
 A guild voice channel admits at most `user_limit` users, where `0` means unlimited. A channel in which any participant has a camera enabled also admits at most 25 users in total, whatever its `user_limit`. A channel that already holds 25 users with cameras enabled refuses a further camera with `VOICE_CAMERA_USER_LIMIT`. [Capacity](/voice/#capacity) states these bounds in full.
 

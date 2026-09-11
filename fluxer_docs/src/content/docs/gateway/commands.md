@@ -15,7 +15,7 @@ Except for [Heartbeat](#heartbeat), [Identify](#identify), and [Resume](#resume)
 | 1 | Heartbeat | Opcode `11` Heartbeat ACK |
 | 2 | Identify | [Ready](/gateway/events/#ready), a close frame, or silence when the payload is held or discarded |
 | 3 | Presence Update | No direct response |
-| 4 | Voice State Update | [Voice State Ack](/gateway/events/#voice-state-ack), [Voice State Update](/gateway/events/#voice-state-update), and [Voice Server Update](/gateway/events/#voice-server-update) when state changes |
+| 4 | Voice State Update | [Voice State Update](/gateway/events/#voice-state-update) and [Voice Server Update](/gateway/events/#voice-server-update) when state changes |
 | 6 | Resume | Replayed Dispatches followed by [Resumed](/gateway/events/#resumed), Invalid Session, or a close frame |
 | 8 | Request Guild Members | One or more [Guild Members Chunk](/gateway/events/#guild-members-chunk) events |
 | 14 | Lazy Request | [Guild Sync](/gateway/events/#guild-sync) and [Guild Member List Update](/gateway/events/#guild-member-list-update) |
@@ -265,9 +265,6 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
 | viewer_stream_keys?<sup>3</sup> | ?array[string] | The stream keys this connection is watching, where an omitted key keeps the current list and null clears it |
 | latitude? | number or string | The client latitude, used to pick a voice region |
 | longitude? | number or string | The client longitude, used to pick a voice region |
-| mutation_id? | string | A client-generated identity echoed in [Voice State Ack](/gateway/events/#voice-state-ack) |
-| runtime_epoch? | string | The client runtime generation echoed in Voice State Ack |
-| base_version?<sup>4</sup> | integer | The voice state version this update was computed against |
 
 <sup>1</sup> A `channel_id` with no `connection_id` opens a new connection, and a `channel_id` with one updates or moves that connection. An update that leaves one guild, meaning a non-null `guild_id` with `channel_id: null`, requires a `connection_id`, and one that omits it is refused with `VOICE_MISSING_CONNECTION_ID`
 
@@ -288,9 +285,7 @@ Opcode `4` joins, moves, updates, or leaves the voice membership associated with
     "self_mute": false,
     "self_deaf": false,
     "self_video": false,
-    "self_stream": false,
-    "mutation_id": "e0a1c2",
-    "base_version": 7
+    "self_stream": false
   }
 }
 ```
@@ -304,10 +299,6 @@ Every field is optional. A non-null `guild_id` or `channel_id` is a canonical de
 The command has no `session_id` field. The current Gateway session is the membership identity.
 
 Joining or replacing a grant produces [Voice Server Update](/gateway/events/#voice-server-update) with the token and endpoint for the media connection, and [Voice State Update](/gateway/events/#voice-state-update) for every session that can see the channel.
-
-When a guild update has `mutation_id`, Fluxer also reports the outcome to the requesting session as [Voice State Ack](/gateway/events/#voice-state-ack), whose `status` is `applied` or `rejected` and whose `error_code` names the exact refusal. Without `mutation_id` a refusal produces no event at all, and the DM and group DM call context never acks.
-
-`base_version` is a staleness check for an update that names an existing guild connection. An update whose `base_version` is more than one behind that connection's current voice state version is rejected with `stale_base_version`. The check runs after the member, channel, and connection lookups and before the permission checks. It does not apply to opening a new connection, to leaving a channel, or to the DM and group DM call context.
 
 The first two updates in a rolling one-second window are processed immediately. Later updates enter a [per-session queue](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
 

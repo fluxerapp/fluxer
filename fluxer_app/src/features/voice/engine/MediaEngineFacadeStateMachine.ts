@@ -84,18 +84,6 @@ export interface MediaEngineFacadeGatewayErrorInput {
 	channelId: string | null;
 }
 
-export const VOICE_CAMERA_USER_LIMIT_ERROR_CODE = 'VOICE_CAMERA_USER_LIMIT';
-
-export interface MediaEngineFacadeVoiceStateAckRejectionInput {
-	status?: string;
-	errorCode?: string;
-}
-
-export function shouldNotifyCameraUserLimitRejection(input: MediaEngineFacadeVoiceStateAckRejectionInput): boolean {
-	if (input.status !== 'rejected') return false;
-	return input.errorCode === VOICE_CAMERA_USER_LIMIT_ERROR_CODE;
-}
-
 export type MediaEngineFacadeGatewayErrorDecision =
 	| {type: 'ignore'}
 	| {

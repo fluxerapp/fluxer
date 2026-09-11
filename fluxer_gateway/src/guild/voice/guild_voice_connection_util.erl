@@ -19,9 +19,7 @@
     maybe_attach_e2ee_key_to_reply/2,
     normalize_session_id/1,
     normalize_optional_binary/1,
-    applied_mutation_reply/3,
     maybe_error_reply/5,
-    rejected_mutation_reply/6,
     clear_virtual_access_flags/2
 ]).
 
@@ -62,9 +60,6 @@ build_context(Request0) ->
         viewer_stream_keys => maps:get(viewer_stream_keys, Request, undefined),
         latitude => Coord(maps:get(latitude, Request, undefined)),
         longitude => Coord(maps:get(longitude, Request, undefined)),
-        mutation_id => maps:get(mutation_id, Request, undefined),
-        runtime_epoch => maps:get(runtime_epoch, Request, undefined),
-        base_version => maps:get(base_version, Request, undefined),
         e2ee_capable => Norm(maps:get(e2ee_capable, Request, false)),
         bot => Norm(maps:get(bot, Request, false))
     }.
@@ -166,72 +161,10 @@ normalize_session_id(Value) ->
 normalize_optional_binary(Value) ->
     guild_voice_connection_normalize:normalize_optional_binary(Value).
 
--spec applied_mutation_reply({reply, map(), guild_state()}, context(), integer()) ->
-    {reply, map(), guild_state()}.
-applied_mutation_reply({reply, BaseReply, NewState}, Context, ChannelIdValue) ->
-    GuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
-        maps:get(id, NewState, undefined)
-    ),
-    NewVoiceState = maps:get(voice_state, BaseReply, #{}),
-    NewVersion = voice_state_utils:voice_state_version(NewVoiceState),
-    NormalizedConnId = normalize_conn_id_for_ack(Context),
-    Ack = guild_voice_mutation:build_ack(
-        maps:get(mutation_id, Context, undefined),
-        maps:get(runtime_epoch, Context, undefined),
-        NormalizedConnId,
-        GuildId,
-        ChannelIdValue,
-        #{
-            status => <<"applied">>,
-            server_version => NewVersion,
-            canonical_state => voice_state_utils:external_voice_state(NewVoiceState)
-        }
-    ),
-    Reply = merge_ack(BaseReply, Ack),
-    {reply, Reply, NewState}.
-
 -spec maybe_error_reply(context(), voice_state(), guild_state(), integer(), atom()) ->
     {reply, map(), guild_state()} | {reply, {error, atom(), atom()}, guild_state()}.
-maybe_error_reply(Context, ExistingVoiceState, State, ChannelIdValue, ErrorAtom) ->
-    case maps:get(mutation_id, Context, undefined) of
-        undefined ->
-            {reply, gateway_errors:error(ErrorAtom), State};
-        _ ->
-            rejected_mutation_reply(
-                Context, ExistingVoiceState, State, ChannelIdValue, <<"rejected">>, ErrorAtom
-            )
-    end.
-
--spec rejected_mutation_reply(
-    context(), voice_state(), guild_state(), integer(), binary(), atom() | binary()
-) -> {reply, map(), guild_state()}.
-rejected_mutation_reply(Context, ExistingVS, State, ChannelIdValue, Status, Error) ->
-    GuildId = guild_voice_connection_normalize:normalize_positive_snowflake(
-        maps:get(id, State, undefined)
-    ),
-    CurrentVersion = voice_state_utils:voice_state_version(ExistingVS),
-    NormalizedConnId = normalize_conn_id_for_ack(Context),
-    Ack = guild_voice_mutation:build_ack(
-        maps:get(mutation_id, Context, undefined),
-        maps:get(runtime_epoch, Context, undefined),
-        NormalizedConnId,
-        GuildId,
-        ChannelIdValue,
-        #{
-            status => Status,
-            server_version => CurrentVersion,
-            canonical_state => canonical_state_for_ack(ExistingVS),
-            error_code => rejection_error_code(Error),
-            error_message => rejection_error_message(Error)
-        }
-    ),
-    {reply, #{success => false, ack => Ack}, State}.
-
--spec canonical_state_for_ack(voice_state()) -> map().
-canonical_state_for_ack(VoiceState) when is_map(VoiceState), map_size(VoiceState) > 0 ->
-    voice_state_utils:external_voice_state(VoiceState);
-canonical_state_for_ack(_) ->
-    #{}.
+maybe_error_reply(_Context, _ExistingVoiceState, State, _ChannelIdValue, ErrorAtom) ->
+    {reply, gateway_errors:error(ErrorAtom), State}.
 
 -spec clear_virtual_access_flags(voice_state(), guild_state()) -> guild_state().
 clear_virtual_access_flags(VoiceState, State) when is_map(VoiceState) ->
@@ -243,26 +176,6 @@ clear_virtual_access_flags(VoiceState, State) when is_map(VoiceState) ->
         false ->
             State
     end.
-
--spec normalize_conn_id_for_ack(context()) -> binary() | null.
-normalize_conn_id_for_ack(Context) ->
-    case maps:get(connection_id, Context, undefined) of
-        undefined -> null;
-        C -> C
-    end.
-
--spec merge_ack(map(), term()) -> map().
-merge_ack(BaseReply, undefined) -> BaseReply;
-merge_ack(BaseReply, Ack) -> BaseReply#{ack => Ack}.
-
--spec rejection_error_code(atom() | binary()) -> binary().
-rejection_error_code(ErrorAtom) when is_atom(ErrorAtom) -> gateway_errors:error_code(ErrorAtom);
-rejection_error_code(ErrorCode) when is_binary(ErrorCode) -> ErrorCode.
-
--spec rejection_error_message(atom() | binary()) -> binary().
-rejection_error_message(ErrorAtom) when is_atom(ErrorAtom) ->
-    gateway_errors:error_message(ErrorAtom);
-rejection_error_message(ErrorMessage) when is_binary(ErrorMessage) -> ErrorMessage.
 
 -spec guild_data(guild_state()) -> map().
 guild_data(State) ->

@@ -10,10 +10,8 @@ import {
 	selectMediaEngineGatewayErrorDecision,
 	shouldCancelMediaEngineReconnectForServerVoiceStateRemoval,
 	shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval,
-	shouldNotifyCameraUserLimitRejection,
 	shouldRunMediaEngineDeferredDisconnect,
 	transitionMediaEngineFacadeSnapshot,
-	VOICE_CAMERA_USER_LIMIT_ERROR_CODE,
 } from './MediaEngineFacadeStateMachine';
 
 function connected(guildId: string | null = 'guild-1', channelId = 'channel-1') {
@@ -433,28 +431,5 @@ describe('MediaEngineFacadeStateMachine', () => {
 				channelLimitAllowed: true,
 			}),
 		).toEqual({type: 'navigate-channel-gate'});
-	});
-
-	it('notifies only for rejected voice state acks carrying the camera user limit error code', () => {
-		expect(
-			shouldNotifyCameraUserLimitRejection({
-				status: 'rejected',
-				errorCode: VOICE_CAMERA_USER_LIMIT_ERROR_CODE,
-			}),
-		).toBe(true);
-		expect(
-			shouldNotifyCameraUserLimitRejection({
-				status: 'applied',
-				errorCode: VOICE_CAMERA_USER_LIMIT_ERROR_CODE,
-			}),
-		).toBe(false);
-		expect(
-			shouldNotifyCameraUserLimitRejection({
-				status: 'rejected',
-				errorCode: 'VOICE_PERMISSION_DENIED',
-			}),
-		).toBe(false);
-		expect(shouldNotifyCameraUserLimitRejection({})).toBe(false);
-		expect(shouldNotifyCameraUserLimitRejection({status: 'rejected'})).toBe(false);
 	});
 });

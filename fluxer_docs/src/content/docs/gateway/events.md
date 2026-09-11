@@ -105,7 +105,6 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Channel Pins Update](#channel-pins-update) | A channel's most recent pin time changes | Channel visibility |
 | [Channel Pins ACK](#channel-pins-ack) | The current user acknowledges a channel's pins | Current user |
 | [Voice State Update](#voice-state-update) | A guild or call participant's voice state changes | Channel visibility |
-| [Voice State Ack](#voice-state-ack) | The session's own voice mutation is applied or rejected | Current session |
 | [Voice Server Update](#voice-server-update) | The session receives or replaces its own voice grant | Current session |
 | [Entrance Sound Play](#entrance-sound-play) | A participant's entrance sound plays in a voice channel | Voice channel |
 | [Call Create](#call-create) | A private channel call begins or becomes visible | Call recipient |
@@ -941,71 +940,6 @@ A `channel_id` of null means the participant left.
 <sup>1</sup> Publisher-asserted. In a guild voice channel Fluxer sets it to false when the participant lacks `STREAM`
 
 The broadcast form has no `region_id`, `server_id`, `latitude`, or `longitude`.
-
-### <span id="voice-state-ack"></span>VOICE_STATE_ACK
-
-Reports the outcome of the session's own [Voice State Update](/gateway/commands/#voice-state-update). Sent only when that command supplied `mutation_id`, and delivered to the requesting session alone.
-
-| Field | Type | Description |
-| --- | --- | --- |
-| mutation_id | string | The `mutation_id` the command supplied |
-| runtime_epoch<sup>1</sup> | string | The `runtime_epoch` the command supplied |
-| connection_id | ?string | Voice connection the mutation applied to |
-| guild_id | ?snowflake | Guild the mutation applied to |
-| channel_id | ?snowflake | Channel the mutation applied to |
-| status | string | `applied` or `rejected` |
-| server_version | integer | The voice state version after the mutation |
-| canonical_state<sup>2</sup> | [voice state object](#voice-state-object) | The authoritative voice state, an empty object when none exists |
-| error_code? | string | Stable rejection code, present only when `status` is `rejected` |
-| error_message? | string | Human-readable rejection message |
-
-<sup>1</sup> Echoed back unchanged. A command that omitted the field produces the literal string `undefined` here, so a client MUST compare the value against the epoch it sent
-
-<sup>2</sup> Also has the `region_id` and `server_id` fields a [Voice State Update](#voice-state-update) omits, and never has coordinates. Both extra fields are internal routing identity, and a client MUST NOT depend on them
-
-A mutation whose `base_version` is more than one behind the server's current version is rejected after the connection lookup and before the permission checks, with `error_code` and `error_message` both set to `stale_base_version`.
-
-Every other rejection has one of these codes, with `error_message` set to the registry text for the same code.
-
-#### `VOICE_CONNECTION_NOT_FOUND`
-
-The named voice connection does not exist and no matching pending connection could be restored.
-
-#### `VOICE_PENDING_EXPIRED`
-
-The pending voice connection expired before the mutation arrived.
-
-#### `VOICE_INVALID_STATE`
-
-A `viewer_stream_keys` entry is malformed, names another channel, or names a connection that is not in the channel.
-
-#### `VOICE_MEMBER_TIMED_OUT`<sup>1</sup>
-
-The member is timed out.
-
-#### `VOICE_PERMISSION_DENIED`<sup>1</sup>
-
-The user lacks `VIEW_CHANNEL` or `CONNECT` on the target channel.
-
-#### `VOICE_CHANNEL_FULL`<sup>1</sup>
-
-The channel is at its `user_limit`.
-
-#### `VOICE_CONNECTION_LIMIT_REACHED`<sup>1</sup>
-
-The user holds too many voice connections.
-
-#### `VOICE_CAMERA_USER_LIMIT`
-
-The channel already has 25 users with cameras enabled.
-
-#### `VOICE_E2EE_REQUIRED`<sup>1</sup>
-
-The channel is end-to-end encrypted and the client does not support it.
-
-<sup>1</sup> Checked only when the mutation moves the connection to a different channel. A mutation that keeps the connection in its current channel skips these checks and is applied
-
-Only a command that supplies `connection_id` can produce an ack. A command that omits it opens a new connection, and a `connection_id` that belongs to another user is rejected before any other check. A refusal of either kind produces no Dispatch. Without `mutation_id`, a refused voice state update also produces no Dispatch at all.
 
 ### <span id="voice-server-update"></span>VOICE_SERVER_UPDATE
 
