@@ -3,6 +3,8 @@
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {GuildID, UserID} from '../BrandedTypes';
 import type {VoiceRegionAvailability, VoiceRegionMetadata, VoiceRegionRecord, VoiceServerRecord} from './VoiceModel';
+import {preferServersUnderSoftLimit} from './VoiceRegionSelection';
+import type {VoiceServerLoadSource} from './VoiceServerLoad';
 import type {VoiceTopology} from './VoiceTopology';
 
 export interface VoiceAccessContext {
@@ -11,10 +13,19 @@ export interface VoiceAccessContext {
 	guildFeatures?: Set<string>;
 }
 
+const EMPTY_CONNECTION_COUNTS: ReadonlyMap<string, number> = new Map();
+
 export class VoiceAvailabilityService {
 	private rotationIndex: Map<string, number> = new Map();
 
-	constructor(private topology: VoiceTopology) {}
+	constructor(
+		private topology: VoiceTopology,
+		private loadSource: VoiceServerLoadSource | null = null,
+	) {}
+
+	getServerConnectionCounts(): ReadonlyMap<string, number> {
+		return this.loadSource?.getConnectionCounts() ?? EMPTY_CONNECTION_COUNTS;
+	}
 
 	getRegionMetadata(): Array<VoiceRegionMetadata> {
 		return this.topology.getRegionMetadataList();
@@ -140,9 +151,10 @@ export class VoiceAvailabilityService {
 		if (accessibleServers.length === 0) {
 			return null;
 		}
+		const candidateServers = preferServersUnderSoftLimit(accessibleServers, this.getServerConnectionCounts());
 		const index = this.rotationIndex.get(regionId) ?? 0;
-		const server = accessibleServers[index % accessibleServers.length];
-		this.rotationIndex.set(regionId, (index + 1) % accessibleServers.length);
+		const server = candidateServers[index % candidateServers.length];
+		this.rotationIndex.set(regionId, (index + 1) % candidateServers.length);
 		return server;
 	}
 

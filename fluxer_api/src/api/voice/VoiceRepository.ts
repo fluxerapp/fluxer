@@ -147,6 +147,7 @@ export class VoiceRepository implements IVoiceRepository {
 			latitude: server.latitude ?? null,
 			longitude: server.longitude ?? null,
 			is_active: server.isActive,
+			soft_connection_limit: server.softConnectionLimit ?? null,
 			vip_only: server.restrictions.vipOnly,
 			required_guild_features: new Set(server.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: new Set(Array.from(server.restrictions.allowedGuildIds).map((id) => BigInt(id))),
@@ -190,6 +191,7 @@ export class VoiceRepository implements IVoiceRepository {
 			latitude: row.latitude ?? null,
 			longitude: row.longitude ?? null,
 			isActive: row.is_active ?? true,
+			softConnectionLimit: row.soft_connection_limit ?? null,
 			restrictions: {
 				vipOnly: row.vip_only ?? false,
 				requiredGuildFeatures: new Set(toIterable<string>(row.required_guild_features)),

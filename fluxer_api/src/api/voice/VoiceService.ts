@@ -161,6 +161,7 @@ export class VoiceService {
 			const pseudoRegionServer = selectClosestPseudoRegionServer({
 				mode: regionPreference.mode,
 				accessibleServers,
+				connectionCounts: this.voiceAvailabilityService.getServerConnectionCounts(),
 				latitude: params.latitude,
 				longitude: params.longitude,
 				selectionKey,

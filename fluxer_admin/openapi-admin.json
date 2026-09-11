@@ -13891,6 +13891,14 @@
 						"type": "number"
 					},
 					"is_active": {"type": "boolean", "description": "Whether the server is currently active"},
+					"soft_connection_limit": {
+						"description": "Connection count above which placement prefers another server, or null when the server has no limit",
+						"nullable": true,
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 2147483647,
+						"format": "int32"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 					"required_guild_features": {
 						"type": "array",
@@ -13928,6 +13936,7 @@
 					"latitude",
 					"longitude",
 					"is_active",
+					"soft_connection_limit",
 					"vip_only",
 					"required_guild_features",
 					"allowed_guild_ids",
@@ -14227,6 +14236,14 @@
 								"type": "number"
 							},
 							"is_active": {"type": "boolean", "description": "Whether the server is currently active"},
+							"soft_connection_limit": {
+								"description": "Connection count above which placement prefers another server, or null when the server has no limit",
+								"nullable": true,
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 2147483647,
+								"format": "int32"
+							},
 							"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 							"required_guild_features": {
 								"type": "array",
@@ -14264,6 +14281,7 @@
 							"latitude",
 							"longitude",
 							"is_active",
+							"soft_connection_limit",
 							"vip_only",
 							"required_guild_features",
 							"allowed_guild_ids",
@@ -14299,6 +14317,14 @@
 						"type": "number"
 					},
 					"is_active": {"type": "boolean", "description": "Whether the server is currently active"},
+					"soft_connection_limit": {
+						"description": "Connection count above which placement prefers another server, or null for no limit",
+						"nullable": true,
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 2147483647,
+						"format": "int32"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 					"required_guild_features": {
 						"type": "array",
@@ -14356,6 +14382,14 @@
 								"type": "number"
 							},
 							"is_active": {"type": "boolean", "description": "Whether the server is currently active"},
+							"soft_connection_limit": {
+								"description": "Connection count above which placement prefers another server, or null when the server has no limit",
+								"nullable": true,
+								"type": "integer",
+								"minimum": 1,
+								"maximum": 2147483647,
+								"format": "int32"
+							},
 							"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 							"required_guild_features": {
 								"type": "array",
@@ -14393,6 +14427,7 @@
 							"latitude",
 							"longitude",
 							"is_active",
+							"soft_connection_limit",
 							"vip_only",
 							"required_guild_features",
 							"allowed_guild_ids",
@@ -14428,6 +14463,14 @@
 						"type": "number"
 					},
 					"is_active": {"type": "boolean", "description": "Whether the server is currently active"},
+					"soft_connection_limit": {
+						"description": "Connection count above which placement prefers another server, or null for no limit",
+						"nullable": true,
+						"type": "integer",
+						"minimum": 1,
+						"maximum": 2147483647,
+						"format": "int32"
+					},
 					"vip_only": {"type": "boolean", "description": "Whether this server is restricted to VIP users"},
 					"required_guild_features": {
 						"type": "array",

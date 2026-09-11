@@ -38,6 +38,7 @@ function createMockServer(overrides: Partial<VoiceServerRecord> = {}): VoiceServ
 		latitude: null,
 		longitude: null,
 		isActive: true,
+		softConnectionLimit: null,
 		restrictions: {
 			vipOnly: false,
 			requiredGuildFeatures: new Set(),
@@ -383,6 +384,38 @@ describe('VoiceAvailabilityService', () => {
 			const second = service.selectServer('us-default', context);
 			expect(first!.serverId).toBe('server-1');
 			expect(second!.serverId).toBe('server-2');
+		});
+		it('rotates only between servers below their soft connection limit', () => {
+			const region = createMockRegion();
+			const server1 = createMockServer({serverId: 'server-1', softConnectionLimit: 50});
+			const server2 = createMockServer({serverId: 'server-2'});
+			const topology = createMockTopology([region], new Map([['us-default', [server1, server2]]]));
+			service = new VoiceAvailabilityService(topology, {
+				getConnectionCounts: () => new Map([['server-1', 50]]),
+			});
+			const context: VoiceAccessContext = {
+				requestingUserId: 123n as UserID,
+			};
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-2');
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-2');
+		});
+		it('rotates across every server when all of them are at their soft connection limit', () => {
+			const region = createMockRegion();
+			const server1 = createMockServer({serverId: 'server-1', softConnectionLimit: 50});
+			const server2 = createMockServer({serverId: 'server-2', softConnectionLimit: 50});
+			const topology = createMockTopology([region], new Map([['us-default', [server1, server2]]]));
+			service = new VoiceAvailabilityService(topology, {
+				getConnectionCounts: () =>
+					new Map([
+						['server-1', 90],
+						['server-2', 90],
+					]),
+			});
+			const context: VoiceAccessContext = {
+				requestingUserId: 123n as UserID,
+			};
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-1');
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-2');
 		});
 	});
 });

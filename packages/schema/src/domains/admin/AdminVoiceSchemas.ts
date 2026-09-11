@@ -21,6 +21,8 @@ function areServerCoordinatesPaired(
 	return latitudeIsNull === longitudeIsNull;
 }
 
+const SoftConnectionLimitType = z.number().int().min(1).max(2147483647).nullable();
+
 export const VoiceRegionAdminResponse = z.object({
 	id: z.string().describe('Unique identifier for the voice region'),
 	name: z.string().describe('Display name of the voice region'),
@@ -45,6 +47,9 @@ export const VoiceServerAdminResponse = z.object({
 	latitude: z.number().nullable().describe('Optional geographic latitude override for this server'),
 	longitude: z.number().nullable().describe('Optional geographic longitude override for this server'),
 	is_active: z.boolean().describe('Whether the server is currently active'),
+	soft_connection_limit: SoftConnectionLimitType.describe(
+		'Connection count above which placement prefers another server, or null when the server has no limit',
+	),
 	vip_only: z.boolean().describe('Whether this server is restricted to VIP users'),
 	required_guild_features: z.array(z.string()).max(100).describe('Guild features required to use this server'),
 	allowed_guild_ids: z.array(SnowflakeStringType).max(1000).describe('Guild IDs explicitly allowed to use this server'),
@@ -128,6 +133,9 @@ export const CreateVoiceServerRequest = z
 		latitude: z.number().nullable().optional().describe('Optional geographic latitude override for this server'),
 		longitude: z.number().nullable().optional().describe('Optional geographic longitude override for this server'),
 		is_active: z.boolean().optional().default(true).describe('Whether the server is currently active'),
+		soft_connection_limit: SoftConnectionLimitType.optional()
+			.default(null)
+			.describe('Connection count above which placement prefers another server, or null for no limit'),
 		vip_only: z.boolean().optional().default(false).describe('Whether this server is restricted to VIP users'),
 		required_guild_features: z
 			.array(createStringType(1, 64))
@@ -165,6 +173,9 @@ export const UpdateVoiceServerRequest = z
 		latitude: z.number().nullable().optional().describe('Optional geographic latitude override for this server'),
 		longitude: z.number().nullable().optional().describe('Optional geographic longitude override for this server'),
 		is_active: z.boolean().optional().describe('Whether the server is currently active'),
+		soft_connection_limit: SoftConnectionLimitType.optional().describe(
+			'Connection count above which placement prefers another server, or null for no limit',
+		),
 		vip_only: z.boolean().optional().describe('Whether this server is restricted to VIP users'),
 		required_guild_features: z
 			.array(createStringType(1, 64))

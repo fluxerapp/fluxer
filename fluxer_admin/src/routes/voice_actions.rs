@@ -92,6 +92,16 @@ pub(crate) fn build_server_body(form: &MultiValueForm) -> serde_json::Value {
         body.insert("longitude".into(), lng.into());
     }
     body.insert("is_active".into(), form.bool_value("is_active").into());
+    if let Some(raw) = form.first("soft_connection_limit") {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() {
+            body.insert("soft_connection_limit".into(), serde_json::Value::Null);
+        } else if let Ok(limit) = trimmed.parse::<i64>()
+            && limit > 0
+        {
+            body.insert("soft_connection_limit".into(), limit.into());
+        }
+    }
     body.insert("vip_only".into(), form.bool_value("vip_only").into());
     body.insert(
         "required_guild_features".into(),
@@ -253,6 +263,47 @@ mod tests {
             serde_json::json!(["VIP", "VOICE"])
         );
         assert_eq!(body["allowed_guild_ids"], serde_json::json!(["1", "2"]));
+    }
+
+    #[test]
+    fn build_server_body_sets_soft_connection_limit_from_a_positive_value() {
+        let form =
+            MultiValueForm::parse(b"region_id=us-east&server_id=s1&soft_connection_limit=250");
+        let body = build_server_body(&form);
+        assert_eq!(body["soft_connection_limit"], serde_json::json!(250));
+    }
+
+    #[test]
+    fn build_server_body_clears_soft_connection_limit_when_the_field_is_empty() {
+        let form = MultiValueForm::parse(b"region_id=us-east&server_id=s1&soft_connection_limit=");
+        let body = build_server_body(&form);
+        assert_eq!(body["soft_connection_limit"], serde_json::Value::Null);
+    }
+
+    #[test]
+    fn build_server_body_omits_soft_connection_limit_when_the_field_is_absent_or_invalid() {
+        let absent = MultiValueForm::parse(b"region_id=us-east&server_id=s1&is_active=true");
+        assert!(
+            !build_server_body(&absent)
+                .as_object()
+                .unwrap()
+                .contains_key("soft_connection_limit")
+        );
+        let invalid =
+            MultiValueForm::parse(b"region_id=us-east&server_id=s1&soft_connection_limit=abc");
+        assert!(
+            !build_server_body(&invalid)
+                .as_object()
+                .unwrap()
+                .contains_key("soft_connection_limit")
+        );
+        let zero = MultiValueForm::parse(b"region_id=us-east&server_id=s1&soft_connection_limit=0");
+        assert!(
+            !build_server_body(&zero)
+                .as_object()
+                .unwrap()
+                .contains_key("soft_connection_limit")
+        );
     }
 
     #[test]

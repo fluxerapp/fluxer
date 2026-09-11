@@ -30,6 +30,7 @@ export interface VoiceServerRecord {
 	latitude: number | null;
 	longitude: number | null;
 	isActive: boolean;
+	softConnectionLimit: number | null;
 	restrictions: VoiceRestriction;
 	createdAt: Date | null;
 	updatedAt: Date | null;

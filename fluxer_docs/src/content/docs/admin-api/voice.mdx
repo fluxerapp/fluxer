@@ -99,6 +99,8 @@ The `region_id` and `server_id` pair addresses one server, and a server belongs 
 
 A server can have its own coordinate. Placement then measures distance from that coordinate to pick the closest server for an automatically placed session. A server without one takes no part in distance comparison.
 
+A server can also have a soft connection limit, described under [soft connection limits](#soft-connection-limits).
+
 ### Structure
 
 | Field | Type | Description |
@@ -109,6 +111,7 @@ A server can have its own coordinate. Placement then measures distance from that
 | latitude<sup>2</sup> | ?number | The latitude replacing this server's region coordinate, in decimal degrees, or null when the region coordinate is used |
 | longitude<sup>2</sup> | ?number | The longitude replacing this server's region coordinate, in decimal degrees, or null when the region coordinate is used |
 | is_active<sup>3</sup> | boolean | Whether the server is in rotation for new placement |
+| soft_connection_limit<sup>5</sup> | ?integer | The count at which placement starts preferring another server, or null when the server has no limit (1-2147483647) |
 | vip_only | boolean | Whether the guild has to hold `VIP_VOICE` |
 | required_guild_features | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild, any one of which is enough (max 100) |
 | allowed_guild_ids<sup>4</sup> | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000) |
@@ -124,6 +127,8 @@ A server can have its own coordinate. Placement then measures distance from that
 
 <sup>4</sup> Duplicate entries collapse and the returned order is not the submitted order
 
+<sup>5</sup> The limit is a preference, not a cap. It is described under [soft connection limits](#soft-connection-limits)
+
 :::caution[Server credentials are never returned]
 `api_key` and `api_secret` are stored on the record and accepted by the create and update bodies. No read returns them, so a lost secret has to be replaced with an update.
 :::
@@ -138,6 +143,7 @@ A server can have its own coordinate. Placement then measures distance from that
   "latitude": null,
   "longitude": null,
   "is_active": true,
+  "soft_connection_limit": null,
   "vip_only": false,
   "required_guild_features": [],
   "allowed_guild_ids": [],
@@ -146,6 +152,18 @@ A server can have its own coordinate. Placement then measures distance from that
   "updated_at": "2026-02-11T08:15:22.000Z"
 }
 ```
+
+## Soft connection limits
+
+`soft_connection_limit` is the connection count at which a server stops being a preferred placement target. It orders the candidates for one placement and never refuses one.
+
+Placement splits the servers it may use into those below their limit and those at or above it. It picks from the first group, and it picks from the full set when the first group is empty. A server with a null limit is always in the first group, and so is a server whose current count is unknown. A session is therefore still placed on a server past its limit when no other server can take it.
+
+The count is the number of voice connections the gateway holds for the server, the same figure [Get voice state counts](/admin-api/gateway/#get-voice-state-counts) returns. Each API node reads it at most once every 15 seconds and places against the last reading, so a burst of placements can push a server past its limit before the next reading. A node that has no reading less than 60 seconds old places as though no server had a limit.
+
+The count is keyed by `server_id` alone. Two servers registered in different regions under the same `server_id` share one count, and each is measured against its own limit.
+
+The limit is read when a channel is first placed and the server is pinned for it, as [Voice](/voice/#regions) describes. Later placements into that channel inherit the pin and are not measured against the limit. Lowering or clearing a limit moves no live session.
 
 ## List voice regions
 
@@ -444,6 +462,7 @@ Registers a voice server in a region and returns it. Requires `voice:server:crea
 | latitude?<sup>3</sup> | ?number | The latitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
 | longitude?<sup>3</sup> | ?number | The longitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
 | is_active? | boolean | Whether the server is in rotation for new placement (default true) |
+| soft_connection_limit?<sup>4</sup> | ?integer | The count at which placement starts preferring another server, or null for no limit (1-2147483647, default null) |
 | vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` (default false) |
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each, default empty) |
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000, default empty) |
@@ -454,6 +473,8 @@ Registers a voice server in a region and returns it. Requires `voice:server:crea
 <sup>2</sup> The value has to parse as a URL. Validation does not limit the scheme, and the client receives the value unchanged
 
 <sup>3</sup> The two coordinates are supplied together and are either both null or both a number. A mismatched pair fails body validation on the `latitude` path
+
+<sup>4</sup> Zero and every negative value fail validation, so a server with no limit is registered by omitting the field or sending null. [Soft connection limits](#soft-connection-limits) describes what the value does
 
 The body has no `region_id`. A `region_id` member in the body is overwritten from the path and cannot register the server under a different region.
 
@@ -506,6 +527,7 @@ Every field is optional and an omitted field is left unchanged. An absent, empty
 | latitude?<sup>2</sup> | ?number | The latitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
 | longitude?<sup>2</sup> | ?number | The longitude replacing this server's region coordinate, in decimal degrees, or null to use the region coordinate |
 | is_active? | boolean | Whether the server is in rotation for new placement |
+| soft_connection_limit?<sup>4</sup> | ?integer | The count at which placement starts preferring another server, or null for no limit (1-2147483647) |
 | vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` |
 | required_guild_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each) |
 | allowed_guild_ids?<sup>3</sup> | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000) |
@@ -516,6 +538,8 @@ Every field is optional and an omitted field is left unchanged. An absent, empty
 <sup>2</sup> The two coordinates are supplied together and are either both null or both a number. Sending both as null clears the override and returns the server to its region coordinate
 
 <sup>3</sup> A supplied collection replaces the stored collection outright, so removing one entry means sending the complete remaining set and clearing a collection means sending an empty array
+
+<sup>4</sup> An omitted limit is left unchanged and null clears it. Zero and every negative value fail validation
 
 A `region_id` or `server_id` member in the body is overwritten from the path and cannot move the server to another region.
 

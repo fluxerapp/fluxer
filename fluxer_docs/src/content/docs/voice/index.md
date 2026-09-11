@@ -135,6 +135,8 @@ A member whose `communication_disabled_until` is still in the future is refused 
 
 The first placement in the channel pins one voice server for it, and every later placement inherits that pinned server whatever its own coordinates are. A placement that finds no usable pin takes the accessible server nearest to the `latitude` and `longitude` the placement command supplied. Where the command supplied no usable coordinates, the placement falls back to the deployment's default region, and then to the first accessible region.
 
+A voice server can have a soft connection limit. A placement that has to choose a server prefers the servers below their limit and uses one that is at or above its limit only when no other server can take the placement. [Soft connection limits](/admin-api/voice/#soft-connection-limits) describes the rule in full.
+
 The pin drops when the channel's `rtc_region` changes, when a call changes region, when the pinned server stops being accessible, or when the media server reports the room finished. That last case also disconnects every connection in a guild voice channel.
 
 The literal `automatic` is not a channel region. Only the `region` field of [Modify call region](/http-api/calls/#modify-call-region) accepts it, as a synonym for null.

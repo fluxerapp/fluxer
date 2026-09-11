@@ -8883,6 +8883,10 @@
 				{
 					"name": "longitude",
 					"type": "double"
+				},
+				{
+					"name": "soft_connection_limit",
+					"type": "int"
 				}
 			],
 			"primary_key": "((region_id), server_id)",

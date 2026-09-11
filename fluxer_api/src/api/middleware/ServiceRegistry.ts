@@ -28,6 +28,7 @@ import {setInjectedSearchProvider} from '../SearchFactory';
 import type {ISearchProvider} from '../search/ISearchProvider';
 import {VoiceAvailabilityService} from '../voice/VoiceAvailabilityService';
 import {VoiceRepository} from '../voice/VoiceRepository';
+import {VoiceServerLoadTracker} from '../voice/VoiceServerLoad';
 import {VoiceTopology} from '../voice/VoiceTopology';
 import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
 
@@ -289,7 +290,10 @@ export async function ensureVoiceResourcesInitialized(): Promise<void> {
 			const topology = new VoiceTopology(voiceRepository, voiceConfigSubscriber);
 			await topology.initialize();
 			voiceTopology = topology;
-			voiceAvailabilityService = new VoiceAvailabilityService(topology);
+			voiceAvailabilityService = new VoiceAvailabilityService(
+				topology,
+				new VoiceServerLoadTracker({gatewayService: getGatewayService()}),
+			);
 			liveKitServiceInstance = new LiveKitService(topology);
 			voiceRoomStoreInstance = new VoiceRoomStore(getKVClient());
 		})().finally(() => {

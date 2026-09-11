@@ -77,12 +77,14 @@ export function selectVoiceRegionId({
 export function selectClosestPseudoRegionServer({
 	mode,
 	accessibleServers,
+	connectionCounts,
 	latitude,
 	longitude,
 	selectionKey,
 }: {
 	mode: VoiceRegionPreference['mode'];
 	accessibleServers: Array<VoiceServerRecord>;
+	connectionCounts: ReadonlyMap<string, number>;
 	latitude?: string;
 	longitude?: string;
 	selectionKey: string;
@@ -95,8 +97,29 @@ export function selectClosestPseudoRegionServer({
 	if (userLat === null || userLon === null) {
 		return null;
 	}
-	const closestServers = findClosestServers(accessibleServers, userLat, userLon);
+	const preferredServers = preferServersUnderSoftLimit(accessibleServers, connectionCounts);
+	const closestServers = findClosestServers(preferredServers, userLat, userLon);
 	return selectBalancedServer(closestServers, selectionKey);
+}
+
+export function preferServersUnderSoftLimit(
+	servers: Array<VoiceServerRecord>,
+	connectionCounts: ReadonlyMap<string, number>,
+): Array<VoiceServerRecord> {
+	const serversUnderLimit = servers.filter((server) => !isServerAtSoftLimit(server, connectionCounts));
+	return serversUnderLimit.length > 0 ? serversUnderLimit : servers;
+}
+
+function isServerAtSoftLimit(server: VoiceServerRecord, connectionCounts: ReadonlyMap<string, number>): boolean {
+	const limit = server.softConnectionLimit;
+	if (limit === null || limit <= 0) {
+		return false;
+	}
+	const connectionCount = connectionCounts.get(server.serverId);
+	if (connectionCount === undefined) {
+		return false;
+	}
+	return connectionCount >= limit;
 }
 
 function findClosestRegionIds(
