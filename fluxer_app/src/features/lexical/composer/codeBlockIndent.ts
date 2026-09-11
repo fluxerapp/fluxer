@@ -7,7 +7,7 @@ const SPACE_INDENT_WIDTH = 4;
 const FENCE = '```';
 const LEADING_SPACE_RE = /^[ \t\r]+/;
 const TRAILING_SPACE_RE = /[ \t\r]+$/;
-const FENCE_LANGUAGE_RE = /^[\w+.#/-]+[ \t\r]*$/;
+export const FENCE_LANGUAGE_RE = /^[\w+.#/-]+[ \t\r]*$/;
 const LIST_ITEM_RE = /^( *)(?:[-*]|\d+\.) /;
 const INVISIBLE_RE =
 	/[\p{White_Space}\0\u00ad\u061c\u115f\u1160\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2069\u2800\u3164\ufeff\uffa0]|\u034f|\u17b4|\u17b5|[\ufe00-\ufe0f]|[\u{e0100}-\u{e01ef}]/gu;
@@ -24,7 +24,7 @@ export interface CodeIndentPlan {
 	selectionEnd: number;
 }
 
-interface CodeBlockBody {
+export interface CodeBlockBody {
 	start: number;
 	end: number;
 	rendered: boolean;
@@ -73,7 +73,7 @@ function trimEnd(text: string): string {
 	return text.replace(TRAILING_SPACE_RE, '');
 }
 
-function hasVisibleContent(text: string): boolean {
+export function hasVisibleContent(text: string): boolean {
 	return text.replace(INVISIBLE_RE, '') !== '';
 }
 

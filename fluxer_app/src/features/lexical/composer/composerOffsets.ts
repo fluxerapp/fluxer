@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type CodeBlockWrapPlan, planCodeBlockWrap} from '@app/features/lexical/composer/codeBlockWrap';
 import {
 	$createComposerCustomEmojiNode,
 	$isComposerCustomEmojiNode,
@@ -220,7 +221,10 @@ export function $getComposerDisplayText(): string {
 }
 
 export function $getComposerScanText(): string {
-	const {text, leaves} = $buildDisplayLayout();
+	return scanTextFromLayout($buildDisplayLayout());
+}
+
+function scanTextFromLayout({text, leaves}: DisplayLayout): string {
 	let scanText = '';
 	let offset = 0;
 	for (const {node, start, end} of leaves) {
@@ -428,6 +432,23 @@ function classifyWrap(display: string, start: number, end: number, prefix: strin
 	return 'none';
 }
 
+function codeBlockPlanFor(
+	layout: DisplayLayout,
+	start: number,
+	end: number,
+	prefix: string,
+	suffix: string,
+): CodeBlockWrapPlan | null {
+	if (prefix !== '`' || suffix !== '`') {
+		return null;
+	}
+	const plan = planCodeBlockWrap(scanTextFromLayout(layout), start, end);
+	if (plan != null && !plan.wrapped && classifyWrap(layout.text, start, end, prefix, suffix) === 'flank') {
+		return null;
+	}
+	return plan;
+}
+
 export function $isComposerSelectionWrapped(prefix: string, suffix: string): boolean {
 	const wrapped = $queryComposerSelectionWrappers([{prefix, suffix}]).wrapped[0];
 	return wrapped == null ? false : wrapped;
@@ -448,7 +469,10 @@ export function $queryComposerSelectionWrappers(
 	}
 	return {
 		offsets,
-		wrapped: queries.map(({prefix, suffix}) => classifyWrap(layout.text, start, end, prefix, suffix) !== 'none'),
+		wrapped: queries.map(({prefix, suffix}) => {
+			const plan = codeBlockPlanFor(layout, start, end, prefix, suffix);
+			return plan == null ? classifyWrap(layout.text, start, end, prefix, suffix) !== 'none' : plan.wrapped;
+		}),
 	};
 }
 
@@ -469,6 +493,13 @@ export function $wrapComposerSelection(prefix: string, suffix: string): void {
 	const restoreSelection = (nextStart: number, nextEnd: number) => {
 		$selectComposerRange(backward ? nextEnd : nextStart, backward ? nextStart : nextEnd);
 	};
+	const plan = codeBlockPlanFor(layout, start, end, prefix, suffix);
+	if (plan != null) {
+		replaceTextRange(plan.closing.start, plan.closing.end, plan.closing.text);
+		replaceTextRange(plan.opening.start, plan.opening.end, plan.opening.text);
+		restoreSelection(plan.selectionStart, plan.selectionEnd);
+		return;
+	}
 	switch (classifyWrap(display, start, end, prefix, suffix)) {
 		case 'inside': {
 			replaceTextRange(end - suffix.length, end, '');
@@ -483,6 +514,9 @@ export function $wrapComposerSelection(prefix: string, suffix: string): void {
 			return;
 		}
 		default: {
+			if (prefix === '`' && suffix === '`' && selected.includes('\n')) {
+				return;
+			}
 			replaceTextRange(end, end, suffix);
 			replaceTextRange(start, start, prefix);
 			selected.length === 0
