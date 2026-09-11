@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-09-10 00:00+0000\n"
-"PO-Revision-Date: 2026-09-10 00:00+0000\n"
+"POT-Creation-Date: 2026-09-11 00:00+0000\n"
+"PO-Revision-Date: 2026-09-11 00:00+0000\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2343,13 +2343,6 @@ msgstr "보통 24시간 이내에 답변해 드려요."
 msgctxt "press_branding.contact.story_prompt_message"
 msgid "If you are writing about {product_name}, email {email}. A real person reads it."
 msgstr "{product_name}에 대한 기사를 준비 중이시라면 {email}로 메일을 보내 주세요. 실제 담당자가 읽습니다."
-
-#. Body copy in pricing UI explaining the base-currency checkout option. Preserve all currency and price placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.base_currency_also_available
-msgctxt "pricing_and_tiers.billing.base_currency_also_available"
-msgid ""
-"The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
-msgstr "동일한 구독을 {base_currency_code}로도 판매하며, 월 {base_monthly_price} 또는 연 {base_yearly_price}입니다."
 
 #. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price
