@@ -1,24 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import assert from 'node:assert/strict';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {setSchemaName, zodToOpenAPISchema} from '@fluxer/openapi/src/converters/ZodToOpenAPI';
-import type {OpenAPISchema} from '@fluxer/openapi/src/Types';
-import type {z} from 'zod';
-export interface LoadedSchema {
-	name: string;
-	zodSchema: z.ZodTypeAny;
-	openAPISchema: OpenAPISchema;
-}
+import {z} from 'zod';
+
 function discoverSchemaModules(rootDir: string): Array<string> {
-	if (!fs.existsSync(rootDir)) {
-		return [];
-	}
 	const results: Array<string> = [];
 	const stack: Array<string> = [rootDir];
 	while (stack.length > 0) {
 		const currentDir = stack.pop();
-		if (!currentDir) break;
+		assert(currentDir !== undefined, 'Schema discovery stack must contain a directory');
 		const entries = fs.readdirSync(currentDir, {withFileTypes: true});
 		for (const entry of entries) {
 			const fullPath = path.join(currentDir, entry.name);
@@ -39,24 +31,8 @@ function getModulePaths(basePath: string): Array<string> {
 	const schemaDomains = path.join(basePath, 'packages', 'schema', 'src', 'domains');
 	return discoverSchemaModules(schemaDomains);
 }
-function isZodSchema(value: unknown): value is z.ZodTypeAny {
-	return (
-		value !== null &&
-		typeof value === 'object' &&
-		'_def' in value &&
-		typeof (
-			value as {
-				parse?: unknown;
-			}
-		).parse === 'function'
-	);
-}
-export async function loadSchemas(basePath: string): Promise<Map<string, LoadedSchema>> {
-	const schemas = new Map<string, LoadedSchema>();
-	const collectedSchemas: Array<{
-		name: string;
-		zodSchema: z.ZodTypeAny;
-	}> = [];
+export async function loadSchemas(basePath: string): Promise<Map<string, z.ZodType>> {
+	const schemas = new Map<string, z.ZodType>();
 	const modulePaths = getModulePaths(basePath);
 	for (const modulePath of modulePaths) {
 		try {
@@ -65,31 +41,14 @@ export async function loadSchemas(basePath: string): Promise<Map<string, LoadedS
 				if (exportName.startsWith('_')) {
 					continue;
 				}
-				if (typeof exportValue === 'function') {
-					continue;
-				}
-				if (isZodSchema(exportValue)) {
-					collectedSchemas.push({name: exportName, zodSchema: exportValue});
-				}
+				if (!(exportValue instanceof z.ZodType)) continue;
+				const existing = schemas.get(exportName);
+				if (existing && existing !== exportValue) throw new Error(`Duplicate schema export: ${exportName}`);
+				schemas.set(exportName, exportValue);
 			}
 		} catch (error) {
-			console.warn(`Warning: Could not load schema module ${modulePath}:`, error);
+			throw new Error(`Could not load schema module ${modulePath}`, {cause: error});
 		}
-	}
-	for (const {name, zodSchema} of collectedSchemas) {
-		setSchemaName(zodSchema, name);
-	}
-	for (const {name, zodSchema} of collectedSchemas) {
-		const openAPISchemaOrRef = zodToOpenAPISchema(zodSchema);
-		if ('$ref' in openAPISchemaOrRef) {
-			throw new Error(`Top-level schema export must not be a $ref: ${name}`);
-		}
-		const openAPISchema: OpenAPISchema = openAPISchemaOrRef;
-		schemas.set(name, {
-			name,
-			zodSchema,
-			openAPISchema,
-		});
 	}
 	return schemas;
 }

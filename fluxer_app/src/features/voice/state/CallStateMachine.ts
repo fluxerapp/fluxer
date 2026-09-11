@@ -2,7 +2,7 @@
 
 import type {CallVoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export enum CallLayout {
 	MINIMUM = 'MINIMUM',
@@ -290,7 +290,7 @@ export const callStateMachine = setup({
 export type CallStateSnapshot = SnapshotFrom<typeof callStateMachine>;
 
 export function createCallStateSnapshot(input: CallStateInput = {}): CallStateSnapshot {
-	return getInitialSnapshot(callStateMachine, input);
+	return initialTransition(callStateMachine, input)[0];
 }
 
 export function transitionCallStateSnapshot(snapshot: CallStateSnapshot, event: CallStateEvent): CallStateSnapshot {

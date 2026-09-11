@@ -49,7 +49,7 @@ fn entry_count_hint(count: usize, cap: usize) -> Markup {
         p class="text-xs text-neutral-500" {
             (count) " of " (cap) " stored"
             @if count >= cap {
-                " (at the cap; extra lines are dropped on save)"
+                " (at the cap; remove an entry before adding another)"
             }
         }
     }
@@ -978,16 +978,18 @@ fn voice_noise_suppression_section(
     } else {
         ("Inert", BadgeVariant::Default)
     };
-    let backend_options = NoiseSuppressionBackend::ALL
+    let backend_labels =
+        NoiseSuppressionBackend::ALL.map(|backend| (backend.to_string(), backend.label()));
+    let backend_options = backend_labels
         .iter()
-        .map(|backend| (backend.as_str(), backend.label()))
+        .map(|(value, label)| (value.as_str(), *label))
         .collect::<Vec<_>>();
     let included_user_ids = voice_noise_suppression.included_user_ids.join("\n");
     let excluded_user_ids = voice_noise_suppression.excluded_user_ids.join("\n");
     let guild_overrides = voice_noise_suppression
         .guild_overrides
         .iter()
-        .map(|entry| format!("{}={}", entry.guild_id, entry.backend.as_str()))
+        .map(|entry| format!("{}={}", entry.guild_id, entry.backend))
         .collect::<Vec<_>>()
         .join("\n");
     section_card_with_description(
@@ -1025,17 +1027,18 @@ fn voice_noise_suppression_section(
                         "voice_ns_default_backend",
                         "Default Backend",
                         &backend_options,
-                        voice_noise_suppression.default_backend.as_str(),
+                        &voice_noise_suppression.default_backend.to_string(),
                     ))
                     p class="text-xs text-neutral-500" {
-                        "The backend handed to every targeted user. A default that is not ticked \
-                         below is treated as unavailable and nobody is targeted."
+                        "The backend assigned by always-on user rules and the canary. A default \
+                         that is not ticked below is unavailable, but per-guild overrides can \
+                         still target users."
                     }
                     div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
                         @for backend in NoiseSuppressionBackend::ALL {
                             (checkbox(
                                 "voice_ns_enabled_backends[]",
-                                backend.as_str(),
+                                &backend.to_string(),
                                 backend.label(),
                                 voice_noise_suppression.enabled_backends.contains(&backend),
                                 true,
@@ -1094,8 +1097,9 @@ fn voice_noise_suppression_section(
                         ))
                         p class="text-xs text-neutral-500" {
                             "One snowflake per line, or comma separated. These users are targeted \
-                             regardless of the percentage above. Anything that is not a plain \
-                             numeric ID is dropped."
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             IDs are ignored."
                         }
                     }
                     div class="flex flex-col gap-2" {
@@ -1132,10 +1136,11 @@ fn voice_noise_suppression_section(
                             VOICE_NS_MAX_GUILD_OVERRIDES,
                         ))
                         p class="text-xs text-neutral-500" {
-                            "One per line as guild_id=backend, first line per guild wins. Targeted \
-                             users in that guild get that backend instead of the default. Lines \
-                             that are not a numeric guild ID and a ticked backend are dropped \
-                             without failing the save."
+                            "One per line as guild_id=backend. A guild \
+                             rule targets callers even outside the canary. Always-on user rules \
+                             take precedence, and excluded users stay off. Invalid lines and \
+                             conflicting rules for the same guild prevent the save. \
+                             Unticked backends stay stored but are inactive."
                         }
                     }
 

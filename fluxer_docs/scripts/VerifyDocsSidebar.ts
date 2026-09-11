@@ -1,31 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {readdir, readFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 
-const DOCS_ROOT = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
+import {DOCS_ROOT, listMarkdownFiles, slugifyHeading} from './DocsSource.ts';
+
 const ASTRO_CONFIG = fileURLToPath(new URL('../astro.config.ts', import.meta.url));
 
 const SIDEBAR_START = 'sidebar: [';
 const QUOTED_ENTRY = /'([^']+)'/gu;
 const LINK_ENTRY = /link:\s*'([^']+)'/gu;
-
-async function walk(directory: string): Promise<Array<string>> {
-	const entries = await readdir(directory, {withFileTypes: true});
-	const files: Array<string> = [];
-	for (const entry of entries) {
-		const resolved = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await walk(resolved)));
-			continue;
-		}
-		if (entry.name.endsWith('.mdx') || entry.name.endsWith('.md')) {
-			files.push(resolved);
-		}
-	}
-	return files;
-}
 
 function slugOf(file: string): string {
 	const relative = path.relative(DOCS_ROOT, file);
@@ -85,7 +70,7 @@ for (const match of block.matchAll(QUOTED_ENTRY)) {
 	referenced.add(value);
 }
 
-const files = await walk(DOCS_ROOT);
+const files = await listMarkdownFiles(DOCS_ROOT);
 const actual = new Set(files.map(slugOf));
 
 const missingPages = [...referenced].filter((slug) => !actual.has(slug)).sort();
@@ -119,17 +104,6 @@ const EXPLICIT_ANCHOR = /<[a-z]+\s+id=["']([^"']+)["']/gu;
 const dangling: Array<string> = [];
 const anchorable = new Set(actual);
 
-function slugify(heading: string): string {
-	return heading
-		.replace(/`/gu, '')
-		.replace(/\[([^\]]*)\]\([^)]*\)/gu, '$1')
-		.replace(/<[^>]*>/gu, '')
-		.toLowerCase()
-		.replace(/[^a-z0-9\s-]/gu, '')
-		.trim()
-		.replace(/\s+/gu, '-');
-}
-
 const anchorsByPage = new Map<string, Set<string>>();
 const ambiguousByPage = new Map<string, Set<string>>();
 for (const file of files) {
@@ -140,7 +114,7 @@ for (const file of files) {
 	for (const line of source.split('\n')) {
 		const heading = line.match(HEADING);
 		if (heading != null) {
-			const generated = slugify(heading[1]);
+			const generated = slugifyHeading(heading[1]);
 			anchors.add(generated);
 			counts.set(generated, (counts.get(generated) ?? 0) + 1);
 		}

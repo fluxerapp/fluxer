@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHttpClient} from '@pkgs/http_client/src/HttpClient';
-import type {HttpClient, RequestOptions, RequestUrlPolicy, StreamResponse} from '@pkgs/http_client/src/HttpClientTypes';
+import type {
+	HttpClient,
+	RequestOptions,
+	RequestUrlPolicy,
+	ResponseStream,
+	StreamResponse,
+} from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 
 const requestUrlPolicy = createPublicInternetRequestUrlPolicy();
@@ -40,7 +46,7 @@ function getHttpClientForRequest(options?: SendRequestOptions): HttpClient {
 	return scopedClient;
 }
 
-export async function sendRequest(opts: RequestOptions, options?: SendRequestOptions) {
+export async function sendRequest(opts: RequestOptions, options?: SendRequestOptions): Promise<StreamResponse> {
 	const requestClient = getHttpClientForRequest(options);
 	return requestClient.sendRequest(opts);
 }
@@ -56,7 +62,7 @@ export class ResponseBodyTooLargeError extends Error {
 	}
 }
 
-interface StreamToStringWithLimitOptions {
+interface ResponseBodyReadOptions {
 	maxBytes: number;
 	headers?: Headers;
 	url?: string;
@@ -77,7 +83,7 @@ function parseContentLength(value: string | null | undefined): number | null {
 }
 
 function createResponseBodyTooLargeError(
-	options: StreamToStringWithLimitOptions,
+	options: ResponseBodyReadOptions,
 	actualBytes: number | null,
 ): ResponseBodyTooLargeError {
 	const description = options.description ?? 'Response body';
@@ -91,8 +97,8 @@ function createResponseBodyTooLargeError(
 }
 
 export async function streamToBufferWithLimit(
-	stream: StreamResponse['stream'],
-	options: StreamToStringWithLimitOptions,
+	stream: ResponseStream,
+	options: ResponseBodyReadOptions,
 ): Promise<Uint8Array> {
 	if (!stream) {
 		return new Uint8Array(0);
@@ -124,6 +130,9 @@ export async function streamToBufferWithLimit(
 				throw abortError;
 			}
 			const {done, value} = await reader.read();
+			if (options.signal?.aborted) {
+				throw abortError;
+			}
 			if (done) {
 				break;
 			}
@@ -133,7 +142,7 @@ export async function streamToBufferWithLimit(
 			totalSize += value.byteLength;
 			if (totalSize > options.maxBytes) {
 				const error = createResponseBodyTooLargeError(options, totalSize);
-				await reader.cancel(error).catch(() => {});
+				void reader.cancel(error).catch(() => {});
 				throw error;
 			}
 			chunks.push(value);
@@ -155,8 +164,8 @@ export async function streamToBufferWithLimit(
 }
 
 export async function streamToStringWithLimit(
-	stream: StreamResponse['stream'],
-	options: StreamToStringWithLimitOptions,
+	stream: ResponseStream,
+	options: ResponseBodyReadOptions,
 ): Promise<string> {
 	const merged = await streamToBufferWithLimit(stream, options);
 	return new TextDecoder().decode(merged);

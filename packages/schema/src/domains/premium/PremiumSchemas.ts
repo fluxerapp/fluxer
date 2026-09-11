@@ -4,6 +4,12 @@ import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
+export const PremiumCurrency = z.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']);
+
+export type PremiumCurrency = z.infer<typeof PremiumCurrency>;
+
+const BillingCycleSchema = z.enum(['monthly', 'yearly']);
+
 export const WebhookReceivedResponse = z.object({
 	received: z.boolean().describe('Whether the webhook was successfully received'),
 });
@@ -29,10 +35,8 @@ export const PriceIdsResponse = z.object({
 		.nullish()
 		.describe('Gift 1 month price amount in the currency minor unit'),
 	gift_1_year_amount_minor: z.number().int().nullish().describe('Gift 1 year price amount in the currency minor unit'),
-	currency: z.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']).describe('Currency for the prices'),
-	gift_currency: z
-		.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
-		.describe('Currency for gift prices'),
+	currency: PremiumCurrency.describe('Currency for the prices'),
+	gift_currency: PremiumCurrency.describe('Currency for gift prices'),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
@@ -85,10 +89,8 @@ export const CurrentSubscriptionPriceResponse = z
 	.object({
 		price_id: z.string().describe('The Stripe price ID the user is currently billed against'),
 		amount_minor: z.number().int().describe('The amount the user is actually charged, in the currency minor unit'),
-		currency: z
-			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
-			.describe('Currency of the charged amount'),
-		billing_cycle: z.enum(['monthly', 'yearly']).describe('The recurring billing cycle of the active subscription'),
+		currency: PremiumCurrency.describe('Currency of the charged amount'),
+		billing_cycle: BillingCycleSchema.describe('The recurring billing cycle of the active subscription'),
 		is_grandfathered: z
 			.boolean()
 			.describe('Whether the user is on a legacy price that no longer matches the current list price'),
@@ -113,8 +115,8 @@ export const PendingSubscriptionChangeResponse = z
 		change_kind: PendingSubscriptionChangeKind.describe(
 			'Whether the pending change moves the billing cycle or only the price within the same cycle',
 		),
-		current_billing_cycle: z.enum(['monthly', 'yearly']).nullable().describe('Current recurring billing cycle'),
-		target_billing_cycle: z.enum(['monthly', 'yearly']).describe('Recurring billing cycle that will start later'),
+		current_billing_cycle: BillingCycleSchema.nullable().describe('Current recurring billing cycle'),
+		target_billing_cycle: BillingCycleSchema.describe('Recurring billing cycle that will start later'),
 		effective_at: z.string().describe('ISO timestamp when the pending change takes effect'),
 		current_price_id: z.string().nullable().describe('Current Stripe price ID, when known'),
 		target_price_id: z.string().nullable().describe('Stripe price ID that will be used after the change'),
@@ -123,10 +125,7 @@ export const PendingSubscriptionChangeResponse = z
 			.int()
 			.nullable()
 			.describe('Unit amount of the price that will be used after the change, in the currency minor unit'),
-		currency: z
-			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
-			.nullable()
-			.describe('Currency for the pending change'),
+		currency: PremiumCurrency.nullable().describe('Currency for the pending change'),
 		initial_amount_minor: z
 			.number()
 			.int()
@@ -148,9 +147,7 @@ export const PendingSubscriptionChangeResponse = z
 export type PendingSubscriptionChangeResponse = z.infer<typeof PendingSubscriptionChangeResponse>;
 
 export const ChangeSubscriptionRequest = z.object({
-	billing_cycle: z
-		.enum(['monthly', 'yearly'])
-		.describe('The recurring billing cycle to switch the active subscription to'),
+	billing_cycle: BillingCycleSchema.describe('The recurring billing cycle to switch the active subscription to'),
 	effective_at: z.enum(['now', 'period_end']).optional().describe('When the billing cycle change should take effect'),
 });
 
@@ -193,11 +190,8 @@ export const ListPriceSwitchState = z.object({
 		.int()
 		.nullable()
 		.describe('Current list price for the same cycle and currency, in the currency minor unit'),
-	currency: z
-		.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
-		.nullable()
-		.describe('Currency of both the current and the list amount'),
-	billing_cycle: z.enum(['monthly', 'yearly']).nullable().describe('Recurring billing cycle the switch applies to'),
+	currency: PremiumCurrency.nullable().describe('Currency of both the current and the list amount'),
+	billing_cycle: BillingCycleSchema.nullable().describe('Recurring billing cycle the switch applies to'),
 	effective_at: z
 		.string()
 		.nullable()
@@ -206,26 +200,20 @@ export const ListPriceSwitchState = z.object({
 
 export type ListPriceSwitchState = z.infer<typeof ListPriceSwitchState>;
 
+const ScheduledListPriceSwitch = z.object({
+	effective_at: z.string().describe('ISO timestamp the switch takes effect'),
+	target_price_id: z.string().describe('Stripe price ID the subscription will be billed against after the switch'),
+	target_amount_minor: z.number().int().describe('Amount billed after the switch, in the currency minor unit'),
+	current_amount_minor: z.number().int().describe('Amount billed before the switch, in the currency minor unit'),
+	currency: PremiumCurrency.describe('Currency of both amounts'),
+});
+
 export const SwitchToListPriceResponse = z.discriminatedUnion('status', [
-	z.object({
+	ScheduledListPriceSwitch.extend({
 		status: z.literal('scheduled').describe('The switch was scheduled for the end of the current billing period'),
-		effective_at: z.string().describe('ISO timestamp the switch takes effect'),
-		target_price_id: z.string().describe('Stripe price ID the subscription will be billed against after the switch'),
-		target_amount_minor: z.number().int().describe('Amount billed after the switch, in the currency minor unit'),
-		current_amount_minor: z.number().int().describe('Amount billed before the switch, in the currency minor unit'),
-		currency: z
-			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
-			.describe('Currency of both amounts'),
 	}),
-	z.object({
+	ScheduledListPriceSwitch.extend({
 		status: z.literal('already_scheduled').describe('The switch was already scheduled by an earlier request'),
-		effective_at: z.string().describe('ISO timestamp the switch takes effect'),
-		target_price_id: z.string().describe('Stripe price ID the subscription will be billed against after the switch'),
-		target_amount_minor: z.number().int().describe('Amount billed after the switch, in the currency minor unit'),
-		current_amount_minor: z.number().int().describe('Amount billed before the switch, in the currency minor unit'),
-		currency: z
-			.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'])
-			.describe('Currency of both amounts'),
 	}),
 	z.object({
 		status: z.literal('ineligible').describe('The subscription cannot be moved to the current list price'),
@@ -235,7 +223,7 @@ export const SwitchToListPriceResponse = z.discriminatedUnion('status', [
 
 export type SwitchToListPriceResponse = z.infer<typeof SwitchToListPriceResponse>;
 
-const PremiumBillingCycle = z.enum(['monthly', 'yearly']).nullable();
+const PremiumBillingCycle = BillingCycleSchema.nullable();
 const PremiumActualState = z.object({
 	premium_type: UserPremiumTypesSchema.nullable().describe('Actual subscription type before local perk disabling'),
 	premium_since: z.string().nullable().describe('ISO timestamp when actual premium access first started'),
@@ -355,8 +343,8 @@ export type SelfServeRefundEligibilityResponse = z.infer<typeof SelfServeRefundE
 
 const PremiumBillingState = z.object({
 	stripe_customer_id: z.string().nullable(),
-	current_subscription_price: CurrentSubscriptionPriceResponse.nullable(),
-	pending_subscription_change: PendingSubscriptionChangeResponse.nullable(),
+	current_subscription_price: CurrentSubscriptionPriceResponse,
+	pending_subscription_change: PendingSubscriptionChangeResponse,
 	list_price_switch: ListPriceSwitchState,
 	subscription: PremiumBillingSubscriptionResponse.nullable(),
 	invoices: z.array(PremiumBillingInvoiceResponse),
@@ -381,13 +369,7 @@ export const PremiumStateResponse = z.object({
 
 export type PremiumStateResponse = z.infer<typeof PremiumStateResponse>;
 
-export const PremiumStateQueryRequest = z.object({
-	country_code: createStringType(2, 2)
-		.optional()
-		.describe(
-			'Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
-		),
-});
+export const PremiumStateQueryRequest = PriceIdsQueryRequest;
 
 export type PremiumStateQueryRequest = z.infer<typeof PremiumStateQueryRequest>;
 

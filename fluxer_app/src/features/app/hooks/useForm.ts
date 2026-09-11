@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {FormEvent} from 'react';
+import type {SubmitEvent} from 'react';
 import {useCallback, useLayoutEffect, useState} from 'react';
 
 interface FormField {
@@ -33,7 +33,7 @@ export interface UseFormReturn {
 	setErrors: (errors: ReadonlyMap<string, string>) => void;
 	getValue: (fieldName: string) => string;
 	getError: (fieldName: string) => string | undefined;
-	handleSubmit: (event?: FormEvent) => Promise<void>;
+	handleSubmit: (event?: SubmitEvent<HTMLFormElement>) => Promise<void>;
 	isSubmitting: boolean;
 }
 
@@ -93,7 +93,7 @@ export function useForm({initialValues, onSubmit}: UseFormOptions): UseFormRetur
 	const getValue = useCallback((fieldName: string): string => fields.get(fieldName)?.value ?? '', [fields]);
 	const getError = useCallback((fieldName: string): string | undefined => fields.get(fieldName)?.error, [fields]);
 	const handleSubmit = useCallback(
-		async (event?: FormEvent) => {
+		async (event?: SubmitEvent<HTMLFormElement>) => {
 			event?.preventDefault();
 			if (lifecycle.activeSubmission != null) {
 				return;

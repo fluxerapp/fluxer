@@ -7,8 +7,8 @@ import {
 	GuildRolePositionsRequest,
 	GuildRoleUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-import {z} from 'zod';
+import {GuildRoleListResponse, GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
+
 import {createGuildID, createRoleID} from '../../BrandedTypes';
 import {LoginRequired} from '../../middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
@@ -29,7 +29,7 @@ export function GuildRoleController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_guild_roles',
 			summary: 'List guild roles',
-			responseSchema: z.array(GuildRoleResponse),
+			responseSchema: GuildRoleListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],

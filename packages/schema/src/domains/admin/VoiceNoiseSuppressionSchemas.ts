@@ -15,94 +15,60 @@ export const VOICE_NOISE_SUPPRESSION_BACKENDS = [
 
 export type VoiceNoiseSuppressionBackend = (typeof VOICE_NOISE_SUPPRESSION_BACKENDS)[number];
 
-const VoiceNoiseSuppressionBackendSchema = z.enum(VOICE_NOISE_SUPPRESSION_BACKENDS);
+export const VoiceNoiseSuppressionBackendSchema = z.enum(VOICE_NOISE_SUPPRESSION_BACKENDS);
 
 const VOICE_NOISE_SUPPRESSION_ROLLOUT_BASIS_POINTS_MAX = EXPERIMENT_BUCKET_RESOLUTION;
 const VOICE_NOISE_SUPPRESSION_MAX_TARGETED_USERS = 1000;
 const VOICE_NOISE_SUPPRESSION_MAX_GUILD_OVERRIDES = 200;
 const DEFAULT_VOICE_NOISE_SUPPRESSION_SALT = 'voice-ns-v1';
 
-const DEFAULT_VOICE_NOISE_SUPPRESSION_ENABLED_BACKENDS: ReadonlyArray<VoiceNoiseSuppressionBackend> = [
-	'none',
-	'standard',
-	'gate',
-	'speex',
-	'rnnoise',
-	'gtcrn',
-	'deep_filter',
-];
-
-const SnowflakeListSchema = (max: number) =>
-	z
-		.array(z.string().regex(/^\d{1,20}$/u))
-		.max(max)
-		.default([]);
+const TargetIdSchema = z.string().regex(/^\d{1,20}$/u);
+const TargetedUserIdsSchema = z.array(TargetIdSchema).max(VOICE_NOISE_SUPPRESSION_MAX_TARGETED_USERS);
 
 const VoiceNoiseSuppressionGuildOverrideSchema = z.object({
-	guild_id: z.string().regex(/^\d{1,20}$/u),
+	guild_id: TargetIdSchema,
 	backend: VoiceNoiseSuppressionBackendSchema,
 });
 
+const voiceConfigFields = {
+	enabled: z.boolean(),
+	config_version: z.number().int().min(0),
+	default_backend: VoiceNoiseSuppressionBackendSchema,
+	enabled_backends: z.array(VoiceNoiseSuppressionBackendSchema).max(VOICE_NOISE_SUPPRESSION_BACKENDS.length),
+	allow_user_override: z.boolean(),
+	rollout_basis_points: z.number().int().min(0).max(VOICE_NOISE_SUPPRESSION_ROLLOUT_BASIS_POINTS_MAX),
+	rollout_salt: z.string().trim().min(1).max(64),
+	included_user_ids: TargetedUserIdsSchema,
+	excluded_user_ids: TargetedUserIdsSchema,
+	guild_overrides: z.array(VoiceNoiseSuppressionGuildOverrideSchema).max(VOICE_NOISE_SUPPRESSION_MAX_GUILD_OVERRIDES),
+	stereo_enabled: z.boolean(),
+	suppression_strength: z.number().int().min(0).max(100),
+};
+
 export const VoiceNoiseSuppressionConfigSchema = z.object({
-	enabled: z.boolean().default(false),
-	config_version: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).default(0),
-	default_backend: VoiceNoiseSuppressionBackendSchema.default('standard'),
-	enabled_backends: z
-		.array(VoiceNoiseSuppressionBackendSchema)
-		.max(VOICE_NOISE_SUPPRESSION_BACKENDS.length)
-		.default([...DEFAULT_VOICE_NOISE_SUPPRESSION_ENABLED_BACKENDS]),
-	allow_user_override: z.boolean().default(true),
-	rollout_basis_points: z.number().int().min(0).max(VOICE_NOISE_SUPPRESSION_ROLLOUT_BASIS_POINTS_MAX).default(0),
-	rollout_salt: z.string().trim().min(1).max(64).default(DEFAULT_VOICE_NOISE_SUPPRESSION_SALT),
-	included_user_ids: SnowflakeListSchema(VOICE_NOISE_SUPPRESSION_MAX_TARGETED_USERS),
-	excluded_user_ids: SnowflakeListSchema(VOICE_NOISE_SUPPRESSION_MAX_TARGETED_USERS),
-	guild_overrides: z
-		.array(VoiceNoiseSuppressionGuildOverrideSchema)
-		.max(VOICE_NOISE_SUPPRESSION_MAX_GUILD_OVERRIDES)
-		.default([]),
-	stereo_enabled: z.boolean().default(false),
-	suppression_strength: z.number().int().min(0).max(100).default(80),
+	enabled: voiceConfigFields.enabled.default(false),
+	config_version: voiceConfigFields.config_version.default(0),
+	default_backend: voiceConfigFields.default_backend.default('standard'),
+	enabled_backends: voiceConfigFields.enabled_backends.default([...VOICE_NOISE_SUPPRESSION_BACKENDS]),
+	allow_user_override: voiceConfigFields.allow_user_override.default(true),
+	rollout_basis_points: voiceConfigFields.rollout_basis_points.default(0),
+	rollout_salt: voiceConfigFields.rollout_salt.default(DEFAULT_VOICE_NOISE_SUPPRESSION_SALT),
+	included_user_ids: voiceConfigFields.included_user_ids.default([]),
+	excluded_user_ids: voiceConfigFields.excluded_user_ids.default([]),
+	guild_overrides: voiceConfigFields.guild_overrides.default([]),
+	stereo_enabled: voiceConfigFields.stereo_enabled.default(false),
+	suppression_strength: voiceConfigFields.suppression_strength.default(80),
 });
 
 export type VoiceNoiseSuppressionConfig = z.infer<typeof VoiceNoiseSuppressionConfigSchema>;
 
-export const DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG: VoiceNoiseSuppressionConfig = {
-	enabled: false,
-	config_version: 0,
-	default_backend: 'standard',
-	enabled_backends: [...DEFAULT_VOICE_NOISE_SUPPRESSION_ENABLED_BACKENDS],
-	allow_user_override: true,
-	rollout_basis_points: 0,
-	rollout_salt: DEFAULT_VOICE_NOISE_SUPPRESSION_SALT,
-	included_user_ids: [],
-	excluded_user_ids: [],
-	guild_overrides: [],
-	stereo_enabled: false,
-	suppression_strength: 80,
-};
+export const DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG: VoiceNoiseSuppressionConfig =
+	VoiceNoiseSuppressionConfigSchema.parse({});
 
-export const VoiceNoiseSuppressionConfigUpdateRequest = z.object({
-	enabled: z.boolean().optional(),
-	default_backend: VoiceNoiseSuppressionBackendSchema.optional(),
-	enabled_backends: z.array(VoiceNoiseSuppressionBackendSchema).max(VOICE_NOISE_SUPPRESSION_BACKENDS.length).optional(),
-	allow_user_override: z.boolean().optional(),
-	rollout_basis_points: z.number().int().min(0).max(VOICE_NOISE_SUPPRESSION_ROLLOUT_BASIS_POINTS_MAX).optional(),
-	rollout_salt: z.string().trim().min(1).max(64).optional(),
-	included_user_ids: z
-		.array(z.string().regex(/^\d{1,20}$/u))
-		.max(VOICE_NOISE_SUPPRESSION_MAX_TARGETED_USERS)
-		.optional(),
-	excluded_user_ids: z
-		.array(z.string().regex(/^\d{1,20}$/u))
-		.max(VOICE_NOISE_SUPPRESSION_MAX_TARGETED_USERS)
-		.optional(),
-	guild_overrides: z
-		.array(VoiceNoiseSuppressionGuildOverrideSchema)
-		.max(VOICE_NOISE_SUPPRESSION_MAX_GUILD_OVERRIDES)
-		.optional(),
-	stereo_enabled: z.boolean().optional(),
-	suppression_strength: z.number().int().min(0).max(100).optional(),
-});
+export const VoiceNoiseSuppressionConfigUpdateRequest = z
+	.object(voiceConfigFields)
+	.omit({config_version: true})
+	.partial();
 
 export type VoiceNoiseSuppressionConfigUpdateRequest = z.infer<typeof VoiceNoiseSuppressionConfigUpdateRequest>;
 
@@ -115,16 +81,16 @@ const VOICE_NOISE_SUPPRESSION_ASSIGNMENT_SOURCES = ['user_rule', 'canary'] as co
 const VoiceNoiseSuppressionAssignmentSourceSchema = z.enum(VOICE_NOISE_SUPPRESSION_ASSIGNMENT_SOURCES);
 
 export const VoiceNoiseSuppressionAssignmentResponse = z.object({
-	enabled: z.boolean(),
+	enabled: voiceConfigFields.enabled,
 	config_version: z.number().int(),
 	user_targeted: z.boolean(),
 	backend: VoiceNoiseSuppressionBackendSchema.nullable(),
 	source: VoiceNoiseSuppressionAssignmentSourceSchema.nullable(),
 	guild_overrides: z.array(VoiceNoiseSuppressionGuildOverrideSchema),
 	enabled_backends: z.array(VoiceNoiseSuppressionBackendSchema),
-	allow_user_override: z.boolean(),
-	stereo_enabled: z.boolean(),
-	suppression_strength: z.number().int().min(0).max(100),
+	allow_user_override: voiceConfigFields.allow_user_override,
+	stereo_enabled: voiceConfigFields.stereo_enabled,
+	suppression_strength: voiceConfigFields.suppression_strength,
 });
 
 export type VoiceNoiseSuppressionAssignmentResponse = z.infer<typeof VoiceNoiseSuppressionAssignmentResponse>;
@@ -212,22 +178,30 @@ export interface VoiceNoiseSuppressionResolution {
 	configVersion: number;
 }
 
+function resolveVoiceNoiseSuppressionTarget(
+	assignment: VoiceNoiseSuppressionAssignmentResponse,
+	guildId: string | null,
+): Pick<VoiceNoiseSuppressionResolution, 'backend' | 'source'> | null {
+	if (assignment.source === 'user_rule' && assignment.backend != null) {
+		return {backend: assignment.backend, source: 'user_rule'};
+	}
+	if (guildId != null) {
+		const guildOverride = assignment.guild_overrides.find((override) => override.guild_id === guildId);
+		if (guildOverride) return {backend: guildOverride.backend, source: 'guild_rule'};
+	}
+	if (!assignment.user_targeted) return null;
+	if (assignment.backend == null) return null;
+	if (assignment.source == null) return null;
+	return {backend: assignment.backend, source: assignment.source};
+}
+
 export function resolveVoiceNoiseSuppressionForCall(
 	assignment: VoiceNoiseSuppressionAssignmentResponse,
 	guildId: string | null,
 	userPreference: VoiceNoiseSuppressionBackend | null,
 ): VoiceNoiseSuppressionResolution | null {
 	if (!assignment.enabled) return null;
-	const guildOverride =
-		guildId == null ? undefined : assignment.guild_overrides.find((override) => override.guild_id === guildId);
-	const targeted =
-		assignment.source === 'user_rule' && assignment.backend != null
-			? {backend: assignment.backend, source: 'user_rule' as const}
-			: guildOverride != null
-				? {backend: guildOverride.backend, source: 'guild_rule' as const}
-				: assignment.user_targeted && assignment.backend != null && assignment.source != null
-					? {backend: assignment.backend, source: assignment.source}
-					: null;
+	const targeted = resolveVoiceNoiseSuppressionTarget(assignment, guildId);
 	if (targeted == null) return null;
 	const shared = {
 		stereoEnabled: assignment.stereo_enabled,

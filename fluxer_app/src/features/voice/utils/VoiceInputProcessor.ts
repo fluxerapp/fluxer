@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {
@@ -25,7 +26,7 @@ import {
 	resolveVoiceProcessingFromStateForDeviceLabel,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
 import {inputVoiceVolumePercentToGain} from '@app/features/voice/utils/VoiceVolumeUtils';
-import type {AudioProcessorOptions, LocalAudioTrack, Track, TrackProcessor} from 'livekit-client';
+import type {AudioProcessorOptions, LocalAudioTrack, ProcessorOptions, Track, TrackProcessor} from 'livekit-client';
 
 const logger = new Logger('VoiceInputProcessor');
 const GATE_ANALYSER_FFT_SIZE = 256;
@@ -34,7 +35,7 @@ const GATE_ATTACK_TIME_CONSTANT = 0.005;
 const GATE_RELEASE_TIME_CONSTANT = 0.02;
 const DEFAULT_NOISE_SUPPRESSION_PROBE_SAMPLE_RATE = 48000;
 
-class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, AudioProcessorOptions> {
+class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio> {
 	name = 'fluxer-voice-input-processor';
 	processedTrack?: MediaStreamTrack;
 	private sourceNode: MediaStreamAudioSourceNode | null = null;
@@ -43,6 +44,9 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 	private deepFilterChain: DeepFilterAudioChain | null = null;
 	private workletChain: NoiseSuppressionWorkletChain | null = null;
 	private buildGeneration = 0;
+	private pendingBuild: AbortController | null = null;
+	private cancelled = false;
+	private audioContext: AudioContext | null = null;
 	private gateNode: GainNode | null = null;
 	private gateAnalyserNode: AnalyserNode | null = null;
 	private gateSamples: Uint8Array<ArrayBuffer> | null = null;
@@ -83,21 +87,36 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 		}
 	}
 
-	async init(opts: AudioProcessorOptions): Promise<void> {
-		await this.rebuild(opts);
+	async init(opts: ProcessorOptions<Track.Kind.Audio>): Promise<void> {
+		const audioContext = opts.audioContext ?? this.audioContext;
+		assert.ok(audioContext, 'Voice input processor requires an audio context before initialization');
+		this.audioContext = audioContext;
+		await this.rebuild({...opts, audioContext});
 	}
 
-	async restart(opts: AudioProcessorOptions): Promise<void> {
-		await this.rebuild(opts);
+	async restart(opts: ProcessorOptions<Track.Kind.Audio>): Promise<void> {
+		await this.init(opts);
 	}
 
 	async destroy(): Promise<void> {
+		this.cancelPendingBuild();
 		await this.teardown();
 	}
 
+	cancelPendingBuild(): void {
+		this.cancelled = true;
+		this.buildGeneration++;
+		this.pendingBuild?.abort();
+	}
+
 	private async rebuild(opts: AudioProcessorOptions): Promise<void> {
-		await this.teardown();
-		const generation = ++this.buildGeneration;
+		if (this.cancelled) throw new DOMException('Voice input build cancelled', 'AbortError');
+		const teardown = this.teardown();
+		const generation = this.buildGeneration;
+		await teardown;
+		if (generation !== this.buildGeneration) throw new DOMException('Voice input build cancelled', 'AbortError');
+		const controller = new AbortController();
+		this.pendingBuild = controller;
 		try {
 			this.sourceNode = opts.audioContext.createMediaStreamSource(new MediaStream([opts.track]));
 			this.gainNode = opts.audioContext.createGain();
@@ -105,10 +124,10 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 			this.sourceNode.connect(this.gainNode);
 			const chainTail = this.gateEnabled ? this.startVoiceActivityGate(opts.audioContext) : this.gainNode;
 			if (this.workletBackend != null) {
-				const chain = await this.buildWorkletChain(opts, this.workletBackend, generation);
+				const chain = await this.buildWorkletChain(opts, this.workletBackend, generation, controller.signal);
 				if (generation !== this.buildGeneration) {
 					await chain?.dispose();
-					return;
+					throw new DOMException('Voice input build cancelled', 'AbortError');
 				}
 				if (chain) {
 					this.workletChain = chain;
@@ -122,6 +141,10 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 					audioContext: opts.audioContext,
 					noiseReductionLevel: this.deepFilterNoiseReductionLevel,
 				});
+				if (generation !== this.buildGeneration) {
+					await chain.dispose();
+					throw new DOMException('Voice input build cancelled', 'AbortError');
+				}
 				this.deepFilterChain = chain;
 				chainTail.connect(chain.inputDestination);
 				this.processedTrack = chain.processedTrack;
@@ -135,8 +158,10 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 			}
 			this.processedTrack = passthroughTrack;
 		} catch (error) {
-			await this.teardown();
+			if (generation === this.buildGeneration) await this.teardown();
 			throw error;
+		} finally {
+			if (this.pendingBuild === controller) this.pendingBuild = null;
 		}
 	}
 
@@ -144,20 +169,25 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 		opts: AudioProcessorOptions,
 		backend: NoiseSuppressionWorkletBackend,
 		generation: number,
+		signal: AbortSignal,
 	): Promise<NoiseSuppressionWorkletChain | null> {
 		try {
 			return await buildNoiseSuppressionWorkletChain({
 				audioContext: opts.audioContext,
 				backend,
 				suppressionStrength: this.suppressionStrength,
+				signal,
 				onRuntimeFailure: (error) => {
 					if (generation !== this.buildGeneration) return;
+					if (!ownsVoiceInputProcessor(this)) return;
 					logger.warn('Noise suppression worklet failed while running; rebuilding without it', {backend, error});
 					markNoiseSuppressionBackendFailed(backend);
-					void restartVoiceInputProcessorAfterWorkletFailure();
+					void restartVoiceInputProcessorAfterWorkletFailure(this);
 				},
 			});
 		} catch (error) {
+			if (generation !== this.buildGeneration) throw error;
+			if (signal.aborted) throw error;
 			logger.warn('Noise suppression worklet chain build failed; continuing without suppression', {backend, error});
 			markNoiseSuppressionBackendFailed(backend);
 			return null;
@@ -220,6 +250,9 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 	}
 
 	private async teardown(): Promise<void> {
+		this.buildGeneration++;
+		this.pendingBuild?.abort();
+		this.pendingBuild = null;
 		if (this.gateTimerId !== null) {
 			window.clearInterval(this.gateTimerId);
 			this.gateTimerId = null;
@@ -229,27 +262,9 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 		this.gateNode?.disconnect();
 		this.gateAnalyserNode?.disconnect();
 		this.passthroughDestination?.disconnect();
-		if (this.workletChain) {
-			try {
-				await this.workletChain.dispose();
-			} catch (error) {
-				logger.warn('Failed to dispose noise suppression worklet chain for voice input', error);
-			}
-		}
-		if (this.deepFilterChain) {
-			try {
-				await this.deepFilterChain.dispose();
-			} catch (error) {
-				logger.warn('Failed to dispose DeepFilter chain for voice input', error);
-			}
-		}
-		if (this.processedTrack && this.processedTrack.readyState !== 'ended') {
-			try {
-				this.processedTrack.stop();
-			} catch (error) {
-				logger.warn('Failed to stop processed voice input track', error);
-			}
-		}
+		const workletChain = this.workletChain;
+		const deepFilterChain = this.deepFilterChain;
+		const processedTrack = this.processedTrack;
 		this.sourceNode = null;
 		this.gainNode = null;
 		this.gateNode = null;
@@ -262,12 +277,45 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio, Audio
 		this.deepFilterChain = null;
 		this.workletChain = null;
 		this.processedTrack = undefined;
+		if (workletChain) {
+			try {
+				await workletChain.dispose();
+			} catch (error) {
+				logger.warn('Failed to dispose noise suppression worklet chain for voice input', error);
+			}
+		}
+		if (deepFilterChain) {
+			try {
+				await deepFilterChain.dispose();
+			} catch (error) {
+				logger.warn('Failed to dispose DeepFilter chain for voice input', error);
+			}
+		}
+		if (processedTrack && processedTrack.readyState !== 'ended') {
+			try {
+				processedTrack.stop();
+			} catch (error) {
+				logger.warn('Failed to stop processed voice input track', error);
+			}
+		}
 	}
+}
+
+interface VoiceInputProcessorBinding {
+	track: LocalAudioTrack;
+	processor: VoiceInputTrackProcessor;
 }
 
 let activeTrack: LocalAudioTrack | null = null;
 let activeProcessor: VoiceInputTrackProcessor | null = null;
+let pendingProcessor: VoiceInputProcessorBinding | null = null;
+let desiredTrack: LocalAudioTrack | null = null;
+let synchronizationGeneration = 0;
 const failedWorkletBackends = new Set<NoiseSuppressionWorkletBackend>();
+
+function ownsVoiceInputProcessor(processor: VoiceInputTrackProcessor): boolean {
+	return processor === activeProcessor || processor === pendingProcessor?.processor;
+}
 
 function markNoiseSuppressionBackendFailed(backend: NoiseSuppressionWorkletBackend): void {
 	failedWorkletBackends.add(backend);
@@ -281,11 +329,14 @@ function forgetFailedBackendsOnConfigChange(configVersion: number): void {
 	failedWorkletBackends.clear();
 }
 
-async function restartVoiceInputProcessorAfterWorkletFailure(): Promise<void> {
-	const track = activeTrack;
+async function restartVoiceInputProcessorAfterWorkletFailure(processor: VoiceInputTrackProcessor): Promise<void> {
+	const track = processor === activeProcessor ? activeTrack : pendingProcessor?.track;
 	if (!track) return;
 	try {
-		await removeVoiceInputProcessor(track);
+		const removal = removeVoiceInputProcessor(track);
+		const generation = synchronizationGeneration;
+		await removal;
+		if (generation !== synchronizationGeneration) return;
 		await syncVoiceInputProcessor(track);
 	} catch (error) {
 		logger.warn('Failed to rebuild the voice input processor after a noise suppression failure', error);
@@ -325,8 +376,10 @@ function shouldUseVoiceInputProcessor(): boolean {
 }
 
 export async function syncVoiceInputProcessor(track: LocalAudioTrack | null): Promise<void> {
+	const generation = ++synchronizationGeneration;
+	desiredTrack = track;
 	if (!track) {
-		await removeVoiceInputProcessor();
+		await stopCurrentVoiceInputProcessors();
 		return;
 	}
 	const effective = readEffectiveNoiseSuppression(DEFAULT_NOISE_SUPPRESSION_PROBE_SAMPLE_RATE);
@@ -339,7 +392,7 @@ export async function syncVoiceInputProcessor(track: LocalAudioTrack | null): Pr
 	const inputVolumePercent = VoiceSettings.getInputVolume();
 	const gateEnabled = isVoiceActivityGateEnabled();
 	if (!shouldUseVoiceInputProcessor()) {
-		await removeVoiceInputProcessor(track);
+		await stopCurrentVoiceInputProcessors();
 		return;
 	}
 	if (
@@ -355,7 +408,8 @@ export async function syncVoiceInputProcessor(track: LocalAudioTrack | null): Pr
 		activeProcessor.updateInputVolumePercent(inputVolumePercent);
 		return;
 	}
-	await removeVoiceInputProcessor();
+	await stopCurrentVoiceInputProcessors();
+	if (generation !== synchronizationGeneration) return;
 	const processor = new VoiceInputTrackProcessor(
 		inputVolumePercent,
 		deepFilterEnabled,
@@ -365,7 +419,7 @@ export async function syncVoiceInputProcessor(track: LocalAudioTrack | null): Pr
 		suppressionStrength,
 	);
 	try {
-		await track.setProcessor(processor);
+		if (!(await installVoiceInputProcessor({track, processor}, generation))) return;
 	} catch (error) {
 		logger.warn('Voice input processor install failed; publication remains on raw mic track', {
 			error,
@@ -373,21 +427,39 @@ export async function syncVoiceInputProcessor(track: LocalAudioTrack | null): Pr
 			workletBackend,
 			inputVolumePercent,
 		});
-		try {
-			await processor.destroy();
-		} catch (destroyError) {
-			logger.debug('Failed to destroy voice input processor after install failure', destroyError);
-		}
 		throw error;
 	}
-	activeTrack = track;
-	activeProcessor = processor;
 	logger.debug('Applied voice input processor', {
 		inputVolumePercent,
 		deepFilterEnabled,
 		gateEnabled,
 		workletBackend,
 	});
+}
+
+async function installVoiceInputProcessor(binding: VoiceInputProcessorBinding, generation: number): Promise<boolean> {
+	const {track, processor} = binding;
+	pendingProcessor = binding;
+	try {
+		await track.setProcessor(processor);
+	} catch (error) {
+		try {
+			await processor.destroy();
+		} catch (destroyError) {
+			logger.debug('Failed to destroy voice input processor after install failure', destroyError);
+		}
+		if (generation !== synchronizationGeneration) return false;
+		throw error;
+	} finally {
+		if (pendingProcessor === binding) pendingProcessor = null;
+	}
+	if (generation !== synchronizationGeneration) {
+		await stopVoiceInputProcessor(binding);
+		return false;
+	}
+	activeTrack = track;
+	activeProcessor = processor;
+	return true;
 }
 
 export function updateVoiceInputGain(track: LocalAudioTrack | null): void {
@@ -403,37 +475,32 @@ export function updateVoiceInputGain(track: LocalAudioTrack | null): void {
 }
 
 export async function removeVoiceInputProcessor(track?: LocalAudioTrack | null): Promise<void> {
-	if (!activeProcessor) {
-		return;
-	}
-	const processor = activeProcessor;
-	const processorTrack = activeTrack;
-	if (track != null && processorTrack !== track) {
-		return;
-	}
-	const shouldStopViaTrack = processorTrack != null && (track == null || track === processorTrack);
-	let stoppedByTrack = false;
-	let destroyedDirectly = false;
+	if (track != null && desiredTrack !== track) return;
+	synchronizationGeneration++;
+	desiredTrack = null;
+	await stopCurrentVoiceInputProcessors();
+}
+
+async function stopVoiceInputProcessor({track, processor}: VoiceInputProcessorBinding): Promise<void> {
+	processor.cancelPendingBuild();
 	try {
-		if (shouldStopViaTrack) {
-			await processorTrack.stopProcessor();
-			stoppedByTrack = true;
-		} else {
-			destroyedDirectly = true;
-			await processor.destroy();
-		}
+		if (await track.stopProcessorIfCurrent(processor)) return;
 	} catch (error) {
 		logger.warn('Failed to stop voice input processor', error);
 	}
-	if (!stoppedByTrack && !destroyedDirectly) {
-		try {
-			await processor.destroy();
-		} catch (error) {
-			logger.warn('Failed to destroy voice input processor after stop failure', error);
-		}
+	try {
+		await processor.destroy();
+	} catch (error) {
+		logger.warn('Failed to destroy voice input processor after stop failure', error);
 	}
-	if (activeProcessor === processor) {
-		activeTrack = null;
-		activeProcessor = null;
-	}
+}
+
+async function stopCurrentVoiceInputProcessors(): Promise<void> {
+	const pending = pendingProcessor;
+	const active = activeTrack && activeProcessor ? {track: activeTrack, processor: activeProcessor} : null;
+	pendingProcessor = null;
+	activeTrack = null;
+	activeProcessor = null;
+	if (pending) await stopVoiceInputProcessor(pending);
+	if (active) await stopVoiceInputProcessor(active);
 }

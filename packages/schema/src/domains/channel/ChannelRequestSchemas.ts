@@ -44,8 +44,8 @@ const ChannelOverwriteRequest = z.object({
 		],
 		'The type of overwrite (0 = role, 1 = member)',
 	),
-	allow: UnsignedInt64Type.optional().describe('fluxer:UnsignedInt64Type Bitwise value of allowed permissions'),
-	deny: UnsignedInt64Type.optional().describe('fluxer:UnsignedInt64Type Bitwise value of denied permissions'),
+	allow: UnsignedInt64Type.optional().describe('Bitwise value of allowed permissions'),
+	deny: UnsignedInt64Type.optional().describe('Bitwise value of denied permissions'),
 });
 
 const ChannelCommonBase = z.object({
@@ -201,10 +201,14 @@ export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 
 export type ChannelUpdateRequest = z.infer<typeof ChannelUpdateRequest>;
 
+export const ChannelUpdateRequestBody = z.union(
+	ChannelUpdateRequest.options.map(({shape: {type, ...shape}}) => z.object(shape)),
+);
+
 export const PermissionOverwriteCreateRequest = z.object({
 	type: ChannelOverwriteTypeSchema.describe('The type of overwrite (0 = role, 1 = member)'),
-	allow: UnsignedInt64Type.nullish().describe('fluxer:UnsignedInt64Type Bitwise value of allowed permissions'),
-	deny: UnsignedInt64Type.nullish().describe('fluxer:UnsignedInt64Type Bitwise value of denied permissions'),
+	allow: UnsignedInt64Type.nullish().describe('Bitwise value of allowed permissions'),
+	deny: UnsignedInt64Type.nullish().describe('Bitwise value of denied permissions'),
 });
 
 export type PermissionOverwriteCreateRequest = z.infer<typeof PermissionOverwriteCreateRequest>;
@@ -316,11 +320,13 @@ export const StreamPreviewUploadUrlBodySchema = z.object({
 
 export type StreamPreviewUploadUrlBodySchema = z.infer<typeof StreamPreviewUploadUrlBodySchema>;
 
+export const StreamPreviewResponse = z.file().describe('The current stream preview image');
+
 export const StreamPreviewUploadUrlResponseSchema = z.object({
 	upload_url: URLType.describe('URL used to upload the stream preview with a PUT request'),
 	method: z.literal('PUT').describe('HTTP method to use for the upload URL'),
 	content_type: createStringType(1, 64).describe('MIME type that must be sent with the upload request'),
-	expires_at: z.string().datetime().describe('ISO timestamp when the upload URL expires'),
+	expires_at: z.iso.datetime().describe('ISO timestamp when the upload URL expires'),
 	expires_in: Int32Type.describe('Number of seconds the upload URL remains valid'),
 	max_bytes: Int32Type.describe('Maximum supported preview image size in bytes'),
 });

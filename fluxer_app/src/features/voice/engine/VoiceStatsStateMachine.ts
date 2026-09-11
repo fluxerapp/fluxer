@@ -16,7 +16,7 @@ import type {
 	VoiceEngineV2VoiceStats as VoiceStats,
 	VoiceEngineV2StatsSample as VoiceStatsSample,
 } from '@fluxer/voice_engine_v2';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export const MAX_LATENCY_HISTORY = 60;
 export const MAX_TIME_SERIES_SAMPLES = 60;
@@ -504,7 +504,7 @@ export type VoiceStatsSnapshot = SnapshotFrom<typeof voiceStatsStateMachine>;
 export type VoiceStatsStateValue = 'idle' | 'trackingLatency' | 'trackingStats' | 'trackingBoth';
 
 export function createVoiceStatsSnapshot(): VoiceStatsSnapshot {
-	return getInitialSnapshot(voiceStatsStateMachine);
+	return initialTransition(voiceStatsStateMachine)[0];
 }
 
 export function transitionVoiceStatsSnapshot(snapshot: VoiceStatsSnapshot, event: VoiceStatsEvent): VoiceStatsSnapshot {

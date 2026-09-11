@@ -3,7 +3,6 @@
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {CustomStatusPayload} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import type {z} from 'zod';
 import {createEmojiID, type EmojiID, type UserID} from '../../BrandedTypes';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
 import {contentModerationService} from '../../infrastructure/ContentModerationService';
@@ -11,8 +10,6 @@ import type {LimitConfigService} from '../../limits/LimitConfigService';
 import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
 import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
 import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-
-type CustomStatusInput = z.infer<typeof CustomStatusPayload>;
 
 interface ValidatedCustomStatus {
 	text: string | null;
@@ -29,7 +26,7 @@ export class CustomStatusValidator {
 		private readonly limitConfigService: LimitConfigService,
 	) {}
 
-	async validate(userId: UserID, payload: CustomStatusInput): Promise<ValidatedCustomStatus> {
+	async validate(userId: UserID, payload: CustomStatusPayload): Promise<ValidatedCustomStatus> {
 		const text = payload.text ?? null;
 		contentModerationService.scanText(text, {
 			userId,

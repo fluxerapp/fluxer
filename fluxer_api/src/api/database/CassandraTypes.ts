@@ -366,14 +366,3 @@ export function assertNoUndefinedParams(params: Record<string, unknown>): void {
 		}
 	}
 }
-
-export function chunkArray<T>(items: Array<T>, size: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	if (size <= 0) {
-		throw new Error('Chunk size must be greater than 0');
-	}
-	for (let i = 0; i < items.length; i += size) {
-		chunks.push(items.slice(i, i + size));
-	}
-	return chunks;
-}

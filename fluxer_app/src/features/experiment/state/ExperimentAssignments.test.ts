@@ -47,29 +47,6 @@ const CANARY_ENVELOPE: ExperimentAssignmentsResponse = {
 	assignments: {voice_noise_suppression: CANARY_ASSIGNMENT},
 };
 
-interface ScheduleRecorder {
-	delays: Array<number>;
-	restore: () => void;
-}
-
-function recordScheduledDelays(): ScheduleRecorder {
-	const delays: Array<number> = [];
-	const original = globalThis.setTimeout;
-	const patched = (...args: Array<unknown>) => {
-		const timeout = args[1];
-		delays.push(typeof timeout === 'number' ? timeout : 0);
-		return (original as unknown as (...callArgs: Array<unknown>) => NodeJS.Timeout)(...args);
-	};
-	globalThis.setTimeout = patched as unknown as typeof globalThis.setTimeout;
-	return {
-		delays,
-		restore: () => {
-			globalThis.setTimeout = original;
-		},
-	};
-}
-
-let recorder: ScheduleRecorder;
 let visibility: DocumentVisibilityState = 'visible';
 const unsubscribes: Array<() => void> = [];
 
@@ -82,7 +59,9 @@ function requestHeaders(index: number): Record<string, string> {
 }
 
 function lastScheduledDelayMs(): number {
-	return recorder.delays[recorder.delays.length - 1] ?? Number.NaN;
+	const call = vi.mocked(setTimeout).mock.calls.at(-1);
+	expect(call).toBeDefined();
+	return call![1]!;
 }
 
 function setVisibility(next: DocumentVisibilityState): void {
@@ -91,9 +70,7 @@ function setVisibility(next: DocumentVisibilityState): void {
 }
 
 async function settle(): Promise<void> {
-	for (let index = 0; index < 4; index++) {
-		await vi.advanceTimersByTimeAsync(0);
-	}
+	await vi.advanceTimersByTimeAsync(0);
 }
 
 function subscribe(listener: () => void): () => void {
@@ -107,16 +84,12 @@ function voiceConfigVersion(): number {
 }
 
 function deferredReply(): {resolve: (response: RestResponse<unknown>) => void} {
-	let resolve: (response: RestResponse<unknown>) => void = () => {};
-	const pending = new Promise<RestResponse<unknown>>((settleWith) => {
-		resolve = settleWith;
+	let resolve!: (response: RestResponse<unknown>) => void;
+	const pending = new Promise<RestResponse<unknown>>((complete) => {
+		resolve = complete;
 	});
-	vi.mocked(http.get).mockReturnValue(pending);
-	return {
-		resolve: (response) => {
-			resolve(response);
-		},
-	};
+	vi.mocked(http.get).mockReturnValueOnce(pending);
+	return {resolve};
 }
 
 async function adopt(response: ExperimentAssignmentsResponse): Promise<void> {
@@ -129,7 +102,8 @@ beforeEach(() => {
 	visibility = 'visible';
 	Object.defineProperty(document, 'visibilityState', {configurable: true, get: () => visibility});
 	vi.useFakeTimers();
-	recorder = recordScheduledDelays();
+	vi.spyOn(globalThis, 'setTimeout');
+	vi.spyOn(Math, 'random').mockReturnValue(0.5);
 	vi.mocked(http.get).mockReset();
 });
 
@@ -138,9 +112,8 @@ afterEach(() => {
 		unsubscribe();
 	}
 	ExperimentAssignments.reset();
-	recorder.restore();
-	vi.useRealTimers();
 	vi.restoreAllMocks();
+	vi.useRealTimers();
 });
 
 describe('ExperimentAssignments cold start', () => {
@@ -217,40 +190,20 @@ describe('ExperimentAssignments response handling', () => {
 });
 
 describe('ExperimentAssignments scheduling', () => {
-	it('takes the poll interval from the envelope and jitters it by fifteen percent', async () => {
-		const observed: Array<number> = [];
-		for (let run = 0; run < 64; run++) {
-			ExperimentAssignments.reset();
-			await adopt({...CANARY_ENVELOPE, poll_interval_seconds: 600});
-			observed.push(lastScheduledDelayMs());
-		}
-		for (const delay of observed) {
-			expect(delay).toBeGreaterThanOrEqual(510_000);
-			expect(delay).toBeLessThanOrEqual(690_000);
-		}
-		expect(new Set(observed).size).toBeGreaterThan(1);
-	});
-
-	it('takes the jitter ratio from the envelope', async () => {
-		const observed: Array<number> = [];
-		for (let run = 0; run < 64; run++) {
-			ExperimentAssignments.reset();
-			await adopt({...CANARY_ENVELOPE, poll_interval_seconds: 600, poll_jitter_percent: 50});
-			observed.push(lastScheduledDelayMs());
-		}
-		for (const delay of observed) {
-			expect(delay).toBeGreaterThanOrEqual(300_000);
-			expect(delay).toBeLessThanOrEqual(900_000);
-		}
-		expect(observed.some((delay) => delay < 510_000 || delay > 690_000)).toBe(true);
-	});
-
-	it('schedules an exact interval when the server disables jitter', async () => {
-		for (let run = 0; run < 8; run++) {
-			ExperimentAssignments.reset();
-			await adopt({...CANARY_ENVELOPE, poll_interval_seconds: 600, poll_jitter_percent: 0});
-			expect(lastScheduledDelayMs()).toBe(600_000);
-		}
+	it.each([
+		{jitter: 15, random: 0, delay: 510_000},
+		{jitter: 15, random: 0.5, delay: 600_000},
+		{jitter: 15, random: 0.999999, delay: 690_000},
+		{jitter: 50, random: 0, delay: 300_000},
+		{jitter: 50, random: 0.5, delay: 600_000},
+		{jitter: 50, random: 0.999999, delay: 899_999},
+		{jitter: 0, random: 0, delay: 600_000},
+		{jitter: 0, random: 0.5, delay: 600_000},
+		{jitter: 0, random: 0.999999, delay: 600_000},
+	])('schedules $delay ms for $jitter% jitter and random value $random', async ({jitter, random, delay}) => {
+		vi.mocked(Math.random).mockReturnValue(random);
+		await adopt({...CANARY_ENVELOPE, poll_interval_seconds: 600, poll_jitter_percent: jitter});
+		expect(lastScheduledDelayMs()).toBe(delay);
 	});
 
 	it('never schedules a poll below half the minimum interval', async () => {
@@ -379,6 +332,58 @@ describe('ExperimentAssignments visibility', () => {
 });
 
 describe('ExperimentAssignments lifecycle', () => {
+	it.each([
+		'stop',
+		'reset',
+	] as const)('aborts an active request on %s and starts a fresh request immediately', async (method) => {
+		const stale = deferredReply();
+		ExperimentAssignments.start();
+		await settle();
+		const signal = vi.mocked(http.get).mock.calls[0]?.[1]?.signal;
+		expect(signal).toBeDefined();
+		expect(signal!.aborted).toBe(false);
+
+		ExperimentAssignments[method]();
+		expect(signal!.aborted).toBe(true);
+		vi.mocked(http.get).mockResolvedValue(reply(200, CANARY_ENVELOPE, {etag: 'W/"fresh"'}));
+		ExperimentAssignments.start();
+		await settle();
+		expect(http.get).toHaveBeenCalledTimes(2);
+		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
+		expect(vi.getTimerCount()).toBe(1);
+
+		stale.resolve(reply(200, INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE, {etag: 'W/"stale"'}));
+		await settle();
+		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
+		expect(vi.getTimerCount()).toBe(1);
+	});
+
+	it('keeps ownership of the replacement request when the stale request finishes first', async () => {
+		const stale = deferredReply();
+		ExperimentAssignments.start();
+		ExperimentAssignments.stop();
+		const replacement = deferredReply();
+		ExperimentAssignments.start();
+		const signal = vi.mocked(http.get).mock.calls[1]?.[1]?.signal;
+		expect(signal).toBeDefined();
+
+		stale.resolve(reply(200, CANARY_ENVELOPE));
+		await settle();
+		await vi.advanceTimersByTimeAsync(31_000);
+		setVisibility('hidden');
+		setVisibility('visible');
+		await settle();
+		expect(http.get).toHaveBeenCalledTimes(2);
+		expect(signal!.aborted).toBe(false);
+
+		ExperimentAssignments.stop();
+		expect(signal!.aborted).toBe(true);
+		replacement.resolve(reply(200, CANARY_ENVELOPE));
+		await settle();
+		expect(ExperimentAssignments.response).toBe(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
+		expect(vi.getTimerCount()).toBe(0);
+	});
+
 	it('discards a response that lands after reset', async () => {
 		const deferred = deferredReply();
 		ExperimentAssignments.start();

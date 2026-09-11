@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {createGuildID, type GuildID, type UserID} from '../../../BrandedTypes';
 import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
 import type {GuildService} from '../../../guild/services/GuildService';
@@ -17,7 +18,7 @@ interface AdminGuildManagementServiceDeps {
 export class AdminGuildManagementService {
 	constructor(private readonly deps: AdminGuildManagementServiceDeps) {}
 
-	async reloadGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null) {
+	async reloadGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null): Promise<SuccessResponse> {
 		const {guildRepository, gatewayService, auditService} = this.deps;
 		const guildId = createGuildID(guildIdRaw);
 		const guild = await guildRepository.findUnique(guildId);
@@ -36,7 +37,11 @@ export class AdminGuildManagementService {
 		return {success: true};
 	}
 
-	async shutdownGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null) {
+	async shutdownGuild(
+		guildIdRaw: bigint,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<SuccessResponse> {
 		const {guildRepository, gatewayService, auditService} = this.deps;
 		const guildId = createGuildID(guildIdRaw);
 		const guild = await guildRepository.findUnique(guildId);
@@ -55,7 +60,7 @@ export class AdminGuildManagementService {
 		return {success: true};
 	}
 
-	async deleteGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null) {
+	async deleteGuild(guildIdRaw: bigint, adminUserId: UserID, auditLogReason: string | null): Promise<SuccessResponse> {
 		const {guildService, auditService} = this.deps;
 		const guildId = createGuildID(guildIdRaw);
 		await guildService.data.deleteGuildForAdmin(guildId, auditLogReason);

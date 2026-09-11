@@ -1,21 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	GuildIdParam,
 	GuildIdUserIdParam,
 	GuildIdUserIdRoleIdParam,
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {
+	GuildBanListResponse,
+	GuildMemberListResponse,
+	GuildMemberResponse,
+} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {
 	GuildBanCreateRequest,
 	GuildMemberListQuery,
 	GuildMemberUpdateRequest,
-	GuildTransferOwnershipRequest,
+	GuildTransferOwnershipWithVerificationRequest,
 	MyGuildMemberUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {z} from 'zod';
+
 import {requireSudoMode} from '../../auth/services/SudoVerificationService';
 import {createGuildID, createRoleID, createUserID} from '../../BrandedTypes';
 import {LoginRequired} from '../../middleware/AuthMiddleware';
@@ -36,7 +39,7 @@ export function GuildMemberController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_guild_members',
 			summary: 'List guild members',
-			responseSchema: z.array(GuildMemberResponse),
+			responseSchema: GuildMemberListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],
@@ -194,7 +197,7 @@ export function GuildMemberController(app: HonoApp) {
 		LoginRequired,
 		Validator('param', GuildIdParam),
 		SudoModeMiddleware,
-		Validator('json', GuildTransferOwnershipRequest.merge(SudoVerificationSchema)),
+		Validator('json', GuildTransferOwnershipWithVerificationRequest),
 		OpenAPI({
 			operationId: 'transfer_guild_ownership',
 			summary: 'Transfer guild ownership',
@@ -227,7 +230,7 @@ export function GuildMemberController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_guild_bans',
 			summary: 'List guild bans',
-			responseSchema: z.array(GuildBanResponse),
+			responseSchema: GuildBanListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],

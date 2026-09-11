@@ -127,8 +127,7 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 		const isMaxed = maxSelections !== undefined && selectedUserIds.length >= maxSelections;
 		const isMutableRefObject = (
 			ref: React.Ref<HTMLInputElement> | undefined,
-		): ref is React.MutableRefObject<HTMLInputElement | null> =>
-			typeof ref === 'object' && ref !== null && 'current' in ref;
+		): ref is React.RefObject<HTMLInputElement | null> => typeof ref === 'object' && ref !== null && 'current' in ref;
 		const renderSearchInput = ({inputProps, inputClassName, ref: forwardedRef}: RenderInputArgs) => {
 			const handleRef = (node: HTMLInputElement | null) => {
 				inputRef.current = node;

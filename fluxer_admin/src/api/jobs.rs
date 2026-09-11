@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::snowflake;
+
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{ActiveJobsResponse, CancelJobResponse, GetJobResponse, ListJobsResponse};
 
@@ -39,7 +41,7 @@ impl AdminApiClient {
     pub async fn get_job(&self, job_id: &str) -> ApiResult<GetJobResponse> {
         let response = self
             .generated()
-            .get_admin_job(job_id)
+            .get_admin_job(&snowflake(job_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

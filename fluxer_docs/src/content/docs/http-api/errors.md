@@ -1359,10 +1359,6 @@ Channel must be a DM or a group DM
 
 Channel must be a voice channel
 
-### `CHANNEL_NAME_EMPTY_AFTER_NORMALIZATION`
-
-Channel name can't be empty after normalization
-
 ### `CHANNEL_NOT_FOUND`
 
 Channel not found
@@ -1514,14 +1510,6 @@ Favorite meme name is required
 ### `FAVORITE_MEME_NOT_FOUND`
 
 Favorite meme wasn't found
-
-### `FILENAME_EMPTY_AFTER_NORMALIZATION`
-
-Filename can't be empty after normalization
-
-### `FILENAME_INVALID_CHARACTERS`
-
-Filename contains invalid characters
 
 ### `FILENAME_LENGTH_INVALID`
 

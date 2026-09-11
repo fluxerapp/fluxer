@@ -7,15 +7,25 @@ import {
 	GatewayRolloutConfigSchema,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {
-	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
 	type VoiceNoiseSuppressionConfig,
 	VoiceNoiseSuppressionConfigSchema,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {
-	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
 	type ExperimentDeliveryConfig,
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {
+	type InstanceAppPublic,
+	type InstanceBranding,
+	type InstanceCaptchaProvider,
+	InstanceCaptchaProviderSchema,
+	type InstanceCommunity,
+	type InstanceRegistration,
+	type InstanceRegistrationMode,
+	InstanceRegistrationModeSchema,
+	type InstanceServices,
+	type InstanceSetup,
+} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import {Config} from '../Config';
 import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '../config/APIConfig';
@@ -56,47 +66,10 @@ const DEFAULT_GATEWAY_ROLLOUT_CONFIG: GatewayRolloutConfig = {
 	voice_e2ee_scope: 'guild_feature_only',
 };
 
-function cloneDefaultVoiceNoiseSuppressionConfig(): VoiceNoiseSuppressionConfig {
-	return {
-		...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
-		enabled_backends: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.enabled_backends],
-		included_user_ids: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.included_user_ids],
-		excluded_user_ids: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.excluded_user_ids],
-		guild_overrides: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.guild_overrides],
-	};
-}
+export type InstanceRegistrationConfig = InstanceRegistration;
 
-function cloneDefaultExperimentDeliveryConfig(): ExperimentDeliveryConfig {
-	return {...DEFAULT_EXPERIMENT_DELIVERY_CONFIG};
-}
-export type InstanceRegistrationMode = 'open' | 'approval' | 'closed';
-export interface InstanceRegistrationConfig {
-	mode: InstanceRegistrationMode;
-	admin_registration_urls_enabled: boolean;
-}
-
-export interface InstanceBrandingConfig {
-	product_name: string;
-	icon_url: string | null;
-	symbol_url: string | null;
-	logo_url: string | null;
-	wordmark_url: string | null;
-	favicon_url: string | null;
-	theme_color: string | null;
-}
-
-interface InstanceAppPublicConfig {
-	branding: InstanceBrandingConfig;
-	setup: {
-		configured: boolean;
-	};
-	legal: {
-		terms_url: string | null;
-		privacy_url: string | null;
-	};
-	registration: {
-		collect_date_of_birth: boolean;
-	};
+interface InstanceAppPublicConfig extends Omit<InstanceAppPublic, 'setup'> {
+	setup: Pick<InstanceSetup, 'configured'>;
 }
 
 export type InstancePremiumMode = 'mirror' | 'everyone';
@@ -115,19 +88,6 @@ export interface InstancePolicyConfig {
 	deferred_phone_gate_member_threshold: number;
 }
 
-interface InstanceCommunityPublicConfig {
-	single_community: boolean;
-	single_community_guild_id: string | null;
-	direct_messages_disabled: boolean;
-}
-
-interface InstanceServicesPublicConfig {
-	gif_enabled: boolean;
-	youtube_enabled: boolean;
-	bluesky_enabled: boolean;
-}
-
-export type InstanceCaptchaProvider = 'hcaptcha' | 'turnstile' | 'none';
 type InstanceEmailProvider = 'smtp' | 'none';
 
 interface InstanceGifIntegrationConfig {
@@ -341,7 +301,7 @@ function isStringArray(value: unknown): value is Array<string> {
 }
 
 function isRegistrationMode(value: unknown): value is InstanceRegistrationMode {
-	return value === 'open' || value === 'approval' || value === 'closed';
+	return InstanceRegistrationModeSchema.safeParse(value).success;
 }
 
 function normalizeNullableString(value: unknown): string | null {
@@ -542,7 +502,7 @@ const DEFAULT_INSTANCE_MEDIA_CONFIG: InstanceMediaConfig = {
 };
 
 function isCaptchaProvider(value: unknown): value is InstanceCaptchaProvider {
-	return value === 'hcaptcha' || value === 'turnstile' || value === 'none';
+	return InstanceCaptchaProviderSchema.safeParse(value).success;
 }
 
 function isEmailProvider(value: unknown): value is InstanceEmailProvider {
@@ -1079,16 +1039,16 @@ export class InstanceConfigRepository {
 	async getVoiceNoiseSuppressionConfig(): Promise<VoiceNoiseSuppressionConfig> {
 		const raw = await this.getConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY);
 		if (!raw) {
-			return cloneDefaultVoiceNoiseSuppressionConfig();
+			return VoiceNoiseSuppressionConfigSchema.parse({});
 		}
 		const parsed = parseJsonRecord(raw);
 		if (!parsed) {
-			return cloneDefaultVoiceNoiseSuppressionConfig();
+			return VoiceNoiseSuppressionConfigSchema.parse({});
 		}
-		const result = VoiceNoiseSuppressionConfigSchema.safeParse({...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG, ...parsed});
+		const result = VoiceNoiseSuppressionConfigSchema.safeParse(parsed);
 		if (!result.success) {
 			Logger.error({error: result.error}, 'Invalid voice noise suppression config');
-			return cloneDefaultVoiceNoiseSuppressionConfig();
+			return VoiceNoiseSuppressionConfigSchema.parse({});
 		}
 		return result.data;
 	}
@@ -1100,16 +1060,16 @@ export class InstanceConfigRepository {
 	async getExperimentDeliveryConfig(): Promise<ExperimentDeliveryConfig> {
 		const raw = await this.getConfig(EXPERIMENT_DELIVERY_CONFIG_KEY);
 		if (!raw) {
-			return cloneDefaultExperimentDeliveryConfig();
+			return ExperimentDeliveryConfigSchema.parse({});
 		}
 		const parsed = parseJsonRecord(raw);
 		if (!parsed) {
-			return cloneDefaultExperimentDeliveryConfig();
+			return ExperimentDeliveryConfigSchema.parse({});
 		}
-		const result = ExperimentDeliveryConfigSchema.safeParse({...DEFAULT_EXPERIMENT_DELIVERY_CONFIG, ...parsed});
+		const result = ExperimentDeliveryConfigSchema.safeParse(parsed);
 		if (!result.success) {
 			Logger.error({error: result.error}, 'Invalid experiment delivery config');
-			return cloneDefaultExperimentDeliveryConfig();
+			return ExperimentDeliveryConfigSchema.parse({});
 		}
 		return result.data;
 	}
@@ -1156,7 +1116,7 @@ export class InstanceConfigRepository {
 	}
 
 	async setAppPublicConfig(config: {
-		branding?: Partial<InstanceBrandingConfig>;
+		branding?: Partial<InstanceBranding>;
 		setup?: Partial<InstanceAppPublicConfig['setup']>;
 		legal?: Partial<InstanceAppPublicConfig['legal']>;
 		registration?: Partial<InstanceAppPublicConfig['registration']>;
@@ -1468,7 +1428,7 @@ export class InstanceConfigRepository {
 		};
 	}
 
-	async getInstanceCommunityPublicConfig(): Promise<InstanceCommunityPublicConfig> {
+	async getInstanceCommunityPublicConfig(): Promise<InstanceCommunity> {
 		const policy = await this.getInstancePolicyConfig();
 		return {
 			single_community: policy.single_community_enabled,
@@ -1477,7 +1437,7 @@ export class InstanceConfigRepository {
 		};
 	}
 
-	async getResolvedServicesConfig(): Promise<InstanceServicesPublicConfig> {
+	async getResolvedServicesConfig(): Promise<InstanceServices> {
 		const [policy, gif, youtubeApiKey, bluesky] = await Promise.all([
 			this.getInstancePolicyConfig(),
 			this.getEffectiveGifConfig(),

@@ -117,15 +117,16 @@ export const UpdateVoiceRegionRequest = z.object({
 
 export type UpdateVoiceRegionRequest = z.infer<typeof UpdateVoiceRegionRequest>;
 
+export const UpdateVoiceRegionRequestBody = UpdateVoiceRegionRequest.omit({id: true});
+
 export const DeleteVoiceRegionRequest = z.object({
 	id: createStringType(1, 64).describe('ID of the voice region to delete'),
 });
 
 export type DeleteVoiceRegionRequest = z.infer<typeof DeleteVoiceRegionRequest>;
 
-export const CreateVoiceServerRequest = z
+export const CreateVoiceServerRequestBody = z
 	.object({
-		region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
 		server_id: createStringType(1, 64).describe('Unique identifier for the voice server'),
 		endpoint: z.url().describe('Client signal WebSocket endpoint URL for the voice server'),
 		api_key: createStringType(1, 256).describe('API key for authenticating with the voice server'),
@@ -157,16 +158,18 @@ export const CreateVoiceServerRequest = z
 			.describe('User IDs explicitly allowed to use this server'),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
-		message: 'Latitude and longitude must both be provided or both be omitted',
+		error: 'Latitude and longitude must both be provided or both be omitted',
 		path: ['latitude'],
 	});
 
+export const CreateVoiceServerRequest = CreateVoiceServerRequestBody.safeExtend({
+	region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
+});
+
 export type CreateVoiceServerRequest = z.infer<typeof CreateVoiceServerRequest>;
 
-export const UpdateVoiceServerRequest = z
+export const UpdateVoiceServerRequestBody = z
 	.object({
-		region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
-		server_id: createStringType(1, 64).describe('Unique identifier for the voice server'),
 		endpoint: z.url().optional().describe('Client signal WebSocket endpoint URL for the voice server'),
 		api_key: createStringType(1, 256).optional().describe('API key for authenticating with the voice server'),
 		api_secret: createStringType(1, 256).optional().describe('API secret for authenticating with the voice server'),
@@ -194,9 +197,14 @@ export const UpdateVoiceServerRequest = z
 			.describe('User IDs explicitly allowed to use this server'),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
-		message: 'Latitude and longitude must both be provided or both be omitted',
+		error: 'Latitude and longitude must both be provided or both be omitted',
 		path: ['latitude'],
 	});
+
+export const UpdateVoiceServerRequest = UpdateVoiceServerRequestBody.safeExtend({
+	region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
+	server_id: createStringType(1, 64).describe('Unique identifier for the voice server'),
+});
 
 export type UpdateVoiceServerRequest = z.infer<typeof UpdateVoiceServerRequest>;
 

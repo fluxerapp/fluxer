@@ -23,6 +23,7 @@ export function SystemAdminController(app: HonoApp) {
 			description:
 				'Writes a V8 heap snapshot of the current process and returns the snapshot file. Used for diagnosing memory leaks. Requires SYSTEM_HEAP_SNAPSHOT permission.',
 			responseSchema: HeapSnapshotResponse,
+			responseContentType: 'application/octet-stream',
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',

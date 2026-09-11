@@ -51,14 +51,13 @@ export const WebhookUpdateRequest = z
 export type WebhookUpdateRequest = z.infer<typeof WebhookUpdateRequest>;
 
 export const WebhookTokenUpdateRequest = z
-	.object({
+	.strictObject({
 		name: WebhookNameType.describe('The new name of the webhook'),
 		avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 			.nullish()
 			.describe('The new avatar image as a base64-encoded data URI'),
 	})
-	.partial()
-	.strict();
+	.partial();
 
 export type WebhookTokenUpdateRequest = z.infer<typeof WebhookTokenUpdateRequest>;
 

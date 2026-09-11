@@ -3,6 +3,7 @@
 import {readdir, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {DOCS_ROOT, listMarkdownFiles} from './DocsSource.ts';
 import {
 	columnWidthPercents,
 	extractTables,
@@ -15,7 +16,6 @@ import {
 	TABLE_WIDE_TIER_PX,
 } from './DocsTableWidth.ts';
 
-const DOCS_ROOT = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
 const STYLES_ROOT = fileURLToPath(new URL('../src/styles/', import.meta.url));
 const STARLIGHT_STYLES = fileURLToPath(new URL('../node_modules/@astrojs/starlight/style/', import.meta.url));
 
@@ -56,22 +56,6 @@ interface Finding {
 	readonly detail: string;
 }
 
-async function walk(directory: string): Promise<Array<string>> {
-	const entries = await readdir(directory, {withFileTypes: true});
-	const files: Array<string> = [];
-	for (const entry of entries) {
-		const resolved = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await walk(resolved)));
-			continue;
-		}
-		if (entry.name.endsWith('.mdx') || entry.name.endsWith('.md')) {
-			files.push(resolved);
-		}
-	}
-	return files;
-}
-
 function frontmatterOf(source: string): string | null {
 	if (!source.startsWith('---\n')) {
 		return null;
@@ -93,7 +77,7 @@ function insideFence(lines: ReadonlyArray<string>, index: number): boolean {
 	return fenced;
 }
 
-const files = await walk(DOCS_ROOT);
+const files = await listMarkdownFiles(DOCS_ROOT);
 const findings: Array<Finding> = [];
 
 for (const file of files) {

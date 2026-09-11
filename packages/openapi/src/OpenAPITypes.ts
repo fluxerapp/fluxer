@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type {core} from 'zod';
 export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 export type ValidatorTarget = 'json' | 'query' | 'param' | 'form' | 'header' | 'cookie';
 export interface ExtractedValidator {
 	target: ValidatorTarget;
-	schemaName: string | null;
-	inlineSchema: string | null;
+	schemaName: string;
+}
+export interface OpenAPIExternalDocs {
+	url: string;
+	description?: string;
 }
 export interface ExtractedRoute {
 	method: HttpMethod;
@@ -16,15 +20,15 @@ export interface ExtractedRoute {
 	hasLoginRequired: boolean;
 	hasDefaultUserOnly: boolean;
 	hasLoginRequiredAllowSuspicious: boolean;
-	hasSudoMode: boolean;
 	rateLimitConfig: string | null;
-	handlerSource: string | null;
-	responseMapperName: string | null;
 	responseSchemaName: string | null;
+	responseContentType: string;
 	hasNoContent: boolean;
+	bodylessStatusCodes: Array<number>;
 	successStatusCodes: Array<number>;
 	explicitRequestSchemaName: string | null;
 	explicitRequestFormSchemaName: string | null;
+	explicitRequestBodyRequired: boolean | null;
 	explicitSummary: string | null;
 	explicitOperationId: string | null;
 	explicitDescription: string | null;
@@ -35,20 +39,10 @@ export interface ExtractedRoute {
 	oauth2BearerTokenRequired: boolean;
 	explicitTags: Array<string> | null;
 	explicitDeprecated: boolean;
-	explicitExternalDocs: {
-		url: string;
-		description?: string;
-	} | null;
+	explicitExternalDocs: OpenAPIExternalDocs | null;
 }
 export interface OpenAPIPathItem {
 	[method: string]: OpenAPIOperation;
-}
-interface MintlifyMetadata {
-	title?: string;
-	description?: string;
-}
-export interface MintlifyExtension {
-	metadata?: MintlifyMetadata;
 }
 export interface OpenAPIOperation {
 	operationId: string;
@@ -60,11 +54,7 @@ export interface OpenAPIOperation {
 	requestBody?: OpenAPIRequestBody;
 	responses: Record<string, OpenAPIResponse>;
 	deprecated?: boolean;
-	externalDocs?: {
-		url: string;
-		description?: string;
-	};
-	'x-mint'?: MintlifyExtension;
+	externalDocs?: OpenAPIExternalDocs;
 }
 export interface OpenAPIParameter {
 	name: string;
@@ -73,69 +63,30 @@ export interface OpenAPIParameter {
 	schema: OpenAPISchemaOrRef;
 	description?: string;
 }
+interface OpenAPIMediaType {
+	schema: OpenAPISchemaOrRef;
+}
 export interface OpenAPIRequestBody {
 	required?: boolean;
-	content: {
-		'application/json'?: {
-			schema: OpenAPISchema | OpenAPIRef;
-		};
-		'multipart/form-data'?: {
-			schema: OpenAPISchema | OpenAPIRef;
-		};
-	};
+	content: Record<string, OpenAPIMediaType>;
 }
 export interface OpenAPIResponse {
 	description: string;
-	content?: {
-		'application/json'?: {
-			schema: OpenAPISchema | OpenAPIRef;
-		};
-	};
+	content?: Record<string, OpenAPIMediaType>;
 	headers?: Record<string, OpenAPIHeaderObject>;
 }
 export interface OpenAPIHeaderObject {
 	description?: string;
 	schema: OpenAPISchemaOrRef;
 }
-export interface OpenAPIRef {
+export interface OpenAPIRef extends core.JSONSchema.JSONSchema {
 	$ref: string;
 }
 export type OpenAPISchemaOrRef = OpenAPISchema | OpenAPIRef;
-export interface OpenAPISchema {
-	type?: string;
-	format?: string;
-	items?: OpenAPISchemaOrRef | boolean;
-	prefixItems?: Array<OpenAPISchemaOrRef>;
-	properties?: Record<string, OpenAPISchemaOrRef>;
-	additionalProperties?: boolean | OpenAPISchemaOrRef;
-	required?: Array<string>;
-	enum?: Array<string | number | boolean>;
-	minimum?: number;
-	maximum?: number;
-	minLength?: number;
-	maxLength?: number;
-	minItems?: number;
-	maxItems?: number;
-	uniqueItems?: boolean;
-	multipleOf?: number;
-	exclusiveMinimum?: number;
-	exclusiveMaximum?: number;
-	pattern?: string;
-	default?: unknown;
-	nullable?: boolean;
-	oneOf?: Array<OpenAPISchemaOrRef>;
-	anyOf?: Array<OpenAPISchemaOrRef>;
-	allOf?: Array<OpenAPISchemaOrRef>;
-	not?: OpenAPISchemaOrRef;
-	description?: string;
-	discriminator?: {
-		propertyName: string;
-		mapping?: Record<string, string>;
-	};
-	patternProperties?: Record<string, OpenAPISchemaOrRef | boolean>;
-}
+export type OpenAPISchema = core.JSONSchema.JSONSchema;
 export interface OpenAPIDocument {
-	openapi: '3.1.0';
+	openapi: '3.0.3' | '3.1.0';
+	security?: Array<Record<string, Array<string>>>;
 	info: {
 		title: string;
 		version: string;

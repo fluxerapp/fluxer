@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	AdminAuditLogChannelSummary,
+	AdminAuditLogGuildSummary,
+	AdminAuditLogResponse,
+	AdminAuditLogUserSummary,
+	AuditLogsListResponse,
+} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {UserID} from '../../BrandedTypes';
 import {createChannelID, createGuildID, createUserID} from '../../BrandedTypes';
 import type {IChannelRepository} from '../../channel/IChannelRepository';
@@ -70,10 +77,7 @@ export class AdminAuditService {
 		target_id?: string;
 		limit?: number;
 		offset?: number;
-	}): Promise<{
-		logs: Array<AdminAuditLogResponse>;
-		total: number;
-	}> {
+	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
 		if (!auditLogSearchService || !auditLogSearchService.isAvailable()) {
@@ -116,10 +120,7 @@ export class AdminAuditService {
 		sort_order?: 'asc' | 'desc';
 		limit?: number;
 		offset?: number;
-	}): Promise<{
-		logs: Array<AdminAuditLogResponse>;
-		total: number;
-	}> {
+	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
 		if (!auditLogSearchService || !auditLogSearchService.isAvailable()) {
@@ -164,10 +165,7 @@ export class AdminAuditService {
 		targetId?: bigint;
 		limit?: number;
 		offset?: number;
-	}): Promise<{
-		logs: Array<AdminAuditLogResponse>;
-		total: number;
-	}> {
+	}): Promise<AuditLogsListResponse> {
 		const limit = data.limit || 50;
 		const allLogs = await this.adminRepository.listAllAuditLogsPaginated(limit + (data.offset || 0));
 		let filteredLogs = allLogs;
@@ -320,24 +318,6 @@ export class AdminAuditService {
 	}
 }
 
-interface AdminAuditLogResponse {
-	log_id: string;
-	admin_user_id: string;
-	admin_user: AuditLogUserSummary | null;
-	target_type: string;
-	target_id: string;
-	target_user: AuditLogUserSummary | null;
-	target_guild: AuditLogGuildSummary | null;
-	target_channel: AuditLogChannelSummary | null;
-	related_users: Record<string, AuditLogUserSummary>;
-	related_guilds: Record<string, AuditLogGuildSummary>;
-	related_channels: Record<string, AuditLogChannelSummary>;
-	action: string;
-	audit_log_reason: string | null;
-	metadata: Record<string, string>;
-	created_at: string;
-}
-
 interface AuditLogEnrichmentDeps {
 	userRepository?: Pick<IUserRepository, 'findUnique'>;
 	guildRepository?: Pick<IGuildRepositoryAggregate, 'findUnique'>;
@@ -348,25 +328,6 @@ interface AuditLogEnrichment {
 	users: Map<string, User>;
 	guilds: Map<string, Guild>;
 	channels: Map<string, Channel>;
-}
-
-interface AuditLogUserSummary {
-	id: string;
-	username: string;
-	discriminator: string;
-	global_name: string | null;
-}
-
-interface AuditLogGuildSummary {
-	id: string;
-	name: string;
-}
-
-interface AuditLogChannelSummary {
-	id: string;
-	name: string | null;
-	type: number;
-	guild_id: string | null;
 }
 
 const USER_TARGET_TYPES = new Set(['user', 'guild_member', 'message_deletion', 'message_shred']);
@@ -388,7 +349,7 @@ function isChannelIdKey(key: string): boolean {
 	return key === 'channel_id' || key.endsWith('_channel_id');
 }
 
-function mapUserSummary(user: User | null): AuditLogUserSummary | null {
+function mapUserSummary(user: User | null): AdminAuditLogUserSummary | null {
 	if (!user) return null;
 	return {
 		id: user.id.toString(),
@@ -398,7 +359,7 @@ function mapUserSummary(user: User | null): AuditLogUserSummary | null {
 	};
 }
 
-function mapGuildSummary(guild: Guild | null): AuditLogGuildSummary | null {
+function mapGuildSummary(guild: Guild | null): AdminAuditLogGuildSummary | null {
 	if (!guild) return null;
 	return {
 		id: guild.id.toString(),
@@ -406,7 +367,7 @@ function mapGuildSummary(guild: Guild | null): AuditLogGuildSummary | null {
 	};
 }
 
-function mapChannelSummary(channel: Channel | null): AuditLogChannelSummary | null {
+function mapChannelSummary(channel: Channel | null): AdminAuditLogChannelSummary | null {
 	if (!channel) return null;
 	return {
 		id: channel.id.toString(),

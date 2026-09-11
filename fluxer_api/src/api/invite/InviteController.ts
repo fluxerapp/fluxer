@@ -3,10 +3,11 @@
 import {ChannelIdParam, GuildIdParam, InviteCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	ChannelInviteCreateRequest,
+	InviteMetadataListResponse,
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import {z} from 'zod';
+
 import {createChannelID, createGuildID, createInviteCode} from '../BrandedTypes';
 import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
@@ -129,7 +130,7 @@ export function InviteController(app: HonoApp) {
 			summary: 'List channel invites',
 			description:
 				'Retrieves all currently active invites for the specified channel, including invite codes, creators, expiration times, and usage statistics. The authenticated user must have permission to manage invites for the channel. Returns an array of invite metadata objects.',
-			responseSchema: z.array(InviteMetadataResponseSchema),
+			responseSchema: InviteMetadataListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Invites'],
@@ -152,7 +153,7 @@ export function InviteController(app: HonoApp) {
 			summary: 'List guild invites',
 			description:
 				'Retrieves all currently active invites across all channels in the specified guild, including invite codes, creators, expiration times, and usage statistics. The authenticated user must have permission to manage invites for the guild. Returns an array of invite metadata objects.',
-			responseSchema: z.array(InviteMetadataResponseSchema),
+			responseSchema: InviteMetadataListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Invites'],

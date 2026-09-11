@@ -14,7 +14,6 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {UserPrivateResponse, UserProfileFullResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {Context} from 'hono';
-import type {z} from 'zod';
 import * as AuthEmailRevert from '../../auth/AuthEmailRevert';
 import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
 import type {IRegistrationRiskEvaluator} from '../../auth/services/IRegistrationRiskEvaluator';
@@ -54,9 +53,8 @@ import type {EmailChangeService} from './EmailChangeService';
 import type {UserAccountService} from './UserAccountService';
 import type {UserChannelService} from './UserChannelService';
 
-export type UserUpdateWithVerificationRequestData = z.infer<typeof UserUpdateWithVerificationRequest>;
 type UserUpdatePayload = Omit<
-	UserUpdateWithVerificationRequestData,
+	UserUpdateWithVerificationRequest,
 	'mfa_method' | 'mfa_code' | 'webauthn_response' | 'webauthn_challenge' | 'email_token'
 >;
 
@@ -83,13 +81,13 @@ function hasProfileCustomizationUpdate(data: UserUpdatePayload): boolean {
 
 function stripUnauthorizedProfileTimezoneUpdate(
 	user: User,
-	body: UserUpdateWithVerificationRequestData,
-): UserUpdateWithVerificationRequestData {
+	body: UserUpdateWithVerificationRequest,
+): UserUpdateWithVerificationRequest {
 	if (canUseProfileTimezone(user)) {
 		return body;
 	}
 	const {timezone: _timezone, timezone_privacy_flags: _timezonePrivacyFlags, ...rest} = body;
-	return rest as UserUpdateWithVerificationRequestData;
+	return rest;
 }
 
 function hasDefinedUserUpdatePayload(data: UserUpdatePayload): boolean {
@@ -177,7 +175,7 @@ export class UserAccountRequestService {
 	async updateCurrentUser(params: {
 		ctx: Context<HonoEnv>;
 		user: User;
-		body: UserUpdateWithVerificationRequestData;
+		body: UserUpdateWithVerificationRequest;
 		authSession: AuthSession;
 	}): Promise<UserPrivateResponse> {
 		const {ctx, body, authSession} = params;
@@ -559,7 +557,7 @@ export class UserAccountRequestService {
 		}
 	}
 
-	private enforceSuspiciousSelfUpdateAllowance(user: User, body: UserUpdateWithVerificationRequestData): void {
+	private enforceSuspiciousSelfUpdateAllowance(user: User, body: UserUpdateWithVerificationRequest): void {
 		const flags = getEffectiveSuspiciousFlags(user);
 		if (flags === 0) {
 			return;
@@ -570,7 +568,7 @@ export class UserAccountRequestService {
 		throw new AccountSuspiciousActivityError(flags);
 	}
 
-	private isAllowedSuspiciousRecoveryUpdate(body: UserUpdateWithVerificationRequestData): boolean {
+	private isAllowedSuspiciousRecoveryUpdate(body: UserUpdateWithVerificationRequest): boolean {
 		if (!body.email_token) {
 			return false;
 		}

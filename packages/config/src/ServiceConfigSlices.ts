@@ -17,13 +17,7 @@ export function extractKVClientConfig(master: MasterConfig) {
 		kvUrl: master.internal.kv,
 		kvMode: master.internal.kv_mode,
 		kvClusterNodes: master.internal.kv_cluster_nodes,
-		kvClusterNatMap: master.internal.kv_cluster_nat_map as Record<
-			string,
-			{
-				host: string;
-				port: number;
-			}
-		>,
+		kvClusterNatMap: master.internal.kv_cluster_nat_map,
 	};
 }
 

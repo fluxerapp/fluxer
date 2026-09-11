@@ -141,7 +141,7 @@ The tag is a hash of the body alone, so two accounts resolving to the same envel
 
 ### Polling
 
-A client reads this route once per session and then again every `poll_interval_seconds`, offset by a random amount up to `poll_jitter_percent` of that interval in either direction. It sends the last `ETag` on every request after the first. A client MUST NOT poll faster than the value it was served.
+A client reads this route once per session and then again every `poll_interval_seconds`, offset by a random amount up to `poll_jitter_percent` of that interval in either direction. It sends the last `ETag` on every request after the first. A client MUST NOT poll faster than the lower end of that jitter range.
 
 Raising `poll_interval_seconds` sheds request volume. Raising `poll_jitter_percent` spreads a fleet that has synchronised on one interval. A client that has never reached this route holds the built-in defaults of 300 seconds and 15 percent, so neither value reaches a client that cannot read it.
 

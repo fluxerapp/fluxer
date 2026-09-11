@@ -13,16 +13,17 @@ impl AdminApiClient {
         duration_quantity: u32,
     ) -> ApiResult<CodesResponse> {
         let body = generated_types::GenerateGiftCodesRequest {
-            count: crate::api::generated::nonzero_u32(count, "count").map_err(ApiError::Parse)?,
+            count: crate::api::generated::nonzero_u32(count, "count")
+                .map_err(ApiError::Parse)?
+                .into(),
             duration_quantity: crate::api::generated::nonzero_u32(
                 duration_quantity,
                 "duration_quantity",
             )
-            .map_err(ApiError::Parse)?,
-            duration_type: generated_types::GenerateGiftCodesRequestDurationType::try_from(
-                duration_type,
-            )
-            .map_err(|e| ApiError::Parse(e.to_string()))?,
+            .map_err(ApiError::Parse)?
+            .into(),
+            duration_type: generated_types::GiftCodeDurationTypeSchema::try_from(duration_type)
+                .map_err(|e| ApiError::Parse(e.to_string()))?,
         };
         let response = self
             .generated()

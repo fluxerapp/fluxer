@@ -13,17 +13,17 @@
 		"validate": "tsx src/scripts/GenerateSpec.ts --validate-only"
 	},
 	"dependencies": {
-		"@fluxer/constants": "workspace:*",
 		"@fluxer/errors": "workspace:*",
+		"@fluxer/schema": "workspace:*",
+		"@redocly/openapi-core": "catalog:",
 		"ts-morph": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "catalog:",
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
-		"prettier": "^3.8.3",
 		"tsx": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	}
 }

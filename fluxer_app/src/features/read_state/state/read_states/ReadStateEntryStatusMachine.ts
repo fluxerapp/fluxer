@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 import {compareMessageIds} from './shared';
 
 export interface ReadStateEntryStatusInput {
@@ -127,7 +127,7 @@ export const readStateEntryStatusMachine = setup({
 export type ReadStateEntryStatusSnapshot = SnapshotFrom<typeof readStateEntryStatusMachine>;
 
 export function createReadStateEntryStatusSnapshot(input: ReadStateEntryStatusInput): ReadStateEntryStatusSnapshot {
-	return getInitialSnapshot(readStateEntryStatusMachine, input);
+	return initialTransition(readStateEntryStatusMachine, input)[0];
 }
 
 export function transitionReadStateEntryStatusSnapshot(

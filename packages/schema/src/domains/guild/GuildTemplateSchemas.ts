@@ -22,6 +22,7 @@ const TemplateOverwriteType = z
 		}
 		return value;
 	})
+	.pipe(z.number())
 	.describe('The type of overwrite (0/role = role, 1/member = member)');
 const TemplatePermissionOverwrite = z.object({
 	id: TemplateEntityId.describe('The ID of the role or user for this overwrite'),

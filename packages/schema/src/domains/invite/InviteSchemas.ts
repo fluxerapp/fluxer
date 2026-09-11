@@ -39,54 +39,48 @@ export const ChannelInviteCreateRequest = z.object({
 
 export type ChannelInviteCreateRequest = z.infer<typeof ChannelInviteCreateRequest>;
 
-export const GuildInviteResponse = z.object({
+const InviteResponseBase = z.object({
 	code: z.string().describe('The unique invite code'),
-	type: z.literal(InviteTypes.GUILD).describe('The type of invite (guild)'),
-	guild: GuildPartialResponse.describe('The guild this invite is for'),
-	channel: z.lazy(() => ChannelPartialResponse).describe('The channel this invite is for'),
 	inviter: z
 		.lazy(() => UserPartialResponse)
 		.nullish()
 		.describe('The user who created the invite'),
-	member_count: Int32Type.describe('The approximate total member count of the guild'),
-	presence_count: Int32Type.describe('The approximate online member count of the guild'),
 	expires_at: z.iso.datetime().nullish().describe('ISO8601 timestamp of when the invite expires'),
 	temporary: z.boolean().describe('Whether the invite grants temporary membership'),
+});
+
+export const GuildInviteResponse = InviteResponseBase.extend({
+	type: z.literal(InviteTypes.GUILD).describe('The type of invite (guild)'),
+	guild: GuildPartialResponse.describe('The guild this invite is for'),
+	channel: z.lazy(() => ChannelPartialResponse).describe('The channel this invite is for'),
+	member_count: Int32Type.describe('The approximate total member count of the guild'),
+	presence_count: Int32Type.describe('The approximate online member count of the guild'),
 });
 
 export type GuildInviteResponse = z.infer<typeof GuildInviteResponse>;
 
-export const GroupDmInviteResponse = z.object({
-	code: z.string().describe('The unique invite code'),
+export const GroupDmInviteResponse = InviteResponseBase.extend({
 	type: z.literal(InviteTypes.GROUP_DM).describe('The type of invite (group DM)'),
 	channel: z.lazy(() => ChannelPartialResponse).describe('The group DM channel this invite is for'),
-	inviter: z
-		.lazy(() => UserPartialResponse)
-		.nullish()
-		.describe('The user who created the invite'),
 	member_count: Int32Type.describe('The current member count of the group DM'),
-	expires_at: z.iso.datetime().nullish().describe('ISO8601 timestamp of when the invite expires'),
-	temporary: z.boolean().describe('Whether the invite grants temporary membership'),
 });
 
 export type GroupDmInviteResponse = z.infer<typeof GroupDmInviteResponse>;
 
-export const GuildInviteMetadataResponse = z.object({
-	...GuildInviteResponse.shape,
+const InviteMetadataFields = {
 	created_at: z.iso.datetime().describe('ISO8601 timestamp of when the invite was created'),
 	uses: Int32Type.describe('The number of times this invite has been used'),
 	max_uses: Int32Type.describe('The maximum number of times this invite can be used'),
+};
+
+export const GuildInviteMetadataResponse = GuildInviteResponse.extend({
+	...InviteMetadataFields,
 	max_age: Int32Type.describe('The duration in seconds before the invite expires'),
 });
 
 export type GuildInviteMetadataResponse = z.infer<typeof GuildInviteMetadataResponse>;
 
-export const GroupDmInviteMetadataResponse = z.object({
-	...GroupDmInviteResponse.shape,
-	created_at: z.iso.datetime().describe('ISO8601 timestamp of when the invite was created'),
-	uses: Int32Type.describe('The number of times this invite has been used'),
-	max_uses: Int32Type.describe('The maximum number of times this invite can be used'),
-});
+export const GroupDmInviteMetadataResponse = GroupDmInviteResponse.extend(InviteMetadataFields);
 
 export type GroupDmInviteMetadataResponse = z.infer<typeof GroupDmInviteMetadataResponse>;
 
@@ -124,3 +118,5 @@ export interface GroupDmInvite extends InviteBase {
 }
 
 export type Invite = GuildInvite | GroupDmInvite;
+
+export const InviteMetadataListResponse = z.array(InviteMetadataResponseSchema);

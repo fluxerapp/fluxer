@@ -10,9 +10,10 @@ import {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {
 	BulkIgnoreFriendRequestsResponse,
+	RelationshipListResponse,
 	RelationshipResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {z} from 'zod';
+
 import {createUserID} from '../../BrandedTypes';
 import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
@@ -30,7 +31,7 @@ export function UserRelationshipController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_user_relationships',
 			summary: 'List user relationships',
-			responseSchema: z.array(RelationshipResponse),
+			responseSchema: RelationshipListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],

@@ -2,7 +2,6 @@
 
 import {
 	DONATION_CURRENCIES,
-	type DonationCurrency as DonationCurrencyCode,
 	getDonationAmountConstraints,
 } from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
 import {z} from 'zod';
@@ -37,7 +36,7 @@ export const DonationCheckoutRequest = z
 			),
 	})
 	.superRefine((value, ctx) => {
-		const constraints = getDonationAmountConstraints(value.currency as DonationCurrencyCode);
+		const constraints = getDonationAmountConstraints(value.currency);
 		if (value.amount_cents < constraints.minimumAmountMinor || value.amount_cents > constraints.maximumAmountMinor) {
 			ctx.addIssue({
 				code: 'custom',

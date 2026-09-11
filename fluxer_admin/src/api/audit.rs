@@ -3,8 +3,6 @@
 use crate::api::generated::types as generated_types;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
-#[cfg(test)]
-use super::types::AuditLogEntry;
 use super::types::AuditLogsListResponse;
 
 pub struct SearchAuditLogsParams {
@@ -38,64 +36,22 @@ impl AdminApiClient {
         let limit = params.limit.to_string();
         let offset = params.offset.to_string();
         let query_params = [
-            (
-                "q",
-                nonempty_string(params.query.as_deref()).unwrap_or_default(),
-            ),
+            ("q", params.query.as_deref().unwrap_or_default()),
             (
                 "admin_user_id",
-                nonempty_string(params.admin_user_id.as_deref()).unwrap_or_default(),
+                params.admin_user_id.as_deref().unwrap_or_default(),
             ),
             (
                 "target_type",
-                nonempty_string(params.target_type.as_deref()).unwrap_or_default(),
+                params.target_type.as_deref().unwrap_or_default(),
             ),
-            (
-                "target_id",
-                nonempty_string(params.target_id.as_deref()).unwrap_or_default(),
-            ),
-            ("sort_by", sort_by.unwrap_or_default()),
-            ("sort_order", sort_order.unwrap_or_default()),
-            ("limit", limit),
-            ("offset", offset),
+            ("target_id", params.target_id.as_deref().unwrap_or_default()),
+            ("sort_by", sort_by.as_deref().unwrap_or_default()),
+            ("sort_order", sort_order.as_deref().unwrap_or_default()),
+            ("limit", limit.as_str()),
+            ("offset", offset.as_str()),
         ];
-        let query_params: Vec<(&str, &str)> = query_params
-            .iter()
-            .map(|(key, value)| (*key, value.as_str()))
-            .collect();
         self.get("/admin/audit-logs", Some(&query_params)).await
-    }
-}
-
-#[cfg(test)]
-fn audit_logs_response(
-    response: generated_types::AuditLogsListResponseSchema,
-) -> ApiResult<AuditLogsListResponse> {
-    Ok(AuditLogsListResponse {
-        logs: response.logs.into_iter().map(audit_log_entry).collect(),
-        total: crate::api::generated::number_to_u64(response.total, "total")
-            .map_err(ApiError::Parse)?,
-    })
-}
-
-#[cfg(test)]
-fn audit_log_entry(entry: generated_types::AdminAuditLogResponseSchema) -> AuditLogEntry {
-    AuditLogEntry {
-        log_id: String::from(entry.log_id),
-        admin_user_id: String::from(entry.admin_user_id),
-        admin_user: None,
-        action: entry.action,
-        target_id: entry.target_id,
-        target_type: entry.target_type,
-        target_user: None,
-        target_guild: None,
-        target_channel: None,
-        related_users: Default::default(),
-        related_guilds: Default::default(),
-        related_channels: Default::default(),
-        audit_log_reason: entry.audit_log_reason,
-        metadata: entry.metadata,
-        created_at: entry.created_at,
     }
 }
 
@@ -111,12 +67,6 @@ fn audit_sort_by(value: &str) -> ApiResult<generated_types::ListAdminAuditLogsSo
 fn audit_sort_order(value: &str) -> ApiResult<generated_types::ListAdminAuditLogsSortOrder> {
     generated_types::ListAdminAuditLogsSortOrder::try_from(value)
         .map_err(|e| ApiError::Parse(e.to_string()))
-}
-
-fn nonempty_string(value: Option<&str>) -> Option<String> {
-    value
-        .filter(|value| !value.is_empty())
-        .map(std::borrow::ToOwned::to_owned)
 }
 
 #[cfg(test)]
@@ -135,10 +85,39 @@ mod tests {
 
     #[test]
     fn rejects_lossy_audit_totals() {
-        let response = generated_types::AuditLogsListResponseSchema {
-            logs: Vec::new(),
-            total: 1.5,
-        };
-        assert!(audit_logs_response(response).is_err());
+        for total in [serde_json::json!(1.5), serde_json::json!(-1)] {
+            let response = serde_json::json!({"logs": [], "total": total});
+            assert!(serde_json::from_value::<AuditLogsListResponse>(response).is_err());
+        }
+    }
+
+    #[test]
+    fn deserializes_audit_fields_without_losing_generated_string_values() {
+        let json = serde_json::json!({
+            "logs": [{
+                "log_id": "123456789012345678",
+                "admin_user_id": "234567890123456789",
+                "admin_user": null,
+                "action": "USER_UPDATE",
+                "target_id": "345678901234567890",
+                "target_type": "user",
+                "target_user": null,
+                "target_guild": null,
+                "target_channel": null,
+                "related_users": {},
+                "related_guilds": {},
+                "related_channels": {},
+                "audit_log_reason": "Account review",
+                "metadata": {"field": "username"},
+                "created_at": "2026-09-11T12:00:00.000Z"
+            }],
+            "total": 1
+        });
+        let generated: generated_types::AuditLogsListResponseSchema =
+            serde_json::from_value(json.clone()).unwrap();
+        assert_eq!(generated.logs[0].action.to_string(), "USER_UPDATE");
+
+        let response: AuditLogsListResponse = serde_json::from_value(json.clone()).unwrap();
+        assert_eq!(serde_json::to_value(response).unwrap(), json);
     }
 }

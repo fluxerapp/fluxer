@@ -24,6 +24,7 @@
 		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
 		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
 		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
+		"packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
 		"pnpm-workspace.yaml": ["catalog"]
 	},
@@ -73,7 +74,6 @@
 			"ignoreDependencies": ["sharp"]
 		},
 		"packages/openapi": {
-			"entry": ["src/GenerateOpenAPISpec.ts"],
 			"project": ["src/**/*.ts"]
 		},
 		"packages/schema": {

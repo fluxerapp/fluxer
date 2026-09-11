@@ -15,7 +15,7 @@ import {
 	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
-import {getInitialSnapshot, setup, transition} from 'xstate';
+import {initialTransition, setup, transition} from 'xstate';
 
 export type StreamSettingsAudioControlStateValue =
 	| 'hidden'
@@ -146,7 +146,7 @@ export function selectStreamSettingsAudioControlState(
 ): StreamSettingsAudioControlStateValue {
 	const [snapshot] = transition(
 		streamSettingsAudioControlStateMachine,
-		getInitialSnapshot(streamSettingsAudioControlStateMachine),
+		initialTransition(streamSettingsAudioControlStateMachine)[0],
 		{
 			type: 'audio.evaluate',
 			signals,

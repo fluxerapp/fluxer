@@ -10,7 +10,6 @@ import type {
 	GuildInviteMetadataResponse,
 	GuildInviteResponse,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import type {z} from 'zod';
 import type {ChannelID, GuildID} from '../BrandedTypes';
 import type {IGatewayService} from '../infrastructure/IGatewayService';
 import type {UserCacheService} from '../infrastructure/UserCacheService';
@@ -23,21 +22,8 @@ interface MapInviteToGuildInviteResponseParams {
 	invite: Invite;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
-	getGuildResponse: (guildId: GuildID) => Promise<z.infer<typeof GuildPartialResponse>>;
-	getGuildCounts: (guildId: GuildID) => Promise<{
-		memberCount: number;
-		presenceCount: number;
-	}>;
-	gatewayService: IGatewayService;
-}
-
-interface MapInviteToGuildInviteMetadataResponseParams {
-	invite: Invite;
-	userCacheService: UserCacheService;
-	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
-	getGuildResponse: (guildId: GuildID) => Promise<z.infer<typeof GuildPartialResponse>>;
+	getChannelResponse: (channelId: ChannelID) => Promise<ChannelPartialResponse>;
+	getGuildResponse: (guildId: GuildID) => Promise<GuildPartialResponse>;
 	getGuildCounts: (guildId: GuildID) => Promise<{
 		memberCount: number;
 		presenceCount: number;
@@ -49,16 +35,7 @@ interface MapInviteToGroupDmInviteResponseParams {
 	invite: Invite;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
-	getChannelSystem: (channelId: ChannelID) => Promise<Channel | null>;
-	getChannelMemberCount: (channelId: ChannelID) => Promise<number>;
-}
-
-interface MapInviteToGroupDmInviteMetadataResponseParams {
-	invite: Invite;
-	userCacheService: UserCacheService;
-	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
+	getChannelResponse: (channelId: ChannelID) => Promise<ChannelPartialResponse>;
 	getChannelSystem: (channelId: ChannelID) => Promise<Channel | null>;
 	getChannelMemberCount: (channelId: ChannelID) => Promise<number>;
 }
@@ -71,7 +48,7 @@ export async function mapInviteToGuildInviteResponse({
 	getGuildResponse,
 	getGuildCounts,
 	gatewayService,
-}: MapInviteToGuildInviteResponseParams): Promise<z.infer<typeof GuildInviteResponse>> {
+}: MapInviteToGuildInviteResponseParams): Promise<GuildInviteResponse> {
 	if (!invite.guildId) {
 		throw new UnknownInviteError();
 	}
@@ -117,7 +94,7 @@ export async function mapInviteToGuildInviteMetadataResponse({
 	getGuildResponse,
 	getGuildCounts,
 	gatewayService,
-}: MapInviteToGuildInviteMetadataResponseParams): Promise<z.infer<typeof GuildInviteMetadataResponse>> {
+}: MapInviteToGuildInviteResponseParams): Promise<GuildInviteMetadataResponse> {
 	const baseResponse = await mapInviteToGuildInviteResponse({
 		invite,
 		userCacheService,
@@ -143,7 +120,7 @@ export async function mapInviteToGroupDmInviteResponse({
 	getChannelResponse,
 	getChannelSystem,
 	getChannelMemberCount,
-}: MapInviteToGroupDmInviteResponseParams): Promise<z.infer<typeof GroupDmInviteResponse>> {
+}: MapInviteToGroupDmInviteResponseParams): Promise<GroupDmInviteResponse> {
 	if (!invite.channelId) {
 		throw new UnknownInviteError();
 	}
@@ -195,7 +172,7 @@ export async function mapInviteToGroupDmInviteMetadataResponse({
 	getChannelResponse,
 	getChannelSystem,
 	getChannelMemberCount,
-}: MapInviteToGroupDmInviteMetadataResponseParams): Promise<z.infer<typeof GroupDmInviteMetadataResponse>> {
+}: MapInviteToGroupDmInviteResponseParams): Promise<GroupDmInviteMetadataResponse> {
 	const baseResponse = await mapInviteToGroupDmInviteResponse({
 		invite,
 		userCacheService,

@@ -25,9 +25,11 @@ import {
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {
 	BulkMessageFetchResponse,
+	MessageListResponse,
+	MessagePurgeResponse,
 	MessageResponseSchema,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {z} from 'zod';
+
 import {requireSudoMode} from '../../auth/services/SudoVerificationService';
 import {createAttachmentID, createChannelID, createMessageID} from '../../BrandedTypes';
 import {Config} from '../../Config';
@@ -53,7 +55,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_messages',
 			summary: 'List messages in a channel',
-			responseSchema: z.array(MessageResponseSchema),
+			responseSchema: MessageListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
@@ -431,7 +433,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'purge_personal_notes_messages',
 			summary: 'Purge all messages in personal notes',
-			responseSchema: z.object({deleted_count: z.number().int().nonnegative()}),
+			responseSchema: MessagePurgeResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],

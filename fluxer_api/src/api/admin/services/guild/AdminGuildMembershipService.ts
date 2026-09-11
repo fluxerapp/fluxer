@@ -8,6 +8,7 @@ import type {
 	ForceAddUserToGuildRequest,
 	KickGuildMemberRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {createGuildID, createUserID, type UserID} from '../../../BrandedTypes';
 import type {GuildService} from '../../../guild/services/GuildService';
 import {createRequestCache, type RequestCache} from '../../../middleware/RequestCacheMiddleware';
@@ -34,7 +35,7 @@ export class AdminGuildMembershipService {
 		requestCache: RequestCache;
 		adminUserId: UserID;
 		auditLogReason: string | null;
-	}) {
+	}): Promise<SuccessResponse> {
 		const {userRepository, guildService, auditService} = this.deps;
 		const userId = createUserID(data.user_id);
 		const guildId = createGuildID(data.guild_id);

@@ -13,7 +13,7 @@ import {
 	normalizeDiscoveryTag,
 } from '@fluxer/constants/src/DiscoveryConstants';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
-import {SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {SnowflakeStringType, SnowflakeType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const DISCOVERY_CATEGORY_MAX = Math.max(...Object.values(DiscoveryCategories));
@@ -22,18 +22,18 @@ const DiscoveryTagSchema = z
 	.min(DISCOVERY_TAG_MIN_LENGTH)
 	.max(DISCOVERY_TAG_MAX_LENGTH)
 	.refine((value) => isValidDiscoveryTag(value), {
-		message: 'Tag must be alphanumeric and may contain spaces, hyphens, underscores, plus, or ampersands',
+		error: 'Tag must be alphanumeric and may contain spaces, hyphens, underscores, plus, or ampersands',
 	})
-	.transform((value) => normalizeDiscoveryTag(value));
+	.overwrite(normalizeDiscoveryTag);
 const DiscoveryTagsSchema = z
 	.array(DiscoveryTagSchema)
 	.max(DISCOVERY_MAX_TAGS)
-	.transform((tags) => Array.from(new Set(tags)))
+	.overwrite((tags) => Array.from(new Set(tags)))
 	.describe(`Up to ${DISCOVERY_MAX_TAGS} custom discovery tags`);
 const DiscoveryLanguageSchema = z
 	.string()
 	.refine((value) => isValidDiscoveryLanguage(value), {
-		message: 'Unsupported language code',
+		error: 'Unsupported language code',
 	})
 	.describe('Primary community language (BCP-47 code)');
 export const DiscoveryApplicationRequest = z.object({
@@ -49,22 +49,11 @@ export const DiscoveryApplicationRequest = z.object({
 
 export type DiscoveryApplicationRequest = z.infer<typeof DiscoveryApplicationRequest>;
 
-export const DiscoveryApplicationPatchRequest = z.object({
-	description: z
-		.string()
-		.min(DISCOVERY_DESCRIPTION_MIN_LENGTH)
-		.max(DISCOVERY_DESCRIPTION_MAX_LENGTH)
+export const DiscoveryApplicationPatchRequest = DiscoveryApplicationRequest.partial().extend({
+	description: DiscoveryApplicationRequest.shape.description
 		.optional()
 		.describe('Updated description for discovery listing'),
-	category_type: z
-		.number()
-		.int()
-		.min(0)
-		.max(DISCOVERY_CATEGORY_MAX)
-		.optional()
-		.describe('Updated discovery category type'),
-	primary_language: DiscoveryLanguageSchema.optional(),
-	custom_tags: DiscoveryTagsSchema.optional(),
+	category_type: DiscoveryApplicationRequest.shape.category_type.optional().describe('Updated discovery category type'),
 });
 
 export type DiscoveryApplicationPatchRequest = z.infer<typeof DiscoveryApplicationPatchRequest>;
@@ -72,11 +61,7 @@ export type DiscoveryApplicationPatchRequest = z.infer<typeof DiscoveryApplicati
 export const DiscoverySearchQuery = z.object({
 	query: z.string().max(100).optional().describe('Search query'),
 	category: z.coerce.number().int().min(0).max(DISCOVERY_CATEGORY_MAX).optional().describe('Filter by category'),
-	language: z
-		.string()
-		.refine((value) => isValidDiscoveryLanguage(value), {message: 'Unsupported language code'})
-		.optional()
-		.describe('Filter by primary community language'),
+	language: DiscoveryLanguageSchema.optional().describe('Filter by primary community language'),
 	tag: z.string().max(DISCOVERY_TAG_MAX_LENGTH).optional().describe('Filter by a specific custom tag'),
 	sort_by: z.enum(['member_count', 'online_count', 'relevance']).optional().describe('Sort order'),
 	limit: z.coerce.number().int().min(1).max(48).optional().default(24).describe('Number of results to return'),
@@ -152,22 +137,7 @@ export const DiscoveryAdminPendingApplicationResponse = z.object({
 
 export type DiscoveryAdminPendingApplicationResponse = z.infer<typeof DiscoveryAdminPendingApplicationResponse>;
 
-export const DiscoveryAdminListedGuildResponse = z.object({
-	guild_id: SnowflakeStringType.describe('Guild ID'),
-	guild_name: z.string().describe('Guild name'),
-	guild_icon: z.string().nullable().describe('Guild icon hash'),
-	guild_owner_id: SnowflakeStringType.describe('Guild owner user ID'),
-	guild_owner_username: z.string().nullable().describe('Guild owner username'),
-	guild_owner_global_name: z.string().nullable().describe('Guild owner display name'),
-	guild_owner_discriminator: z.string().nullable().describe('Guild owner discriminator'),
-	guild_member_count: z.number().describe('Approximate member count'),
-	guild_nsfw_level: NSFWLevelSchema.nullable().describe('NSFW level of the guild'),
-	guild_features: z.array(z.string()).describe('Guild feature flags'),
-	description: z.string().describe('Discovery description'),
-	category_type: z.number().describe('Discovery category type'),
-	primary_language: z.string().nullable().describe('Primary community language'),
-	custom_tags: z.array(z.string()).describe('Custom discovery tags'),
-	applied_at: z.string().describe('Application timestamp'),
+export const DiscoveryAdminListedGuildResponse = DiscoveryAdminPendingApplicationResponse.extend({
 	approved_at: z.string().nullable().describe('Approval timestamp'),
 });
 
@@ -192,12 +162,18 @@ export const DiscoveryCategoryListResponse = z.array(DiscoveryCategoryResponse);
 
 export type DiscoveryCategoryListResponse = z.infer<typeof DiscoveryCategoryListResponse>;
 
+const DiscoveryReviewReason = withOpenApiType(z.string().max(500).describe('Review reason'), 'DiscoveryReviewReason');
+const DiscoveryRejectionReason = withOpenApiType(
+	z.string().min(1).max(500).describe('Rejection reason'),
+	'DiscoveryRejectionReason',
+);
+
 const DiscoveryAdminReviewRequest = z.object({
-	reason: z.string().max(500).optional().describe('Review reason'),
+	reason: DiscoveryReviewReason.optional(),
 });
 
 const DiscoveryAdminRejectRequest = z.object({
-	reason: z.string().min(1).max(500).describe('Rejection reason'),
+	reason: DiscoveryRejectionReason,
 });
 
 export const DiscoveryAdminRemoveRequest = z.object({
@@ -248,3 +224,6 @@ export const DiscoveryAdminListingBulkCategoryResponse = z.object({
 });
 
 export type DiscoveryAdminListingBulkCategoryResponse = z.infer<typeof DiscoveryAdminListingBulkCategoryResponse>;
+
+export const DiscoveryAdminPendingApplicationListResponse = z.array(DiscoveryAdminPendingApplicationResponse);
+export const DiscoveryAdminListedGuildListResponse = z.array(DiscoveryAdminListedGuildResponse);

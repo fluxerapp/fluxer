@@ -92,7 +92,6 @@
 		"@typescript/native-preview": "catalog:",
 		"esbuild": "catalog:",
 		"msw": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	},
 	"packageManager": "pnpm@10.29.3"

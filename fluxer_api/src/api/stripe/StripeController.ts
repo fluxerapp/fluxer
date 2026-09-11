@@ -6,7 +6,7 @@ import {StripeWebhookSignatureMissingError} from '@fluxer/errors/src/domains/pay
 import {GiftCodeParam, SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	CreateCheckoutSessionRequest,
-	GiftCodeMetadataResponse,
+	GiftCodeMetadataListResponse,
 	GiftCodeResponse,
 } from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import {
@@ -22,7 +22,7 @@ import {
 	UrlResponse,
 	WebhookReceivedResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
-import {z} from 'zod';
+
 import {Config} from '../Config';
 import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
 import {CaptchaMiddleware} from '../middleware/CaptchaMiddleware';
@@ -251,7 +251,7 @@ export function StripeController(app: HonoApp) {
 			operationId: 'list_user_gifts',
 			summary: 'List user gifts',
 			description: 'Lists all gift codes created by the authenticated user.',
-			responseSchema: z.array(GiftCodeMetadataResponse),
+			responseSchema: GiftCodeMetadataListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: 'Users',

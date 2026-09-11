@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ConfigObject, isConfigObject} from '@fluxer/config/src/config_loader/ConfigObject';
+
 type ConfigPathKey = string | number;
-type ConfigObject = Record<string, unknown>;
 type ConfigContainer = ConfigObject | Array<unknown>;
 
 type EnvValueParser = (raw: string) => unknown;
@@ -436,12 +437,8 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_GEOIP_DB_PATH: {path: ['geoip', 'maxmind_db_path']},
 };
 
-function isPlainObject(value: unknown): value is ConfigObject {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function isContainer(value: unknown): value is ConfigContainer {
-	return isPlainObject(value) || Array.isArray(value);
+	return isConfigObject(value) || Array.isArray(value);
 }
 
 function createChildContainer(nextKey: ConfigPathKey | undefined): ConfigContainer {

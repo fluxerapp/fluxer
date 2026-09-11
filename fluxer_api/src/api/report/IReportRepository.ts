@@ -5,8 +5,11 @@ import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '../datab
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
+	IARSubmissionRow,
 	MessageReportSubmissionByReporterRow,
 } from '../database/types/ReportTypes';
+
+export type {IARMessageContextRow, IARSubmissionRow} from '../database/types/ReportTypes';
 
 export enum ReportStatus {
 	PENDING = 0,
@@ -28,29 +31,6 @@ export function reportStatusToString(status: ReportStatus | number): string {
 	return REPORT_STATUS_STRINGS[status as ReportStatus] ?? 'unknown';
 }
 
-type MentionCollection = ReadonlyArray<bigint> | Set<bigint> | null | undefined;
-
-export interface IARMessageContextRow {
-	message_id: bigint;
-	channel_id: bigint | null;
-	author_id: bigint;
-	author_username: string;
-	author_discriminator: number;
-	author_avatar_hash: string | null;
-	content: string | null;
-	timestamp: Date;
-	edited_timestamp: Date | null;
-	type: number;
-	flags: number;
-	mention_everyone: boolean;
-	mention_users: MentionCollection;
-	mention_roles: MentionCollection;
-	mention_channels: MentionCollection;
-	attachments: Array<MessageAttachment> | null;
-	embeds: Array<MessageEmbed> | null;
-	sticker_items: Array<MessageStickerItem> | null;
-}
-
 export interface IARMessageContext {
 	messageId: MessageID;
 	channelId: ChannelID | null;
@@ -70,43 +50,6 @@ export interface IARMessageContext {
 	attachments: Array<MessageAttachment>;
 	embeds: Array<MessageEmbed>;
 	stickers: Array<MessageStickerItem>;
-}
-
-export interface IARSubmissionRow {
-	report_id: bigint;
-	reporter_id: bigint | null;
-	reporter_email: string | null;
-	reporter_full_legal_name: string | null;
-	reporter_country_of_residence: string | null;
-	reported_at: Date;
-	status: number;
-	report_type: number;
-	category: string;
-	additional_info: string | null;
-	reported_user_id: bigint | null;
-	reported_user_avatar_hash: string | null;
-	reported_guild_id: bigint | null;
-	reported_guild_name: string | null;
-	reported_guild_icon_hash: string | null;
-	reported_message_id: bigint | null;
-	reported_channel_id: bigint | null;
-	reported_channel_name: string | null;
-	message_context: Array<IARMessageContextRow> | null;
-	guild_context_id: bigint | null;
-	resolved_at: Date | null;
-	resolved_by_admin_id: bigint | null;
-	public_comment: string | null;
-	audit_log_reason: string | null;
-	reported_guild_invite_code: string | null;
-	reported_guild_nsfw?: boolean | null;
-	reported_guild_content_warning_level?: number | null;
-	reported_guild_content_warning_text?: string | null;
-	reported_channel_nsfw_override?: boolean | null;
-	reported_channel_content_warning_level?: number | null;
-	reported_channel_content_warning_text?: string | null;
-	reported_channel_effective_nsfw?: boolean | null;
-	reported_channel_effective_content_warning_level?: number | null;
-	reported_channel_effective_content_warning_text?: string | null;
 }
 
 export interface IARSubmission {

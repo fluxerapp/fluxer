@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{Archive, ArchiveDownloadUrlResponse, ListArchivesResponse};
@@ -12,7 +12,7 @@ impl AdminApiClient {
         include_attachments: bool,
     ) -> ApiResult<Archive> {
         let body = generated_types::AdminArchiveCreateRequest {
-            include_attachments: include_attachments.then_some(true),
+            include_attachments,
         };
         let response = self
             .generated()
@@ -28,7 +28,7 @@ impl AdminApiClient {
         include_attachments: bool,
     ) -> ApiResult<Archive> {
         let body = generated_types::AdminArchiveCreateRequest {
-            include_attachments: include_attachments.then_some(true),
+            include_attachments,
         };
         let response = self
             .generated()
@@ -78,15 +78,17 @@ impl AdminApiClient {
         subject_id: &str,
         archive_id: &str,
     ) -> ApiResult<ArchiveDownloadUrlResponse> {
+        let subject_type = generated_types::ArchiveSubjectTypeSchema::try_from(subject_type)
+            .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
-            .get_admin_archive_download(subject_type, subject_id, archive_id)
+            .get_admin_archive_download(
+                subject_type,
+                &snowflake(subject_id),
+                &snowflake(archive_id),
+            )
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
-}
-
-fn snowflake(value: &str) -> generated_types::SnowflakeType {
-    generated_types::SnowflakeType::from(value.to_owned())
 }

@@ -6,7 +6,7 @@ import {
 	sanitizeRetryAfterSeconds,
 } from '@fluxer/errors/src/domains/core/RetryAfterSeconds';
 import {ThrottledError} from '@fluxer/errors/src/domains/core/ThrottledError';
-import type {FluxerErrorData} from '@fluxer/errors/src/FluxerError';
+import type {RateLimitMetadata} from '@fluxer/schema/src/domains/common/ErrorSchemas';
 
 type RateLimitScope = 'global' | 'shared' | 'user';
 
@@ -63,7 +63,7 @@ export class RateLimitError extends ThrottledError {
 				? safeRetryAfterDecimal
 				: resetAfterDecimal;
 		const safeScope = sanitizeRateLimitScope(scope, global);
-		const data: FluxerErrorData = {
+		const data: RateLimitMetadata = {
 			global,
 			retry_after: safeRetryAfterDecimal,
 		};

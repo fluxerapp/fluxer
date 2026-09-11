@@ -188,7 +188,7 @@ export class EmailDnsValidationService implements IEmailDnsValidationService {
 	}
 
 	private async withLookupDeadline<T>(lookup: Promise<T>): Promise<T> {
-		let timer: ReturnType<typeof setTimeout> | undefined;
+		let timer: NodeJS.Timeout | undefined;
 		try {
 			return await Promise.race([
 				lookup,

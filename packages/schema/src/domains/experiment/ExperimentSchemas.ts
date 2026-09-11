@@ -12,37 +12,27 @@ export const EXPERIMENT_MAX_POLL_JITTER_PERCENT = 50;
 export const DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS = 300;
 export const DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT = 15;
 
-export const ExperimentDeliveryConfigSchema = z.object({
+const experimentDeliveryFields = {
 	poll_interval_seconds: z
 		.number()
 		.int()
 		.min(EXPERIMENT_MIN_POLL_INTERVAL_SECONDS)
-		.max(EXPERIMENT_MAX_POLL_INTERVAL_SECONDS)
-		.default(DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS),
-	poll_jitter_percent: z
-		.number()
-		.int()
-		.min(0)
-		.max(EXPERIMENT_MAX_POLL_JITTER_PERCENT)
-		.default(DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT),
+		.max(EXPERIMENT_MAX_POLL_INTERVAL_SECONDS),
+	poll_jitter_percent: z.number().int().min(0).max(EXPERIMENT_MAX_POLL_JITTER_PERCENT),
+};
+
+export const ExperimentDeliveryConfigSchema = z.object({
+	poll_interval_seconds: experimentDeliveryFields.poll_interval_seconds.default(
+		DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS,
+	),
+	poll_jitter_percent: experimentDeliveryFields.poll_jitter_percent.default(DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT),
 });
 
 export type ExperimentDeliveryConfig = z.infer<typeof ExperimentDeliveryConfigSchema>;
 
-export const DEFAULT_EXPERIMENT_DELIVERY_CONFIG: ExperimentDeliveryConfig = {
-	poll_interval_seconds: DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS,
-	poll_jitter_percent: DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
-};
+export const DEFAULT_EXPERIMENT_DELIVERY_CONFIG: ExperimentDeliveryConfig = ExperimentDeliveryConfigSchema.parse({});
 
-export const ExperimentDeliveryConfigUpdateRequest = z.object({
-	poll_interval_seconds: z
-		.number()
-		.int()
-		.min(EXPERIMENT_MIN_POLL_INTERVAL_SECONDS)
-		.max(EXPERIMENT_MAX_POLL_INTERVAL_SECONDS)
-		.optional(),
-	poll_jitter_percent: z.number().int().min(0).max(EXPERIMENT_MAX_POLL_JITTER_PERCENT).optional(),
-});
+export const ExperimentDeliveryConfigUpdateRequest = z.object(experimentDeliveryFields).partial();
 
 export type ExperimentDeliveryConfigUpdateRequest = z.infer<typeof ExperimentDeliveryConfigUpdateRequest>;
 
@@ -56,7 +46,7 @@ const ExperimentAssignmentsSchema = z.object({
 
 export const ExperimentAssignmentsResponse = z.object({
 	poll_interval_seconds: z.number().int(),
-	poll_jitter_percent: z.number().int().min(0).max(EXPERIMENT_MAX_POLL_JITTER_PERCENT),
+	poll_jitter_percent: experimentDeliveryFields.poll_jitter_percent,
 	assignments: ExperimentAssignmentsSchema,
 });
 

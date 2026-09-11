@@ -254,7 +254,7 @@ export function assignRef<T>(ref: React.Ref<T> | undefined, value: T | null): vo
 		ref(value);
 		return;
 	}
-	(ref as React.MutableRefObject<T | null>).current = value;
+	ref.current = value;
 }
 
 export function normalizeFilterKey(filterKey: string): string {

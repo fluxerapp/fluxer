@@ -21,7 +21,7 @@ interface UseTextareaKeyboardOptions {
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	handleTextChange: (newValue: string, previousValue: string) => void;
-	previousValueRef: React.MutableRefObject<string>;
+	previousValueRef: React.RefObject<string>;
 	clearSegments: () => void;
 	replyingMessage: {
 		messageId: string;

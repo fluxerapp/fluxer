@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type {OpenAPIDocument} from '@fluxer/openapi/src/OpenAPITypes';
 export type OpenAPIRouteScope = 'all' | 'admin' | 'public';
+export type OpenAPISchemaTarget = 'draft-2020-12' | 'openapi-3.0';
 export interface OpenAPIGeneratorOptions {
 	readonly basePath: string;
 	readonly title?: string;
@@ -8,6 +9,7 @@ export interface OpenAPIGeneratorOptions {
 	readonly description?: string;
 	readonly serverUrl?: string;
 	readonly routeScope?: OpenAPIRouteScope;
+	readonly schemaTarget?: OpenAPISchemaTarget;
 }
 export interface SkippedRoute {
 	readonly method: string;

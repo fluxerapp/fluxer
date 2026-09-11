@@ -72,8 +72,6 @@ export const ERROR_I18N_MESSAGES = {
 		'File index {index} exceeds the maximum allowed index of {maxIndex}.',
 	'attachments_and_uploads.file_not_found': 'File not found.',
 	'attachments_and_uploads.file_size_too_large': 'File size is too large. Maximum file size is {maxSize}.',
-	'attachments_and_uploads.filename_empty_after_normalization': "Filename can't be empty after normalization.",
-	'attachments_and_uploads.filename_invalid_characters': 'Filename contains invalid characters.',
 	'attachments_and_uploads.filename_length_invalid': 'Filename must be between {min} and {max} characters.',
 	'attachments_and_uploads.image_size_exceeds_limit': 'Image size exceeds {maxSize} bytes.',
 	'attachments_and_uploads.invalid_file_field_name':
@@ -425,7 +423,6 @@ export const ERROR_I18N_MESSAGES = {
 		'You need to complete your account setup before you can submit reports.',
 	'moderation_and_reports.unknown_report': 'Unknown report.',
 	'moderation_and_reports.user_is_not_banned': "This user isn't banned.",
-	'names_and_normalization.channel_name_empty_after_normalization': "Channel name can't be empty after normalization.",
 	'names_and_normalization.name_empty_after_normalization': "Name can't be empty after normalization.",
 	'permissions.global_ip_banned':
 		'Your IP address {ipAddress} has been permanently blocked from the Fluxer API by platform administrators. If you believe this is a mistake, contact support@fluxer.app to appeal. Include this IP address in your appeal.',

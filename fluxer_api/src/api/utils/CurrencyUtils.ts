@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isEuEeaCountryCode} from '@fluxer/constants/src/EuropeanEconomicArea';
+import type {PremiumCurrency} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 
-export type Currency = 'USD' | 'EUR' | 'BRL' | 'DKK' | 'INR' | 'NOK' | 'PLN' | 'SEK' | 'TRY';
+export type Currency = PremiumCurrency;
 
 export function getCurrency(countryCode: string | null | undefined): Currency {
 	return getCurrencyPreferences(countryCode)[0];

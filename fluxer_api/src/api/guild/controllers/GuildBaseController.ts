@@ -14,8 +14,12 @@ import {
 	GuildVanityURLUpdateRequest,
 	GuildVanityURLUpdateResponse,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {GuildResponse, GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {z} from 'zod';
+import {
+	GuildListResponse,
+	GuildResponse,
+	GuildVanityURLResponse,
+} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+
 import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
 import {requireSudoMode} from '../../auth/services/SudoVerificationService';
 import {createGuildID} from '../../BrandedTypes';
@@ -68,7 +72,7 @@ export function GuildBaseController(app: HonoApp) {
 			operationId: 'list_guilds',
 			summary: 'List current user guilds',
 			description: 'Requires guilds OAuth scope if using bearer token. Returns all guilds the user is a member of.',
-			responseSchema: z.array(GuildResponse),
+			responseSchema: GuildListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],

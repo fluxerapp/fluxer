@@ -215,7 +215,7 @@ function createBlockedRequestError(url: URL, context: RequestUrlValidationContex
 }
 
 async function defaultLookupHost(hostname: string): Promise<Array<string>> {
-	const addresses = await dns.promises.lookup(hostname, {all: true, verbatim: true});
+	const addresses = await dns.promises.lookup(hostname, {all: true, order: 'verbatim'});
 	return addresses.map((addressEntry) => addressEntry.address);
 }
 
@@ -234,7 +234,7 @@ function deduplicateAddresses(addresses: Array<string>): Array<string> {
 
 function createBlocklistDispatcher(allowPrivateAddresses: boolean): NonNullable<RequestInit['dispatcher']> {
 	const lookup: LookupFunction = (hostname, options, callback) => {
-		dns.lookup(hostname, {...options, all: true, verbatim: true}, (error, addresses) => {
+		dns.lookup(hostname, {...options, all: true, order: options.order ?? 'verbatim'}, (error, addresses) => {
 			if (error) {
 				callback(error, []);
 				return;

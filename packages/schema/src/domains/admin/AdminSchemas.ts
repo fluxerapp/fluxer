@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	GIFT_CODE_DURATION_TYPE_DEFINITIONS,
-	MAX_GIFT_CODES_PER_REQUEST,
-	MAX_GIFT_DURATION_QUANTITY,
-} from '@fluxer/constants/src/GiftCodeConstants';
+import {MAX_GIFT_CODES_PER_REQUEST, MAX_GIFT_DURATION_QUANTITY} from '@fluxer/constants/src/GiftCodeConstants';
 import {
 	CONTENT_WARNING_TEXT_MAX_LENGTH,
 	SystemChannelFlags,
@@ -12,6 +8,7 @@ import {
 } from '@fluxer/constants/src/GuildConstants';
 import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
+import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {
@@ -27,7 +24,12 @@ import {
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {
+	InstanceCaptchaProviderSchema,
+	InstanceRegistrationModeSchema,
+} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {GiftCodeDurationTypeSchema} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {
 	ContentWarningLevelSchema,
@@ -267,10 +269,10 @@ export const ListArchivesQuery = z
 
 export type ListArchivesQuery = z.infer<typeof ListArchivesQuery>;
 
-const IP_OR_CIDR_REGEX = /^(?:(?:\d{1,3}\.){3}\d{1,3}(?:\/\d{1,2})?|(?:[a-fA-F0-9:]+)(?:\/\d{1,3})?)$/;
+const IpOrCidrType = z.union([z.ipv4(), z.ipv6(), z.cidrv4(), z.cidrv6()]);
 export const BanIpRequest = z.object({
 	ip: createStringType(1, 45)
-		.refine((value) => IP_OR_CIDR_REGEX.test(value), 'Must be a valid IPv4/IPv6 address or CIDR range')
+		.refine((value) => IpOrCidrType.safeParse(value).success, 'Must be a valid IPv4/IPv6 address or CIDR range')
 		.describe('IPv4/IPv6 address or CIDR range to ban'),
 });
 
@@ -398,14 +400,9 @@ export const BanProfileSubstringRequest = z.object({
 
 export type BanProfileSubstringRequest = z.infer<typeof BanProfileSubstringRequest>;
 
-const GiftCodeDurationTypeEnum = createNamedStringLiteralUnion(
-	GIFT_CODE_DURATION_TYPE_DEFINITIONS,
-	'Gift code duration unit',
-);
-
 export const GenerateGiftCodesRequest = z.object({
 	count: z.number().int().min(1).max(MAX_GIFT_CODES_PER_REQUEST).describe('Number of gift codes to generate'),
-	duration_type: GiftCodeDurationTypeEnum.describe('Duration unit for the generated gift codes'),
+	duration_type: GiftCodeDurationTypeSchema.describe('Duration unit for the generated gift codes'),
 	duration_quantity: z
 		.number()
 		.int()
@@ -433,17 +430,8 @@ const SsoConfigResponse = z.object({
 	redirect_uri: z.string().nullable(),
 });
 
-const RegistrationModeSchema = createNamedStringLiteralUnion(
-	[
-		['open', 'open', 'Anyone can register'],
-		['approval', 'approval', 'Anyone can register, but admins must approve new accounts'],
-		['closed', 'closed', 'Public registration is closed'],
-	],
-	'Registration mode',
-);
-
 const InstanceRegistrationConfigResponse = z.object({
-	mode: RegistrationModeSchema,
+	mode: InstanceRegistrationModeSchema,
 	admin_registration_urls_enabled: z.boolean(),
 });
 
@@ -557,7 +545,6 @@ const InstancePolicyResponse = z.object({
 	}),
 });
 
-const CaptchaProviderSchema = z.enum(['hcaptcha', 'turnstile', 'none']);
 const EmailProviderSchema = z.enum(['smtp', 'none']);
 
 const AttachmentDecayEffectiveResponse = z.object({
@@ -597,8 +584,8 @@ const InstanceIntegrationsResponse = z.object({
 		effective_available: z.boolean(),
 	}),
 	captcha: z.object({
-		provider: CaptchaProviderSchema.nullable(),
-		effective_provider: CaptchaProviderSchema,
+		provider: InstanceCaptchaProviderSchema.nullable(),
+		effective_provider: InstanceCaptchaProviderSchema,
 		hcaptcha_site_key: z.string().nullable(),
 		hcaptcha_secret_key_set: z.boolean(),
 		turnstile_site_key: z.string().nullable(),
@@ -655,7 +642,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
-			mode: RegistrationModeSchema.optional(),
+			mode: InstanceRegistrationModeSchema.optional(),
 			admin_registration_urls_enabled: z.boolean().optional(),
 		})
 		.nullish(),
@@ -691,7 +678,7 @@ export const InstanceConfigUpdateRequest = z.object({
 				.nullish(),
 			captcha: z
 				.object({
-					provider: CaptchaProviderSchema.nullish(),
+					provider: InstanceCaptchaProviderSchema.nullish(),
 					hcaptcha_site_key: z.string().trim().max(4096).nullish(),
 					hcaptcha_secret_key: z.string().trim().max(4096).nullish(),
 					turnstile_site_key: z.string().trim().max(4096).nullish(),
@@ -857,7 +844,7 @@ const LimitRuleSchema = z.object({
 				const limitKeys = Object.keys(limits);
 				return limitKeys.every((key) => (LIMIT_KEYS as ReadonlyArray<string>).includes(key));
 			},
-			{message: 'Invalid limit key detected'},
+			{error: 'Invalid limit key detected'},
 		)
 		.describe('Per-limit key values'),
 });
@@ -912,29 +899,16 @@ export const CreateAdminApiKeyResponse = z.object({
 
 export type CreateAdminApiKeyResponse = z.infer<typeof CreateAdminApiKeyResponse>;
 
-export const ListAdminApiKeyResponse = z.object({
-	key_id: z.string().describe('Unique identifier for the API key'),
-	name: z.string().describe('Display name for the API key'),
-	created_at: z.string().describe('ISO 8601 timestamp when the key was created'),
+export const ListAdminApiKeyResponse = CreateAdminApiKeyResponse.omit({key: true}).extend({
 	last_used_at: z.string().nullable().describe('ISO 8601 timestamp when the key was last used, or null if never used'),
-	expires_at: z.string().nullable().describe('ISO 8601 timestamp when the key expires, or null if no expiration'),
 	created_by_user_id: SnowflakeStringType.describe('User ID of the admin who created this key'),
-	acls: z.array(z.string()).max(ADMIN_ACL_COUNT).describe('List of access control permissions for the key'),
 });
 
 export type ListAdminApiKeyResponse = z.infer<typeof ListAdminApiKeyResponse>;
 
 export const UpdateAdminApiKeyRequest = z.object({
-	name: z
-		.string()
-		.min(1)
-		.max(100)
-		.refine((value) => value.trim().length > 0, 'Name cannot be empty')
-		.optional()
-		.describe('New display name for the API key'),
-	acls: z
-		.array(AdminAclType)
-		.max(ADMIN_ACL_COUNT)
+	name: CreateAdminApiKeyRequest.shape.name.optional().describe('New display name for the API key'),
+	acls: CreateAdminApiKeyRequest.shape.acls
 		.optional()
 		.describe('Replacement list of access control permissions for the key'),
 });
@@ -988,29 +962,6 @@ export const IndexRefreshStatusResponse = z.union([
 
 export type IndexRefreshStatusResponse = z.infer<typeof IndexRefreshStatusResponse>;
 
-const AdminArchiveSubjectTypeSchema = createNamedStringLiteralUnion(
-	[
-		['user', 'user', 'User data archive'],
-		['guild', 'guild', 'Guild data archive'],
-	],
-	'Type of subject being archived',
-);
-export const AdminArchiveResponseSchema = z.object({
-	archive_id: SnowflakeStringType,
-	subject_type: AdminArchiveSubjectTypeSchema,
-	subject_id: SnowflakeStringType,
-	requested_by: SnowflakeStringType,
-	requested_at: z.string(),
-	started_at: z.string().nullable(),
-	completed_at: z.string().nullable(),
-	failed_at: z.string().nullable(),
-	file_size: createStringType(1, 64).nullable(),
-	progress_percent: z.number(),
-	progress_step: createStringType(1, 256).nullable(),
-	error_message: createStringType(1, 4000).nullable(),
-	download_url_expires_at: z.string().nullable(),
-	expires_at: z.string().nullable(),
-});
 export const ListArchivesResponseSchema = z.object({
 	archives: z.array(AdminArchiveResponseSchema),
 });
@@ -1059,16 +1010,19 @@ const AdminAuditLogUserSummarySchema = z.object({
 	discriminator: z.string(),
 	global_name: z.string().nullable(),
 });
+export type AdminAuditLogUserSummary = z.infer<typeof AdminAuditLogUserSummarySchema>;
 const AdminAuditLogGuildSummarySchema = z.object({
 	id: SnowflakeStringType,
 	name: z.string(),
 });
+export type AdminAuditLogGuildSummary = z.infer<typeof AdminAuditLogGuildSummarySchema>;
 const AdminAuditLogChannelSummarySchema = z.object({
 	id: SnowflakeStringType,
 	name: z.string().nullable(),
 	type: ChannelTypeSchema,
 	guild_id: SnowflakeStringType.nullable(),
 });
+export type AdminAuditLogChannelSummary = z.infer<typeof AdminAuditLogChannelSummarySchema>;
 export const AdminAuditLogResponseSchema = z.object({
 	log_id: SnowflakeStringType,
 	admin_user_id: SnowflakeStringType,
@@ -1086,10 +1040,12 @@ export const AdminAuditLogResponseSchema = z.object({
 	metadata: z.record(createStringType(1, 256), createStringType(0, 4000)),
 	created_at: z.string(),
 });
+export type AdminAuditLogResponse = z.infer<typeof AdminAuditLogResponseSchema>;
 export const AuditLogsListResponseSchema = z.object({
 	logs: z.array(AdminAuditLogResponseSchema),
 	total: z.number(),
 });
+export type AuditLogsListResponse = z.infer<typeof AuditLogsListResponseSchema>;
 export const BanCheckResponseSchema = z.object({
 	banned: z.boolean(),
 });
@@ -1105,11 +1061,13 @@ export type BulkBanFileShasRequest = z.infer<typeof BulkBanFileShasRequest>;
 const NcmecSubmissionStatusEnum = createNamedStringLiteralUnion(
 	[
 		['not_submitted', 'not_submitted', 'Report has not been submitted to NCMEC'],
+		['submitting', 'submitting', 'Report submission to NCMEC is in progress'],
 		['submitted', 'submitted', 'Report has been submitted to NCMEC'],
 		['failed', 'failed', 'Report submission to NCMEC failed'],
 	],
 	'NCMEC submission status',
 );
+export type NcmecSubmissionStatus = z.infer<typeof NcmecSubmissionStatusEnum>;
 export const NcmecAttachmentSubmitResultResponse = z.object({
 	success: z.literal(true),
 	ncmec_report_id: createStringType(1, 256),
@@ -1211,9 +1169,6 @@ export const GatewayVoiceStateCountsResponse = z.object({
 
 export type GatewayVoiceStateCountsResponse = z.infer<typeof GatewayVoiceStateCountsResponse>;
 
-export const SuccessResponse = z.object({
-	success: z.boolean(),
-});
 const AdminGuildResponseSchema = z.object({
 	id: SnowflakeStringType,
 	name: createStringType(1, 100),
@@ -1244,7 +1199,7 @@ const AdminGuildRoleSummarySchema = z.object({
 	name: createStringType(1, 100),
 	color: Int32Type,
 	position: Int32Type,
-	permissions: PermissionStringType.describe('fluxer:PermissionStringType The role permissions bitfield'),
+	permissions: PermissionStringType.describe('The role permissions bitfield'),
 	hoist: z.boolean(),
 	mentionable: z.boolean(),
 });
@@ -1500,8 +1455,6 @@ export const LimitConfigGetResponse = z.object({
 export const DeleteApiKeyResponse = z.object({
 	success: z.literal(true),
 });
-export const HeapSnapshotResponse = z.object({
-	success: z.literal(true),
-	filename: z.string().describe('Name of the heap snapshot file'),
-	size_bytes: z.number().describe('Size of the heap snapshot in bytes'),
-});
+export const HeapSnapshotResponse = z.file().describe('V8 heap snapshot file');
+
+export const AdminApiKeyListResponse = z.array(ListAdminApiKeyResponse);

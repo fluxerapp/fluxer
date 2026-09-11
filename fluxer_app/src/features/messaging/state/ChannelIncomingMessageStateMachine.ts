@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ChannelIncomingMessageInput {
 	hasNonceMatch: boolean;
@@ -111,7 +111,7 @@ export type ChannelIncomingMessageSnapshot = SnapshotFrom<typeof channelIncoming
 export function createChannelIncomingMessageSnapshot(
 	input: ChannelIncomingMessageInput,
 ): ChannelIncomingMessageSnapshot {
-	return getInitialSnapshot(channelIncomingMessageMachine, input);
+	return initialTransition(channelIncomingMessageMachine, input)[0];
 }
 
 export function transitionChannelIncomingMessageSnapshot(

@@ -256,8 +256,8 @@ function buildRegistrationAuthData(device: WebAuthnDevice): Buffer {
 	let x: Buffer, y: Buffer;
 	const asn1Offset = pubKeyBuf.indexOf(Buffer.from([0x30, 0x59, 0x30, 0x13]));
 	if (asn1Offset > 0 && pubKeyBuf.length >= asn1Offset + 68) {
-		x = pubKeyBuf.slice(asn1Offset + 4 + 3, asn1Offset + 4 + 35);
-		y = pubKeyBuf.slice(asn1Offset + 4 + 36, asn1Offset + 4 + 68);
+		x = pubKeyBuf.subarray(asn1Offset + 4 + 3, asn1Offset + 4 + 35);
+		y = pubKeyBuf.subarray(asn1Offset + 4 + 36, asn1Offset + 4 + 68);
 	} else {
 		x = randomBytes(32);
 		y = randomBytes(32);

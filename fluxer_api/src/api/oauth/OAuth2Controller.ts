@@ -23,7 +23,6 @@ import {
 	RevokeRequestForm,
 	TokenRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
-import type {z} from 'zod';
 import {Config} from '../Config';
 import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '../middleware/AuthMiddleware';
 import {requireOAuth2BearerToken, requireOAuth2Scope} from '../middleware/OAuth2ScopeMiddleware';
@@ -119,7 +118,7 @@ export function OAuth2Controller(app: HonoApp) {
 				'User grants permission for an OAuth2 application to access authorized scopes. Used in authorization code flow to complete the authorization process after user review.',
 		}),
 		async (ctx) => {
-			const body: z.infer<typeof AuthorizeConsentRequest> = ctx.req.valid('json');
+			const body: AuthorizeConsentRequest = ctx.req.valid('json');
 			const user = ctx.get('user');
 			return ctx.json(
 				await ctx.get('oauth2RequestService').authorizeConsent({
@@ -263,13 +262,13 @@ export function OAuth2Controller(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENTS_LIST),
 		OpenAPI({
 			operationId: 'get_current_user_applications',
-			summary: 'List current user applications',
+			summary: 'Get current bot application',
 			responseSchema: ApplicationsMeResponse,
 			statusCode: 200,
-			security: [],
+			security: ['botToken'],
 			tags: ['OAuth2'],
 			description:
-				'Lists all OAuth2 applications registered by the authenticated user. Includes application credentials and metadata. Requires valid OAuth2 access token.',
+				'Retrieves the application associated with the authenticated bot, including its owner and bot profile. Requires a valid bot token.',
 		}),
 		async (ctx) => {
 			const response = await ctx

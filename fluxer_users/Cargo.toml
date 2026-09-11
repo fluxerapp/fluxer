@@ -8,6 +8,7 @@ publish = false
 [dependencies]
 anyhow = "1.0.104"
 chrono = { version = "0.4", default-features = false }
+fluxer_common = { path = "../fluxer_common" }
 fluxer-svc = { path = "../fluxer_svc" }
 futures = "0.3.32"
 moka = { version = "0.12.15", features = ["future", "sync"] }

@@ -7,23 +7,12 @@ import {createUserID} from '../../BrandedTypes';
 import {UserMessageDeletionService} from '../../channel/services/message/UserMessageDeletionService';
 import {getContentMessage} from '../../content_i18n/ContentI18n';
 import {Logger} from '../../Logger';
+import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '../utils/SelfMessageFilterPayload';
 import {getWorkerDependencies} from '../WorkerContext';
 
-const FilterPayload = z.object({
-	scope: z.enum(['selected', 'inaccessible_only']),
-	includeDms: z.boolean(),
-	includeDmsClosed: z.boolean(),
-	includeGroupDms: z.boolean(),
-	includeGuilds: z.boolean(),
-	guildFilterMode: z.enum(['exclude', 'include_only']).default('exclude'),
-	excludedGuildIds: z.array(z.string()),
-	includedGuildIds: z.array(z.string()).default([]),
-	startTimestamp: z.number().nullable(),
-	endTimestamp: z.number().nullable(),
-});
 const PayloadSchema = z.object({
 	userId: z.string(),
-	filter: FilterPayload,
+	filter: SelfMessageFilterPayload,
 });
 const bulkDeleteSelfMessagesImmediate: WorkerTaskHandler = async (payload, helpers) => {
 	const validated = PayloadSchema.parse(payload);
@@ -62,18 +51,7 @@ const bulkDeleteSelfMessagesImmediate: WorkerTaskHandler = async (payload, helpe
 	});
 	const result = await deletionService.deleteUserMessagesFiltered(
 		userId,
-		{
-			scope: validated.filter.scope,
-			includeDms: validated.filter.includeDms,
-			includeDmsClosed: validated.filter.includeDmsClosed,
-			includeGroupDms: validated.filter.includeGroupDms,
-			includeGuilds: validated.filter.includeGuilds,
-			guildFilterMode: validated.filter.guildFilterMode,
-			excludedGuildIds: new Set(validated.filter.excludedGuildIds),
-			includedGuildIds: new Set(validated.filter.includedGuildIds),
-			startTimestamp: validated.filter.startTimestamp,
-			endTimestamp: validated.filter.endTimestamp,
-		},
+		deserializeSelfMessageFilter(validated.filter),
 		{currentGuildIds, openDmChannelIds},
 		(deleted) => helpers.logger.debug(`Deleted ${deleted} messages so far`),
 	);

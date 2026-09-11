@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {registerComposerMarkdownHighlight} from '@app/features/lexical/composer/ComposerMarkdownHighlight';
 import {$hydrateComposerFromDraft, $projectComposer} from '@app/features/lexical/composer/ComposerSerialization';
 import {$getComposerSelectionRange, $selectComposerRange} from '@app/features/lexical/composer/composerOffsets';
@@ -24,7 +25,6 @@ import {
 	$isElementNode,
 	$isTextNode,
 	createEditor,
-	type ElementNode,
 	type LexicalEditor,
 	type RangeSelection,
 } from 'lexical';
@@ -282,7 +282,9 @@ describe('registerComposerMarkdownHighlight with silentMessagePrefix', () => {
 		]);
 		expect(readLines(editor)).toEqual([[['@silent', SILENT_STYLE], [' ', ''], 'composer-mention']]);
 		const mention = editor.getEditorState().read(() => {
-			const pill = $getRoot().getFirstChildOrThrow<ElementNode>().getLastChild();
+			const paragraph = $getRoot().getFirstChildOrThrow();
+			assert($isElementNode(paragraph), 'Expected composer paragraph');
+			const pill = paragraph.getLastChild();
 			return $isComposerMentionNode(pill) ? {literal: pill.isLiteral(), presentation: pill.getPresentation()} : null;
 		});
 		expect(mention).toEqual({literal: false, presentation: ComposerMentionPresentation.none});

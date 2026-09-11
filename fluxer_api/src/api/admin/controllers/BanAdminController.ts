@@ -39,7 +39,7 @@ import {
 	SuspiciousEmailDomainRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import type {ZodTypeAny, z} from 'zod';
+import type {ZodType} from 'zod';
 import {requireAdminACL, requireAnyAdminACL} from '../../middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
@@ -221,7 +221,7 @@ function requireProfileSubstringScope(scope: ProfileSubstringScope | undefined):
 	return scope;
 }
 
-async function parseBlocklistBody<T extends ZodTypeAny>(schema: T, value: unknown): Promise<z.infer<T>> {
+async function parseBlocklistBody<T>(schema: ZodType<T>, value: unknown): Promise<T> {
 	const result = await schema.safeParseAsync(value);
 	if (!result.success) {
 		throw inputValidationErrorFromZodIssues(result.error.issues);

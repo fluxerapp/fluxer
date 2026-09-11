@@ -17,26 +17,21 @@ import {describe, expect, it} from 'vitest';
 
 describe('CustomStatusPayload', () => {
 	it('accepts single-codepoint unicode emoji names', () => {
-		const result = CustomStatusPayload.safeParse({
-			text: 'Coffee time',
-			emoji_name: '☕',
-		});
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.emoji_name).toBe('☕');
-		}
+		expect(
+			CustomStatusPayload.parse({
+				text: 'Coffee time',
+				emoji_name: '☕',
+			}),
+		).toEqual({text: 'Coffee time', emoji_name: '☕'});
 	});
 	it('ignores emoji_name when emoji_id is provided', () => {
-		const result = CustomStatusPayload.safeParse({
-			text: 'Custom emoji status',
-			emoji_id: '123456789012345678',
-			emoji_name: 'not-a-unicode-emoji-and-way-too-long-to-validate-in-this-path',
-		});
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.emoji_id).toBe(123456789012345678n);
-			expect(result.data.emoji_name).toBeUndefined();
-		}
+		expect(
+			CustomStatusPayload.parse({
+				text: 'Custom emoji status',
+				emoji_id: '123456789012345678',
+				emoji_name: 'not-a-unicode-emoji-and-way-too-long-to-validate-in-this-path',
+			}),
+		).toEqual({text: 'Custom emoji status', emoji_id: 123456789012345678n});
 	});
 });
 
@@ -47,30 +42,21 @@ describe('UserSettingsUpdateRequest synced_preferences', () => {
 				searchEngines: create(SearchEngineSettingsSchema, {textSearchEngineId: 'google'}),
 			}),
 		);
-		const result = UserSettingsUpdateRequest.safeParse({synced_preferences: encoded});
-		expect(result.success).toBe(true);
+		expect(UserSettingsUpdateRequest.parse({synced_preferences: encoded})).toEqual({synced_preferences: encoded});
 	});
-	it('accepts the empty snapshot', () => {
-		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: ''}).success).toBe(true);
+	it.each([
+		{name: 'empty snapshot', value: ''},
+		{name: 'cleared snapshot', value: null},
+		{name: 'exact size cap', value: 'A'.repeat(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH)},
+	])('preserves $name', ({value}) => {
+		expect(UserSettingsUpdateRequest.parse({synced_preferences: value})).toEqual({synced_preferences: value});
 	});
-	it('accepts null to clear the snapshot', () => {
-		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: null}).success).toBe(true);
-	});
-	it('rejects non-base64 strings', () => {
-		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: 'not_base64!!!'}).success).toBe(false);
-	});
-	it('rejects raw record/object payloads', () => {
-		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: {textSearchEngineId: 'google'}}).success).toBe(
-			false,
-		);
-	});
-	it('accepts a string at exactly the size cap', () => {
-		const atCap = 'A'.repeat(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH);
-		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: atCap}).success).toBe(true);
-	});
-	it('rejects strings exceeding the size cap', () => {
-		const oversized = 'A'.repeat(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH + 1);
-		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: oversized}).success).toBe(false);
+	it.each([
+		{name: 'non-base64 string', value: 'not_base64!!!'},
+		{name: 'raw object', value: {textSearchEngineId: 'google'}},
+		{name: 'above size cap', value: 'A'.repeat(SYNCED_PREFERENCES_MAX_ENCODED_LENGTH + 1)},
+	])('rejects $name', ({value}) => {
+		expect(UserSettingsUpdateRequest.safeParse({synced_preferences: value}).success).toBe(false);
 	});
 });
 
@@ -79,7 +65,7 @@ describe('CreatePrivateChannelRequest', () => {
 		const recipients = Array.from({length: MAX_GROUP_DM_OTHER_RECIPIENTS}, (_, index) =>
 			String(100000000000000000n + BigInt(index)),
 		);
-		expect(CreatePrivateChannelRequest.safeParse({recipients}).success).toBe(true);
+		expect(CreatePrivateChannelRequest.parse({recipients})).toEqual({recipients: recipients.map(BigInt)});
 	});
 	it('rejects group DM requests above the member limit', () => {
 		const recipients = Array.from({length: MAX_GROUP_DM_OTHER_RECIPIENTS + 1}, (_, index) =>
@@ -88,10 +74,12 @@ describe('CreatePrivateChannelRequest', () => {
 		expect(CreatePrivateChannelRequest.safeParse({recipients}).success).toBe(false);
 	});
 	it('allows DM requests to the system user id 0', () => {
-		const parsed = CreatePrivateChannelRequest.safeParse({recipient_id: '0'});
-		expect(parsed.success).toBe(true);
-		if (parsed.success) {
-			expect(parsed.data.recipient_id).toBe(0n);
-		}
+		expect(CreatePrivateChannelRequest.parse({recipient_id: '0'})).toEqual({recipient_id: 0n});
+	});
+	it.each([{}, {recipient_id: '0', recipients: []}])('requires exactly one recipient form for %j', (input) => {
+		expect(CreatePrivateChannelRequest.safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: 'Either recipient_id or recipients must be provided, but not both'}]},
+		});
 	});
 });

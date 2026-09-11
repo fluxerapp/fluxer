@@ -59,7 +59,7 @@ const assignRef = <T,>(ref: React.Ref<T> | null | undefined, value: T | null) =>
 		ref(value);
 		return;
 	}
-	(ref as React.MutableRefObject<T | null>).current = value;
+	ref.current = value;
 };
 export const PickerSearchInput = React.forwardRef<HTMLInputElement, PickerSearchInputProps>(
 	(

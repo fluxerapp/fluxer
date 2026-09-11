@@ -7,6 +7,7 @@
 		"build": "astro build",
 		"dev": "astro dev",
 		"start": "tsx scripts/StartServer.ts",
+		"test": "node --import tsx --test scripts/*.test.ts",
 		"typecheck": "astro check --minimumFailingSeverity warning",
 		"verify": "pnpm verify:sidebar && pnpm verify:coverage && pnpm verify:schemas && pnpm verify:style",
 		"verify:coverage": "tsx scripts/VerifyDocsCoverage.ts",

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{AdminApiClient, ApiResultExt},
+    api::{
+        client::{AdminApiClient, ApiResultExt},
+        reports::SearchReportsParams,
+    },
     config::AdminConfig,
     middleware::{
         auth::AuthContext,
@@ -89,22 +92,22 @@ async fn reports_list(
         .as_deref()
         .and_then(|s| s.parse::<i32>().ok());
     let reports = client
-        .search_reports(
-            search_query.as_deref(),
+        .search_reports(&SearchReportsParams {
+            query: search_query.as_deref(),
             status,
             report_type,
-            query.category.as_deref(),
-            query.reporter_id.as_deref(),
-            query.reported_user_id.as_deref(),
-            query.reported_guild_id.as_deref(),
-            query.reported_channel_id.as_deref(),
-            query.guild_context_id.as_deref(),
-            query.resolved_by_admin_id.as_deref(),
-            Some(sort_by),
-            Some(sort_order),
+            category: query.category.as_deref(),
+            reporter_id: query.reporter_id.as_deref(),
+            reported_user_id: query.reported_user_id.as_deref(),
+            reported_guild_id: query.reported_guild_id.as_deref(),
+            reported_channel_id: query.reported_channel_id.as_deref(),
+            guild_context_id: query.guild_context_id.as_deref(),
+            resolved_by_admin_id: query.resolved_by_admin_id.as_deref(),
+            sort_by: Some(sort_by),
+            sort_order: Some(sort_order),
             limit,
             offset,
-        )
+        })
         .await
         .log_error("search reports");
 

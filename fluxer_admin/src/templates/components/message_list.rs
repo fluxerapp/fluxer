@@ -9,36 +9,7 @@ use super::user_display::format_user_display;
 use crate::config::AdminConfig;
 use crate::routes::auth::json_string;
 
-pub struct Attachment {
-    pub id: String,
-    pub url: String,
-    pub filename: String,
-    pub nsfw: Option<bool>,
-    pub content_type: Option<String>,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
-    pub size: Option<u64>,
-    pub ncmec_status: String,
-    pub ncmec_report_id: Option<String>,
-    pub ncmec_failure_reason: Option<String>,
-}
-
-pub struct Message {
-    pub id: String,
-    pub content: String,
-    pub timestamp: String,
-    pub author_id: String,
-    pub author_username: String,
-    pub author_global_name: Option<String>,
-    pub author_discriminator: String,
-    pub author_avatar: Option<String>,
-    pub channel_id: String,
-    pub channel_nsfw: Option<bool>,
-    pub channel_content_warning_level: Option<i32>,
-    pub channel_content_warning_text: Option<String>,
-    pub guild_nsfw: Option<bool>,
-    pub attachments: Vec<Attachment>,
-}
+use super::message_data::{Attachment, Message};
 
 fn is_image(att: &Attachment) -> bool {
     att.content_type

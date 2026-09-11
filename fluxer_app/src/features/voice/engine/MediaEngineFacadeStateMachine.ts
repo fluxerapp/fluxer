@@ -2,7 +2,7 @@
 
 import type {GatewayErrorCode} from '@fluxer/constants/src/GatewayConstants';
 import {GatewayErrorCodes} from '@fluxer/constants/src/GatewayConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MediaEngineFacadeConnectionTarget {
 	guildId: string | null;
@@ -352,7 +352,7 @@ export const mediaEngineFacadeStateMachine = setup({
 export type MediaEngineFacadeSnapshot = SnapshotFrom<typeof mediaEngineFacadeStateMachine>;
 
 export function createMediaEngineFacadeSnapshot(): MediaEngineFacadeSnapshot {
-	return getInitialSnapshot(mediaEngineFacadeStateMachine);
+	return initialTransition(mediaEngineFacadeStateMachine)[0];
 }
 
 export function transitionMediaEngineFacadeSnapshot(

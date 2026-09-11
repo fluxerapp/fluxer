@@ -16,6 +16,7 @@ use crate::types::{
 };
 use crate::udt;
 use chrono::{DateTime, Utc};
+use fluxer_common::user_flags::{USER_FLAG_STAFF, visible_user_flags};
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::transport::Transport;
 use fluxer_svc::{postgres, postgres::BigIntBound, postgres::KeyPart};
@@ -46,14 +47,11 @@ fn effective_reference_type(reference: &MessageReference) -> i32 {
         .unwrap_or(MESSAGE_REFERENCE_TYPE_DEFAULT)
 }
 const MESSAGE_FLAG_SUPPRESS_EMBEDS: i64 = 1 << 2;
-const PUBLIC_USER_FLAGS: i64 =
-    (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6);
 #[cfg(test)]
 const USER_FLAG_DELETED: i64 = 1_i64 << 34;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
-const USER_FLAG_STAFF: i64 = 1;
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
@@ -2688,7 +2686,7 @@ fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartialRespon
         avatar_color: partial.avatar_color,
         bot: partial.bot.filter(|bot| *bot),
         system: partial.system.filter(|system| *system),
-        flags: flags & PUBLIC_USER_FLAGS,
+        flags: i64::from(visible_user_flags(flags)),
         mention_flags: partial.mention_flags.filter(|flags| *flags != 0),
     }
 }

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {GuildID, UserID} from '../BrandedTypes';
 import type {GuildAuditLogRow} from '../database/types/GuildTypes';
@@ -11,7 +12,7 @@ export class GuildAuditLog {
 	readonly logId: bigint;
 	readonly userId: UserID;
 	readonly targetId: string | null;
-	readonly actionType: number;
+	readonly actionType: AuditLogActionType;
 	readonly reason: string | null;
 	readonly options: Map<string, string>;
 	readonly changes: GuildAuditLogChange | null;

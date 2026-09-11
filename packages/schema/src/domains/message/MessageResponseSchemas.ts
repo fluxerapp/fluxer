@@ -301,11 +301,7 @@ export interface MessageSnapshot {
 	readonly timestamp: string;
 }
 
-export interface MessageStickerItem {
-	readonly id: string;
-	readonly name: string;
-	readonly animated: boolean;
-}
+export type MessageStickerItem = Readonly<MessageStickerResponse>;
 
 export interface AllowedMentions {
 	readonly parse?: ReadonlyArray<'roles' | 'users' | 'everyone'>;
@@ -314,11 +310,7 @@ export interface AllowedMentions {
 	readonly replied_user?: boolean;
 }
 
-export interface ChannelMention {
-	readonly id: string;
-	readonly type: number;
-	readonly name: string;
-}
+export type ChannelMention = Readonly<MessageChannelMentionResponse>;
 
 export interface MessageMention extends UserPartial {
 	readonly member?: Omit<GuildMemberData, 'user'>;
@@ -357,3 +349,5 @@ export interface Message {
 	readonly _allowedMentions?: AllowedMentions;
 	readonly _favoriteMemeId?: string;
 }
+
+export const MessagePurgeResponse = z.object({deleted_count: z.number().int().nonnegative()});

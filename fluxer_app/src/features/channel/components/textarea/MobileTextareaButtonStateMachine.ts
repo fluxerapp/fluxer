@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {hasVisibleMessageContent} from '@app/features/messaging/utils/VisibleMessageContent';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type MobileTextareaVisibleButton = 'send' | 'voice';
 export type MobileTextareaButtonMode = 'voice' | 'sendReady' | 'sendBlocked';
@@ -144,7 +144,7 @@ export const mobileTextareaButtonStateMachine = setup({
 export type MobileTextareaButtonSnapshot = SnapshotFrom<typeof mobileTextareaButtonStateMachine>;
 
 export function createMobileTextareaButtonSnapshot(): MobileTextareaButtonSnapshot {
-	return getInitialSnapshot(mobileTextareaButtonStateMachine);
+	return initialTransition(mobileTextareaButtonStateMachine)[0];
 }
 
 export function transitionMobileTextareaButtonSnapshot(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {NativePermissionResult} from '@app/features/permissions/system/utils/NativePermissions';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 interface ScreenSharePickerDisplayPermissionContext {
 	settingsOpened: boolean;
@@ -107,7 +107,7 @@ export type ScreenSharePickerDisplayPermissionSnapshot = SnapshotFrom<
 >;
 
 export function createScreenSharePickerDisplayPermissionSnapshot(): ScreenSharePickerDisplayPermissionSnapshot {
-	return getInitialSnapshot(screenSharePickerDisplayPermissionStateMachine);
+	return initialTransition(screenSharePickerDisplayPermissionStateMachine)[0];
 }
 
 export function transitionScreenSharePickerDisplayPermissionSnapshot(

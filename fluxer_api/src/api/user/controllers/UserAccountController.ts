@@ -33,6 +33,7 @@ import {
 	UserGuildSettingsUpdateRequest,
 	UserNoteUpdateRequest,
 	UserProfileQueryRequest,
+	UserSettingsUpdateRequest,
 	UserTagCheckQueryRequest,
 	UserUpdateWithVerificationRequest,
 	VoiceActivitySharingUpdateRequest,
@@ -72,10 +73,8 @@ import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
-import type {UserUpdateWithVerificationRequestData} from '../services/UserAccountRequestService';
 import {getCachedUserPartialResponse} from '../UserCacheHelpers';
 import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse, mapUserToPrivateResponse} from '../UserMappers';
-import {UserSettingsUpdateRequest} from '../UserModel';
 
 export function UserAccountController(app: HonoApp) {
 	app.get(
@@ -125,7 +124,7 @@ export function UserAccountController(app: HonoApp) {
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			const user = ctx.get('user');
-			const rawBody: UserUpdateWithVerificationRequestData = ctx.req.valid('json');
+			const rawBody: UserUpdateWithVerificationRequest = ctx.req.valid('json');
 			return ctx.json(
 				await userAccountRequestService.updateCurrentUser({
 					ctx,

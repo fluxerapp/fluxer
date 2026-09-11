@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 use serde::Deserialize;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
+use super::reports::SearchReportsParams;
 use super::types::{
     GuildAuditLogResponse, GuildDetailInfo, GuildInfo, GuildUpdateResponse,
     ListGuildMembersResponse, LookupGuildResponse, SearchGuildsResponse, SearchReportsResponse,
@@ -28,13 +29,8 @@ impl AdminApiClient {
     }
 
     pub async fn get_guild_by_id(&self, guild_id: &str) -> ApiResult<GuildInfo> {
-        let response = self
-            .generated()
-            .get_admin_guild(&snowflake(guild_id))
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: LookupGuildResponse = self.generated_value(response.into_inner())?;
-        resp.guild
+        self.lookup_guild(guild_id)
+            .await?
             .map(GuildInfo::from)
             .ok_or_else(|| super::client::ApiError::Http {
                 status: 404,
@@ -144,8 +140,7 @@ impl AdminApiClient {
         let limit = limit
             .map(i32::try_from)
             .transpose()
-            .map_err(|e| ApiError::Parse(e.to_string()))?
-            .map(generated_types::Int32Type::from);
+            .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
             .list_admin_guild_audit_logs(
@@ -153,7 +148,7 @@ impl AdminApiClient {
                 None,
                 None,
                 before.as_ref(),
-                limit.as_ref(),
+                limit,
                 None,
             )
             .await
@@ -259,37 +254,27 @@ impl AdminApiClient {
         limit: u32,
         offset: u32,
     ) -> ApiResult<SearchReportsResponse> {
-        self.search_reports(
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some(guild_id),
-            None,
-            None,
-            None,
-            None,
-            None,
+        self.search_reports(&SearchReportsParams {
+            reported_guild_id: Some(guild_id),
             limit,
             offset,
-        )
+            ..Default::default()
+        })
         .await
     }
 }
 
 #[derive(Deserialize)]
 struct GuildSettingsPatch {
-    content_warning_level: Option<generated_types::ContentWarningLevel>,
+    content_warning_level: Option<generated_types::ContentWarningLevelInput>,
     content_warning_text: Option<String>,
-    default_message_notifications: Option<generated_types::DefaultMessageNotifications>,
+    default_message_notifications: Option<generated_types::DefaultMessageNotificationsInput>,
     disabled_operations: Option<generated_types::GuildOperations>,
-    explicit_content_filter: Option<generated_types::GuildExplicitContentFilter>,
-    mfa_level: Option<generated_types::GuildMfaLevel>,
+    explicit_content_filter: Option<generated_types::GuildExplicitContentFilterInput>,
+    mfa_level: Option<generated_types::GuildMfaLevelInput>,
     nsfw: Option<bool>,
-    nsfw_level: Option<generated_types::NsfwLevel>,
-    verification_level: Option<generated_types::GuildVerificationLevel>,
+    nsfw_level: Option<generated_types::NsfwLevelInput>,
+    verification_level: Option<generated_types::GuildVerificationLevelInput>,
 }
 
 fn search_guilds_response(
@@ -317,7 +302,7 @@ fn guild_admin_response(response: generated_types::GuildAdminResponse) -> ApiRes
         owner_global_name: response.owner_global_name,
         owner_discriminator: response.owner_discriminator,
         member_count: crate::api::generated::i64_to_u64(
-            i64::from(response.member_count),
+            i64::from(i32::from(response.member_count)),
             "member_count",
         )
         .map_err(ApiError::Parse)?,
@@ -325,7 +310,7 @@ fn guild_admin_response(response: generated_types::GuildAdminResponse) -> ApiRes
         nsfw_level: response.nsfw_level.map(i32::from),
         nsfw: response.nsfw,
         content_warning_level: response.content_warning_level.map(i32::from),
-        content_warning_text: response.content_warning_text,
+        content_warning_text: response.content_warning_text.map(String::from),
         description: None,
         vanity_url_code: None,
     })
@@ -338,9 +323,9 @@ fn guild_update_response(
     Ok(GuildUpdateResponse {
         guild: GuildInfo {
             id: String::from(guild.id),
-            name: guild.name,
-            icon: guild.icon,
-            banner: guild.banner,
+            name: String::from(guild.name),
+            icon: guild.icon.map(String::from),
+            banner: guild.banner.map(String::from),
             owner_id: String::from(guild.owner_id),
             owner_username: None,
             owner_global_name: None,
@@ -350,11 +335,11 @@ fn guild_update_response(
                 "member_count",
             )
             .map_err(ApiError::Parse)?,
-            features: guild.features,
+            features: guild.features.into_iter().map(String::from).collect(),
             nsfw_level: guild.nsfw_level.map(i32::from),
             nsfw: guild.nsfw,
             content_warning_level: guild.content_warning_level.map(i32::from),
-            content_warning_text: guild.content_warning_text,
+            content_warning_text: guild.content_warning_text.map(String::from),
             description: None,
             vanity_url_code: None,
         },
@@ -378,10 +363,6 @@ fn guild_settings_request(
         verification_level: patch.verification_level,
         ..Default::default()
     })
-}
-
-fn snowflake(value: &str) -> generated_types::SnowflakeType {
-    generated_types::SnowflakeType::from(value.to_owned())
 }
 
 fn guild_features(values: &[String]) -> Vec<generated_types::GuildFeatureSchema> {

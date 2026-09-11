@@ -17,13 +17,13 @@
 		"@fluxer/hono_types": "workspace:*",
 		"@fluxer/i18n": "workspace:*",
 		"@fluxer/logger": "workspace:*",
+		"@fluxer/schema": "workspace:*",
 		"hono": "catalog:"
 	},
 	"devDependencies": {
 		"@messageformat/parser": "catalog:",
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	}
 }

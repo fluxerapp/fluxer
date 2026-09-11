@@ -12,8 +12,8 @@ import {z} from 'zod';
 export const ChannelOverwriteResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for the role or user this overwrite applies to'),
 	type: ChannelOverwriteTypeSchema.describe('The type of entity the overwrite applies to'),
-	allow: PermissionStringType.describe('fluxer:PermissionStringType The bitwise value of allowed permissions'),
-	deny: PermissionStringType.describe('fluxer:PermissionStringType The bitwise value of denied permissions'),
+	allow: PermissionStringType.describe('The bitwise value of allowed permissions'),
+	deny: PermissionStringType.describe('The bitwise value of denied permissions'),
 });
 
 export type ChannelOverwriteResponse = z.infer<typeof ChannelOverwriteResponse>;
@@ -164,3 +164,6 @@ export interface Channel {
 	readonly rate_limit_per_user?: number;
 	readonly nicks?: Readonly<Record<string, string>>;
 }
+
+export const ChannelListResponse = z.array(ChannelResponse);
+export const RtcRegionListResponse = z.array(RtcRegionResponse);

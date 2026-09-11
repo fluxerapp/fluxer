@@ -4,7 +4,7 @@ import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import {normalizeVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type NormalizedVoiceState = Omit<
 	VoiceState,
@@ -360,7 +360,7 @@ export const voiceGatewayStateMachine = setup({
 export type VoiceGatewayStateSnapshot = SnapshotFrom<typeof voiceGatewayStateMachine>;
 
 export function createVoiceGatewayStateSnapshot(): VoiceGatewayStateSnapshot {
-	return getInitialSnapshot(voiceGatewayStateMachine);
+	return initialTransition(voiceGatewayStateMachine)[0];
 }
 
 export function transitionVoiceGatewayStateSnapshot(

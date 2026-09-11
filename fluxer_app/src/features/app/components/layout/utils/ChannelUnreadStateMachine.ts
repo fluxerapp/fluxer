@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 import type {ChannelUnreadState, ChannelUnreadStateInput} from './ChannelUnreadState';
 
 interface ChannelUnreadMachineContext extends ChannelUnreadStateInput {}
@@ -74,7 +74,7 @@ export const channelUnreadStateMachine = setup({
 export type ChannelUnreadSnapshot = SnapshotFrom<typeof channelUnreadStateMachine>;
 
 export function createChannelUnreadSnapshot(input: ChannelUnreadStateInput): ChannelUnreadSnapshot {
-	return getInitialSnapshot(channelUnreadStateMachine, input);
+	return initialTransition(channelUnreadStateMachine, input)[0];
 }
 
 export function transitionChannelUnreadSnapshot(

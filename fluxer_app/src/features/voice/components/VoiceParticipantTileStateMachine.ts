@@ -2,7 +2,7 @@
 
 import type {VoiceParticipantTilePresentation} from '@app/features/voice/components/voice_participant_tile/shared';
 import type {VoiceMediaGraphStreamTileState} from '@app/features/voice/engine/VoiceMediaGraphTileState';
-import {assign, getInitialSnapshot, setup, transition} from 'xstate';
+import {assign, initialTransition, setup, transition} from 'xstate';
 
 export type VoiceParticipantTileScreenShareStateValue =
 	| 'idle'
@@ -221,7 +221,7 @@ export function selectVoiceParticipantTileScreenShareState(
 ): VoiceParticipantTileScreenShareStateValue {
 	const [snapshot] = transition(
 		voiceParticipantTileStateMachine,
-		getInitialSnapshot(voiceParticipantTileStateMachine),
+		initialTransition(voiceParticipantTileStateMachine)[0],
 		{
 			type: 'tile.evaluateScreenShare',
 			signals,

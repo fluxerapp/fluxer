@@ -15,7 +15,6 @@
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	}
 }

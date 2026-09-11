@@ -25,9 +25,14 @@ import {
 	WebhookTokenUpdateRequest,
 	WebhookUpdateRequest,
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
-import {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
+import {
+	SlackWebhookResponse,
+	WebhookListResponse,
+	WebhookResponse,
+	WebhookTokenResponse,
+} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 import type {Context} from 'hono';
-import {z} from 'zod';
+
 import {
 	createChannelID,
 	createGuildID,
@@ -128,7 +133,7 @@ export function WebhookController(app: HonoApp) {
 			summary: 'List guild webhooks',
 			description:
 				'Returns a list of all webhooks configured in the specified guild. Requires the user to have appropriate permissions to view webhooks in the guild.',
-			responseSchema: z.array(WebhookResponse),
+			responseSchema: WebhookListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Webhooks'],
@@ -152,7 +157,7 @@ export function WebhookController(app: HonoApp) {
 			summary: 'List channel webhooks',
 			description:
 				'Returns a list of all webhooks configured in the specified channel. Requires the user to have appropriate permissions to view webhooks in the channel.',
-			responseSchema: z.array(WebhookResponse),
+			responseSchema: WebhookListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Webhooks'],
@@ -492,7 +497,7 @@ export function WebhookController(app: HonoApp) {
 			summary: 'Execute Slack webhook',
 			description:
 				'Receives and processes Slack-formatted webhook payloads, converting them to messages in the configured channel. Returns "ok" as plain text with a 200 status code.',
-			responseSchema: z.string(),
+			responseSchema: SlackWebhookResponse,
 			statusCode: 200,
 			tags: ['Webhooks'],
 		}),

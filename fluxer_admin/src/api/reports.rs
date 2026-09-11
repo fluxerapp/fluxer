@@ -1,9 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::snowflake;
+
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
     ListReportsResponse, ReportEntry, ResolveReportResponse, SearchReportsResponse,
 };
+
+#[derive(Default)]
+pub struct SearchReportsParams<'a> {
+    pub query: Option<&'a str>,
+    pub status: Option<i32>,
+    pub report_type: Option<i32>,
+    pub category: Option<&'a str>,
+    pub reporter_id: Option<&'a str>,
+    pub reported_user_id: Option<&'a str>,
+    pub reported_guild_id: Option<&'a str>,
+    pub reported_channel_id: Option<&'a str>,
+    pub guild_context_id: Option<&'a str>,
+    pub resolved_by_admin_id: Option<&'a str>,
+    pub sort_by: Option<&'a str>,
+    pub sort_order: Option<&'a str>,
+    pub limit: u32,
+    pub offset: u32,
+}
 
 impl AdminApiClient {
     pub async fn list_reports(
@@ -26,7 +46,7 @@ impl AdminApiClient {
     pub async fn get_report(&self, report_id: &str) -> ApiResult<ReportEntry> {
         let response = self
             .generated()
-            .get_admin_report(report_id)
+            .get_admin_report(&snowflake(report_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -50,51 +70,55 @@ impl AdminApiClient {
         .await
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub async fn search_reports(
         &self,
-        query: Option<&str>,
-        status: Option<i32>,
-        report_type: Option<i32>,
-        category: Option<&str>,
-        reporter_id: Option<&str>,
-        reported_user_id: Option<&str>,
-        reported_guild_id: Option<&str>,
-        reported_channel_id: Option<&str>,
-        guild_context_id: Option<&str>,
-        resolved_by_admin_id: Option<&str>,
-        sort_by: Option<&str>,
-        sort_order: Option<&str>,
-        limit: u32,
-        offset: u32,
+        params: &SearchReportsParams<'_>,
     ) -> ApiResult<SearchReportsResponse> {
-        let status = status.map(report_status).transpose()?.unwrap_or_default();
-        let report_type = report_type
+        let status = params
+            .status
+            .map(report_status)
+            .transpose()?
+            .unwrap_or_default();
+        let report_type = params
+            .report_type
             .map(report_type_name)
             .transpose()?
             .unwrap_or_default();
-        let sort_by = sort_by.map(report_sort_by).transpose()?.unwrap_or_default();
-        let limit = limit.to_string();
-        let offset = offset.to_string();
+        let sort_by = params
+            .sort_by
+            .map(report_sort_by)
+            .transpose()?
+            .unwrap_or_default();
+        let limit = params.limit.to_string();
+        let offset = params.offset.to_string();
         let query_params = [
-            ("q", query.unwrap_or_default()),
+            ("q", params.query.unwrap_or_default()),
             ("status", status),
             ("report_type", report_type),
-            ("category", category.unwrap_or_default()),
-            ("reporter_id", reporter_id.unwrap_or_default()),
-            ("reported_user_id", reported_user_id.unwrap_or_default()),
-            ("reported_guild_id", reported_guild_id.unwrap_or_default()),
+            ("category", params.category.unwrap_or_default()),
+            ("reporter_id", params.reporter_id.unwrap_or_default()),
+            (
+                "reported_user_id",
+                params.reported_user_id.unwrap_or_default(),
+            ),
+            (
+                "reported_guild_id",
+                params.reported_guild_id.unwrap_or_default(),
+            ),
             (
                 "reported_channel_id",
-                reported_channel_id.unwrap_or_default(),
+                params.reported_channel_id.unwrap_or_default(),
             ),
-            ("guild_context_id", guild_context_id.unwrap_or_default()),
+            (
+                "guild_context_id",
+                params.guild_context_id.unwrap_or_default(),
+            ),
             (
                 "resolved_by_admin_id",
-                resolved_by_admin_id.unwrap_or_default(),
+                params.resolved_by_admin_id.unwrap_or_default(),
             ),
             ("sort_by", sort_by),
-            ("sort_order", sort_order.unwrap_or_default()),
+            ("sort_order", params.sort_order.unwrap_or_default()),
             ("limit", limit.as_str()),
             ("offset", offset.as_str()),
         ];
@@ -107,22 +131,12 @@ impl AdminApiClient {
         limit: u32,
         offset: u32,
     ) -> ApiResult<SearchReportsResponse> {
-        self.search_reports(
-            None,
-            None,
-            None,
-            None,
-            Some(reporter_id),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+        self.search_reports(&SearchReportsParams {
+            reporter_id: Some(reporter_id),
             limit,
             offset,
-        )
+            ..Default::default()
+        })
         .await
     }
 
@@ -132,22 +146,12 @@ impl AdminApiClient {
         limit: u32,
         offset: u32,
     ) -> ApiResult<SearchReportsResponse> {
-        self.search_reports(
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some(reported_user_id),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+        self.search_reports(&SearchReportsParams {
+            reported_user_id: Some(reported_user_id),
             limit,
             offset,
-        )
+            ..Default::default()
+        })
         .await
     }
 }
@@ -177,5 +181,63 @@ fn report_sort_by(value: &str) -> ApiResult<&'static str> {
         other => Err(ApiError::Parse(format!(
             "unknown report sort field: {other}"
         ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn report_statuses_preserve_the_closed_wire_mapping() {
+        for (value, expected) in [(0, "pending"), (1, "resolved")] {
+            assert_eq!(report_status(value).expect("supported status"), expected);
+        }
+        for value in [-1, 2] {
+            assert_eq!(
+                report_status(value)
+                    .expect_err("unknown status")
+                    .to_string(),
+                format!("parse error: unknown report status: {value}")
+            );
+        }
+    }
+
+    #[test]
+    fn report_types_preserve_the_closed_wire_mapping() {
+        for (value, expected) in [(0, "message"), (1, "user"), (2, "guild")] {
+            assert_eq!(report_type_name(value).expect("supported type"), expected);
+        }
+        for value in [-1, 3] {
+            assert_eq!(
+                report_type_name(value)
+                    .expect_err("unknown type")
+                    .to_string(),
+                format!("parse error: unknown report type: {value}")
+            );
+        }
+    }
+
+    #[test]
+    fn report_sort_fields_accept_only_the_existing_aliases() {
+        for (field, expected) in [
+            ("createdAt", "created_at"),
+            ("created_at", "created_at"),
+            ("reportedAt", "reported_at"),
+            ("reported_at", "reported_at"),
+            ("resolvedAt", "resolved_at"),
+            ("resolved_at", "resolved_at"),
+        ] {
+            assert_eq!(
+                report_sort_by(field).expect("supported sort field"),
+                expected
+            );
+        }
+        assert_eq!(
+            report_sort_by("unknown")
+                .expect_err("unknown sort field")
+                .to_string(),
+            "parse error: unknown report sort field: unknown"
+        );
     }
 }

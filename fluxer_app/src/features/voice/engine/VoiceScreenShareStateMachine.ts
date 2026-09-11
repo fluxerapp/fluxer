@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {PendingScreenShareStopRequest} from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type VoiceScreenShareSourceType = 'display' | 'native-display' | 'native-app' | 'device';
 
@@ -368,7 +368,7 @@ export type VoiceScreenShareSnapshot = SnapshotFrom<typeof voiceScreenShareState
 export type VoiceScreenShareStateValue = 'inactive' | 'active' | 'pending';
 
 export function createVoiceScreenShareSnapshot(): VoiceScreenShareSnapshot {
-	return getInitialSnapshot(voiceScreenShareStateMachine);
+	return initialTransition(voiceScreenShareStateMachine)[0];
 }
 
 export function transitionVoiceScreenShareSnapshot(

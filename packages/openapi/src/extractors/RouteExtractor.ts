@@ -6,8 +6,21 @@ import {
 	type StaticValue,
 	UNRESOLVED,
 } from '@fluxer/openapi/src/extractors/StaticPathResolver';
-import type {ExtractedRoute, ExtractedValidator, HttpMethod, ValidatorTarget} from '@fluxer/openapi/src/Types';
-import {type CallExpression, type FunctionDeclaration, Node, Project, type SourceFile} from 'ts-morph';
+import type {
+	ExtractedRoute,
+	ExtractedValidator,
+	HttpMethod,
+	OpenAPIExternalDocs,
+	ValidatorTarget,
+} from '@fluxer/openapi/src/OpenAPITypes';
+import {
+	type CallExpression,
+	type FunctionDeclaration,
+	Node,
+	type ObjectLiteralExpression,
+	Project,
+	type SourceFile,
+} from 'ts-morph';
 
 const HTTP_METHODS: ReadonlySet<string> = new Set(['get', 'post', 'put', 'patch', 'delete']);
 function isHttpMethod(method: string): method is HttpMethod {
@@ -28,16 +41,20 @@ function extractStringLiteral(node: Node): string | null {
 function extractNumberArray(value: unknown): Array<number> | null {
 	if (typeof value === 'number') return [value];
 	if (Array.isArray(value)) {
-		const numbers = value.filter((v): v is number => typeof v === 'number');
-		return numbers.length > 0 ? numbers : null;
+		if (!value.every((entry): entry is number => typeof entry === 'number')) {
+			throw new Error('OpenAPI status-list metadata must contain only numbers');
+		}
+		return value;
 	}
 	return null;
 }
 function extractStringArray(value: unknown): Array<string> | null {
 	if (typeof value === 'string') return [value];
 	if (Array.isArray(value)) {
-		const strings = value.filter((v): v is string => typeof v === 'string');
-		return strings.length > 0 ? strings : null;
+		if (!value.every((entry): entry is string => typeof entry === 'string')) {
+			throw new Error('OpenAPI string-list metadata must contain only strings');
+		}
+		return value;
 	}
 	return null;
 }
@@ -56,14 +73,11 @@ interface MetadataContext {
 	readonly resolver: StaticPathResolver;
 	readonly scope: Scope;
 }
-function resolveMetadataText(node: Node, context: MetadataContext | null): string | null {
-	if (context == null) {
-		return null;
-	}
+function resolveMetadataText(node: Node, context: MetadataContext): string | null {
 	const value = context.resolver.resolve(node, context.scope);
 	return typeof value === 'string' ? value : null;
 }
-function extractObjectLiteralValue(node: Node, context: MetadataContext | null): unknown {
+function extractObjectLiteralValue(node: Node, context: MetadataContext): unknown {
 	if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
 		return node.getLiteralValue();
 	}
@@ -95,7 +109,7 @@ function extractObjectLiteralValue(node: Node, context: MetadataContext | null):
 		const values: Array<unknown> = [];
 		for (const element of node.getElements()) {
 			if (Node.isSpreadElement(element)) {
-				const spread = context?.resolver.resolve(element.getExpression(), context.scope);
+				const spread = context.resolver.resolve(element.getExpression(), context.scope);
 				if (spread == null || spread === UNRESOLVED || !Array.isArray(spread)) {
 					values.push(null);
 					continue;
@@ -108,388 +122,120 @@ function extractObjectLiteralValue(node: Node, context: MetadataContext | null):
 		return values;
 	}
 	if (Node.isObjectLiteralExpression(node)) {
-		const result: Record<string, unknown> = {};
-		for (const prop of node.getProperties()) {
-			if (Node.isPropertyAssignment(prop)) {
-				const key = prop.getName();
-				const initializer = prop.getInitializer();
-				if (initializer) {
-					result[key] = extractObjectLiteralValue(initializer, context);
-				}
-			}
-		}
-		return result;
+		return parseObjectLiteralMetadata(node, context);
 	}
 	return null;
 }
-function parseObjectLiteralMetadata(objLiteral: Node, context: MetadataContext | null): Record<string, unknown> {
-	if (!Node.isObjectLiteralExpression(objLiteral)) return {};
-	return extractObjectLiteralValue(objLiteral, context) as Record<string, unknown>;
+function parseObjectLiteralMetadata(
+	objLiteral: ObjectLiteralExpression,
+	context: MetadataContext,
+): Record<string, unknown> {
+	const metadata: Record<string, unknown> = {};
+	for (const property of objLiteral.getProperties()) {
+		if (!Node.isPropertyAssignment(property)) continue;
+		const initializer = property.getInitializer();
+		if (initializer) metadata[property.getName()] = extractObjectLiteralValue(initializer, context);
+	}
+	return metadata;
 }
 function extractValidatorInfo(callExpr: CallExpression): ExtractedValidator | null {
 	const expression = callExpr.getExpression();
-	if (!Node.isIdentifier(expression) || expression.getText() !== 'Validator') {
-		return null;
-	}
-	const args = callExpr.getArguments();
-	if (args.length < 2) {
-		return null;
-	}
-	const targetArg = args[0];
-	const schemaArg = args[1];
+	if (!Node.isIdentifier(expression) || expression.getText() !== 'Validator') return null;
+	const [targetArg, schemaArg] = callExpr.getArguments();
+	if (!targetArg || !schemaArg) throw new Error(`Validator requires a target and named schema: ${callExpr.getText()}`);
 	const target = extractStringLiteral(targetArg);
-	if (!target || !isValidatorTarget(target)) {
-		return null;
+	if (!target || !isValidatorTarget(target)) throw new Error(`Unsupported validator target: ${targetArg.getText()}`);
+	if (!Node.isIdentifier(schemaArg)) {
+		throw new Error(`Validator must use a named schema export: ${schemaArg.getText()}`);
 	}
-	let schemaName: string | null = null;
-	let inlineSchema: string | null = null;
-	if (Node.isIdentifier(schemaArg)) {
-		schemaName = schemaArg.getText();
-	} else if (Node.isCallExpression(schemaArg)) {
-		const callText = schemaArg.getText();
-		if (callText.startsWith('z.object')) {
-			inlineSchema = callText;
-		} else {
-			const callExpressionName = schemaArg.getExpression();
-			if (Node.isPropertyAccessExpression(callExpressionName)) {
-				const propName = callExpressionName.getName();
-				if (propName === 'merge' || propName === 'pick' || propName === 'omit' || propName === 'partial') {
-					const obj = callExpressionName.getExpression();
-					if (Node.isIdentifier(obj)) {
-						schemaName = obj.getText();
-					} else {
-						inlineSchema = callText;
-					}
-				} else {
-					inlineSchema = callText;
-				}
-			} else {
-				inlineSchema = callText;
-			}
-		}
-	} else if (Node.isPropertyAccessExpression(schemaArg)) {
-		schemaName = schemaArg.getText();
-	} else {
-		inlineSchema = schemaArg.getText();
-	}
-	return {target, schemaName, inlineSchema};
+	return {target, schemaName: schemaArg.getText()};
 }
 interface MiddlewareInfo {
 	middlewareName: string;
-	rateLimitConfig: string | null;
-	responseSchemaName: string | null;
-	hasNoContent: boolean;
-	explicitRequestSchemaName?: string | null;
-	explicitRequestFormSchemaName?: string | null;
-	explicitSummary: string | null;
-	explicitOperationId: string | null;
-	explicitDescription: string | null;
-	explicitStatusCodes: Array<number> | null;
-	explicitSecurity: Array<string> | null;
-	oauth2RequiredScopes: Array<string> | null;
-	oauth2ScopeMode: 'all' | 'any' | null;
-	oauth2BearerTokenRequired: boolean;
-	explicitTags: Array<string> | null;
-	explicitDeprecated: boolean;
-	explicitExternalDocs: {
-		url: string;
-		description?: string;
-	} | null;
+	rateLimitConfig?: string;
+	responseSchemaName?: string;
+	responseContentType?: string;
+	hasNoContent?: boolean;
+	bodylessStatusCodes?: Array<number> | null;
+	explicitRequestSchemaName?: string;
+	explicitRequestFormSchemaName?: string;
+	explicitRequestBodyRequired?: boolean;
+	explicitSummary?: string;
+	explicitOperationId?: string;
+	explicitDescription?: string;
+	explicitStatusCodes?: Array<number> | null;
+	explicitSecurity?: Array<string> | null;
+	oauth2RequiredScopes?: Array<string> | null;
+	oauth2ScopeMode?: 'all' | 'any';
+	oauth2BearerTokenRequired?: boolean;
+	explicitTags?: Array<string> | null;
+	explicitDeprecated?: boolean;
+	explicitExternalDocs?: OpenAPIExternalDocs;
 }
-function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContext | null): MiddlewareInfo | null {
+function metadataString(value: unknown): string | undefined {
+	return typeof value === 'string' ? value : undefined;
+}
+function extractExternalDocs(value: unknown): OpenAPIExternalDocs | undefined {
+	if (!value || typeof value !== 'object' || !('url' in value) || typeof value.url !== 'string') return undefined;
+	return {url: value.url, description: 'description' in value ? metadataString(value.description) : undefined};
+}
+function extractOpenAPIMetadata(args: ReadonlyArray<Node>, context: MetadataContext): MiddlewareInfo {
+	const [first, summary, responseSchema, options] = args;
+	if (!first) throw new Error('OpenAPI requires route metadata');
+	const metadata = Node.isObjectLiteralExpression(first)
+		? parseObjectLiteralMetadata(first, context)
+		: {
+				...(options && Node.isObjectLiteralExpression(options) ? parseObjectLiteralMetadata(options, context) : {}),
+				operationId: extractStringLiteral(first),
+				summary: summary ? extractStringLiteral(summary) : undefined,
+				responseSchema: responseSchema?.getText(),
+			};
+	const schemaName = metadataString(metadata.responseSchema);
+	return {
+		middlewareName: 'OpenAPI',
+		responseSchemaName: schemaName,
+		hasNoContent: schemaName === undefined || schemaName === 'null',
+		bodylessStatusCodes: extractNumberArray(metadata.bodylessStatusCodes),
+		responseContentType: metadataString(metadata.responseContentType),
+		explicitRequestSchemaName: metadataString(metadata.requestSchema),
+		explicitRequestFormSchemaName: metadataString(metadata.requestFormSchema),
+		explicitRequestBodyRequired:
+			typeof metadata.requestBodyRequired === 'boolean' ? metadata.requestBodyRequired : undefined,
+		explicitSummary: metadataString(metadata.summary),
+		explicitOperationId: metadataString(metadata.operationId),
+		explicitDescription: metadataString(metadata.description),
+		explicitStatusCodes: extractNumberArray(metadata.statusCode),
+		explicitSecurity: extractStringArray(metadata.security),
+		explicitTags: extractStringArray(metadata.tags),
+		explicitDeprecated: metadata.deprecated === true,
+		explicitExternalDocs: extractExternalDocs(metadata.externalDocs),
+	};
+}
+function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContext): MiddlewareInfo | null {
 	const expression = callExpr.getExpression();
-	if (Node.isIdentifier(expression)) {
-		const name = expression.getText();
-		if (name === 'RateLimitMiddleware') {
-			const args = callExpr.getArguments();
-			if (args.length > 0) {
-				const configArg = args[0];
-				const configText = configArg.getText();
-				return {
-					middlewareName: name,
-					rateLimitConfig: configText,
-					responseSchemaName: null,
-					hasNoContent: false,
-					explicitSummary: null,
-					explicitOperationId: null,
-					explicitDescription: null,
-					explicitStatusCodes: null,
-					explicitSecurity: null,
-					oauth2RequiredScopes: null,
-					oauth2ScopeMode: null,
-					oauth2BearerTokenRequired: false,
-					explicitTags: null,
-					explicitDeprecated: false,
-					explicitExternalDocs: null,
-				};
-			}
-		}
-		if (name === 'ResponseType') {
-			const args = callExpr.getArguments();
-			if (args.length > 0) {
-				const schemaArg = args[0];
-				let schemaName: string | null = null;
-				if (Node.isIdentifier(schemaArg)) {
-					schemaName = schemaArg.getText();
-				} else if (Node.isPropertyAccessExpression(schemaArg)) {
-					schemaName = schemaArg.getText();
-				} else if (Node.isCallExpression(schemaArg)) {
-					schemaName = schemaArg.getText();
-				}
-				return {
-					middlewareName: name,
-					rateLimitConfig: null,
-					responseSchemaName: schemaName,
-					hasNoContent: false,
-					explicitSummary: null,
-					explicitOperationId: null,
-					explicitDescription: null,
-					explicitStatusCodes: null,
-					explicitSecurity: null,
-					oauth2RequiredScopes: null,
-					oauth2ScopeMode: null,
-					oauth2BearerTokenRequired: false,
-					explicitTags: null,
-					explicitDeprecated: false,
-					explicitExternalDocs: null,
-				};
-			}
-		}
-		if (name === 'NoContent') {
-			return {
-				middlewareName: name,
-				rateLimitConfig: null,
-				responseSchemaName: null,
-				hasNoContent: true,
-				explicitSummary: null,
-				explicitOperationId: null,
-				explicitDescription: null,
-				explicitStatusCodes: null,
-				explicitSecurity: null,
-				oauth2RequiredScopes: null,
-				oauth2ScopeMode: null,
-				oauth2BearerTokenRequired: false,
-				explicitTags: null,
-				explicitDeprecated: false,
-				explicitExternalDocs: null,
-			};
-		}
-		if (name === 'OpenAPI') {
-			const args = callExpr.getArguments();
-			if (args.length === 0) return null;
-			const firstArg = args[0];
-			if (Node.isObjectLiteralExpression(firstArg)) {
-				const metadata = parseObjectLiteralMetadata(firstArg, context);
-				const operationId = typeof metadata.operationId === 'string' ? metadata.operationId : null;
-				const summary = typeof metadata.summary === 'string' ? metadata.summary : null;
-				const description = typeof metadata.description === 'string' ? metadata.description : null;
-				const deprecated = typeof metadata.deprecated === 'boolean' ? metadata.deprecated : false;
-				let schemaName: string | null = null;
-				if (metadata.responseSchema != null) {
-					schemaName = String(metadata.responseSchema);
-				}
-				const requestSchemaName =
-					metadata.requestSchema != null && typeof metadata.requestSchema === 'string' ? metadata.requestSchema : null;
-				const requestFormSchemaName =
-					metadata.requestFormSchema != null && typeof metadata.requestFormSchema === 'string'
-						? metadata.requestFormSchema
-						: null;
-				const statusCodes = extractNumberArray(metadata.statusCode);
-				const security = extractStringArray(metadata.security);
-				const tags = extractStringArray(metadata.tags);
-				let externalDocs: {
-					url: string;
-					description?: string;
-				} | null = null;
-				if (
-					metadata.externalDocs &&
-					typeof metadata.externalDocs === 'object' &&
-					'url' in metadata.externalDocs &&
-					typeof metadata.externalDocs.url === 'string'
-				) {
-					externalDocs = {
-						url: metadata.externalDocs.url,
-						description:
-							'description' in metadata.externalDocs && typeof metadata.externalDocs.description === 'string'
-								? metadata.externalDocs.description
-								: undefined,
-					};
-				}
-				return {
-					middlewareName: name,
-					rateLimitConfig: null,
-					responseSchemaName: schemaName,
-					hasNoContent: schemaName === null || schemaName === 'null',
-					explicitRequestSchemaName: requestSchemaName,
-					explicitRequestFormSchemaName: requestFormSchemaName,
-					explicitSummary: summary,
-					explicitOperationId: operationId,
-					explicitDescription: description,
-					explicitStatusCodes: statusCodes,
-					explicitSecurity: security,
-					oauth2RequiredScopes: null,
-					oauth2ScopeMode: null,
-					oauth2BearerTokenRequired: false,
-					explicitTags: tags,
-					explicitDeprecated: deprecated,
-					explicitExternalDocs: externalDocs,
-				};
-			}
-			if (args.length >= 2) {
-				const secondArg = args[1];
-				let operationId: string | null = null;
-				let summary: string | null = null;
-				let schemaName: string | null = null;
-				let description: string | null = null;
-				if (Node.isStringLiteral(firstArg) || Node.isNoSubstitutionTemplateLiteral(firstArg)) {
-					operationId = firstArg.getLiteralValue();
-				}
-				if (Node.isStringLiteral(secondArg) || Node.isNoSubstitutionTemplateLiteral(secondArg)) {
-					summary = secondArg.getLiteralValue();
-				}
-				if (args.length > 2) {
-					const thirdArg = args[2];
-					if (Node.isIdentifier(thirdArg)) {
-						schemaName = thirdArg.getText();
-					} else if (Node.isPropertyAccessExpression(thirdArg)) {
-						schemaName = thirdArg.getText();
-					} else if (Node.isCallExpression(thirdArg)) {
-						schemaName = thirdArg.getText();
-					}
-				}
-				if (args.length > 3) {
-					const fourthArg = args[3];
-					if (Node.isObjectLiteralExpression(fourthArg)) {
-						const properties = fourthArg.getProperties();
-						for (const prop of properties) {
-							if (Node.isPropertyAssignment(prop)) {
-								const propName = prop.getName();
-								if (propName === 'description') {
-									const initializer = prop.getInitializer();
-									if (initializer) {
-										description = extractStringLiteral(initializer);
-									}
-								}
-							}
-						}
-					}
-				}
-				return {
-					middlewareName: name,
-					rateLimitConfig: null,
-					responseSchemaName: schemaName,
-					hasNoContent: schemaName === null || schemaName === 'null',
-					explicitSummary: summary,
-					explicitOperationId: operationId,
-					explicitDescription: description,
-					explicitStatusCodes: null,
-					explicitSecurity: null,
-					oauth2RequiredScopes: null,
-					oauth2ScopeMode: null,
-					oauth2BearerTokenRequired: false,
-					explicitTags: null,
-					explicitDeprecated: false,
-					explicitExternalDocs: null,
-				};
-			}
-		}
-		if (name === 'requireOAuth2Scope' || name === 'requireOAuth2ScopeForBearer') {
-			const scopes = extractOAuth2ScopeArgs(callExpr.getArguments());
-			return {
-				middlewareName: name,
-				rateLimitConfig: null,
-				responseSchemaName: null,
-				hasNoContent: false,
-				explicitSummary: null,
-				explicitOperationId: null,
-				explicitDescription: null,
-				explicitStatusCodes: null,
-				explicitSecurity: null,
-				oauth2RequiredScopes: scopes,
-				oauth2ScopeMode: 'all',
-				oauth2BearerTokenRequired: false,
-				explicitTags: null,
-				explicitDeprecated: false,
-				explicitExternalDocs: null,
-			};
-		}
-		if (name === 'requireAnyOAuth2Scope' || name === 'requireAnyOAuth2ScopeForBearer') {
-			const scopes = extractOAuth2ScopeArgs(callExpr.getArguments());
-			return {
-				middlewareName: name,
-				rateLimitConfig: null,
-				responseSchemaName: null,
-				hasNoContent: false,
-				explicitSummary: null,
-				explicitOperationId: null,
-				explicitDescription: null,
-				explicitStatusCodes: null,
-				explicitSecurity: null,
-				oauth2RequiredScopes: scopes,
-				oauth2ScopeMode: 'any',
-				oauth2BearerTokenRequired: false,
-				explicitTags: null,
-				explicitDeprecated: false,
-				explicitExternalDocs: null,
-			};
-		}
-		if (name === 'requireOAuth2BearerToken') {
-			return {
-				middlewareName: name,
-				rateLimitConfig: null,
-				responseSchemaName: null,
-				hasNoContent: false,
-				explicitSummary: null,
-				explicitOperationId: null,
-				explicitDescription: null,
-				explicitStatusCodes: null,
-				explicitSecurity: null,
-				oauth2RequiredScopes: null,
-				oauth2ScopeMode: null,
-				oauth2BearerTokenRequired: true,
-				explicitTags: null,
-				explicitDeprecated: false,
-				explicitExternalDocs: null,
-			};
-		}
-		return {
-			middlewareName: name,
-			rateLimitConfig: null,
-			responseSchemaName: null,
-			hasNoContent: false,
-			explicitSummary: null,
-			explicitOperationId: null,
-			explicitDescription: null,
-			explicitStatusCodes: null,
-			explicitSecurity: null,
-			oauth2RequiredScopes: null,
-			oauth2ScopeMode: null,
-			oauth2BearerTokenRequired: false,
-			explicitTags: null,
-			explicitDeprecated: false,
-			explicitExternalDocs: null,
-		};
+	if (!Node.isIdentifier(expression)) return null;
+	const name = expression.getText();
+	const args = callExpr.getArguments();
+	switch (name) {
+		case 'RateLimitMiddleware':
+			return {middlewareName: name, rateLimitConfig: args[0]?.getText()};
+		case 'ResponseType':
+			return {middlewareName: name, responseSchemaName: args[0]?.getText()};
+		case 'NoContent':
+			return {middlewareName: name, hasNoContent: true};
+		case 'OpenAPI':
+			return extractOpenAPIMetadata(args, context);
+		case 'requireOAuth2Scope':
+		case 'requireOAuth2ScopeForBearer':
+			return {middlewareName: name, oauth2RequiredScopes: extractOAuth2ScopeArgs(args), oauth2ScopeMode: 'all'};
+		case 'requireAnyOAuth2Scope':
+		case 'requireAnyOAuth2ScopeForBearer':
+			return {middlewareName: name, oauth2RequiredScopes: extractOAuth2ScopeArgs(args), oauth2ScopeMode: 'any'};
+		case 'requireOAuth2BearerToken':
+			return {middlewareName: name, oauth2BearerTokenRequired: true};
+		default:
+			return {middlewareName: name};
 	}
-	return null;
-}
-function extractHandlerInfo(arg: Node): {
-	handlerSource: string;
-	responseMapperName: string | null;
-	successStatusCodes: Array<number>;
-} | null {
-	if (!Node.isArrowFunction(arg) && !Node.isFunctionExpression(arg)) {
-		return null;
-	}
-	const handlerSource = arg.getText();
-	let responseMapperName: string | null = null;
-	const mapperMatch = handlerSource.match(/\b(map\w+To\w+)\s*\(/);
-	if (mapperMatch) {
-		responseMapperName = mapperMatch[1];
-	}
-	const successStatusCodes = extractSuccessStatusCodes(arg);
-	const truncatedSource =
-		handlerSource.length > 2000 ? `${handlerSource.slice(0, 2000)}\n// ... truncated` : handlerSource;
-	return {handlerSource: truncatedSource, responseMapperName, successStatusCodes};
 }
 function extractSuccessStatusCodes(handler: Node): Array<number> {
 	const codes = new Set<number>();
@@ -649,152 +395,94 @@ function buildRoute(
 	resolver: StaticPathResolver,
 	scope: Scope,
 ): ExtractedRoute {
-	const validators: Array<ExtractedValidator> = [];
-	const middlewares: Array<string> = [];
-	let hasLoginRequired = false;
-	let hasDefaultUserOnly = false;
-	let hasLoginRequiredAllowSuspicious = false;
-	let hasSudoMode = false;
-	let rateLimitConfig: string | null = null;
-	let handlerSource: string | null = null;
-	let responseMapperName: string | null = null;
-	let responseSchemaName: string | null = null;
-	let hasNoContent = false;
-	let successStatusCodes: Array<number> = [];
-	let explicitRequestSchemaName: string | null = null;
-	let explicitRequestFormSchemaName: string | null = null;
-	let explicitSummary: string | null = null;
-	let explicitOperationId: string | null = null;
-	let explicitDescription: string | null = null;
-	let explicitStatusCodes: Array<number> | null = null;
-	let explicitSecurity: Array<string> | null = null;
-	let oauth2RequiredScopes: Array<string> | null = null;
-	let oauth2ScopeMode: 'all' | 'any' | null = null;
-	let oauth2BearerTokenRequired = false;
-	let explicitTags: Array<string> | null = null;
-	let explicitDeprecated = false;
-	let explicitExternalDocs: {
-		url: string;
-		description?: string;
-	} | null = null;
-	for (const arg of registration.middlewareArguments) {
-		if (Node.isIdentifier(arg)) {
-			const name = arg.getText();
-			middlewares.push(name);
-			if (name === 'LoginRequired') {
-				hasLoginRequired = true;
-			} else if (name === 'DefaultUserOnly') {
-				hasDefaultUserOnly = true;
-			} else if (name === 'LoginRequiredAllowSuspicious') {
-				hasLoginRequiredAllowSuspicious = true;
-			} else if (name === 'SudoModeMiddleware') {
-				hasSudoMode = true;
-			}
-		} else if (Node.isCallExpression(arg)) {
-			const validatorInfo = extractValidatorInfo(arg);
-			if (validatorInfo) {
-				validators.push(validatorInfo);
-			} else {
-				const middlewareInfo = extractMiddlewareInfo(arg, {resolver, scope});
-				if (middlewareInfo) {
-					middlewares.push(middlewareInfo.middlewareName);
-					if (middlewareInfo.rateLimitConfig) {
-						rateLimitConfig = middlewareInfo.rateLimitConfig;
-					}
-					if (middlewareInfo.responseSchemaName) {
-						responseSchemaName = middlewareInfo.responseSchemaName;
-					}
-					if (middlewareInfo.hasNoContent) {
-						hasNoContent = true;
-					}
-					if (middlewareInfo.explicitRequestSchemaName) {
-						explicitRequestSchemaName = middlewareInfo.explicitRequestSchemaName;
-					}
-					if (middlewareInfo.explicitRequestFormSchemaName) {
-						explicitRequestFormSchemaName = middlewareInfo.explicitRequestFormSchemaName;
-					}
-					if (middlewareInfo.explicitSummary) {
-						explicitSummary = middlewareInfo.explicitSummary;
-					}
-					if (middlewareInfo.explicitOperationId) {
-						explicitOperationId = middlewareInfo.explicitOperationId;
-					}
-					if (middlewareInfo.explicitDescription) {
-						explicitDescription = middlewareInfo.explicitDescription;
-					}
-					if (middlewareInfo.explicitStatusCodes) {
-						explicitStatusCodes = middlewareInfo.explicitStatusCodes;
-					}
-					if (middlewareInfo.explicitSecurity) {
-						explicitSecurity = middlewareInfo.explicitSecurity;
-					}
-					if (middlewareInfo.oauth2RequiredScopes && middlewareInfo.oauth2ScopeMode) {
-						if (oauth2ScopeMode && oauth2ScopeMode !== middlewareInfo.oauth2ScopeMode) {
-							throw new Error(
-								`Cannot combine OAuth2 scope middleware modes on ${method.toUpperCase()} ${routePath} in ${sourceFile.getFilePath()}:${registration.call.getStartLineNumber()}`,
-							);
-						}
-						oauth2ScopeMode = middlewareInfo.oauth2ScopeMode;
-						const combinedScopes: Array<string> = [
-							...(oauth2RequiredScopes ?? []),
-							...middlewareInfo.oauth2RequiredScopes,
-						];
-						oauth2RequiredScopes = Array.from(new Set<string>(combinedScopes));
-					}
-					if (middlewareInfo.oauth2BearerTokenRequired) {
-						oauth2BearerTokenRequired = true;
-					}
-					if (middlewareInfo.explicitTags) {
-						explicitTags = middlewareInfo.explicitTags;
-					}
-					if (middlewareInfo.explicitDeprecated) {
-						explicitDeprecated = middlewareInfo.explicitDeprecated;
-					}
-					if (middlewareInfo.explicitExternalDocs) {
-						explicitExternalDocs = middlewareInfo.explicitExternalDocs;
-					}
-				}
-			}
-		} else if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {
-			const handlerInfo = extractHandlerInfo(arg);
-			if (handlerInfo) {
-				handlerSource = handlerInfo.handlerSource;
-				responseMapperName = handlerInfo.responseMapperName;
-				successStatusCodes = handlerInfo.successStatusCodes;
-			}
-		}
-	}
-	return {
+	const route: ExtractedRoute = {
 		method,
 		path: routePath,
 		controllerFile: sourceFile.getFilePath(),
 		lineNumber: registration.call.getStartLineNumber(),
-		validators,
-		middlewares,
-		hasLoginRequired,
-		hasDefaultUserOnly,
-		hasLoginRequiredAllowSuspicious,
-		hasSudoMode,
-		rateLimitConfig,
-		handlerSource,
-		responseMapperName,
-		responseSchemaName,
-		hasNoContent,
-		successStatusCodes,
-		explicitRequestSchemaName,
-		explicitRequestFormSchemaName,
-		explicitSummary,
-		explicitOperationId,
-		explicitDescription,
-		explicitStatusCodes,
-		explicitSecurity,
-		oauth2RequiredScopes,
-		oauth2ScopeMode,
-		oauth2BearerTokenRequired,
-		explicitTags,
-		explicitDeprecated,
-		explicitExternalDocs,
+		validators: [],
+		middlewares: [],
+		hasLoginRequired: false,
+		hasDefaultUserOnly: false,
+		hasLoginRequiredAllowSuspicious: false,
+		rateLimitConfig: null,
+		responseSchemaName: null,
+		responseContentType: 'application/json',
+		hasNoContent: false,
+		bodylessStatusCodes: [],
+		successStatusCodes: [],
+		explicitRequestSchemaName: null,
+		explicitRequestFormSchemaName: null,
+		explicitRequestBodyRequired: null,
+		explicitSummary: null,
+		explicitOperationId: null,
+		explicitDescription: null,
+		explicitStatusCodes: null,
+		explicitSecurity: null,
+		oauth2RequiredScopes: null,
+		oauth2ScopeMode: null,
+		oauth2BearerTokenRequired: false,
+		explicitTags: null,
+		explicitDeprecated: false,
+		explicitExternalDocs: null,
 	};
+	const context = {resolver, scope};
+	for (const arg of registration.middlewareArguments) {
+		if (Node.isIdentifier(arg)) {
+			const name = arg.getText();
+			route.middlewares.push(name);
+			if (name === 'LoginRequired') route.hasLoginRequired = true;
+			if (name === 'DefaultUserOnly') route.hasDefaultUserOnly = true;
+			if (name === 'LoginRequiredAllowSuspicious') route.hasLoginRequiredAllowSuspicious = true;
+			continue;
+		}
+		if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {
+			route.successStatusCodes = extractSuccessStatusCodes(arg);
+			continue;
+		}
+		if (!Node.isCallExpression(arg)) continue;
+		const validator = extractValidatorInfo(arg);
+		if (validator) {
+			route.validators.push(validator);
+			continue;
+		}
+		const middleware = extractMiddlewareInfo(arg, context);
+		if (!middleware) continue;
+		route.middlewares.push(middleware.middlewareName);
+		if (middleware.rateLimitConfig) route.rateLimitConfig = middleware.rateLimitConfig;
+		if (middleware.responseSchemaName) route.responseSchemaName = middleware.responseSchemaName;
+		if (middleware.responseContentType) route.responseContentType = middleware.responseContentType;
+		if (middleware.hasNoContent) route.hasNoContent = true;
+		if (middleware.bodylessStatusCodes) route.bodylessStatusCodes = middleware.bodylessStatusCodes;
+		if (middleware.explicitRequestSchemaName) route.explicitRequestSchemaName = middleware.explicitRequestSchemaName;
+		if (middleware.explicitRequestFormSchemaName) {
+			route.explicitRequestFormSchemaName = middleware.explicitRequestFormSchemaName;
+		}
+		if (middleware.explicitRequestBodyRequired !== undefined) {
+			route.explicitRequestBodyRequired = middleware.explicitRequestBodyRequired;
+		}
+		if (middleware.explicitSummary) route.explicitSummary = middleware.explicitSummary;
+		if (middleware.explicitOperationId) route.explicitOperationId = middleware.explicitOperationId;
+		if (middleware.explicitDescription) route.explicitDescription = middleware.explicitDescription;
+		if (middleware.explicitStatusCodes) route.explicitStatusCodes = middleware.explicitStatusCodes;
+		if (middleware.explicitSecurity) route.explicitSecurity = middleware.explicitSecurity;
+		if (middleware.oauth2RequiredScopes && middleware.oauth2ScopeMode) {
+			if (route.oauth2ScopeMode && route.oauth2ScopeMode !== middleware.oauth2ScopeMode) {
+				throw new Error(
+					`Cannot combine OAuth2 scope middleware modes on ${method.toUpperCase()} ${routePath} in ${route.controllerFile}:${route.lineNumber}`,
+				);
+			}
+			route.oauth2ScopeMode = middleware.oauth2ScopeMode;
+			route.oauth2RequiredScopes = [
+				...new Set([...(route.oauth2RequiredScopes ?? []), ...middleware.oauth2RequiredScopes]),
+			];
+		}
+		if (middleware.oauth2BearerTokenRequired) route.oauth2BearerTokenRequired = true;
+		if (middleware.explicitTags) route.explicitTags = middleware.explicitTags;
+		if (middleware.explicitDeprecated) route.explicitDeprecated = true;
+		if (middleware.explicitExternalDocs) route.explicitExternalDocs = middleware.explicitExternalDocs;
+	}
+	return route;
 }
 function owningFunction(node: Node): FunctionDeclaration | null {
 	for (const ancestor of node.getAncestors()) {
@@ -1000,7 +688,7 @@ export function extractRoutesFromControllers(controllerPaths: Array<string>): Ar
 			const fileRoutes = findRoutesInSourceFile(sourceFile, resolver, unresolved);
 			routes.push(...fileRoutes);
 		} catch (error) {
-			console.warn(`Warning: Could not parse ${controllerPath}:`, error);
+			throw new Error(`Could not extract routes from ${controllerPath}`, {cause: error});
 		}
 	}
 	if (unresolved.length > 0) {

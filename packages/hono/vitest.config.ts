@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import tsconfigPaths from 'vite-tsconfig-paths';
 import {defineConfig} from 'vitest/config';
 
 export default defineConfig({
 	root: process.cwd(),
-	plugins: [tsconfigPaths()],
+	resolve: {tsconfigPaths: true},
 	cacheDir: './node_modules/.vitest',
 	test: {
 		globals: true,

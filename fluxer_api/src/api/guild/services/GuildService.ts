@@ -12,12 +12,17 @@ import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGu
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildStickerError} from '@fluxer/errors/src/domains/guild/UnknownGuildStickerError';
 import type {
+	AuditLogOptions,
+	AuditLogWebhookResponse,
+	GuildAuditLogEntryResponse,
+	GuildAuditLogListResponse,
+} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
+import type {
 	GuildEmojiMetadataResponse,
 	GuildStickerMetadataResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {ApiContext} from '../../ApiContext';
@@ -50,40 +55,17 @@ import {GuildModerationService} from './GuildModerationService';
 import {GuildRoleService} from './GuildRoleService';
 import {GuildSearchService} from './GuildSearchService';
 
-interface AuditLogOptions {
-	channel_id?: string;
-	count?: number;
-	delete_member_days?: string;
-	id?: string;
-	integration_type?: number;
-	message_id?: string;
-	members_removed?: number;
-	role_name?: string;
-	type?: number;
-	inviter_id?: string;
-	max_age?: number;
-	max_uses?: number;
-	temporary?: boolean;
-	uses?: number;
-}
-
-interface GuildAuditLogEntryResponse {
-	id: string;
-	action_type: number;
-	user_id: string | null;
-	target_id: string | null;
-	reason?: string;
-	options?: AuditLogOptions;
+interface StoredGuildAuditLogEntryResponse extends Omit<GuildAuditLogEntryResponse, 'changes'> {
 	changes?: GuildAuditLogChange;
 }
 
-interface AuditLogWebhook {
-	id: string;
+interface StoredAuditLogWebhookResponse extends Omit<AuditLogWebhookResponse, 'type'> {
 	type: number;
-	guild_id: string | null;
-	channel_id: string | null;
-	name: string;
-	avatar_hash: string | null;
+}
+
+interface StoredGuildAuditLogListResponse extends Omit<GuildAuditLogListResponse, 'audit_log_entries' | 'webhooks'> {
+	audit_log_entries: Array<StoredGuildAuditLogEntryResponse>;
+	webhooks: Array<StoredAuditLogWebhookResponse>;
 }
 
 interface GuildAuth {
@@ -303,11 +285,7 @@ export class GuildService {
 		afterLogId?: bigint;
 		filterUserId?: UserID;
 		actionType?: AuditLogActionType;
-	}): Promise<{
-		audit_log_entries: Array<GuildAuditLogEntryResponse>;
-		users: Array<UserPartialResponse>;
-		webhooks: Array<AuditLogWebhook>;
-	}> {
+	}): Promise<StoredGuildAuditLogListResponse> {
 		const {userId, guildId} = params;
 		const [hasPermission, guild] = await Promise.all([
 			this.gatewayService.checkPermission({
@@ -334,11 +312,7 @@ export class GuildService {
 		afterLogId?: bigint;
 		filterUserId?: UserID;
 		actionType?: AuditLogActionType;
-	}): Promise<{
-		audit_log_entries: Array<GuildAuditLogEntryResponse>;
-		users: Array<UserPartialResponse>;
-		webhooks: Array<AuditLogWebhook>;
-	}> {
+	}): Promise<StoredGuildAuditLogListResponse> {
 		const {guildId, requestCache, limit = 50, beforeLogId, afterLogId, filterUserId, actionType} = params;
 		if (beforeLogId !== undefined && afterLogId !== undefined) {
 			throw InputValidationError.fromCode('before', ValidationErrorCodes.CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER);
@@ -412,7 +386,7 @@ export class GuildService {
 		};
 	}
 
-	private mapAuditLogToEntry(log: GuildAuditLog): GuildAuditLogEntryResponse {
+	private mapAuditLogToEntry(log: GuildAuditLog): StoredGuildAuditLogEntryResponse {
 		return {
 			id: log.logId.toString(),
 			action_type: log.actionType,
@@ -532,7 +506,7 @@ export class GuildService {
 		return {webhooks: foundWebhooks};
 	}
 
-	private buildAuditLogWebhookResponses(webhooks: Array<Webhook>): Array<AuditLogWebhook> {
+	private buildAuditLogWebhookResponses(webhooks: Array<Webhook>): Array<StoredAuditLogWebhookResponse> {
 		return webhooks.map((webhook) => ({
 			id: webhook.id.toString(),
 			type: webhook.type,

@@ -3,3 +3,4 @@
 pub mod config;
 pub mod external_media_path;
 pub mod geoip;
+pub mod user_flags;

@@ -22,7 +22,7 @@ export function ExperimentController(app: HonoApp) {
 			description:
 				'Returns the polling cadence and every experiment assignment resolved for the authenticated user from the instance configuration. Clients revalidate with If-None-Match and receive 304 when nothing changed.',
 			responseSchema: ExperimentAssignmentsResponse,
-			statusCode: 200,
+			statusCode: [200, 304],
 			security: ['bearerToken', 'sessionToken', 'botToken'],
 			tags: ['Experiments'],
 		}),

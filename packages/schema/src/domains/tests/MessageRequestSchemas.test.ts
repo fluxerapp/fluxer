@@ -1,11 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	MessageNonceRequest,
 	MessageRequestSchema,
 	MessageUpdateRequestSchema,
 	RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {describe, expect, it} from 'vitest';
+
+describe('MessageNonceRequest', () => {
+	it.each([
+		[0, '0'],
+		[Number.MAX_SAFE_INTEGER, '9007199254740991'],
+		['  client-nonce  ', 'client-nonce'],
+		['-1', '-1'],
+	])('normalizes nonce %j to its wire string', (input, expected) => {
+		expect(MessageNonceRequest.parse(input)).toBe(expected);
+	});
+
+	it.each([
+		-1,
+		0.5,
+		Number.MAX_SAFE_INTEGER + 1,
+		Number.POSITIVE_INFINITY,
+		'',
+		'a'.repeat(33),
+	])('rejects invalid nonce %j', (input) => {
+		expect(MessageNonceRequest.safeParse(input).success).toBe(false);
+	});
+});
 
 describe('MessageRequestSchema', () => {
 	it('preserves ANSI escape characters in message content', () => {

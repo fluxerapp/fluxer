@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::snowflake;
 
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{ListGuildEmojisResponse, ListGuildStickersResponse};
 
 impl AdminApiClient {
     pub async fn list_guild_emojis(&self, guild_id: &str) -> ApiResult<ListGuildEmojisResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
+        let guild_id = snowflake(guild_id);
         let response = self
             .generated()
             .list_admin_guild_emojis(&guild_id)
@@ -20,7 +20,7 @@ impl AdminApiClient {
         &self,
         guild_id: &str,
     ) -> ApiResult<ListGuildStickersResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
+        let guild_id = snowflake(guild_id);
         let response = self
             .generated()
             .list_admin_guild_stickers(&guild_id)

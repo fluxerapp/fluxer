@@ -5,6 +5,7 @@ import {
 	CreateVoiceRegionRequest,
 	CreateVoiceRegionResponse,
 	CreateVoiceServerRequest,
+	CreateVoiceServerRequestBody,
 	CreateVoiceServerResponse,
 	DeleteVoiceResponse,
 	GetVoiceRegionQuery,
@@ -14,8 +15,10 @@ import {
 	ListVoiceRegionsResponse,
 	ListVoiceServersResponse,
 	UpdateVoiceRegionRequest,
+	UpdateVoiceRegionRequestBody,
 	UpdateVoiceRegionResponse,
 	UpdateVoiceServerRequest,
+	UpdateVoiceServerRequestBody,
 	UpdateVoiceServerResponse,
 	VoiceRegionIdParam,
 	VoiceServerIdParam,
@@ -117,6 +120,7 @@ export function VoiceAdminController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'update_admin_voice_region',
 			summary: 'Update voice region',
+			requestSchema: UpdateVoiceRegionRequestBody,
 			responseSchema: UpdateVoiceRegionResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -195,6 +199,7 @@ export function VoiceAdminController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'create_admin_voice_server',
 			summary: 'Create voice server',
+			requestSchema: CreateVoiceServerRequestBody,
 			responseSchema: CreateVoiceServerResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -247,6 +252,7 @@ export function VoiceAdminController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'update_admin_voice_server',
 			summary: 'Update voice server',
+			requestSchema: UpdateVoiceServerRequestBody,
 			responseSchema: UpdateVoiceServerResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

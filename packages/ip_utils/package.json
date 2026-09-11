@@ -15,7 +15,6 @@
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	}
 }

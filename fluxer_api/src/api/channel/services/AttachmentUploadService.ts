@@ -40,6 +40,7 @@ import type {Attachment} from '../../models/Attachment';
 import type {Channel} from '../../models/Channel';
 import type {Message} from '../../models/Message';
 import type {IUserRepository} from '../../user/IUserRepository';
+import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
 import {assertGuildMemberCanCommunicate} from '../../utils/GuildCommunicationUtils';
 import type {UploadedAttachment} from '../AttachmentDTOs';
 import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
@@ -486,24 +487,6 @@ export class AttachmentUploadService {
 		});
 		return {channel, guild};
 	}
-}
-
-async function mapWithConcurrency<T, TResult>(
-	items: ReadonlyArray<T>,
-	concurrency: number,
-	mapper: (item: T, index: number) => Promise<TResult>,
-): Promise<Array<TResult>> {
-	const results = new Array<TResult>(items.length);
-	let nextIndex = 0;
-	async function worker(): Promise<void> {
-		for (;;) {
-			const index = nextIndex++;
-			if (index >= items.length) return;
-			results[index] = await mapper(items[index]!, index);
-		}
-	}
-	await Promise.all(Array.from({length: Math.min(concurrency, items.length)}, () => worker()));
-	return results;
 }
 
 async function runAttachmentStorageOperation<T>(operation: () => Promise<T>): Promise<T> {

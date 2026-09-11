@@ -7,6 +7,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use fluxer_admin::{
+    api::{generated::types as generated_types, types::LookupGuildResponse},
     build_router,
     config::{AdminConfig, ProxyConfig, RuntimeEnv},
     session,
@@ -905,8 +906,8 @@ fn user(id: &str, username: &str) -> Value {
     })
 }
 
-fn searched_guild() -> Value {
-    json!({
+fn searched_guild() -> generated_types::GuildAdminResponse {
+    serde_json::from_value(json!({
         "id": "1600000000000000001",
         "name": "Searched Guild",
         "icon": null,
@@ -919,15 +920,14 @@ fn searched_guild() -> Value {
         "features": ["COMMUNITY"],
         "nsfw_level": 0,
         "nsfw": false,
-        "content_warning_level": null,
-        "content_warning_text": null,
-        "description": "Guild used by HTMX acceptance tests.",
-        "vanity_url_code": null
-    })
+        "content_warning_level": 0,
+        "content_warning_text": null
+    }))
+    .expect("guild search fixture must match the generated response contract")
 }
 
-fn searched_guild_detail() -> Value {
-    json!({
+fn searched_guild_detail() -> generated_types::LookupGuildResponseGuild {
+    serde_json::from_value(json!({
         "id": "1600000000000000001",
         "owner_id": "1500000000000000001",
         "owner_username": "SearchedUser",
@@ -944,7 +944,7 @@ fn searched_guild_detail() -> Value {
         "mfa_level": 0,
         "nsfw_level": 0,
         "nsfw": false,
-        "content_warning_level": null,
+        "content_warning_level": 0,
         "content_warning_text": null,
         "explicit_content_filter": 0,
         "default_message_notifications": 0,
@@ -956,9 +956,23 @@ fn searched_guild_detail() -> Value {
         "disabled_operations": 0,
         "member_count": 12,
         "channels": [],
-        "roles": [],
-        "description": "Guild used by HTMX acceptance tests."
-    })
+        "roles": []
+    }))
+    .expect("guild detail fixture must match the generated response contract")
+}
+
+#[test]
+fn guild_fixtures_match_generated_response_contracts() {
+    let search = searched_guild();
+    assert_eq!(search.name, "Searched Guild");
+    assert_eq!(*search.member_count, 12);
+
+    let response: LookupGuildResponse =
+        serde_json::from_value(json!({"guild": searched_guild_detail()})).unwrap();
+    let detail = response.guild.unwrap();
+    assert_eq!(detail.name, "Searched Guild");
+    assert_eq!(detail.id, "1600000000000000001");
+    assert_eq!(detail.member_count, 12);
 }
 
 fn searched_application() -> Value {

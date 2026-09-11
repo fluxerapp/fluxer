@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {
 	$getComposerClipboardSelection,
 	$insertComposerClipboardSlice,
@@ -42,6 +43,7 @@ import {
 	$createTextNode,
 	$getRoot,
 	$getSelection,
+	$isElementNode,
 	$isRangeSelection,
 	$setCompositionKey,
 	$setSelection,
@@ -142,7 +144,9 @@ function describeNode(node: LexicalNode): string {
 }
 
 function $paragraph(): ElementNode {
-	return $getRoot().getFirstChildOrThrow<ElementNode>();
+	const paragraph = $getRoot().getFirstChildOrThrow();
+	assert($isElementNode(paragraph), 'Expected composer paragraph');
+	return paragraph;
 }
 
 function children(editor: LexicalEditor): Array<string> {
@@ -517,9 +521,13 @@ describe('typed special mentions', () => {
 			'text:@everyone ',
 			'slash-slot:@here ',
 		]);
-		expect(editor.read(() => $paragraph().getLastChildOrThrow<ElementNode>().getChildren().map(describeNode))).toEqual([
-			'text:@here ',
-		]);
+		expect(
+			editor.read(() => {
+				const slot = $paragraph().getLastChildOrThrow();
+				assert($isElementNode(slot), 'Expected slash command slot element');
+				return slot.getChildren().map(describeNode);
+			}),
+		).toEqual(['text:@here ']);
 	});
 
 	it('restores a draft special mention and projects it back unchanged', () => {

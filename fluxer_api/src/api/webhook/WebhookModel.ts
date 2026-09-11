@@ -2,14 +2,13 @@
 
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
-import type {z} from 'zod';
 import {createUserID} from '../BrandedTypes';
 import type {UserCacheService} from '../infrastructure/UserCacheService';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
 import type {Webhook} from '../models/Webhook';
 import {getCachedUserPartialResponse} from '../user/UserCacheHelpers';
 
-export function mapWebhookToTokenResponse(webhook: Webhook): z.infer<typeof WebhookTokenResponse> {
+export function mapWebhookToTokenResponse(webhook: Webhook): WebhookTokenResponse {
 	return {
 		id: webhook.id.toString(),
 		guild_id: webhook.guildId?.toString() || '',
@@ -28,7 +27,7 @@ export async function mapWebhookToResponseWithCache({
 	webhook: Webhook;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-}): Promise<z.infer<typeof WebhookResponse>> {
+}): Promise<WebhookResponse> {
 	const creatorPartial = await getCachedUserPartialResponse({
 		userId: webhook.creatorId ?? createUserID(DELETED_USER_ID),
 		userCacheService,
@@ -48,7 +47,7 @@ export async function mapWebhooksToResponse({
 	webhooks: Array<Webhook>;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-}): Promise<Array<z.infer<typeof WebhookResponse>>> {
+}): Promise<Array<WebhookResponse>> {
 	return await Promise.all(
 		webhooks.map((webhook) => mapWebhookToResponseWithCache({webhook, userCacheService, requestCache})),
 	);

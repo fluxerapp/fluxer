@@ -73,7 +73,7 @@ const assignRef = <T,>(ref: React.Ref<T> | undefined, value: T | null): void => 
 	if (typeof ref === 'function') {
 		ref(value);
 	} else if (ref && typeof ref === 'object') {
-		(ref as React.MutableRefObject<T | null>).current = value;
+		ref.current = value;
 	}
 };
 

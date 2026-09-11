@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {registerComposerMarkdownHighlight} from '@app/features/lexical/composer/ComposerMarkdownHighlight';
 import {type CodeBlockWrapPlan, planCodeBlockWrap} from '@app/features/lexical/composer/codeBlockWrap';
 import {
@@ -25,8 +26,8 @@ import {createEmptyHistoryState, registerHistory} from '@lexical/history';
 import {
 	$getNodeByKey,
 	$getRoot,
+	$isElementNode,
 	createEditor,
-	type ElementNode,
 	type LexicalEditor,
 	type NodeKey,
 	REDO_COMMAND,
@@ -307,13 +308,14 @@ function composerState(editor: LexicalEditor): {
 }
 
 function atomicKeys(editor: LexicalEditor): Array<NodeKey> {
-	return editor.read(() =>
-		$getRoot()
-			.getFirstChildOrThrow<ElementNode>()
+	return editor.read(() => {
+		const paragraph = $getRoot().getFirstChildOrThrow();
+		assert($isElementNode(paragraph), 'Expected composer paragraph');
+		return paragraph
 			.getChildren()
 			.filter((node) => $isComposerMentionNode(node) || $isComposerCustomEmojiNode(node))
-			.map((node) => node.getKey()),
-	);
+			.map((node) => node.getKey());
+	});
 }
 
 function atomicState(editor: LexicalEditor, keys: Array<NodeKey>): Array<{attached: boolean; literal: boolean} | null> {

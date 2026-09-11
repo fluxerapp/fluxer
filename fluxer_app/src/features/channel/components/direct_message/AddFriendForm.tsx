@@ -123,7 +123,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		}
 		return getSendFriendRequestErrorMessage(i18n, errorCode, null);
 	};
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const [username, discriminator] = parseInput(input['trim']());
 		if (!username || !discriminator || !/^\d{4}$/.test(discriminator)) {

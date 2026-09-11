@@ -8,7 +8,6 @@ import {
 	GroupDmAddPermissionFlagsDescriptions,
 	GuildFolderFlags,
 	GuildFolderFlagsDescriptions,
-	GuildFolderIcons,
 	IncomingCallFlags,
 	IncomingCallFlagsDescriptions,
 	type MentionReplyPreference,
@@ -33,6 +32,7 @@ import {
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {
+	GuildFolderIconSchema,
 	MentionReplyPreferencesSchema,
 	ProfilePrivacyLevelSchema,
 	RelationshipTypesSchema,
@@ -257,21 +257,6 @@ export const CustomStatusResponse = z.object({
 
 export type CustomStatusResponse = z.infer<typeof CustomStatusResponse>;
 
-const GuildFolderIconSchema = withOpenApiType(
-	createNamedStringLiteralUnion(
-		[
-			[GuildFolderIcons.FOLDER, 'FOLDER', 'Classic folder icon'],
-			[GuildFolderIcons.STAR, 'STAR', 'Star icon'],
-			[GuildFolderIcons.HEART, 'HEART', 'Heart icon'],
-			[GuildFolderIcons.BOOKMARK, 'BOOKMARK', 'Bookmark icon'],
-			[GuildFolderIcons.GAME_CONTROLLER, 'GAME_CONTROLLER', 'Game controller icon'],
-			[GuildFolderIcons.SHIELD, 'SHIELD', 'Shield icon'],
-			[GuildFolderIcons.MUSIC_NOTE, 'MUSIC_NOTE', 'Music note icon'],
-		] as const,
-		'Guild folder icon',
-	),
-	'GuildFolderIconType',
-);
 export const UserSettingsResponse = z.object({
 	status: z.string().describe('The current online status of the user'),
 	status_resets_at: z.iso.datetime().nullish().describe('ISO8601 timestamp of when the status will reset'),
@@ -454,13 +439,7 @@ export interface PendingBulkMessageDeletion {
 	readonly message_count: number;
 }
 
-export interface UserProfile {
-	readonly bio: string | null;
-	readonly banner: string | null;
-	readonly banner_color?: number | null;
-	readonly pronouns: string | null;
-	readonly accent_color: number | null;
-}
+export type UserProfile = Readonly<UserProfileResponse>;
 
 export interface UserPartial {
 	readonly id: string;
@@ -688,3 +667,5 @@ export const PhoneGateEscapePreviewResponse = z.object({
 });
 
 export type PhoneGateEscapePreviewResponse = z.infer<typeof PhoneGateEscapePreviewResponse>;
+
+export const RelationshipListResponse = z.array(RelationshipResponse);

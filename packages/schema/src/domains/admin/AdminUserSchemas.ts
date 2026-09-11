@@ -10,6 +10,7 @@ import {
 	UserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
+import {CalendarDateType} from '@fluxer/schema/src/primitives/DateValidators';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {createQueryIntegerType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -115,9 +116,7 @@ export const AdminUsersMeResponse = z.object({
 
 export type AdminUsersMeResponse = z.infer<typeof AdminUsersMeResponse>;
 
-export const UserMutationResponse = z.object({
-	user: UserAdminResponseSchema,
-});
+export const UserMutationResponse = AdminUsersMeResponse;
 
 export type UserMutationResponse = z.infer<typeof UserMutationResponse>;
 
@@ -153,7 +152,7 @@ export const ListUserDmChannelsRequest = z
 		limit: z.number().int().min(1).max(200).default(50).describe('Maximum number of DM channels to return'),
 	})
 	.refine((value) => value.before === undefined || value.after === undefined, {
-		message: 'before and after cannot both be provided',
+		error: 'before and after cannot both be provided',
 	});
 
 export type ListUserDmChannelsRequest = z.infer<typeof ListUserDmChannelsRequest>;
@@ -363,7 +362,7 @@ export type UpdateHasVerifiedPhoneRequest = z.infer<typeof UpdateHasVerifiedPhon
 export const ChangeDobRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change date of birth for'),
 	date_of_birth: createStringType(10, 10)
-		.refine((value) => /^\d{4}-\d{2}-\d{2}$/.test(value), 'Invalid date format')
+		.refine((value) => CalendarDateType.safeParse(value).success, 'Invalid date format')
 		.describe('New date of birth in YYYY-MM-DD format'),
 });
 
@@ -421,17 +420,11 @@ export const BulkUpdateUserFlagsRequest = z.object({
 
 export type BulkUpdateUserFlagsRequest = z.infer<typeof BulkUpdateUserFlagsRequest>;
 
-export const BulkScheduleUserDeletionRequest = z.object({
+export const BulkScheduleUserDeletionRequest = ScheduleAccountDeletionRequest.omit({user_id: true}).extend({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to schedule deletion for'),
-	reason_code: withFieldDescription(DeletionReasonCodeType, 'Code indicating the reason for deletion'),
-	public_reason: createStringType(0, 512).optional().describe('Public-facing reason for the deletion'),
-	days_until_deletion: z
-		.number()
-		.int()
-		.min(1)
-		.max(365)
-		.default(60)
-		.describe('Number of days until the accounts are deleted'),
+	days_until_deletion: ScheduleAccountDeletionRequest.shape.days_until_deletion.describe(
+		'Number of days until the accounts are deleted',
+	),
 });
 
 export type BulkScheduleUserDeletionRequest = z.infer<typeof BulkScheduleUserDeletionRequest>;
@@ -574,7 +567,7 @@ export const AdminUserDmChannelListQuery = z
 		),
 	})
 	.refine((value) => value.before === undefined || value.after === undefined, {
-		message: 'before and after cannot both be provided',
+		error: 'before and after cannot both be provided',
 	});
 
 export type AdminUserDmChannelListQuery = z.infer<typeof AdminUserDmChannelListQuery>;

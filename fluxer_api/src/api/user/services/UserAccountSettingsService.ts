@@ -99,8 +99,6 @@ export class UserAccountSettingsService {
 		if (data.status_resets_at !== undefined) updatedRowData.status_resets_at = data.status_resets_at;
 		if (data.status_resets_to !== undefined) updatedRowData.status_resets_to = data.status_resets_to;
 		if (data.theme !== undefined) {
-			if (data.theme !== currentSettings.theme) {
-			}
 			updatedRowData.theme = data.theme;
 		}
 		if (data.locale !== undefined) updatedRowData.locale = data.locale;

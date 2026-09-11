@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type ReviewStep = 'account' | 'scopes' | 'community' | 'permissions';
 export type AuthorizePhase =
@@ -80,7 +80,7 @@ export type AuthorizeMachineSnapshot = SnapshotFrom<typeof authorizeStateMachine
 export type AuthorizeMachineStateValue = 'loading' | 'session_expired' | 'invalid_request' | 'review' | 'success';
 
 export function createAuthorizeSnapshot(): AuthorizeMachineSnapshot {
-	return getInitialSnapshot(authorizeStateMachine);
+	return initialTransition(authorizeStateMachine)[0];
 }
 
 export function transitionAuthorizeSnapshot(

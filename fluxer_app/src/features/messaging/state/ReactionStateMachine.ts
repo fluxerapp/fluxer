@@ -2,7 +2,7 @@
 
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import type {MessageReaction} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ReactionRecord {
 	emoji: ReactionEmoji;
@@ -366,7 +366,7 @@ export function createReactionMachineSnapshot(
 	map: ReactionMap = emptyMap(),
 	currentUserId?: string | null,
 ): ReactionMachineSnapshot {
-	return getInitialSnapshot(reactionStateMachine, {map, currentUserId});
+	return initialTransition(reactionStateMachine, {map, currentUserId})[0];
 }
 
 export function transitionReactionSnapshot(

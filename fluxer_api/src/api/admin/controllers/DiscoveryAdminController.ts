@@ -6,17 +6,17 @@ import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas
 import {
 	DiscoveryAdminApplicationUpdateRequest,
 	DiscoveryAdminCategoryListingQuery,
-	DiscoveryAdminListedGuildResponse,
+	DiscoveryAdminListedGuildListResponse,
 	DiscoveryAdminListingBulkCategoryRequest,
 	DiscoveryAdminListingBulkCategoryResponse,
-	DiscoveryAdminPendingApplicationResponse,
+	DiscoveryAdminPendingApplicationListResponse,
 	DiscoveryAdminRemoveRequest,
 	DiscoveryApplicationPatchRequest,
 	DiscoveryApplicationResponse,
 	DiscoveryCategoryIdParam,
 	DiscoveryCategoryListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import {z} from 'zod';
+
 import {createGuildID} from '../../BrandedTypes';
 import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
 import {mapGuildFeatures} from '../../guild/GuildFeatureUtils';
@@ -138,7 +138,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 			summary: 'List discovery applications',
 			description:
 				'Returns every pending discovery application, enriched with guild metadata. No pagination. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: z.array(DiscoveryAdminPendingApplicationResponse),
+			responseSchema: DiscoveryAdminPendingApplicationListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
@@ -214,7 +214,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 			summary: 'List guilds in a discovery category',
 			description:
 				'Returns an offset page of the guilds listed under one discovery category, most members first, enriched with guild metadata. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: z.array(DiscoveryAdminListedGuildResponse),
+			responseSchema: DiscoveryAdminListedGuildListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
@@ -249,7 +249,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 			summary: 'List discovery listings',
 			description:
 				'Returns every approved/listed discovery guild, enriched with guild metadata. No pagination. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: z.array(DiscoveryAdminListedGuildResponse),
+			responseSchema: DiscoveryAdminListedGuildListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',

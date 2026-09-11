@@ -14,11 +14,7 @@ export const GuildEmojiResponse = z.object({
 
 export type GuildEmojiResponse = z.infer<typeof GuildEmojiResponse>;
 
-export const GuildEmojiWithUserResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier for this emoji'),
-	name: z.string().describe('The name of the emoji'),
-	animated: z.boolean().describe('Whether this emoji is animated'),
-	nsfw: z.boolean().describe('Deprecated; always false. Retained for compatibility with older clients'),
+export const GuildEmojiWithUserResponse = GuildEmojiResponse.extend({
 	user: z.lazy(() => UserPartialResponse).describe('The user who uploaded this emoji'),
 });
 
@@ -35,13 +31,7 @@ export const GuildStickerResponse = z.object({
 
 export type GuildStickerResponse = z.infer<typeof GuildStickerResponse>;
 
-export const GuildStickerWithUserResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier for this sticker'),
-	name: z.string().describe('The name of the sticker'),
-	description: z.string().describe('The description of the sticker'),
-	tags: z.array(z.string()).max(MAX_GUILD_STICKER_TAGS).describe('Autocomplete/suggestion tags for the sticker'),
-	animated: z.boolean().describe('Whether this sticker is animated'),
-	nsfw: z.boolean().describe('Deprecated; always false. Retained for compatibility with older clients'),
+export const GuildStickerWithUserResponse = GuildStickerResponse.extend({
 	user: z.lazy(() => UserPartialResponse).describe('The user who uploaded this sticker'),
 });
 

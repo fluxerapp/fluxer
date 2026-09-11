@@ -31,3 +31,6 @@ export interface Webhook {
 	readonly avatar: string | null;
 	readonly token: string;
 }
+
+export const WebhookListResponse = z.array(WebhookResponse);
+export const SlackWebhookResponse = z.string();

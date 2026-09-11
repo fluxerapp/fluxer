@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::SendSystemDmResponse;
@@ -14,11 +14,7 @@ impl AdminApiClient {
         let body = generated_types::SendSystemDmRequest {
             content: generated_types::SendSystemDmRequestContent::try_from(content)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
-            user_ids: user_ids
-                .iter()
-                .cloned()
-                .map(generated_types::SnowflakeType::from)
-                .collect(),
+            user_ids: user_ids.iter().map(|id| snowflake(id)).collect(),
         };
         let response = self
             .generated()

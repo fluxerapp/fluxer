@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -362,11 +362,8 @@ impl AdminApiClient {
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserUsernameUpdateRequest {
             discriminator: discriminator
-                .map(generated_types::DiscriminatorType::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            username: generated_types::UsernameType::try_from(username)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
+                .map(|value| generated_types::DiscriminatorType::String(value.to_owned())),
+            username: generated_types::UsernameType::from(username.to_owned()),
         };
         let response = self
             .generated()
@@ -399,7 +396,8 @@ impl AdminApiClient {
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserBanRequest {
             duration_hours: i32::try_from(duration_hours)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
+                .map_err(|e| ApiError::Parse(e.to_string()))?
+                .into(),
             reason: reason.map(std::borrow::ToOwned::to_owned),
         };
         let resp: UserMutationResponse = self
@@ -430,10 +428,12 @@ impl AdminApiClient {
         days_until_deletion: u32,
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserDeletionScheduleRequest {
-            days_until_deletion: Some(
-                crate::api::generated::nonzero_u32(days_until_deletion, "days_until_deletion")
-                    .map_err(ApiError::Parse)?,
-            ),
+            days_until_deletion: crate::api::generated::nonzero_u32(
+                days_until_deletion,
+                "days_until_deletion",
+            )
+            .map_err(ApiError::Parse)?
+            .into(),
             public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
             reason_code: crate::api::generated::deletion_reason_code(reason_code, "reason_code")
                 .map_err(ApiError::Parse)?,
@@ -484,10 +484,10 @@ impl AdminApiClient {
         target_id: &str,
         category: &str,
     ) -> ApiResult<()> {
-        let category = generated_types::RemoveAdminUserRelationshipCategory::try_from(category)
+        let category = generated_types::RelationshipCategoryEnum::try_from(category)
             .map_err(|e| ApiError::Parse(e.to_string()))?;
         self.generated()
-            .remove_admin_user_relationship(&snowflake(user_id), target_id, category)
+            .remove_admin_user_relationship(&snowflake(user_id), &snowflake(target_id), category)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
@@ -498,7 +498,7 @@ impl AdminApiClient {
         user_id: &str,
         category: &str,
     ) -> ApiResult<super::types::RemoveRelationshipsResponse> {
-        let category = generated_types::ClearAdminUserRelationshipsCategory::try_from(category)
+        let category = generated_types::RelationshipCategoryEnum::try_from(category)
             .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
@@ -563,10 +563,6 @@ fn nonempty(value: Option<&str>) -> Option<&str> {
 
 fn bool_param(value: bool) -> &'static str {
     if value { "true" } else { "false" }
-}
-
-fn snowflake(value: &str) -> generated_types::SnowflakeType {
-    generated_types::SnowflakeType::from(value.to_owned())
 }
 
 fn user_flags(values: &[String]) -> Vec<generated_types::UserFlags> {

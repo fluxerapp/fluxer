@@ -423,11 +423,11 @@ function resolvePinnedCallChannel(directMessagesDisabled: boolean): Channel | nu
 
 interface DMChannelVisibilityControllerState {
 	readonly removalDelayMs: number;
-	readonly removalTimers: React.MutableRefObject<Map<string, number>>;
+	readonly removalTimers: React.RefObject<Map<string, number>>;
 	readonly orderedUnreadChannels: ReadonlyArray<Channel>;
 	readonly setVisibleChannels: React.Dispatch<React.SetStateAction<ReadonlyArray<Channel>>>;
 	readonly unreadChannels: ReadonlyArray<Channel>;
-	readonly unreadIdsRef: React.MutableRefObject<ReadonlySet<string>>;
+	readonly unreadIdsRef: React.RefObject<ReadonlySet<string>>;
 }
 
 interface ProjectVisibleDMChannelsRequest {
@@ -437,11 +437,11 @@ interface ProjectVisibleDMChannelsRequest {
 
 class DMChannelVisibilityController {
 	private readonly removalDelayMs: number;
-	private readonly removalTimers: React.MutableRefObject<Map<string, number>>;
+	private readonly removalTimers: React.RefObject<Map<string, number>>;
 	private readonly orderedUnreadChannels: ReadonlyArray<Channel>;
 	private readonly setVisibleChannels: React.Dispatch<React.SetStateAction<ReadonlyArray<Channel>>>;
 	private readonly unreadChannels: ReadonlyArray<Channel>;
-	private readonly unreadIdsRef: React.MutableRefObject<ReadonlySet<string>>;
+	private readonly unreadIdsRef: React.RefObject<ReadonlySet<string>>;
 
 	public constructor({
 		removalDelayMs,

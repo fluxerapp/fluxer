@@ -118,6 +118,7 @@ WORKDIR /usr/src/app
 COPY Cargo.lock ./
 COPY fluxer_common/ fluxer_common/
 COPY fluxer_app_proxy/ fluxer_app_proxy/
+COPY packages/constants/src/AgeGeos.json packages/constants/src/AgeGeos.json
 
 RUN printf '%s\n' \
 	'[workspace]' \

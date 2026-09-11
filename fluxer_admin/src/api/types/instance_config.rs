@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+pub use crate::api::generated::types::VoiceNoiseSuppressionBackendSchema as NoiseSuppressionBackend;
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InstanceConfigResponse {
     pub sso: SsoConfigResponse,
@@ -443,19 +445,6 @@ impl VoiceE2eeScope {
 pub const VOICE_NS_MAX_TARGETED_USERS: usize = 1_000;
 pub const VOICE_NS_MAX_GUILD_OVERRIDES: usize = 200;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum NoiseSuppressionBackend {
-    None,
-    #[default]
-    Standard,
-    Gate,
-    Speex,
-    Rnnoise,
-    Gtcrn,
-    DeepFilter,
-}
-
 impl NoiseSuppressionBackend {
     pub const ALL: [Self; 7] = [
         Self::None,
@@ -466,18 +455,6 @@ impl NoiseSuppressionBackend {
         Self::Gtcrn,
         Self::DeepFilter,
     ];
-
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::None => "none",
-            Self::Standard => "standard",
-            Self::Gate => "gate",
-            Self::Speex => "speex",
-            Self::Rnnoise => "rnnoise",
-            Self::Gtcrn => "gtcrn",
-            Self::DeepFilter => "deep_filter",
-        }
-    }
 
     pub fn label(&self) -> &'static str {
         match self {
@@ -490,12 +467,6 @@ impl NoiseSuppressionBackend {
             Self::DeepFilter => "DeepFilterNet",
         }
     }
-
-    pub fn from_value(value: &str) -> Option<Self> {
-        Self::ALL
-            .into_iter()
-            .find(|backend| backend.as_str() == value)
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -505,30 +476,19 @@ pub struct VoiceNoiseSuppressionGuildOverride {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct VoiceNoiseSuppressionConfigResponse {
-    #[serde(default)]
     pub enabled: bool,
-    #[serde(default)]
     pub config_version: u64,
-    #[serde(default)]
     pub default_backend: NoiseSuppressionBackend,
-    #[serde(default = "default_voice_noise_suppression_enabled_backends")]
     pub enabled_backends: Vec<NoiseSuppressionBackend>,
-    #[serde(default = "default_voice_noise_suppression_allow_user_override")]
     pub allow_user_override: bool,
-    #[serde(default)]
     pub rollout_basis_points: u32,
-    #[serde(default = "default_voice_noise_suppression_rollout_salt")]
     pub rollout_salt: String,
-    #[serde(default)]
     pub included_user_ids: Vec<String>,
-    #[serde(default)]
     pub excluded_user_ids: Vec<String>,
-    #[serde(default)]
     pub guild_overrides: Vec<VoiceNoiseSuppressionGuildOverride>,
-    #[serde(default)]
     pub stereo_enabled: bool,
-    #[serde(default = "default_voice_noise_suppression_strength")]
     pub suppression_strength: u32,
 }
 
@@ -538,33 +498,17 @@ impl Default for VoiceNoiseSuppressionConfigResponse {
             enabled: false,
             config_version: 0,
             default_backend: NoiseSuppressionBackend::Standard,
-            enabled_backends: default_voice_noise_suppression_enabled_backends(),
-            allow_user_override: default_voice_noise_suppression_allow_user_override(),
+            enabled_backends: NoiseSuppressionBackend::ALL.to_vec(),
+            allow_user_override: true,
             rollout_basis_points: 0,
-            rollout_salt: default_voice_noise_suppression_rollout_salt(),
+            rollout_salt: "voice-ns-v1".to_owned(),
             included_user_ids: Vec::new(),
             excluded_user_ids: Vec::new(),
             guild_overrides: Vec::new(),
             stereo_enabled: false,
-            suppression_strength: default_voice_noise_suppression_strength(),
+            suppression_strength: 80,
         }
     }
-}
-
-fn default_voice_noise_suppression_enabled_backends() -> Vec<NoiseSuppressionBackend> {
-    NoiseSuppressionBackend::ALL.to_vec()
-}
-
-fn default_voice_noise_suppression_allow_user_override() -> bool {
-    true
-}
-
-fn default_voice_noise_suppression_rollout_salt() -> String {
-    "voice-ns-v1".to_owned()
-}
-
-fn default_voice_noise_suppression_strength() -> u32 {
-    80
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -594,28 +538,19 @@ pub struct VoiceNoiseSuppressionConfigUpdateRequest {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
-    #[serde(default = "default_experiment_poll_interval_seconds")]
     pub poll_interval_seconds: u64,
-    #[serde(default = "default_experiment_poll_jitter_percent")]
     pub poll_jitter_percent: u32,
 }
 
 impl Default for ExperimentDeliveryConfigResponse {
     fn default() -> Self {
         Self {
-            poll_interval_seconds: default_experiment_poll_interval_seconds(),
-            poll_jitter_percent: default_experiment_poll_jitter_percent(),
+            poll_interval_seconds: 300,
+            poll_jitter_percent: 15,
         }
     }
-}
-
-fn default_experiment_poll_interval_seconds() -> u64 {
-    300
-}
-
-fn default_experiment_poll_jitter_percent() -> u32 {
-    15
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1024,31 +959,14 @@ pub struct CreateRegistrationUrlResponse {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    const VOICE_NOISE_SUPPRESSION_SCHEMA: &str = include_str!(
-        "../../../../packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts"
-    );
-
-    fn schema_backend_ids() -> Vec<String> {
-        let (_, rest) = VOICE_NOISE_SUPPRESSION_SCHEMA
-            .split_once("export const VOICE_NOISE_SUPPRESSION_BACKENDS = [")
-            .expect("backend list start");
-        let (block, _) = rest.split_once(']').expect("backend list end");
-        block
-            .split(',')
-            .map(|entry| entry.trim().trim_matches('\'').to_owned())
-            .filter(|entry| !entry.is_empty())
-            .collect()
-    }
+    use crate::api::generated::types as generated_types;
+    use serde_json::json;
 
     #[test]
-    fn noise_suppression_backend_ids_are_the_documented_list() {
+    fn noise_suppression_backend_choices_use_the_generated_wire_contract() {
         assert_eq!(
-            NoiseSuppressionBackend::ALL
-                .iter()
-                .map(NoiseSuppressionBackend::as_str)
-                .collect::<Vec<_>>(),
-            vec![
+            serde_json::to_value(NoiseSuppressionBackend::ALL).expect("serializable backends"),
+            json!([
                 "none",
                 "standard",
                 "gate",
@@ -1056,29 +974,70 @@ mod tests {
                 "rnnoise",
                 "gtcrn",
                 "deep_filter"
-            ]
+            ])
         );
+        assert!(serde_json::from_value::<NoiseSuppressionBackend>(json!("deepfilter")).is_err());
     }
 
     #[test]
-    fn noise_suppression_backend_ids_match_the_schema_contract() {
+    fn default_instance_experiment_config_matches_the_published_contract() {
+        let schema: serde_json::Value =
+            serde_json::from_str(include_str!("../../../openapi-admin.json"))
+                .expect("admin schema");
+        let noise = serde_json::from_value::<VoiceNoiseSuppressionConfigResponse>(json!({}))
+            .expect("default noise config");
+        let delivery = serde_json::from_value::<ExperimentDeliveryConfigResponse>(json!({}))
+            .expect("default delivery config");
+        let noise = serde_json::to_value(noise).expect("serializable noise config");
+        let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
+        let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
+            serde_json::from_value(noise.clone()).expect("generated noise config contract");
+        let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
+            serde_json::from_value(delivery.clone()).expect("generated delivery config contract");
         assert_eq!(
-            NoiseSuppressionBackend::ALL
-                .iter()
-                .map(|backend| backend.as_str().to_owned())
-                .collect::<Vec<_>>(),
-            schema_backend_ids()
+            serde_json::to_value(generated_noise).expect("serializable generated noise config"),
+            noise
         );
+        assert_eq!(
+            serde_json::to_value(generated_delivery)
+                .expect("serializable generated delivery config"),
+            delivery
+        );
+        for (name, value) in [
+            ("VoiceNoiseSuppressionConfigResponse", noise),
+            ("ExperimentDeliveryConfigResponse", delivery),
+        ] {
+            for (field, value) in value.as_object().expect("config object") {
+                assert_eq!(
+                    value, &schema["components"]["schemas"][name]["properties"][field]["default"],
+                    "{name}.{field}"
+                );
+            }
+        }
     }
 
     #[test]
-    fn noise_suppression_backend_round_trips_every_id() {
-        for backend in NoiseSuppressionBackend::ALL {
-            assert_eq!(
-                NoiseSuppressionBackend::from_value(backend.as_str()),
-                Some(backend)
-            );
-        }
-        assert_eq!(NoiseSuppressionBackend::from_value("deepfilter"), None);
+    fn noise_suppression_update_preserves_empty_lists_and_omitted_fields() {
+        let update = VoiceNoiseSuppressionConfigUpdateRequest {
+            enabled_backends: Some(Vec::new()),
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            guild_overrides: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::VoiceNoiseSuppressionConfigUpdateRequest>(
+            value.clone(),
+        )
+        .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"enabled_backends": [], "included_user_ids": [], "excluded_user_ids": [], "guild_overrides": []})
+        );
+        assert_eq!(
+            serde_json::to_value(VoiceNoiseSuppressionConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
     }
 }

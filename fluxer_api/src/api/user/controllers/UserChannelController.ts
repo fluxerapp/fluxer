@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DirectMessagesDisabledError} from '@fluxer/errors/src/domains/channel/DirectMessagesDisabledError';
-import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ChannelListResponse, ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {ChannelIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {z} from 'zod';
+
 import {createChannelID} from '../../BrandedTypes';
 import {LoginRequired} from '../../middleware/AuthMiddleware';
 import {GroupDmCreateProtectionMiddleware} from '../../middleware/GroupDmProtectionMiddleware';
@@ -22,7 +22,7 @@ export function UserChannelController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_private_channels',
 			summary: 'List private channels',
-			responseSchema: z.array(ChannelResponse),
+			responseSchema: ChannelListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Users'],

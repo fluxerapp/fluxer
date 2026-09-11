@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface TooltipEnvironment {
 	disabled: boolean;
@@ -243,7 +243,7 @@ export const tooltipStateMachine = setup({
 export type TooltipSnapshot = SnapshotFrom<typeof tooltipStateMachine>;
 
 export function createTooltipSnapshot(input: TooltipMachineInput = {}): TooltipSnapshot {
-	return getInitialSnapshot(tooltipStateMachine, input);
+	return initialTransition(tooltipStateMachine, input)[0];
 }
 
 export function transitionTooltipSnapshot(snapshot: TooltipSnapshot, event: TooltipMachineEvent): TooltipSnapshot {

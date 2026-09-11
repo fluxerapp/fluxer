@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {HarvestStatusResponseSchema} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
-import type {z} from 'zod';
+import type {HarvestStatus, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {UserID} from '../BrandedTypes';
 import type {UserHarvestRow} from '../database/types/UserTypes';
 
@@ -51,20 +50,7 @@ export class UserHarvest {
 		};
 	}
 
-	toResponse(): {
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-		started_at: string | null;
-		completed_at: string | null;
-		failed_at: string | null;
-		file_size: string | null;
-		progress_percent: number;
-		progress_step: string | null;
-		error_message: string | null;
-		download_url_expires_at: string | null;
-		expires_at: string | null;
-	} {
+	toResponse(): HarvestStatusResponse {
 		return {
 			harvest_id: this.harvestId.toString(),
 			status: this.getStatus(),
@@ -81,12 +67,10 @@ export class UserHarvest {
 		};
 	}
 
-	getStatus(): 'pending' | 'processing' | 'completed' | 'failed' {
+	getStatus(): HarvestStatus {
 		if (this.failedAt) return 'failed';
 		if (this.completedAt) return 'completed';
 		if (this.startedAt) return 'processing';
 		return 'pending';
 	}
 }
-
-export type UserHarvestResponse = z.infer<typeof HarvestStatusResponseSchema>;

@@ -5,57 +5,23 @@ import {MessageReferenceTypeSchema, MessageTypeSchema} from '@fluxer/schema/src/
 import {describe, expect, it} from 'vitest';
 
 describe('MessageTypeSchema', () => {
-	it('accepts default message type', () => {
-		const result = MessageTypeSchema.safeParse(MessageTypes.DEFAULT);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(MessageTypes.DEFAULT);
-		}
+	it.each(
+		Object.values(MessageTypes).filter((value) => value !== MessageTypes.CLIENT_SYSTEM),
+	)('accepts wire message type %i', (value) => {
+		expect(MessageTypeSchema.parse(value)).toBe(value);
 	});
-	it('accepts recipient add message type', () => {
-		const result = MessageTypeSchema.safeParse(MessageTypes.RECIPIENT_ADD);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(MessageTypes.RECIPIENT_ADD);
-		}
-	});
-	it('accepts call message type', () => {
-		const result = MessageTypeSchema.safeParse(MessageTypes.CALL);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(MessageTypes.CALL);
-		}
-	});
-	it('accepts reply message type', () => {
-		const result = MessageTypeSchema.safeParse(MessageTypes.REPLY);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(MessageTypes.REPLY);
-		}
-	});
-	it('rejects non-numeric values', () => {
-		const result = MessageTypeSchema.safeParse('invalid');
-		expect(result.success).toBe(false);
+
+	it.each([MessageTypes.CLIENT_SYSTEM, 8, -1, 0.5, '0', null])('rejects non-wire message type %j', (value) => {
+		expect(MessageTypeSchema.safeParse(value).success).toBe(false);
 	});
 });
 
 describe('MessageReferenceTypeSchema', () => {
-	it('accepts default reference type', () => {
-		const result = MessageReferenceTypeSchema.safeParse(MessageReferenceTypes.DEFAULT);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(MessageReferenceTypes.DEFAULT);
-		}
+	it.each(Object.values(MessageReferenceTypes))('accepts reference type %i', (value) => {
+		expect(MessageReferenceTypeSchema.parse(value)).toBe(value);
 	});
-	it('accepts forward reference type', () => {
-		const result = MessageReferenceTypeSchema.safeParse(MessageReferenceTypes.FORWARD);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(MessageReferenceTypes.FORWARD);
-		}
-	});
-	it('rejects non-numeric values', () => {
-		const result = MessageReferenceTypeSchema.safeParse('invalid');
-		expect(result.success).toBe(false);
+
+	it.each([2, -1, 0.5, '0', null])('rejects invalid reference type %j', (value) => {
+		expect(MessageReferenceTypeSchema.safeParse(value).success).toBe(false);
 	});
 });

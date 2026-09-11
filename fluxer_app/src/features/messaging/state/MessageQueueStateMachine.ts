@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MessageQueuePayloadRouteInput {
 	payloadType?: string;
@@ -275,7 +275,7 @@ export type MessageLocalSendRateLimitSnapshot = SnapshotFrom<typeof messageLocal
 export function createMessageQueuePayloadRouteSnapshot(
 	input: MessageQueuePayloadRouteInput,
 ): MessageQueuePayloadRouteSnapshot {
-	return getInitialSnapshot(messageQueuePayloadRouteMachine, input);
+	return initialTransition(messageQueuePayloadRouteMachine, input)[0];
 }
 
 export function transitionMessageQueuePayloadRouteSnapshot(
@@ -307,7 +307,7 @@ export function resolveMessageQueuePayloadRouteDecision(
 export function createMessageQueueSendExecutionSnapshot(
 	input: MessageQueueSendExecutionInput,
 ): MessageQueueSendExecutionSnapshot {
-	return getInitialSnapshot(messageQueueSendExecutionMachine, input);
+	return initialTransition(messageQueueSendExecutionMachine, input)[0];
 }
 
 export function transitionMessageQueueSendExecutionSnapshot(
@@ -337,7 +337,7 @@ export function resolveMessageQueueSendExecutionDecision(
 export function createMessageQueueRequestOutcomeSnapshot(
 	input: MessageQueueRequestOutcomeInput,
 ): MessageQueueRequestOutcomeSnapshot {
-	return getInitialSnapshot(messageQueueRequestOutcomeMachine, input);
+	return initialTransition(messageQueueRequestOutcomeMachine, input)[0];
 }
 
 export function transitionMessageQueueRequestOutcomeSnapshot(
@@ -369,7 +369,7 @@ export function resolveMessageQueueRequestOutcomeDecision(
 export function createMessageLocalSendRateLimitSnapshot(
 	input: MessageLocalSendRateLimitInput,
 ): MessageLocalSendRateLimitSnapshot {
-	return getInitialSnapshot(messageLocalSendRateLimitMachine, input);
+	return initialTransition(messageLocalSendRateLimitMachine, input)[0];
 }
 
 export function transitionMessageLocalSendRateLimitSnapshot(

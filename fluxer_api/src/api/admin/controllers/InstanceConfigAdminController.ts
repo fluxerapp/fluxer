@@ -17,13 +17,13 @@ import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/Gatew
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
 import {createUserID} from '../../BrandedTypes';
 import {Config} from '../../Config';
 import {
-	type InstanceBrandingConfig,
 	type InstancePolicyConfig,
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 	REGISTRATION_REJECTED_TRAIT,
@@ -229,13 +229,16 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				await getGatewayRolloutConfigPublisher().publish(validated);
 			}
 			if (data.voice_noise_suppression) {
-				const currentNoiseSuppression = await instanceConfigRepository.getVoiceNoiseSuppressionConfig();
-				const validated = VoiceNoiseSuppressionConfigSchema.parse({
-					...currentNoiseSuppression,
-					...data.voice_noise_suppression,
-					config_version: currentNoiseSuppression.config_version + 1,
-				});
-				await instanceConfigRepository.setVoiceNoiseSuppressionConfig(validated);
+				const patch = omitUndefinedFields(data.voice_noise_suppression);
+				if (Object.keys(patch).length > 0) {
+					const currentNoiseSuppression = await instanceConfigRepository.getVoiceNoiseSuppressionConfig();
+					const validated = VoiceNoiseSuppressionConfigSchema.parse({
+						...currentNoiseSuppression,
+						...patch,
+						config_version: currentNoiseSuppression.config_version + 1,
+					});
+					await instanceConfigRepository.setVoiceNoiseSuppressionConfig(validated);
+				}
 			}
 			if (data.experiment_delivery) {
 				const currentExperimentDelivery = await instanceConfigRepository.getExperimentDeliveryConfig();
@@ -435,7 +438,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				base64Image: image ?? null,
 				errorPath: 'image',
 			});
-			const brandingPatch: Partial<InstanceBrandingConfig> = {[`${kind}_url`]: prepared.newCdnUrl};
+			const brandingPatch: Partial<InstanceBranding> = {[`${kind}_url`]: prepared.newCdnUrl};
 			await instanceConfigRepository.setAppPublicConfig({branding: brandingPatch});
 			return ctx.json(await buildInstanceConfigResponse());
 		},

@@ -10,7 +10,8 @@ import {fileURLToPath} from 'node:url';
 import {extractRoutesFromControllers} from '@fluxer/openapi/src/extractors/RouteExtractor';
 import {installerChecksumLine} from '../src/installer/InstallerDigest.ts';
 
-const DOCS_ROOT = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
+import {DOCS_ROOT, listMarkdownFiles} from './DocsSource.ts';
+
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json');
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
@@ -237,22 +238,6 @@ interface SpecOperation {
 	readonly security: ReadonlyArray<Record<string, Array<string>>> | null;
 }
 
-async function walk(directory: string): Promise<Array<string>> {
-	const entries = await readdir(directory, {withFileTypes: true});
-	const files: Array<string> = [];
-	for (const entry of entries) {
-		const resolved = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await walk(resolved)));
-			continue;
-		}
-		if (entry.name.endsWith('.mdx') || entry.name.endsWith('.md')) {
-			files.push(resolved);
-		}
-	}
-	return files;
-}
-
 function stripVersionPrefix(routePath: string): string {
 	if (routePath === '/v1') {
 		return '/';
@@ -269,7 +254,7 @@ function shapeOf(method: string, routePath: string): string {
 }
 
 async function documentedRoutes(): Promise<Array<DocumentedRoute>> {
-	const files = await walk(DOCS_ROOT);
+	const files = await listMarkdownFiles(DOCS_ROOT);
 	const routes: Array<DocumentedRoute> = [];
 	for (const file of files) {
 		const source = await readFile(file, 'utf8');
@@ -313,7 +298,7 @@ const ALIAS_ROW_PATTERN =
 	/^\|\s*(GET|HEAD|POST|PATCH|PUT|DELETE|OPTIONS)\s*\|\s*`(\/[^`]+)`\s*\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*$/u;
 
 async function aliasDocumentedRoutes(): Promise<Array<AliasRoute>> {
-	const files = await walk(DOCS_ROOT);
+	const files = await listMarkdownFiles(DOCS_ROOT);
 	const aliases: Array<AliasRoute> = [];
 	for (const file of files) {
 		const source = await readFile(file, 'utf8');
@@ -796,7 +781,7 @@ console.log('enum names and error codes');
 
 	const enumRows: Array<{file: string; line: number; name: string}> = [];
 	const codeRows: Array<{file: string; line: number; code: string}> = [];
-	for (const file of await walk(DOCS_ROOT)) {
+	for (const file of await listMarkdownFiles(DOCS_ROOT)) {
 		const relative = path.relative(DOCS_ROOT, file);
 		const lines = (await readFile(file, 'utf8')).split('\n');
 		let inEnumTable = false;
@@ -978,7 +963,7 @@ console.log('rate limit buckets, limits and windows');
 		/([\d,]+) requests? per ([a-z0-9 ]+?)(?:,| for [^.]*?,) on the (?:shared )?`([a-z0-9_:@{}]+)` bucket/gu;
 	const problems: Array<string> = [];
 	let claims = 0;
-	for (const file of await walk(DOCS_ROOT)) {
+	for (const file of await listMarkdownFiles(DOCS_ROOT)) {
 		const relative = path.relative(DOCS_ROOT, file);
 		const lines = (await readFile(file, 'utf8')).split('\n');
 		for (let i = 0; i < lines.length; i += 1) {
@@ -1343,7 +1328,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 
 	const PIPE_TO_SHELL =
 		/(?:curl|wget|iwr|Invoke-WebRequest)[^\n|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh|iex|Invoke-Expression)\b/iu;
-	const docsPages = await walk(DOCS_ROOT);
+	const docsPages = await listMarkdownFiles(DOCS_ROOT);
 	for (const [name, source] of installers) {
 		if (PIPE_TO_SHELL.test(source)) {
 			problems.push(`${name} pipes a download into a shell`);

@@ -4,13 +4,14 @@ import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownCha
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	ChannelUpdateRequest,
+	ChannelUpdateRequestBody,
 	DeleteChannelQuery,
 	PermissionOverwriteCreateRequest,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {
 	ChannelResponse,
 	ChannelSlowmodeStateResponse,
-	RtcRegionResponse,
+	RtcRegionListResponse,
 } from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {
 	ChannelIdOverwriteIdParam,
@@ -18,7 +19,7 @@ import {
 	ChannelIdUserIdParam,
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import type {Context} from 'hono';
-import {z} from 'zod';
+
 import {requireSudoMode} from '../../auth/services/SudoVerificationService';
 import {createChannelID, createUserID} from '../../BrandedTypes';
 import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
@@ -98,7 +99,7 @@ export function ChannelController(app: HonoApp) {
 			summary: 'List RTC regions',
 			description:
 				'Returns available voice and video calling regions for the channel, used to optimise connection quality. Requires membership with call permissions.',
-			responseSchema: z.array(RtcRegionResponse),
+			responseSchema: RtcRegionListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: 'Channels',
@@ -141,6 +142,7 @@ export function ChannelController(app: HonoApp) {
 		}),
 		OpenAPI({
 			operationId: 'update_channel',
+			requestSchema: ChannelUpdateRequestBody,
 			summary: 'Update channel settings',
 			description:
 				'Modifies channel properties such as name, description, topic, nsfw flag, and slowmode. Requires management permissions in the channel.',

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 import {compareMessageIds, compareReadStateVersions} from './shared';
 
 export interface ReadStateServerAckInput {
@@ -107,7 +107,7 @@ export const readStateServerAckMachine = setup({
 export type ReadStateServerAckSnapshot = SnapshotFrom<typeof readStateServerAckMachine>;
 
 export function createReadStateServerAckSnapshot(input: ReadStateServerAckInput): ReadStateServerAckSnapshot {
-	return getInitialSnapshot(readStateServerAckMachine, input);
+	return initialTransition(readStateServerAckMachine, input)[0];
 }
 
 export function transitionReadStateServerAckSnapshot(

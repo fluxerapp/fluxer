@@ -2,6 +2,7 @@
 
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
+	StreamPreviewResponse,
 	StreamPreviewUploadBodySchema,
 	StreamPreviewUploadUrlBodySchema,
 	StreamPreviewUploadUrlResponseSchema,
@@ -54,7 +55,8 @@ export function StreamController(app: HonoApp) {
 			summary: 'Get stream preview image',
 			description:
 				'Retrieves the current preview thumbnail for a stream. Returns the image with no-store cache headers to ensure freshness.',
-			responseSchema: null,
+			responseSchema: StreamPreviewResponse,
+			responseContentType: 'image/*',
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: 'Channels',

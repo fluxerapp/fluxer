@@ -18,7 +18,7 @@ import {
 import {RelativePosition} from '@app/features/ui/RelativePosition';
 import {
 	assign,
-	getInitialSnapshot,
+	initialTransition,
 	type MachineSnapshot,
 	type MetaObject,
 	type NonReducibleUnknown,
@@ -380,7 +380,7 @@ export type GuildReorderSnapshot = MachineSnapshot<
 >;
 
 export function createGuildReorderSnapshot(): GuildReorderSnapshot {
-	return getInitialSnapshot(guildReorderStateMachine);
+	return initialTransition(guildReorderStateMachine)[0];
 }
 
 export function transitionGuildReorderSnapshot({

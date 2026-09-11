@@ -18,6 +18,7 @@ import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domain
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {HarvestCreationResponse, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
 	BulkDeleteSelfMessagesFilter,
 	HarvestSelfDataRequest,
@@ -48,10 +49,11 @@ import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import type {Message} from '../../models/Message';
 import type {PushSubscription} from '../../models/PushSubscription';
+import {serializeSelfMessageFilter} from '../../worker/utils/SelfMessageFilterPayload';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
 import type {IUserContentRepository} from '../repositories/IUserContentRepository';
-import {UserHarvest, type UserHarvestResponse} from '../UserHarvestModel';
+import {UserHarvest} from '../UserHarvestModel';
 import {UserHarvestRepository} from '../UserHarvestRepository';
 import {BaseUserUpdatePropagator} from './BaseUserUpdatePropagator';
 import {verifyHarvestDownloadToken} from './HarvestDownloadToken';
@@ -438,30 +440,21 @@ export class UserContentService {
 		await this.deleteMobileDevice(userId, deviceId);
 	}
 
-	async requestDataHarvest(userId: UserID): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	async requestDataHarvest(userId: UserID): Promise<HarvestCreationResponse> {
 		return this.requestDataHarvestInternal(userId, null);
 	}
 
-	async requestFilteredDataHarvest(params: {userId: UserID; filter: HarvestSelfDataRequest}): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	async requestFilteredDataHarvest(params: {
+		userId: UserID;
+		filter: HarvestSelfDataRequest;
+	}): Promise<HarvestCreationResponse> {
 		return this.requestDataHarvestInternal(params.userId, params.filter);
 	}
 
 	private async requestDataHarvestInternal(
 		userId: UserID,
 		filter: HarvestSelfDataRequest | null,
-	): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	): Promise<HarvestCreationResponse> {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) throw new UnknownUserError();
 		const harvestId = await this.snowflakeService.generate();
@@ -486,18 +479,7 @@ export class UserContentService {
 			harvestId: harvestId.toString(),
 			...(filter
 				? {
-						filter: {
-							scope: filter.scope,
-							includeDms: filter.include_dms,
-							includeDmsClosed: filter.include_dms_closed,
-							includeGroupDms: filter.include_group_dms,
-							includeGuilds: filter.include_guilds,
-							guildFilterMode: filter.guild_filter_mode,
-							excludedGuildIds: filter.excluded_guild_ids.map((id) => id.toString()),
-							includedGuildIds: filter.included_guild_ids.map((id) => id.toString()),
-							startTimestamp: filter.start_date ? new Date(filter.start_date).getTime() : null,
-							endTimestamp: filter.end_date ? new Date(filter.end_date).getTime() : null,
-						},
+						filter: serializeSelfMessageFilter(filter),
 					}
 				: {}),
 		});
@@ -508,7 +490,7 @@ export class UserContentService {
 		};
 	}
 
-	async getHarvestStatus(userId: UserID, harvestId: bigint): Promise<UserHarvestResponse> {
+	async getHarvestStatus(userId: UserID, harvestId: bigint): Promise<HarvestStatusResponse> {
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findByUserAndHarvestId(userId, harvestId);
 		if (!harvest) {
@@ -517,7 +499,7 @@ export class UserContentService {
 		return harvest.toResponse();
 	}
 
-	async getLatestHarvest(userId: UserID): Promise<UserHarvestResponse | null> {
+	async getLatestHarvest(userId: UserID): Promise<HarvestStatusResponse | null> {
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findLatestByUserId(userId);
 		return harvest ? harvest.toResponse() : null;
@@ -650,18 +632,7 @@ export class UserContentService {
 			'bulkDeleteSelfMessagesImmediate',
 			{
 				userId: userId.toString(),
-				filter: {
-					scope: filter.scope,
-					includeDms: filter.include_dms,
-					includeDmsClosed: filter.include_dms_closed,
-					includeGroupDms: filter.include_group_dms,
-					includeGuilds: filter.include_guilds,
-					guildFilterMode: filter.guild_filter_mode,
-					excludedGuildIds: filter.excluded_guild_ids.map((id) => id.toString()),
-					includedGuildIds: filter.included_guild_ids.map((id) => id.toString()),
-					startTimestamp: filter.start_date ? new Date(filter.start_date).getTime() : null,
-					endTimestamp: filter.end_date ? new Date(filter.end_date).getTime() : null,
-				},
+				filter: serializeSelfMessageFilter(filter),
 			},
 			{maxAttempts: 5},
 		);

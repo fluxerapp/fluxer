@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ChannelMessagesLoadInput {
 	isBefore: boolean;
@@ -124,7 +124,7 @@ export const channelMessagesLoadMachine = setup({
 export type ChannelMessagesLoadSnapshot = SnapshotFrom<typeof channelMessagesLoadMachine>;
 
 export function createChannelMessagesLoadSnapshot(input: ChannelMessagesLoadInput): ChannelMessagesLoadSnapshot {
-	return getInitialSnapshot(channelMessagesLoadMachine, input);
+	return initialTransition(channelMessagesLoadMachine, input)[0];
 }
 
 export function transitionChannelMessagesLoadSnapshot(
@@ -247,7 +247,7 @@ export const channelMessagesWindowMachine = setup({
 export type ChannelMessagesWindowSnapshot = SnapshotFrom<typeof channelMessagesWindowMachine>;
 
 export function createChannelMessagesWindowSnapshot(input: ChannelMessagesWindowInput): ChannelMessagesWindowSnapshot {
-	return getInitialSnapshot(channelMessagesWindowMachine, input);
+	return initialTransition(channelMessagesWindowMachine, input)[0];
 }
 
 export function transitionChannelMessagesWindowSnapshot(

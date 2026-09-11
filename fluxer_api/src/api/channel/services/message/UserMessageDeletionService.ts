@@ -10,6 +10,7 @@ import type {IStorageService} from '../../../infrastructure/IStorageService';
 import {Logger} from '../../../Logger';
 import type {Message} from '../../../models/Message';
 import {deleteMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
+import {chunkArray} from '../../../utils/ArrayUtils';
 import {ChannelEventDispatcher} from '../../../worker/services/ChannelEventDispatcher';
 import {purgeMessageAttachments} from './MessageHelpers';
 import {
@@ -48,14 +49,6 @@ interface MessageWithChannel {
 	channelId: ChannelID;
 	messageId: MessageID;
 	message: Message;
-}
-
-function chunkArray<T>(items: Array<T>, chunkSize: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	for (let i = 0; i < items.length; i += chunkSize) {
-		chunks.push(items.slice(i, i + chunkSize));
-	}
-	return chunks;
 }
 
 export class UserMessageDeletionService {

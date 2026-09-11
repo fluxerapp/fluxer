@@ -13,8 +13,8 @@ import {mapGuildMemberToResponse} from '../../guild/GuildModel';
 import {Logger} from '../../Logger';
 import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
 import {remapAuthorMessagesToDeletedUser} from '../../oauth/ApplicationMessageAuthorAnonymization';
+import {chunkArray} from '../../utils/ArrayUtils';
 import {getWorkerDependencies} from '../WorkerContext';
-import {chunkArray} from './utils/MessageDeletion';
 
 const PayloadSchema = z.object({
 	applicationId: z.string(),

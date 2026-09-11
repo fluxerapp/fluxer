@@ -2,6 +2,7 @@
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
+	AdminApiKeyListResponse,
 	CreateAdminApiKeyRequest,
 	CreateAdminApiKeyResponse,
 	type CreateAdminApiKeyResponse as CreateAdminApiKeyResponseType,
@@ -11,7 +12,7 @@ import {
 	UpdateAdminApiKeyRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {KeyIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {z} from 'zod';
+
 import {requireAdminACL} from '../../middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
@@ -72,7 +73,7 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_admin_api_keys',
 			summary: 'List admin API keys',
-			responseSchema: z.array(ListAdminApiKeyResponse),
+			responseSchema: AdminApiKeyListResponse,
 			statusCode: 200,
 			security: ['adminApiKey'],
 			tags: ['Admin'],

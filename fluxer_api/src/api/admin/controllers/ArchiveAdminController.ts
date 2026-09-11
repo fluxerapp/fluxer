@@ -3,8 +3,11 @@
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {
-	AdminArchiveCreateRequest,
 	AdminArchiveResponseSchema,
+	type ArchiveSubjectType,
+} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
+import {
+	AdminArchiveCreateRequest,
 	DownloadUrlResponseSchema,
 	GetArchiveResponseSchema,
 	ListArchivesQuery,
@@ -19,7 +22,7 @@ import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
 
-function canViewArchive(adminAcls: Set<string>, subjectType: 'user' | 'guild'): boolean {
+function canViewArchive(adminAcls: Set<string>, subjectType: ArchiveSubjectType): boolean {
 	if (adminAcls.has(AdminACLs.WILDCARD) || adminAcls.has(AdminACLs.ARCHIVE_VIEW_ALL)) return true;
 	if (subjectType === 'user') return adminAcls.has(AdminACLs.ARCHIVE_TRIGGER_USER);
 	return adminAcls.has(AdminACLs.ARCHIVE_TRIGGER_GUILD);

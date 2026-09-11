@@ -42,7 +42,6 @@ fn default_test_nats_url() -> String {
 }
 
 fn run_generators(for_typecheck: bool) -> Result<()> {
-    task_run(&["pnpm", "--filter", "@fluxer/config", "generate"])?;
     task_run(&["pnpm", "--filter", "@fluxer/schema", "generate"])?;
     if for_typecheck {
         return task_run(&["pnpm", "--filter", "@fluxer/i18n", "generate:types"]);

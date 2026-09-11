@@ -259,8 +259,8 @@ export const UpdateGuildRequest = UpdateGuildSettingsRequest.omit({guild_id: tru
 	name: UpdateGuildNameRequest.shape.name.optional(),
 	vanity_url_code: UpdateGuildVanityRequest.shape.vanity_url_code.optional(),
 	new_owner_id: TransferGuildOwnershipRequest.shape.new_owner_id.optional(),
-	add_features: UpdateGuildFeaturesRequest.shape.add_features.removeDefault().optional(),
-	remove_features: UpdateGuildFeaturesRequest.shape.remove_features.removeDefault().optional(),
+	add_features: UpdateGuildFeaturesRequest.shape.add_features.unwrap().optional(),
+	remove_features: UpdateGuildFeaturesRequest.shape.remove_features.unwrap().optional(),
 	fields: ClearGuildFieldsRequest.shape.fields.optional(),
 });
 

@@ -250,7 +250,7 @@ function SelectionToolbarSurface({
 	onFocusRequestHandled: () => void;
 	onDismiss: () => void;
 	toolbarRef: React.RefObject<HTMLElement | null>;
-	savedSelectionRef: React.MutableRefObject<ComposerSelectionOffsets | null>;
+	savedSelectionRef: React.RefObject<ComposerSelectionOffsets | null>;
 }) {
 	const {i18n} = useLingui();
 	const [focusIndex, setFocusIndex] = useState(0);

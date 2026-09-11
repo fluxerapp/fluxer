@@ -23,32 +23,13 @@ import {hashFileSha256} from '../../../infrastructure/StorageObjectHelpers';
 import {Logger} from '../../../Logger';
 import type {Channel} from '../../../models/Channel';
 import type {Message} from '../../../models/Message';
+import {mapWithConcurrency} from '../../../utils/ConcurrencyUtils';
 import type {AttachmentToProcess} from '../../AttachmentDTOs';
 import type {AttachmentUploadTraceRepository} from '../../repositories/message/AttachmentUploadTraceRepository';
 import {getContentType, isMediaFile, makeAttachmentCdnKey, validateAttachmentIds} from './MessageHelpers';
 
 const ATTACHMENT_PROCESSING_CONCURRENCY = 2;
 const METADATA_PROBE_DEGRADED_CONTEXT = 'message_attachment';
-
-async function mapWithConcurrency<T, R>(
-	items: ReadonlyArray<T>,
-	limit: number,
-	fn: (item: T, index: number) => Promise<R>,
-): Promise<Array<R>> {
-	if (items.length === 0) return [];
-	const results = new Array<R>(items.length);
-	let nextIndex = 0;
-	const worker = async (): Promise<void> => {
-		while (true) {
-			const index = nextIndex++;
-			if (index >= items.length) return;
-			results[index] = await fn(items[index], index);
-		}
-	};
-	const workerCount = Math.min(limit, items.length);
-	await Promise.all(Array.from({length: workerCount}, () => worker()));
-	return results;
-}
 
 interface ProcessAttachmentParams {
 	message: Message;

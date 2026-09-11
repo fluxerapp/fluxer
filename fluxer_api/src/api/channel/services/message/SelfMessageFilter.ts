@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {
+	BulkDeleteSelfMessagesGuildFilterMode,
+	BulkDeleteSelfMessagesScope,
+} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {UserID} from '../../../BrandedTypes';
 import type {Channel} from '../../../models/Channel';
 
-export type SelfMessageScopeMode = 'selected' | 'inaccessible_only';
-export type SelfMessageGuildFilterMode = 'exclude' | 'include_only';
-
 export interface SelfMessageFilter {
-	scope: SelfMessageScopeMode;
+	scope: BulkDeleteSelfMessagesScope;
 	includeDms: boolean;
 	includeDmsClosed: boolean;
 	includeGroupDms: boolean;
 	includeGuilds: boolean;
-	guildFilterMode: SelfMessageGuildFilterMode;
+	guildFilterMode: BulkDeleteSelfMessagesGuildFilterMode;
 	excludedGuildIds: ReadonlySet<string>;
 	includedGuildIds: ReadonlySet<string>;
 	startTimestamp: number | null;

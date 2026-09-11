@@ -10,7 +10,7 @@ import {useId} from 'react';
 type FieldErrors = ReadonlyMap<string, string> | null | undefined;
 
 export interface AuthFormControllerLike {
-	handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+	handleSubmit: (event: React.SubmitEvent<HTMLFormElement>) => void;
 	getValue: (name: string) => string;
 	setValue: (name: string, value: string) => void;
 	getError: (name: string) => string | null | undefined;

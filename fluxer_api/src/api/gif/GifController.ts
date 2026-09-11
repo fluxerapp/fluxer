@@ -2,14 +2,15 @@
 
 import {
 	GifFeaturedResponse,
+	GifListResponse,
 	GifLocaleQuery,
 	GifRegisterShareRequest,
-	GifResponse,
 	GifSearchQuery,
+	GifSearchSuggestionsResponse,
 } from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {Context, MiddlewareHandler} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {z} from 'zod';
+
 import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
@@ -61,7 +62,7 @@ function registerRoutes(app: HonoApp, cfg: PrefixConfig) {
 		OpenAPI({
 			operationId: `search_${operationSuffix}`,
 			summary: `Search GIFs${deprecated ? ' (deprecated alias)' : ''}`,
-			responseSchema: z.array(GifResponse),
+			responseSchema: GifListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: [...tags],
@@ -109,7 +110,7 @@ function registerRoutes(app: HonoApp, cfg: PrefixConfig) {
 		OpenAPI({
 			operationId: `get_trending_${operationSuffix}`,
 			summary: `Get trending GIFs${deprecated ? ' (deprecated alias)' : ''}`,
-			responseSchema: z.array(GifResponse),
+			responseSchema: GifListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: [...tags],
@@ -162,7 +163,7 @@ function registerRoutes(app: HonoApp, cfg: PrefixConfig) {
 		OpenAPI({
 			operationId: `get_${operationSuffix}_search_suggestions`,
 			summary: `Get GIF search suggestions${deprecated ? ' (deprecated alias)' : ''}`,
-			responseSchema: z.array(z.string()),
+			responseSchema: GifSearchSuggestionsResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: [...tags],

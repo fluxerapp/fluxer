@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import * as path from 'node:path';
-import {Node, type Project, type SourceFile, SyntaxKind} from 'ts-morph';
+import {type BinaryExpression, type Identifier, Node, type Project, type SourceFile, SyntaxKind} from 'ts-morph';
 
 export const UNRESOLVED = Symbol('unresolved');
 
@@ -22,12 +22,6 @@ const MAX_DEPTH = 48;
 
 function isPlainObject(value: Resolved): value is {readonly [key: string]: StaticValue} {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isTruthy(value: StaticValue): boolean {
-	if (Array.isArray(value)) return true;
-	if (isPlainObject(value)) return true;
-	return Boolean(value);
 }
 
 function unwrap(node: Node): Node {
@@ -113,7 +107,8 @@ export class StaticPathResolver {
 				return UNRESOLVED;
 			}
 			if (Array.isArray(target)) {
-				const index = typeof key === 'number' ? key : Number.parseInt(key, 10);
+				const index = Number(key);
+				if (typeof key === 'string' && String(index) !== key) return UNRESOLVED;
 				return Number.isInteger(index) && index >= 0 && index < target.length ? target[index] : UNRESOLVED;
 			}
 			if (isPlainObject(target)) {
@@ -168,14 +163,14 @@ export class StaticPathResolver {
 			if (condition === UNRESOLVED) {
 				return UNRESOLVED;
 			}
-			return this.evaluate(isTruthy(condition) ? node.getWhenTrue() : node.getWhenFalse(), scope, depth + 1);
+			return this.evaluate(condition ? node.getWhenTrue() : node.getWhenFalse(), scope, depth + 1);
 		}
 		if (Node.isPrefixUnaryExpression(node)) {
 			if (node.getOperatorToken() !== SyntaxKind.ExclamationToken) {
 				return UNRESOLVED;
 			}
 			const operand = this.evaluate(node.getOperand(), scope, depth + 1);
-			return operand === UNRESOLVED ? UNRESOLVED : !isTruthy(operand);
+			return operand === UNRESOLVED ? UNRESOLVED : !operand;
 		}
 		if (Node.isBinaryExpression(node)) {
 			return this.evaluateBinary(node, scope, depth);
@@ -183,20 +178,17 @@ export class StaticPathResolver {
 		return UNRESOLVED;
 	}
 
-	private evaluateBinary(node: Node, scope: Scope, depth: number): Resolved {
-		if (!Node.isBinaryExpression(node)) {
-			return UNRESOLVED;
-		}
+	private evaluateBinary(node: BinaryExpression, scope: Scope, depth: number): Resolved {
 		const operator = node.getOperatorToken().getText();
 		const left = this.evaluate(node.getLeft(), scope, depth + 1);
 		if (left === UNRESOLVED) {
 			return UNRESOLVED;
 		}
 		if (operator === '&&') {
-			return isTruthy(left) ? this.evaluate(node.getRight(), scope, depth + 1) : left;
+			return left ? this.evaluate(node.getRight(), scope, depth + 1) : left;
 		}
 		if (operator === '||') {
-			return isTruthy(left) ? left : this.evaluate(node.getRight(), scope, depth + 1);
+			return left || this.evaluate(node.getRight(), scope, depth + 1);
 		}
 		if (operator === '??') {
 			return left === null ? this.evaluate(node.getRight(), scope, depth + 1) : left;
@@ -229,10 +221,7 @@ export class StaticPathResolver {
 		return UNRESOLVED;
 	}
 
-	private evaluateIdentifier(node: Node, scope: Scope, depth: number): Resolved {
-		if (!Node.isIdentifier(node)) {
-			return UNRESOLVED;
-		}
+	private evaluateIdentifier(node: Identifier, scope: Scope, depth: number): Resolved {
 		const name = node.getText();
 		if (name === 'undefined') {
 			return UNRESOLVED;

@@ -4,16 +4,11 @@ import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUn
 import {getClient} from '@pkgs/cassandra/src/Client';
 import cassandra from 'cassandra-driver';
 import {Logger} from '../Logger';
+import {chunkArray} from '../utils/ArrayUtils';
 import {logBatch, logQuery} from './CassandraDevLogger';
 import {getIsDev} from './CassandraMetaRegistry';
 import type {CassandraParams, KvQueryMeta, PreparedQuery, QueryTemplate} from './CassandraTypes';
-import {
-	assertNoUndefinedParams,
-	chunkArray,
-	getStatementMeta,
-	normalizeExecuteArgs,
-	normalizeInParams,
-} from './CassandraTypes';
+import {assertNoUndefinedParams, getStatementMeta, normalizeExecuteArgs, normalizeInParams} from './CassandraTypes';
 
 const DEFAULT_MAX_PARTITION_KEYS_PER_QUERY = 100;
 

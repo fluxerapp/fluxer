@@ -7,8 +7,9 @@ import {
 	resolveVoiceNoiseSuppressionForCall,
 	VOICE_NOISE_SUPPRESSION_BACKENDS,
 	type VoiceNoiseSuppressionAssignmentResponse,
-	type VoiceNoiseSuppressionBackend,
 	type VoiceNoiseSuppressionConfig,
+	VoiceNoiseSuppressionConfigSchema,
+	VoiceNoiseSuppressionConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {describe, expect, test} from 'vitest';
@@ -17,6 +18,45 @@ const TARGETED_USER_ID = '1000000000000000001';
 const OTHER_USER_ID = '1000000000000000002';
 const GUILD_ID = '2000000000000000001';
 const OTHER_GUILD_ID = '2000000000000000002';
+
+describe('voice noise suppression configuration', () => {
+	test('derives defaults from the schema with independently owned arrays', () => {
+		const first = VoiceNoiseSuppressionConfigSchema.parse({});
+		const second = VoiceNoiseSuppressionConfigSchema.parse({});
+		expect(first).toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
+		first.enabled_backends.pop();
+		first.included_user_ids.push(TARGETED_USER_ID);
+		first.excluded_user_ids.push(OTHER_USER_ID);
+		first.guild_overrides.push({guild_id: GUILD_ID, backend: 'rnnoise'});
+		expect(second).toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
+	});
+
+	test.each([
+		{},
+		{enabled: false},
+		{enabled: undefined},
+		{suppression_strength: 42},
+	])('keeps partial updates free of configuration defaults: %j', (patch) => {
+		expect(VoiceNoiseSuppressionConfigUpdateRequest.parse(patch)).toEqual(patch);
+	});
+
+	test('does not accept a client-provided configuration version', () => {
+		expect(VoiceNoiseSuppressionConfigUpdateRequest.parse({config_version: 12})).toEqual({});
+	});
+
+	test.each([
+		{rollout_basis_points: -1},
+		{rollout_basis_points: 10001},
+		{suppression_strength: -1},
+		{suppression_strength: 101},
+		{rollout_salt: ' '},
+		{included_user_ids: ['not-an-id']},
+		{guild_overrides: [{guild_id: GUILD_ID, backend: 'unknown'}]},
+	])('applies the same validation to stored configuration and updates: %j', (value) => {
+		expect(VoiceNoiseSuppressionConfigSchema.safeParse(value).success).toBe(false);
+		expect(VoiceNoiseSuppressionConfigUpdateRequest.safeParse(value).success).toBe(false);
+	});
+});
 
 function createConfig(overrides: Partial<VoiceNoiseSuppressionConfig> = {}): VoiceNoiseSuppressionConfig {
 	return {
@@ -75,8 +115,13 @@ describe('experimentBucket', () => {
 		}
 	});
 
-	test('is stable for the same user id and salt', () => {
-		expect(experimentBucket(TARGETED_USER_ID, 'voice-ns-v1')).toBe(experimentBucket(TARGETED_USER_ID, 'voice-ns-v1'));
+	test.each([
+		{userId: TARGETED_USER_ID, salt: 'voice-ns-v1', expected: 8241},
+		{userId: TARGETED_USER_ID, salt: 'voice-ns-v2', expected: 8500},
+		{userId: OTHER_USER_ID, salt: 'voice-ns-v1', expected: 5384},
+		{userId: OTHER_USER_ID, salt: 'voice-ns-v2', expected: 1357},
+	])('preserves the assignment bucket for $userId with salt $salt', ({userId, salt, expected}) => {
+		expect(experimentBucket(userId, salt)).toBe(expected);
 	});
 
 	test('changes with the salt for at least most user ids', () => {
@@ -326,7 +371,7 @@ describe('resolveVoiceNoiseSuppressionForCall', () => {
 		{allowUserOverride: true, preference: 'gtcrn', expectedBackend: 'rnnoise', expectedSource: 'canary'},
 		{allowUserOverride: false, preference: 'speex', expectedBackend: 'rnnoise', expectedSource: 'canary'},
 		{allowUserOverride: true, preference: null, expectedBackend: 'rnnoise', expectedSource: 'canary'},
-	])('allow_user_override $allowUserOverride with preference $preference resolves to $expectedSource', ({
+	] as const)('allow_user_override $allowUserOverride with preference $preference resolves to $expectedSource', ({
 		allowUserOverride,
 		preference,
 		expectedBackend,
@@ -338,9 +383,10 @@ describe('resolveVoiceNoiseSuppressionForCall', () => {
 			allow_user_override: allowUserOverride,
 			enabled_backends: ['none', 'standard', 'speex', 'rnnoise'],
 		});
-		expect(
-			resolveVoiceNoiseSuppressionForCall(assignment, null, preference as VoiceNoiseSuppressionBackend | null),
-		).toMatchObject({backend: expectedBackend, source: expectedSource});
+		expect(resolveVoiceNoiseSuppressionForCall(assignment, null, preference)).toMatchObject({
+			backend: expectedBackend,
+			source: expectedSource,
+		});
 	});
 
 	test('a user override also outranks a guild rule', () => {

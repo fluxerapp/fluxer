@@ -120,7 +120,7 @@ impl AdminApiClient {
         query_params: Option<&[(&str, &str)]>,
     ) -> ApiResult<T> {
         let response = Self::send_request(self.request(Method::GET, path, query_params)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn post<T: DeserializeOwned>(
@@ -152,7 +152,7 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
         let response = Self::send_request(builder.json(body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn post_with_reason<T: DeserializeOwned>(
@@ -164,7 +164,7 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
         let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn post_void(&self, path: &str, body: Option<&serde_json::Value>) -> ApiResult<()> {
@@ -200,7 +200,7 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
         let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn patch_typed_with_reason<T, B>(
@@ -216,7 +216,7 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
         let response = Self::send_request(builder.json(body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn put_with_reason<T: DeserializeOwned>(
@@ -228,7 +228,7 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
         let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn put_typed_with_reason<T, B>(
@@ -244,7 +244,7 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
         let response = Self::send_request(builder.json(body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     pub async fn put_void_with_reason(
@@ -284,22 +284,22 @@ impl AdminApiClient {
         let builder =
             Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
         let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        Self::parse_response(response).await
     }
 
     async fn parse_void_response(response: reqwest::Response) -> ApiResult<()> {
+        Self::check_response_status(response).await.map(drop)
+    }
+
+    async fn check_response_status(response: reqwest::Response) -> ApiResult<reqwest::Response> {
         if response.status().is_success() {
-            Ok(())
-        } else {
-            let status = response.status().as_u16();
-            let text = response.text().await.map_err(|error| {
-                ApiError::Network(format!("failed to read error response body: {error}"))
-            })?;
-            Err(ApiError::Http {
-                status,
-                message: text,
-            })
+            return Ok(response);
         }
+        let status = response.status().as_u16();
+        let message = response.text().await.map_err(|error| {
+            ApiError::Network(format!("failed to read error response body: {error}"))
+        })?;
+        Err(ApiError::Http { status, message })
     }
 
     pub(crate) fn generated(&self) -> &crate::api::generated::GeneratedClient {
@@ -328,28 +328,16 @@ impl AdminApiClient {
         }
     }
 
-    async fn parse_response<T: DeserializeOwned>(
-        &self,
-        response: reqwest::Response,
-    ) -> ApiResult<T> {
-        let status = response.status();
-        if status.as_u16() == 204 {
-            return serde_json::from_value(serde_json::Value::Null)
-                .map_err(|e| ApiError::Parse(e.to_string()));
-        }
-        if !status.is_success() {
-            let text = response.text().await.map_err(|error| {
-                ApiError::Network(format!("failed to read error response body: {error}"))
-            })?;
-            return Err(ApiError::Http {
-                status: status.as_u16(),
-                message: text,
-            });
-        }
-        let text = response
-            .text()
-            .await
-            .map_err(|e| ApiError::Network(e.to_string()))?;
+    async fn parse_response<T: DeserializeOwned>(response: reqwest::Response) -> ApiResult<T> {
+        let response = Self::check_response_status(response).await?;
+        let text = if response.status() == reqwest::StatusCode::NO_CONTENT {
+            String::new()
+        } else {
+            response
+                .text()
+                .await
+                .map_err(|e| ApiError::Network(e.to_string()))?
+        };
         if text.is_empty() {
             return serde_json::from_value(serde_json::Value::Null)
                 .map_err(|e| ApiError::Parse(e.to_string()));
@@ -415,6 +403,87 @@ impl std::fmt::Display for ApiError {
             Self::Network(msg) => write!(f, "network error: {msg}"),
             Self::Http { status, message } => write!(f, "HTTP {status}: {message}"),
             Self::Parse(msg) => write!(f, "parse error: {msg}"),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{Value, json};
+
+    fn response(status: u16, body: &'static str) -> reqwest::Response {
+        axum::http::Response::builder()
+            .status(status)
+            .body(body)
+            .expect("valid response")
+            .into()
+    }
+
+    #[tokio::test]
+    async fn parses_successful_json_and_empty_responses() {
+        for (status, body, expected) in [
+            (200, r#"{"value":1}"#, json!({"value": 1})),
+            (201, "[1,2]", json!([1, 2])),
+            (202, "null", Value::Null),
+            (200, "", Value::Null),
+            (204, "ignored body", Value::Null),
+        ] {
+            let actual: Value = AdminApiClient::parse_response(response(status, body))
+                .await
+                .expect("valid response body");
+            assert_eq!(actual, expected, "HTTP {status}: {body}");
+        }
+    }
+
+    #[tokio::test]
+    async fn empty_responses_preserve_null_deserialization_errors() {
+        let expected = serde_json::from_value::<Vec<String>>(Value::Null)
+            .expect_err("null is not a list")
+            .to_string();
+        for (status, body) in [(200, ""), (204, "ignored body")] {
+            let error = AdminApiClient::parse_response::<Vec<String>>(response(status, body))
+                .await
+                .expect_err("missing list");
+            assert_eq!(error.to_string(), format!("parse error: {expected}"));
+        }
+    }
+
+    #[tokio::test]
+    async fn malformed_json_preserves_deserialization_errors() {
+        for body in [" ", "{", "not JSON"] {
+            let expected = serde_json::from_str::<Value>(body)
+                .expect_err("malformed JSON")
+                .to_string();
+            let error = AdminApiClient::parse_response::<Value>(response(200, body))
+                .await
+                .expect_err("malformed response");
+            assert_eq!(error.to_string(), format!("parse error: {expected}"));
+        }
+    }
+
+    #[tokio::test]
+    async fn void_responses_do_not_parse_successful_bodies() {
+        for status in [200, 201, 202, 204] {
+            AdminApiClient::parse_void_response(response(status, "not JSON"))
+                .await
+                .expect("successful void response");
+        }
+    }
+
+    #[tokio::test]
+    async fn typed_and_void_responses_preserve_http_errors() {
+        for status in [302, 400, 403, 404, 500] {
+            for body in ["", "plain error", r#"{"code":"FORBIDDEN"}"#] {
+                let typed = AdminApiClient::parse_response::<Value>(response(status, body))
+                    .await
+                    .map(drop);
+                let empty = AdminApiClient::parse_void_response(response(status, body)).await;
+                for result in [typed, empty] {
+                    let error = result.expect_err("unsuccessful response");
+                    assert_eq!(error.to_string(), format!("HTTP {status}: {body}"));
+                }
+            }
         }
     }
 }

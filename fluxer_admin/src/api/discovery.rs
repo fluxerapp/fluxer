@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -16,8 +16,7 @@ impl AdminApiClient {
             .list_admin_discovery_applications()
             .await
             .map_err(|e| self.generated_error(e))?;
-        response
-            .into_inner()
+        Vec::from(response.into_inner())
             .into_iter()
             .map(pending_discovery_application)
             .collect()
@@ -29,8 +28,7 @@ impl AdminApiClient {
             .list_admin_discovery_listings()
             .await
             .map_err(|e| self.generated_error(e))?;
-        response
-            .into_inner()
+        Vec::from(response.into_inner())
             .into_iter()
             .map(listed_guild)
             .collect()
@@ -41,16 +39,13 @@ impl AdminApiClient {
         guild_id: &str,
         reason: Option<&str>,
     ) -> ApiResult<DiscoveryApplicationResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
-        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::from(
-            generated_types::ApprovedDiscoveryAdminApplicationUpdateRequest {
-                reason: reason
-                    .map(generated_types::ApprovedDiscoveryAdminApplicationUpdateRequestReason::try_from)
-                    .transpose()
-                    .map_err(|e| ApiError::Parse(e.to_string()))?,
-                status: generated_types::ApprovedDiscoveryAdminApplicationUpdateRequestStatus::Approved,
-            },
-        );
+        let guild_id = snowflake(guild_id);
+        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::Approved {
+            reason: reason
+                .map(generated_types::DiscoveryReviewReason::try_from)
+                .transpose()
+                .map_err(|e| ApiError::Parse(e.to_string()))?,
+        };
         let response = self
             .generated()
             .update_admin_discovery_application(&guild_id, &body)
@@ -64,18 +59,11 @@ impl AdminApiClient {
         guild_id: &str,
         reason: &str,
     ) -> ApiResult<DiscoveryApplicationResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
-        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::from(
-            generated_types::RejectedDiscoveryAdminApplicationUpdateRequest {
-                reason:
-                    generated_types::RejectedDiscoveryAdminApplicationUpdateRequestReason::try_from(
-                        reason,
-                    )
-                    .map_err(|e| ApiError::Parse(e.to_string()))?,
-                status:
-                    generated_types::RejectedDiscoveryAdminApplicationUpdateRequestStatus::Rejected,
-            },
-        );
+        let guild_id = snowflake(guild_id);
+        let body = generated_types::DiscoveryAdminApplicationUpdateRequest::Rejected {
+            reason: generated_types::DiscoveryRejectionReason::try_from(reason)
+                .map_err(|e| ApiError::Parse(e.to_string()))?,
+        };
         let response = self
             .generated()
             .update_admin_discovery_application(&guild_id, &body)
@@ -89,7 +77,7 @@ impl AdminApiClient {
         guild_id: &str,
         reason: &str,
     ) -> ApiResult<DiscoveryApplicationResponse> {
-        let guild_id = generated_types::SnowflakeType::from(guild_id.to_owned());
+        let guild_id = snowflake(guild_id);
         let body = generated_types::DiscoveryAdminRemoveRequest {
             reason: generated_types::DiscoveryAdminRemoveRequestReason::try_from(reason)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,

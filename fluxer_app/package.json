@@ -278,7 +278,6 @@
 		"sharp": "catalog:",
 		"tsx": "catalog:",
 		"typed-css-modules": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	},
 	"packageManager": "pnpm@10.29.3"

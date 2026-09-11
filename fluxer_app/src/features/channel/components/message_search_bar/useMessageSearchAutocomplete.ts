@@ -90,10 +90,7 @@ const UNNAMED_DESCRIPTOR = msg({
 	comment: 'Short label in the channel and chat use message search autocomplete. Keep it concise.',
 });
 
-function resolveInputCursorPosition(
-	inputRef: React.MutableRefObject<LexicalSearchInputHandle | null>,
-	value: string,
-): number {
+function resolveInputCursorPosition(inputRef: React.RefObject<LexicalSearchInputHandle | null>, value: string): number {
 	const input = inputRef.current;
 	if (input == null) {
 		return value.length;

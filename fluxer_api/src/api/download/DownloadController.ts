@@ -10,6 +10,8 @@ import {
 	DesktopVersionsParam,
 	DesktopVersionsQuery,
 	DesktopVersionsResponse,
+	DownloadChecksumResponse,
+	DownloadFileResponse,
 	VersionInfoResponse,
 } from '@fluxer/schema/src/domains/download/DownloadSchemas';
 import type {Context, Hono} from 'hono';
@@ -204,7 +206,8 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_latest_desktop_version_checksum',
 			summary: 'Download latest desktop version checksum',
-			responseSchema: null,
+			responseSchema: DownloadChecksumResponse,
+			responseContentType: 'text/plain',
 			statusCode: 200,
 			security: [],
 			tags: ['Downloads'],
@@ -231,8 +234,10 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_latest_desktop_version',
 			summary: 'Download latest desktop version',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: DownloadFileResponse,
+			responseContentType: '*/*',
+			statusCode: [200, 206, 302],
+			bodylessStatusCodes: [302],
 			security: [],
 			tags: ['Downloads'],
 			description:
@@ -288,7 +293,8 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_desktop_version_checksum',
 			summary: 'Download desktop version checksum',
-			responseSchema: null,
+			responseSchema: DownloadChecksumResponse,
+			responseContentType: 'text/plain',
 			statusCode: 200,
 			security: [],
 			tags: ['Downloads'],
@@ -315,8 +321,10 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_desktop_version',
 			summary: 'Download desktop version',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: DownloadFileResponse,
+			responseContentType: '*/*',
+			statusCode: [200, 206, 302],
+			bodylessStatusCodes: [302],
 			security: [],
 			tags: ['Downloads'],
 			description:
@@ -340,8 +348,10 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_file',
 			summary: 'Download file',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: DownloadFileResponse,
+			responseContentType: '*/*',
+			statusCode: [200, 206, 302],
+			bodylessStatusCodes: [302],
 			security: [],
 			tags: ['Downloads'],
 			description:

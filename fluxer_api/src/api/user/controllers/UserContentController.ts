@@ -4,6 +4,7 @@ import {Readable} from 'node:stream';
 import {HarvestIdParam, MessageIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {
+	HarvestArchiveResponse,
 	HarvestCreationResponseSchema,
 	HarvestDownloadUrlResponse,
 	HarvestStatusResponseSchema,
@@ -280,8 +281,9 @@ export function UserContentController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'download_data_harvest_archive',
 			summary: 'Download data harvest archive',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: HarvestArchiveResponse,
+			responseContentType: 'application/zip',
+			statusCode: [200, 206],
 			security: [],
 			tags: ['Users'],
 			description:

@@ -7,7 +7,6 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"generate": "node -e \"\"",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"typecheck": "tsgo --noEmit"
@@ -16,7 +15,7 @@
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"yaml": "catalog:"
 	}
 }

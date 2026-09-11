@@ -48,6 +48,9 @@ const AuditLogOptionsSchema = z.object({
 	temporary: z.boolean().optional().describe('Whether the invite grants temporary membership'),
 	uses: z.number().optional().describe('Number of times the invite has been used'),
 });
+
+export type AuditLogOptions = z.infer<typeof AuditLogOptionsSchema>;
+
 export const GuildAuditLogEntryResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this audit log entry'),
 	action_type: AuditLogActionTypeSchema,

@@ -13,6 +13,7 @@ pub mod error_display;
 pub mod form;
 pub mod icons;
 pub mod media;
+pub mod message_data;
 pub mod message_list;
 pub mod nsfw_indicators;
 pub mod page_container;

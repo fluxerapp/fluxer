@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {readFileSync} from 'node:fs';
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import {normalizePublicEndpoint} from '@fluxer/config/src/EndpointDerivation';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
-const SELF_HOSTING = path.join(fileURLToPath(new URL('../../../../', import.meta.url)), 'deploy/self-hosting');
-
-const compose = readFileSync(path.join(SELF_HOSTING, 'docker-compose.yml'), 'utf8');
-const lines = compose.split('\n');
+import {serviceEnvironment, serviceList, serviceNames} from './SelfHostingCompose';
 
 const DOMAIN = 'chat.example.com';
 const PUBLIC_PORT = '19080';
@@ -55,96 +49,7 @@ const ORIGIN_ONLY_ENV: Record<string, string> = {
 	FLUXER_HTTPS_PORT: ORIGIN_PORT,
 };
 
-const indentOf = (line: string): number => line.length - line.trimStart().length;
-
-function unquote(value: string): string {
-	const trimmed = value.trim();
-	const quote = trimmed.slice(0, 1);
-	const quoted = (quote === '"' || quote === "'") && trimmed.length > 1 && trimmed.endsWith(quote);
-	return quoted ? trimmed.slice(1, -1) : trimmed;
-}
-
-function anchorStart(anchor: string): number {
-	const start = lines.findIndex((line) => line.startsWith('x-') && line.endsWith(`&${anchor}`));
-	if (start === -1) {
-		throw new Error(`docker-compose.yml has no &${anchor} anchor`);
-	}
-	return start;
-}
-
-function mapping(start: number, indent: number): Map<string, string> {
-	const entries = new Map<string, string>();
-	for (let index = start; index < lines.length; index += 1) {
-		const line = lines[index];
-		if (line.trim().length === 0 || line.trimStart().startsWith('#')) {
-			continue;
-		}
-		if (indentOf(line) < indent) {
-			break;
-		}
-		if (indentOf(line) > indent) {
-			continue;
-		}
-		const merge = /^<<: \*([a-z][a-z0-9-]*)$/u.exec(line.trim());
-		if (merge) {
-			for (const [key, value] of mapping(anchorStart(merge[1]) + 1, 2)) {
-				entries.set(key, value);
-			}
-			continue;
-		}
-		const entry = /^([A-Za-z_][A-Za-z0-9_]*): (.*)$/u.exec(line.trim());
-		if (entry) {
-			entries.set(entry[1], unquote(entry[2]));
-		}
-	}
-	return entries;
-}
-
-function serviceSection(service: string, key: string): number {
-	const start = lines.indexOf(`  ${service}:`);
-	if (start === -1) {
-		throw new Error(`docker-compose.yml has no ${service} service`);
-	}
-	for (let index = start + 1; index < lines.length; index += 1) {
-		const line = lines[index];
-		if (line.trim().length > 0 && indentOf(line) <= 2) {
-			break;
-		}
-		if (line === `    ${key}:`) {
-			return index;
-		}
-	}
-	return -1;
-}
-
-function serviceList(service: string, key: string): Array<string> {
-	const start = serviceSection(service, key);
-	if (start === -1) {
-		return [];
-	}
-	const items: Array<string> = [];
-	for (let index = start + 1; index < lines.length; index += 1) {
-		const line = lines[index];
-		if (line.trim().length === 0) {
-			continue;
-		}
-		if (indentOf(line) <= 4) {
-			break;
-		}
-		const item = /^- (.*)$/u.exec(line.trim());
-		if (item) {
-			items.push(unquote(item[1]));
-		}
-	}
-	return items;
-}
-
 const SERVICES_WITHOUT_ENDPOINT_REPAIR = new Set(['edge']);
-
-function serviceNames(): Array<string> {
-	const section = compose.slice(compose.indexOf('\nservices:\n'), compose.indexOf('\nnetworks:\n'));
-	return [...section.matchAll(/\n {2}([a-z][a-z0-9_-]*):\n/gu)].map(([, name]) => name);
-}
 
 function closingBrace(value: string, open: number): number {
 	let depth = 0;
@@ -196,7 +101,7 @@ function expand(value: string, env: Record<string, string>): string {
 
 function expandedEnvironment(service: string, env: Record<string, string>): Record<string, string> {
 	const expanded: Record<string, string> = {};
-	for (const [key, value] of mapping(serviceSection(service, 'environment') + 1, 6)) {
+	for (const [key, value] of Object.entries(serviceEnvironment(service))) {
 		expanded[key] = expand(value, env);
 	}
 	return expanded;
@@ -257,7 +162,7 @@ function browserFacingUrls(config: MasterConfig): Array<[string, string]> {
 	return entries.filter(([, value]) => publicUrl(value) !== null);
 }
 
-async function loadApiConfig(env: Record<string, string>): Promise<MasterConfig | Error> {
+async function loadApiConfig(env: Record<string, string>): Promise<MasterConfig> {
 	for (const key of Object.keys(process.env)) {
 		if (key.startsWith('FLUXER_')) {
 			vi.stubEnv(key, undefined);
@@ -268,16 +173,31 @@ async function loadApiConfig(env: Record<string, string>): Promise<MasterConfig 
 			vi.stubEnv(key, value);
 		}
 	}
-	try {
-		return await loadConfig();
-	} catch (error) {
-		return error instanceof Error ? error : new Error(String(error));
-	}
+	return loadConfig();
 }
+
+describe('Compose environment interpolation', () => {
+	test.each([
+		[`\${VALUE}`, {VALUE: 'set'}, 'set'],
+		['$VALUE/path', {VALUE: 'set'}, 'set/path'],
+		[`\${VALUE:-fallback}`, {VALUE: ''}, 'fallback'],
+		[`\${VALUE:-\${OTHER:-fallback}}`, {OTHER: 'nested'}, 'nested'],
+		[`\${VALUE:+alternate}`, {VALUE: 'set'}, 'alternate'],
+		[`\${VALUE:+alternate}`, {}, ''],
+		[`\${VALUE:?required}`, {VALUE: 'set'}, 'set'],
+	] as const)('expands %s with %j to %s', (source, environment, expected) => {
+		expect(expand(source, environment)).toBe(expected);
+	});
+
+	test('rejects a missing required value and unbalanced interpolation', () => {
+		expect(() => expand(`\${VALUE:?required}`, {})).toThrow('VALUE is required: required');
+		expect(() => expand('${VALUE:-fallback', {})).toThrow('unbalanced interpolation');
+	});
+});
 
 describe('the shipped compose stack expanded on a non-default port', () => {
 	test('every service handed a public URL is handed the base domain and port that repair it', () => {
-		const starved = serviceNames()
+		const starved = serviceNames
 			.filter((service) => !SERVICES_WITHOUT_ENDPOINT_REPAIR.has(service))
 			.filter((service) => {
 				const environment = expandedEnvironment(service, PORT_ONLY_ENV);
@@ -289,9 +209,10 @@ describe('the shipped compose stack expanded on a non-default port', () => {
 	});
 
 	test('every public URL the stack hands a browser carries the port', () => {
-		const entries = serviceNames()
+		const entries = serviceNames
 			.filter((service) => !SERVICES_WITHOUT_ENDPOINT_REPAIR.has(service))
 			.flatMap((service) => repairedPublicUrls(service, PORT_ONLY_ENV));
+		expect(entries.length).toBeGreaterThan(0);
 		expect(withoutPort(entries, PUBLIC_PORT)).toEqual([]);
 	});
 
@@ -319,23 +240,17 @@ describe('a public origin carrying a port while FLUXER_PUBLIC_PORT stays standar
 	test('the compose overrides all carry the origin port', () => {
 		const environment = expandedEnvironment('api', ORIGIN_ONLY_ENV);
 		const entries = publicUrlNames(environment).map((name): [string, string] => [name, environment[name]]);
+		expect(entries.length).toBeGreaterThan(0);
 		expect(withoutPort(entries, ORIGIN_PORT)).toEqual([]);
 	});
 
-	test('the loaded config either ports every public URL or refuses the split', async () => {
+	test('the loaded config ports every public URL using the explicit origin', async () => {
 		const loaded = await loadApiConfig(ORIGIN_ONLY_ENV);
-		if (loaded instanceof Error) {
-			expect(loaded.message).not.toBe('');
-			return;
-		}
 		expect(withoutPort(browserFacingUrls(loaded), ORIGIN_PORT)).toEqual([]);
 	});
 
 	test('the port-only recipe ports every public URL the loaded config exposes', async () => {
 		const loaded = await loadApiConfig(PORT_ONLY_ENV);
-		if (loaded instanceof Error) {
-			throw loaded;
-		}
 		expect(withoutPort(browserFacingUrls(loaded), PUBLIC_PORT)).toEqual([]);
 	});
 });

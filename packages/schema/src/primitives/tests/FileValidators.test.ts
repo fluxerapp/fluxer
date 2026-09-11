@@ -2,190 +2,148 @@
 
 import {AVATAR_MAX_SIZE, EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {base64LengthForBytes, createBase64StringType, FilenameType} from '@fluxer/schema/src/primitives/FileValidators';
+import {
+	base64LengthForBytes,
+	createBase64StringType,
+	FilenameType,
+	isValidBase64,
+} from '@fluxer/schema/src/primitives/FileValidators';
 import {describe, expect, it} from 'vitest';
 
 describe('FilenameType', () => {
-	it('accepts valid filenames', () => {
-		const result = FilenameType.safeParse('document.pdf');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('document.pdf');
-		}
+	it.each([
+		['document.pdf', 'document.pdf'],
+		['résumé-東京.txt', 'résumé-東京.txt'],
+		['file123.txt', 'file123.txt'],
+		['my_file-name.txt', 'my_file-name.txt'],
+		['path/to/file.txt', 'path_to_file.txt'],
+		['path\\to\\file.txt', 'path_to_file.txt'],
+		['..file..txt', '.file.txt'],
+		['video..mp4', 'video.mp4'],
+		['CON.txt', '_CON.txt'],
+		['lpt9', '_lpt9'],
+		['console.txt', 'console.txt'],
+		['my file.txt', 'my_file.txt'],
+		['file\x00name.txt', 'filename.txt'],
+		['file.<.txt', 'file_txt'],
+		['<>:"|?*', 'unnamed'],
+		['...', 'unnamed'],
+		['  file.txt  ', 'file.txt'],
+		['   ', 'unnamed'],
+	])('normalizes %j to %j', (input, expected) => {
+		expect(FilenameType.parse(input)).toBe(expected);
 	});
-	it('accepts filenames with unicode characters', () => {
-		const result = FilenameType.safeParse('archivo.txt');
-		expect(result.success).toBe(true);
+
+	it.each(['', 'a'.repeat(256)])('rejects empty or oversized input %#', (input) => {
+		expect(FilenameType.safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.FILENAME_LENGTH_INVALID}]},
+		});
 	});
-	it('accepts filenames with numbers', () => {
-		const result = FilenameType.safeParse('file123.txt');
-		expect(result.success).toBe(true);
+
+	it('bounds input length before normalization', () => {
+		const filename = 'a'.repeat(255);
+		expect(FilenameType.parse(filename)).toBe(filename);
+		expect(FilenameType.safeParse(`${' '.repeat(255)}a`).success).toBe(false);
 	});
-	it('accepts filenames with underscores and hyphens', () => {
-		const result = FilenameType.safeParse('my_file-name.txt');
-		expect(result.success).toBe(true);
+});
+
+describe('isValidBase64', () => {
+	it.each(['', 'YQ==', 'YWI=', 'YWJj', 'SGVsbG8gV29ybGQ=', 'YWJj+/8='])('accepts canonical encoding %j', (input) => {
+		expect(isValidBase64(input)).toBe(true);
 	});
-	it('replaces path separators with underscores', () => {
-		const result = FilenameType.safeParse('path/to/file.txt');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('path_to_file.txt');
-		}
+
+	it.each([
+		'YQ',
+		'YQ=',
+		'YQ===',
+		'====',
+		'Y=Q=',
+		'YR==',
+		'YWJ=',
+		'YWJ_',
+		'YWJ-',
+		'YW J',
+		'éAAA',
+	])('rejects malformed or noncanonical encoding %j', (input) => {
+		expect(isValidBase64(input)).toBe(false);
 	});
-	it('replaces backslashes with underscores', () => {
-		const result = FilenameType.safeParse('path\\to\\file.txt');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('path_to_file.txt');
-		}
-	});
-	it('collapses repeated dots into a single dot', () => {
-		const result = FilenameType.safeParse('..file..txt');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('.file.txt');
-		}
-	});
-	it('keeps the extension when the name contains repeated dots', () => {
-		const result = FilenameType.safeParse('video..mp4');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('video.mp4');
-		}
-	});
-	it('handles Windows reserved names by prefixing', () => {
-		const result = FilenameType.safeParse('CON.txt');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('_CON.txt');
-		}
-	});
-	it('replaces spaces with underscores', () => {
-		const result = FilenameType.safeParse('my file.txt');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('my_file.txt');
-		}
-	});
-	it('removes null bytes', () => {
-		const result = FilenameType.safeParse('file\x00name.txt');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).not.toContain('\x00');
-		}
-	});
-	it('falls back to "unnamed" for invalid filenames', () => {
-		const result = FilenameType.safeParse('...');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('unnamed');
-		}
-	});
-	it('rejects filenames exceeding max length', () => {
-		const result = FilenameType.safeParse('a'.repeat(256));
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.FILENAME_LENGTH_INVALID);
-		}
-	});
-	it('rejects empty filenames', () => {
-		const result = FilenameType.safeParse('');
-		expect(result.success).toBe(false);
-	});
-	it('trims whitespace', () => {
-		const result = FilenameType.safeParse('  file.txt  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('file.txt');
-		}
+
+	it.each([1, 2, 3, 255, 256])('accepts a byte round trip of length %i', (length) => {
+		const bytes = Buffer.from(Array.from({length}, (_, index) => index % 256));
+		const encoded = bytes.toString('base64');
+		expect(isValidBase64(encoded)).toBe(true);
+		expect(Buffer.from(encoded, 'base64')).toEqual(bytes);
 	});
 });
 
 describe('createBase64StringType', () => {
-	it('accepts valid base64 strings', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('SGVsbG8gV29ybGQ=');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('SGVsbG8gV29ybGQ=');
-		}
+	const schema = createBase64StringType(1, 100);
+
+	it.each([
+		['SGVsbG8gV29ybGQ=', 'SGVsbG8gV29ybGQ='],
+		['data:image/png;base64,SGVsbG8gV29ybGQ=', 'SGVsbG8gV29ybGQ='],
+		['  SGVsbG8gV29ybGQ=  ', 'SGVsbG8gV29ybGQ='],
+		['YWJj', 'YWJj'],
+		['YQ==', 'YQ=='],
+		['YWJj+/8=', 'YWJj+/8='],
+	])('normalizes %j', (input, expected) => {
+		expect(schema.parse(input)).toBe(expected);
 	});
-	it('accepts base64 with data URL prefix and extracts base64 part', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('data:image/png;base64,SGVsbG8gV29ybGQ=');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('SGVsbG8gV29ybGQ=');
-		}
+
+	it.each(['Invalid!Base64@', 'YQ===', 'YR==', 'YWJ='])('rejects invalid payload %j', (input) => {
+		expect(schema.safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.INVALID_BASE64_FORMAT}]},
+		});
 	});
-	it('accepts base64 without padding', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('YQ==');
-		expect(result.success).toBe(true);
+
+	it.each([
+		{min: 1, max: 10, input: 'SGVsbG8gV29ybGQ='},
+		{min: 100, max: 200, input: 'YQ=='},
+	])('enforces encoded-length bounds $min..$max', ({min, max, input}) => {
+		expect(createBase64StringType(min, max).safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.BASE64_LENGTH_INVALID}]},
+		});
 	});
-	it('rejects invalid base64 characters', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('Invalid!Base64@');
-		expect(result.success).toBe(false);
+
+	it('checks the extracted payload length, not the data URL prefix', () => {
+		expect(createBase64StringType(4, 4).parse('data:image/png;base64,YQ==')).toBe('YQ==');
 	});
-	it('rejects base64 exceeding max length', () => {
-		const Base64Type = createBase64StringType(1, 10);
-		const result = Base64Type.safeParse('SGVsbG8gV29ybGQ=');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.BASE64_LENGTH_INVALID);
-		}
-	});
-	it('rejects base64 shorter than min length', () => {
-		const Base64Type = createBase64StringType(100, 200);
-		const result = Base64Type.safeParse('YQ==');
-		expect(result.success).toBe(false);
-	});
-	it('rejects base64 with incorrect padding', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('YQ===');
-		expect(result.success).toBe(false);
-	});
-	it('rejects empty base64 even when min is 0', () => {
-		const Base64Type = createBase64StringType(0, 100);
-		const result = Base64Type.safeParse('');
-		expect(result.success).toBe(false);
-	});
-	it('handles base64 with plus and slash characters', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('YWJj+/8=');
-		expect(result.success).toBe(true);
-	});
-	it('trims whitespace before validation', () => {
-		const Base64Type = createBase64StringType(1, 100);
-		const result = Base64Type.safeParse('  SGVsbG8gV29ybGQ=  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('SGVsbG8gV29ybGQ=');
-		}
+
+	it('rejects an empty payload even when the configured minimum is zero', () => {
+		expect(createBase64StringType(0, 100).safeParse('')).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.INVALID_BASE64_FORMAT}]},
+		});
 	});
 });
 
 describe('base64LengthForBytes', () => {
-	it('returns the exact encoded length of the byte ceiling', () => {
-		expect(base64LengthForBytes(EMOJI_MAX_SIZE)).toBe(699052);
-		expect(base64LengthForBytes(AVATAR_MAX_SIZE)).toBe(13981016);
+	it.each([
+		[0, 0],
+		[1, 4],
+		[2, 4],
+		[3, 4],
+		[4, 8],
+		[EMOJI_MAX_SIZE, 699052],
+		[AVATAR_MAX_SIZE, 13981016],
+	])('encodes a ceiling of %i bytes in %i characters', (bytes, expected) => {
+		expect(base64LengthForBytes(bytes)).toBe(expected);
 	});
-	it('returns a multiple of four so isValidBase64 can accept the bound', () => {
-		for (const bytes of [1, 2, 3, 255, 256, EMOJI_MAX_SIZE, STICKER_MAX_SIZE, AVATAR_MAX_SIZE]) {
-			expect(base64LengthForBytes(bytes) % 4).toBe(0);
-		}
+
+	it.each([255, 256, STICKER_MAX_SIZE])('rounds %i bytes up to complete base64 blocks', (bytes) => {
+		expect(base64LengthForBytes(bytes) % 4).toBe(0);
 	});
-	it('accepts an encoding of the full byte ceiling', () => {
-		const Base64Type = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
-		const encoded = Buffer.alloc(EMOJI_MAX_SIZE, 1).toString('base64');
-		expect(encoded.length).toBeLessThanOrEqual(base64LengthForBytes(EMOJI_MAX_SIZE));
-		expect(Base64Type.safeParse(encoded).success).toBe(true);
-	});
-	it('accepts an encoding one byte over the ceiling so the byte check stays authoritative', () => {
-		const Base64Type = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
-		const encoded = Buffer.alloc(EMOJI_MAX_SIZE + 1, 1).toString('base64');
+
+	it.each([
+		EMOJI_MAX_SIZE,
+		EMOJI_MAX_SIZE + 1,
+	])('accepts %i encoded bytes; decoded-byte limits remain authoritative', (bytes) => {
+		const schema = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
+		const encoded = Buffer.alloc(bytes, 1).toString('base64');
 		expect(encoded.length).toBe(base64LengthForBytes(EMOJI_MAX_SIZE));
-		expect(Base64Type.safeParse(encoded).success).toBe(true);
+		expect(schema.parse(encoded)).toBe(encoded);
 	});
 });

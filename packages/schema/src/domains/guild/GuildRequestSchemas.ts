@@ -134,7 +134,7 @@ export const GuildUpdateRequest = z
 			),
 	})
 	.partial()
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type GuildUpdateRequest = z.infer<typeof GuildUpdateRequest>;
 
@@ -188,7 +188,7 @@ export type MyGuildMemberUpdateRequest = z.infer<typeof MyGuildMemberUpdateReque
 export const GuildRoleCreateRequest = z.object({
 	name: createStringType(1, 100).describe('The name of the role (1-100 characters)'),
 	color: ColorType.default(0x000000).describe('The color of the role as an integer (default: 0)'),
-	permissions: UnsignedInt64Type.optional().describe('fluxer:UnsignedInt64Type The permissions bitfield for the role'),
+	permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
 });
 
 export type GuildRoleCreateRequest = z.infer<typeof GuildRoleCreateRequest>;
@@ -196,7 +196,7 @@ export type GuildRoleCreateRequest = z.infer<typeof GuildRoleCreateRequest>;
 export const GuildRoleUpdateRequest = z.object({
 	name: createStringType(1, 100).optional().describe('The name of the role (1-100 characters)'),
 	color: ColorType.optional().describe('The color of the role as an integer'),
-	permissions: UnsignedInt64Type.optional().describe('fluxer:UnsignedInt64Type The permissions bitfield for the role'),
+	permissions: UnsignedInt64Type.optional().describe('The permissions bitfield for the role'),
 	hoist: z.boolean().optional().describe('Whether the role should be displayed separately in the member list'),
 	hoist_position: z.number().int().nullish().describe('The position of the role in the hoisted member list'),
 	mentionable: z.boolean().optional().describe('Whether the role can be mentioned by anyone'),
@@ -280,12 +280,10 @@ export const GuildStickerCloneRequest = z.object({
 
 export type GuildStickerCloneRequest = z.infer<typeof GuildStickerCloneRequest>;
 
-export const GuildTransferOwnershipRequest = z.object({
+const GuildTransferOwnershipRequest = z.object({
 	new_owner_id: SnowflakeType.describe('The ID of the user to transfer ownership to'),
 	password: PasswordType.optional().describe('The current owner password for verification'),
 });
-
-export type GuildTransferOwnershipRequest = z.infer<typeof GuildTransferOwnershipRequest>;
 
 export const GuildBanCreateRequest = z.object({
 	delete_message_days: z
@@ -309,7 +307,7 @@ export const GuildBanCreateRequest = z.object({
 		.number()
 		.int()
 		.refine((val) => val === 0 || (val >= MIN_TEMP_BAN_DURATION_SECONDS && val <= MAX_TEMP_BAN_DURATION_SECONDS), {
-			message: `Ban duration must be 0 (permanent) or between ${MIN_TEMP_BAN_DURATION_SECONDS} and ${MAX_TEMP_BAN_DURATION_SECONDS} seconds`,
+			error: `Ban duration must be 0 (permanent) or between ${MIN_TEMP_BAN_DURATION_SECONDS} and ${MAX_TEMP_BAN_DURATION_SECONDS} seconds`,
 		})
 		.optional()
 		.describe(
@@ -340,7 +338,7 @@ export const GuildDeleteRequest = z
 	.object({
 		password: PasswordType.optional().describe('The owner password for verification'),
 	})
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type GuildDeleteRequest = z.infer<typeof GuildDeleteRequest>;
 
@@ -386,3 +384,7 @@ export const GuildMemberListQuery = z.object({
 });
 
 export type GuildMemberListQuery = z.infer<typeof GuildMemberListQuery>;
+
+export const GuildTransferOwnershipWithVerificationRequest = GuildTransferOwnershipRequest.extend(
+	SudoVerificationSchema.shape,
+);

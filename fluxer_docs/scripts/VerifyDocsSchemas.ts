@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {readdir, readFile} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import type {
+	OpenAPIOperation as Operation,
+	OpenAPISchema as SchemaNode,
+	OpenAPIDocument as Spec,
+} from '@fluxer/openapi/src/OpenAPITypes';
 
-const DOCS_ROOT = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
+import {DOCS_ROOT, listMarkdownFiles, slugifyHeading} from './DocsSource.ts';
+
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json');
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
@@ -13,66 +19,11 @@ const ROUTE_HEADER = /<RouteHeader\s+method="([A-Z]+)"\s+path="([^"]+)"/u;
 const TABLE_ROW = /^\|\s*([^|]+?)\s*\|/u;
 const OBJECT_REFERENCE = /\]\([^)]*#[a-z0-9-]*object\)/u;
 
-interface Spec {
-	readonly paths: Record<string, Record<string, Operation>>;
-	readonly components?: {schemas?: Record<string, SchemaNode>};
-}
-
-interface Operation {
-	readonly parameters?: Array<{name: string; in: string; schema?: SchemaNode}>;
-	readonly requestBody?: {content?: Record<string, {schema?: SchemaNode}>};
-	readonly responses?: Record<string, {content?: Record<string, {schema?: SchemaNode}>}>;
-}
-
-interface SchemaNode {
-	$ref?: string;
-	required?: Array<string>;
-	properties?: Record<string, SchemaNode>;
-	allOf?: Array<SchemaNode>;
-	oneOf?: Array<SchemaNode>;
-	anyOf?: Array<SchemaNode>;
-	items?: SchemaNode;
-	type?: string;
-}
-
-const SUDO_MERGE_FIELDS = ['mfa_method', 'mfa_code', 'webauthn_response', 'webauthn_challenge'];
-
-const STREAMED_RESPONSE_ROUTES = new Map([
-	['POST /admin/system/heap-snapshots', "'Content-Type': 'application/octet-stream'"],
-]);
-
-const MERGED_SCHEMA_ROUTES = new Map([
-	['POST /auth/sessions/logout', "Validator('json', LogoutAuthSessionsRequest.merge(SudoVerificationSchema))"],
-	[
-		'POST /guilds/{}/transfer-ownership',
-		"Validator('json', GuildTransferOwnershipRequest.merge(SudoVerificationSchema))",
-	],
-]);
-
 interface Mismatch {
 	readonly page: string;
 	readonly operation: string;
 	readonly kind: string;
 	readonly detail: string;
-}
-
-async function walk(directory: string): Promise<Array<string>> {
-	const entries = await readdir(directory, {withFileTypes: true});
-	const files: Array<string> = [];
-	for (const entry of entries) {
-		if (entry.name === 'node_modules') {
-			continue;
-		}
-		const resolved = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await walk(resolved)));
-			continue;
-		}
-		if (/\.mdx?$/u.test(entry.name)) {
-			files.push(resolved);
-		}
-	}
-	return files;
 }
 
 function stripVersion(routePath: string): string {
@@ -86,13 +37,29 @@ function shape(method: string, routePath: string): string {
 	return `${method} ${routePath.split('?')[0].replace(/\{[^}]*\}/gu, '{}')}`;
 }
 
-function resolveRef(spec: Spec, node: SchemaNode | undefined, depth = 0): SchemaNode | undefined {
-	if (node == null || depth > 12) {
-		return node;
+function resolveRef(spec: Spec, node: SchemaNode | boolean | undefined, depth = 0): SchemaNode | undefined {
+	if (node == null || typeof node === 'boolean') {
+		return undefined;
+	}
+	if (depth > 64) {
+		throw new Error('OpenAPI reference chain exceeds the supported depth');
 	}
 	if (node.$ref != null) {
-		const name = node.$ref.replace('#/components/schemas/', '');
-		return resolveRef(spec, spec.components?.schemas?.[name], depth + 1);
+		const prefix = '#/components/schemas/';
+		if (!node.$ref.startsWith(prefix)) {
+			throw new Error(`Unsupported schema reference: ${node.$ref}`);
+		}
+		const name = decodeURIComponent(node.$ref.slice(prefix.length)).replace(/~1/gu, '/').replace(/~0/gu, '~');
+		const target = spec.components.schemas[name];
+		if (target == null) {
+			throw new Error(`Missing schema reference: ${node.$ref}`);
+		}
+		const resolved = resolveRef(spec, target, depth + 1);
+		const {$ref, ...siblings} = node;
+		if (resolved == null || Object.keys(siblings).length === 0) {
+			return resolved;
+		}
+		return {...resolved, allOf: [...(resolved.allOf ?? []), siblings]};
 	}
 	return node;
 }
@@ -100,7 +67,7 @@ function resolveRef(spec: Spec, node: SchemaNode | undefined, depth = 0): Schema
 function collectRequired(spec: Spec, node: SchemaNode | undefined, depth = 0): Set<string> {
 	const out = new Set<string>();
 	const resolved = resolveRef(spec, node, depth);
-	if (resolved == null || depth > 12) {
+	if (resolved == null) {
 		return out;
 	}
 	for (const name of resolved.required ?? []) {
@@ -111,23 +78,31 @@ function collectRequired(spec: Spec, node: SchemaNode | undefined, depth = 0): S
 			out.add(name);
 		}
 	}
-	const union = [...(resolved.oneOf ?? []), ...(resolved.anyOf ?? [])];
-	if (union.length > 0) {
-		const declaringBranches = new Map<string, number>();
-		const requiringBranches = new Map<string, number>();
-		for (const branch of union) {
-			const branchRequired = collectRequired(spec, branch, depth + 1);
-			for (const name of collectProperties(spec, branch, depth + 1)) {
-				declaringBranches.set(name, (declaringBranches.get(name) ?? 0) + 1);
-				if (branchRequired.has(name)) {
-					requiringBranches.set(name, (requiringBranches.get(name) ?? 0) + 1);
-				}
-			}
-		}
-		for (const [name, declared] of declaringBranches) {
-			if ((requiringBranches.get(name) ?? 0) === declared) {
+	for (const union of [resolved.oneOf ?? [], resolved.anyOf ?? []]) {
+		const branchRequirements = union.map((branch) => collectRequired(spec, branch, depth + 1));
+		for (const name of branchRequirements[0] ?? []) {
+			if (branchRequirements.every((required) => required.has(name))) {
 				out.add(name);
 			}
+		}
+	}
+	return out;
+}
+
+function collectTypes(spec: Spec, node: SchemaNode | boolean | undefined, depth = 0): Set<string> {
+	const resolved = resolveRef(spec, node, depth);
+	const out = new Set<string>();
+	if (resolved == null) {
+		return out;
+	}
+	for (const type of Array.isArray(resolved.type) ? resolved.type : [resolved.type]) {
+		if (type != null && type !== 'null') {
+			out.add(type);
+		}
+	}
+	for (const branch of [...(resolved.allOf ?? []), ...(resolved.oneOf ?? []), ...(resolved.anyOf ?? [])]) {
+		for (const type of collectTypes(spec, branch, depth + 1)) {
+			out.add(type);
 		}
 	}
 	return out;
@@ -136,14 +111,15 @@ function collectRequired(spec: Spec, node: SchemaNode | undefined, depth = 0): S
 function collectPropertyTypes(spec: Spec, node: SchemaNode | undefined, depth = 0): Map<string, string> {
 	const out = new Map<string, string>();
 	const resolved = resolveRef(spec, node, depth);
-	if (resolved == null || depth > 12) {
+	if (resolved == null) {
 		return out;
 	}
 	for (const [key, value] of Object.entries(resolved.properties ?? {})) {
-		const property = resolveRef(spec, value, depth + 1);
-		const type = property?.type;
-		if (typeof type === 'string') {
-			out.set(key, type);
+		const types = collectTypes(spec, value, depth + 1);
+		if (types.size === 1) {
+			for (const type of types) {
+				out.set(key, type);
+			}
 		}
 	}
 	for (const branch of [...(resolved.allOf ?? [])]) {
@@ -198,7 +174,7 @@ function isDeprecatedProperty(property: unknown): boolean {
 function collectProperties(spec: Spec, node: SchemaNode | undefined, depth = 0): Set<string> {
 	const out = new Set<string>();
 	const resolved = resolveRef(spec, node, depth);
-	if (resolved == null || depth > 12) {
+	if (resolved == null) {
 		return out;
 	}
 	for (const [key, property] of Object.entries(resolved.properties ?? {})) {
@@ -355,20 +331,32 @@ const adminSpec: Spec = JSON.parse(await readFile(ADMIN_SPEC, 'utf8'));
 const mainIndex = operationIndex(mainSpec);
 const adminIndex = operationIndex(adminSpec);
 
-function slugifyHeading(heading: string): string {
-	return heading
-		.replace(/`/gu, '')
-		.replace(/\[([^\]]*)\]\([^)]*\)/gu, '$1')
-		.replace(/<[^>]*>/gu, '')
-		.toLowerCase()
-		.replace(/[^a-z0-9\s-]/gu, '')
-		.trim()
-		.replace(/\s+/gu, '-');
+function documentReferences(page: string, line: string): Set<string> {
+	const references = new Set<string>();
+	for (const link of line.matchAll(/\]\(([^)\s]*)#([a-z0-9-]+)\)/gu)) {
+		if (/^[a-z][a-z0-9+.-]*:/iu.test(link[1])) {
+			continue;
+		}
+		const target =
+			link[1].length === 0
+				? page
+				: link[1].startsWith('/')
+					? link[1].slice(1)
+					: path.posix.join(path.posix.dirname(page), link[1]);
+		const slug = target
+			.replace(/\.(mdx|md)$/u, '')
+			.replace(/\/$/u, '')
+			.replace(/\/index$/u, '');
+		references.add(`${slug}#${link[2]}`);
+	}
+	return references;
 }
 
-const allFiles = await walk(DOCS_ROOT);
+const allFiles = await listMarkdownFiles(DOCS_ROOT);
 const anchorFields = new Map<string, Set<string>>();
 const anchorTypes = new Map<string, Map<string, string>>();
+const anchorReferences = new Map<string, Set<string>>();
+const objectAnchors = new Set<string>();
 for (const file of allFiles) {
 	const slug = path
 		.relative(DOCS_ROOT, file)
@@ -376,19 +364,38 @@ for (const file of allFiles) {
 		.replace(/\/index$/u, '')
 		.replace(/^index$/u, '');
 	const lines = (await readFile(file, 'utf8')).split('\n');
-	let currentAnchor: string | null = null;
+	let currentAnchors: Array<string> = [];
+	const pendingAnchors: Array<string> = [];
 	for (let i = 0; i < lines.length; i += 1) {
 		const line = lines[i];
+		for (const explicit of line.matchAll(/<a\s+id=["']([^"']+)["']/gu)) {
+			const nextContent = lines.slice(i + 1).find((nextLine) => nextLine.trim().length > 0);
+			if (nextContent?.startsWith('## ')) {
+				pendingAnchors.push(explicit[1]);
+			} else {
+				currentAnchors.push(explicit[1]);
+			}
+		}
 		const heading = line.match(/^##\s+(.+?)\s*$/u);
 		if (heading != null && !line.startsWith('###')) {
-			currentAnchor = slugifyHeading(heading[1]);
-			const explicit = line.match(/id=["']([^"']+)["']/u);
-			if (explicit != null) {
-				currentAnchor = explicit[1];
+			currentAnchors = [...new Set([slugifyHeading(heading[1]), ...pendingAnchors])];
+			if (/\bobject\b/iu.test(heading[1])) {
+				for (const anchor of currentAnchors) {
+					objectAnchors.add(`${slug}#${anchor}`);
+				}
 			}
+			pendingAnchors.length = 0;
 			continue;
 		}
-		if (currentAnchor == null || !line.startsWith('|')) {
+		for (const anchor of currentAnchors) {
+			const key = `${slug}#${anchor}`;
+			const references = anchorReferences.get(key) ?? new Set<string>();
+			for (const reference of documentReferences(slug, line)) {
+				references.add(reference);
+			}
+			anchorReferences.set(key, references);
+		}
+		if (currentAnchors.length === 0 || !line.startsWith('|')) {
 			continue;
 		}
 		const row = line.match(TABLE_ROW);
@@ -401,7 +408,8 @@ for (const file of allFiles) {
 		}
 		const cells = line.split('|').slice(1, -1);
 		const declaredType = cells.length >= 2 ? normaliseDocType(cells[1]) : null;
-		for (const anchorKey of [`${slug}#${currentAnchor}`]) {
+		for (const anchor of currentAnchors) {
+			const anchorKey = `${slug}#${anchor}`;
 			const set = anchorFields.get(anchorKey) ?? new Set<string>();
 			set.add(name);
 			anchorFields.set(anchorKey, set);
@@ -428,7 +436,7 @@ let typesCompared = 0;
 let optionalityCompared = 0;
 const optionalityAdvisories: Array<string> = [];
 
-for (const file of await walk(DOCS_ROOT)) {
+for (const file of allFiles) {
 	const relative = path.relative(DOCS_ROOT, file);
 	if (relative.startsWith('media-proxy/')) {
 		continue;
@@ -486,13 +494,16 @@ for (const file of await walk(DOCS_ROOT)) {
 
 		const referenced = new Set<string>();
 		for (let i = section.start; i < section.end; i += 1) {
-			for (const link of lines[i].matchAll(/\]\(([^)\s]*)#([a-z0-9-]+)\)/gu)) {
-				const targetPage = link[1].replace(/^\//u, '').replace(/\/$/u, '');
-				if (targetPage.length === 0) {
-					referenced.add(`${relative.replace(/\.(mdx|md)$/u, '').replace(/\/index$/u, '')}#${link[2]}`);
-					continue;
-				}
-				referenced.add(`${targetPage}#${link[2]}`);
+			for (const reference of documentReferences(relative, lines[i])) {
+				referenced.add(reference);
+			}
+		}
+		for (const anchor of referenced) {
+			if (!objectAnchors.has(anchor) || (anchorFields.get(anchor)?.size ?? 0) > 0) {
+				continue;
+			}
+			for (const reference of anchorReferences.get(anchor) ?? []) {
+				referenced.add(reference);
 			}
 		}
 		const referencedFields = new Set<string>();
@@ -506,41 +517,40 @@ for (const file of await walk(DOCS_ROOT)) {
 		if (successResponse != null) {
 			const responseSchema = successResponse[1].content?.['application/json']?.schema;
 			const resolvedResponse = resolveRef(spec, responseSchema);
-			const target = resolvedResponse?.type === 'array' ? resolvedResponse.items : resolvedResponse;
+			const itemSchema = resolvedResponse?.type === 'array' ? resolvedResponse.items : resolvedResponse;
+			const target = typeof itemSchema === 'boolean' || Array.isArray(itemSchema) ? undefined : itemSchema;
 			const responseProperties = collectProperties(spec, target);
 			const resolvedTarget = resolveRef(spec, target);
 			const responseIsUnion =
 				resolvedTarget != null && ((resolvedTarget.oneOf ?? []).length > 0 || (resolvedTarget.anyOf ?? []).length > 0);
-			if (!STREAMED_RESPONSE_ROUTES.has(key)) {
-				const referencedTypes = new Map<string, string>();
-				for (const anchor of referenced) {
-					for (const [field, type] of anchorTypes.get(anchor) ?? []) {
-						if (!referencedTypes.has(field)) {
-							referencedTypes.set(field, type);
-						}
+			const referencedTypes = new Map<string, string>();
+			for (const anchor of referenced) {
+				for (const [field, type] of anchorTypes.get(anchor) ?? []) {
+					if (!referencedTypes.has(field)) {
+						referencedTypes.set(field, type);
 					}
-				}
-				for (const [field, specType] of collectPropertyTypes(spec, target)) {
-					const docType = referencedTypes.get(field);
-					if (docType == null) {
-						continue;
-					}
-					typesCompared += 1;
-					if (specType === docType) {
-						continue;
-					}
-					if (specType === 'number' && docType === 'integer') {
-						continue;
-					}
-					mismatches.push({
-						page: relative,
-						operation: key,
-						kind: 'type-mismatch',
-						detail: `${field}: documented ${docType}, response schema ${specType}`,
-					});
 				}
 			}
-			if (responseProperties.size > 0 && !responseIsUnion && !STREAMED_RESPONSE_ROUTES.has(key)) {
+			for (const [field, specType] of collectPropertyTypes(spec, target)) {
+				const docType = referencedTypes.get(field);
+				if (docType == null) {
+					continue;
+				}
+				typesCompared += 1;
+				if (specType === docType) {
+					continue;
+				}
+				if (specType === 'number' && docType === 'integer') {
+					continue;
+				}
+				mismatches.push({
+					page: relative,
+					operation: key,
+					kind: 'type-mismatch',
+					detail: `${field}: documented ${docType}, response schema ${specType}`,
+				});
+			}
+			if (responseProperties.size > 0 && !responseIsUnion) {
 				responsesChecked += 1;
 				for (const field of responseProperties) {
 					if (pageFields.has(field) || referencedFields.has(field)) {
@@ -609,12 +619,8 @@ for (const file of await walk(DOCS_ROOT)) {
 							: `${relative}  ${key}  ${field}: documented required, schema marks it optional`,
 					);
 				}
-				const merged = MERGED_SCHEMA_ROUTES.has(key);
 				for (const field of documented) {
 					if (actual.has(field)) {
-						continue;
-					}
-					if (merged && SUDO_MERGE_FIELDS.includes(field)) {
 						continue;
 					}
 					mismatches.push({page: relative, operation: key, kind: 'body-extra', detail: field});
@@ -685,63 +691,19 @@ for (const m of mismatches) {
 	byKind.set(m.kind, (byKind.get(m.kind) ?? 0) + 1);
 }
 
-const authSource = await readFile(path.join(REPO_ROOT, 'fluxer_api/src/api/auth/AuthController.ts'), 'utf8');
-const guildSource = await readFile(
-	path.join(REPO_ROOT, 'fluxer_api/src/api/guild/controllers/GuildMemberController.ts'),
-	'utf8',
-);
-const adminSystemSource = await readFile(
-	path.join(REPO_ROOT, 'fluxer_api/src/api/admin/controllers/SystemAdminController.ts'),
-	'utf8',
-);
-const staleExemptions: Array<string> = [];
-for (const [route, anchor] of STREAMED_RESPONSE_ROUTES) {
-	if (!adminSystemSource.includes(anchor)) {
-		staleExemptions.push(`${route}: no longer streams a file, drop this exemption`);
-	}
-}
-for (const [route, anchor] of MERGED_SCHEMA_ROUTES) {
-	const present = authSource.includes(anchor) || guildSource.includes(anchor);
-	if (!present) {
-		staleExemptions.push(`${route}: the .merge() call is gone, drop this exemption`);
-	}
-}
-if (staleExemptions.length > 0) {
-	console.log('stale exemptions:');
-	for (const entry of staleExemptions) {
-		console.log(`  ${entry}`);
-	}
-}
-
 console.log(`request body tables checked: ${checkedBodies.toString()}`);
 console.log(`union bodies skipped for the missing check: ${unionBodiesSkipped.toString()}`);
 console.log(
 	`fields documented in a shared object section rather than the route table: ${referencedElsewhere.toString()}`,
 );
 console.log(`bodies documented by reference to an object section: ${documentedByReference.toString()}`);
-console.log(
-	`merged-schema exemptions active: ${MERGED_SCHEMA_ROUTES.size.toString()} (the OpenAPI generator drops .merge() operands)`,
-);
 console.log(`query parameter tables checked: ${checkedQueries.toString()}`);
 console.log(`success response schemas checked: ${responsesChecked.toString()}`);
-console.log(
-	`streamed-response exemptions active: ${STREAMED_RESPONSE_ROUTES.size.toString()} (the spec declares JSON, the implementation streams a file)`,
-);
 console.log(`response fields found documented on the page: ${responseFieldsFound.toString()}`);
 console.log(`request body field types compared: ${typesCompared.toString()}`);
 console.log(`request body optionality compared: ${optionalityCompared.toString()}`);
 console.log(`optionality advisories: ${optionalityAdvisories.length.toString()}`);
 if (optionalityAdvisories.length > 0) {
-	console.log('  ADVISORY ONLY, this does not fail the run.');
-	console.log('  Both current lines were adjudicated by hand. ZERO documentation bugs: in each');
-	console.log('  case the page is MORE precise than a bare ? marker can be.');
-	console.log('    POST /stripe/checkout/subscription/preapproval requires country_code in the');
-	console.log('      handler (StripeCheckoutService.ts:310 throws when no country resolves) while the');
-	console.log('      shared CreateCheckoutSessionRequest requires only price_id.');
-	console.log('    PATCH /admin/discovery/applications/{guild_id} takes a discriminated union.');
-	console.log('      reason is required when status is rejected and optional when it is approved,');
-	console.log('      which the page states in a footnote instead of flattening it to ?.');
-	console.log('  Re-adjudicate only if this list changes.');
 	for (const entry of optionalityAdvisories) {
 		console.log(`    ${entry}`);
 	}

@@ -8,8 +8,9 @@ import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes
 import {purgeMessageAttachments} from '../../channel/services/message/MessageHelpers';
 import type {Message} from '../../models/Message';
 import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
+import {chunkArray} from '../../utils/ArrayUtils';
 import {getWorkerDependencies} from '../WorkerContext';
-import {chunkArray, createBulkDeleteDispatcher} from './utils/MessageDeletion';
+import {createBulkDeleteDispatcher} from './utils/MessageDeletion';
 
 const PayloadSchema = z.object({
 	job_id: z.string().min(1),

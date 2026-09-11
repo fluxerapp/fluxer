@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
+
 export interface AdminArchiveRow {
-	subject_type: 'user' | 'guild';
+	subject_type: ArchiveSubjectType;
 	subject_id: bigint;
 	archive_id: bigint;
 	requested_by: bigint;

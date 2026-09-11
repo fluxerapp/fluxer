@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {availableParallelism} from 'node:os';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import {configDefaults, defineConfig} from 'vitest/config';
 
 function parseParallelInteger(value: string | undefined, fallback: number): number {
@@ -79,7 +78,7 @@ export default defineConfig({
 		},
 		projects: [
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api',
@@ -89,7 +88,7 @@ export default defineConfig({
 				},
 			},
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api-module-registry',
@@ -99,7 +98,7 @@ export default defineConfig({
 				},
 			},
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api-instance-policy',

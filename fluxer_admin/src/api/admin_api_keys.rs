@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{CreateAdminApiKeyResponse, ListAdminApiKeyEntry};
@@ -35,7 +35,7 @@ impl AdminApiClient {
     }
 
     pub async fn revoke_api_key(&self, key_id: &str) -> ApiResult<()> {
-        let key_id = generated_types::SnowflakeType::from(key_id.to_owned());
+        let key_id = snowflake(key_id);
         self.generated()
             .delete_admin_api_key(&key_id)
             .await

@@ -61,12 +61,9 @@ describe('ChannelResponse', () => {
 		rate_limit_per_user: 0,
 	};
 	it('accepts valid channel response', () => {
-		const result = ChannelResponse.safeParse(validChannel);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.id).toBe('123456789012345678');
-			expect(result.data.name).toBe('general');
-		}
+		const result = ChannelResponse.parse(validChannel);
+		expect(result.id).toBe('123456789012345678');
+		expect(result.name).toBe('general');
 	});
 	it('requires id and type', () => {
 		const {id, ...channelWithoutId} = validChannel;
@@ -100,11 +97,8 @@ describe('ChannelResponse', () => {
 				{id: '222222222222222222', type: 1, allow: '0', deny: '2048'},
 			],
 		};
-		const result = ChannelResponse.safeParse(channel);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.permission_overwrites).toHaveLength(2);
-		}
+		const result = ChannelResponse.parse(channel);
+		expect(result.permission_overwrites).toHaveLength(2);
 	});
 	it('accepts more permission_overwrites than the old response ceiling', () => {
 		const channel = {
@@ -116,11 +110,8 @@ describe('ChannelResponse', () => {
 				deny: '0',
 			})),
 		};
-		const result = ChannelResponse.safeParse(channel);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.permission_overwrites).toHaveLength(501);
-		}
+		const result = ChannelResponse.parse(channel);
+		expect(result.permission_overwrites).toHaveLength(501);
 	});
 	it('accepts voice channel properties', () => {
 		const voiceChannel = {
@@ -131,13 +122,10 @@ describe('ChannelResponse', () => {
 			voice_connection_limit: 5,
 			rtc_region: 'us-west',
 		};
-		const result = ChannelResponse.safeParse(voiceChannel);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.bitrate).toBe(64000);
-			expect(result.data.user_limit).toBe(10);
-			expect(result.data.voice_connection_limit).toBe(5);
-		}
+		const result = ChannelResponse.parse(voiceChannel);
+		expect(result.bitrate).toBe(64000);
+		expect(result.user_limit).toBe(10);
+		expect(result.voice_connection_limit).toBe(5);
 	});
 	it('accepts null optional fields', () => {
 		const channel = {
@@ -159,11 +147,8 @@ describe('ChannelResponse', () => {
 				'222222222222222222': 'Friend 2',
 			},
 		};
-		const result = ChannelResponse.safeParse(channel);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.nicks).toBeDefined();
-		}
+		const result = ChannelResponse.parse(channel);
+		expect(result.nicks).toBeDefined();
 	});
 	it('accepts valid last_pin_timestamp', () => {
 		const channel = {

@@ -289,7 +289,7 @@ Creates a setup mode session that captures and verifies a card before a localise
 | Field | Type | Description |
 | --- | --- | --- |
 | price_id | string | Registered localised recurring price ID (1-256 characters) |
-| country_code<sup>1</sup> | string | Two-letter country used to select the regional price catalogue (2 characters) |
+| country_code?<sup>1</sup> | string | Two-letter country used to select the regional price catalogue (2 characters) |
 | client_geoip_country_code? | string | Two-letter country the client previously observed for itself (2 characters) |
 | eu_withdrawal_waiver_accepted? | boolean | Whether the digital content withdrawal waiver was explicitly accepted |
 | is_business? | boolean | Whether to require a billing address for tax invoicing (default false) |

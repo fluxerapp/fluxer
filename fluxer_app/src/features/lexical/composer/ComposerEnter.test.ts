@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {registerComposerEnter} from '@app/features/lexical/composer/ComposerEnter';
 import {$replaceComposerRange, $selectComposerRange} from '@app/features/lexical/composer/composerOffsets';
 import {ComposerMentionNode} from '@app/features/lexical/composer/nodes/ComposerMentionNode';
 import {ComposerPlainSegmentNode} from '@app/features/lexical/composer/nodes/ComposerPlainSegmentNode';
-import {$createSlashSlotNode, SlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
+import {
+	$createSlashSlotNode,
+	$isSlashSlotNode,
+	SlashSlotNode,
+} from '@app/features/lexical/composer/nodes/SlashSlotNode';
 import {SlashSlotPlaceholderNode} from '@app/features/lexical/composer/nodes/SlashSlotPlaceholderNode';
-import {$getRoot, $setSelection, createEditor, type ElementNode, KEY_ENTER_COMMAND, type LexicalEditor} from 'lexical';
+import {$getRoot, $isElementNode, $setSelection, createEditor, KEY_ENTER_COMMAND, type LexicalEditor} from 'lexical';
 import {describe, expect, it, vi} from 'vitest';
 
 vi.mock('@app/features/lexical/composer/nodes/ComposerMentionPill', () => ({ComposerMentionPill: () => null}));
@@ -45,16 +50,22 @@ function typedWithRequiredSlot(text: string, offset: number): LexicalEditor {
 	return createComposer(() => {
 		$replaceComposerRange(0, 0, {kind: 'text', text}, {leading: false, trailing: false});
 		const slot = $createSlashSlotNode('value', 'string', true);
-		$getRoot().getFirstChildOrThrow<ElementNode>().append(slot);
+		const paragraph = $getRoot().getFirstChildOrThrow();
+		assert($isElementNode(paragraph), 'Expected composer paragraph');
+		paragraph.append(slot);
 		slot.ensurePlaceholder();
 		$selectComposerRange(offset, offset);
 	});
 }
 
 function slotValidity(editor: LexicalEditor): string {
-	return editor.read(() =>
-		$getRoot().getFirstChildOrThrow<ElementNode>().getLastChildOrThrow<SlashSlotNode>().getValidity(),
-	);
+	return editor.read(() => {
+		const paragraph = $getRoot().getFirstChildOrThrow();
+		assert($isElementNode(paragraph), 'Expected composer paragraph');
+		const slot = paragraph.getLastChildOrThrow();
+		assert($isSlashSlotNode(slot), 'Expected required slash command slot');
+		return slot.getValidity();
+	});
 }
 
 function pressEnter(

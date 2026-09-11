@@ -36,7 +36,7 @@ interface TextareaInputFieldProps {
 	placeholder: string;
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 	scrollerRef?: React.RefObject<ScrollerHandle | null>;
-	shouldStickToBottomRef?: React.MutableRefObject<boolean>;
+	shouldStickToBottomRef?: React.RefObject<boolean>;
 	isFocused?: boolean;
 	isAutocompleteAttached: boolean;
 	autocompleteListId?: string;

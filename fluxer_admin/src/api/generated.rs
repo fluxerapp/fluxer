@@ -16,6 +16,10 @@ pub use inner::types;
 
 pub use inner::Client as GeneratedClient;
 
+pub(crate) fn snowflake(value: &str) -> types::SnowflakeType {
+    types::SnowflakeType::Variant0(value.to_owned())
+}
+
 pub(crate) fn number_to_u64(value: f64, field: &str) -> Result<u64, String> {
     const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
     if !value.is_finite() || value < 0.0 || value.fract() != 0.0 || value > MAX_SAFE_INTEGER {
@@ -126,10 +130,10 @@ mod tests {
         let response: SearchGuildsResponse =
             serde_json::from_value(json).expect("failed to deserialize SearchGuildsResponse");
 
-        assert_eq!(response.total as i64, 1);
+        assert_eq!(response.total, 1.0);
         assert_eq!(response.guilds.len(), 1);
         assert_eq!(response.guilds[0].name, "Test Guild");
-        assert_eq!(response.guilds[0].member_count, 42);
+        assert_eq!(*response.guilds[0].member_count, 42);
     }
 
     #[test]

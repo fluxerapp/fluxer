@@ -25,6 +25,7 @@ const MAX_BACKOFF_DOUBLINGS = 2;
 const EXPERIMENT_ASSIGNMENTS_MIN_POLL_DELAY_MS = (EXPERIMENT_MIN_POLL_INTERVAL_SECONDS * MS_PER_SECOND) / 2;
 
 type UnobservedField =
+	| 'abortController'
 	| 'etag'
 	| 'failureStreak'
 	| 'generation'
@@ -69,6 +70,7 @@ class ExperimentAssignmentsStore {
 	private listening = false;
 	private pollTimerId: NodeJS.Timeout | null = null;
 	private inFlight: Promise<void> | null = null;
+	private abortController: AbortController | null = null;
 	private failureStreak = 0;
 	private notFoundStreak = 0;
 	private pollingDisabled = false;
@@ -81,6 +83,7 @@ class ExperimentAssignmentsStore {
 			this,
 			{
 				response: observable.ref,
+				abortController: false,
 				etag: false,
 				failureStreak: false,
 				generation: false,
@@ -117,6 +120,10 @@ class ExperimentAssignmentsStore {
 	stop(): void {
 		this.started = false;
 		this.generation += 1;
+		const controller = this.abortController;
+		this.abortController = null;
+		this.inFlight = null;
+		controller?.abort();
 		try {
 			this.removeVisibilityListener();
 		} catch (err) {
@@ -128,7 +135,6 @@ class ExperimentAssignmentsStore {
 	reset(): void {
 		this.stop();
 		this.etag = null;
-		this.inFlight = null;
 		this.failureStreak = 0;
 		this.notFoundStreak = 0;
 		this.pollingDisabled = false;
@@ -198,16 +204,19 @@ class ExperimentAssignmentsStore {
 		if (existing !== null) {
 			return existing;
 		}
-		const pending = this.fetchAssignments(this.generation).finally(() => {
+		const controller = new AbortController();
+		this.abortController = controller;
+		const pending = this.fetchAssignments(this.generation, controller.signal).finally(() => {
 			if (this.inFlight === pending) {
 				this.inFlight = null;
+				this.abortController = null;
 			}
 		});
 		this.inFlight = pending;
 		return pending;
 	}
 
-	private async fetchAssignments(generation: number): Promise<void> {
+	private async fetchAssignments(generation: number, signal: AbortSignal): Promise<void> {
 		this.lastFetchStartedAt = Date.now();
 		const headers: Record<string, string> = {};
 		if (this.etag !== null) {
@@ -218,6 +227,7 @@ class ExperimentAssignmentsStore {
 				headers,
 				mode: 'silent',
 				parse: 'json',
+				signal,
 			});
 			if (generation !== this.generation) {
 				return;

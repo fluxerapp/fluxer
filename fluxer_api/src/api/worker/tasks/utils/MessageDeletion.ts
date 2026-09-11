@@ -4,14 +4,6 @@ import {type ChannelID, createChannelID, type MessageID} from '../../../BrandedT
 import type {IChannelRepository} from '../../../channel/IChannelRepository';
 import type {IGatewayService} from '../../../infrastructure/IGatewayService';
 
-export function chunkArray<T>(items: Array<T>, chunkSize: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	for (let i = 0; i < items.length; i += chunkSize) {
-		chunks.push(items.slice(i, i + chunkSize));
-	}
-	return chunks;
-}
-
 interface BulkDeleteDispatcherDeps {
 	channelRepository: IChannelRepository;
 	gatewayService: IGatewayService;

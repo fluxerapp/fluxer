@@ -103,8 +103,8 @@ interface UseTextareaAutocompleteParams {
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	segmentManagerRef: React.MutableRefObject<TextareaSegmentManager>;
-	previousValueRef: React.MutableRefObject<string>;
+	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
+	previousValueRef: React.RefObject<string>;
 	prepareTextChange: PrepareTextareaTextChange;
 	allowedTriggers?: Array<TriggerType>;
 	maxActualLength?: number;

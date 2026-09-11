@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createECDH} from 'node:crypto';
+import {type ConfigObject, isConfigObject} from '@fluxer/config/src/config_loader/ConfigObject';
 import {buildNamedFluxerEnvOverrides} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {
 	buildUrl,
@@ -10,8 +11,6 @@ import {
 	parsePublicOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
-
-type ConfigObject = Record<string, unknown>;
 
 let cachedConfig: MasterConfig | null = null;
 
@@ -312,18 +311,14 @@ function defaultConfig(): MasterConfig {
 	};
 }
 
-function isPlainObject(value: unknown): value is ConfigObject {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function mergeConfig<T>(base: T, overrides: unknown): T {
-	if (!isPlainObject(base) || !isPlainObject(overrides)) {
+	if (!isConfigObject(base) || !isConfigObject(overrides)) {
 		return overrides === undefined ? base : (overrides as T);
 	}
 	const out: ConfigObject = {...base};
 	for (const [key, value] of Object.entries(overrides)) {
 		const current = out[key];
-		out[key] = isPlainObject(current) && isPlainObject(value) ? mergeConfig(current, value) : value;
+		out[key] = isConfigObject(current) && isConfigObject(value) ? mergeConfig(current, value) : value;
 	}
 	return out as T;
 }

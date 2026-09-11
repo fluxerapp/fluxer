@@ -174,7 +174,7 @@ export function useTileContextMenuActive(tileElRef: React.RefObject<HTMLElement 
 }
 
 function unsubscribeManagedVideoPublication(
-	managedPublicationRef: React.MutableRefObject<RemoteTrackPublication | null>,
+	managedPublicationRef: React.RefObject<RemoteTrackPublication | null>,
 	publication: RemoteTrackPublication | null,
 ): void {
 	if (!publication) return;

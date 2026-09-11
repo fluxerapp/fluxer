@@ -11,7 +11,9 @@
 		"typecheck": "tsgo --noEmit"
 	},
 	"dependencies": {
-		"@fluxer/limits": "workspace:*"
+		"@fluxer/constants": "workspace:*",
+		"@fluxer/limits": "workspace:*",
+		"@fluxer/schema": "workspace:*"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

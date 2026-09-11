@@ -21,9 +21,9 @@ import {useCallback, useEffect} from 'react';
 interface UseTextareaPasteParams {
 	channel?: Channel | null;
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	segmentManagerRef: React.MutableRefObject<TextareaSegmentManager>;
+	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
-	previousValueRef: React.MutableRefObject<string>;
+	previousValueRef: React.RefObject<string>;
 	prepareTextChange: PrepareTextareaTextChange;
 	maxMessageLength?: number;
 	onPasteExceedsLimit?: (pastedText: string) => void;

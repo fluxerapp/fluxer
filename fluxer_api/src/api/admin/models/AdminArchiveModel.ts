@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {z} from 'zod';
+import type {AdminArchiveResponse, ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import type {AdminArchiveRow} from '../../database/types/AdminArchiveTypes';
-
-export type ArchiveSubjectType = 'user' | 'guild';
 
 export class AdminArchive {
 	subjectType: ArchiveSubjectType;
@@ -61,22 +58,7 @@ export class AdminArchive {
 		};
 	}
 
-	toResponse(): {
-		archive_id: string;
-		subject_type: ArchiveSubjectType;
-		subject_id: string;
-		requested_by: string;
-		requested_at: string;
-		started_at: string | null;
-		completed_at: string | null;
-		failed_at: string | null;
-		file_size: string | null;
-		progress_percent: number;
-		progress_step: string | null;
-		error_message: string | null;
-		download_url_expires_at: string | null;
-		expires_at: string | null;
-	} {
+	toResponse(): AdminArchiveResponse {
 		return {
 			archive_id: this.archiveId.toString(),
 			subject_type: this.subjectType,
@@ -95,5 +77,3 @@ export class AdminArchive {
 		};
 	}
 }
-
-export type AdminArchiveResponse = z.infer<typeof AdminArchiveResponseSchema>;

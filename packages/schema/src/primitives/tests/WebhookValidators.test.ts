@@ -4,22 +4,11 @@ import {WebhookTypeSchema} from '@fluxer/schema/src/primitives/WebhookValidators
 import {describe, expect, it} from 'vitest';
 
 describe('WebhookTypeSchema', () => {
-	it('accepts incoming webhook type', () => {
-		const result = WebhookTypeSchema.safeParse(1);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(1);
-		}
+	it.each([1, 2])('accepts webhook type %i', (value) => {
+		expect(WebhookTypeSchema.parse(value)).toBe(value);
 	});
-	it('accepts channel follower webhook type', () => {
-		const result = WebhookTypeSchema.safeParse(2);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(2);
-		}
-	});
-	it('rejects non-numeric values', () => {
-		const result = WebhookTypeSchema.safeParse('invalid');
-		expect(result.success).toBe(false);
+
+	it.each([0, 3, -1, 1.5, '1', null])('rejects unknown or nonnumeric webhook type %j', (value) => {
+		expect(WebhookTypeSchema.safeParse(value).success).toBe(false);
 	});
 });

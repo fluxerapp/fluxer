@@ -41,7 +41,7 @@ export async function parseMultipartMessageData(
 	ctx: Context<HonoEnv>,
 	user: User,
 	channelId: ChannelID,
-	schema: z.ZodTypeAny,
+	schema: z.ZodType<MessageRequest | MessageUpdateRequest>,
 	options?: ParseMultipartMessageDataOptions,
 ): Promise<MessageRequest | MessageUpdateRequest> {
 	let body: MultipartBody;

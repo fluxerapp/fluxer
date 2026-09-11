@@ -360,9 +360,6 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.FAILED_TO_UPLOAD_IMAGE]: 'attachments_and_uploads.failed_to_upload_image',
 	[ValidationErrorCodes.FILE_INDEX_EXCEEDS_MAXIMUM]: 'attachments_and_uploads.file_index_exceeds_maximum',
 	[ValidationErrorCodes.FILE_NOT_FOUND]: 'attachments_and_uploads.file_not_found',
-	[ValidationErrorCodes.FILENAME_EMPTY_AFTER_NORMALIZATION]:
-		'attachments_and_uploads.filename_empty_after_normalization',
-	[ValidationErrorCodes.FILENAME_INVALID_CHARACTERS]: 'attachments_and_uploads.filename_invalid_characters',
 	[ValidationErrorCodes.FILENAME_LENGTH_INVALID]: 'attachments_and_uploads.filename_length_invalid',
 	[ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT]: 'attachments_and_uploads.image_size_exceeds_limit',
 	[ValidationErrorCodes.INVALID_FILE_FIELD_NAME]: 'attachments_and_uploads.invalid_file_field_name',
@@ -455,8 +452,6 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.CHANNEL_ID_IS_REQUIRED]: 'channels_and_guilds.channel_id_required',
 	[ValidationErrorCodes.CHANNEL_MUST_BE_DM_OR_GROUP_DM]: 'channels_and_guilds.channel_must_be_dm_or_group_dm',
 	[ValidationErrorCodes.CHANNEL_MUST_BE_VOICE]: 'channels_and_guilds.channel_must_be_voice',
-	[ValidationErrorCodes.CHANNEL_NAME_EMPTY_AFTER_NORMALIZATION]:
-		'names_and_normalization.channel_name_empty_after_normalization',
 	[ValidationErrorCodes.CATEGORIES_CANNOT_HAVE_PARENT_CHANNEL]:
 		'channels_and_guilds.categories_cannot_have_parent_channel',
 	[ValidationErrorCodes.CATEGORIES_CANNOT_HAVE_PARENTS]: 'channels_and_guilds.categories_cannot_have_parents',

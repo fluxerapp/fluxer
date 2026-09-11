@@ -47,7 +47,7 @@ export const MessageReferenceRequest = z
 			return true;
 		},
 		{
-			message: 'Forward message reference must include channel_id and message_id',
+			error: 'Forward message reference must include channel_id and message_id',
 		},
 	);
 

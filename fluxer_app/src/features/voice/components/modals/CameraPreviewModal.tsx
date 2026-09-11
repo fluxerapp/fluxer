@@ -256,8 +256,8 @@ interface CameraPreviewTrackSetupArgs {
 	cameraResolution: 'low' | 'medium' | 'high';
 	videoFrameRate: number;
 	isCurrentInitialization: () => boolean;
-	trackRef: React.MutableRefObject<LocalVideoTrack | null>;
-	processorRef: React.MutableRefObject<CameraPreviewProcessor | null>;
+	trackRef: React.RefObject<LocalVideoTrack | null>;
+	processorRef: React.RefObject<CameraPreviewProcessor | null>;
 	onResolutionNegotiated: (resolution: {width: number; height: number} | null) => void;
 }
 

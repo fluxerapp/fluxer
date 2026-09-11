@@ -9,6 +9,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {NcmecAlreadySubmittedError} from '@fluxer/errors/src/domains/moderation/NcmecAlreadySubmittedError';
 import {NcmecSubmissionFailedError} from '@fluxer/errors/src/domains/moderation/NcmecSubmissionFailedError';
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
+import type {NcmecSubmissionStatus} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
@@ -57,8 +58,6 @@ import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
 import type {NcmecApiClient} from './NcmecReporter';
 import {buildNcmecFileDetailsXml, buildNcmecReportXml} from './NcmecReporter';
 import type {NcmecRepository} from './NcmecRepository';
-
-export type NcmecSubmissionStatus = 'not_submitted' | 'submitting' | 'submitted' | 'failed';
 
 export interface NcmecAttachmentStatusResponse {
 	status: NcmecSubmissionStatus;

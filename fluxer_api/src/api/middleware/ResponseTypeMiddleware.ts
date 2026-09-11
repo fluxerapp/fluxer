@@ -78,7 +78,7 @@ export function ResponseType<T extends ZodType>(
 ): MiddlewareHandler<HonoEnv> {
 	const {skipValidation = false, allowNoContent = false} = options ?? {};
 	return async (ctx, next) => {
-		ctx.set('responseSchema' as keyof HonoEnv['Variables'], schema);
+		ctx.set('responseSchema', schema);
 		await next();
 		if (skipValidation || !Config.dev.validateResponses) {
 			return;
@@ -90,35 +90,19 @@ export function ResponseType<T extends ZodType>(
 	};
 }
 
-interface OpenAPIMetadata {
-	operationId: string;
-	summary: string;
-	description: string;
-	responseSchema: ZodType | null;
-	requestSchema?: ZodType;
-	requestFormSchema?: ZodType;
-	requestBodyRequired?: boolean;
-	statusCode?: number | Array<number>;
-	security?: SecurityScheme | Array<SecurityScheme>;
-	tags: string | Array<string>;
-	deprecated?: boolean;
-	externalDocs?: {
-		url: string;
-		description?: string;
-	};
-}
-
 type SecurityScheme = 'botToken' | 'oauth2Token' | 'bearerToken' | 'sessionToken' | 'adminApiKey';
 
-interface OpenAPIRouteMetadata {
+export interface OpenAPIRouteMetadata {
 	operationId: string;
 	summary: string;
 	description: string;
 	responseSchema: ZodType | null;
+	responseContentType?: string;
 	requestSchema?: ZodType;
 	requestFormSchema?: ZodType;
 	requestBodyRequired?: boolean;
 	statusCode?: number | Array<number>;
+	bodylessStatusCodes?: Array<number>;
 	security?: SecurityScheme | Array<SecurityScheme>;
 	tags: string | Array<string>;
 	deprecated?: boolean;
@@ -130,6 +114,7 @@ interface OpenAPIRouteMetadata {
 
 interface OpenAPIOptions {
 	description: string;
+	responseContentType?: string;
 }
 
 function validateOperationId(operationId: string): void {
@@ -140,20 +125,8 @@ function validateOperationId(operationId: string): void {
 	}
 }
 
-function normalizeSecurityToArray(
-	security?: SecurityScheme | Array<SecurityScheme>,
-): Array<SecurityScheme> | undefined {
-	if (!security) return undefined;
-	return Array.isArray(security) ? security : [security];
-}
-
-function normalizeTagsToArray(tags: string | Array<string>): Array<string> {
-	return Array.isArray(tags) ? tags : [tags];
-}
-
-function normalizeStatusCodeToArray(statusCode?: number | Array<number>): Array<number> | undefined {
-	if (!statusCode) return undefined;
-	return Array.isArray(statusCode) ? statusCode : [statusCode];
+function toArray<T>(value: T | Array<T>): Array<T> {
+	return Array.isArray(value) ? value : [value];
 }
 
 export function OpenAPI(metadata: OpenAPIRouteMetadata): MiddlewareHandler<HonoEnv>;
@@ -186,33 +159,28 @@ export function OpenAPI(
 			summary: summary!,
 			description: options.description,
 			responseSchema,
+			responseContentType: options.responseContentType,
 			tags: [],
 		};
 	} else {
 		metadata = operationIdOrMetadata;
 	}
 	validateOperationId(metadata.operationId);
-	const {statusCode, security, tags, deprecated, externalDocs} = metadata;
+	const {statusCode, security, tags, bodylessStatusCodes, responseContentType} = metadata;
 	const schema = metadata.responseSchema;
+	const fullMetadata: OpenAPIRouteMetadata = {
+		...metadata,
+		statusCode: statusCode === undefined ? undefined : toArray(statusCode),
+		security: security === undefined ? undefined : toArray(security),
+		tags: toArray(tags),
+	};
+	const mediaType = responseContentType?.split(';', 1)[0]?.trim().toLowerCase();
+	const hasJsonResponse = mediaType === undefined || mediaType === 'application/json';
 	return async (ctx, next) => {
-		const fullMetadata: OpenAPIMetadata = {
-			operationId: metadata.operationId,
-			summary: metadata.summary,
-			description: metadata.description,
-			responseSchema: schema,
-			requestSchema: metadata.requestSchema,
-			requestFormSchema: metadata.requestFormSchema,
-			requestBodyRequired: metadata.requestBodyRequired,
-			statusCode: statusCode ? normalizeStatusCodeToArray(statusCode) : undefined,
-			security: security ? normalizeSecurityToArray(security) : undefined,
-			tags: normalizeTagsToArray(tags),
-			deprecated,
-			externalDocs,
-		};
-		ctx.set('openapiMetadata' as keyof HonoEnv['Variables'], fullMetadata);
-		ctx.set('responseSchema' as keyof HonoEnv['Variables'], schema);
+		ctx.set('openapiMetadata', fullMetadata);
+		ctx.set('responseSchema', schema);
 		await next();
-		if (!schema || !Config.dev.validateResponses) {
+		if (!schema || !hasJsonResponse || !Config.dev.validateResponses || bodylessStatusCodes?.includes(ctx.res.status)) {
 			return;
 		}
 		await validateAndRewriteResponse(ctx, schema);

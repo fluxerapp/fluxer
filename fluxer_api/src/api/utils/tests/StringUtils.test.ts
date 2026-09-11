@@ -4,79 +4,40 @@ import {describe, expect, it} from 'vitest';
 import {hasVisibleContent, parseString} from '../StringUtils';
 
 describe('parseString', () => {
-	it('returns trimmed string within max length', () => {
-		expect(parseString('Hello World', 50)).toBe('Hello World');
-	});
-	it('trims whitespace from the string', () => {
-		expect(parseString('  Hello World  ', 50)).toBe('Hello World');
-	});
-	it('truncates string exceeding max length', () => {
-		const result = parseString('This is a very long string that needs truncation', 20);
-		expect(result.length).toBeLessThanOrEqual(20);
-		expect(result).toContain('...');
-	});
-	it('handles exact max length', () => {
-		const result = parseString('12345', 5);
-		expect(result).toBe('12345');
-	});
-	it('decodes HTML entities before processing', () => {
-		expect(parseString('Hello &amp; World', 50)).toBe('Hello & World');
-		expect(parseString('&lt;script&gt;', 50)).toBe('<script>');
-	});
-	it('handles empty string', () => {
-		expect(parseString('', 50)).toBe('');
-	});
-	it('handles string with only whitespace', () => {
-		expect(parseString('   ', 50)).toBe('');
-	});
-	it('handles unicode characters', () => {
-		expect(parseString('Hello \u{1F600} World', 50)).toBe('Hello \u{1F600} World');
-	});
-	it('truncates with ellipsis by default', () => {
-		const result = parseString('This is a test string for truncation', 15);
-		expect(result.endsWith('...')).toBe(true);
-	});
-	it('handles max length of 0 (lodash truncate returns ellipsis)', () => {
-		const result = parseString('Hello', 0);
-		expect(result).toBe('...');
-	});
-	it('handles max length of 1 (lodash truncate minimum is ellipsis length)', () => {
-		const result = parseString('Hello', 1);
-		expect(result).toBe('...');
-	});
-	it('handles max length of 3 (minimum for truncation)', () => {
-		const result = parseString('Hello', 3);
-		expect(result).toBe('...');
-	});
-	it('handles max length of 4', () => {
-		const result = parseString('Hello', 4);
-		expect(result.length).toBeLessThanOrEqual(4);
-	});
-	it('preserves string with special characters', () => {
-		const input = 'Hello\nWorld\tTab';
-		const result = parseString(input, 50);
-		expect(result).toContain('\n');
-		expect(result).toContain('\t');
-	});
-	it('handles combined HTML entities and long strings', () => {
-		const input = '&amp; '.repeat(20);
-		const result = parseString(input, 30);
-		expect(result.length).toBeLessThanOrEqual(30);
+	it.each([
+		{input: 'Hello World', max: 50, expected: 'Hello World'},
+		{input: '  Hello World  ', max: 50, expected: 'Hello World'},
+		{input: 'This is a very long string that needs truncation', max: 20, expected: 'This is a very lo...'},
+		{input: '12345', max: 5, expected: '12345'},
+		{input: 'Hello &amp; World', max: 50, expected: 'Hello & World'},
+		{input: '&lt;script&gt;', max: 50, expected: '<script>'},
+		{input: '', max: 50, expected: ''},
+		{input: '   ', max: 50, expected: ''},
+		{input: 'Hello 😀 World', max: 50, expected: 'Hello 😀 World'},
+		{input: 'This is a test string for truncation', max: 15, expected: 'This is a te...'},
+		{input: 'Hello', max: 0, expected: '...'},
+		{input: 'Hello', max: 1, expected: '...'},
+		{input: 'Hello', max: 3, expected: '...'},
+		{input: 'Hello', max: 4, expected: 'H...'},
+		{input: 'Hello\nWorld\tTab', max: 50, expected: 'Hello\nWorld\tTab'},
+		{input: '&amp;&amp;&amp;abc', max: 5, expected: '&&...'},
+		{input: '😀abcd', max: 4, expected: '😀...'},
+	])('decodes, trims, and truncates $input to $expected', ({input, max, expected}) => {
+		expect(parseString(input, max)).toBe(expected);
 	});
 });
 
 describe('hasVisibleContent', () => {
-	it('rejects whitespace and invisible-only strings', () => {
-		expect(hasVisibleContent('')).toBe(false);
-		expect(hasVisibleContent(' \t\n')).toBe(false);
-		expect(hasVisibleContent('\u200e \u200b\ufeff')).toBe(false);
-		expect(hasVisibleContent('\u2800\u3164\u{e0100}')).toBe(false);
+	it.each([
+		'',
+		' \t\n',
+		'\u200e \u200b\ufeff',
+		'\u2800\u3164\u{e0100}',
+	])('rejects whitespace or invisible-only input %j', (input) => {
+		expect(hasVisibleContent(input)).toBe(false);
 	});
 
-	it('allows any visible character', () => {
-		expect(hasVisibleContent('hello')).toBe(true);
-		expect(hasVisibleContent('\u200e hello')).toBe(true);
-		expect(hasVisibleContent('🙂')).toBe(true);
-		expect(hasVisibleContent('` `')).toBe(true);
+	it.each(['hello', '\u200e hello', '🙂', '` `'])('accepts visible input %j', (input) => {
+		expect(hasVisibleContent(input)).toBe(true);
 	});
 });

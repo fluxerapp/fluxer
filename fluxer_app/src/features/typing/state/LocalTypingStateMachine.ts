@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export const LOCAL_TYPING_REMOTE_SEND_DELAY_MS = 1500;
 export const LOCAL_TYPING_REMOTE_REFRESH_MS = 8000;
@@ -198,7 +198,7 @@ export const localTypingStateMachine = setup({
 });
 
 export function createLocalTypingSnapshot(input: LocalTypingMachineInput = {}): LocalTypingSnapshot {
-	return getInitialSnapshot(localTypingStateMachine, input);
+	return initialTransition(localTypingStateMachine, input)[0];
 }
 
 export function transitionLocalTypingSnapshot(

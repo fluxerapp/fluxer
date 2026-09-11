@@ -55,26 +55,15 @@ import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
 import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
 import {appendAssetToArchive, buildHashedAssetKey, getAnimatedAssetExtension} from '../utils/AssetArchiveHelpers';
 import {ContentAddressedAttachmentCollector} from '../utils/ContentAddressedAttachmentCollector';
+import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '../utils/SelfMessageFilterPayload';
 import {getWorkerDependencies} from '../WorkerContext';
 
-const FilterPayloadSchema = z.object({
-	scope: z.enum(['selected', 'inaccessible_only']),
-	includeDms: z.boolean(),
-	includeDmsClosed: z.boolean(),
-	includeGroupDms: z.boolean(),
-	includeGuilds: z.boolean(),
-	guildFilterMode: z.enum(['exclude', 'include_only']).default('exclude'),
-	excludedGuildIds: z.array(z.string()),
-	includedGuildIds: z.array(z.string()).default([]),
-	startTimestamp: z.number().nullable(),
-	endTimestamp: z.number().nullable(),
-});
 const PayloadSchema = z.object({
 	userId: z.string(),
 	harvestId: z.string(),
 	adminRequestedBy: z.string().optional(),
 	includeAttachments: z.boolean().default(false),
-	filter: FilterPayloadSchema.optional(),
+	filter: SelfMessageFilterPayload.optional(),
 });
 
 interface HarvestedAttachment {
@@ -785,18 +774,7 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 	};
 	let filterArgs: HarvestMessagesFilterArgs | null = null;
 	if (validated.filter) {
-		const filter: SelfMessageFilter = {
-			scope: validated.filter.scope,
-			includeDms: validated.filter.includeDms,
-			includeDmsClosed: validated.filter.includeDmsClosed,
-			includeGroupDms: validated.filter.includeGroupDms,
-			includeGuilds: validated.filter.includeGuilds,
-			guildFilterMode: validated.filter.guildFilterMode,
-			excludedGuildIds: new Set(validated.filter.excludedGuildIds),
-			includedGuildIds: new Set(validated.filter.includedGuildIds),
-			startTimestamp: validated.filter.startTimestamp,
-			endTimestamp: validated.filter.endTimestamp,
-		};
+		const filter = deserializeSelfMessageFilter(validated.filter);
 		const [privateChannelsForFilter, userGuildsForFilter] = await Promise.all([
 			userRepository.listPrivateChannels(userId),
 			guildRepository.listUserGuilds(userId),

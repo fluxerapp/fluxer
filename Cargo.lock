@@ -1940,6 +1940,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "fluxer-svc",
+ "fluxer_common",
  "futures",
  "moka",
  "rmp-serde",

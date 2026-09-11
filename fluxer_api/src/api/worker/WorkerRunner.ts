@@ -77,7 +77,7 @@ export class WorkerRunner {
 	private readonly ledger: IJobLedgerRepository;
 	private readonly heartbeat: WorkerHeartbeat | null;
 	private heartbeatSignal: WorkerHeartbeatSignal | null = null;
-	private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+	private heartbeatTimer: NodeJS.Timeout | null = null;
 	private running = false;
 	private consumerMessages: ConsumerMessages | null = null;
 	private processingLoop: Promise<void> | null = null;
@@ -447,7 +447,7 @@ export class WorkerRunner {
 		msg.term(RETIRED_TASK_REASON);
 	}
 
-	private startAckHeartbeat(taskType: string, msg: JsMsg): ReturnType<typeof setInterval> {
+	private startAckHeartbeat(taskType: string, msg: JsMsg): NodeJS.Timeout {
 		const heartbeat = setInterval(
 			() => {
 				try {

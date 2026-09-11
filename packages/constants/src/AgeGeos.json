@@ -1,0 +1,4 @@
+{
+	"ageRestrictedGeos": [{"countryCode": "GB", "regionCode": null}, {"countryCode": "BR", "regionCode": null}],
+	"ageBlockedGeos": [{"countryCode": "US", "regionCode": "MS"}]
+}

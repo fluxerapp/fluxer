@@ -31,9 +31,9 @@ interface UseTextareaExpressionHandlersOptions {
 		newText: string;
 		newSegments: Array<MentionSegment>;
 	};
-	previousValueRef: React.MutableRefObject<string>;
+	previousValueRef: React.RefObject<string>;
 	prepareTextChange: PrepareTextareaTextChange;
-	segmentManagerRef: React.MutableRefObject<TextareaSegmentManager>;
+	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
 	sendOptimisticMessage: (
 		messageData: {
 			content: string;

@@ -19,12 +19,9 @@ describe('UserPartialResponse', () => {
 		flags: 0,
 	};
 	it('accepts valid user partial response', () => {
-		const result = UserPartialResponse.safeParse(validUser);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.id).toBe('123456789012345678');
-			expect(result.data.username).toBe('testuser');
-		}
+		const result = UserPartialResponse.parse(validUser);
+		expect(result.id).toBe('123456789012345678');
+		expect(result.username).toBe('testuser');
 	});
 	it('accepts null global_name and avatar', () => {
 		const user = {
@@ -38,19 +35,13 @@ describe('UserPartialResponse', () => {
 	});
 	it('accepts optional bot flag', () => {
 		const user = {...validUser, bot: true};
-		const result = UserPartialResponse.safeParse(user);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.bot).toBe(true);
-		}
+		const result = UserPartialResponse.parse(user);
+		expect(result.bot).toBe(true);
 	});
 	it('accepts optional system flag', () => {
 		const user = {...validUser, system: true};
-		const result = UserPartialResponse.safeParse(user);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.system).toBe(true);
-		}
+		const result = UserPartialResponse.parse(user);
+		expect(result.system).toBe(true);
 	});
 	it('requires id', () => {
 		const {id, ...userWithoutId} = validUser;
@@ -180,12 +171,9 @@ describe('RelationshipResponse', () => {
 		friend_shares_voice_activity: true,
 	};
 	it('accepts valid relationship', () => {
-		const result = RelationshipResponse.safeParse(validRelationship);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.id).toBe('123456789012345678');
-			expect(result.data.type).toBe(1);
-		}
+		const result = RelationshipResponse.parse(validRelationship);
+		expect(result.id).toBe('123456789012345678');
+		expect(result.type).toBe(1);
 	});
 	it('accepts relationship with null nickname', () => {
 		const relationship = {...validRelationship, nickname: null};

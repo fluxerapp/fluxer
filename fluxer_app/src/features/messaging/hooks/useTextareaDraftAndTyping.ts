@@ -12,8 +12,8 @@ interface UseTextareaDraftAndTypingOptions {
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	draft: string | null;
 	draftSegments?: ReadonlyArray<MentionSegment> | null;
-	previousValueRef: React.MutableRefObject<string>;
-	segmentManagerRef?: React.MutableRefObject<TextareaSegmentManager>;
+	previousValueRef: React.RefObject<string>;
+	segmentManagerRef?: React.RefObject<TextareaSegmentManager>;
 	isAutocompleteAttached: boolean;
 	enabled: boolean;
 	typingEnabled?: boolean;
