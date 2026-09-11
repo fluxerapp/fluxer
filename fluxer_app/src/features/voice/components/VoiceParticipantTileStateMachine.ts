@@ -87,6 +87,8 @@ export function graphTileStateHoldsWatchIntent(graphTileState: VoiceMediaGraphSt
 			return true;
 		case 'rendering':
 			return true;
+		case 'recovering':
+			return true;
 		case 'failed':
 			return true;
 		case 'idle':
@@ -108,6 +110,8 @@ export function shouldShowScreenShareBuffering(signals: VoiceParticipantTileScre
 		case 'attaching':
 			return true;
 		case 'subscribedAwaitingFrame':
+			return true;
+		case 'recovering':
 			return true;
 		case 'publicationMissing':
 			if (signals.isRepublishGracePending) return true;

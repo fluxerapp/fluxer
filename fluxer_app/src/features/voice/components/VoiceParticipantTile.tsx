@@ -76,6 +76,7 @@ import {
 } from '@app/features/voice/components/voice_participant_tile/hooks';
 import LastFrameSnapshotCache from '@app/features/voice/components/voice_participant_tile/LastFrameSnapshotCache';
 import {ScreenSharePlaceholder} from '@app/features/voice/components/voice_participant_tile/ScreenSharePlaceholder';
+import {screenShareVideoSubscriptionRecoveryCoordinator} from '@app/features/voice/components/voice_participant_tile/ScreenShareVideoSubscriptionRecovery';
 import {
 	CAMERA_BUFFERING_DESCRIPTOR,
 	CAMERA_HIDDEN_DESCRIPTOR,
@@ -113,6 +114,7 @@ import {
 	selectVoiceMediaGraphDeferredStopKeys,
 	selectVoiceMediaGraphFailure,
 	selectVoiceMediaGraphViewerStreamKeys,
+	selectVoiceMediaGraphWatchGeneration,
 } from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import {selectVoiceMediaGraphStreamTileState} from '@app/features/voice/engine/VoiceMediaGraphTileState';
@@ -405,11 +407,22 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const isConnectedToTileChannel =
 		Boolean(channelId) && MediaEngine.channelId === channelId && MediaEngine.guildId === (guildId ?? null);
 	const isWatching = isConnectedToTileChannel && graphViewerStreamKeys.includes(streamKey);
-	const graphTileState = selectVoiceMediaGraphStreamTileState(graphSnapshot, {
-		streamKey: streamKey || null,
-		participantIdentity: identity || null,
-		source: VoiceTrackSource.ScreenShare,
-	});
+	const graphWatchGeneration = selectVoiceMediaGraphWatchGeneration(graphSnapshot, streamKey);
+	const graphTileState = selectVoiceMediaGraphStreamTileState(
+		graphSnapshot,
+		{
+			streamKey: streamKey || null,
+			participantIdentity: identity || null,
+			source: VoiceTrackSource.ScreenShare,
+		},
+		{
+			hasRecoveryBudget: screenShareVideoSubscriptionRecoveryCoordinator.hasFirstFrameRecoveryBudget(
+				streamKey,
+				graphWatchGeneration,
+			),
+			nowMs: voiceMediaGraphStore.nowMs(),
+		},
+	);
 	const graphWatchFailure = isScreenShare
 		? selectVoiceMediaGraphFailure(graphSnapshot, {
 				streamKey,

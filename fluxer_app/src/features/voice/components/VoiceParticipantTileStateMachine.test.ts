@@ -30,6 +30,7 @@ const GRAPH_TILE_STATES: ReadonlyArray<VoiceMediaGraphStreamTileState> = [
 	'attaching',
 	'subscribedAwaitingFrame',
 	'rendering',
+	'recovering',
 	'failed',
 ];
 
@@ -39,6 +40,7 @@ const WATCH_INTENT_GRAPH_TILE_STATES: ReadonlyArray<VoiceMediaGraphStreamTileSta
 	'attaching',
 	'subscribedAwaitingFrame',
 	'rendering',
+	'recovering',
 	'failed',
 ];
 
@@ -215,6 +217,18 @@ describe('VoiceParticipantTileStateMachine graph-derived screen share state', ()
 
 	it('renders without overlays once the graph reports rendering', () => {
 		expect(selectVoiceParticipantTileScreenShareState(signals({graphTileState: 'rendering'}))).toBe('idle');
+	});
+
+	it('shows buffering while screen share recovery is still running', () => {
+		expect(selectVoiceParticipantTileScreenShareState(signals({graphTileState: 'recovering'}))).toBe('buffering');
+		expect(
+			selectVoiceParticipantTileScreenShareState(signals({graphTileState: 'recovering', isTrackReference: false})),
+		).toBe('buffering');
+	});
+
+	it('holds the error code back until recovery has given up', () => {
+		expect(shouldShowWatchFailed(signals({graphTileState: 'recovering'}))).toBe(false);
+		expect(shouldShowWatchFailed(signals({graphTileState: 'failed'}))).toBe(true);
 	});
 
 	it('shows the watch failed overlay when the graph reports a failure', () => {

@@ -79,9 +79,9 @@ function createWatchedSnapshot(failure: Partial<VoiceMediaGraphFailure> | null):
 	});
 }
 
-function createGraphPort(snapshot: VoiceMediaGraphSnapshot): ScreenShareVideoSubscriptionRecoveryGraph {
+function createGraphPort(getSnapshot: () => VoiceMediaGraphSnapshot): ScreenShareVideoSubscriptionRecoveryGraph {
 	return {
-		getGraphSnapshot: () => snapshot,
+		getGraphSnapshot: getSnapshot,
 		nowMs: () => 1000,
 		transition: () => undefined,
 	};
@@ -95,20 +95,47 @@ function createReceivablePublication(): ScreenShareVideoSubscriptionRecoveryPubl
 	};
 }
 
-function acquireWatchingTile(failure: Partial<VoiceMediaGraphFailure> | null) {
-	const snapshot = createWatchedSnapshot(failure);
+function createMutedPublication(): ScreenShareVideoSubscriptionRecoveryPublication {
+	return {
+		trackSid: TRACK_SID,
+		isSubscribed: true,
+		track: {mediaStreamTrack: {readyState: 'live', muted: true}},
+	};
+}
+
+function createWatchingTile(
+	failure: Partial<VoiceMediaGraphFailure> | null,
+	publication: ScreenShareVideoSubscriptionRecoveryPublication = createReceivablePublication(),
+) {
+	let snapshot = createWatchedSnapshot(failure);
 	const {scheduler, fire, pendingCount, scheduledDelays} = createScheduler();
-	const coordinator = new ScreenShareVideoSubscriptionRecoveryCoordinator(scheduler, createGraphPort(snapshot));
+	const coordinator = new ScreenShareVideoSubscriptionRecoveryCoordinator(
+		scheduler,
+		createGraphPort(() => snapshot),
+	);
 	const recover = vi.fn();
-	coordinator.acquire({
-		key: TRACK_SID,
-		publication: createReceivablePublication(),
-		streamKey: STREAM_KEY,
-		participantIdentity: PARTICIPANT_IDENTITY,
-		isStillWanted: () => isScreenShareVideoSubscriptionRecoveryWanted(snapshot, STREAM_KEY),
-		recover,
-	});
-	return {coordinator, fire, pendingCount, scheduledDelays, recover};
+	const acquire = () =>
+		coordinator.acquire({
+			key: TRACK_SID,
+			publication,
+			streamKey: STREAM_KEY,
+			participantIdentity: PARTICIPANT_IDENTITY,
+			isStillWanted: () => isScreenShareVideoSubscriptionRecoveryWanted(snapshot, STREAM_KEY),
+			recover,
+		});
+	const restartWatch = (nextFailure: Partial<VoiceMediaGraphFailure> | null) => {
+		snapshot = createWatchedSnapshot(nextFailure);
+	};
+	return {coordinator, fire, pendingCount, scheduledDelays, recover, acquire, restartWatch};
+}
+
+function acquireWatchingTile(
+	failure: Partial<VoiceMediaGraphFailure> | null,
+	publication?: ScreenShareVideoSubscriptionRecoveryPublication,
+) {
+	const tile = createWatchingTile(failure, publication);
+	tile.acquire();
+	return tile;
 }
 
 describe('isScreenShareVideoSubscriptionRecoveryWanted', () => {
@@ -179,5 +206,58 @@ describe('ScreenShareVideoSubscriptionRecoveryCoordinator first-frame recovery',
 
 		expect(recover).not.toHaveBeenCalled();
 		expect(coordinator.getActiveSessionCount()).toBe(0);
+	});
+
+	it('keeps the recovery count when the lease is released and taken again', () => {
+		const {coordinator, fire, recover, acquire} = createWatchingTile(FIRST_FRAME_TIMEOUT_FAILURE);
+		const release = acquire();
+
+		fire();
+
+		expect(recover).toHaveBeenCalledTimes(1);
+
+		release();
+
+		expect(coordinator.getActiveSessionCount()).toBe(0);
+
+		acquire();
+		fire();
+		fire();
+
+		expect(recover).toHaveBeenCalledTimes(3);
+
+		fire();
+
+		expect(recover).toHaveBeenCalledTimes(3);
+		expect(coordinator.getActiveSessionCount()).toBe(0);
+	});
+
+	it('hands the next watch of the same stream a fresh recovery budget', () => {
+		const {fire, recover, acquire, restartWatch} = createWatchingTile(FIRST_FRAME_TIMEOUT_FAILURE);
+		const release = acquire();
+
+		fire();
+		fire();
+		fire();
+
+		expect(recover).toHaveBeenCalledTimes(3);
+
+		release();
+		restartWatch(null);
+		acquire();
+		restartWatch(FIRST_FRAME_TIMEOUT_FAILURE);
+		fire();
+
+		expect(recover).toHaveBeenCalledTimes(4);
+	});
+
+	it('leaves a muted track alone until a failure is recorded', () => {
+		const {coordinator, fire, recover} = acquireWatchingTile(null, createMutedPublication());
+
+		fire();
+		fire();
+
+		expect(recover).not.toHaveBeenCalled();
+		expect(coordinator.getActiveSessionCount()).toBe(1);
 	});
 });
