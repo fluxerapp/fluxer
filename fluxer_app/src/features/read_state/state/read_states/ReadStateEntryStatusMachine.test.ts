@@ -14,14 +14,17 @@ import {
 const BASE_TIMESTAMP = Date.UTC(2024, 0, 1);
 const ACK_ID = fromTimestamp(BASE_TIMESTAMP + 1000);
 const LAST_ID = fromTimestamp(BASE_TIMESTAMP + 2000);
+const ACK_TS = BASE_TIMESTAMP + 1000;
+const LAST_TS = BASE_TIMESTAMP + 2000;
 
 function input(overrides: Partial<ReadStateEntryStatusInput> = {}): ReadStateEntryStatusInput {
 	return {
 		supportsUnreadTracking: true,
 		hasBlockedDirectMessageRecipient: false,
-		readStateKnown: true,
 		lastMessageId: LAST_ID,
 		ackMessageId: LAST_ID,
+		ackTimestamp: LAST_TS,
+		lastMessageTimestamp: LAST_TS,
 		mentionCount: 0,
 		...overrides,
 	};
@@ -35,8 +38,9 @@ describe('readStateEntryStatusMachine', () => {
 	it('routes the read-state status by priority', () => {
 		expectResolvedState({supportsUnreadTracking: false, mentionCount: 1, ackMessageId: ACK_ID}, 'untracked');
 		expectResolvedState({hasBlockedDirectMessageRecipient: true, mentionCount: 1, ackMessageId: ACK_ID}, 'blocked');
-		expectResolvedState({readStateKnown: false, ackMessageId: ACK_ID}, 'unknown');
-		expectResolvedState({lastMessageId: null, ackMessageId: ACK_ID}, 'unknown');
+		expectResolvedState({lastMessageId: null, ackMessageId: ACK_ID}, 'read');
+		expectResolvedState({ackMessageId: null, ackTimestamp: ACK_TS}, 'unread');
+		expectResolvedState({ackMessageId: null, ackTimestamp: LAST_TS}, 'read');
 		expectResolvedState({ackMessageId: ACK_ID}, 'unread');
 		expectResolvedState({ackMessageId: LAST_ID}, 'read');
 	});

@@ -7,6 +7,8 @@ import {type ReadStateEntryStatusInput, resolveReadStateEntryStatus} from './Rea
 const BASE_TIMESTAMP = Date.UTC(2024, 0, 1);
 const ACK_ID = fromTimestamp(BASE_TIMESTAMP + 1_000);
 const LAST_ID = fromTimestamp(BASE_TIMESTAMP + 2_000);
+const ACK_TS = BASE_TIMESTAMP + 1_000;
+const LAST_TS = BASE_TIMESTAMP + 2_000;
 const INPUTS = Object.freeze(
 	Array.from({length: 100_000}, (_, index): ReadStateEntryStatusInput => {
 		switch (index % 6) {
@@ -14,54 +16,60 @@ const INPUTS = Object.freeze(
 				return {
 					supportsUnreadTracking: false,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 1,
 				};
 			case 1:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: true,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 1,
 				};
 			case 2:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: false,
 					lastMessageId: LAST_ID,
-					ackMessageId: ACK_ID,
+					ackMessageId: null,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 0,
 				};
 			case 3:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: null,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 0,
 				};
 			case 4:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 2,
 				};
 			default:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: LAST_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 0,
 				};
 		}

@@ -9,10 +9,9 @@ export interface ReadStateIncomingMessageInput {
 	isAtBottom: boolean;
 	authorBlocked: boolean;
 	hadUnreadOrMentions: boolean;
-	readStateKnown: boolean;
 	messageId: string;
 	ackMessageId: string | null;
-	previousLastMessageId: string | null;
+	coveredByLastMessage: boolean;
 }
 
 export type ReadStateIncomingMessageDecision =
@@ -33,7 +32,7 @@ export type ReadStateIncomingMessageDecision =
 	  }
 	| {
 			type: 'recordUnread';
-			initializeUnknownReadState: boolean;
+			coveredByLastMessage: boolean;
 	  };
 
 export type ReadStateIncomingMessageEvent = {
@@ -41,19 +40,9 @@ export type ReadStateIncomingMessageEvent = {
 	input: ReadStateIncomingMessageInput;
 };
 
-function getEffectiveAckMessageId(context: ReadStateIncomingMessageInput): string | null {
-	switch (context.readStateKnown) {
-		case true:
-			return context.ackMessageId;
-		case false:
-			return context.previousLastMessageId;
-	}
-}
-
-function isCoveredByEffectiveAck(context: ReadStateIncomingMessageInput): boolean {
-	const effectiveAckMessageId = getEffectiveAckMessageId(context);
-	if (effectiveAckMessageId == null) return false;
-	return compareMessageIds(context.messageId, effectiveAckMessageId) <= 0;
+function isCoveredByAck(context: ReadStateIncomingMessageInput): boolean {
+	if (context.ackMessageId == null) return false;
+	return compareMessageIds(context.messageId, context.ackMessageId) <= 0;
 }
 
 function getDecision(snapshot: ReadStateIncomingMessageSnapshot): ReadStateIncomingMessageDecision {
@@ -71,7 +60,7 @@ function getDecision(snapshot: ReadStateIncomingMessageSnapshot): ReadStateIncom
 		default:
 			return {
 				type: 'recordUnread',
-				initializeUnknownReadState: !snapshot.context.readStateKnown,
+				coveredByLastMessage: snapshot.context.coveredByLastMessage,
 			};
 	}
 }
@@ -93,7 +82,7 @@ export const readStateIncomingMessageMachine = setup({
 		shouldAutomaticallyAck: ({context}) => context.automaticAckEnabled && context.isAtBottom,
 		shouldAckBlockedMessage: ({context}) => context.authorBlocked && !context.hadUnreadOrMentions,
 		shouldIgnoreBlockedMessage: ({context}) => context.authorBlocked,
-		isCoveredByAck: ({context}) => isCoveredByEffectiveAck(context),
+		isCoveredByAck: ({context}) => isCoveredByAck(context),
 	},
 }).createMachine({
 	id: 'readStateIncomingMessage',

@@ -22,10 +22,9 @@ function input(overrides: Partial<ReadStateIncomingMessageInput> = {}): ReadStat
 		isAtBottom: false,
 		authorBlocked: false,
 		hadUnreadOrMentions: false,
-		readStateKnown: true,
 		messageId: MESSAGE_ID,
 		ackMessageId: ACK_ID,
-		previousLastMessageId: PREVIOUS_ID,
+		coveredByLastMessage: false,
 		...overrides,
 	};
 }
@@ -63,22 +62,21 @@ describe('readStateIncomingMessageMachine', () => {
 		expect(
 			resolveReadStateIncomingMessageDecision(
 				input({
-					readStateKnown: false,
 					messageId: PREVIOUS_ID,
 					ackMessageId: null,
 				}),
 			),
-		).toEqual({type: 'coveredByAck'});
+		).toEqual({type: 'recordUnread', coveredByLastMessage: false});
 	});
 
-	it('records unread and initializes unknown read state only when needed', () => {
+	it('records unread and reports whether the message is already covered by the watermark', () => {
 		expect(resolveReadStateIncomingMessageDecision(input())).toEqual({
 			type: 'recordUnread',
-			initializeUnknownReadState: false,
+			coveredByLastMessage: false,
 		});
-		expect(resolveReadStateIncomingMessageDecision(input({readStateKnown: false, ackMessageId: null}))).toEqual({
+		expect(resolveReadStateIncomingMessageDecision(input({coveredByLastMessage: true}))).toEqual({
 			type: 'recordUnread',
-			initializeUnknownReadState: true,
+			coveredByLastMessage: true,
 		});
 	});
 
@@ -86,7 +84,7 @@ describe('readStateIncomingMessageMachine', () => {
 		const unreadSnapshot = createReadStateIncomingMessageSnapshot(input());
 		expect(selectReadStateIncomingMessageDecision(unreadSnapshot)).toEqual({
 			type: 'recordUnread',
-			initializeUnknownReadState: false,
+			coveredByLastMessage: false,
 		});
 
 		const autoAckSnapshot = transitionReadStateIncomingMessageSnapshot(unreadSnapshot, {

@@ -10,6 +10,7 @@ import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSche
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const channels = new Map<string, Channel>();
+const guilds = new Map<string, {joinedAt: string | null}>();
 let pinnedToEnd = false;
 let automaticAck = false;
 const loadedMessages: Array<{id: string; author: {id: string}}> = [];
@@ -41,6 +42,7 @@ vi.mock('@app/features/user/state/Users', () => ({
 	default: {getCurrentUser: () => ({id: 'me'}), cacheUsers: () => {}},
 }));
 vi.mock('@app/features/relationship/state/Relationships', () => ({default: {isBlocked: () => false}}));
+vi.mock('@app/features/guild/state/Guilds', () => ({default: {getGuild: (id: string) => guilds.get(id)}}));
 vi.mock('@app/features/member/state/GuildMembers', () => ({default: {getMember: () => null}}));
 vi.mock('@app/features/user/state/UserGuildSettings', () => ({
 	default: {

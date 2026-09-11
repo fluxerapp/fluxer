@@ -23,6 +23,9 @@ import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMember
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {action, makeAutoObservable, reaction} from 'mobx';
 
+const STALE_WINDOW_REFETCH_INTERVAL_MS = 10_000;
+const staleWindowRefetchedAt = new Map<string, number>();
+
 interface GuildMemberUpdateAction {
 	type: 'GUILD_MEMBER_UPDATE';
 	guildId: string;
@@ -379,10 +382,9 @@ class Messages {
 		if (!isNonGuildChannel && !guildExists) {
 			return false;
 		}
-		const distrustedTailId = messages.ready && messages.cached ? (messages.last()?.id ?? null) : null;
 		this.commitMessages(messages.withPatch({loadingMore: true}));
 		this.notifyChange();
-		MessageCommands.fetchMessages(channelId, null, distrustedTailId, MAX_MESSAGES_PER_CHANNEL);
+		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL);
 		return false;
 	}
 
@@ -443,9 +445,9 @@ class Messages {
 	}
 
 	@action
-	handleLoadMessages(action: {channelId: string; jump?: JumpOptions; tailProbe?: boolean}): boolean {
+	handleLoadMessages(action: {channelId: string; jump?: JumpOptions}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId);
-		this.commitMessages(action.tailProbe ? messages.beginProbeLoad() : messages.beginLoad(action.jump));
+		this.commitMessages(messages.beginLoad(action.jump));
 		this.notifyChange();
 		return false;
 	}
@@ -499,7 +501,6 @@ class Messages {
 		hasMoreBefore?: boolean;
 		hasMoreAfter?: boolean;
 		cached?: boolean;
-		tailProbe?: boolean;
 		messages: Array<WireMessage>;
 	}): boolean {
 		const messages = ChannelMessages.getOrCreate(action.channelId).applyLoadedWindow({
@@ -510,11 +511,24 @@ class Messages {
 			hasMoreBefore: action.hasMoreBefore,
 			hasMoreAfter: action.hasMoreAfter,
 			cached: action.cached,
-			tailProbe: action.tailProbe,
 		});
 		this.commitMessages(messages);
 		this.notifyChange();
+		this.refetchStaleWindow(action.channelId, action.cached === true, action.jump);
 		return false;
+	}
+
+	private refetchStaleWindow(channelId: string, stale: boolean, jump?: JumpOptions): void {
+		if (!stale || !GatewayConnection.isConnected || SelectedChannel.currentChannelId !== channelId) {
+			return;
+		}
+		const lastAttemptAt = staleWindowRefetchedAt.get(channelId) ?? 0;
+		const now = Date.now();
+		if (now - lastAttemptAt < STALE_WINDOW_REFETCH_INTERVAL_MS) {
+			return;
+		}
+		staleWindowRefetchedAt.set(channelId, now);
+		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL, jump, {staleRefetch: true});
 	}
 
 	@action
@@ -523,15 +537,6 @@ class Messages {
 		this.commitMessages(messages.withPatch({loadingMore: false, error: true}));
 		this.notifyChange();
 		return false;
-	}
-
-	@action
-	handleTailProbeSettled(action: {channelId: string}): boolean {
-		const messages = ChannelMessages.get(action.channelId);
-		if (!messages?.probeLoading) return false;
-		this.commitMessages(messages.endProbeLoad());
-		this.notifyChange();
-		return true;
 	}
 
 	@action

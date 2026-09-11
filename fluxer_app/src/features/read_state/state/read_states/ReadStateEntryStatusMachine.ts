@@ -6,9 +6,10 @@ import {compareMessageIds} from './shared';
 export interface ReadStateEntryStatusInput {
 	supportsUnreadTracking: boolean;
 	hasBlockedDirectMessageRecipient: boolean;
-	readStateKnown: boolean;
 	lastMessageId: string | null;
 	ackMessageId: string | null;
+	ackTimestamp: number;
+	lastMessageTimestamp: number;
 	mentionCount: number;
 }
 
@@ -17,7 +18,7 @@ export type ReadStateEntryStatusEvent = {
 	input: ReadStateEntryStatusInput;
 };
 
-export type ReadStateEntryStatusValue = 'untracked' | 'blocked' | 'unknown' | 'read' | 'unread';
+export type ReadStateEntryStatusValue = 'untracked' | 'blocked' | 'read' | 'unread';
 
 export interface ReadStateEntryStatusModel {
 	state: ReadStateEntryStatusValue;
@@ -34,8 +35,6 @@ function getStatusValue(snapshot: ReadStateEntryStatusSnapshot): ReadStateEntryS
 			return 'untracked';
 		case 'blocked':
 			return 'blocked';
-		case 'unknown':
-			return 'unknown';
 		case 'unread':
 			return 'unread';
 		default:
@@ -44,14 +43,16 @@ function getStatusValue(snapshot: ReadStateEntryStatusSnapshot): ReadStateEntryS
 }
 
 function isUnread(context: ReadStateEntryStatusInput): boolean {
-	if (!context.readStateKnown || context.lastMessageId == null) return false;
-	return compareMessageIds(context.ackMessageId, context.lastMessageId) < 0;
+	if (context.lastMessageId == null) return false;
+	if (context.ackMessageId != null) {
+		return compareMessageIds(context.ackMessageId, context.lastMessageId) < 0;
+	}
+	return context.ackTimestamp < context.lastMessageTimestamp;
 }
 
 function getStatusValueFromInput(input: ReadStateEntryStatusInput): ReadStateEntryStatusValue {
 	if (!input.supportsUnreadTracking) return 'untracked';
 	if (input.hasBlockedDirectMessageRecipient) return 'blocked';
-	if (!input.readStateKnown || input.lastMessageId == null) return 'unknown';
 	if (isUnread(input)) return 'unread';
 	return 'read';
 }
@@ -89,7 +90,6 @@ export const readStateEntryStatusMachine = setup({
 	guards: {
 		isUntracked: ({context}) => !context.supportsUnreadTracking,
 		isBlocked: ({context}) => context.hasBlockedDirectMessageRecipient,
-		isUnknown: ({context}) => !context.readStateKnown || context.lastMessageId == null,
 		isUnread: ({context}) => isUnread(context),
 	},
 }).createMachine({
@@ -101,7 +101,6 @@ export const readStateEntryStatusMachine = setup({
 			always: [
 				{guard: 'isUntracked', target: 'untracked'},
 				{guard: 'isBlocked', target: 'blocked'},
-				{guard: 'isUnknown', target: 'unknown'},
 				{guard: 'isUnread', target: 'unread'},
 				{target: 'read'},
 			],
@@ -110,9 +109,6 @@ export const readStateEntryStatusMachine = setup({
 			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
 		},
 		blocked: {
-			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
-		},
-		unknown: {
 			on: {'readStateEntry.updated': {target: 'routing', actions: 'applyInput'}},
 		},
 		read: {

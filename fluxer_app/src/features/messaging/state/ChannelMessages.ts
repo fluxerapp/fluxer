@@ -52,7 +52,6 @@ interface LoadCompleteOptions {
 	hasMoreBefore?: boolean;
 	hasMoreAfter?: boolean;
 	cached?: boolean;
-	tailProbe?: boolean;
 }
 
 type MessageInput = Message | WireMessage;
@@ -300,7 +299,6 @@ export class ChannelMessages {
 	jumpDestinationOffset = 0;
 	jumpTicket = 1;
 	loadGeneration = 0;
-	probeLoading = false;
 	hasJumped = false;
 	landedAtLiveEdge = false;
 	jumpHighlight = true;
@@ -835,15 +833,6 @@ export class ChannelMessages {
 		return this.cloneAnd({ready: true, cached: true}).merge([hydrateMessage(this, wire, 'preserve')]);
 	}
 
-	beginProbeLoad(): ChannelMessages {
-		return this.cloneAnd({loadGeneration: ++nextLoadGeneration, probeLoading: true});
-	}
-
-	endProbeLoad(): ChannelMessages {
-		if (!this.probeLoading) return this;
-		return this.cloneAnd({probeLoading: false});
-	}
-
 	beginLoad(jump?: JumpOptions): ChannelMessages {
 		return this.cloneAnd({
 			loadGeneration: ++nextLoadGeneration,
@@ -868,7 +857,6 @@ export class ChannelMessages {
 			hasMoreBefore = false,
 			hasMoreAfter = false,
 			cached = false,
-			tailProbe = false,
 		} = options;
 		const records = [...windowMessages].reverse().map((m) => hydrateMessage(this, m, 'empty'));
 		const loadDecision = resolveChannelMessagesLoadDecision({
@@ -887,26 +875,24 @@ export class ChannelMessages {
 			}
 		} else {
 			next = this.merge(records, loadDecision.prepend, true, true);
-			if (!tailProbe && loadDecision.trimBottom) {
+			if (loadDecision.trimBottom) {
 				next = next.trimToWindow(true, false);
-			} else if (!tailProbe && loadDecision.trimTop) {
+			} else if (loadDecision.trimTop) {
 				next = next.trimToWindow(false, true);
 			}
 		}
-		const jumpPatch = tailProbe
-			? {}
-			: {
-					jumpType: jump?.jumpType ?? JumpTypes.ANIMATED,
-					jumpHighlight: jump?.flash ?? false,
-					hasJumped: jump != null,
-					landedAtLiveEdge: jump?.present ?? false,
-					jumpDestinationId: jump?.messageId ?? null,
-					jumpDestinationOffset: jump && jump.messageId != null && jump.offset != null ? jump.offset : 0,
-					jumpTicket: jump ? next.jumpTicket + 1 : next.jumpTicket,
-					jumpReturnMessageId: jump?.returnToMessageId ?? null,
-					jumpReturnChannelId: jump?.returnToMessageId ? (jump.returnChannelId ?? this.channelId) : null,
-					jumpReturnGuildId: jump?.returnToMessageId ? (jump.returnGuildId ?? null) : null,
-				};
+		const jumpPatch = {
+			jumpType: jump?.jumpType ?? JumpTypes.ANIMATED,
+			jumpHighlight: jump?.flash ?? false,
+			hasJumped: jump != null,
+			landedAtLiveEdge: jump?.present ?? false,
+			jumpDestinationId: jump?.messageId ?? null,
+			jumpDestinationOffset: jump && jump.messageId != null && jump.offset != null ? jump.offset : 0,
+			jumpTicket: jump ? next.jumpTicket + 1 : next.jumpTicket,
+			jumpReturnMessageId: jump?.returnToMessageId ?? null,
+			jumpReturnChannelId: jump?.returnToMessageId ? (jump.returnChannelId ?? this.channelId) : null,
+			jumpReturnGuildId: jump?.returnToMessageId ? (jump.returnGuildId ?? null) : null,
+		};
 		const reachesLiveEdge = selectChannelMessagesLoadRestoresTrust({
 			mode: loadDecision.mode,
 			isAfter,
@@ -915,7 +901,6 @@ export class ChannelMessages {
 		next = next.cloneAnd({
 			ready: true,
 			loadingMore: false,
-			probeLoading: false,
 			...jumpPatch,
 			hasMoreBefore: loadDecision.preserveHasMoreBefore ? next.hasMoreBefore : hasMoreBefore,
 			hasMoreAfter: loadDecision.preserveHasMoreAfter ? next.hasMoreAfter : hasMoreAfter,
@@ -996,7 +981,6 @@ export class ChannelMessages {
 			clone.jumpDestinationOffset = this.jumpDestinationOffset;
 			clone.jumpTicket = this.jumpTicket;
 			clone.loadGeneration = this.loadGeneration;
-			clone.probeLoading = this.probeLoading;
 			clone.hasJumped = this.hasJumped;
 			clone.landedAtLiveEdge = this.landedAtLiveEdge;
 			clone.jumpHighlight = this.jumpHighlight;
@@ -1020,7 +1004,6 @@ export class ChannelMessages {
 				patch.jumpDestinationOffset !== undefined ? patch.jumpDestinationOffset : this.jumpDestinationOffset;
 			clone.jumpTicket = patch.jumpTicket !== undefined ? patch.jumpTicket : this.jumpTicket;
 			clone.loadGeneration = patch.loadGeneration !== undefined ? patch.loadGeneration : this.loadGeneration;
-			clone.probeLoading = 'probeLoading' in patch ? !!patch.probeLoading : this.probeLoading;
 			clone.hasJumped = 'hasJumped' in patch ? !!patch.hasJumped : this.hasJumped;
 			clone.landedAtLiveEdge = 'landedAtLiveEdge' in patch ? !!patch.landedAtLiveEdge : this.landedAtLiveEdge;
 			clone.jumpHighlight = 'jumpHighlight' in patch ? !!patch.jumpHighlight : this.jumpHighlight;
