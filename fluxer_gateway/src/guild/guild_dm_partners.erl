@@ -62,17 +62,15 @@ visibility_inputs(State) ->
         maps:get(virtual_channel_access, State, #{})
     }.
 
--spec role_inputs(term()) -> term().
-role_inputs(Roles) when is_map(Roles) ->
+-spec role_inputs(map()) -> [{term(), term()}].
+role_inputs(Roles) ->
     lists:sort([
         {Id, maps:get(<<"permissions">>, Role, undefined)}
      || {Id, Role} <- maps:to_list(Roles), is_map(Role)
-    ]);
-role_inputs(Roles) ->
-    Roles.
+    ]).
 
--spec channel_inputs(term()) -> term().
-channel_inputs(Channels) when is_map(Channels) ->
+-spec channel_inputs(map()) -> [{term(), term(), term(), term()}].
+channel_inputs(Channels) ->
     lists:sort([
         {
             Id,
@@ -81,9 +79,7 @@ channel_inputs(Channels) when is_map(Channels) ->
             maps:get(<<"permission_overwrites">>, Channel, [])
         }
      || {Id, Channel} <- maps:to_list(Channels), is_map(Channel)
-    ]);
-channel_inputs(Channels) ->
-    Channels.
+    ]).
 
 -spec update(session_id(), [term()], guild_state()) -> guild_state().
 update(SessionId, PartnerIds, State) ->
