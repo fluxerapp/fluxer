@@ -6,15 +6,18 @@ import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedErr
 import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
+import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {createApplicationID} from '../BrandedTypes';
+import {createApplicationID, createUserID} from '../BrandedTypes';
+import {assertMutableUserId} from '../constants/Core';
 import {Logger} from '../Logger';
 import type {User} from '../models/User';
 import type {HonoEnv} from '../types/HonoEnv';
 
 const ADMIN_OAUTH2_APPLICATION_ID_BRANDED = createApplicationID(ADMIN_OAUTH2_APPLICATION_ID);
 type AdminAuthTokenType = 'bearer' | 'session' | 'admin_api_key';
+const ADMIN_TARGET_USER_PARAMS = ['user_id', 'target_user_id'] as const;
 
 function ensureBearerIsBuiltInAdminApplication(ctx: Context<HonoEnv>): void {
 	if (ctx.get('oauthBearerApplicationId') !== ADMIN_OAUTH2_APPLICATION_ID_BRANDED) {
@@ -57,6 +60,23 @@ function getRequestAdminACLs(ctx: Context<HonoEnv>, adminUser: User, tokenType: 
 	return tokenType === 'admin_api_key' ? (ctx.get('adminApiKeyAcls') ?? new Set()) : adminUser.acls;
 }
 
+function ensureAdminTargetIsMutable(ctx: Context<HonoEnv>): void {
+	if (ctx.req.method === 'GET') {
+		return;
+	}
+	for (const paramName of ADMIN_TARGET_USER_PARAMS) {
+		const rawUserId = ctx.req.param(paramName);
+		if (rawUserId === undefined) {
+			continue;
+		}
+		const parsedUserId = SnowflakeType.safeParse(rawUserId);
+		if (!parsedUserId.success) {
+			continue;
+		}
+		assertMutableUserId(createUserID(parsedUserId.data));
+	}
+}
+
 function requireAdminAccess(requiredACLs: ReadonlyArray<string>) {
 	return createMiddleware<HonoEnv>(async (ctx, next) => {
 		const adminUser = ctx.get('user');
@@ -80,6 +100,7 @@ function requireAdminAccess(requiredACLs: ReadonlyArray<string>) {
 		if (!hasAnyAdminACL(requestAcls, requiredACLs)) {
 			throw new MissingACLError(requiredACLs[0] ?? AdminACLs.AUTHENTICATE);
 		}
+		ensureAdminTargetIsMutable(ctx);
 		ctx.set('adminUserId', adminUser.id);
 		ctx.set('adminUserAcls', requestAcls);
 		await next();

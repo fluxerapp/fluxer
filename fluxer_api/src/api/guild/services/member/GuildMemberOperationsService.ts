@@ -36,6 +36,7 @@ import {requireEmailVerified} from '../../../auth/EmailVerificationUtils';
 import type {GuildID, InviteCode, RoleID, UserID} from '../../../BrandedTypes';
 import {createChannelID, createRoleID} from '../../../BrandedTypes';
 import type {ChannelService} from '../../../channel/services/ChannelService';
+import {assertMutableUserId} from '../../../constants/Core';
 import type {GuildMemberRow} from '../../../database/types/GuildTypes';
 import {contentModerationService} from '../../../infrastructure/ContentModerationService';
 import type {EntityAssetService, PreparedAssetUpload} from '../../../infrastructure/EntityAssetService';
@@ -493,6 +494,7 @@ export class GuildMemberOperationsService {
 			if (!guild) throw new UnknownGuildError();
 			const existingMember = await this.guildRepository.getMember(guildId, userId);
 			if (existingMember) return existingMember;
+			assertMutableUserId(userId);
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) throw new UnknownGuildError();
 			if (!skipBanCheck) {

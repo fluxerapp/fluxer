@@ -4,6 +4,7 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {ChannelID, GuildID, MessageID, UserID} from '../../../BrandedTypes';
 import {createChannelID} from '../../../BrandedTypes';
 import type {IChannelRepository} from '../../../channel/IChannelRepository';
+import {assertMutableUserId} from '../../../constants/Core';
 import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
 import type {IGatewayService} from '../../../infrastructure/IGatewayService';
 import type {IStorageService} from '../../../infrastructure/IStorageService';
@@ -74,6 +75,7 @@ export class UserMessageDeletionService {
 	}
 
 	async deleteUserMessagesBulk(userId: UserID, options: BulkDeleteUserMessagesOptions = {}): Promise<number> {
+		assertMutableUserId(userId);
 		const {beforeTimestamp = Number.POSITIVE_INFINITY, channelIdAllowlist, onProgress} = options;
 		Logger.debug({userId, beforeTimestamp}, 'Starting bulk user message deletion');
 		const messagesByChannel = await this.collectUserMessages(userId, beforeTimestamp, channelIdAllowlist);

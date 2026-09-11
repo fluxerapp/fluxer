@@ -4,6 +4,7 @@ import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
 import {createUserID, type UserID} from '../../../../BrandedTypes';
+import {isSyntheticUserId} from '../../../../constants/Core';
 import {fetchMany, fetchOne, fetchPage, upsertOne} from '../../../../database/CassandraQueryExecution';
 import {Db, type DbOp, nextVersion} from '../../../../database/CassandraTypes';
 import {
@@ -44,6 +45,12 @@ const createFetchAllUsersPaginatedQuery = (limit: number) =>
 type UserPatch = Partial<{
 	[K in Exclude<keyof UserRow, 'user_id'> & string]: DbOp<UserRow[K]>;
 }>;
+
+function assertWritableUserId(userId: UserID): void {
+	if (isSyntheticUserId(userId)) {
+		throw new Error(`Refusing to write a users row for synthetic user ${userId}`);
+	}
+}
 
 export class UserDataRepository {
 	async findUnique(userId: UserID): Promise<User | null> {
@@ -125,6 +132,7 @@ export class UserDataRepository {
 		updatedData: UserRow;
 	}> {
 		const userId = data.user_id;
+		assertWritableUserId(userId);
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
@@ -152,6 +160,7 @@ export class UserDataRepository {
 		previousData: UserRow | null;
 		updatedData: UserRow;
 	}> {
+		assertWritableUserId(userId);
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
@@ -183,6 +192,7 @@ export class UserDataRepository {
 		};
 	}> {
 		const {userId, lastActiveAt, lastActiveIp} = params;
+		assertWritableUserId(userId);
 		const previousData = (await this.getActivityTracking(userId)) ?? {last_active_at: null, last_active_ip: null};
 		await upsertOne(
 			Users.patchByPk(
@@ -219,6 +229,7 @@ export class UserDataRepository {
 	): Promise<{
 		finalVersion: number | null;
 	}> {
+		assertWritableUserId(userId);
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
