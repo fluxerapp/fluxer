@@ -2,6 +2,7 @@
 
 import {
 	type PerTrackStats,
+	type TransportInfo,
 	VoiceEngineV2AppStatsHostAdapter,
 	type VoiceEngineV2AppStatsHostAdapterScheduler,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppStatsHostAdapter';
@@ -333,5 +334,126 @@ describe('VoiceEngineV2AppStatsHostAdapter firefox outbound rows', () => {
 
 		expect(rows[classification.localVideoTrackIndex!].mid).toBe('3');
 		expect(rows[classification.localScreenShareTrackIndex!].mid).toBe('4');
+	});
+});
+
+function chromiumWatchedScreenShareReports(): Map<string, unknown> {
+	return new Map<string, unknown>([
+		[
+			'C1',
+			{
+				type: 'codec',
+				id: 'C1',
+				mimeType: 'video/H264',
+				payloadType: 108,
+				sdpFmtpLine: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
+			},
+		],
+		[
+			'IT01V',
+			{
+				type: 'inbound-rtp',
+				id: 'IT01V',
+				kind: 'video',
+				ssrc: 2001,
+				mid: '5',
+				codecId: 'C1',
+				trackIdentifier: 'screen-share-track',
+				bytesReceived: 3_500_000,
+				packetsReceived: 4210,
+				framesReceived: 0,
+				framesDecoded: 0,
+				keyFramesDecoded: 0,
+				pliCount: 7,
+				frameWidth: 1920,
+				frameHeight: 1080,
+			},
+		],
+		[
+			'CP1',
+			{
+				type: 'candidate-pair',
+				id: 'CP1',
+				state: 'succeeded',
+				nominated: true,
+				selected: true,
+				localCandidateId: 'LC1',
+				remoteCandidateId: 'RC1',
+				currentRoundTripTime: 0.023,
+			},
+		],
+		[
+			'LC1',
+			{
+				type: 'local-candidate',
+				id: 'LC1',
+				candidateType: 'relay',
+				protocol: 'udp',
+				relayProtocol: 'tls',
+				url: 'turn:turn.fluxer.example:443?transport=tcp',
+				networkType: 'wifi',
+			},
+		],
+		['RC1', {type: 'remote-candidate', id: 'RC1', candidateType: 'host', protocol: 'udp'}],
+		[
+			'T1',
+			{type: 'transport', id: 'T1', dtlsState: 'connected', iceState: 'connected', selectedCandidatePairId: 'CP1'},
+		],
+	]);
+}
+
+async function collectWatchedScreenShareStats(): Promise<{
+	rows: Array<PerTrackStats>;
+	transport: TransportInfo | null;
+}> {
+	const scheduler = createScheduler();
+	const subscriber = {
+		getStats() {
+			return Promise.resolve(chromiumWatchedScreenShareReports());
+		},
+	};
+	const adapter = new VoiceEngineV2AppStatsHostAdapter({now: () => 1000, scheduler});
+	adapter.setRoom({
+		engine: {pcManager: {subscriber, mode: 'subscriber-primary'}},
+		numParticipants: 2,
+	} as unknown as Room);
+	adapter.startStatsTracking();
+	scheduler.runStatsTick();
+	await Promise.resolve();
+	await Promise.resolve();
+	await Promise.resolve();
+	const rows = adapter.perTrackStats;
+	const transport = adapter.subscriberTransport;
+	adapter.cleanup();
+	return {rows, transport};
+}
+
+describe('VoiceEngineV2AppStatsHostAdapter watched screen share rows', () => {
+	it('collects the inbound packet, byte and frame counters that tell a stalled decode apart from a dead feed', async () => {
+		const {rows} = await collectWatchedScreenShareStats();
+
+		expect(rows.map((row) => [row.packetsReceived, row.bytesReceived, row.framesReceived, row.framesDecoded])).toEqual([
+			[4210, 3_500_000, 0, 0],
+		]);
+	});
+
+	it('collects the codec sdp fmtp line of the receive row', async () => {
+		const {rows} = await collectWatchedScreenShareStats();
+
+		expect(rows[0].codecSdpFmtpLine).toBe('level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f');
+	});
+
+	it('collects the relay protocol of the selected local candidate, which the local protocol never shows', async () => {
+		const {transport} = await collectWatchedScreenShareStats();
+
+		expect(transport?.localProtocol).toBe('udp');
+		expect(transport?.localRelayProtocol).toBe('tls');
+		expect(transport?.localCandidateUrlHost).toBe('turn.fluxer.example');
+	});
+
+	it('collects the peer connection mode alongside the transport block', async () => {
+		const {transport} = await collectWatchedScreenShareStats();
+
+		expect(transport?.peerConnectionMode).toBe('subscriber-primary');
 	});
 });

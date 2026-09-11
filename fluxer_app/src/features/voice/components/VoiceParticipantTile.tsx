@@ -552,6 +552,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		isPublicationDesired,
 		hasSubscribedVideo: hasSubscribedScreenShareVideo,
 		operationKey: isScreenShareRepublishBuffering ? `republish:${screenSharePublicationMigrationVersion}` : null,
+		publication,
 		videoRef,
 	});
 	useStoreVersion(LastFrameSnapshotCache);

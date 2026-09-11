@@ -11,12 +11,14 @@ import {
 	isDesktop,
 	supportsDesktopScreenShareAudioCapture,
 } from '@app/features/ui/utils/NativeUtils';
+import {collectVoiceSubscriptionDebugReport} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugReport';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {getNativeEngineAudioTrackPumpStats} from '@app/features/voice/engine/voice_screen_share_manager/NativeEngineAudioTrackPump';
 import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type CodecCapabilityReport,
@@ -33,6 +35,7 @@ import {
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {getScreenShareDecodeFailures} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
@@ -53,6 +56,14 @@ function safeError(error: unknown): Record<string, unknown> {
 		};
 	}
 	return {message: String(error)};
+}
+
+function safeCollect<T>(collect: () => T): T | {error: Record<string, unknown>} {
+	try {
+		return collect();
+	} catch (error) {
+		return {error: safeError(error)};
+	}
 }
 
 async function withTimeout<T>(
@@ -586,6 +597,14 @@ export async function buildStatsForNerdsCopyPayload(data: StatsForNerdsData): Pr
 		voiceSettings,
 		voiceSession: summarizeRoom(),
 		recentScreenShares: getRecentScreenShares(),
+		screenShareWatchFailures: safeCollect(() => ScreenShareWatchFailures.getFailureHistory()),
+		screenShareNegotiation: safeCollect(() => ({
+			selectedCodec: ScreenShareCodecNegotiation.getSelectedCodec(),
+			localCodecs: ScreenShareCodecNegotiation.getLocalCodecAdvertisements(),
+			remoteDecodeCodecsByIdentity: ScreenShareCodecNegotiation.getRemoteDecodeCodecsByIdentity(),
+			decodeFailures: [...getScreenShareDecodeFailures()],
+		})),
+		voiceSubscriptionDebug: safeCollect(() => collectVoiceSubscriptionDebugReport()),
 		desktop,
 	};
 }

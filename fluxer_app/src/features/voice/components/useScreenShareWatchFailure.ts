@@ -8,6 +8,7 @@ import {
 	type ScreenShareWatchFailure,
 	ScreenShareWatchFailures,
 } from '@app/features/voice/state/ScreenShareWatchFailures';
+import type {RemoteTrackPublication} from 'livekit-client';
 import type React from 'react';
 import {useEffect, useMemo} from 'react';
 
@@ -23,6 +24,7 @@ interface UseScreenShareWatchFailureOptions {
 	isPublicationDesired: boolean;
 	hasSubscribedVideo: boolean;
 	operationKey?: string | number | null;
+	publication?: RemoteTrackPublication | null;
 	videoRef: React.RefObject<HTMLVideoElement | null>;
 }
 
@@ -69,6 +71,7 @@ export function useScreenShareWatchFailure({
 	participantSid,
 	trackSid,
 	operationKey,
+	publication,
 	videoRef,
 }: UseScreenShareWatchFailureOptions): ScreenShareWatchFailureState {
 	const attemptEnabled = enabled && streamKey !== '';
@@ -100,6 +103,14 @@ export function useScreenShareWatchFailure({
 			ScreenShareWatchFailures.releaseAttempt(target, attemptKey);
 		};
 	}, [attemptEnabled, attemptKey, target]);
+
+	useEffect(() => {
+		if (!attemptEnabled) return;
+		ScreenShareWatchFailures.setWatchTarget(streamKey, {videoRef, publication});
+		return () => {
+			ScreenShareWatchFailures.clearWatchTarget(streamKey);
+		};
+	}, [attemptEnabled, publication, streamKey, videoRef]);
 
 	useEffect(() => {
 		if (!attemptEnabled || !attemptKey) return;

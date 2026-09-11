@@ -515,6 +515,19 @@ class ScreenShareCodecNegotiation {
 		return this.selectedCodec;
 	}
 
+	getLocalCodecAdvertisements(): Array<FluxerCodecAdvertisement> {
+		if (this.localCodecs.length === 0) return buildLocalCodecAdvertisements();
+		return [...this.localCodecs];
+	}
+
+	getRemoteDecodeCodecsByIdentity(): Record<string, Array<VideoCodec>> {
+		const result: Record<string, Array<VideoCodec>> = {};
+		for (const [identity, codecs] of this.remoteCodecsByIdentity) {
+			result[identity] = [...getDecodeSet(codecs)];
+		}
+		return result;
+	}
+
 	setSelectionChangeListener(
 		listener: ((room: Room, codec: VideoCodec, reason: NegotiationReason) => void) | null,
 	): void {
