@@ -10,11 +10,14 @@ import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGr
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import styles from '@app/features/voice/components/VoiceConnectionStatus.module.css';
-import {
-	type NoiseSuppressionMethod,
-	resolveNoiseSuppressionMethod,
-} from '@app/features/voice/components/voice_connection_status/shared';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {
+	getNoiseSuppressionChoiceValues,
+	getSelectedNoiseSuppressionChoice,
+	setNoiseSuppressionChoice,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
+import {getNoiseSuppressionChoiceLabelDescriptor} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
 import {
 	VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR,
 	VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR,
@@ -43,19 +46,6 @@ const CUSTOM_DESCRIPTOR = msg({
 const TUNE_THE_PROCESSING_YOURSELF_DESCRIPTOR = msg({
 	message: 'Tune the processing yourself.',
 	comment: 'Description for the custom option in the voice processing settings radio group.',
-});
-const NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Noise suppression option using the enhanced neural filter (DeepFilterNet3). Keep it concise.',
-});
-const NOISE_SUPPRESSION_STANDARD_DESCRIPTOR = msg({
-	message: 'Standard',
-	comment: 'Noise suppression option using the browser built-in engine. Keep it concise.',
-});
-const NONE_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Noise suppression option that disables suppression.',
-	context: 'noise-suppression-option',
 });
 const AUDIO_PROCESSING_DESCRIPTOR = msg({
 	message: 'Audio processing',
@@ -87,8 +77,7 @@ export const AudioProcessingModal = observer(() => {
 	const deepFilterEnabled = VoiceSettings.deepFilterNoiseSuppression;
 	const deepFilterNoiseReductionLevel = VoiceSettings.deepFilterNoiseSuppressionLevel;
 	const deepFilterDefaultNoiseReductionLevel = 80;
-	const browserNsEnabled = VoiceSettings.noiseSuppression;
-	const method = resolveNoiseSuppressionMethod(deepFilterEnabled, browserNsEnabled);
+	const noiseSuppressionChoice = getSelectedNoiseSuppressionChoice();
 	const modeOptions: Array<RadioOption<VoiceProcessingMode>> = [
 		{
 			value: 'voice',
@@ -106,33 +95,11 @@ export const AudioProcessingModal = observer(() => {
 			desc: i18n._(TUNE_THE_PROCESSING_YOURSELF_DESCRIPTOR),
 		},
 	];
-	const noiseSuppressionOptions: Array<ComboboxOption<NoiseSuppressionMethod>> = [
-		{
-			value: 'enhanced',
-			label: i18n._(NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR),
-		},
-		{
-			value: 'standard',
-			label: i18n._(NOISE_SUPPRESSION_STANDARD_DESCRIPTOR),
-		},
-		{
-			value: 'none',
-			label: i18n._(NONE_DESCRIPTOR),
-		},
-	];
-	const setNoiseSuppressionMethod = (next: NoiseSuppressionMethod) => {
-		switch (next) {
-			case 'enhanced':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: true, noiseSuppression: false});
-				return;
-			case 'standard':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: true});
-				return;
-			case 'none':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: false});
-				return;
-		}
-	};
+	const noiseSuppressionOptions: Array<ComboboxOption<VoiceNoiseSuppressionBackend>> =
+		getNoiseSuppressionChoiceValues().map((backend) => ({
+			value: backend,
+			label: i18n._(getNoiseSuppressionChoiceLabelDescriptor(backend)),
+		}));
 	return (
 		<Modal.Root
 			size="small"
@@ -161,11 +128,11 @@ export const AudioProcessingModal = observer(() => {
 							className={styles.nsOptions}
 							data-flx="voice.voice-connection-status.audio-processing-modal.ns-options"
 						>
-							<CompactComboboxRow<NoiseSuppressionMethod>
+							<CompactComboboxRow<VoiceNoiseSuppressionBackend>
 								label={i18n._(VOICE_NOISE_SUPPRESSION_DESCRIPTOR)}
-								value={method}
+								value={noiseSuppressionChoice}
 								options={noiseSuppressionOptions}
-								onChange={setNoiseSuppressionMethod}
+								onChange={setNoiseSuppressionChoice}
 								isSearchable={false}
 								controlWidth="small"
 								dataFlx="voice.voice-connection-status.audio-processing-modal.select.set-noise-suppression-method"

@@ -32,6 +32,8 @@ The complete runtime configuration of the deployment. Every configuration operat
 | --- | --- | --- |
 | sso | [SSO configuration](#sso-configuration-object) object | Single sign-on settings |
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
+| voice_noise_suppression | [voice noise suppression configuration](#voice-noise-suppression-configuration-object) object | Client-side noise suppression rollout |
+| experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, legal, setup, and registration field policy |
@@ -87,6 +89,48 @@ Admission and dispatch tuning for the Gateway cluster.
 | voice_e2ee_scope | string | `guild_feature_only` or `platform_wide` (default `guild_feature_only`) |
 
 Every field is present on read. A deployment that has stored nothing reports the defaults above.
+
+## Voice noise suppression configuration object
+
+The instance rollout of client-side noise suppression. [Experiments](/http-api/experiments/) defines what a client resolves from it and the closed [backend registry](/http-api/experiments/#noise-suppression-backends) every backend field draws on.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| default_backend | string | Backend given to a drawn account (default `standard`) |
+| enabled_backends | array[string] | Backends a client MAY run, up to 7 entries (default every backend) |
+| allow_user_override | boolean | Whether an account's own choice replaces the assigned backend (default true) |
+| rollout_basis_points | integer | Share of accounts drawn, in basis points (0-10000, default 0) |
+| rollout_salt | string | Salt of the sampling hash (1-64 characters, default `voice-ns-v1`) |
+| included_user_ids | array[snowflake] | Accounts always drawn, up to 1000 entries (default empty) |
+| excluded_user_ids | array[snowflake] | Accounts never drawn, up to 1000 entries (default empty) |
+| guild_overrides | array[[guild override](/http-api/experiments/#noise-suppression-guild-override-object) object] | Per-guild replacements, up to 200 entries (default empty) |
+| stereo_enabled | boolean | Whether a drawn client publishes a stereo microphone track (default false) |
+| suppression_strength | integer | Suppression strength (0-100, default 80) |
+
+Every field is present on read. A deployment that has stored nothing reports the defaults above.
+
+`excluded_user_ids` is applied before `included_user_ids`, so an account in both is never drawn. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
+
+How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
+
+## Experiment delivery configuration object
+
+How often a client polls [Get experiment assignments](/http-api/experiments/#get-experiment-assignments), and how widely those polls are spread. The setting is instance-wide and applies to every experiment at once, so adding an experiment adds no second cadence to tune.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| poll_interval_seconds | integer | Seconds between client revalidations (60-86400, default 300) |
+| poll_jitter_percent | integer | Spread applied to each revalidation (0-50, default 15) |
+
+Every field is present on read. A deployment that has stored nothing reports the defaults above.
+
+Both fields are served to every account, whether or not any experiment targets that account, and neither one is versioned by `config_version`. A client that has never reached the experiments route holds the same two values as built-in defaults, 300 seconds and 15 percent, so neither field reaches a client that cannot read the route.
 
 ## Registration configuration object
 
@@ -472,6 +516,8 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | --- | --- | --- |
 | sso?<sup>1</sup> | object | Every [SSO configuration](#sso-configuration-object) field except `client_secret_set` and `redirect_uri`, plus `client_secret` |
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
+| voice_noise_suppression? | object | Any subset of the [noise suppression](#voice-noise-suppression-configuration-object) fields |
+| experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal`, and `registration` sub-objects, each merged field by field |
 | integrations?<sup>3</sup> | object | `gif`, `youtube`, `captcha`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
@@ -481,6 +527,10 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 <sup>1</sup> The supplied fields are merged over the stored configuration and the result is validated as a whole. Every supplied endpoint URL uses `https`, has no credentials and no fragment, and resolves to a publicly routable address, otherwise the request returns 400 `INVALID_FORM_BODY` with `INVALID_URL_FORMAT` or `URL_NOT_PUBLICLY_ROUTABLE`
 
 <sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. Every string is trimmed before it is stored
+
+`voice_noise_suppression` takes every [voice noise suppression configuration](#voice-noise-suppression-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
+
+`experiment_delivery` takes both [experiment delivery configuration](#experiment-delivery-configuration-object) fields, each bound as documented there. It is a section of its own, so a write to it changes no `config_version` and changes no assignment, only the cadence on which clients ask for one.
 
 <sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
 
@@ -516,7 +566,7 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `voice_noise_suppression`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

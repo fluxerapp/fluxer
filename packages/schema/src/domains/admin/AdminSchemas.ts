@@ -18,6 +18,14 @@ import {
 	GatewayRolloutConfigResponse,
 	GatewayRolloutConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
+import {
+	VoiceNoiseSuppressionConfigResponse,
+	VoiceNoiseSuppressionConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {
+	ExperimentDeliveryConfigResponse,
+	ExperimentDeliveryConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
@@ -629,6 +637,8 @@ const InstanceIntegrationsResponse = z.object({
 export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
+	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
+	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -641,6 +651,8 @@ export type InstanceConfigResponse = z.infer<typeof InstanceConfigResponse>;
 
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
+	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
+	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: RegistrationModeSchema.optional(),

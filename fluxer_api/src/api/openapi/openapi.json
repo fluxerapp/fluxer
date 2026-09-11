@@ -6504,6 +6504,73 @@
 				]
 			}
 		},
+		"/experiments": {
+			"get": {
+				"operationId": "get_experiments",
+				"summary": "Get the experiment assignments",
+				"tags": ["Experiments"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ExperimentAssignmentsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Get the experiment assignments"}},
+				"description": "Returns the polling cadence and every experiment assignment resolved for the authenticated user from the instance configuration. Clients revalidate with If-None-Match and receive 304 when nothing changed.",
+				"security": [{"sessionToken": []}, {"botToken": []}]
+			}
+		},
 		"/gateway/bot": {
 			"get": {
 				"operationId": "get_gateway_bot",
@@ -29193,6 +29260,82 @@
 				},
 				"required": ["id", "guild_id", "name", "animated", "allow_cloning"]
 			},
+			"ExperimentAssignmentsResponse": {
+				"type": "object",
+				"properties": {
+					"poll_interval_seconds": {"type": "integer", "format": "int53"},
+					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50, "format": "int32"},
+					"assignments": {
+						"type": "object",
+						"properties": {
+							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"}
+						}
+					}
+				},
+				"required": ["poll_interval_seconds", "poll_jitter_percent", "assignments"]
+			},
+			"VoiceNoiseSuppressionAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "format": "int53"},
+					"user_targeted": {"type": "boolean"},
+					"backend": {
+						"anyOf": [
+							{
+								"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+								"type": "string",
+								"x-enumNames": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"]
+							},
+							{"type": "null"}
+						]
+					},
+					"source": {
+						"anyOf": [
+							{"enum": ["user_rule", "canary"], "type": "string", "x-enumNames": ["user_rule", "canary"]},
+							{"type": "null"}
+						]
+					},
+					"guild_overrides": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"guild_id": {"type": "string", "pattern": "^\\d{1,20}$"},
+								"backend": {
+									"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+									"type": "string",
+									"x-enumNames": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"]
+								}
+							},
+							"required": ["guild_id", "backend"]
+						}
+					},
+					"enabled_backends": {
+						"type": "array",
+						"items": {
+							"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+							"type": "string",
+							"x-enumNames": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"]
+						}
+					},
+					"allow_user_override": {"type": "boolean"},
+					"stereo_enabled": {"type": "boolean"},
+					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100, "format": "int32"}
+				},
+				"required": [
+					"enabled",
+					"config_version",
+					"user_targeted",
+					"backend",
+					"source",
+					"guild_overrides",
+					"enabled_backends",
+					"allow_user_override",
+					"stereo_enabled",
+					"suppression_strength"
+				]
+			},
 			"GatewayBotResponse": {
 				"type": "object",
 				"properties": {
@@ -37887,6 +38030,7 @@
 		{"name": "Connections"},
 		{"name": "Messages"},
 		{"name": "Donations"},
+		{"name": "Experiments"},
 		{"name": "Geolocation"},
 		{"name": "GIFs"},
 		{"name": "GIFs (Deprecated)"},

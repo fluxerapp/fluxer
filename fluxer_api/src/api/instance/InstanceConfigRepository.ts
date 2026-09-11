@@ -6,6 +6,16 @@ import {
 	type GatewayRolloutConfig,
 	GatewayRolloutConfigSchema,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
+import {
+	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+	type VoiceNoiseSuppressionConfig,
+	VoiceNoiseSuppressionConfigSchema,
+} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {
+	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
+	type ExperimentDeliveryConfig,
+	ExperimentDeliveryConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import {Config} from '../Config';
 import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '../config/APIConfig';
@@ -21,6 +31,8 @@ import {getDefaultDateOfBirthCollection, setCachedDateOfBirthCollection} from '.
 import {normalizeSsoAllowedEmailDomains} from './SsoConfigValidation';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
+const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
+const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -43,6 +55,20 @@ const DEFAULT_GATEWAY_ROLLOUT_CONFIG: GatewayRolloutConfig = {
 	gateway_dispatch_relay_max_queue: 50000,
 	voice_e2ee_scope: 'guild_feature_only',
 };
+
+function cloneDefaultVoiceNoiseSuppressionConfig(): VoiceNoiseSuppressionConfig {
+	return {
+		...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+		enabled_backends: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.enabled_backends],
+		included_user_ids: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.included_user_ids],
+		excluded_user_ids: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.excluded_user_ids],
+		guild_overrides: [...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.guild_overrides],
+	};
+}
+
+function cloneDefaultExperimentDeliveryConfig(): ExperimentDeliveryConfig {
+	return {...DEFAULT_EXPERIMENT_DELIVERY_CONFIG};
+}
 export type InstanceRegistrationMode = 'open' | 'approval' | 'closed';
 export interface InstanceRegistrationConfig {
 	mode: InstanceRegistrationMode;
@@ -1048,6 +1074,48 @@ export class InstanceConfigRepository {
 
 	async setGatewayRolloutConfig(config: GatewayRolloutConfig): Promise<void> {
 		await this.setConfig(GATEWAY_ROLLOUT_CONFIG_KEY, JSON.stringify(config));
+	}
+
+	async getVoiceNoiseSuppressionConfig(): Promise<VoiceNoiseSuppressionConfig> {
+		const raw = await this.getConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY);
+		if (!raw) {
+			return cloneDefaultVoiceNoiseSuppressionConfig();
+		}
+		const parsed = parseJsonRecord(raw);
+		if (!parsed) {
+			return cloneDefaultVoiceNoiseSuppressionConfig();
+		}
+		const result = VoiceNoiseSuppressionConfigSchema.safeParse({...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG, ...parsed});
+		if (!result.success) {
+			Logger.error({error: result.error}, 'Invalid voice noise suppression config');
+			return cloneDefaultVoiceNoiseSuppressionConfig();
+		}
+		return result.data;
+	}
+
+	async setVoiceNoiseSuppressionConfig(config: VoiceNoiseSuppressionConfig): Promise<void> {
+		await this.setConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY, JSON.stringify(config));
+	}
+
+	async getExperimentDeliveryConfig(): Promise<ExperimentDeliveryConfig> {
+		const raw = await this.getConfig(EXPERIMENT_DELIVERY_CONFIG_KEY);
+		if (!raw) {
+			return cloneDefaultExperimentDeliveryConfig();
+		}
+		const parsed = parseJsonRecord(raw);
+		if (!parsed) {
+			return cloneDefaultExperimentDeliveryConfig();
+		}
+		const result = ExperimentDeliveryConfigSchema.safeParse({...DEFAULT_EXPERIMENT_DELIVERY_CONFIG, ...parsed});
+		if (!result.success) {
+			Logger.error({error: result.error}, 'Invalid experiment delivery config');
+			return cloneDefaultExperimentDeliveryConfig();
+		}
+		return result.data;
+	}
+
+	async setExperimentDeliveryConfig(config: ExperimentDeliveryConfig): Promise<void> {
+		await this.setConfig(EXPERIMENT_DELIVERY_CONFIG_KEY, JSON.stringify(config));
 	}
 
 	async hasLimitConfig(): Promise<boolean> {

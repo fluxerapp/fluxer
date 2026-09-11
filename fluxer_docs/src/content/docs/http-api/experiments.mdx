@@ -1,0 +1,150 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Experiments
+description: The experiment assignments envelope, the revalidation and polling contract, and the noise suppression experiment.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An experiment is one instance-wide rollout the operator configures and Fluxer resolves against one account. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. `voice_noise_suppression` is the only experiment defined today, and [Voice](/voice/) defines the placement protocol its assignment applies to.
+
+Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
+
+## Experiment assignments object
+
+One resolution of every defined experiment against one account. Every field is present on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| poll_interval_seconds | integer | Seconds to wait before revalidating, from 60 through 86400 |
+| poll_jitter_percent | integer | How far to spread the wait around the interval, from 0 through 50 |
+| assignments | [assignment map](#assignment-map-object) object | One entry for each experiment the server defines |
+
+The two polling fields sit on the envelope rather than on any one experiment, because the cadence is a property of the route and not of a rollout. They are the operator's [experiment delivery configuration](/admin-api/instance/#experiment-delivery-configuration-object) read back unchanged, so they hold the same values for every account and every experiment, whatever those experiments resolve to.
+
+## Assignment map object
+
+One entry per experiment. The envelope reports this object even when it is empty.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| voice_noise_suppression? | [noise suppression assignment](#noise-suppression-assignment-object) object | The caller's noise suppression assignment |
+
+Every key here is optional in the schema so that a peer running a different server version still validates the envelope. A client reading a server that has not defined an experiment it knows about, or that defines one it does not, drops the unknown key and treats the missing one as off rather than as an error.
+
+This server version writes `voice_noise_suppression` on every response, including while the rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client can tell an operator write from a no-op without a second request.
+
+## Noise suppression backends
+
+Noise suppression runs in the client, on the microphone track, before that track is published. Fluxer processes no audio for it. The registry is closed, and a backend outside it is not a value this API produces or accepts.
+
+| Value | Description |
+| --- | --- |
+| none | No processing |
+| standard | The browser or platform suppressor the client already has |
+| gate | A noise gate keyed on input level |
+| speex | The Speex preprocessor |
+| rnnoise | The RNNoise recurrent model |
+| gtcrn | The GTCRN model |
+| deep_filter | The DeepFilterNet model |
+
+A client MUST treat a backend absent from `enabled_backends` as unavailable, including one named by `backend` or by a [guild override](#noise-suppression-guild-override-object).
+
+## Noise suppression assignment object
+
+One resolution of the instance noise suppression rollout against one account. Every field is present whenever the key is written.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout is running on this instance |
+| config_version | integer | The revision of the instance configuration this assignment was resolved from |
+| user_targeted | boolean | Whether the caller is inside the rollout |
+| backend | ?string | The [backend](#noise-suppression-backends) the caller applies, and null where the caller is not targeted |
+| source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
+| guild_overrides | array[[guild override](#noise-suppression-guild-override-object) object] | Per-guild backend replacements that apply to the caller |
+| enabled_backends | array[string] | The [backends](#noise-suppression-backends) the client MAY run |
+| allow_user_override | boolean | Whether the account's own stored choice replaces `backend` |
+| stereo_enabled | boolean | Whether the client publishes a stereo microphone track |
+| suppression_strength | integer | Suppression strength from 0 through 100, which only a backend that reads it applies |
+
+`config_version` counts operator writes, not assignment changes. It is raised by every [Update instance configuration](/admin-api/instance/#update-instance-configuration) request that sets at least one noise suppression field, so it can advance while the caller's assignment stays byte for byte the same.
+
+### Resolution outcomes
+
+Three outcomes set `user_targeted` to false, and they differ in what else they report.
+
+1. The rollout is off. `enabled` is false, `enabled_backends` and `guild_overrides` are empty, and `allow_user_override` and `stereo_enabled` are false.
+2. The operator has excluded the caller. `enabled` is true, and every other field is as in the first outcome.
+3. The caller was not drawn. `enabled` is true, and `enabled_backends`, `guild_overrides`, `allow_user_override`, and `stereo_enabled` all hold their configured values.
+
+A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. A caller that is drawn while `backend` is absent from `enabled_backends` is reported as not drawn, with `user_targeted` false and both `backend` and `source` null.
+
+A client branches on `user_targeted` rather than on `enabled_backends`, because the third outcome keeps the array populated. A `guild_overrides` entry applies in its guild whether or not the caller was drawn.
+
+`config_version` reports the stored revision in all three outcomes, the rollout being off included.
+
+## Noise suppression guild override object
+
+One backend replacement scoped to one guild. A guild named here replaces `backend` while the caller is connected to a voice channel of that guild.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The guild the replacement applies in |
+| backend | string | The [backend](#noise-suppression-backends) to run in that guild |
+
+An override naming a backend that is absent from `enabled_backends` is dropped before the response is written, so every entry is runnable.
+
+## Get experiment assignments
+
+<RouteHeader method="GET" path="/v1/experiments" bot />
+
+Resolves every defined experiment for the caller and returns an [experiment assignments](#experiment-assignments-object) object. The response is derived per account, so it is never shared between accounts.
+
+### Response body
+
+[Experiment assignments](#experiment-assignments-object) object.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The envelope was resolved |
+| 304 | empty | The request sent a matching `If-None-Match` |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| If-None-Match? | string | An `ETag` from an earlier response to this route |
+
+A client sends the `ETag` it last received. Fluxer compares it against the tag of the envelope it just resolved and answers 304 with no body on a match. `*` matches any current tag. A weak comparison is used, so a `W/` prefix on either side does not defeat the match.
+
+### Response headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ETag | string | A strong tag over the envelope body, sent on 200 and on 304 |
+| Cache-Control | string | The literal value `private, no-cache` |
+| Vary | string | The literal value `Authorization`, replaced by `Origin` where the [cross-origin policy](/http-api/#cross-origin-requests) echoed an allowed origin |
+
+The tag is a hash of the body alone, so two accounts resolving to the same envelope receive the same tag. It changes whenever any field changes, the polling fields and `config_version` included.
+
+`ETag` is listed in `Access-Control-Expose-Headers` and `If-None-Match` in `Access-Control-Allow-Headers`, so a cross-origin client reads the tag and revalidates with it.
+
+### Polling
+
+A client reads this route once per session and then again every `poll_interval_seconds`, offset by a random amount up to `poll_jitter_percent` of that interval in either direction. It sends the last `ETag` on every request after the first. A client MUST NOT poll faster than the value it was served.
+
+Raising `poll_interval_seconds` sheds request volume. Raising `poll_jitter_percent` spreads a fleet that has synchronised on one interval. A client that has never reached this route holds the built-in defaults of 300 seconds and 15 percent, so neither value reaches a client that cannot read it.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `default` bucket.

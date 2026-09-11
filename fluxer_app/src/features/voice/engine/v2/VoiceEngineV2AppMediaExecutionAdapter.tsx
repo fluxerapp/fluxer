@@ -103,6 +103,8 @@ import {
 	buildCameraPublishOptions,
 	findVideoPublishCodecPolicyViolation,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
+import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
+import {applyNoiseSuppressionOverride} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
 import {applyBackgroundProcessor, clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {
 	removeVoiceInputProcessor,
@@ -116,6 +118,7 @@ import {
 import {
 	applyContentHintToTrack,
 	getActiveVoiceProcessingMode,
+	type ResolvedVoiceProcessing,
 	resolveVoiceProcessingFromStateForDeviceLabel,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
 import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
@@ -138,6 +141,7 @@ import {Track} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppMediaExecutionAdapter');
 const LOCAL_SPEAKING_ANALYSER_INTERVAL_MS = 50;
+const MICROPHONE_CAPTURE_SAMPLE_RATE = 48000;
 const CAMERA_PUBLISH_CODEC_CORRECTION_MAX = 1;
 export const REPUBLISH_MICROPHONE_GUARD_MS = 150;
 type VoiceMuteReason = VoiceEngineV2AppVoiceMuteReason;
@@ -596,14 +600,20 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		return device?.label || null;
 	}
 
-	private getMicrophoneCaptureOptions(options: VoiceEngineV2MicrophoneOptions = {}): AudioCaptureOptions {
+	private resolveActiveMicrophoneProfile(): ResolvedVoiceProcessing {
 		const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
+		return applyNoiseSuppressionOverride(profile, readEffectiveNoiseSuppression(MICROPHONE_CAPTURE_SAMPLE_RATE));
+	}
+
+	private getMicrophoneCaptureOptions(options: VoiceEngineV2MicrophoneOptions = {}): AudioCaptureOptions {
+		const profile = this.resolveActiveMicrophoneProfile();
 		return {
 			deviceId: options.deviceId ?? this.resolveInputDeviceId(),
 			echoCancellation: options.echoCancellation ?? profile.echoCancellation,
 			noiseSuppression: options.noiseSuppression ?? profile.browserNoiseSuppression,
 			autoGainControl: options.autoGainControl ?? profile.autoGainControl,
 			voiceIsolation: false,
+			...(profile.stereoCapture ? {channelCount: {ideal: 2}} : {}),
 		};
 	}
 
@@ -611,8 +621,8 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		const channel = channelId ? Channels.getChannel(channelId) : null;
 		const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
 		const channelBitrate = resolveVoiceChannelBitrate(channel?.bitrate, guild?.features);
-		const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
-		return buildMicrophonePublishOptions(channelBitrate, profile.mode);
+		const profile = this.resolveActiveMicrophoneProfile();
+		return buildMicrophonePublishOptions(channelBitrate, profile.mode, profile.stereoCapture);
 	}
 
 	async refreshMicrophonePublishSettings(room: Room | null, channelId: string | null): Promise<void> {

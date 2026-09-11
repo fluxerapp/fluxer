@@ -11882,6 +11882,8 @@
 						]
 					},
 					"gateway_rollout": {"$ref": "#/components/schemas/GatewayRolloutConfigSchema"},
+					"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionConfigSchema"},
+					"experiment_delivery": {"$ref": "#/components/schemas/ExperimentDeliveryConfigSchema"},
 					"registration": {
 						"type": "object",
 						"properties": {
@@ -12268,6 +12270,8 @@
 				"required": [
 					"sso",
 					"gateway_rollout",
+					"voice_noise_suppression",
+					"experiment_delivery",
 					"registration",
 					"self_hosted",
 					"app_public",
@@ -12290,12 +12294,76 @@
 					"voice_e2ee_scope": {"enum": ["guild_feature_only", "platform_wide"], "type": "string"}
 				}
 			},
+			"VoiceNoiseSuppressionConfigSchema": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
+					"default_backend": {
+						"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+						"type": "string"
+					},
+					"enabled_backends": {
+						"type": "array",
+						"items": {
+							"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+							"type": "string"
+						},
+						"maxItems": 7
+					},
+					"allow_user_override": {"type": "boolean"},
+					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000, "format": "int32"},
+					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64},
+					"included_user_ids": {
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"maxItems": 1000
+					},
+					"excluded_user_ids": {
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"maxItems": 1000
+					},
+					"guild_overrides": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"guild_id": {"type": "string", "pattern": "^\\d{1,20}$"},
+								"backend": {
+									"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+									"type": "string"
+								}
+							},
+							"required": ["guild_id", "backend"]
+						},
+						"maxItems": 200
+					},
+					"stereo_enabled": {"type": "boolean"},
+					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100, "format": "int32"}
+				}
+			},
+			"ExperimentDeliveryConfigSchema": {
+				"type": "object",
+				"properties": {
+					"poll_interval_seconds": {"type": "integer", "minimum": 60, "maximum": 86400, "format": "int32"},
+					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50, "format": "int32"}
+				}
+			},
 			"InstanceConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
 					"gateway_rollout": {
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/GatewayRolloutConfigUpdateRequest"}]
+					},
+					"voice_noise_suppression": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/VoiceNoiseSuppressionConfigUpdateRequest"}]
+					},
+					"experiment_delivery": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/ExperimentDeliveryConfigUpdateRequest"}]
 					},
 					"registration": {
 						"nullable": true,
@@ -12528,6 +12596,61 @@
 					"gateway_dispatch_relay_shards": {"type": "integer", "minimum": 1, "maximum": 10000, "format": "int32"},
 					"gateway_dispatch_relay_max_queue": {"type": "integer", "minimum": 0, "maximum": 1000000, "format": "int32"},
 					"voice_e2ee_scope": {"enum": ["guild_feature_only", "platform_wide"], "type": "string"}
+				}
+			},
+			"VoiceNoiseSuppressionConfigUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"default_backend": {
+						"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+						"type": "string"
+					},
+					"enabled_backends": {
+						"type": "array",
+						"items": {
+							"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+							"type": "string"
+						},
+						"maxItems": 7
+					},
+					"allow_user_override": {"type": "boolean"},
+					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000, "format": "int32"},
+					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64},
+					"included_user_ids": {
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"maxItems": 1000
+					},
+					"excluded_user_ids": {
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"},
+						"maxItems": 1000
+					},
+					"guild_overrides": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"guild_id": {"type": "string", "pattern": "^\\d{1,20}$"},
+								"backend": {
+									"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"],
+									"type": "string"
+								}
+							},
+							"required": ["guild_id", "backend"]
+						},
+						"maxItems": 200
+					},
+					"stereo_enabled": {"type": "boolean"},
+					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100, "format": "int32"}
+				}
+			},
+			"ExperimentDeliveryConfigUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"poll_interval_seconds": {"type": "integer", "minimum": 60, "maximum": 86400, "format": "int32"},
+					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50, "format": "int32"}
 				}
 			},
 			"BrandingAssetUploadRequest": {

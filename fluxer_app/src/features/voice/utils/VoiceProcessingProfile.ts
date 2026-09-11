@@ -3,6 +3,7 @@
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
+import type {VoiceNoiseSuppressionBackend} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 
 export type VoiceProcessingMode = 'voice' | 'studio' | 'custom';
 
@@ -23,6 +24,17 @@ export interface ResolvedVoiceProcessing {
 	deepFilter: boolean;
 	deepFilterNoiseReductionLevel: number;
 	contentHint: '' | 'speech' | 'music';
+	noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+	stereoCapture: boolean;
+}
+
+export function legacyNoiseSuppressionBackend(
+	deepFilter: boolean,
+	browserNoiseSuppression: boolean,
+): VoiceNoiseSuppressionBackend {
+	if (deepFilter) return 'deep_filter';
+	if (browserNoiseSuppression) return 'standard';
+	return 'none';
 }
 
 export const DEFAULT_VOICE_PROCESSING_MODE: VoiceProcessingMode = 'voice';
@@ -47,6 +59,8 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 				deepFilter: false,
 				deepFilterNoiseReductionLevel: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: 'music',
+				noiseSuppressionBackend: 'none',
+				stereoCapture: false,
 			};
 		case 'custom': {
 			const browserNs = settings.noiseSuppression && !settings.deepFilterNoiseSuppression;
@@ -60,6 +74,8 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 					? clampDeepFilterNoiseReductionLevel(settings.deepFilterNoiseSuppressionLevel)
 					: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: '',
+				noiseSuppressionBackend: legacyNoiseSuppressionBackend(settings.deepFilterNoiseSuppression, browserNs),
+				stereoCapture: false,
 			};
 		}
 		default:
@@ -71,6 +87,8 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 				deepFilter: false,
 				deepFilterNoiseReductionLevel: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: 'speech',
+				noiseSuppressionBackend: 'standard',
+				stereoCapture: false,
 			};
 	}
 }

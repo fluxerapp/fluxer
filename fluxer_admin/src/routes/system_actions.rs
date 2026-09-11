@@ -7,7 +7,8 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DeferredPhoneGateUpdateRequest, GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
+            DeferredPhoneGateUpdateRequest, ExperimentDeliveryConfigUpdateRequest,
+            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
             InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
             InstanceBlueskyKeyIntegrationUpdateRequest, InstanceCaptchaIntegrationUpdateRequest,
             InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
@@ -16,8 +17,10 @@ use crate::{
             InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
             InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
             InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, PremiumMode, RegistrationMode, SsoConfigUpdateRequest,
-            VoiceE2eeScope,
+            LimitRuleFilters, NoiseSuppressionBackend, PremiumMode, RegistrationMode,
+            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
+            VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
+            VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -198,6 +201,14 @@ pub async fn instance_config_post(
         }
         "update_media" => {
             let update = build_media_update(&form);
+            instance_config_result(client.update_instance_config(&update).await)
+        }
+        "update_voice_noise_suppression" => {
+            let update = build_voice_noise_suppression_update(&form);
+            instance_config_result(client.update_instance_config(&update).await)
+        }
+        "update_experiment_delivery" => {
+            let update = build_experiment_delivery_update(&form);
             instance_config_result(client.update_instance_config(&update).await)
         }
         "test_smtp" => match build_smtp_test_request(&form) {
@@ -407,6 +418,8 @@ fn build_sso_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
         policy: None,
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -443,6 +456,183 @@ fn build_gateway_rollout_update(form: &MultiValueForm) -> InstanceConfigUpdateRe
         policy: None,
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
+    }
+}
+
+const VOICE_NS_ROLLOUT_BASIS_POINTS_MAX: u32 = 10_000;
+const VOICE_NS_SUPPRESSION_STRENGTH_MAX: u32 = 100;
+const VOICE_NS_MAX_ROLLOUT_SALT_CHARS: usize = 64;
+const VOICE_NS_MAX_SNOWFLAKE_LENGTH: usize = 20;
+const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS: u64 = 60;
+const EXPERIMENT_MAX_POLL_INTERVAL_SECONDS: u64 = 86_400;
+const EXPERIMENT_DEFAULT_POLL_INTERVAL_SECONDS: u64 = 300;
+const EXPERIMENT_MAX_POLL_JITTER_PERCENT: u32 = 50;
+const EXPERIMENT_DEFAULT_POLL_JITTER_PERCENT: u32 = 15;
+
+fn parse_clamped_form_number<T>(
+    form: &MultiValueForm,
+    key: &str,
+    empty_value: T,
+    min: T,
+    max: T,
+) -> Option<T>
+where
+    T: std::str::FromStr + Ord,
+{
+    let raw = form.first(key)?.trim();
+    let value = if raw.is_empty() {
+        empty_value
+    } else {
+        raw.parse::<T>().unwrap_or(empty_value)
+    };
+    Some(value.clamp(min, max))
+}
+
+fn parse_voice_noise_suppression_rollout_salt(form: &MultiValueForm) -> Option<String> {
+    let salt: String = form
+        .clean("voice_ns_rollout_salt")?
+        .chars()
+        .take(VOICE_NS_MAX_ROLLOUT_SALT_CHARS)
+        .collect();
+    clean_string(&salt)
+}
+
+fn is_voice_noise_suppression_snowflake(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= VOICE_NS_MAX_SNOWFLAKE_LENGTH
+        && value.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+fn parse_voice_noise_suppression_user_ids(value: &str) -> Vec<String> {
+    let mut ids: Vec<String> = Vec::new();
+    for candidate in value.split([',', '\n', '\r']) {
+        let candidate = candidate.trim();
+        if !is_voice_noise_suppression_snowflake(candidate) {
+            continue;
+        }
+        if ids.iter().any(|existing| existing == candidate) {
+            continue;
+        }
+        ids.push(candidate.to_owned());
+        if ids.len() == VOICE_NS_MAX_TARGETED_USERS {
+            break;
+        }
+    }
+    ids
+}
+
+fn parse_voice_noise_suppression_guild_overrides(
+    value: &str,
+) -> Vec<VoiceNoiseSuppressionGuildOverride> {
+    let mut overrides: Vec<VoiceNoiseSuppressionGuildOverride> = Vec::new();
+    for line in value.lines() {
+        let Some((guild_id, backend)) = line.split_once('=') else {
+            continue;
+        };
+        let guild_id = guild_id.trim();
+        if !is_voice_noise_suppression_snowflake(guild_id) {
+            continue;
+        }
+        if overrides
+            .iter()
+            .any(|existing| existing.guild_id == guild_id)
+        {
+            continue;
+        }
+        let Some(backend) = NoiseSuppressionBackend::from_value(backend.trim()) else {
+            continue;
+        };
+        overrides.push(VoiceNoiseSuppressionGuildOverride {
+            guild_id: guild_id.to_owned(),
+            backend,
+        });
+        if overrides.len() == VOICE_NS_MAX_GUILD_OVERRIDES {
+            break;
+        }
+    }
+    overrides
+}
+
+fn build_voice_noise_suppression_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
+    let selected =
+        form.list_values_any(&["voice_ns_enabled_backends[]", "voice_ns_enabled_backends"]);
+    let enabled_backends = NoiseSuppressionBackend::ALL
+        .into_iter()
+        .filter(|backend| selected.iter().any(|value| value == backend.as_str()))
+        .collect();
+    InstanceConfigUpdateRequest {
+        gateway_rollout: None,
+        registration: None,
+        sso: None,
+        app_public: None,
+        policy: None,
+        integrations: None,
+        media: None,
+        voice_noise_suppression: Some(VoiceNoiseSuppressionConfigUpdateRequest {
+            enabled: Some(form.bool_value("voice_ns_enabled")),
+            default_backend: form
+                .first("voice_ns_default_backend")
+                .and_then(NoiseSuppressionBackend::from_value),
+            enabled_backends: Some(enabled_backends),
+            allow_user_override: Some(form.bool_value("voice_ns_allow_user_override")),
+            rollout_basis_points: parse_clamped_form_number(
+                form,
+                "voice_ns_rollout_basis_points",
+                0,
+                0,
+                VOICE_NS_ROLLOUT_BASIS_POINTS_MAX,
+            ),
+            rollout_salt: parse_voice_noise_suppression_rollout_salt(form),
+            included_user_ids: Some(parse_voice_noise_suppression_user_ids(
+                form.first("voice_ns_included_user_ids").unwrap_or_default(),
+            )),
+            excluded_user_ids: Some(parse_voice_noise_suppression_user_ids(
+                form.first("voice_ns_excluded_user_ids").unwrap_or_default(),
+            )),
+            guild_overrides: Some(parse_voice_noise_suppression_guild_overrides(
+                form.first("voice_ns_guild_overrides").unwrap_or_default(),
+            )),
+            stereo_enabled: Some(form.bool_value("voice_ns_stereo_enabled")),
+            suppression_strength: parse_clamped_form_number(
+                form,
+                "voice_ns_suppression_strength",
+                0,
+                0,
+                VOICE_NS_SUPPRESSION_STRENGTH_MAX,
+            ),
+        }),
+        experiment_delivery: None,
+    }
+}
+
+fn build_experiment_delivery_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
+    InstanceConfigUpdateRequest {
+        gateway_rollout: None,
+        registration: None,
+        sso: None,
+        app_public: None,
+        policy: None,
+        integrations: None,
+        media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: Some(ExperimentDeliveryConfigUpdateRequest {
+            poll_interval_seconds: parse_clamped_form_number(
+                form,
+                "experiment_delivery_poll_interval_seconds",
+                EXPERIMENT_DEFAULT_POLL_INTERVAL_SECONDS,
+                EXPERIMENT_MIN_POLL_INTERVAL_SECONDS,
+                EXPERIMENT_MAX_POLL_INTERVAL_SECONDS,
+            ),
+            poll_jitter_percent: parse_clamped_form_number(
+                form,
+                "experiment_delivery_poll_jitter_percent",
+                EXPERIMENT_DEFAULT_POLL_JITTER_PERCENT,
+                0,
+                EXPERIMENT_MAX_POLL_JITTER_PERCENT,
+            ),
+        }),
     }
 }
 
@@ -466,6 +656,8 @@ fn build_registration_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
         policy: None,
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -494,6 +686,8 @@ fn build_app_public_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest
         policy: None,
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -515,6 +709,8 @@ fn build_app_legal_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest 
         policy: None,
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -534,6 +730,8 @@ fn build_app_registration_update(form: &MultiValueForm) -> InstanceConfigUpdateR
         policy: None,
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -563,6 +761,8 @@ fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
         }),
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -672,6 +872,8 @@ fn build_integrations_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
             }),
         }),
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -700,6 +902,8 @@ fn build_media_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
                 renew_window_days: form.parse_u32("media_attachment_decay_renew_window_days"),
             }),
         }),
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -742,6 +946,8 @@ fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
         }),
         integrations: None,
         media: None,
+        voice_noise_suppression: None,
+        experiment_delivery: None,
     }
 }
 
@@ -1064,6 +1270,326 @@ mod tests {
             filters.guild_features,
             vec!["COMMUNITY".to_owned(), "NEWS".to_owned()]
         );
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_collects_backends_and_clamps_numbers() {
+        let form = MultiValueForm::parse(
+            b"voice_ns_enabled=true&voice_ns_allow_user_override=on&voice_ns_default_backend=rnnoise&voice_ns_enabled_backends%5B%5D=deep_filter&voice_ns_enabled_backends%5B%5D=none&voice_ns_enabled_backends%5B%5D=bogus&voice_ns_rollout_basis_points=99999&voice_ns_suppression_strength=250&voice_ns_rollout_salt=%20voice-ns-v2%20",
+        );
+        let request = build_voice_noise_suppression_update(&form);
+        let update = request
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.allow_user_override, Some(true));
+        assert_eq!(update.stereo_enabled, Some(false));
+        assert_eq!(
+            update.default_backend,
+            Some(NoiseSuppressionBackend::Rnnoise)
+        );
+        assert_eq!(
+            update.enabled_backends,
+            Some(vec![
+                NoiseSuppressionBackend::None,
+                NoiseSuppressionBackend::DeepFilter
+            ])
+        );
+        assert_eq!(update.rollout_basis_points, Some(10_000));
+        assert_eq!(update.suppression_strength, Some(100));
+        assert_eq!(update.rollout_salt, Some("voice-ns-v2".to_owned()));
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_leaves_the_feature_inert_when_nothing_is_submitted() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_voice_noise_suppression_update(&form);
+        let update = request
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(update.enabled, Some(false));
+        assert_eq!(update.allow_user_override, Some(false));
+        assert_eq!(update.stereo_enabled, Some(false));
+        assert_eq!(update.default_backend, None);
+        assert_eq!(update.enabled_backends, Some(Vec::new()));
+        assert_eq!(update.rollout_basis_points, None);
+        assert_eq!(update.rollout_salt, None);
+        assert_eq!(update.included_user_ids, Some(Vec::new()));
+        assert_eq!(update.excluded_user_ids, Some(Vec::new()));
+        assert_eq!(update.guild_overrides, Some(Vec::new()));
+        assert_eq!(update.suppression_strength, None);
+        assert!(request.gateway_rollout.is_none());
+        assert!(request.policy.is_none());
+        assert!(request.media.is_none());
+        assert!(request.experiment_delivery.is_none());
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_reads_user_id_textareas() {
+        let form = MultiValueForm::parse(
+            b"voice_ns_included_user_ids=1500000000000000001%0A1500000000000000002&voice_ns_excluded_user_ids=1500000000000000003%2C%201500000000000000004",
+        );
+        let update = build_voice_noise_suppression_update(&form)
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(
+            update.included_user_ids,
+            Some(vec![
+                "1500000000000000001".to_owned(),
+                "1500000000000000002".to_owned()
+            ])
+        );
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec![
+                "1500000000000000003".to_owned(),
+                "1500000000000000004".to_owned()
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_user_ids_splits_newlines_and_commas() {
+        assert_eq!(
+            parse_voice_noise_suppression_user_ids("  1 ,2\n3\r\n 4 ,, 5 "),
+            vec![
+                "1".to_owned(),
+                "2".to_owned(),
+                "3".to_owned(),
+                "4".to_owned(),
+                "5".to_owned()
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_user_ids_dedupes_preserving_order() {
+        assert_eq!(
+            parse_voice_noise_suppression_user_ids("20,10,20,10,30"),
+            vec!["20".to_owned(), "10".to_owned(), "30".to_owned()]
+        );
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_user_ids_rejects_non_digit_and_overlong_values() {
+        assert!(
+            parse_voice_noise_suppression_user_ids(
+                "abc,12a,-1,1.0, ,999999999999999999999,<script>"
+            )
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_user_ids_truncates_at_cap() {
+        let value = (0..1_200)
+            .map(|index| index.to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        let ids = parse_voice_noise_suppression_user_ids(&value);
+        assert_eq!(ids.len(), VOICE_NS_MAX_TARGETED_USERS);
+        assert_eq!(ids.last(), Some(&"999".to_owned()));
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_guild_overrides_skips_malformed_lines() {
+        let overrides = parse_voice_noise_suppression_guild_overrides(
+            " 1600000000000000001 = rnnoise \n1600000000000000002\n=gate\nnot-a-guild=gate\n1600000000000000003=unknown_backend\n1600000000000000004=deep_filter\n",
+        );
+        assert_eq!(
+            overrides,
+            vec![
+                VoiceNoiseSuppressionGuildOverride {
+                    guild_id: "1600000000000000001".to_owned(),
+                    backend: NoiseSuppressionBackend::Rnnoise,
+                },
+                VoiceNoiseSuppressionGuildOverride {
+                    guild_id: "1600000000000000004".to_owned(),
+                    backend: NoiseSuppressionBackend::DeepFilter,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_treats_blank_numbers_as_explicit_values() {
+        let form = MultiValueForm::parse(
+            b"voice_ns_rollout_basis_points=&voice_ns_suppression_strength=%20%20",
+        );
+        let update = build_voice_noise_suppression_update(&form)
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(update.rollout_basis_points, Some(0));
+        assert_eq!(update.suppression_strength, Some(0));
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_treats_unparseable_numbers_as_explicit_values() {
+        let form = MultiValueForm::parse(
+            b"voice_ns_rollout_basis_points=abc&voice_ns_suppression_strength=-5",
+        );
+        let update = build_voice_noise_suppression_update(&form)
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(update.rollout_basis_points, Some(0));
+        assert_eq!(update.suppression_strength, Some(0));
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_accepts_padded_numbers() {
+        let form = MultiValueForm::parse(b"voice_ns_rollout_basis_points=%20250%20");
+        let update = build_voice_noise_suppression_update(&form)
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(update.rollout_basis_points, Some(250));
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_truncates_an_overlong_rollout_salt() {
+        let salt = "\u{e9}".repeat(80);
+        let form = MultiValueForm::parse(format!("voice_ns_rollout_salt={salt}").as_bytes());
+        let update = build_voice_noise_suppression_update(&form)
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        let salt = update.rollout_salt.expect("rollout salt");
+        assert_eq!(salt.chars().count(), VOICE_NS_MAX_ROLLOUT_SALT_CHARS);
+        assert_eq!(salt, "\u{e9}".repeat(VOICE_NS_MAX_ROLLOUT_SALT_CHARS));
+    }
+
+    #[test]
+    fn build_voice_noise_suppression_update_never_sends_an_empty_rollout_salt() {
+        let form = MultiValueForm::parse(b"voice_ns_rollout_salt=%20%20%20");
+        let update = build_voice_noise_suppression_update(&form)
+            .voice_noise_suppression
+            .expect("voice noise suppression update");
+        assert_eq!(update.rollout_salt, None);
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_guild_overrides_dedupes_keeping_the_first_backend() {
+        let overrides = parse_voice_noise_suppression_guild_overrides(
+            "1600000000000000001=rnnoise\n1600000000000000001=gate\n1600000000000000002=speex\n1600000000000000001=deep_filter\n",
+        );
+        assert_eq!(
+            overrides,
+            vec![
+                VoiceNoiseSuppressionGuildOverride {
+                    guild_id: "1600000000000000001".to_owned(),
+                    backend: NoiseSuppressionBackend::Rnnoise,
+                },
+                VoiceNoiseSuppressionGuildOverride {
+                    guild_id: "1600000000000000002".to_owned(),
+                    backend: NoiseSuppressionBackend::Speex,
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn parse_voice_noise_suppression_guild_overrides_truncates_at_cap() {
+        let value = (0..300)
+            .map(|index| format!("{index}=gate"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let overrides = parse_voice_noise_suppression_guild_overrides(&value);
+        assert_eq!(overrides.len(), VOICE_NS_MAX_GUILD_OVERRIDES);
+        assert_eq!(
+            overrides.last().map(|entry| entry.guild_id.as_str()),
+            Some("199")
+        );
+    }
+
+    #[test]
+    fn build_experiment_delivery_update_leaves_both_fields_unchanged_when_absent() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_experiment_delivery_update(&form);
+        let update = request
+            .experiment_delivery
+            .expect("experiment delivery update");
+        assert_eq!(update.poll_interval_seconds, None);
+        assert_eq!(update.poll_jitter_percent, None);
+        assert!(request.voice_noise_suppression.is_none());
+        assert!(request.gateway_rollout.is_none());
+        assert!(request.policy.is_none());
+        assert!(request.media.is_none());
+    }
+
+    #[test]
+    fn build_experiment_delivery_update_treats_blank_numbers_as_explicit_defaults() {
+        let form = MultiValueForm::parse(
+            b"experiment_delivery_poll_interval_seconds=&experiment_delivery_poll_jitter_percent=%20%20",
+        );
+        let update = build_experiment_delivery_update(&form)
+            .experiment_delivery
+            .expect("experiment delivery update");
+        assert_eq!(
+            update.poll_interval_seconds,
+            Some(EXPERIMENT_DEFAULT_POLL_INTERVAL_SECONDS)
+        );
+        assert_eq!(
+            update.poll_jitter_percent,
+            Some(EXPERIMENT_DEFAULT_POLL_JITTER_PERCENT)
+        );
+    }
+
+    #[test]
+    fn build_experiment_delivery_update_treats_unparseable_numbers_as_explicit_defaults() {
+        let form = MultiValueForm::parse(
+            b"experiment_delivery_poll_interval_seconds=12.5&experiment_delivery_poll_jitter_percent=abc",
+        );
+        let update = build_experiment_delivery_update(&form)
+            .experiment_delivery
+            .expect("experiment delivery update");
+        assert_eq!(
+            update.poll_interval_seconds,
+            Some(EXPERIMENT_DEFAULT_POLL_INTERVAL_SECONDS)
+        );
+        assert_eq!(
+            update.poll_jitter_percent,
+            Some(EXPERIMENT_DEFAULT_POLL_JITTER_PERCENT)
+        );
+    }
+
+    #[test]
+    fn build_experiment_delivery_update_clamps_numbers_to_their_bounds() {
+        let form = MultiValueForm::parse(
+            b"experiment_delivery_poll_interval_seconds=5&experiment_delivery_poll_jitter_percent=90",
+        );
+        let update = build_experiment_delivery_update(&form)
+            .experiment_delivery
+            .expect("experiment delivery update");
+        assert_eq!(
+            update.poll_interval_seconds,
+            Some(EXPERIMENT_MIN_POLL_INTERVAL_SECONDS)
+        );
+        assert_eq!(
+            update.poll_jitter_percent,
+            Some(EXPERIMENT_MAX_POLL_JITTER_PERCENT)
+        );
+
+        let form = MultiValueForm::parse(
+            b"experiment_delivery_poll_interval_seconds=999999&experiment_delivery_poll_jitter_percent=0",
+        );
+        let update = build_experiment_delivery_update(&form)
+            .experiment_delivery
+            .expect("experiment delivery update");
+        assert_eq!(
+            update.poll_interval_seconds,
+            Some(EXPERIMENT_MAX_POLL_INTERVAL_SECONDS)
+        );
+        assert_eq!(update.poll_jitter_percent, Some(0));
+    }
+
+    #[test]
+    fn build_experiment_delivery_update_accepts_padded_numbers() {
+        let form = MultiValueForm::parse(
+            b"experiment_delivery_poll_interval_seconds=%20900%20&experiment_delivery_poll_jitter_percent=%2025%20",
+        );
+        let update = build_experiment_delivery_update(&form)
+            .experiment_delivery
+            .expect("experiment delivery update");
+        assert_eq!(update.poll_interval_seconds, Some(900));
+        assert_eq!(update.poll_jitter_percent, Some(25));
     }
 
     #[test]

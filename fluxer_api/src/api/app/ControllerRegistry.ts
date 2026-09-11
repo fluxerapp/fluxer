@@ -9,6 +9,7 @@ import type {APIConfig} from '../config/APIConfig';
 import {ConnectionController} from '../connection/ConnectionController';
 import {DonationController} from '../donation/DonationController';
 import {DownloadController} from '../download/DownloadController';
+import {ExperimentController} from '../experiment/ExperimentController';
 import {FavoriteGifController} from '../favorite_gif/FavoriteGifController';
 import {FavoriteMemeController} from '../favorite_meme/FavoriteMemeController';
 import {GatewayController} from '../gateway/GatewayController';
@@ -50,6 +51,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	InstanceController(routes);
 	OpenAPIController(routes);
 	DownloadController(routes);
+	ExperimentController(routes);
 	FavoriteGifController(routes);
 	FavoriteMemeController(routes);
 	InviteController(routes);

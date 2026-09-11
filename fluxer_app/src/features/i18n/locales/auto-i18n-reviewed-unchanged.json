@@ -1381,6 +1381,9 @@
         "msgid": "Branding asset preview"
       },
       {
+        "msgid": "Built-in suppression from your browser or system."
+      },
+      {
         "msgid": "Camera access is needed for device previews"
       },
       {
@@ -1478,6 +1481,9 @@
       },
       {
         "msgid": "Custom emoji {emojiName} from {communityName}"
+      },
+      {
+        "msgid": "Cuts audio below a loudness threshold, lowest CPU cost."
       },
       {
         "msgid": "Deafen other members in this voice channel, so they cannot hear or speak."
@@ -1678,6 +1684,9 @@
         "msgid": "Let people search and send GIFs powered by Klipy."
       },
       {
+        "msgid": "Lightweight classic filter, works on any device."
+      },
+      {
         "msgid": "Loading instance configuration"
       },
       {
@@ -1712,6 +1721,12 @@
       },
       {
         "msgid": "Neko cat that chases your cursor"
+      },
+      {
+        "msgid": "Neural filter that removes most background noise."
+      },
+      {
+        "msgid": "Neural filter, full audio bandwidth."
       },
       {
         "msgid": "New price scheduled for <0>{pendingChangeDate}</0>."
@@ -1978,6 +1993,12 @@
         "msgid": "Send messages in this channel."
       },
       {
+        "msgid": "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
+      },
+      {
+        "msgid": "Sends your microphone audio with no suppression."
+      },
+      {
         "msgid": "Sequential send"
       },
       {
@@ -2074,6 +2095,9 @@
         "msgid": "Static Neko"
       },
       {
+        "msgid": "Stereo microphone"
+      },
+      {
         "msgid": "Still Neko"
       },
       {
@@ -2087,6 +2111,9 @@
       },
       {
         "msgid": "Stream quality"
+      },
+      {
+        "msgid": "Strongest neural filter for speech, limits audio to the speech range."
       },
       {
         "msgid": "Switch price"
@@ -2315,6 +2342,22 @@
       },
       {
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Balanced"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Classic"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Focused"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Noise gate"
       },
       {
         "msgctxt": "screen-share",

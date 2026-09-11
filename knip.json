@@ -51,7 +51,7 @@
 		},
 		"fluxer_app": {
 			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
-			"ignoreDependencies": ["@lingui/swc-plugin"]
+			"ignoreDependencies": ["@sapphi-red/web-noise-suppressor", "@lingui/swc-plugin"]
 		},
 		"fluxer_desktop": {
 			"entry": [

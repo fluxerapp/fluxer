@@ -18,6 +18,10 @@ pub struct InstanceConfigResponse {
     pub integrations: InstanceIntegrationsResponse,
     #[serde(default)]
     pub media: InstanceMediaResponse,
+    #[serde(default)]
+    pub voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
+    #[serde(default)]
+    pub experiment_delivery: ExperimentDeliveryConfigResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -436,6 +440,192 @@ impl VoiceE2eeScope {
     }
 }
 
+pub const VOICE_NS_MAX_TARGETED_USERS: usize = 1_000;
+pub const VOICE_NS_MAX_GUILD_OVERRIDES: usize = 200;
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum NoiseSuppressionBackend {
+    None,
+    #[default]
+    Standard,
+    Gate,
+    Speex,
+    Rnnoise,
+    Gtcrn,
+    DeepFilter,
+}
+
+impl NoiseSuppressionBackend {
+    pub const ALL: [Self; 7] = [
+        Self::None,
+        Self::Standard,
+        Self::Gate,
+        Self::Speex,
+        Self::Rnnoise,
+        Self::Gtcrn,
+        Self::DeepFilter,
+    ];
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Standard => "standard",
+            Self::Gate => "gate",
+            Self::Speex => "speex",
+            Self::Rnnoise => "rnnoise",
+            Self::Gtcrn => "gtcrn",
+            Self::DeepFilter => "deep_filter",
+        }
+    }
+
+    pub fn label(&self) -> &'static str {
+        match self {
+            Self::None => "None (pass-through)",
+            Self::Standard => "Standard (WebRTC)",
+            Self::Gate => "Noise gate",
+            Self::Speex => "Speex",
+            Self::Rnnoise => "RNNoise",
+            Self::Gtcrn => "GTCRN",
+            Self::DeepFilter => "DeepFilterNet",
+        }
+    }
+
+    pub fn from_value(value: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|backend| backend.as_str() == value)
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct VoiceNoiseSuppressionGuildOverride {
+    pub guild_id: String,
+    pub backend: NoiseSuppressionBackend,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct VoiceNoiseSuppressionConfigResponse {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub config_version: u64,
+    #[serde(default)]
+    pub default_backend: NoiseSuppressionBackend,
+    #[serde(default = "default_voice_noise_suppression_enabled_backends")]
+    pub enabled_backends: Vec<NoiseSuppressionBackend>,
+    #[serde(default = "default_voice_noise_suppression_allow_user_override")]
+    pub allow_user_override: bool,
+    #[serde(default)]
+    pub rollout_basis_points: u32,
+    #[serde(default = "default_voice_noise_suppression_rollout_salt")]
+    pub rollout_salt: String,
+    #[serde(default)]
+    pub included_user_ids: Vec<String>,
+    #[serde(default)]
+    pub excluded_user_ids: Vec<String>,
+    #[serde(default)]
+    pub guild_overrides: Vec<VoiceNoiseSuppressionGuildOverride>,
+    #[serde(default)]
+    pub stereo_enabled: bool,
+    #[serde(default = "default_voice_noise_suppression_strength")]
+    pub suppression_strength: u32,
+}
+
+impl Default for VoiceNoiseSuppressionConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            default_backend: NoiseSuppressionBackend::Standard,
+            enabled_backends: default_voice_noise_suppression_enabled_backends(),
+            allow_user_override: default_voice_noise_suppression_allow_user_override(),
+            rollout_basis_points: 0,
+            rollout_salt: default_voice_noise_suppression_rollout_salt(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+            guild_overrides: Vec::new(),
+            stereo_enabled: false,
+            suppression_strength: default_voice_noise_suppression_strength(),
+        }
+    }
+}
+
+fn default_voice_noise_suppression_enabled_backends() -> Vec<NoiseSuppressionBackend> {
+    NoiseSuppressionBackend::ALL.to_vec()
+}
+
+fn default_voice_noise_suppression_allow_user_override() -> bool {
+    true
+}
+
+fn default_voice_noise_suppression_rollout_salt() -> String {
+    "voice-ns-v1".to_owned()
+}
+
+fn default_voice_noise_suppression_strength() -> u32 {
+    80
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct VoiceNoiseSuppressionConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_backend: Option<NoiseSuppressionBackend>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled_backends: Option<Vec<NoiseSuppressionBackend>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub allow_user_override: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guild_overrides: Option<Vec<VoiceNoiseSuppressionGuildOverride>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stereo_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub suppression_strength: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ExperimentDeliveryConfigResponse {
+    #[serde(default = "default_experiment_poll_interval_seconds")]
+    pub poll_interval_seconds: u64,
+    #[serde(default = "default_experiment_poll_jitter_percent")]
+    pub poll_jitter_percent: u32,
+}
+
+impl Default for ExperimentDeliveryConfigResponse {
+    fn default() -> Self {
+        Self {
+            poll_interval_seconds: default_experiment_poll_interval_seconds(),
+            poll_jitter_percent: default_experiment_poll_jitter_percent(),
+        }
+    }
+}
+
+fn default_experiment_poll_interval_seconds() -> u64 {
+    300
+}
+
+fn default_experiment_poll_jitter_percent() -> u32 {
+    15
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ExperimentDeliveryConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll_interval_seconds: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll_jitter_percent: Option<u32>,
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct InstanceRegistrationResponse {
     pub mode: RegistrationMode,
@@ -525,6 +715,10 @@ pub struct InstanceConfigUpdateRequest {
     pub integrations: Option<InstanceIntegrationsUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub media: Option<InstanceMediaUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voice_noise_suppression: Option<VoiceNoiseSuppressionConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -825,4 +1019,66 @@ pub struct CreateRegistrationUrlResponse {
     pub registration_url: RegistrationUrlResponse,
     pub code: String,
     pub url: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VOICE_NOISE_SUPPRESSION_SCHEMA: &str = include_str!(
+        "../../../../packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts"
+    );
+
+    fn schema_backend_ids() -> Vec<String> {
+        let (_, rest) = VOICE_NOISE_SUPPRESSION_SCHEMA
+            .split_once("export const VOICE_NOISE_SUPPRESSION_BACKENDS = [")
+            .expect("backend list start");
+        let (block, _) = rest.split_once(']').expect("backend list end");
+        block
+            .split(',')
+            .map(|entry| entry.trim().trim_matches('\'').to_owned())
+            .filter(|entry| !entry.is_empty())
+            .collect()
+    }
+
+    #[test]
+    fn noise_suppression_backend_ids_are_the_documented_list() {
+        assert_eq!(
+            NoiseSuppressionBackend::ALL
+                .iter()
+                .map(NoiseSuppressionBackend::as_str)
+                .collect::<Vec<_>>(),
+            vec![
+                "none",
+                "standard",
+                "gate",
+                "speex",
+                "rnnoise",
+                "gtcrn",
+                "deep_filter"
+            ]
+        );
+    }
+
+    #[test]
+    fn noise_suppression_backend_ids_match_the_schema_contract() {
+        assert_eq!(
+            NoiseSuppressionBackend::ALL
+                .iter()
+                .map(|backend| backend.as_str().to_owned())
+                .collect::<Vec<_>>(),
+            schema_backend_ids()
+        );
+    }
+
+    #[test]
+    fn noise_suppression_backend_round_trips_every_id() {
+        for backend in NoiseSuppressionBackend::ALL {
+            assert_eq!(
+                NoiseSuppressionBackend::from_value(backend.as_str()),
+                Some(backend)
+            );
+        }
+        assert_eq!(NoiseSuppressionBackend::from_value("deepfilter"), None);
+    }
 }

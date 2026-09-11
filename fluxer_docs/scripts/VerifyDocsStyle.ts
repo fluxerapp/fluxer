@@ -303,7 +303,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['admin-api/discovery.mdx', {'table-identifier': 1}],
 	['admin-api/guilds.mdx', {'table-identifier': 3}],
 	['admin-api/index.mdx', {'table-fit': 1, 'table-identifier': 2}],
-	['admin-api/instance.mdx', {'table-identifier': 5}],
+	['admin-api/instance.mdx', {'table-fit': 1, 'table-identifier': 5}],
 	['admin-api/messages.mdx', {'table-identifier': 1}],
 	['admin-api/reports.mdx', {'table-fit': 1, 'table-identifier': 2}],
 	['admin-api/users.mdx', {'table-fit': 1, 'table-identifier': 1}],

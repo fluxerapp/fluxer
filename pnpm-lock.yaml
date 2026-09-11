@@ -105,6 +105,9 @@ catalogs:
     '@radix-ui/react-switch':
       specifier: 1.2.6
       version: 1.2.6
+    '@sapphi-red/web-noise-suppressor':
+      specifier: 0.4.0
+      version: 0.4.0
     '@simplewebauthn/browser':
       specifier: 13.2.2
       version: 13.2.2
@@ -434,12 +437,12 @@ catalogs:
       version: 4.3.6
 
 overrides:
+  '@astrojs/check@0.9.9>chokidar': 5.0.0
   '@floating-ui/dom': 1.7.5
   '@lingui/swc-plugin': 5.11.0
   '@rspack/cli': 1.7.6
   '@rspack/core': 1.7.6
   '@rspack/dev-server@1.1.5>webpack-dev-server': 5.2.6
-  '@astrojs/check@0.9.9>chokidar': 5.0.0
   cassandra-driver@4.8.0>adm-zip: 0.6.0
   emscripten-wasm-loader@3.0.3>nanoid: 3.3.18
   hunspell-asm@4.0.2>nanoid: 3.3.18
@@ -1503,6 +1506,9 @@ importers:
       '@radix-ui/react-switch':
         specifier: 'catalog:'
         version: 1.2.6(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@sapphi-red/web-noise-suppressor':
+        specifier: 'catalog:'
+        version: 0.4.0
       '@simplewebauthn/browser':
         specifier: 'catalog:'
         version: 13.2.2
@@ -7357,6 +7363,9 @@ packages:
 
   '@rspack/lite-tapable@1.1.0':
     resolution: {integrity: sha512-E2B0JhYFmVAwdDiG14+DW0Di4Ze4Jg10Pc4/lILUrd5DRCaklduz2OvJ5HYQ6G+hd+WTzqQb3QnDNfK4yvAFYw==}
+
+  '@sapphi-red/web-noise-suppressor@0.4.0':
+    resolution: {integrity: sha512-vkBEL/VDkbeP3qqSRQFRtPLGa19a38JUzO6J0r5D/MQSumrlERy671DAMaETgY6etXjDCoJcD7JBIaXnuGVtVw==}
 
   '@shikijs/core@4.4.3':
     resolution: {integrity: sha512-QCR4q2ZO/ILJEuwiBMel4wdcTDb1JGwfjKTxPDF6x8ixOaluPrVqIn06C99AcRPhmYlBR56d/Fb+GN58GzExpg==}
@@ -18580,6 +18589,8 @@ snapshots:
       - webpack-cli
 
   '@rspack/lite-tapable@1.1.0': {}
+
+  '@sapphi-red/web-noise-suppressor@0.4.0': {}
 
   '@shikijs/core@4.4.3':
     dependencies:

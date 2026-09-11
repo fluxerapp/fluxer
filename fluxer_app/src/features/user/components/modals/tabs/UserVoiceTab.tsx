@@ -32,11 +32,24 @@ import {useMediaPermission} from '@app/features/user/components/modals/tabs/hook
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type ExternalAudioProcessorMatch,
 	findExternalProcessorForDevice,
 } from '@app/features/voice/utils/ExternalAudioProcessor';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {
+	getNoiseSuppressionChoiceValues,
+	getSelectedNoiseSuppressionChoice,
+	isStereoMicrophoneChoiceAvailable,
+	isStereoMicrophoneEnabled,
+	setNoiseSuppressionChoice,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
+import {
+	getNoiseSuppressionChoiceLabelDescriptor,
+	STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR,
+	STEREO_MICROPHONE_DESCRIPTOR,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
 import {buildSettingsDeviceOptions} from '@app/features/voice/utils/SettingsDeviceOptions';
 import {hasDeviceLabels, resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
 import {
@@ -81,18 +94,6 @@ const CUSTOM_DESCRIPTOR = msg({
 const CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Adjust each setting yourself: noise suppression, echo cancellation, and gain.',
 	comment: 'Description for the custom profile option in the voice tab.',
-});
-const NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Noise suppression option label in the voice tab (neural filter). Keep it concise.',
-});
-const NOISE_SUPPRESSION_STANDARD_DESCRIPTOR = msg({
-	message: 'Standard',
-	comment: 'Noise suppression option label in the voice tab (browser default). Keep it concise.',
-});
-const NONE_DESCRIPTOR = msg({
-	message: 'None',
-	comment: 'Short label in the voice tab. Keep it concise.',
 });
 const PUSH_TO_TALK_LIMITED_DESCRIPTOR = msg({
 	message: 'Push-to-talk (limited)',
@@ -188,18 +189,10 @@ const ENTRANCE_SOUND_DESCRIPTOR = msg({
 	comment: 'Subsection title in the voice tab. Keep it concise.',
 });
 
-type NoiseSuppressionMethod = 'enhanced' | 'standard' | 'none';
-
 interface VoiceTabProps {
 	voiceSettings: typeof VoiceSettings;
 	hasPremium: boolean;
 	autoRequestPermission?: boolean;
-}
-
-function resolveNoiseSuppressionMethod(deepFilterEnabled: boolean, browserNsEnabled: boolean): NoiseSuppressionMethod {
-	if (deepFilterEnabled) return 'enhanced';
-	if (browserNsEnabled) return 'standard';
-	return 'none';
 }
 
 export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoRequestPermission = false}) => {
@@ -287,25 +280,13 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			desc: i18n._(CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR),
 		},
 	];
-	const noiseSuppressionMethod = resolveNoiseSuppressionMethod(deepFilterNoiseSuppression, noiseSuppression);
-	const noiseSuppressionOptions: Array<ComboboxOption<NoiseSuppressionMethod>> = [
-		{value: 'enhanced', label: i18n._(NOISE_SUPPRESSION_ENHANCED_DESCRIPTOR)},
-		{value: 'standard', label: i18n._(NOISE_SUPPRESSION_STANDARD_DESCRIPTOR)},
-		{value: 'none', label: i18n._(NONE_DESCRIPTOR)},
-	];
-	const setNoiseSuppressionMethod = (method: NoiseSuppressionMethod) => {
-		switch (method) {
-			case 'enhanced':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: true, noiseSuppression: false});
-				return;
-			case 'standard':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: true});
-				return;
-			case 'none':
-				VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: false});
-				return;
-		}
-	};
+	const noiseSuppressionChoice = getSelectedNoiseSuppressionChoice();
+	const noiseSuppressionOptions: Array<ComboboxOption<VoiceNoiseSuppressionBackend>> =
+		getNoiseSuppressionChoiceValues().map((backend) => ({
+			value: backend,
+			label: i18n._(getNoiseSuppressionChoiceLabelDescriptor(backend)),
+		}));
+	const stereoMicrophoneAvailable = isStereoMicrophoneChoiceAvailable();
 	const setPushToTalkEnabled = (enabled: boolean) => {
 		const mode = enabled ? 'voice_push_to_talk' : 'voice_activity';
 		if (enabled && !isNativeDesktop) {
@@ -494,16 +475,28 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 					/>
 				</div>
 			)}
-			<CompactComboboxRow<NoiseSuppressionMethod>
+			<CompactComboboxRow<VoiceNoiseSuppressionBackend>
 				label={i18n._(VOICE_NOISE_SUPPRESSION_DESCRIPTOR)}
-				value={noiseSuppressionMethod}
+				value={noiseSuppressionChoice}
 				options={noiseSuppressionOptions}
-				onChange={setNoiseSuppressionMethod}
+				onChange={setNoiseSuppressionChoice}
 				isSearchable={false}
 				controlWidth="medium"
 				dataFlx="user.voice-tab.render-custom-profile.select.set-noise-suppression-method"
 				data-flx="user.user-voice-tab.render-custom-profile.compact-combobox-row.set-noise-suppression-method"
 			/>
+			{stereoMicrophoneAvailable && (
+				<Switch
+					label={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
+					description={i18n._(STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR)}
+					value={isStereoMicrophoneEnabled()}
+					onChange={(value) => {
+						VoiceSettings.stereoMicrophone = value;
+					}}
+					ariaLabel={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
+					data-flx="user.voice-tab.render-custom-profile.switch.set-stereo-microphone"
+				/>
+			)}
 			<Switch
 				label={i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR)}
 				value={echoCancellation}

@@ -68,6 +68,7 @@ catalog:
   '@radix-ui/react-switch': 1.2.6
   '@rspack/cli': 1.7.6
   '@rspack/core': 1.7.6
+  '@sapphi-red/web-noise-suppressor': 0.4.0
   '@simplewebauthn/browser': 13.2.2
   '@simplewebauthn/server': 13.2.3
   '@svgr/webpack': 8.1.0
@@ -182,12 +183,12 @@ catalog:
 minimumReleaseAge: 1440
 
 overrides:
+  '@astrojs/check@0.9.9>chokidar': 5.0.0
   '@floating-ui/dom': 1.7.5
   '@lingui/swc-plugin': 'catalog:'
   '@rspack/cli': 'catalog:'
   '@rspack/core': 'catalog:'
   '@rspack/dev-server@1.1.5>webpack-dev-server': 5.2.6
-  '@astrojs/check@0.9.9>chokidar': 5.0.0
   cassandra-driver@4.8.0>adm-zip: 0.6.0
   emscripten-wasm-loader@3.0.3>nanoid: 3.3.18
   hunspell-asm@4.0.2>nanoid: 3.3.18

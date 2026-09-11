@@ -137,7 +137,7 @@ An `X-Audit-Log-Reason` normalised to more than 512 characters is discarded, and
 | Content-Type? | string | The media type of the representation, absent from a response with no body |
 | Cache-Control?<sup>4</sup> | string | The literal value `no-cache` unless the operation sets its own directive |
 | Access-Control-Allow-Origin?<sup>5</sup> | string | The request `Origin` when it is a configured application origin, and the literal `*` on routes that set their own wildcard |
-| Access-Control-Expose-Headers?<sup>5</sup> | string | The literal value `X-Fluxer-Version` |
+| Access-Control-Expose-Headers?<sup>5</sup> | string | The literal value `X-Fluxer-Version, ETag` |
 | Vary?<sup>5</sup> | string | The literal value `Origin`, sent whenever the allowed origin was echoed |
 | Retry-After?<sup>6</sup> | string | Whole seconds to wait, sent on a rate limit denial, a slowmode denial, a resource lock, and the in-flight ceiling 503 |
 | X-RateLimit-Limit?<sup>7</sup> | string | Present on a route denial and on a successful bot or webhook request |
@@ -188,7 +188,7 @@ Five paths are readable from any origin. `/v1/webhooks/{webhook_id}/{token}` and
 
 [Get instance discovery](/http-api/instance/#get-instance-discovery) on `/.well-known/fluxer`, [Get OpenAPI document](/http-api/instance/#get-openapi-document) on `/v1/openapi.json`, and [Get client geolocation](/http-api/instance/#get-client-geolocation) on `/v1/ip` set `Access-Control-Allow-Origin: *` in the operation itself. The wildcard stands for any origin outside the allow-list, and for an allowed origin the policy replaces it with that exact origin and sends `Vary: Origin`.
 
-`Access-Control-Expose-Headers` is the single value `X-Fluxer-Version`. Every other Fluxer response header, the rate limit headers and `X-Request-ID` included, is hidden from cross-origin script.
+`Access-Control-Expose-Headers` is the value `X-Fluxer-Version, ETag`. Every other Fluxer response header, the rate limit headers and `X-Request-ID` included, is hidden from cross-origin script. `Access-Control-Allow-Headers` is `Content-Type, Authorization, X-Requested-With, Accept-Language, X-Request-ID, If-None-Match`, so a cross-origin client revalidates an [ETag](/http-api/experiments/#get-experiment-assignments) it was served.
 
 :::caution[Same-host mutations require a matching origin]
 A production deployment rejects a non-`GET` request whose `Host` is `web.fluxer.app` or `web.canary.fluxer.app` unless its `Origin` is exactly `https://` followed by that same host, returning 403 `INVALID_API_ORIGIN`. A request sent to the API host is unaffected.
