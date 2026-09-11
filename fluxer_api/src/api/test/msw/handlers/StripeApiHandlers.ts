@@ -353,6 +353,16 @@ interface MockStripeSubscriptionSchedule {
 	}>;
 }
 
+const PRICE_ID_CURRENCY_MARKERS = ['eur', 'brl', 'dkk', 'inr', 'nok', 'pln', 'sek', 'try'] as const;
+
+function inferPriceIdCurrency(normalizedPriceId: string): string {
+	return PRICE_ID_CURRENCY_MARKERS.find((marker) => normalizedPriceId.includes(marker)) ?? 'usd';
+}
+
+function inferPriceIdInterval(normalizedPriceId: string): 'month' | 'year' {
+	return normalizedPriceId.includes('year') ? 'year' : 'month';
+}
+
 function parseFormDataToObject<T extends object = Record<string, unknown>>(formData: FormData): T {
 	const result: Record<string, unknown> = {};
 	const isArrayIndex = (segment: string): boolean => /^\d+$/.test(segment);
@@ -797,24 +807,8 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 	function inferSubscriptionPriceState(priceId: string): Pick<MockStripeSubscriptionState, 'currency' | 'interval'> {
 		const normalizedPriceId = priceId.toLowerCase();
 		return {
-			currency: normalizedPriceId.includes('eur')
-				? 'eur'
-				: normalizedPriceId.includes('brl')
-					? 'brl'
-					: normalizedPriceId.includes('dkk')
-						? 'dkk'
-						: normalizedPriceId.includes('inr')
-							? 'inr'
-							: normalizedPriceId.includes('nok')
-								? 'nok'
-								: normalizedPriceId.includes('pln')
-									? 'pln'
-									: normalizedPriceId.includes('sek')
-										? 'sek'
-										: normalizedPriceId.includes('try')
-											? 'try'
-											: 'usd',
-			interval: normalizedPriceId.includes('year') ? 'year' : 'month',
+			currency: inferPriceIdCurrency(normalizedPriceId),
+			interval: inferPriceIdInterval(normalizedPriceId),
 		};
 	}
 	function createDefaultSubscriptionState(): MockStripeSubscriptionState {
@@ -1724,29 +1718,11 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 				id,
 				object: 'price',
 				active: true,
-				currency:
-					overrides?.currency ??
-					(normalizedPriceId.includes('eur')
-						? 'eur'
-						: normalizedPriceId.includes('brl')
-							? 'brl'
-							: normalizedPriceId.includes('dkk')
-								? 'dkk'
-								: normalizedPriceId.includes('inr')
-									? 'inr'
-									: normalizedPriceId.includes('nok')
-										? 'nok'
-										: normalizedPriceId.includes('pln')
-											? 'pln'
-											: normalizedPriceId.includes('sek')
-												? 'sek'
-												: normalizedPriceId.includes('try')
-													? 'try'
-													: 'usd'),
-				unit_amount: overrides?.unit_amount ?? (normalizedPriceId.includes('year') ? 4999 : 499),
+				currency: overrides?.currency ?? inferPriceIdCurrency(normalizedPriceId),
+				unit_amount: overrides?.unit_amount ?? (inferPriceIdInterval(normalizedPriceId) === 'year' ? 4999 : 499),
 				type: 'recurring',
 				recurring: {
-					interval: overrides?.interval ?? (normalizedPriceId.includes('year') ? 'year' : 'month'),
+					interval: overrides?.interval ?? inferPriceIdInterval(normalizedPriceId),
 					interval_count: 1,
 				},
 				product: overrides?.product ?? 'prod_test_1',
