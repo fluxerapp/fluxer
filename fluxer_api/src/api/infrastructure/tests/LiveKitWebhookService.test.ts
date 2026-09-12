@@ -3,8 +3,8 @@
 import type {WebhookEvent} from 'livekit-server-sdk';
 import {describe, expect, it, vi} from 'vitest';
 import {createChannelID, createGuildID} from '../../BrandedTypes';
-import {VoiceTopology} from '../../voice/VoiceTopology';
 import type {IVoiceRepository} from '../../voice/IVoiceRepository';
+import {VoiceTopology} from '../../voice/VoiceTopology';
 import type {IGatewayService} from '../IGatewayService';
 import type {ILiveKitService} from '../ILiveKitService';
 import type {IVoiceRoomStore} from '../IVoiceRoomStore';
@@ -29,7 +29,12 @@ function harness(pinnedServerId: string | null) {
 	} as unknown as IVoiceRoomStore;
 	const gatewayService = {disconnectAllVoiceUsersInChannel} as unknown as IGatewayService;
 	const liveKitService = {} as unknown as ILiveKitService;
-	const service = new LiveKitWebhookService(voiceRoomStore, gatewayService, liveKitService, new VoiceTopology({} as unknown as IVoiceRepository, null));
+	const service = new LiveKitWebhookService(
+		voiceRoomStore,
+		gatewayService,
+		liveKitService,
+		new VoiceTopology({} as unknown as IVoiceRepository, null),
+	);
 	return {service, deleteRoomServer, disconnectAllVoiceUsersInChannel};
 }
 
