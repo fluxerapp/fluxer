@@ -103,7 +103,7 @@ One descriptor describes one encoding of one provider GIF. A provider returns se
 
 <sup>1</sup> A non-negative value of at most 2147483647. A descriptor with an empty `src` or `proxy_src`, or a zero dimension, is unusable as a preview and is skipped
 
-A client submitting a format map to [Save meme from URL](#save-meme-from-url) supplies all four members of every descriptor, and a descriptor missing one fails validation with 400 `INVALID_FORM_BODY`.
+A client submitting a format map to [Save meme from URL](#save-meme-from-url) supplies all members of every descriptor, and a descriptor missing one fails validation with 400 `INVALID_FORM_BODY`.
 
 ## GIF media format names
 
@@ -255,7 +255,7 @@ A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select
 | alt_text?<sup>3</sup> | ?string | The accessibility description of the media (0-500 characters) |
 | tags? | ?array[string] | The search tags to store, each 1-30 characters |
 
-<sup>1</sup> At least one of the two keys must be present, and a body with neither fails validation. Both may be present as null, which selects nothing explicitly
+<sup>1</sup> At least one of the keys must be present, and a body with neither fails validation. Both may be present as null, which selects nothing explicitly
 
 <sup>2</sup> `embed_index` takes precedence when both have a value, and an index outside the combined embed list fails with `EMBED_INDEX_OUT_OF_BOUNDS`
 
@@ -441,7 +441,7 @@ Fluxer derives a two-letter country from the requesting address by geolocation, 
 
 <sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result by position against its request
 
-Fluxer resolves a URL in three stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. When a stage fails, Fluxer downgrades that URL's entry alone. A URL that none of the three stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
+Fluxer resolves a URL in stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. When a stage fails, Fluxer downgrades that URL's entry alone. A URL that none of the stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
 
 ### Response
 

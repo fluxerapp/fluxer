@@ -20,7 +20,7 @@ Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject 
 
 ## Archive object
 
-An archive is in one of three lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. A retried attempt clears `failed_at` and `error_message` when it starts, so a failed archive reads as building again while the retry runs.
+An archive is in one of these lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. A retried attempt clears `failed_at` and `error_message` when it starts, so a failed archive reads as building again while the retry runs.
 
 ### Structure
 

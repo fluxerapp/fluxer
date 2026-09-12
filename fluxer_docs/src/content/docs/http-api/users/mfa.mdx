@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Multi-factor authentication asks for a second proof of identity after the account password. Fluxer accepts a TOTP authenticator app and WebAuthn credentials such as a passkey. A one-use backup code works instead of a TOTP code, and [sudo mode](#sudo-mode) reuses these factors to protect every security-sensitive operation in the API.
 
-Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the two sudo routes.
+Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the sudo routes.
 
 :::caution[A challenge is one-use and context-bound]
 Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the issuing user and operation context and expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
@@ -32,9 +32,9 @@ Enabling TOTP issues 10 codes without deleting anything first. An account that a
 
 [List MFA backup codes](#list-mfa-backup-codes) reads the current set back at any time and reports which codes are already consumed. Consuming a code is irreversible. An account that cannot prove [sudo mode](#sudo-mode) reads the same set through the [backup codes challenge](#backup-codes-challenge).
 
-A backup code has exactly three entry points: the `mfa_code` field of the [sudo verification object](#sudo-verification-object) with `mfa_method` set to `totp`, the `code` field of [Disable TOTP MFA](#disable-totp-mfa), and the `code` field of [complete login with TOTP](/http-api/authentication/#complete-login-with-totp). Every other code field rejects it. All three accept a current authenticator code or an unconsumed backup code. [Enable TOTP MFA](#enable-totp-mfa) validates only against the secret being enrolled.
+A backup code has only these entry points: the `mfa_code` field of the [sudo verification object](#sudo-verification-object) with `mfa_method` set to `totp`, the `code` field of [Disable TOTP MFA](#disable-totp-mfa), and the `code` field of [complete login with TOTP](/http-api/authentication/#complete-login-with-totp). Every other code field rejects it. All accept a current authenticator code or an unconsumed backup code. [Enable TOTP MFA](#enable-totp-mfa) validates only against the secret being enrolled.
 
-Every entry point requires the account to hold a TOTP secret. An account whose only authenticator is WebAuthn holds no TOTP secret, so none of the three entry points accepts a backup code, though the account can still regenerate the set.
+Every entry point requires the account to hold a TOTP secret. An account whose only authenticator is WebAuthn holds no TOTP secret, so none of the entry points accepts a backup code, though the account can still regenerate the set.
 
 :::caution[An uppercase backup code with spaces still matches]
 Fluxer lowercases the submitted value and each stored code, then removes every character outside `a-z` and `0-9`. `abcdefgh` and `AbCd EfGh` both match the issued code `abcd-efgh`.
@@ -71,7 +71,7 @@ Each operation passes through its own route bucket and, separately, through one 
 | Code verification | 5 attempts per 15 minutes for each ticket | [Verify MFA backup codes challenge code](#verify-mfa-backup-codes-challenge-code) |
 | Regeneration | 5 attempts per 15 minutes for each ticket | [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) |
 
-Fluxer refuses a resend for 30 seconds after the previous send on the same ticket. That refusal is HTTP 429 with a `Retry-After` computed from the moment the next send becomes available. It is independent of the route bucket and of the two 15-minute send controls.
+Fluxer refuses a resend for 30 seconds after the previous send on the same ticket. That refusal is HTTP 429 with a `Retry-After` computed from the moment the next send becomes available. It is independent of the route bucket and of the 15-minute send controls.
 
 ## Sudo mode
 
@@ -325,7 +325,7 @@ Fluxer accepts additional credential property fields.
 
 ## WebAuthn authentication options object
 
-Every operation that issues a WebAuthn authentication challenge returns this object: sudo verification here, and the two login option operations on [HTTP authentication](/http-api/authentication/).
+Every operation that issues a WebAuthn authentication challenge returns this object: sudo verification here, and the login option operations on [HTTP authentication](/http-api/authentication/).
 
 ### Structure
 
@@ -364,7 +364,7 @@ Fluxer emits no other PublicKeyCredential request options member, so `hints` and
 | extensions<sup>6</sup> | [WebAuthn client extension inputs](#webauthn-client-extension-inputs-object) object | Requested client extensions |
 | hints<sup>7</sup> | array[string] | Authenticator hints |
 
-<sup>1</sup> Always the three COSE identifiers `-8`, `-7`, and `-257`, in that order, standing for EdDSA, ECDSA with SHA-256, and RSASSA-PKCS1-v1_5 with SHA-256
+<sup>1</sup> Always the COSE identifiers `-8`, `-7`, and `-257`, in that order, standing for EdDSA, ECDSA with SHA-256, and RSASSA-PKCS1-v1_5 with SHA-256
 
 <sup>2</sup> Every registration emits the fixed value `60000`
 

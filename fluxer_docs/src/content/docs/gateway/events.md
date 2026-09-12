@@ -34,7 +34,7 @@ Most guild-scoped Dispatches have a `guild_id` string. [Guild Create](#guild-cre
 
 The originating session is excluded from a Dispatch only for [Message Reaction Add](#message-reaction-add) and [Message Reaction Remove](#message-reaction-remove) in a guild channel, and only when the request supplied a `session_id`. That field is removed from the payload. The same field on a direct message or group direct message reaction is forwarded to every recipient unchanged and excludes nobody. The actor that issues any other mutation receives the resulting Dispatch like every other eligible session.
 
-A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it is [Guild Sync](#guild-sync), [Guild Member List Update](#guild-member-list-update), or [Guild Members Chunk](#guild-members-chunk). Those three are delivered live and never retained. A single oversized Dispatch is delivered but not retained, as [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) describes. [Ready](#ready) and the guild burst that follows it for a bot session are also sent outside the replay buffer. The initial [Call Create](#call-create) events are retained like any other Dispatch and are replayed on Resume.
+A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it is [Guild Sync](#guild-sync), [Guild Member List Update](#guild-member-list-update), or [Guild Members Chunk](#guild-members-chunk). Those are delivered live and never retained. A single oversized Dispatch is delivered but not retained, as [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) describes. [Ready](#ready) and the guild burst that follows it for a bot session are also sent outside the replay buffer. The initial [Call Create](#call-create) events are retained like any other Dispatch and are replayed on Resume.
 
 ## Dispatch events
 
@@ -618,7 +618,7 @@ A group whose count is `0` is omitted. The `offline` group is also omitted once 
 
 #### Member list item object
 
-Each item has exactly one of the two fields.
+Each item has exactly one of the fields.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -809,7 +809,7 @@ In a guild channel the session named by the request's `session_id` is excluded a
 
 <sup>1</sup> Present only on the [Message Reaction Add](#message-reaction-add) that creates the first reaction with that emoji on the message. An addition to an emoji that already has a reactor, a [Message Reaction Remove](#message-reaction-remove), and a [Message Reaction Remove Emoji](#message-reaction-remove-emoji) omit the field
 
-Neither `id` nor `animated` is ever null. A Unicode reaction omits both, so a client distinguishes the two forms by the presence of `id`. A client MUST NOT read an absent `animated` as `false`.
+Neither `id` nor `animated` is ever null. A Unicode reaction omits both, so a client distinguishes the forms by the presence of `id`. A client MUST NOT read an absent `animated` as `false`.
 
 ### <span id="message-reaction-add-many"></span>MESSAGE_REACTION_ADD_MANY
 
@@ -997,7 +997,7 @@ A private channel call began, or became visible in the session's initial state.
 
 <sup>2</sup> Present only when the session pulled the call's state for itself
 
-A session pulls the call's state for itself in two cases. The first is the Call Create it receives shortly after [Ready](#ready) for a private channel that already has a call. The second is the Call Create that reattaches the session to a call it lost, whether or not that loss produced a [Call Delete](#call-delete).
+A session pulls the call's state for itself in the cases below. The first is the Call Create it receives shortly after [Ready](#ready) for a private channel that already has a call. The second is the Call Create that reattaches the session to a call it lost, whether or not that loss produced a [Call Delete](#call-delete).
 
 Recipients are every recipient of the channel, whether or not they joined the call. The same set receives [Call Update](#call-update) and [Call Delete](#call-delete).
 
@@ -1067,6 +1067,6 @@ A channel the session cannot view, and a channel on which it lacks `VIEW_CHANNEL
 
 Every resource object named on this page has the representation defined by the [HTTP API](/http-api/). A Dispatch payload with a resource object has the same fields, with the guild-scoped events adding `guild_id` and the message and reaction events adding `member`.
 
-Two reductions are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and moves those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
+The reductions below are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and moves those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
 
 Every Dispatch payload also drops the fields the Gateway keeps for its own indexing: `recipient_ids`, `role_index`, `channel_index`, `member_role_index`, `role_perms_cache`, and `overwrite_perms_cache`.

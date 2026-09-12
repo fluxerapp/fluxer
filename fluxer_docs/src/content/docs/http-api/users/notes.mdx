@@ -103,7 +103,7 @@ Creates, replaces, or deletes the caller's note for one target account. Returns 
 The supplied text becomes the complete stored note. An unresolved target ID returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
 
 :::caution[An omitted, null, or empty note deletes it]
-An empty string is [read as `null`](/http-api/#input-normalisation), so the three forms are indistinguishable. Any value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
+An empty string is [read as `null`](/http-api/#input-normalisation), so the forms are indistinguishable. Any value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
 :::
 
 A `note` of at least 3 characters matching the instance phrase blocklist, or with a URL matching the URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. The blocklist check runs before the route's own credential and body checks, so a blocked value is refused with `CONTENT_BLOCKED` even when the request would also fail one of those checks.

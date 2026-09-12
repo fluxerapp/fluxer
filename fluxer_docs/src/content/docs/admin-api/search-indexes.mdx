@@ -6,7 +6,7 @@ description: Administrative search index rebuilds, index names, and rebuild prog
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A search index holds the documents a search reads, and a rebuild writes those documents from current data. These two routes queue a rebuild and read its progress. The rebuild itself runs as the `refreshSearchIndex` background task described by [Jobs](/admin-api/jobs/).
+A search index holds the documents a search reads, and a rebuild writes those documents from current data. These routes queue a rebuild and read its progress. The rebuild itself runs as the `refreshSearchIndex` background task described by [Jobs](/admin-api/jobs/).
 
 Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
 
@@ -61,7 +61,7 @@ A receipt for one queued rebuild.
 
 ## Search index refresh progress object
 
-Progress for one queued rebuild. The object has two shapes, selected by `status`.
+Progress for one queued rebuild. The object shape is selected by `status`.
 
 ### Not found structure
 

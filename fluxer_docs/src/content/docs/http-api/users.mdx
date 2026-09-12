@@ -557,7 +557,7 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>1</sup> The pair requires the `guild_id` query parameter and requires both the caller and the target to be members of that guild
 
-<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is also omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
+<sup>2</sup> All are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is also omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
 
 <sup>3</sup> The collection is omitted unless its query parameter is true, and always when the target is the caller
 
@@ -627,7 +627,7 @@ Returns a [full user profile](#full-user-profile-object) object for one target a
 <sup>2</sup> The value is trimmed and read as true only for the exact strings `true`, `True`, and `1`. Every other value, including absence, is false
 
 :::note[Profile privacy is a field filter]
-A read that passes the access check can still be restricted. A restricted read nulls `bio` and `pronouns` in both profile objects, empties `connected_accounts`, nulls `timezone_offset`, and sets `profile_limited` to true. It also removes the three premium fields from the body.
+A read that passes the access check can still be restricted. A restricted read nulls `bio` and `pronouns` in both profile objects, empties `connected_accounts`, nulls `timezone_offset`, and sets `profile_limited` to true. It also removes the premium fields from the body.
 :::
 
 ### Response
@@ -673,7 +673,7 @@ A reserved username fails validation with `USERNAME_RESERVED_VALUE` or `USERNAME
 | --- | --- | --- |
 | taken | boolean | Whether the normalised tag is unavailable |
 
-:::caution[`true` also comes from two transient conditions]
+:::caution[`true` also comes from transient conditions]
 A tag claimed by a registration still in progress reads as taken for up to 30 seconds. A lookup that waits more than 10 seconds on a busy username also reads as taken.
 :::
 

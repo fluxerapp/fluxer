@@ -61,7 +61,7 @@ Every amount field is in the minor unit of the currency field its description na
 
 ## Price IDs object
 
-The four checkout prices resolved for one country: monthly and yearly recurring, and one-month and one-year gift.
+The checkout prices resolved for one country: monthly and yearly recurring, and one-month and one-year gift.
 
 ### Structure
 
@@ -78,7 +78,7 @@ The four checkout prices resolved for one country: monthly and yearly recurring,
 | currency | string | [Display currency](#display-currencies) of the recurring prices |
 | gift_currency | string | [Display currency](#display-currencies) of the gift prices |
 
-<sup>1</sup> Fluxer resolves the recurring pair and the gift pair separately. Each pair takes the first currency for which both of its prices are configured, so the two pairs can resolve to different currencies
+<sup>1</sup> Fluxer resolves the recurring pair and the gift pair separately. Each pair takes the first currency for which both of its prices are configured, so the pairs can resolve to different currencies
 
 <sup>2</sup> Null when the amount cannot be resolved. [Get price IDs](#get-price-ids) reads it from the payment provider through a one-hour cache, while the copies inside [get premium state](#get-premium-state) read the mirrored price rows
 
@@ -276,7 +276,7 @@ The effective state decides whether premium features are available. It differs f
 
 <sup>1</sup> Decided in a fixed order. A self-hosted deployment in the `everyone` [premium mode](/admin-api/instance/#premium-modes) reports true, then a bot account reports true, then `premium_perks_disabled` reports false, then `premium_enabled_override` reports true, and otherwise the value follows `actual.has_active_paid_premium`
 
-<sup>2</sup> The only two fields the effective state gates. They report the account value while `is_premium` is true, and `0` and null respectively while it is false
+<sup>2</sup> The only fields the effective state gates. They report the account value while `is_premium` is true, and `0` and null respectively while it is false
 
 <sup>3</sup> Copied from the [actual premium state](#actual-premium-state-object) unchanged, so the value does not react to `is_premium`
 
@@ -488,7 +488,7 @@ The route answers from mirrored billing data, so it works when the payment provi
 :::
 
 :::note[The paired values are computed differently]
-This route derives `current_subscription_price` from the mirrored subscription and `refund_eligibility` from the mirrored invoices, while the two dedicated routes read the payment provider. The values can disagree while the mirror is behind.
+This route derives `current_subscription_price` from the mirrored subscription and `refund_eligibility` from the mirrored invoices, while the dedicated routes read the payment provider. The values can disagree while the mirror is behind.
 :::
 
 ### Query parameters

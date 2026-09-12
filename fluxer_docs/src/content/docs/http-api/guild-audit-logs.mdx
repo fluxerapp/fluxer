@@ -166,13 +166,13 @@ Every field is present only for the actions listed against it in the [audit acti
 | temporary | boolean | Whether the recorded entity is temporary |
 | uses<sup>3</sup> | number | The invite use count recorded with the action |
 
-<sup>1</sup> The value is the length of the consolidated run for [MESSAGE_BULK_DELETE](#audit-actions) and is always `1` for the two voice actions
+<sup>1</sup> The value is the length of the consolidated run for [MESSAGE_BULK_DELETE](#audit-actions) and is always `1` for the voice actions
 
 <sup>2</sup> Read from the legacy `delete_message_days` body field of [Create or replace guild ban](/http-api/guild-moderation/#create-or-replace-guild-ban), so a ban that supplied only `delete_message_seconds` records `"0"`
 
 <sup>3</sup> The field is defined by the wire contract and no current guild operation records it
 
-<sup>4</sup> The value is a [channel type](/http-api/channels/#channel-types) for the three channel actions and a [permission overwrite type](/http-api/channels/#permission-overwrite-types) for the three overwrite actions
+<sup>4</sup> The value is a [channel type](/http-api/channels/#channel-types) for the channel actions and a [permission overwrite type](/http-api/channels/#permission-overwrite-types) for the overwrite actions
 
 ## Audit log change object
 
@@ -273,7 +273,7 @@ Recorded by [CHANNEL_CREATE](#audit-actions), [CHANNEL_UPDATE](#audit-actions), 
 
 #### Permission overwrite change fields
 
-Recorded by the three [channel overwrite actions](#audit-actions). Every value in this family is a string.
+Recorded by the [channel overwrite actions](#audit-actions). Every value in this family is a string.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -443,7 +443,7 @@ A guild ID that names no guild returns 404 `UNKNOWN_GUILD`. A non-member of an e
 
 <sup>1</sup> A negative value and a value above 100 are both rejected, and the accepted value `0` is processed as `1`
 
-<sup>2</sup> The two cursors are mutually exclusive, and supplying both returns 400 `INVALID_FORM_BODY` with [`CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER`](/http-api/errors/#validation-error-code-registry) against `before`
+<sup>2</sup> The cursors are mutually exclusive, and supplying both returns 400 `INVALID_FORM_BODY` with [`CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER`](/http-api/errors/#validation-error-code-registry) against `before`
 
 <sup>3</sup> Supplying either filter disables message deletion consolidation for the request, so a page filtered by actor or action returns the unconsolidated entries
 

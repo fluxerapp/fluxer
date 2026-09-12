@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Admin discovery is the review side of the public guild directory. An Admin decides the application a guild manager submits, reads and edits the approved listing, moves it between categories, and removes the guild from the directory. A guild has at most one application, and the public [Discovery](/http-api/discovery/) resource drives the same lifecycle from the guild's side.
 
-Every operation except [Remove discovery listing](#remove-discovery-listing) requires `discovery:review`, which covers the four reads, [Review discovery application](#review-discovery-application), [Move discovery listings to a category](#move-discovery-listings-to-a-category), and [Update discovery listing](#update-discovery-listing). [Remove discovery listing](#remove-discovery-listing) requires `discovery:remove` instead. Neither implies the other.
+Every operation except [Remove discovery listing](#remove-discovery-listing) requires `discovery:review`, which covers the reads, [Review discovery application](#review-discovery-application), [Move discovery listings to a category](#move-discovery-listings-to-a-category), and [Update discovery listing](#update-discovery-listing). [Remove discovery listing](#remove-discovery-listing) requires `discovery:remove` instead. Neither implies the other.
 
 No operation here reads `X-Audit-Log-Reason` or records an Admin audit entry. An operation that stores a reason takes it in its request body.
 
@@ -40,7 +40,7 @@ A guild's submitted application, together with the guild details Fluxer resolves
 | custom_tags<sup>6</sup> <sup>8</sup> | array[string] | Normalised [custom tags](/http-api/discovery/#custom-tags) of the listing |
 | applied_at | ISO8601 timestamp | Time at which the guild applied |
 
-<sup>1</sup> Resolved from the guild at request time. A guild that can no longer be resolved yields the literal name `(unknown guild)`, a null icon, the owner ID `0`, a member count of 0, a null NSFW level, an empty feature array, and null for all three owner name fields
+<sup>1</sup> Resolved from the guild at request time. A guild that can no longer be resolved yields the literal name `(unknown guild)`, a null icon, the owner ID `0`, a member count of 0, a null NSFW level, an empty feature array, and null for all owner name fields
 
 <sup>2</sup> Read from the owner account, so it is null when the guild resolved but the owner account did not
 

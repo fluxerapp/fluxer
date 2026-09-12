@@ -41,11 +41,11 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
 | approximate_member_count?<sup>4</sup> | integer | The member count the main Gateway reports |
 | approximate_presence_count?<sup>4</sup> | integer | The connected member count the main Gateway reports |
 
-<sup>1</sup> All three are null whenever the owner account is not resolved. [List guilds](#list-guilds) never resolves it, so all three are always null there
+<sup>1</sup> All are null whenever the owner account is not resolved. [List guilds](#list-guilds) never resolves it, so all are always null there
 
 <sup>2</sup> A member connecting or disconnecting does not change it
 
-<sup>3</sup> No operation populates these three, so they are absent from every current response
+<sup>3</sup> No operation populates these, so they are absent from every current response
 
 <sup>4</sup> Present only on [List user guilds](/admin-api/users/#list-user-guilds) when that operation is asked for counts
 
@@ -105,9 +105,9 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | channels | array[[Admin guild channel](#admin-guild-channel-object) object] | Every channel in the guild |
 | roles | array[[Admin guild role](#admin-guild-role-object) object] | Every role in the guild |
 
-<sup>1</sup> All three are null when the owner account cannot be resolved
+<sup>1</sup> All are null when the owner account cannot be resolved
 
-<sup>2</sup> The operation does not populate these three, so they are absent from every current response
+<sup>2</sup> The operation does not populate these, so they are absent from every current response
 
 ### Admin guild channel object
 
@@ -126,7 +126,7 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | content_warning_text?<sup>3</sup> | ?string | The content warning text set on the channel |
 | url<sup>4</sup> | ?string | The external channel URL (1-2048 characters) |
 
-<sup>3</sup> The operation does not populate these three, so they are absent from every current response
+<sup>3</sup> The operation does not populate these, so they are absent from every current response
 
 <sup>4</sup> Null for every channel type that is not an external link channel
 
@@ -163,7 +163,7 @@ The guild state [Update guild](#update-guild) reads back after applying the requ
 
 ## Admin guild expression object
 
-A custom emoji or a sticker of a guild, with a resolvable media URL. The two listings return the same shape.
+A custom emoji or a sticker of a guild, with a resolvable media URL. The listings return the same shape.
 
 ### Structure
 
@@ -370,7 +370,7 @@ The channel references, idle timeout, and message history cutoff of a guild are 
 | --- | --- | --- |
 | 200 | response body | Every selected field group was applied |
 | 400 | [error response](/admin-api/#error-response) | The custom invite code is malformed or already claimed |
-| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL`, because the account holds none of the five update ACLs, or lacks an ACL a supplied field selects |
+| 403 | [error response](/admin-api/#error-response) | `MISSING_ACL`, because the account holds none of the update ACLs, or lacks an ACL a supplied field selects |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
 
 :::caution[Field groups apply one at a time]
@@ -769,7 +769,7 @@ The page has the same shape and semantics as the public [List guild audit logs](
 | user_id?<sup>2</sup> | snowflake | Return only entries recorded for this actor |
 | action_type?<sup>2</sup> | integer | Return only entries with this [audit action](/http-api/guild-audit-logs/#audit-actions) value |
 
-<sup>1</sup> The two cursors are mutually exclusive. Supplying both fails with 400 `INVALID_FORM_BODY` and the validation code `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER` against `before`
+<sup>1</sup> The cursors are mutually exclusive. Supplying both fails with 400 `INVALID_FORM_BODY` and the validation code `CANNOT_SPECIFY_BOTH_BEFORE_AND_AFTER` against `before`
 
 <sup>2</sup> Supplying either filter disables the consolidation of consecutive message deletion entries
 

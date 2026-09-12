@@ -4,7 +4,7 @@ title: Rate limits
 description: The route and global buckets, the denial body, and the rate limit headers.
 ---
 
-Fluxer bounds HTTP API traffic with two allowances, a per-route bucket and one global bucket. A bucket is one allowance counted over one window. Fluxer denies an over-allowance request with 429, `code` set to `RATE_LIMITED`, a [rate limit response object](#rate-limit-response-object), and the [rate limit headers](#rate-limit-headers).
+Fluxer bounds HTTP API traffic with a per-route bucket and one global bucket. A bucket is one allowance counted over one window. Fluxer denies an over-allowance request with 429, `code` set to `RATE_LIMITED`, a [rate limit response object](#rate-limit-response-object), and the [rate limit headers](#rate-limit-headers).
 
 ## Buckets and scope
 
@@ -16,9 +16,9 @@ A request that resolves no account is keyed by the client IP address, exactly fo
 
 Fluxer also evaluates a route bucket against the global bucket unless the route declares that bucket exempt. The global bucket is keyed by the same identity, so a request that resolves no account consumes the global allowance of its client IP address.
 
-Seven buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each sits on a route that already consumed a non-exempt bucket, so both routes still draw on the global allowance.
+These buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each sits on a route that already consumed a non-exempt bucket, so both routes still draw on the global allowance.
 
-Every HTTP API and Admin API operation declares a bucket, apart from the seven [desktop download](/http-api/downloads/) routes, which declare none. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
+Every HTTP API and Admin API operation declares a bucket, apart from the [desktop download](/http-api/downloads/) routes, which declare none. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
 
 The global window is one second. The default allowance is 50 requests per second, and an account holding the [`HIGH_GLOBAL_RATE_LIMIT`](/admin-api/users/#account-flags) flag receives 1,200 requests per second instead. The [`RATE_LIMIT_BYPASS`](/admin-api/users/#account-flags) flag exempts an account from the global bucket and from every route bucket. A successful response to that account has no rate limit header.
 
@@ -38,7 +38,7 @@ Every bucket is a leaky bucket. It admits at most the declared limit at once and
 A route's rate limit middleware normally runs before its authentication policy, so an over-allowance request returns 429 `RATE_LIMITED` where the same request inside its allowance would return 401 or 403. Fluxer resolves the credential before either check, and both buckets are keyed by the authenticated account whenever one resolves.
 :::
 
-Four routes charge a second bucket. [Create private channel](/http-api/users/private-channels/#create-private-channel) and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient) evaluate that second bucket after the authentication policy and the request validation, so an unauthenticated or malformed request is refused before it is consumed. Create private channel consumes `user:group_dm:create` only when the validated body supplies `recipients`. A one-to-one direct message create reaches no second bucket.
+The routes below charge a second bucket. [Create private channel](/http-api/users/private-channels/#create-private-channel) and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient) evaluate that second bucket after the authentication policy and the request validation, so an unauthenticated or malformed request is refused before it is consumed. Create private channel consumes `user:group_dm:create` only when the validated body supplies `recipients`. A one-to-one direct message create reaches no second bucket.
 
 [Delete guild emoji](/http-api/guild-emojis/#delete-guild-emoji) and [Delete guild sticker](/http-api/guild-stickers/#delete-guild-sticker) declare both of their buckets ahead of the authentication policy and the request validation, so an unauthenticated or malformed request consumes the second bucket too. The `guild:emoji:delete:daily::guild_id` and `guild:sticker:delete:daily::guild_id` buckets draw on the global allowance, and one delete request evaluates it twice.
 
@@ -46,11 +46,11 @@ Four routes charge a second bucket. [Create private channel](/http-api/users/pri
 When the global bucket denies a request authenticated by a non-bot account's user session token, Fluxer revokes that token before writing the 429. The client must authenticate again. A bot token, an OAuth2 access token, and an Admin API key are never revoked this way, and a route bucket denial never revokes a credential.
 :::
 
-A deployment can disable both buckets through instance configuration. While they are disabled, no response has an `X-RateLimit-*` header and no request is refused with 429 `RATE_LIMITED`. That switch also turns off the two login allowances. Every other [limit enforced inside a handler](#limits-enforced-inside-a-handler) stays in force.
+A deployment can disable both buckets through instance configuration. While they are disabled, no response has an `X-RateLimit-*` header and no request is refused with 429 `RATE_LIMITED`. That switch also turns off the login allowances. Every other [limit enforced inside a handler](#limits-enforced-inside-a-handler) stays in force.
 
 ## Rate limit response object
 
-The denial body has the two members of the ordinary [error response](/http-api/#error-response) and two further members.
+The denial body has the members of the ordinary [error response](/http-api/#error-response) and two further members.
 
 ### Structure
 
@@ -123,7 +123,7 @@ These headers describe a rate limit decision. An operation that answers 429 retu
 
 <sup>6</sup> The leading 16 hexadecimal characters of the SHA-256 digest of the route's declared bucket name before any path parameter is substituted, so it identifies the route and never the caller
 
-A 429 from a limit enforced inside a handler has the other four route headers and no `X-RateLimit-Bucket`.
+A 429 from a limit enforced inside a handler has the other route headers and no `X-RateLimit-Bucket`.
 
 :::note[A browser client reads none of these headers]
 The [cross-origin policy](/http-api/#cross-origin-requests) exposes only `X-Fluxer-Version`, so a script running on an allowed origin observes the 429 status and the response body, and no header.
@@ -133,9 +133,9 @@ The [cross-origin policy](/http-api/#cross-origin-requests) exposes only `X-Flux
 
 An allowance enforced inside a handler is keyed independently of the route bucket and of the global bucket, so exhausting it denies the request while both buckets still have room. The set below is complete.
 
-The `disable_rate_limits` deployment switch turns off the two login allowances along with both buckets. `relax_registration_rate_limits` turns off the three registration allowances. Every other allowance below is enforced on every deployment.
+The `disable_rate_limits` deployment switch turns off the login allowances along with both buckets. `relax_registration_rate_limits` turns off the registration allowances. Every other allowance below is enforced on every deployment.
 
-A denial takes one of two shapes. A send or submission allowance answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. A change allowance answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
+A denial takes one of the shapes below. A send or submission allowance answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. A change allowance answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
 
 The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Retry-After` header. The remaining delay appears only in the entry's localised `message`.
 
@@ -189,7 +189,7 @@ The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Re
 | [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 5 per 5 minutes on one multi-factor attempt against one MFA ticket | `INVALID_CODE` |
 | [Sudo mode](/http-api/users/mfa/#sudo-mode) with the `totp` method | 10 per 15 minutes on one multi-factor attempt | `INVALID_MFA_CODE` |
 
-Every Modify current user allowance is keyed by the authenticated account, and the bot tag allowance by the bot account, so an owner changing a bot's tag draws on the bot's allowance. The five guild member allowances are keyed by the guild and the member together, and one account holds a separate allowance in each guild. The login allowances are keyed by the account and by the MFA ticket respectively, and the sudo allowance by the account.
+Every Modify current user allowance is keyed by the authenticated account, and the bot tag allowance by the bot account, so an owner changing a bot's tag draws on the bot's allowance. The guild member allowances are keyed by the guild and the member together, and one account holds a separate allowance in each guild. The login allowances are keyed by the account and by the MFA ticket respectively, and the sudo allowance by the account.
 
 Fluxer consumes every multi-factor allowance before it checks the code, so a correct code drawn against an exhausted allowance is reported exactly like a wrong one. A correct code clears the counter. The ticket allowance also destroys the MFA ticket as it denies, and the client restarts from [Log in with a password](/http-api/authentication/#log-in-with-a-password).
 

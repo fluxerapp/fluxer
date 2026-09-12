@@ -114,7 +114,7 @@ Redeems a gift for the authenticated account and returns 204 with an empty body.
 A consumed code receives 400 `GIFT_CODE_ALREADY_REDEEMED`. A code another request is redeeming receives 400 `STRIPE_GIFT_REDEMPTION_IN_PROGRESS`. A code that does not exist or has been revoked receives 404 `UNKNOWN_GIFT_CODE`.
 
 :::note[The refusal order differs from checkout]
-The claimed account, verified email and purchase flag refusals are evaluated before the lifetime refusal here. [Create subscription checkout](/http-api/billing/#create-subscription-checkout) evaluates the same two groups in the opposite order.
+The claimed account, verified email and purchase flag refusals are evaluated before the lifetime refusal here. [Create subscription checkout](/http-api/billing/#create-subscription-checkout) evaluates the same groups in the opposite order.
 :::
 
 :::caution[Redemption is single-use per code]

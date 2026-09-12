@@ -57,7 +57,7 @@ A message object is the full stored form of one post in a channel.
 
 <sup>2</sup> Echoed from the create request, so a message read through any other operation always reports false
 
-<sup>3</sup> A user who became an active mention appears in `mentions`, and a user who is only referenced by rendered text appears in `users` instead, so the two arrays never contain the same user
+<sup>3</sup> A user who became an active mention appears in `mentions`, and a user who is only referenced by rendered text appears in `users` instead, so the arrays never contain the same user
 
 <sup>4</sup> Empty while `SUPPRESS_EMBEDS` is set on the message
 
@@ -484,7 +484,7 @@ An allowed mentions object selects which mentions written in the message text be
 | roles?<sup>2</sup> | array[snowflake] | At most 100 role IDs permitted to become active mentions |
 | replied_user?<sup>3</sup> | boolean | Whether a reply mentions the referenced message author (default true) |
 
-<sup>1</sup> Defaults to every category when the object is absent, to the empty set when `users` or `roles` is supplied without it, and to the empty set when the object is present with none of its four fields
+<sup>1</sup> Defaults to every category when the object is absent, to the empty set when `users` or `roles` is supplied without it, and to the empty set when the object is present with none of its fields
 
 <sup>2</sup> A non-empty `parse` combined with a non-empty `users` or `roles` is rejected with the field code `PARSE_AND_USERS_OR_ROLES_CANNOT_BE_USED_TOGETHER`
 
@@ -1193,7 +1193,7 @@ Modifies a message. Returns the updated [message](#message-object) object. Emits
 - The target must be a `DEFAULT` or `REPLY` message, and any other type fails with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`.
 - A message that has [message snapshots](#message-snapshot-object) cannot be edited by its author and fails with the field code `MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED`. A non-author moderator holding `MANAGE_MESSAGES` can still toggle `SUPPRESS_EMBEDS` and change existing attachment metadata on a forwarded message.
 - The author can modify every supported field, and a timed-out author is refused with 403 `COMMUNICATION_DISABLED`.
-- A caller who is not the author can act only in a guild channel, must hold [MANAGE_MESSAGES](/http-api/permissions/), and can change only `SUPPRESS_EMBEDS` and the metadata of attachments that already exist. A non-author edit that does not satisfy all three conditions fails with 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
+- A caller who is not the author can act only in a guild channel, must hold [MANAGE_MESSAGES](/http-api/permissions/), and can change only `SUPPRESS_EMBEDS` and the metadata of attachments that already exist. A non-author edit that does not satisfy all these conditions fails with 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - `MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 - A caller who does not hold the bit at all is treated as any other non-author and receives 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/) and adding an upload requires [ATTACH_FILES](/http-api/permissions/).
@@ -1729,7 +1729,7 @@ Returns a bare array of [partial user](/http-api/users/#partial-user-object) obj
 
 - Authorisation, query parameters, and ordering are exactly those of [List reaction users](#list-reaction-users), and the array is the same page that operation returns in its `items` field.
 
-The pagination signal is in two response headers. `X-Has-More` is `true` or `false`. `X-Next-After` is the ID of the last user in the array, and it is absent when no further page exists. [List reaction users](#list-reaction-users) returns the same users with both values in the body.
+The pagination signal is in the response headers. `X-Has-More` is `true` or `false`. `X-Next-After` is the ID of the last user in the array, and it is absent when no further page exists. [List reaction users](#list-reaction-users) returns the same users with both values in the body.
 
 ### Path parameters
 

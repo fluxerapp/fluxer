@@ -6,7 +6,7 @@ description: Recent mentions, saved messages, and deletion of the caller's own m
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Recent mentions and saved messages are private lists that only the account owning them can read. Two further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests live on [Data harvests](/http-api/users/data-harvest/).
+Recent mentions and saved messages are private lists that only the account owning them can read. Further routes delete the messages the caller authored, one filtered and immediate, the other unfiltered and delayed by a day. Data harvests live on [Data harvests](/http-api/users/data-harvest/).
 
 These routes are user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has an outstanding required action with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
@@ -324,7 +324,7 @@ The caller proves sudo mode either with the sudo fields below or with an existin
 
 <sup>5</sup> These fields are the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). Which combination is accepted depends on the account's configured authenticators
 
-The `selected` scope requires at least one of the four context toggles to be true, and a request that disables all four fails validation on `include_dms`. The `inaccessible_only` scope ignores the toggles and the guild filter.
+The `selected` scope requires at least one of the context toggles to be true, and a request that disables them all fails validation on `include_dms`. The `inaccessible_only` scope ignores the toggles and the guild filter.
 
 Neither scope includes the caller's personal notes channel, so this operation cannot delete a personal note.
 
@@ -387,7 +387,7 @@ Any pending deletion for the account is removed from the queue first. The accoun
 The updated counts and schedule are published to the caller through [User Update](/gateway/events/#user-update). No message is deleted by this request, so no channel receives a Dispatch until the scheduled work runs.
 
 :::caution[Nothing announces that the deletion finished]
-When the scheduled work runs it clears the three stored fields directly and emits no [User Update](/gateway/events/#user-update).
+When the scheduled work runs it clears the stored fields directly and emits no [User Update](/gateway/events/#user-update).
 :::
 
 ### Rate limit

@@ -61,7 +61,7 @@ The other 200 body. Fluxer returns it when a channel the search needs has never 
 | --- | --- | --- |
 | indexing | boolean | Whether an index the search needed is not queryable yet, always true on this body |
 
-Tell the two bodies apart by the presence of `indexing`, which the result object never has. The request queues the missing indexing work, and a later identical request returns ordinary results once that work completes.
+Tell the bodies apart by the presence of `indexing`, which the result object never has. The request queues the missing indexing work, and a later identical request returns ordinary results once that work completes.
 
 ### Example
 
@@ -135,7 +135,7 @@ A bot uses `current`. Supplying any other value with a bot token returns 400 `IN
 
 <sup>2</sup> An audio preview is indexed as `audio`. Use the `sound` [content type](#search-content-types) to find uploaded audio attachments
 
-The four values above are the only ones this filter accepts, so a rich, link, gifv, or bluesky embed cannot be selected or excluded by embed type.
+The values above are the only ones this filter accepts, so a rich, link, gifv, or bluesky embed cannot be selected or excluded by embed type.
 
 ## Search sort fields
 
@@ -258,7 +258,7 @@ The operation walks the set from the first page to skip stale hits, so a deep of
 A plain text query pages past it. A page beyond that window fails with 500 `INTERNAL_SERVER_ERROR` when `contents` or `exact_phrases` is supplied.
 :::
 
-The two backends read `min_id` and `max_id` differently. An Elasticsearch instance compares the message ID. A Meilisearch instance compares the whole creation second the bound encodes, so a message created in the same second as the bound is excluded there. An Elasticsearch instance requires at least one `contents` entry to match and replaces `content` with that group. A Meilisearch instance joins the group, `content`, and the quoted phrases into one query string, and requires no entry in particular. Supplying `exact_phrases` without `contents` narrows `content` to the message text alone on Elasticsearch.
+The backends read `min_id` and `max_id` differently. An Elasticsearch instance compares the message ID. A Meilisearch instance compares the whole creation second the bound encodes, so a message created in the same second as the bound is excluded there. An Elasticsearch instance requires at least one `contents` entry to match and replaces `content` with that group. A Meilisearch instance joins the group, `content`, and the quoted phrases into one query string, and requires no entry in particular. Supplying `exact_phrases` without `contents` narrows `content` to the message text alone on Elasticsearch.
 
 The `current` scope requires one of `context_guild_id` and `context_channel_id`. Supplying neither returns 400 with the field code [CONTEXT_CHANNEL_OR_GUILD_ID_REQUIRED](/http-api/errors/) on the path `context`.
 

@@ -12,7 +12,7 @@ An application is an OAuth2 client owned by one user account, and every bot acco
 
 Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Fluxer accepts an account with an outstanding required action everywhere here.
 
-The three sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
+The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
 
 :::caution[Credentials are shown once]
 A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a [bot token](/authentication/#token-formats) only by [Create application](#create-application) and [Reset bot token](#reset-bot-token). Both are stored as one-way hashes.
@@ -83,7 +83,7 @@ The bot account an application owns. [Create application](#create-application) c
 
 <sup>4</sup> Declared optional by the schema and always emitted, except on the [public application](#public-application-object) object, which omits both. `authenticator_types` is an empty array when the account has no authenticator, and `mfa_enabled` is true exactly when that array is not empty
 
-<sup>5</sup> The bitfield is the account's [public user flags](/http-api/users/#public-user-flags), and [Update bot profile](#update-bot-profile) sets only the two [bot flags](#bot-flags) in it
+<sup>5</sup> The bitfield is the account's [public user flags](/http-api/users/#public-user-flags), and [Update bot profile](#update-bot-profile) sets only the [bot flags](#bot-flags) in it
 
 :::note[Bot token format]
 A bot token is the application ID, a full stop, and an opaque secret of 32 random bytes encoded as base64url.
@@ -442,7 +442,7 @@ Updates the bot account an application owns and returns the resulting [bot profi
 
 <sup>4</sup> Rejected with 403 `CONTENT_BLOCKED` when content moderation or the profile substring blocklist blocks the value
 
-<sup>5</sup> Fluxer reads only the two [bot flags](#bot-flags) from the supplied bitfield and sets or clears each to match. It ignores every other bit
+<sup>5</sup> Fluxer reads only the [bot flags](#bot-flags) from the supplied bitfield and sets or clears each to match. It ignores every other bit
 
 Fluxer checks the decoded bytes of `avatar` and `banner` against the instance's avatar byte ceiling, which applies to both fields and defaults to 10 MiB. Each image also passes the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are never checked.
 

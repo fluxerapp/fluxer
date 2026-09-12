@@ -132,7 +132,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 
 ## Admin report detail object
 
-The detail object extends the [Admin report object](#admin-report-object) with the evidence too large to return in a list page. [Get report](#get-report) emits these three members, and [List reports](#list-reports) omits them.
+The detail object extends the [Admin report object](#admin-report-object) with the evidence too large to return in a list page. [Get report](#get-report) emits these members, and [List reports](#list-reports) omits them.
 
 ### Structure
 
@@ -258,7 +258,7 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 
 Returns a page of [Admin report](#admin-report-object) objects without message context. Requires `report:view`.
 
-The operation has two branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
+The operation has these branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
 
 The status-only branch defaults to PENDING, so a request with no query string returns pending reports only. The search branch applies no status filter when `status` is omitted. `sort_by` and `sort_order` reach the search branch only. The status-only branch always orders by `reported_at` descending.
 

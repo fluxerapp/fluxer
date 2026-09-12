@@ -33,7 +33,7 @@ An unsuccessful response body is an English reason phrase under the content type
 
 A retained external origin status reaches the client as an upstream fetch failure on the signed external read route and as the canonical reason phrase of its status on `/_metadata`. An object store error that maps to no case above uses the canonical reason phrase of its status.
 
-Every error a route produces uses `Cache-Control: no-store` and the standard [security headers](/media-proxy/overview/#representation-headers). Three failures have the security headers and set no cache policy, and [Cache policies](#cache-policies) names them. No plain-text error has CORS headers unless it came from the [upload relay](/media-proxy/upload-relay/), and no error has `Retry-After` or a request identifier.
+Every error a route produces uses `Cache-Control: no-store` and the standard [security headers](/media-proxy/overview/#representation-headers). The exceptions have the security headers and set no cache policy, and [Cache policies](#cache-policies) names them. No plain-text error has CORS headers unless it came from the [upload relay](/media-proxy/upload-relay/), and no error has `Retry-After` or a request identifier.
 
 ### Handling contract
 
@@ -90,7 +90,7 @@ Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixel
 
 The upload relay limits a body to the smaller of the capability's declared maximum and the endpoint's configured body limit. That endpoint limit defaults to the same 500 MiB ceiling and can be configured from 1 byte through 5 GiB. A request that declares no `Content-Length` is spooled to disk first, and spooled bodies share an 8 GiB endpoint budget by default.
 
-An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited to the base64 expansion of the 500 MiB media bound plus 1 MiB. All three answer a larger body with 413.
+An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited to the base64 expansion of the 500 MiB media bound plus 1 MiB. All answer a larger body with 413.
 
 ## Work admission
 

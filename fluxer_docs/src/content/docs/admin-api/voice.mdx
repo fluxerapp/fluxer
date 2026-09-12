@@ -14,7 +14,7 @@ No operation here addresses a live session, a participant, or a track. [Get voic
 Every write takes effect once each API node reloads its topology. No write moves, disconnects, or re-places a live session.
 :::
 
-:::caution[Each write runs in three separate steps]
+:::caution[Each write runs in separate steps]
 A write stores the record, notifies every node to reload, then records the audit entry with the audit reason. A failure at the second or third step answers 500 with the record already stored, so read the record back before retrying.
 :::
 
@@ -32,13 +32,13 @@ A participant is one voice connection, identified as `user_{user_id}_{connection
 
 ## Placement eligibility
 
-Four stored fields decide whether a region or a server can be chosen for one placement. Fluxer evaluates the four identically on both records, and it also skips a server whenever `is_active` is false. It resolves a region first, then a server inside it, so a caller admitted to a region whose servers all refuse it cannot use that region.
+The stored fields below decide whether a region or a server can be chosen for one placement. Fluxer evaluates them identically on both records, and it also skips a server whenever `is_active` is false. It resolves a region first, then a server inside it, so a caller admitted to a region whose servers all refuse it cannot use that region.
 
-`allowed_user_ids` is evaluated first and on its own. A non-empty list admits only the accounts it names and refuses every other caller whatever the remaining three fields say. An empty list gates nothing.
+`allowed_user_ids` is evaluated first and on its own. A non-empty list admits only the accounts it names and refuses every other caller whatever the remaining fields say. An empty list gates nothing.
 
 `vip_only`, `required_guild_features`, and `allowed_guild_ids` are guild gates. When none of the three is set, the record admits every caller that passed the user gate, including a private call, which has no guild. When any of the three is set, the record admits only a placement that has a guild. A [call](/http-api/calls/#modify-call-region) or a group direct message can then never use that region or server.
 
-With a guild present, a guild named by `allowed_guild_ids` is admitted at once and the other two gates are not checked. Otherwise `vip_only` requires the guild to hold the `VIP_VOICE` [guild feature](/http-api/guilds/#guild-features), and `required_guild_features` requires the guild to hold at least one of the features it names. A guild holding none of them is refused.
+With a guild present, a guild named by `allowed_guild_ids` is admitted at once and the other gates are not checked. Otherwise `vip_only` requires the guild to hold the `VIP_VOICE` [guild feature](/http-api/guilds/#guild-features), and `required_guild_features` requires the guild to hold at least one of the features it names. A guild holding none of them is refused.
 
 ## Admin voice region object
 
@@ -58,7 +58,7 @@ The operator supplies `id` on creation, and it is the primary key. A channel sto
 | is_default<sup>1</sup> | boolean | Whether automatic placement falls back to this region |
 | vip_only<sup>2</sup> | boolean | Whether the guild has to hold `VIP_VOICE` |
 | required_guild_features<sup>2</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild, any one of which is enough (max 100) |
-| allowed_guild_ids<sup>2</sup><sup>3</sup> | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000) |
+| allowed_guild_ids<sup>2</sup><sup>3</sup> | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000) |
 | allowed_user_ids<sup>3</sup> | array[snowflake] | The accounts allowed to use the region at all (max 1000) |
 | created_at | ?ISO8601 timestamp | Time the region record was created, or null when the stored row has none |
 | updated_at | ?ISO8601 timestamp | Time the region record last changed, or null when the stored row has none |
@@ -114,7 +114,7 @@ A server can also have a soft connection limit, described under [soft connection
 | soft_connection_limit<sup>5</sup> | ?integer | The count at which placement starts preferring another server, or null when the server has no limit (1-2147483647) |
 | vip_only | boolean | Whether the guild has to hold `VIP_VOICE` |
 | required_guild_features | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild, any one of which is enough (max 100) |
-| allowed_guild_ids<sup>4</sup> | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000) |
+| allowed_guild_ids<sup>4</sup> | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000) |
 | allowed_user_ids<sup>4</sup> | array[snowflake] | The accounts allowed to use the server at all (max 1000) |
 | created_at | ?ISO8601 timestamp | Time the server record was created, or null when the stored row has none |
 | updated_at | ?ISO8601 timestamp | Time the server record last changed, or null when the stored row has none |
@@ -253,7 +253,7 @@ Stores a region and returns it. Requires `voice:region:create`.
 | is_default? | boolean | Whether automatic placement falls back to this region (default false) |
 | vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` (default false) |
 | required_guild_features?<sup>2</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items, default empty) |
-| allowed_guild_ids? | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000, default empty) |
+| allowed_guild_ids? | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000, default empty) |
 | allowed_user_ids? | array[snowflake] | The accounts allowed to use the region at all (max 1000, default empty) |
 
 <sup>1</sup> The identifier is not checked for collision. Reusing the identifier of an existing region overwrites that record in full, resets its creation time to now, and replaces every one of its collections
@@ -307,7 +307,7 @@ Every field is optional and an omitted field is left unchanged. An absent, empty
 | is_default? | boolean | Whether automatic placement falls back to this region |
 | vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` |
 | required_guild_features?<sup>1</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each) |
-| allowed_guild_ids?<sup>1</sup> | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000) |
+| allowed_guild_ids?<sup>1</sup> | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000) |
 | allowed_user_ids?<sup>1</sup> | array[snowflake] | The accounts allowed to use the region at all (max 1000) |
 
 <sup>1</sup> A supplied collection replaces the stored collection outright, so removing one entry means sending the complete remaining set and clearing a collection means sending an empty array
@@ -465,7 +465,7 @@ Registers a voice server in a region and returns it. Requires `voice:server:crea
 | soft_connection_limit?<sup>4</sup> | ?integer | The count at which placement starts preferring another server, or null for no limit (1-2147483647, default null) |
 | vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` (default false) |
 | required_guild_features? | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each, default empty) |
-| allowed_guild_ids? | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000, default empty) |
+| allowed_guild_ids? | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000, default empty) |
 | allowed_user_ids? | array[snowflake] | The accounts allowed to use the server at all (max 1000, default empty) |
 
 <sup>1</sup> The pair of region and server identifier is not checked for collision. Reusing an existing pair overwrites that record in full, resets its creation time to now, and replaces both stored credentials
@@ -530,7 +530,7 @@ Every field is optional and an omitted field is left unchanged. An absent, empty
 | soft_connection_limit?<sup>4</sup> | ?integer | The count at which placement starts preferring another server, or null for no limit (1-2147483647) |
 | vip_only? | boolean | Whether the guild has to hold `VIP_VOICE` |
 | required_guild_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) that admit a guild (max 100 items of 1-64 characters each) |
-| allowed_guild_ids?<sup>3</sup> | array[snowflake] | The guilds admitted without checking the other two guild gates (max 1000) |
+| allowed_guild_ids?<sup>3</sup> | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000) |
 | allowed_user_ids?<sup>3</sup> | array[snowflake] | The accounts allowed to use the server at all (max 1000) |
 
 <sup>1</sup> An omitted credential is left unchanged and a supplied one replaces it. An empty string fails the length bound, so a credential can be replaced but never cleared

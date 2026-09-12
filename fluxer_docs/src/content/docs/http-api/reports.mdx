@@ -27,7 +27,7 @@ Fluxer copies the reported content when the report is submitted. A message repor
 
 [Report message](#report-message), [Report user](#report-user), and [Report guild](#report-guild) accept a user session token only. A bot token and an OAuth2 bearer credential are both rejected with 403 `ACCESS_DENIED`. The account must also be claimed and email-verified. An account holding no password and no SSO identity is rejected with 400 `UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS`, and one whose address is unverified with 403 `REPORT_EMAIL_VERIFICATION_REQUIRED`. An account with the report ban flag is rejected with 403 `REPORT_BANNED`.
 
-The three Digital Services Act routes require no credential. Fluxer still resolves a valid credential presented anyway, so the request draws on that account's rate limit allowance.
+The Digital Services Act routes require no credential. Fluxer still resolves a valid credential presented anyway, so the request draws on that account's rate limit allowance.
 
 Every route bucket is keyed by the authenticated user ID when a credential resolves and by client IP address otherwise. Report creation applies further policy allowances keyed by the reporter.
 

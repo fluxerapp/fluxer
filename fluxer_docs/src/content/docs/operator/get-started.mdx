@@ -102,7 +102,7 @@ curl -fsSLO https://fluxer.dev/install.sh.sha256
 sha256sum -c install.sh.sha256
 ```
 
-On macOS, the same two downloads and:
+On macOS, the same downloads and:
 
 ```bash
 shasum -a 256 -c install.sh.sha256
@@ -140,7 +140,7 @@ The run prints one line per phase and ends with the URL to open.
 
 ### Serving on another port
 
-The installer writes an `.env` for `https` on `443` and has no flag for another port. Two lines change it, the port of the public address and the publish that answers on it:
+The installer writes an `.env` for `https` on `443` and has no flag for another port. The lines below change it, the port of the public address and the publish that answers on it:
 
 ```ini
 FLUXER_PUBLIC_PORT=8443
@@ -236,7 +236,7 @@ The desktop client opens the hosted web app for its release channel, so reach yo
 
 ## Backups
 
-An instance comes back from two artifacts and its `.env`: a dump of the database, which covers `postgres-data`, and a tarball of `seaweedfs-data`, which holds every upload, avatar, report and harvest. [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists every volume and what it holds.
+An instance comes back from these artifacts and its `.env`: a dump of the database, which covers `postgres-data`, and a tarball of `seaweedfs-data`, which holds every upload, avatar, report and harvest. [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists every volume and what it holds.
 
 The dump costs no downtime, so run it on a schedule while the stack serves:
 

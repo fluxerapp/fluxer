@@ -22,7 +22,7 @@ One resolution of every defined experiment against one account. Every field is p
 | poll_jitter_percent | integer | How far to spread the wait around the interval, from 0 through 50 |
 | assignments | [assignment map](#assignment-map-object) object | One entry for each experiment the server defines |
 
-The two polling fields sit on the envelope rather than on any one experiment, because the cadence is a property of the route and not of a rollout. They are the operator's [experiment delivery configuration](/admin-api/instance/#experiment-delivery-configuration-object) read back unchanged, so they hold the same values for every account and every experiment, whatever those experiments resolve to.
+The polling fields sit on the envelope rather than on any one experiment, because the cadence is a property of the route and not of a rollout. They are the operator's [experiment delivery configuration](/admin-api/instance/#experiment-delivery-configuration-object) read back unchanged, so they hold the same values for every account and every experiment, whatever those experiments resolve to.
 
 ## Assignment map object
 
@@ -77,7 +77,7 @@ One resolution of the instance noise suppression rollout against one account. Ev
 
 ### Resolution outcomes
 
-Three outcomes set `user_targeted` to false, and they differ in what else they report.
+The outcomes below set `user_targeted` to false, and they differ in what else they report.
 
 1. The rollout is off. `enabled` is false, `enabled_backends` and `guild_overrides` are empty, and `allow_user_override` and `stereo_enabled` are false.
 2. The operator has excluded the caller. `enabled` is true, and every other field is as in the first outcome.
@@ -87,7 +87,7 @@ A caller is drawn either by the operator's allowlist, which sets `source` to `us
 
 A client branches on `user_targeted` rather than on `enabled_backends`, because the third outcome keeps the array populated. A `guild_overrides` entry applies in its guild whether or not the caller was drawn.
 
-`config_version` reports the stored revision in all three outcomes, the rollout being off included.
+`config_version` reports the stored revision in all outcomes, the rollout being off included.
 
 ## Noise suppression guild override object
 

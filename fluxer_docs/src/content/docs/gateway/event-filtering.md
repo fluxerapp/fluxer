@@ -1,14 +1,14 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Event filtering
-description: The four gates a Dispatch passes before it reaches a socket, and the two client controls.
+description: The gates a Dispatch passes before it reaches a socket, and the client controls.
 ---
 
-A [Dispatch](/gateway/events/) is one event Fluxer sends to a connected client. Each one passes four independent gates on its way to a socket, and a client shapes its traffic with [Lazy Request](/gateway/commands/#lazy-request) subscriptions and the [Identify](/gateway/commands/#identify) `ignored_events` list.
+A [Dispatch](/gateway/events/) is one event Fluxer sends to a connected client. Each one passes independent gates on its way to a socket, and a client shapes its traffic with [Lazy Request](/gateway/commands/#lazy-request) subscriptions and the [Identify](/gateway/commands/#identify) `ignored_events` list.
 
-Fluxer has no `intents` field, no intent close code, and no privileged-intent approval. A client ported from a protocol that uses intents replaces its intent mask with those two mechanisms.
+Fluxer has no `intents` field, no intent close code, and no privileged-intent approval. A client ported from a protocol that uses intents replaces its intent mask with those mechanisms.
 
-## The four gates
+## The gates
 
 Fluxer evaluates a guild-scoped Dispatch against these gates in order.
 
@@ -41,7 +41,7 @@ The guild resolves each event to one of these recipient sets.
 
 Every one of those sets excludes a session that has not yet received the guild's initial state.
 
-Channel visibility is `VIEW_CHANNEL` on the channel, plus two extensions. A category is visible when at least one of its children is visible. A user with a live voice connection in a channel keeps virtual access to it whenever the channel would otherwise stop being visible. That covers a role or overwrite change removing `VIEW_CHANNEL`, and a move into a channel the user cannot view. Virtual access is keyed by user, so it applies to every session of that user. It is dropped when the user's voice connection to the channel ends.
+Channel visibility is `VIEW_CHANNEL` on the channel, plus extensions. A category is visible when at least one of its children is visible. A user with a live voice connection in a channel keeps virtual access to it whenever the channel would otherwise stop being visible. That covers a role or overwrite change removing `VIEW_CHANNEL`, and a move into a channel the user cannot view. Virtual access is keyed by user, so it applies to every session of that user. It is dropped when the user's voice connection to the channel ends.
 
 Message access is `READ_MESSAGE_HISTORY` on the channel. Without that permission a session still receives events for messages newer than the guild's message history cutoff. A guild that sets no cutoff offers no such fallback, so a session without `READ_MESSAGE_HISTORY` receives none of the message-access filtered events there.
 
@@ -102,7 +102,7 @@ The override applies to every session, including a bot session. A bot suppresses
 
 A session that no longer shares a viewable channel with the subject is dropped from that subject's subscriber set, so a client that regains access MUST resend `members` to restore delivery. Each `members` array replaces the session's previous subscription set for that guild.
 
-A session holds a presence back in two cases. It holds every presence that arrives before [Ready](/gateway/events/#ready), and releases the queue once it has dispatched Ready. A held presence whose subject already appears in the Ready `presences` array is dropped, and the session sends the rest in one burst. When Ready has not been dispatched within 10,000 milliseconds of session start, a fallback timer releases the queue. After that the session holds a guild presence whose `guild_id` names a guild it is not connected to, and an account-scoped presence for a user that is neither a friend nor a recipient of a group direct message it belongs to.
+A session holds a presence back in the cases below. It holds every presence that arrives before [Ready](/gateway/events/#ready), and releases the queue once it has dispatched Ready. A held presence whose subject already appears in the Ready `presences` array is dropped, and the session sends the rest in one burst. When Ready has not been dispatched within 10,000 milliseconds of session start, a fallback timer releases the queue. After that the session holds a guild presence whose `guild_id` names a guild it is not connected to, and an account-scoped presence for a user that is neither a friend nor a recipient of a group direct message it belongs to.
 
 A bot session holds no friend or group direct message presence subscriptions, so a bot receives a presence through this guild path alone.
 

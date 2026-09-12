@@ -6,7 +6,7 @@ description: External account connections, domain ownership proof, Bluesky autho
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A connection links a Fluxer account to an outside identity the account has proved it controls. The two [connection types](#connection-types) are a DNS domain and a Bluesky account authorised through atproto OAuth. A profile renders an account's connections as the `connected_accounts` field of the [full user profile object](/http-api/users/#full-user-profile-object).
+A connection links a Fluxer account to an outside identity the account has proved it controls. The [connection types](#connection-types) are a DNS domain and a Bluesky account authorised through atproto OAuth. A profile renders an account's connections as the `connected_accounts` field of the [full user profile object](/http-api/users/#full-user-profile-object).
 
 Every route that reads or writes a connection is user-only. A bot token is rejected with 403 `ACCESS_DENIED`, and so is an OAuth2 bearer except on [List connections](#list-connections), which accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes). An account with an outstanding required action is rejected with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. No connection identifier is a snowflake.
 
@@ -98,7 +98,7 @@ The payload is ordinary base64url and has the verification token in the clear. T
 
 Fluxer attempts a `domain` proof against the stored identifier exactly as it was submitted. [Initiate connection](#initiate-connection) accepts any string of 1 to 253 characters and applies no syntax check of its own, so a malformed value is accepted and then fails its proof.
 
-Fluxer first resolves the TXT records of `_fluxer.<domain>`. It issues the query in parallel to a fixed set of eight public DNS resolvers, each with a 2000 millisecond timeout and one attempt. The proof succeeds when any resolver returns a record whose concatenated strings equal `fluxer-verification=<token>` exactly. A resolver that fails or times out is treated like an absent record and produces no separate error.
+Fluxer first resolves the TXT records of `_fluxer.<domain>`. It issues the query in parallel to a fixed set of public DNS resolvers, each with a 2000 millisecond timeout and one attempt. The proof succeeds when any resolver returns a record whose concatenated strings equal `fluxer-verification=<token>` exactly. A resolver that fails or times out is treated like an absent record and produces no separate error.
 
 When the DNS proof fails, Fluxer issues one HTTPS `GET` to `https://<domain>/.well-known/fluxer-verification` with a 5000 millisecond timeout. It follows up to 5 redirects. A sixth redirect fails the proof, as does a redirect response that has no `Location` header. The proof succeeds only when the status of the final response is in the 2xx range and the whitespace-trimmed body equals the token exactly. A response body over the 16384 byte ceiling fails the proof, and a declared `Content-Length` over that ceiling fails it before the body is read.
 
@@ -402,7 +402,7 @@ Fluxer trims surrounding whitespace, then removes a leading `https://bsky.app/pr
 
 <sup>3</sup> The comparison is case-insensitive and runs against the stored connection `name`, so an account whose upstream handle has since changed is not detected as a duplicate here and refreshes its existing connection at the callback
 
-:::note[Two independent availability gates]
+:::note[Independent availability gates]
 This operation requires both a configured Bluesky OAuth client and the instance [service availability](/http-api/instance/#service-availability-object) flag `bluesky_enabled`. A missing client and a cleared flag both produce `BLUESKY_OAUTH_NOT_ENABLED`, and the response does not say which.
 :::
 
@@ -468,7 +468,7 @@ The document is the same for every request. Its URLs are built from the `api_pub
 | tos_uri?<sup>1</sup> | string | The terms of service document offered to the account holder |
 | policy_uri?<sup>1</sup> | string | The privacy policy document offered to the account holder |
 | redirect_uris | array[string] | The one URL an authorisation server may return to, `/connections/bluesky/callback` on `api_public` |
-| grant_types | array[string] | The two grants the client uses, `authorization_code` and `refresh_token` |
+| grant_types | array[string] | The grants the client uses, `authorization_code` and `refresh_token` |
 | response_types | array[string] | The one response type the client accepts, `code` |
 | scope | string | The scope requested at authorisation, `atproto` |
 | application_type | string | The client type, `web` |

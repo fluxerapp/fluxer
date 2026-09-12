@@ -4,7 +4,7 @@ title: Authentication
 description: Credential syntax, token formats, authorisation outcomes, and sudo mode.
 ---
 
-An authenticated request has one credential in the `Authorization` header. Fluxer accepts four kinds. A client acting for a person sends a user session token, an application's bot sends a bot token, a client acting on a user's behalf under OAuth2 sends an access token, and the [Admin API](/admin-api/) takes an Admin API key. The kind decides who Fluxer treats as the caller and which [authorisation policy](#authorisation-outcomes) the matched operation applies.
+An authenticated request has one credential in the `Authorization` header. Fluxer accepts these kinds. A client acting for a person sends a user session token, an application's bot sends a bot token, a client acting on a user's behalf under OAuth2 sends an access token, and the [Admin API](/admin-api/) takes an Admin API key. The kind decides who Fluxer treats as the caller and which [authorisation policy](#authorisation-outcomes) the matched operation applies.
 
 Fluxer returns every failure named here in the standard [error response](/http-api/#error-response) envelope. The operations that issue and revoke credentials belong to the [Authentication HTTP API](/http-api/authentication/) and the [OAuth2 HTTP API](/http-api/oauth2/).
 
@@ -100,7 +100,7 @@ The `Authorization` header holds a single credential. A [sudo mode](#sudo-mode) 
 
 A bot token is the owning application's [snowflake](/snowflakes/), a single full stop, and a secret. It is valid only while the application has an active bot user and the secret is current.
 
-The Gateway accepts a bot token in [Identify](/gateway/commands/#identify), and so do [`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) and [`GET /v1/applications/@me`](/http-api/applications/#get-bot-application). Those two operations match the scheme prefix without regard to case. `GET /v1/applications/@me` requires the `Bot` prefix and returns 401 `INVALID_TOKEN` for anything else.
+The Gateway accepts a bot token in [Identify](/gateway/commands/#identify), and so do [`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) and [`GET /v1/applications/@me`](/http-api/applications/#get-bot-application). Those operations match the scheme prefix without regard to case. `GET /v1/applications/@me` requires the `Bot` prefix and returns 401 `INVALID_TOKEN` for anything else.
 
 A bot cannot use an operation restricted to ordinary user accounts, and such an operation returns 403 `ACCESS_DENIED`. An operation in [Authentication](/http-api/authentication/) that resolves an account from its request body or token, such as login, password recovery, email verification, email revert, and IP authorisation, returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED` when that account is a bot.
 
@@ -134,7 +134,7 @@ On every Admin request the resolved user must hold the `admin:authenticate` ACL 
 
 ## Authorisation outcomes
 
-An operation that requires a credential declares one of the four authorisation policies:
+An operation that requires a credential declares one of the authorisation policies:
 
 - A user operation requires a resolved user and rejects an OAuth2 bearer credential it has not opted into. A user-only operation rejects a bot account as well.
 - A bot operation accepts a bot token, which resolves the application's bot account as the request identity.
@@ -201,7 +201,7 @@ An unknown, expired, revoked, or malformed credential returns 401 `UNAUTHORIZED`
 
 Fluxer records a malformed header and a credential that resolves nothing against the originating address. An Admin API key presented outside `/v1/admin` records nothing.
 
-Two triggers ban an address. Fluxer bans it on the first crossing of the distinct rejected token threshold inside the tracking window. A failure score over its threshold bans the address only after the score crosses that threshold in several separate windows. The window and both thresholds are instance configuration. Fluxer never applies an automatic ban to an address it classifies as mobile. A banned address is refused before the operation runs, as [Errors](/http-api/errors/) sets out.
+The triggers below ban an address. Fluxer bans it on the first crossing of the distinct rejected token threshold inside the tracking window. A failure score over its threshold bans the address only after the score crosses that threshold in several separate windows. The window and both thresholds are instance configuration. Fluxer never applies an automatic ban to an address it classifies as mobile. A banned address is refused before the operation runs, as [Errors](/http-api/errors/) sets out.
 
 ## Sudo mode
 

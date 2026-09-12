@@ -136,7 +136,7 @@ The filter chooses which messages a harvest collects. Every non-message section 
 | start_date?<sup>4</sup> | ?ISO8601 timestamp | Inclusive lower bound on message timestamps, or null for no lower bound |
 | end_date?<sup>4</sup> | ?ISO8601 timestamp | Exclusive upper bound on message timestamps, or null for no upper bound |
 
-<sup>1</sup> The `selected` scope requires at least one of the four include fields to be true, and a body disabling all four is rejected at path `include_dms`
+<sup>1</sup> The `selected` scope requires at least one of the include fields to be true, and a body disabling them all is rejected at path `include_dms`
 
 <sup>2</sup> Independent of `include_dms`, so setting `include_dms` false and `include_dms_closed` true targets closed conversations only
 
@@ -150,7 +150,7 @@ Under the `selected` scope, each context has its own condition:
 - A group DM is collected only while the caller is still a recipient and `include_group_dms` is true.
 - A guild channel is collected only while the caller is still a member, `include_guilds` is true, and the guild is admitted by the configured list mode.
 
-The `inaccessible_only` scope selects messages in guilds the caller has left or been removed from and in group DMs the caller has left. It never selects one-to-one direct messages, and it ignores the four toggles, the guild filter mode, and both guild lists.
+The `inaccessible_only` scope selects messages in guilds the caller has left or been removed from and in group DMs the caller has left. It never selects one-to-one direct messages, and it ignores the toggles, the guild filter mode, and both guild lists.
 
 Both scopes exclude the caller's personal notes channel, and both exclude a message whose channel no longer resolves or is neither a direct message, a group DM, nor a guild channel.
 
@@ -283,13 +283,13 @@ Fluxer removes no harvest record, so an ID that once resolved keeps resolving. A
 
 Issues a temporary download URL for one completed harvest. Returns a [harvest download](#harvest-download-object) object on success.
 
-Fluxer evaluates four rejection cases in a fixed order, each with its own code. An unknown or foreign harvest is 404 `UNKNOWN_HARVEST`. A harvest whose latest attempt failed is 400 `HARVEST_FAILED`. A harvest with no recorded completion or no stored archive is 400 `HARVEST_NOT_READY`. A harvest past its download deadline is 400 `HARVEST_EXPIRED`.
+Fluxer evaluates the rejection cases in a fixed order, each with its own code. An unknown or foreign harvest is 404 `UNKNOWN_HARVEST`. A harvest whose latest attempt failed is 400 `HARVEST_FAILED`. A harvest with no recorded completion or no stored archive is 400 `HARVEST_NOT_READY`. A harvest past its download deadline is 400 `HARVEST_EXPIRED`.
 
 :::danger[Each request issues a new bearer URL]
 A URL is created for each call, its stated expiry is seven days later, and a later call revokes nothing. Treat every issued URL as a secret.
 :::
 
-The URL takes one of two forms. When the instance has presigned harvest downloads enabled, which is the default, it is an object storage presigned URL. Otherwise it points at [Download data harvest archive](#download-data-harvest-archive) on this API with a signed `token` query parameter.
+The URL takes one of the forms below. When the instance has presigned harvest downloads enabled, which is the default, it is an object storage presigned URL. Otherwise it points at [Download data harvest archive](#download-data-harvest-archive) on this API with a signed `token` query parameter.
 
 ### Path parameters
 

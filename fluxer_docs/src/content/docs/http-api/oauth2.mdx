@@ -77,7 +77,7 @@ These members are the whole body, so the routine that reads the ordinary [error 
 
 The consent, token, introspection, and revocation routes return this object for a grant, client authentication, scope, redirect, response type, or permission mask failure. Every other failure, including request validation, authentication, authorisation, and rate limiting, uses the ordinary [error response](/http-api/#error-response) with an [API error code](/http-api/errors/).
 
-:::note[Two error envelopes share status 400]
+:::note[Both error envelopes share status 400]
 The same route can return either one. [Authorise application](#authorise-application) returns neither, because it reports an OAuth2 failure as a query parameter on a redirect.
 :::
 
@@ -401,7 +401,7 @@ A guild installation emits [Guild Create](/gateway/events/#guild-create), [Guild
 
 <sup>3</sup> The value must parse as a non-negative integer literal. Every bit outside the defined [permission](/http-api/permissions/) mask is cleared before use, and a caller without ADMINISTRATOR cannot request a retained bit it does not itself hold
 
-<sup>4</sup> The two fields are mutually exclusive
+<sup>4</sup> The fields are mutually exclusive
 
 ### Response
 

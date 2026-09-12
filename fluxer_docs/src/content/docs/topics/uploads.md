@@ -1,12 +1,12 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Attachment uploads
-description: The pre-upload plan, its two modes, and how a client claims the result.
+description: The pre-upload plan, its modes, and how a client claims the result.
 ---
 
 Fluxer accepts an attachment inline as a `files[n]` part of a [multipart request](/http-api/#request-body-formats), or pre-uploaded before the message exists. The pre-upload operations and objects live on the [Messages resource](/http-api/messages/).
 
-The flow has two modes and the server chooses between them from the declared byte count. A file of 10485760 bytes or less, the 10 MiB threshold, is planned as a singlepart upload and is finished as soon as its bytes are stored. A larger file is planned as a multipart upload and needs an explicit completion call. Both modes end the same way, by naming the resulting `upload_filename` in an ordinary message operation.
+The server chooses the flow's mode from the declared byte count. A file of 10485760 bytes or less, the 10 MiB threshold, is planned as a singlepart upload and is finished as soon as its bytes are stored. A larger file is planned as a multipart upload and needs an explicit completion call. Both modes end the same way, by naming the resulting `upload_filename` in an ordinary message operation.
 
 :::caution[Pre-uploads can be switched off]
 When a deployment disables them, the plan request and the completion request both answer 403 `FEATURE_TEMPORARILY_DISABLED` ahead of the channel, permission, and size checks, and the [instance features object](/http-api/instance/#instance-features-object) reports `presigned_attachment_uploads` false. A client falls back to the inline multipart path.
@@ -43,7 +43,7 @@ A plan is bounded at 10,000 parts. One that would need more returns 400 `FILE_SI
 
 Each `upload_url` is a `PUT` target with its own authorisation in its query string. A direct storage URL has the object store's own signature and a relay URL has the signed relay capability in its `t` parameter, so neither shape reads an `Authorization` header.
 
-The direct storage capability signs the exact byte count, so a `PUT` of any other length is rejected. A relay capability bounds the length at the same value and answers 413 above it, and the relay applies its own body ceiling, 500 MiB by default, on top of that. Without a declared `Content-Length`, the relay spools the body to the smaller of the two bounds and answers 413 past it. The relay answers 401 when the capability is missing, malformed, or expired. Either way, a client sends exactly the authorised byte count.
+The direct storage capability signs the exact byte count, so a `PUT` of any other length is rejected. A relay capability bounds the length at the same value and answers 413 above it, and the relay applies its own body ceiling, 500 MiB by default, on top of that. Without a declared `Content-Length`, the relay spools the body to the smaller of the bounds and answers 413 past it. The relay answers 401 when the capability is missing, malformed, or expired. Either way, a client sends exactly the authorised byte count.
 
 A singlepart transfer sends the whole file and must send the entry's `content_type` as its `Content-Type` header. The relay takes the media type from its capability and ignores the header. A multipart part transfer sends only that part's bytes and has no signed media type.
 
@@ -69,7 +69,7 @@ An issued upload URL authorises writing one object or one part. A client treats 
 
 The channel, permission, and communication checks of the plan request run again, and the operation answers 403 `FEATURE_TEMPORARILY_DISABLED` when pre-uploads are switched off.
 
-Two failures are reported as [validation error object](/http-api/#validation-error-object) entries on a 400 `INVALID_FORM_BODY` response.
+The failures below are reported as [validation error object](/http-api/#validation-error-object) entries on a 400 `INVALID_FORM_BODY` response.
 
 | Code | Path | Condition |
 | --- | --- | --- |
@@ -108,7 +108,7 @@ A `content_type` containing `jpeg` or `jpg` in any case is accepted without insp
 
 The operation answers 204 once the image is accepted. Fluxer absorbs a transient storage failure, so a 204 confirms acceptance alone.
 
-[Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issues a reusable `PUT` capability for the same purpose. Its `content_type` must contain `jpeg` or `jpg` in any case, and every other value returns 400 `PREVIEW_MUST_BE_JPEG`. It answers with `upload_url`, `method` fixed to `PUT`, the `content_type` the client sends, `expires_at`, `expires_in`, and `max_bytes`, which is always 1000000. A direct storage capability lasts one day and a relay capability lasts the relay token lifetime, so `expires_in` differs between the two shapes. The capability writes the same object every time it is used, and a publisher refreshes the thumbnail without asking for a new URL.
+[Create stream preview upload URL](/http-api/streams/#create-stream-preview-upload-url) issues a reusable `PUT` capability for the same purpose. Its `content_type` must contain `jpeg` or `jpg` in any case, and every other value returns 400 `PREVIEW_MUST_BE_JPEG`. It answers with `upload_url`, `method` fixed to `PUT`, the `content_type` the client sends, `expires_at`, `expires_in`, and `max_bytes`, which is always 1000000. A direct storage capability lasts one day and a relay capability lasts the relay token lifetime, so `expires_in` differs between the shapes. The capability writes the same object every time it is used, and a publisher refreshes the thumbnail without asking for a new URL.
 
 Nothing inspects the bytes written through that capability. A relay capability still refuses a declared length above `max_bytes` with 413, and a direct storage capability enforces nothing beyond its signed media type. A publisher encodes a valid JPEG of at most 1000000 bytes itself.
 

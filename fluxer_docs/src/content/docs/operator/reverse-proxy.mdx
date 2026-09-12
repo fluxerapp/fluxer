@@ -93,11 +93,11 @@ Browsers send it, and the admin dashboard refuses a mutating request with a cros
 
 The instance sends its own policy, and its nonce is what lets the web app boot. Browsers enforce every policy they receive.
 
-Every worked configuration below answers all seven.
+Every worked configuration below answers them all.
 
 ## The public address
 
-Three variables tell the instance the address browsers use. Fluxer reads neither `X-Forwarded-Proto` nor `X-Forwarded-Host`, so you keep these correct by hand:
+The variables below tell the instance the address browsers use. Fluxer reads neither `X-Forwarded-Proto` nor `X-Forwarded-Host`, so you keep these correct by hand:
 
 ```ini
 FLUXER_DOMAIN=chat.example.com
@@ -107,7 +107,7 @@ FLUXER_PUBLIC_PORT=443
 
 They stay `https` on `443` even though the instance itself speaks plain HTTP on `8080`. Clients read every base URL from the discovery document the API builds out of these values.
 
-Serving on a port other than `443` means changing one of those three:
+Serving on a port other than `443` means changing one of those variables:
 
 ```ini
 FLUXER_PUBLIC_PORT=8443
@@ -261,7 +261,7 @@ networks:
     external: true
 ```
 
-Then list all three files so every command picks them up:
+Then list all the files so every command picks them up:
 
 ```ini
 COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:traefik.compose.yml
@@ -269,7 +269,7 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:traefik.compose.yml
 
 ## HAProxy
 
-One frontend, one backend, and four timeouts:
+One frontend, one backend, and the timeouts:
 
 ```haproxy
 defaults
@@ -296,7 +296,7 @@ backend fluxer_edge
 
 ## Apache httpd
 
-This configuration needs three modules: `mod_proxy`, `mod_proxy_http`, and `mod_headers`. Since 2.4.47 `mod_proxy_http` handles the WebSocket upgrade itself, so `mod_proxy_wstunnel` is not needed.
+This configuration needs these modules: `mod_proxy`, `mod_proxy_http`, and `mod_headers`. Since 2.4.47 `mod_proxy_http` handles the WebSocket upgrade itself, so `mod_proxy_wstunnel` is not needed.
 
 ```apache
 <VirtualHost *:443>
@@ -440,7 +440,7 @@ Goes to `app-proxy:8080` unchanged.
 
 Pass the query string on `/gateway` through untouched. Clients always send `?v=`, `?encoding=`, `?compress=` and `?stream=`, and `1` is the only version the Gateway accepts.
 
-Apple and Google fetch the two association files at those fixed paths, for saved-password autofill in the iOS apps and link handling in the Android ones. The last entry already has all four, so a proxy that forwards `/` needs no extra rule. A proxy that forwards a named path allowlist has to list these four paths along with everything else that entry covers.
+Apple and Google fetch the association files at those fixed paths, for saved-password autofill in the iOS apps and link handling in the Android ones. The last entry already has them all, so a proxy that forwards `/` needs no extra rule. A proxy that forwards a named path allowlist has to list these paths along with everything else that entry covers.
 
 `/_metrics` on the API, Media Proxy, and Gateway, plus `/_health/ready`, `/_health/drain`, and `/_health/undrain` on the Gateway, are gated to loopback and are unreachable through any proxy. The probes that work through a proxy are `/_health`, `/api/_health`, `/gateway/_health`, and `/media/_health`.
 
@@ -491,4 +491,4 @@ Hosting LiveKit on a hostname other than `FLUXER_DOMAIN` means widening the Cont
 FLUXER_CSP_EXTRA_CONNECT_SRC=wss://livekit.example.com:7881
 ```
 
-`app-proxy` builds the policy and reads its environment at container start, so apply the change with `docker compose up -d app-proxy`. `docker compose restart app-proxy` reuses the existing container with its old environment. [Content Security Policy](/operator/configuration/#content-security-policy) has the other ten variables.
+`app-proxy` builds the policy and reads its environment at container start, so apply the change with `docker compose up -d app-proxy`. `docker compose restart app-proxy` reuses the existing container with its old environment. [Content Security Policy](/operator/configuration/#content-security-policy) has the other variables.

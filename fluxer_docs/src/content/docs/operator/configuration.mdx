@@ -10,7 +10,7 @@ We are grateful to everyone supporting the project through [Fluxer Plutonium](ht
 
 Fluxer reads its settings from environment variables. They live in a file named `.env`, in the same directory as `docker-compose.yml`.
 
-A first run touches two sections. [Core identity and public address](#core-identity-and-public-address) has `FLUXER_DOMAIN`, the hostname people type into a browser. [Secrets you must generate](#secrets-you-must-generate) has the values that ship as `CHANGE_ME`. Everything after those two is optional and already has a working value.
+A first run touches the sections below. [Core identity and public address](#core-identity-and-public-address) has `FLUXER_DOMAIN`, the hostname people type into a browser. [Secrets you must generate](#secrets-you-must-generate) has the values that ship as `CHANGE_ME`. Everything after those two is optional and already has a working value.
 
 The installer in [Get started](/operator/get-started/) writes `.env` for you and fills in every secret. [Upgrading](/operator/upgrading/) covers moving between releases.
 
@@ -35,15 +35,15 @@ Precedence, highest first:
 2. The environment variable.
 3. The built-in default.
 
-Three runtimes read the environment, each with its own parser, so the same name can have a different default in different services.
+Each runtime reads the environment with its own parser, so the same name can have a different default in different services.
 
 #### Node named overrides
 
-Read by `api` and `worker`. A fixed table of 278 `FLUXER_*` names. A name outside it is invisible.
+Read by `api` and `worker`. A fixed table of `FLUXER_*` names. A name outside it is invisible.
 
 #### Rust direct reads
 
-Read by `media-proxy`, `app-proxy`, `admin`, and the five internal services. Each crate reads its own names. Blank usually counts as unset.
+Read by `media-proxy`, `app-proxy`, `admin`, and the internal services. Each crate reads its own names. Blank usually counts as unset.
 
 #### Erlang direct reads
 
@@ -53,7 +53,7 @@ Parsing rules:
 
 - Node treats an empty string as set. `FLUXER_EMAIL_FROM_NAME=` overrides the `Fluxer` default with an empty name.
 - Node booleans accept only `true` and `false`, in any letter case. `FLUXER_POSTGRES_SSL=1` parses as the number `1` and fails startup with `FLUXER_POSTGRES_SSL must be true or false`.
-- Rust has three boolean parsers. `app-proxy` and `admin` treat anything other than `1`, `true`, `yes`, or `on` as false. `media-proxy` and the internal services reject an unrecognised value with a startup error.
+- Rust parses booleans differently by crate. `app-proxy` and `admin` treat anything other than `1`, `true`, `yes`, or `on` as false. `media-proxy` and the internal services reject an unrecognised value with a startup error.
 - A value that starts with `{` or `[` is parsed as JSON. A failed parse fails startup with a message naming the variable.
 - A name read as an integer fails startup on any other value, in Node and in the Gateway. An empty value takes the default.
 - Comma separated lists are split on `,`, trimmed, and stripped of empty entries.
@@ -138,7 +138,7 @@ Base64url of the 65-byte uncompressed P-256 point, unpadded, which is 87 charact
 
 The matching half of the pair. Base64url of the 32-byte P-256 scalar, unpadded, which is 43 characters. The API refuses to start when the scalar does not derive the public point. Both values are required even when nobody uses browser notifications.
 
-Two more values ship with a usable value. Both are required.
+The values below ship with a usable value. Both are required.
 
 #### `FLUXER_S3_ACCESS_KEY`
 
@@ -146,7 +146,7 @@ Two more values ship with a usable value. Both are required.
 
 #### `LIVEKIT_API_KEY`
 
-`.env.example` `fluxer`. The LiveKit API key. Compose passes it to LiveKit as `LIVEKIT_KEYS` and as the webhook signing key, and to the API as `FLUXER_LIVEKIT_API_KEY`, so one change in `.env` moves all three.
+`.env.example` `fluxer`. The LiveKit API key. Compose passes it to LiveKit as `LIVEKIT_KEYS` and as the webhook signing key, and to the API as `FLUXER_LIVEKIT_API_KEY`, so one change in `.env` moves them all.
 
 ## Endpoint derivation from FLUXER_BASE_DOMAIN
 
@@ -169,7 +169,7 @@ Nothing in the stack reads `X-Forwarded-Proto` or `X-Forwarded-Host`. Every abso
 
 ## The public origin
 
-`FLUXER_PUBLIC_ORIGIN` states the public address as one string, with no trailing slash: the scheme, the host, and the port when that port is not the default for the scheme. `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT` state the same address between them, so the two spellings have to agree.
+`FLUXER_PUBLIC_ORIGIN` states the public address as one string, with no trailing slash: the scheme, the host, and the port when that port is not the default for the scheme. `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT` state the same address between them, so the spellings have to agree.
 
 `docker-compose.yml` substitutes it into every name that needs a full origin, among them `FLUXER_APP_ENDPOINT`, `FLUXER_ADMIN_ENDPOINT`, `FLUXER_ADMIN_OAUTH_REDIRECT_URI`, `FLUXER_MEDIA_ENDPOINT`, `FLUXER_MARKETING_ENDPOINT`, `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`, `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`, `FLUXER_STATIC_CDN_ENDPOINT`, `FLUXER_LIVEKIT_URL`, `FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`, `PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT`, and the Gateway's media and static endpoints. `grep FLUXER_PUBLIC_ORIGIN docker-compose.yml` is the whole list. Compose also puts the name itself into the shared `x-fluxer-env` block, and a service that reads it takes its base domain, scheme and port from it.
 
@@ -177,7 +177,7 @@ It ships commented out. When it is unset, Compose builds those names from `FLUXE
 
 A non-default port therefore needs nothing here. `FLUXER_PUBLIC_PORT` sets the port of the public address, and the rest of the stack follows it. The comment block under the first three lines of `.env.example` says what each layout needs.
 
-Set `FLUXER_PUBLIC_ORIGIN` only to write the address out in one place, and then repeat the port `FLUXER_PUBLIC_PORT` names and the host `FLUXER_DOMAIN` names inside it. An `.env` whose two spellings disagree names two addresses. Half the instance answers on one and half on the other, and the web app sends no `Authorization` header to an API that is not on its own origin.
+Set `FLUXER_PUBLIC_ORIGIN` only to write the address out in one place, and then repeat the port `FLUXER_PUBLIC_PORT` names and the host `FLUXER_DOMAIN` names inside it. An `.env` whose spellings disagree names two addresses. Half the instance answers on one and half on the other, and the web app sends no `Authorization` header to an API that is not on its own origin.
 
 ## Endpoint overrides
 
@@ -201,11 +201,11 @@ Defaults to the derived endpoint. The public API base. The `admin` service reads
 
 #### `FLUXER_API_CLIENT_ENDPOINT`
 
-Defaults to the derived endpoint. The API base handed to clients. Setting only one of the two API endpoints splits what clients see from what the instance advertises.
+Defaults to the derived endpoint. The API base handed to clients. Setting only one of the API endpoints splits what clients see from what the instance advertises.
 
 #### `FLUXER_APP_ENDPOINT`
 
-Defaults to the derived endpoint. The web app origin. Also one of the two allowed CORS origins. Serving the client from another hostname requires setting this.
+Defaults to the derived endpoint. The web app origin. Also one of the allowed CORS origins. Serving the client from another hostname requires setting this.
 
 #### `FLUXER_GATEWAY_ENDPOINT`
 
@@ -271,7 +271,7 @@ Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. 
 
 The `edge` container is the only HTTP entry point. Both layouts below work with the edge left alone.
 
-Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else. The two `443` publishes follow `FLUXER_PUBLIC_PORT`, so a non-default public port moves them with it.
+Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else. The `443` publishes follow `FLUXER_PUBLIC_PORT`, so a non-default public port moves them with it.
 
 Put your own reverse proxy in front by adding `docker-compose.proxy.yml`, a second Compose file that overrides parts of the first. Load it with `-f` twice, or set `COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml` in `.env` once. The edge then serves plain HTTP on one port, and the proxy in front terminates TLS. [Behind your own reverse proxy](/operator/reverse-proxy/) owns the switch, the requirements, and the per-proxy configuration.
 
@@ -333,7 +333,7 @@ The API rejects any request whose client-IP header is missing, empty, not a pars
 
 ## Images
 
-These three pick which container images Compose pulls. All are optional.
+These pick which container images Compose pulls. All are optional.
 
 | Variable | Value in `.env.example` |
 | --- | --- |
@@ -343,7 +343,7 @@ These three pick which container images Compose pulls. All are optional.
 
 `FLUXER_REGISTRY_OWNER` is the owner segment of the image names and falls back to `fluxerapp`. `FLUXER_REGISTRY` is the registry images are pulled from and falls back to `ghcr.io/` followed by the owner. `FLUXER_IMAGE_TAG` is the tag on every Fluxer image and falls back to `v1`.
 
-These affect only the eleven Fluxer images. `docker-compose.yml` pins the `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs`, and `livekit` images, and `.env` cannot change them.
+These affect only the Fluxer images. `docker-compose.yml` pins the `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs`, and `livekit` images, and `.env` cannot change them.
 
 ## Database
 
@@ -387,7 +387,7 @@ Default empty. A CA certificate in PEM form. Used only when SSL is on.
 
 #### `FLUXER_POSTGRES_MAX_CONNECTIONS`
 
-Default `20`. Pool size. Integer 1 to 1000, per process. The total is the sum across every container. Compose sets 25 for `api` and `worker` and 20 for the two database-backed shards.
+Default `20`. Pool size. Integer 1 to 1000, per process. The total is the sum across every container. Compose sets 25 for `api` and `worker` and 20 for the database-backed shards.
 
 #### `FLUXER_POSTGRES_KV_TABLE`
 
@@ -459,7 +459,7 @@ Default `536870912`. GIF cache size. Must be at least 16777216. Set it to 134217
 
 Default `300000`. How often the API refreshes its IP-ban cache. A non-finite value or one at or below zero disables the timer.
 
-Two sorted sets in the bundled Valkey have no expiry: `bulk_message_deletion_queue` and the account deletion queue. The worker rebuilds each of them from the users table whenever its state version is absent or older than a day, so a lost set costs one rebuild and up to a day of delay. `docker-compose.yml` still starts Valkey with `--appendonly yes`, `--appendfsync everysec`, a named volume and `noeviction`. An over-limit write then returns an error to the caller and drops no queued work.
+These sorted sets in the bundled Valkey have no expiry: `bulk_message_deletion_queue` and the account deletion queue. The worker rebuilds each of them from the users table whenever its state version is absent or older than a day, so a lost set costs one rebuild and up to a day of delay. `docker-compose.yml` still starts Valkey with `--appendonly yes`, `--appendfsync everysec`, a named volume and `noeviction`. An over-limit write then returns an error to the caller and drops no queued work.
 
 Distributed locks in the same store all have a TTL, so they expire on their own. [Volumes and buckets](#volumes-and-buckets) states what losing `valkey-data` costs.
 
@@ -521,7 +521,7 @@ Default `static`. Static assets. Read by `media-proxy` only in `static` mode, wh
 
 A separate downloads provider is available. `FLUXER_S3_DOWNLOADS_ENDPOINT`, `FLUXER_S3_DOWNLOADS_PUBLIC_ENDPOINT`, `FLUXER_S3_DOWNLOADS_FORCE_PATH_STYLE`, `FLUXER_S3_DOWNLOADS_REGION`, `FLUXER_S3_DOWNLOADS_ACCESS_KEY_ID`, and `FLUXER_S3_DOWNLOADS_SECRET_ACCESS_KEY` take effect only when `FLUXER_S3_DOWNLOADS_ENDPOINT` is non-empty, and they then replace the primary configuration for the downloads bucket.
 
-The Media Proxy read path has four overrides of its own. All are optional.
+The Media Proxy read path has overrides of its own. All are optional.
 
 #### `FLUXER_S3_READ_ENDPOINT`
 
@@ -571,7 +571,7 @@ Default `true`. Certificate verification. Elasticsearch only. Never passed to th
 
 ## Message bus and internal services
 
-NATS is the message bus between Fluxer processes, and five small internal services sit behind it. All are optional.
+NATS is the message bus between Fluxer processes, and small internal services sit behind it. All are optional.
 
 #### `FLUXER_NATS_URL`
 
@@ -587,21 +587,21 @@ Default `nats://127.0.0.1:4222`. The JetStream address. Read by `api` and `worke
 
 #### `FLUXER_NATS_AUTH_TOKEN`
 
-Default empty. NATS authentication. Read by `api`, `worker`, `gateway`, and the five internal services. The shipped NATS runs without authentication, and Compose forwards this name to every container that connects to it.
+Default empty. NATS authentication. Read by `api`, `worker`, `gateway`, and the internal services. The shipped NATS runs without authentication, and Compose forwards this name to every container that connects to it.
 
 #### `FLUXER_SVC_NATS_URL`
 
-Default `nats://127.0.0.1:4222`. The NATS address for the five internal services. A separate variable from `FLUXER_NATS_URL`.
+Default `nats://127.0.0.1:4222`. The NATS address for the internal services. A separate variable from `FLUXER_NATS_URL`.
 
 #### `FLUXER_GATEWAY_API_RPC_ENDPOINT`
 
 No default. Where the Gateway calls the API. Read by the Gateway.
 
-The five internal services read the same topology variables. All are optional.
+The internal services read the same topology variables. All are optional.
 
 #### `FLUXER_SVC_NAME`
 
-Default `default`. The metrics prefix and the concurrency default. NATS subjects come from a hardcoded per-crate name. Compose sets it to the crate name on all ten containers.
+Default `default`. The metrics prefix and the concurrency default. NATS subjects come from a hardcoded per-crate name. Compose sets it to the crate name on every internal service container.
 
 #### `FLUXER_SVC_MODE`
 
@@ -625,7 +625,7 @@ Default `8090`. The health and metrics port. Not published.
 
 #### `FLUXER_SVC_MAX_CONCURRENT_REQUESTS`
 
-Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight request ceiling. The built-in defaults key off `FLUXER_SVC_NAME`. Compose forwards `FLUXER_SVC_MAX_CONCURRENT_REQUESTS` to `users`, `users-shard`, `messages`, and `messages-shard` at a default of 20, which pairs with their 20-connection Postgres pools, and leaves the six other containers on the built-in defaults.
+Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight request ceiling. The built-in defaults key off `FLUXER_SVC_NAME`. Compose forwards `FLUXER_SVC_MAX_CONCURRENT_REQUESTS` to `users`, `users-shard`, `messages`, and `messages-shard` at a default of 20, which pairs with their 20-connection Postgres pools, and leaves the other containers on the built-in defaults.
 
 #### `POD_NAME`
 
@@ -697,7 +697,7 @@ LiveKit media does not go through the edge. Compose publishes both media ports d
 
 Moving a media port is one line in `.env` followed by `docker compose up -d livekit`. Compose puts the same value on the host side of the mapping, on the container side, and on the `rtc` port LiveKit advertises in the ICE candidates it hands to clients.
 
-Moving the key pair takes two steps. Set both names in `.env`, then run `docker compose up -d livekit api worker` so LiveKit restarts on the new key and the API rebuilds its webhook receivers and upserts the stored voice server row.
+Moving the key pair takes these steps. Set both names in `.env`, then run `docker compose up -d livekit api worker` so LiveKit restarts on the new key and the API rebuilds its webhook receivers and upserts the stored voice server row.
 
 The `Caddyfile` is a bind mount, so the edge reads the copy that sits on disk beside `docker-compose.yml`. Editing it takes `docker compose restart edge`, because `docker compose up -d` leaves a container alone when only a mounted file changed. An upgrade does that restart itself, which [What the script does](/operator/upgrading/#what-the-script-does) covers. A change to any LiveKit value in `.env` needs `docker compose up -d`, because `restart` reuses the existing container with its old environment.
 
@@ -733,9 +733,9 @@ Default `60000`. Grace before culling a LiveKit-only participant. Milliseconds.
 
 ## Email
 
-Email is off by default, and two conditions turn it on. The switch must be on, and the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
+Email is off by default, and the conditions below turn it on. The switch must be on, and the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
 
-The same two conditions turn on a DNS check at registration. The check runs when email is on by the rule above. The dashboard switch and the SMTP values decide it along with the variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
+The same conditions turn on a DNS check at registration. The check runs when email is on by the rule above. The dashboard switch and the SMTP values decide it along with the variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
 
 #### `FLUXER_EMAIL_ENABLED`
 
@@ -789,10 +789,10 @@ All are optional.
 
 | Variable | Value in `.env.example` | Controls |
 | --- | --- | --- |
-| FLUXER_CAPTCHA_ENABLED | `false` | The [CAPTCHA](/topics/captcha/) switch. Startup fails when it is `true` without a provider and that provider's two keys |
+| FLUXER_CAPTCHA_ENABLED | `false` | The [CAPTCHA](/topics/captcha/) switch. Startup fails when it is `true` without a provider and that provider's keys |
 | FLUXER_CAPTCHA_PROVIDER | `none` | The provider. `hcaptcha`, `turnstile`, or `none`. Anything else fails startup |
 
-`FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY`, `FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY`, `FLUXER_CAPTCHA_TURNSTILE_SITE_KEY`, and `FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY` ship empty in `.env.example` and the shipped Compose file forwards all four. Set the pair the selected provider needs. The admin dashboard's Runtime Integrations panel sets the same provider and keys, and a value stored there wins over the environment. An instance that configures CAPTCHA only there must leave `FLUXER_CAPTCHA_ENABLED` at `false`, because the boot check reads the environment alone.
+`FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY`, `FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY`, `FLUXER_CAPTCHA_TURNSTILE_SITE_KEY`, and `FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY` ship empty in `.env.example` and the shipped Compose file forwards them all. Set the pair the selected provider needs. The admin dashboard's Runtime Integrations panel sets the same provider and keys, and a value stored there wins over the environment. An instance that configures CAPTCHA only there must leave `FLUXER_CAPTCHA_ENABLED` at `false`, because the boot check reads the environment alone.
 
 ## Single sign-on and passkeys
 
@@ -830,7 +830,7 @@ Bluesky OAuth login is off by default and is configured through `FLUXER_AUTH_BLU
 | FLUXER_VAPID_PRIVATE_KEY | `CHANGE_ME` | The VAPID private key. Base64url of the 32-byte scalar, and the matching half of the pair |
 | FLUXER_VAPID_EMAIL | unset | The VAPID contact address. Compose derives `admin@` followed by `FLUXER_DOMAIN` when it is unset |
 
-The Gateway reads the same three names. A malformed pair, or a private key that does not derive the public point, does not stop it. It records the fault in its log at startup and then drops every web push notification.
+The Gateway reads the same names. A malformed pair, or a private key that does not derive the public point, does not stop it. It records the fault in its log at startup and then drops every web push notification.
 
 `FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone, defaults to `true`, and turns that check off when it is `false`.
 
@@ -880,7 +880,7 @@ No default. The service account address. Paired with the project.
 
 #### `FLUXER_PUSH_FCM_PRIVATE_KEY`
 
-No default. The service account key. Use one of the three key sources.
+No default. The service account key. Use one of the key sources.
 
 #### `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`
 
@@ -1026,9 +1026,9 @@ Default `flag_spammer`. What happens when it fires. `flag_spammer` or `suppress_
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. External blocklist feeds. Off by default on a self-hosted instance.
 
-A second family, unrelated to the rules above, tunes the IP auto-banner: `FLUXER_ABUSE_WINDOW_MS`, four `FLUXER_ABUSE_THRESHOLD_` names, four `FLUXER_ABUSE_TOKEN_DIVERSITY_` names, `FLUXER_ABUSE_BAN_TTL_SEC`, `FLUXER_ABUSE_BATCH_FLUSH_MS`, `FLUXER_ABUSE_MAX_BATCH_TICKS`, `FLUXER_ABUSE_MAX_NEW_TOKENS_PER_TICK`, `FLUXER_ABUSE_MAX_TRACKED_IPS`, `FLUXER_ABUSE_MAX_TOKEN_HASHES_PER_IP`, `FLUXER_ABUSE_MIN_SCORE_FOR_LOOKUP`, `FLUXER_ABUSE_MIN_TOKENS_FOR_LOOKUP`, and `FLUXER_ABUSE_REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN`. All are read directly from the environment, none are in `.env.example` or the Compose file, and a non-finite value or one at or below zero falls back to the default.
+A second family, unrelated to the rules above, tunes the IP auto-banner: `FLUXER_ABUSE_WINDOW_MS`, the `FLUXER_ABUSE_THRESHOLD_` names, the `FLUXER_ABUSE_TOKEN_DIVERSITY_` names, `FLUXER_ABUSE_BAN_TTL_SEC`, `FLUXER_ABUSE_BATCH_FLUSH_MS`, `FLUXER_ABUSE_MAX_BATCH_TICKS`, `FLUXER_ABUSE_MAX_NEW_TOKENS_PER_TICK`, `FLUXER_ABUSE_MAX_TRACKED_IPS`, `FLUXER_ABUSE_MAX_TOKEN_HASHES_PER_IP`, `FLUXER_ABUSE_MIN_SCORE_FOR_LOOKUP`, `FLUXER_ABUSE_MIN_TOKENS_FOR_LOOKUP`, and `FLUXER_ABUSE_REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN`. All are read directly from the environment, none are in `.env.example` or the Compose file, and a non-finite value or one at or below zero falls back to the default.
 
-Five more names in that family limit how often the auto-banner buys an IP classification from ipinfo. A shared claim lets one replica do the lookup for the others. With the claim off, every API replica looks up the same attacking IP at the same moment, so one IP costs one lookup per replica.
+Other names in that family limit how often the auto-banner buys an IP classification from ipinfo. A shared claim lets one replica do the lookup for the others. With the claim off, every API replica looks up the same attacking IP at the same moment, so one IP costs one lookup per replica.
 
 - `FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED` defaults to `1` and gates the shared claim. It is read as a string, and only `0` turns the claim off.
 - `FLUXER_ABUSE_IP_CLASS_CLAIM_TTL_SEC` defaults to `15` seconds and sets how long a replica holds that claim.
@@ -1036,9 +1036,9 @@ Five more names in that family limit how often the auto-banner buys an IP classi
 - `FLUXER_ABUSE_IP_CLASS_NEGATIVE_TTL_MS` defaults to `300000` milliseconds and sets how long a failed classification is remembered.
 - `FLUXER_ABUSE_IP_CLASS_HINT_TTL_MS` defaults to `600000` milliseconds and sets how long a class sent by another replica stays usable.
 
-The claim key is `abuse:ipclass:claim:` plus the ban key, and replicas send classes to each other on the `abuse_tracker:ipclass` key-value channel. The four numeric names are read through the same helper as the names above, so a non-finite value or one at or below zero falls back to the default.
+The claim key is `abuse:ipclass:claim:` plus the ban key, and replicas send classes to each other on the `abuse_tracker:ipclass` key-value channel. The numeric names are read through the same helper as the names above, so a non-finite value or one at or below zero falls back to the default.
 
-A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXER_IPINFO_BUDGET_ENABLED` defaults to `1`, and `0` turns off all shedding. `FLUXER_IPINFO_BUDGET_MONTHLY_MAX` defaults to `140000` and is the ceiling for one UTC calendar month. Lookups run at three priorities, each with a share of that ceiling and a token bucket for bursts refilled once a minute.
+A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXER_IPINFO_BUDGET_ENABLED` defaults to `1`, and `0` turns off all shedding. `FLUXER_IPINFO_BUDGET_MONTHLY_MAX` defaults to `140000` and is the ceiling for one UTC calendar month. Lookups run at the priorities below, each with a share of that ceiling and a token bucket for bursts refilled once a minute.
 
 - Admin IP bans and scheduled deletion checks are critical. They reach the full ceiling, with a burst of `60` from `FLUXER_IPINFO_BUDGET_CRITICAL_BURST` refilled at `60` a minute by `FLUXER_IPINFO_BUDGET_CRITICAL_REFILL_PER_MIN`.
 - Registration risk is standard. It stops at `FLUXER_IPINFO_BUDGET_STANDARD_MONTHLY_PCT` percent of the ceiling, default `90`, with a burst of `240` from `FLUXER_IPINFO_BUDGET_STANDARD_BURST` refilled at `120` a minute by `FLUXER_IPINFO_BUDGET_STANDARD_REFILL_PER_MIN`.
@@ -1046,7 +1046,7 @@ A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXE
 
 The lower ceilings mean background lookups stop first and critical lookups stop last. The counters live in the key-value store under `ipinfo:budget:burst:` and `ipinfo:budget:month:`. A shed lookup returns an unavailable result and raises no error, and any key-value failure admits the lookup at every priority, so a cache outage never stops an admin ban or the auto-banner.
 
-Two names let the local MaxMind databases answer the registration risk lookup. `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` is off by default and only `1` or `true`, in any letter case, turns it on. `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` is a comma-separated list of ASN numbers, empty by default, and non-numeric entries are dropped. The pre-screen therefore does nothing until an operator fills the list in. An IP skips ipinfo only when the local city database returns a country, the local ASN database returns a number, that number is in the list, and the ASN organization name is not a commercial privacy provider, an education network or a cellular network. Everything else still goes to ipinfo.
+The names below let the local MaxMind databases answer the registration risk lookup. `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` is off by default and only `1` or `true`, in any letter case, turns it on. `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` is a comma-separated list of ASN numbers, empty by default, and non-numeric entries are dropped. The pre-screen therefore does nothing until an operator fills the list in. An IP skips ipinfo only when the local city database returns a country, the local ASN database returns a number, that number is in the list, and the ASN organization name is not a commercial privacy provider, an education network or a cellular network. Everything else still goes to ipinfo.
 
 ## Limits
 
@@ -1084,7 +1084,7 @@ Defaults to `debug` in development, `info` otherwise. The Node log level. Read b
 
 #### `RUST_LOG`
 
-Default `info`. The Rust log filter. Read by `media-proxy`, `app-proxy`, `admin`, and the five internal services. Not in `.env.example` or the Compose file.
+Default `info`. The Rust log filter. Read by `media-proxy`, `app-proxy`, `admin`, and the internal services. Not in `.env.example` or the Compose file.
 
 #### `FLUXER_GATEWAY_LOGGER_LEVEL`
 
@@ -1126,7 +1126,7 @@ All are optional.
 
 #### `FLUXER_DISCOVERY_ENABLED`
 
-Default `true`. The public guild [discovery](/http-api/discovery/) surface. With it off, discovery search, discovery join, and the three guild discovery application routes return 400 `DISCOVERY_DISABLED`.
+Default `true`. The public guild [discovery](/http-api/discovery/) surface. With it off, discovery search, discovery join, and the guild discovery application routes return 400 `DISCOVERY_DISABLED`.
 
 #### `FLUXER_DISCOVERY_MIN_MEMBER_COUNT`
 
@@ -1428,7 +1428,7 @@ Default empty. Extra trusted addresses for that gate. Every entry must parse as 
 
 Default `3600`. How often the edge IP list refreshes. Accepts 60 to 86400.
 
-`media-proxy` range-checks two values at startup and then reads them nowhere: `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`. A bad value still fails the boot.
+`media-proxy` range-checks these values at startup and then reads them nowhere: `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`. A bad value still fails the boot.
 
 ## Gateway settings
 
@@ -1520,7 +1520,7 @@ Default `16`. The ceiling of the scheduler clamp. Compose forwards it to `gatewa
 
 The Gateway entrypoint derives the scheduler counts before the BEAM starts. It reads the container CPU quota, clamps the result between `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`, exports the answer as `FLUXER_ERLANG_SCHEDULERS`, and derives `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS` from it. `vm.args.src` then substitutes both into `+S` and `+SDcpu`.
 
-The two clamp bounds reach the Gateway from `.env`. To pin the count, set `FLUXER_ERLANG_SCHEDULERS` on the `gateway` service in `docker-compose.yml`, which skips the clamp.
+The clamp bounds reach the Gateway from `.env`. To pin the count, set `FLUXER_ERLANG_SCHEDULERS` on the `gateway` service in `docker-compose.yml`, which skips the clamp.
 
 The Gateway protocol version is `1`. The Gateway answers any other value in `?v=` with 101, then a close frame reading `Invalid API version`. [Gateway overview](/gateway/overview/) has the close code.
 
@@ -1660,9 +1660,9 @@ Become `FLUXER_LIVEKIT_API_KEY` and `FLUXER_LIVEKIT_API_SECRET`, and LiveKit's o
 
 ## Keys Compose does not forward
 
-`.env.example` names every variable `docker-compose.yml` reads from `.env`. The Node override table has 278 names, on top of roughly ninety Rust-only and twenty-five Erlang-only names, and Compose forwards a fraction of them. A name below reaches a service only through a Compose override file that adds it to that service's environment block.
+`.env.example` names every variable `docker-compose.yml` reads from `.env`. Compose forwards a fraction of the Node override names, the Rust-only names and the Erlang-only names. A name below reaches a service only through a Compose override file that adds it to that service's environment block.
 
-#### `FLUXER_AUTH_BLUESKY_` and the six names under it
+#### `FLUXER_AUTH_BLUESKY_` and the names under it
 
 Bluesky login defaults off. The admin dashboard configures it too, under Runtime Integrations.
 
@@ -1674,7 +1674,7 @@ Mobile push cannot be configured at all from the example.
 
 The only way to change log verbosity.
 
-#### `FLUXER_APP_PRODUCT_NAME` and the six branding URLs
+#### `FLUXER_APP_PRODUCT_NAME` and the branding URLs
 
 Branding is otherwise admin-dashboard only.
 
@@ -1732,11 +1732,11 @@ Credentials for the [Admin API](/admin-api/).
 
 Each write publishes a refresh on the key-value pub/sub channel, so other processes drop their cached copy without a restart.
 
-Two settings exist only in the dashboard: attachment decay, which defaults to on, and the inactivity deletion threshold, which defaults to 365 days.
+These settings exist only in the dashboard: attachment decay, which defaults to on, and the inactivity deletion threshold, which defaults to 365 days.
 
 ## Services
 
-The stack runs 25 containers on one Docker bridge network, which is private to the stack.
+The stack runs its containers on one Docker bridge network, which is private to the stack.
 
 | Service | Image | What it does |
 | --- | --- | --- |
@@ -1754,7 +1754,7 @@ The stack runs 25 containers on one Docker bridge network, which is private to t
 | gifs, gifs-shard | fluxer-gifs | GIF provider access |
 | unfurl, unfurl-shard | fluxer-unfurl | Link unfurling |
 | postgres | postgres:16-alpine | The database |
-| valkey | valkey/valkey:8.1-alpine | The key-value store and pub/sub bus, and the two deletion queues |
+| valkey | valkey/valkey:8.1-alpine | The key-value store and pub/sub bus, and the deletion queues |
 | nats | nats:2.14-alpine | Core messaging, and the JetStream streams holding queued background jobs |
 | meilisearch | getmeili/meilisearch:v1.12 | The search index |
 | seaweedfs | chrislusf/seaweedfs:4.34 | S3-compatible object storage |
@@ -1763,9 +1763,9 @@ The stack runs 25 containers on one Docker bridge network, which is private to t
 
 The edge and LiveKit are the only services that publish ports. The edge publishes 80/tcp, 443/tcp, 443/udp, or one plain-HTTP port under the overlay. LiveKit publishes 7881/tcp and 7882/udp. Everything else is reachable only over the bridge network.
 
-`api` is the one service an operator configures directly, through the shared environment block. `worker`, `gateway`, `app-proxy`, and `media-proxy` are touched rarely, `worker` for lane concurrency, `app-proxy` for CSP extras, and `media-proxy` for transform limits. The edge takes only the three `FLUXER_EDGE_` variables, `postgres` only the password, `meilisearch` only the master key, `valkey` only the two `FLUXER_VALKEY_` tuning values, and `livekit` only the key pair and the two port variables. `static-proxy` reads no environment variables, and the remaining services need none.
+`api` is the one service an operator configures directly, through the shared environment block. `worker`, `gateway`, `app-proxy`, and `media-proxy` are touched rarely, `worker` for lane concurrency, `app-proxy` for CSP extras, and `media-proxy` for transform limits. The edge takes only the `FLUXER_EDGE_` variables, `postgres` only the password, `meilisearch` only the master key, `valkey` only the `FLUXER_VALKEY_` tuning values, and `livekit` only the key pair and the port variables. `static-proxy` reads no environment variables, and the remaining services need none.
 
-The five internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. The shipped stack fixes `FLUXER_SVC_SHARD_COUNT` at `1`.
+The internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. The shipped stack fixes `FLUXER_SVC_SHARD_COUNT` at `1`.
 
 ## Resources
 
@@ -1885,7 +1885,7 @@ Default `256mb`. The ceiling for `unfurl-shard`. Fetches remote pages, so a slow
 
 Default `256mb`. The ceiling for `admin`. Serves the dashboard and proxies no media.
 
-A reservation goes to the four services whose loss takes the instance down, so the kernel reclaims from everything else first. All are optional.
+A reservation goes to the services whose loss takes the instance down, so the kernel reclaims from everything else first. All are optional.
 
 #### `FLUXER_POSTGRES_MEMORY_RESERVATION`
 
@@ -1913,7 +1913,7 @@ No default. The V8 old-space ceiling for `api`, in MB. Appended to `NODE_OPTIONS
 
 No default. The V8 old-space ceiling for `worker`, in MB. Same rule against `FLUXER_WORKER_MEMORY_LIMIT`.
 
-Six names on the Postgres command line tune the bundled server. Keep them consistent with `FLUXER_POSTGRES_MEMORY_LIMIT`. All are optional.
+The names on the Postgres command line tune the bundled server. Keep them consistent with `FLUXER_POSTGRES_MEMORY_LIMIT`. All are optional.
 
 #### `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS`
 
@@ -1949,11 +1949,11 @@ Default `192mb`. The dataset ceiling. Bounds stored keys only. Client buffers, r
 
 #### `FLUXER_VALKEY_MAXMEMORY_POLICY`
 
-Default `noeviction`. What happens to a write above the ceiling. Under `noeviction` an over-limit write returns an OOM error to the caller. Under any eviction policy Valkey can drop the two deletion queues and the distributed locks. Every lock has a TTL, and the worker rebuilds both queues from the users table within a day. [Volumes and buckets](#volumes-and-buckets) has what dropping a queue costs.
+Default `noeviction`. What happens to a write above the ceiling. Under `noeviction` an over-limit write returns an OOM error to the caller. Under any eviction policy Valkey can drop the deletion queues and the distributed locks. Every lock has a TTL, and the worker rebuilds both queues from the users table within a day. [Volumes and buckets](#volumes-and-buckets) has what dropping a queue costs.
 
 No service sets a CPU limit, a CPU reservation or `cpu_shares`, so every container sees the host's full CPU count. Bound the Gateway's scheduler count with `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`, or pin it with `FLUXER_ERLANG_SCHEDULERS` and `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS` from [Gateway settings](#gateway-settings).
 
-On a host smaller than the 16 GB the defaults assume, lower the four large ceilings and the Postgres tuning together. The block below is the 8 GB profile.
+On a host smaller than the 16 GB the defaults assume, lower the large ceilings and the Postgres tuning together. The block below is the 8 GB profile.
 
 ```bash
 FLUXER_POSTGRES_MEMORY_LIMIT=2560mb
@@ -2017,7 +2017,7 @@ CORS origins are exactly the app and marketing endpoints. Serving the client fro
 | --- | --- | --- |
 | postgres-data | Every account, message, and configuration row | Yes |
 | seaweedfs-data | Every uploaded file | Yes |
-| valkey-data | The two deletion queues, held locks, and cached values | Yes |
+| valkey-data | The deletion queues, held locks, and cached values | Yes |
 | nats-data | The JetStream `JOBS` and `JOBS_DLQ` streams, on file storage | Yes |
 | edge-data | Issued TLS certificates | Optional, a loss only costs a re-issue |
 | edge-config | The edge's own state | No |
@@ -2029,7 +2029,7 @@ CORS origins are exactly the app and marketing endpoints. Serving the client fro
 
 Volume names are prefixed with the Compose project name, so `postgres-data` is `fluxer_postgres-data` on the host.
 
-`seaweedfs-init` creates five buckets and exits.
+`seaweedfs-init` creates these buckets and exits.
 
 | Bucket | Holds |
 | --- | --- |
@@ -2039,4 +2039,4 @@ Volume names are prefixed with the Compose project name, so `postgres-data` is `
 | fluxer-reports | Abuse report evidence, and NCMEC payloads where that integration is on |
 | fluxer-harvests | User and guild data archives |
 
-An attachment lands in `fluxer-uploads` first. Once processing succeeds, Fluxer copies it into `fluxer` and deletes the original. `FLUXER_S3_BUCKET_STATIC` names a sixth bucket that `seaweedfs-init` skips and that the stack's mode never reads.
+An attachment lands in `fluxer-uploads` first. Once processing succeeds, Fluxer copies it into `fluxer` and deletes the original. `FLUXER_S3_BUCKET_STATIC` names a further bucket that `seaweedfs-init` skips and that the stack's mode never reads.

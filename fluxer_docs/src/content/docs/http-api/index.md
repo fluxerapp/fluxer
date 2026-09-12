@@ -30,9 +30,9 @@ An operation documents its body under `JSON body`, `Form body`, or `Multipart bo
 
 A JSON body is parsed from the raw request text without inspecting `Content-Type`. The instance content filter scans a `POST`, `PUT`, or `PATCH` body that parses as JSON against the banned-phrase and banned-URL blocklists, whatever the header declares. It skips a body whose `Content-Type` contains `multipart/form-data` or `application/x-www-form-urlencoded`. A client MUST send the canonical media type.
 
-Form bodies accept `application/x-www-form-urlencoded` and `multipart/form-data` interchangeably. The three [OAuth2](/http-api/oauth2/) token operations are the only ones that take one. A field that occurs once is a string or file. Repeating the same field name produces an array in occurrence order, and a name ending in `[]` also collects its values into an array.
+Form bodies accept `application/x-www-form-urlencoded` and `multipart/form-data` interchangeably. The [OAuth2](/http-api/oauth2/) token operations are the only ones that take one. A field that occurs once is a string or file. Repeating the same field name produces an array in occurrence order, and a name ending in `[]` also collects its values into an array.
 
-[Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the only operations that define a multipart body of their own. Each selects the multipart parser when the request `Content-Type` contains `multipart/form-data` and parses the body as JSON otherwise. The three OAuth2 token operations also accept `multipart/form-data`, but read it as an ordinary form body.
+[Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the only operations that define a multipart body of their own. Each selects the multipart parser when the request `Content-Type` contains `multipart/form-data` and parses the body as JSON otherwise. The OAuth2 token operations also accept `multipart/form-data`, but read it as an ordinary form body.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -77,11 +77,11 @@ The shared validator normalises the JSON body, a form body, the query string, pa
 
 A nested object whose members have all become `null` becomes `null` in turn. The root object itself is never collapsed this way. An empty request body is read as an empty object, so the caller sees the operation's own required-field failures. A body that is present but does not parse as JSON returns 400 `INVALID_FORM_BODY` with one element at path `body` and code `INVALID_FORMAT`.
 
-:::caution[Three operations bypass the shared validator]
+:::caution[These operations bypass the shared validator]
 [Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) read their own body and apply none of that normalisation.
 :::
 
-An empty string stays an empty string and an empty nested object stays an empty object in those three. The first two reject a JSON body that does not parse. On a JSON body all three collapse every schema failure to one validation entry, and each operation names that entry on its own page.
+An empty string stays an empty string and an empty nested object stays an empty object in those three. The first two reject a JSON body that does not parse. On a JSON body all collapse every schema failure to one validation entry, and each operation names that entry on its own page.
 
 ## Authentication
 
@@ -170,7 +170,7 @@ An operation that sets its own `Cache-Control` keeps that value. A response whos
 
 Every route consumes its own rate limit bucket and is also evaluated against one global bucket unless that bucket is exempt. A denial returns 429 `RATE_LIMITED`. [Rate limits](/topics/rate-limits/) defines the bucket scoping rules, the global allowance, the 429 body, the scope registry, and the complete `X-RateLimit-*` header contract.
 
-:::note[Two 429 responses have no `X-RateLimit-*` header]
+:::note[These 429 responses have no `X-RateLimit-*` header]
 A 429 `RESOURCE_LOCKED` response has `Retry-After: 1`, and a 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` response has the remaining cooldown in whole seconds. A client that reads the bucket headers branches on `code`.
 :::
 
@@ -184,7 +184,7 @@ A small set of routes exists only on the hosted Fluxer deployment. A self-hosted
 
 The CORS response policy is an allow-list of exactly two origins, the deployment's configured web application endpoint and its marketing endpoint. A request whose `Origin` matches one of them receives `Access-Control-Allow-Origin` set to that origin and `Vary: Origin`. Every other request, including one that sends no `Origin`, receives no `Access-Control-Allow-Origin` from that policy. Credentialed cross-origin requests are not enabled, so `Access-Control-Allow-Credentials` is never sent.
 
-Five paths are readable from any origin. `/v1/webhooks/{webhook_id}/{token}` and `/v1/webhooks/{webhook_id}/{token}/messages/{message_id}` have a second cross-origin policy that allows any origin. Four of the methods registered on them refuse the first-party web client outright, and that refusal is defined by [Origin refusal](/http-api/webhooks/#origin-refusal).
+The paths below are readable from any origin. `/v1/webhooks/{webhook_id}/{token}` and `/v1/webhooks/{webhook_id}/{token}/messages/{message_id}` have a second cross-origin policy that allows any origin. Four of the methods registered on them refuse the first-party web client outright, and that refusal is defined by [Origin refusal](/http-api/webhooks/#origin-refusal).
 
 [Get instance discovery](/http-api/instance/#get-instance-discovery) on `/.well-known/fluxer`, [Get OpenAPI document](/http-api/instance/#get-openapi-document) on `/v1/openapi.json`, and [Get client geolocation](/http-api/instance/#get-client-geolocation) on `/v1/ip` set `Access-Control-Allow-Origin: *` in the operation itself. The wildcard stands for any origin outside the allow-list, and for an allowed origin the policy replaces it with that exact origin and sends `Vary: Origin`.
 

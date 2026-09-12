@@ -12,7 +12,7 @@ The Instance resource describes how one Fluxer deployment is set up. It publishe
 
 Every route here is unauthenticated. A credential changes no response body. One that resolves to an account moves the [rate limit bucket](/topics/rate-limits/) from the client IP address onto that account.
 
-Each of the three routes answers with `Access-Control-Allow-Origin: *`, replaced by the request `Origin` when the deployment-wide [cross-origin policy](/http-api/#cross-origin-requests) allows that origin. The [Admin Instance API](/admin-api/instance/) defines the operator side of the same configuration.
+Each of the routes answers with `Access-Control-Allow-Origin: *`, replaced by the request `Origin` when the deployment-wide [cross-origin policy](/http-api/#cross-origin-requests) allows that origin. The [Admin Instance API](/admin-api/instance/) defines the operator side of the same configuration.
 
 ## Instance discovery object
 
@@ -245,7 +245,7 @@ The client starts from the default value of every key. It evaluates the rules fr
 
 A rule that names no trait and no guild feature replaces the current value for each key it has. A rule that names at least one raises the current value to its own value when that is higher. Because a rebuilt rule has every key, an unfiltered rule returns each key it did not override to the default. A matching filtered rule raises each key it did not override to at least the default.
 
-Two evaluation contexts exist. A client reads the key's scope and the rule's filters to decide which keys an evaluation applies. The [limit key](#limit-keys) registry states the scope of each key.
+The evaluation contexts are listed below. A client reads the key's scope and the rule's filters to decide which keys an evaluation applies. The [limit key](#limit-keys) registry states the scope of each key.
 
 | Scope | User evaluation | Guild evaluation |
 | --- | --- | --- |

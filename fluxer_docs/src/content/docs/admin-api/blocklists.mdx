@@ -1,14 +1,14 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Blocklists
-description: The nine safety blocklists, their value forms, and the operations that manage them.
+description: The safety blocklists, their value forms, and the operations that manage them.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
 A blocklist is a stored set of values Fluxer checks account access and user content against. Nine lists exist. Each has one canonical value form, one matching rule, and its own stored fields. Fluxer canonicalises every value before storage and before every check.
 
-Each list has its own three [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
+Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
 
 Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
 
@@ -50,7 +50,7 @@ Fluxer synchronises disposable email domains from external feeds every six hours
 
 <sup>9</sup> The only scoped list. Scope and substring together identify a row, so the same substring can be stored once per [scope](#profile-substring-scopes)
 
-The fields and the operations a list accepts differ from list to list. Read the `fields` array and the three `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
+The fields and the operations a list accepts differ from list to list. Read the `fields` array and the `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
 
 ## Content blocklist categories
 
@@ -67,7 +67,7 @@ Every `url`, `url-domain`, `file-sha`, and `avatar-hash` row has a category nami
 | gifct | Imported from a GIFCT hash set |
 | stop_ncii | Imported from a StopNCII hash set |
 
-The request field is a free string of 1 through 64 characters, so a value outside this registry is accepted and stored verbatim. Tolerate a stored category outside these eight.
+The request field is a free string of 1 through 64 characters, so a value outside this registry is accepted and stored verbatim. Tolerate a stored category outside the registry.
 
 ## Content blocklist severities
 
@@ -267,7 +267,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 
 <RouteHeader method="GET" path="/v1/admin/blocklists" />
 
-Returns one [blocklist](#blocklist-object) object for every blocklist this instance keeps. Requires any one of the nine `check` permissions.
+Returns one [blocklist](#blocklist-object) object for every blocklist this instance keeps. Requires any one of the `check` permissions.
 
 The response is identical for every Admin.
 

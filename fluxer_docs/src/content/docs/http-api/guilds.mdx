@@ -91,9 +91,9 @@ A guild object contains the guild's configuration. The operation that returns it
 
 <sup>13</sup> Only [Get guild](#get-guild) populates this field, and the array is filtered to the channels the caller can currently view
 
-<sup>14</sup> Only [Get guild](#get-guild) populates these two fields, and both are computed from the guild's live main Gateway state
+<sup>14</sup> Only [Get guild](#get-guild) populates these fields, and both are computed from the guild's live main Gateway state
 
-<sup>15</sup> Only [List current user guilds](#list-current-user-guilds) populates these two fields, and only when `with_counts` is true. A guild whose counts are not currently held reports 0 for both
+<sup>15</sup> Only [List current user guilds](#list-current-user-guilds) populates these fields, and only when `with_counts` is true. A guild whose counts are not currently held reports 0 for both
 
 :::note[An absent field means the operation omitted it]
 `roles`, `emojis`, `stickers`, `channels`, and every count field arrive only from the operations named in the footnotes above. A guild returned without `roles` can still hold roles.

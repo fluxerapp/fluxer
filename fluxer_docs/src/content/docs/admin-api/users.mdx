@@ -10,7 +10,7 @@ These routes read and edit any account on the instance. An account has more fiel
 
 Each mutable field group has its own route, its own [ACL](/admin-api/#acl-registry), and its own [audit action](/admin-api/#audit-actions), so there is no combined update.
 
-A read records no audit entry and reads no audit reason. [List user sessions](#list-user-sessions) and [List user WebAuthn credentials](#list-user-webauthn-credentials) are the two exceptions. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
+A read records no audit entry and reads no audit reason. [List user sessions](#list-user-sessions) and [List user WebAuthn credentials](#list-user-webauthn-credentials) are the exceptions. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
 
 :::caution[A missing PII ACL nulls the protected fields]
 The read still succeeds, so a null field is no evidence that the account has none.
@@ -20,7 +20,7 @@ The read still succeeds, so a null field is no evidence that the account has non
 
 The complete administrative view of one account. It has every stored flag, the private lifecycle fields, and the contact and network fields that the public [user object](/http-api/users/#user-object) never exposes.
 
-When the caller lacks the matching ACL, Fluxer redacts three field groups and still returns every key, so the object shape is identical for every caller.
+When the caller lacks the matching ACL, Fluxer redacts field groups and still returns every key, so the object shape is identical for every caller.
 
 ### Structure
 
@@ -512,7 +512,7 @@ A `q` value that is entirely digits also resolves that exact account ID and plac
 
 Returns the account the request authenticated as, wrapped in a `user` member. Requires `admin:authenticate`.
 
-Every Admin credential holds `admin:authenticate`, so every account that can reach the Admin API can read this route. `email`, `date_of_birth`, and the three IP fields are returned unredacted whatever the acting credential holds. `acls` reports the ACL set stored on the account. For an Admin API key credential that set can be wider than what the key itself can use.
+Every Admin credential holds `admin:authenticate`, so every account that can reach the Admin API can read this route. `email`, `date_of_birth`, and the IP fields are returned unredacted whatever the acting credential holds. `acls` reports the ACL set stored on the account. For an Admin API key credential that set can be wider than what the key itself can use.
 
 ### Response body
 
@@ -1463,7 +1463,7 @@ Fluxer cancels a Stripe subscription on the account without proration and refund
 
 The account holder is emailed the deadline and the supplied `public_reason` when the account has an email address.
 
-For every reason code other than `USER_REQUESTED`, two more enforcement passes run. The first adds the account's email address to the email blocklist and marks its last active address, authorised addresses, live session addresses, and session tombstone addresses as suspicious IPs.
+For every reason code other than `USER_REQUESTED`, further enforcement passes run. The first adds the account's email address to the email blocklist and marks its last active address, authorised addresses, live session addresses, and session tombstone addresses as suspicious IPs.
 
 The second resolves every pending report against the account, in pages of 100, and notifies each reporter through the ordinary [report](/admin-api/reports/) path. It runs only on an instance with a report search backend. Both passes log a failure and continue, so the request still succeeds.
 
@@ -1568,7 +1568,7 @@ The response has no paging state. Derive the next cursor from the last returned 
 
 Lists the direct message channels the account has taken part in. Requires `user:list:dm_channels`. The read does not open, reopen, or acknowledge a channel for the target account.
 
-:::note[The two channel classes are separate reads]
+:::note[The channel classes are separate reads]
 `type` selects which channel class is returned. The default returns one-to-one direct message channels, and group direct messages need a second request with `type=group_dm`.
 :::
 
@@ -1664,7 +1664,7 @@ Lists the friends, friend requests, and blocked accounts of the account, split i
 | outgoing_requests<sup>1</sup> | array[[Admin relationship](#admin-relationship-object) object] | The friend requests the account has sent |
 | blocked<sup>1</sup> | array[[Admin relationship](#admin-relationship-object) object] | The accounts this account has blocked |
 
-<sup>1</sup> A stored [relationship type](/http-api/users/relationships/#relationship-types) outside the four categories is dropped from the response
+<sup>1</sup> A stored [relationship type](/http-api/users/relationships/#relationship-types) outside the categories is dropped from the response
 
 The operation accepts no cursor, category filter, or limit, and returns every category in full.
 
@@ -1808,7 +1808,7 @@ The `X-Audit-Log-Reason` header value is stored on the recorded entry.
 
 <sup>1</sup> Reachable only with `user:view:ip`, because no lookup is attempted without it. The audit entry is written after the lookups, so a request that fails this way records nothing
 
-Without `user:view:ip` the two derived fields are null and `client_ip` is the literal string `[redacted]`, so a redacted address is distinguishable from a failed lookup. With it, a partial reverse DNS or location failure yields null for that field alone.
+Without `user:view:ip` the derived fields are null and `client_ip` is the literal string `[redacted]`, so a redacted address is distinguishable from a failed lookup. With it, a partial reverse DNS or location failure yields null for that field alone.
 
 ### Side effects
 

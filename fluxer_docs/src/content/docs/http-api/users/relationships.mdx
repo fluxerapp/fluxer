@@ -176,7 +176,7 @@ A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flag
 
 That path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. The policy path can also set the `SPAMMER` flag on the caller, which makes every later send one-sided.
 
-:::note[The two suppression entries enter at different points]
+:::note[The suppression entries enter at different points]
 A caller that already has the flag enters before the pending request lookup, so it can hold both an `INCOMING_REQUEST` and an `OUTGOING_REQUEST` record for one account. A caller suppressed during the call enters after the lookup and accepts the pending request normally.
 :::
 
@@ -247,7 +247,7 @@ The body can be omitted, in which case it is treated as an empty object and acce
 | --- | --- | --- |
 | type?<sup>1</sup> | integer | The [relationship type](#relationship-types) selecting the operation |
 
-<sup>1</sup> One of the four enumerated types when present. Only BLOCKED selects blocking, and every other accepted value selects acceptance
+<sup>1</sup> One of the enumerated types when present. Only BLOCKED selects blocking, and every other accepted value selects acceptance
 
 ### Response
 

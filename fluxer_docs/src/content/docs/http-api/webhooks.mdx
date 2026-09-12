@@ -18,7 +18,7 @@ A management operation requires [MANAGE_WEBHOOKS](/http-api/permissions/) at gui
 
 Fluxer resolves the guild before every management operation. A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`.
 
-[List guild webhooks](#list-guild-webhooks), [List channel webhooks](#list-channel-webhooks), and [Create webhook](#create-webhook) name a guild or a channel in their paths, so the availability gate applies. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) refuses an authenticated request with 403 `MISSING_ACCESS` before the operation runs. [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. The three remaining management routes name only a webhook ID and are not gated.
+[List guild webhooks](#list-guild-webhooks), [List channel webhooks](#list-channel-webhooks), and [Create webhook](#create-webhook) name a guild or a channel in their paths, so the availability gate applies. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) refuses an authenticated request with 403 `MISSING_ACCESS` before the operation runs. [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. The remaining management routes name only a webhook ID and are not gated.
 
 Fluxer scans a submitted webhook `name` against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`. The same lists scan the resolved content and embed text of a created or edited message, and a match returns the same code. The `avatar` member is exempt from that scan, and Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
 
@@ -1025,7 +1025,7 @@ The operation removes the webhook, frees its guild and channel webhook slot, and
 
 ## Token routes
 
-The ten routes below take the matching webhook ID and token in their paths as the complete credential. The `Authorization` header is neither required nor read on any of them.
+The routes below take the matching webhook ID and token in their paths as the complete credential. The `Authorization` header is neither required nor read on any of them.
 
 ## Get webhook with token
 

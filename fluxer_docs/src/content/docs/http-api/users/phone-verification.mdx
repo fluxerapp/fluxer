@@ -89,7 +89,7 @@ Keep phone numbers, verification codes, and challenge codes out of logs, analyti
 
 <sup>3</sup> The threshold is 100 for `US` and `CA`, 70 for `GB`, `DE`, `FR`, `IT`, `ES`, `NL`, `SE`, `NO`, `DK`, `FI`, `AU`, `NZ`, `JP`, `KR`, `CH`, `AT`, `BE`, `IE`, and `PT`, and 35 for every other country and for a lookup reporting no country
 
-Only [Send phone verification](#send-phone-verification) converts an inbound verdict into a challenge. [Verify phone code](#verify-phone-code) refuses the same three verdicts with 400 `INVALID_PHONE_NUMBER`.
+Only [Send phone verification](#send-phone-verification) converts an inbound verdict into a challenge. [Verify phone code](#verify-phone-code) refuses the same verdicts with 400 `INVALID_PHONE_NUMBER`.
 
 ## Inbound challenge reason values
 
@@ -122,7 +122,7 @@ Confirmation that the SMS provider accepted a one-time code for delivery. [Send 
 
 ## Inbound challenge object
 
-The instructions for texting a code to Fluxer, returned by [Send phone verification](#send-phone-verification) when policy routed the attempt inbound. `channel` tells the two response shapes apart.
+The instructions for texting a code to Fluxer, returned by [Send phone verification](#send-phone-verification) when policy routed the attempt inbound. `channel` tells the response shapes apart.
 
 ### Structure
 
@@ -310,7 +310,7 @@ On the 429, `X-RateLimit-Scope` reports `shared` when a number-scoped provider t
 
 ### Side effects
 
-Fluxer marks the account as holding a verified phone. It then clears every phone requirement from the stored suspicious activity bitfield: `REQUIRE_VERIFIED_PHONE`, `REQUIRE_REVERIFIED_PHONE`, the four combined email-or-phone requirements, `REQUIRE_INBOUND_PHONE_VERIFICATION`, and the marker deferring a phone requirement until the account joins a qualifying community guild. Email-only requirements remain, so an account that also owes email verification stays restricted.
+Fluxer marks the account as holding a verified phone. It then clears every phone requirement from the stored suspicious activity bitfield: `REQUIRE_VERIFIED_PHONE`, `REQUIRE_REVERIFIED_PHONE`, the combined email-or-phone requirements, `REQUIRE_INBOUND_PHONE_VERIFICATION`, and the marker deferring a phone requirement until the account joins a qualifying community guild. Email-only requirements remain, so an account that also owes email verification stays restricted.
 
 Fluxer clears the spammer flag when present and dispatches [User Update](/gateway/events/#user-update). When the spammer flag was cleared, Fluxer also dispatches [Guild Member Update](/gateway/events/#guild-member-update) for the account in every guild it belongs to, before the HTTP response returns.
 

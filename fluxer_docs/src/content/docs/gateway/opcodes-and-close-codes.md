@@ -134,7 +134,7 @@ Close `4007` follows one rule for [Heartbeat](/gateway/commands/#heartbeat) and 
 
 Heartbeat tests the value's type alone, and only once a session is attached. Before Identify or Resume attaches one, the Gateway accepts every `d` and answers with Opcode 11. With a session attached, the Gateway accepts a `d` that is `null` or any integer, and every other value closes with `4007`. A sequence below the acknowledged sequence leaves that bound unchanged, and any other integer sets it and trims the replay buffer. A heartbeat that arrives in the short window between the session process ending and the socket noticing also closes with `4007`.
 
-Resume tests two bounds and its `seq` must clear both.
+Resume tests the bounds below and its `seq` must clear both.
 
 - The current sequence. A `seq` above the last sequence the session dispatched closes with `4007`.
 - The acknowledged sequence. A `seq` below the last acknowledged sequence closes with `4007`. A heartbeat with a higher sequence moves this bound.

@@ -36,13 +36,13 @@ A key with a different segment count, a non-numeric channel segment, an empty co
 
 Fluxer checks the scope segment against the resolved channel. A guild-scoped key whose resolved channel is private returns 400 `STREAM_KEY_SCOPE_MISMATCH`, and so does a `dm` key whose resolved channel belongs to a guild. A guild-scoped key whose guild segment is not the resolved channel's guild returns the same code.
 
-The route then compares the channel segment against the resolved channel ID, and a mismatch returns 400 `STREAM_KEY_CHANNEL_MISMATCH`. On the two routes that have a body `channel_id`, a caller MUST send the same value in the body and in the key.
+The route then compares the channel segment against the resolved channel ID, and a mismatch returns 400 `STREAM_KEY_CHANNEL_MISMATCH`. On the routes that have a body `channel_id`, a caller MUST send the same value in the body and in the key.
 
 That comparison is the last check of the read boundary. Channel lookup, the scope check, the channel type check, and the `CONNECT` check all run first, so a body `channel_id` naming a channel the caller cannot see answers 404 `UNKNOWN_CHANNEL` or 403.
 
 ## Access rules
 
-Two boundaries apply across this page.
+The boundaries below apply across this page.
 
 Read access matches [Get channel](/http-api/channels/#get-channel) for the [resolved channel](#stream-key). A guild channel also requires the [CONNECT](/http-api/permissions/) permission. The caller does not have to own the stream, so any member who can join the channel can read its preview.
 

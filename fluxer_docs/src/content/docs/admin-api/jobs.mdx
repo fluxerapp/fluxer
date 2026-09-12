@@ -15,7 +15,7 @@ A large share of Fluxer's background work never gets a ledger row, and that work
 :::
 
 :::note[Fan-out, embeds, and most sweeps have no ledger row]
-Mention fan-out (`handleMentions` and `handleMentionChunk`), embed extraction (`extractEmbeds`), and every periodic sweep other than the three blocklist feed syncs run this way.
+Mention fan-out (`handleMentions` and `handleMentionChunk`), embed extraction (`extractEmbeds`), and every periodic sweep other than the blocklist feed syncs run this way.
 :::
 
 ## Admin job object
@@ -48,7 +48,7 @@ One object is one row of the ledger. No operation on this page changes any field
 | payload<sup>11</sup> | ?string | The JSON rendering of the job input |
 | result | ?string | Always null |
 
-<sup>1</sup> The task reports progress at its own pace, and a task that never reports leaves all three null for its whole run. A bulk task reports once before it starts, again after every 25 entities, and once when it finishes, except for `schedule_user_deletion`, which reports after every 10 accounts, and the file SHA bulk ban, which reports after every 50 hashes
+<sup>1</sup> The task reports progress at its own pace, and a task that never reports leaves all null for its whole run. A bulk task reports once before it starts, again after every 25 entities, and once when it finishes, except for `schedule_user_deletion`, which reports after every 10 accounts, and the file SHA bulk ban, which reports after every 50 hashes
 
 <sup>2</sup> Written only when the job is dead-lettered. A single failed delivery that is redelivered leaves it null
 
@@ -94,7 +94,7 @@ One object is one row of the ledger. No operation on this page changes any field
 
 ## Job cursor object
 
-The resume point [List jobs](#list-jobs) returns, split into the three cursor query parameters a caller sends back.
+The resume point [List jobs](#list-jobs) returns, split into the cursor query parameters a caller sends back.
 
 ### Structure
 
@@ -126,7 +126,7 @@ The resume point [List jobs](#list-jobs) returns, split into the three cursor qu
 
 <sup>1</sup> Only a task that aborts at the checkpoint settles here, as [Cancel job](#cancel-job) describes
 
-`queued` and `running` are the active statuses and the other three are terminal. [List active jobs](#list-active-jobs) returns exactly the two active statuses. Cancellation is recorded only while a job holds one of them.
+`queued` and `running` are the active statuses and the other three are terminal. [List active jobs](#list-active-jobs) returns exactly the active statuses. Cancellation is recorded only while a job holds one of them.
 
 A job whose queue publish fails after its ledger row is written also settles as `deadletter`. That row reports `attempts` 0, `started_at` null, and `error_message` from the publish failure.
 
@@ -152,7 +152,7 @@ A lane is a consumer group with its own concurrency, acknowledgement deadline, a
 - `lifecycle` runs `applicationProcessDeletion`, `batchGuildAuditLogMessageDeletes`, `bulkAddGuildMembers`, `bulkBanFileShas`, `bulkDeleteSelfMessagesImmediate`, `bulkDeleteUserMessages`, `bulkDeleteUserMessagesScoped`, `bulkScheduleUserDeletion`, `bulkUpdateGuildFeatures`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateUserFlags`, `deleteUserMessagesInGuildByTime`, `finalizeNcmecAttachmentReport`, `harvestGuildData`, `harvestUserData`, `messageShred`, `processStripeWebhook`, `reconcileUserPayments`, `revalidateUserConnections`, `sendSystemDm`, `userProcessPendingDeletion`, and `userProcessPendingDeletions`.
 - `batch` runs `expireAttachments`, `flushUserActivityBuffer`, `indexChannelMessages`, `indexGuildMembers`, `processAssetDeletionQueue`, `processBunnyPurgeQueue`, `processExpiredPremiumSweep`, `processInactivityDeletions`, `processPendingBulkMessageDeletions`, `processPremiumStateReconciliationQueue`, `prunePostgresKvTtl`, `refreshSearchIndex`, `syncDiscoveryIndex`, `syncDisposableEmailDomains`, `syncFileShaBlocklists`, and `syncUrlBlocklists`.
 
-The five tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/).
+The tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/).
 
 ## List jobs
 
@@ -175,7 +175,7 @@ The ledger is bucketed by UTC day and each bucket is ordered by creation time de
 | task_type?<sup>3</sup> | string | The [background job task type](#background-job-task-types) a returned job must run (1-128 characters) |
 | requested_by_user_id? | snowflake | The ID of the account a returned job must record as its requester |
 
-<sup>1</sup> The three cursor parameters are one value split into parts and are supplied together. A strict subset, a `cursor_bucket_day` that is not a calendar date, or a `cursor_created_at` that is not an ISO 8601 timestamp returns 400 `INVALID_FORM_BODY`, and each rejected part is named by the `path` of an element in `errors`
+<sup>1</sup> The cursor parameters are one value split into parts and are supplied together. A strict subset, a `cursor_bucket_day` that is not a calendar date, or a `cursor_created_at` that is not an ISO 8601 timestamp returns 400 `INVALID_FORM_BODY`, and each rejected part is named by the `path` of an element in `errors`
 
 <sup>2</sup> The scan covers the starting bucket plus this many earlier buckets, so the default reads 15. The starting bucket is the current UTC day, or the cursor's bucket when one is supplied
 
@@ -193,7 +193,7 @@ The ledger is bucketed by UTC day and each bucket is ordered by creation time de
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The job page was returned |
-| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the cursor is a strict subset of its three parts or one part is malformed |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the cursor is a strict subset of its parts or one part is malformed |
 
 ### Rate limit
 

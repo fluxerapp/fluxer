@@ -340,7 +340,7 @@ The returned `authorization_url` is the configured provider authorisation endpoi
 
 <sup>1</sup> Fluxer sanitises the value before binding it to the state and discards a value that does not survive, which the [SSO completion response](#sso-completion-response-object) reports as the empty string. Sanitisation keeps the trimmed value only when it begins with a single `/`, is at most 2,048 characters, and contains no carriage return or line feed
 
-<sup>2</sup> The two accepted values are the instance default reported as `redirect_uri` by [get SSO status](#get-sso-status) and the mobile callback `fluxer://auth/sso/callback`, and any other value returns the field code `INVALID_URL_FORMAT`. The accepted value is bound to the state and reused at the token exchange
+<sup>2</sup> The accepted values are the instance default reported as `redirect_uri` by [get SSO status](#get-sso-status) and the mobile callback `fluxer://auth/sso/callback`, and any other value returns the field code `INVALID_URL_FORMAT`. The accepted value is bound to the state and reused at the token exchange
 
 ### Response
 
@@ -533,7 +533,7 @@ Login verifies CAPTCHA when CAPTCHA is enabled. It also permits 10 attempts per 
 An unknown email address and an incorrect password both return the same paired field codes `INVALID_EMAIL_OR_PASSWORD` on `email` and `password`.
 :::
 
-A new client IP address on an account that has neither a second factor nor the app store reviewer flag returns 403 `IP_AUTHORIZATION_REQUIRED`. That error body has `ip_authorization_required` set to true, the `ticket` used by the three IP authorisation operations, the account `email`, and `resend_available_in` set to 30 seconds.
+A new client IP address on an account that has neither a second factor nor the app store reviewer flag returns 403 `IP_AUTHORIZATION_REQUIRED`. That error body has `ip_authorization_required` set to true, the `ticket` used by the IP authorisation operations, the account `email`, and `resend_available_in` set to 30 seconds.
 
 When the instance has disabled new-IP authorisation or sends no email, Fluxer authorises the client IP address silently and the login continues. An account that already has a second factor never enters IP authorisation.
 
@@ -869,7 +869,7 @@ Password recovery verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both
 <sup>1</sup> An address whose domain has no usable DNS records returns the field code `INVALID_EMAIL_ADDRESS`, while an address that passes DNS validation but belongs to no account returns the ordinary success response
 
 :::note[Account existence is not disclosed]
-An address that resolves to no account produces the same 204 response as an address that resolves to an ordinary account. Only DNS validation failure, the route bucket, the two extra allowances, and an address belonging to a bot account can produce a different outcome.
+An address that resolves to no account produces the same 204 response as an address that resolves to an ordinary account. Only DNS validation failure, the route bucket, the extra allowances, and an address belonging to a bot account can produce a different outcome.
 :::
 
 ### Response

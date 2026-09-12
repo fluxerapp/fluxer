@@ -34,7 +34,7 @@ The error code determines which supplementary members a failure has, and most co
 
 Fluxer answers a field-level failure with 400 and a top-level `errors` array. Each element identifies one failed input field. The [validation error object](/http-api/#validation-error-object) documents the element shape.
 
-A boundary schema validates one of four request targets: the JSON body, the form body, the query string, and the path parameters. A failure on any of them returns the top-level code `INVALID_FORM_BODY`, and each element has a `code` drawn from the [validation error code registry](#validation-error-code-registry) together with a localised `message`.
+A boundary schema validates one of the request targets: the JSON body, the form body, the query string, and the path parameters. A failure on any of them returns the top-level code `INVALID_FORM_BODY`, and each element has a `code` drawn from the [validation error code registry](#validation-error-code-registry) together with a localised `message`.
 
 An operation can also report against a named field without the boundary schema. That failure returns `INVALID_FORM_BODY` as well. Its element has an enumerated `code` and localised `message` when the failure declares a registry code. Otherwise it has a fixed English `message` written at the failure site and no `code`. Every element `code` a client observes is a registry value.
 
@@ -62,7 +62,7 @@ The `path` of an element is the dot-joined position of the failed value, so a ne
 An empty or whitespace-only body becomes `{}`, so the response reports the fields the schema then finds missing. A body that does not parse as JSON returns 400 `INVALID_FORM_BODY` with one element at path `body` and code `INVALID_FORMAT`.
 :::
 
-Fluxer normalises empty values on all four targets before validation runs. An empty string becomes `null` wherever it appears, including inside an array element. A nested object becomes `null` when it holds no members. It also becomes `null` when every one of its members is `null` after Fluxer has applied the same rule to each of them. The top-level object itself is never replaced, so a request that sends nothing still reaches the schema as an object and fails on the fields the schema requires.
+Fluxer normalises empty values on all targets before validation runs. An empty string becomes `null` wherever it appears, including inside an array element. A nested object becomes `null` when it holds no members. It also becomes `null` when every one of its members is `null` after Fluxer has applied the same rule to each of them. The top-level object itself is never replaced, so a request that sends nothing still reaches the schema as an object and fails on the fields the schema requires.
 
 :::caution[An enumerated validation failure answers 400 alone]
 A validation failure whose elements have enumerated codes answers 400 with its elements in `errors`. Its top-level code is `INVALID_FORM_BODY` everywhere except [Modify current user settings](/http-api/users/settings/#modify-current-user-settings). Any other status, retry guidance, or response header from the original failure is dropped.
@@ -116,7 +116,7 @@ Every `4xx` response to a request that resolved no authenticated user contribute
 
 Fluxer records a second signal of weight 1 for a credential that fails to resolve. A request that presents an unrecognised token and is answered 401 contributes both. That signal also records a hash of the credential presented, and Fluxer tracks the number of distinct hashes seen for one IP identity beside the score.
 
-The score and the credential hashes accumulate inside a fixed window, and the window restarts once it elapses. Two triggers fire an automatic ban. The credential trigger fires the first time the count of distinct rejected credentials reaches its threshold. The score trigger fires only after the score has crossed its threshold in three separate windows, which is the default. Both thresholds depend on the address classification, which is datacentre, anonymising, mobile, or residential. An unclassified address takes the residential thresholds. Fluxer never bans a mobile address automatically.
+The score and the credential hashes accumulate inside a fixed window, and the window restarts once it elapses. The triggers below fire an automatic ban. The credential trigger fires the first time the count of distinct rejected credentials reaches its threshold. The score trigger fires only after the score has crossed its threshold in three separate windows, which is the default. Both thresholds depend on the address classification, which is datacentre, anonymising, mobile, or residential. An unclassified address takes the residential thresholds. Fluxer never bans a mobile address automatically.
 
 :::caution[An automatic ban answers every request for 24 hours]
 The window length, both thresholds, and the number of windows the score trigger requires are instance configuration. A tripped ban lasts 24 hours by default. While it holds, Fluxer answers every request from that identity with 403 and the code `GLOBAL_IP_TEMPORARILY_BANNED`.

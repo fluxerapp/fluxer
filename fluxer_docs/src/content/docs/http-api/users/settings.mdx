@@ -6,7 +6,7 @@ description: Account-wide settings, guild folders, notification settings, and vo
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-User settings are the stored preferences of one account. Fluxer keeps them in two records: the account-wide [user settings object](/http-api/users/#user-settings-object), and a [user guild settings object](#user-guild-settings-object) for each guild and for private channels.
+User settings are the stored preferences of one account. Fluxer keeps them in these records: the account-wide [user settings object](/http-api/users/#user-settings-object), and a [user guild settings object](#user-guild-settings-object) for each guild and for private channels.
 
 Every route here is user-only and rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`. Every route except [Get current user settings](#get-current-user-settings) also rejects an account with an outstanding required action, with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
@@ -184,9 +184,9 @@ Neither field is read outside a guild. A direct message and a group DM collect o
 
 The input form of the [user settings object](/http-api/users/#user-settings-object). Every field is optional, and an omitted field leaves the stored value unchanged. A field present with a value overwrites the stored value in full, including an array or object member.
 
-The three staff-only fields are the exception. Every update resets `suppress_unprivileged_self_mentions`, `suppress_unprivileged_self_mentions_bypass_user_ids`, and `staff_dm_access_user_ids` to false, empty, and empty for an ordinary account, including an update that names none of them.
+The staff-only fields are the exception. Every update resets `suppress_unprivileged_self_mentions`, `suppress_unprivileged_self_mentions_bypass_user_ids`, and `staff_dm_access_user_ids` to false, empty, and empty for an ordinary account, including an update that names none of them.
 
-Two further members are accepted and ignored. `guild_positions` is an array of at most 200 guild snowflakes, and nothing reads it. `default_share_voice_activity` belongs to [Modify voice activity sharing](#modify-voice-activity-sharing).
+Further members are accepted and ignored. `guild_positions` is an array of at most 200 guild snowflakes, and nothing reads it. `default_share_voice_activity` belongs to [Modify voice activity sharing](#modify-voice-activity-sharing).
 
 ### Structure
 

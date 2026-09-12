@@ -14,7 +14,7 @@ Every route on this page is user-only. Bot and OAuth2 credentials are rejected.
 
 ## Access rules
 
-Four routes share one boundary. [Get call eligibility](#get-call-eligibility), [Modify call region](#modify-call-region), [Ring call recipients](#ring-call-recipients), and [Stop ringing call recipients](#stop-ringing-call-recipients) each resolve the channel named by the path parameter first, then apply the same three checks in order.
+The routes below share one boundary. [Get call eligibility](#get-call-eligibility), [Modify call region](#modify-call-region), [Ring call recipients](#ring-call-recipients), and [Stop ringing call recipients](#stop-ringing-call-recipients) each resolve the channel named by the path parameter first, then apply the same checks in order.
 
 Fluxer answers 404 `UNKNOWN_CHANNEL` for a channel ID that names no channel. A channel that exists but is neither a direct message nor a group direct message returns 400 `INVALID_CHANNEL_TYPE_FOR_CALL`. That type check runs before the membership check, so any authenticated account can learn that an arbitrary channel exists whenever that channel is not a private channel.
 
@@ -30,7 +30,7 @@ A private call has no moderator and no permission overwrites. No account other t
 
 Silencing another participant happens in the client. A client MAY mute a participant or change per-participant volume. The client MUST keep each setting local to the listening device, so neither reaches the Gateway or any other participant.
 
-Two operations on this page name another recipient. [Ring call recipients](#ring-call-recipients) adds named recipients to the ringing set of a call, and [Stop ringing call recipients](#stop-ringing-call-recipients) removes them from it. Any current recipient MAY call either one. Neither changes anything for a recipient who has already connected, and neither writes a voice state.
+The operations below name another recipient. [Ring call recipients](#ring-call-recipients) adds named recipients to the ringing set of a call, and [Stop ringing call recipients](#stop-ringing-call-recipients) removes them from it. Any current recipient MAY call either one. Neither changes anything for a recipient who has already connected, and neither writes a voice state.
 
 ## Call eligibility object
 

@@ -1,10 +1,10 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Fluxer API
-description: The four Fluxer protocol surfaces and the contracts they share.
+description: The Fluxer protocol surfaces and the contracts they share.
 ---
 
-Fluxer is a self-hostable chat platform. Its API has four surfaces, and all four share one identifier space.
+Fluxer is a self-hostable chat platform. Its API has the surfaces below, and they all share one identifier space.
 
 - To build a client or a bot, start with the [HTTP API](/http-api/) and the [Gateway](/gateway/overview/).
 - For voice or a screen share, read [Voice](/voice/).
@@ -22,14 +22,14 @@ Fluxer is a self-hostable chat platform. Its API has four surfaces, and all four
 
 A client mutates a resource over the HTTP API and receives the resulting update as a Gateway [Dispatch](/gateway/events/). Each operation states the Dispatches it fires, and [Events](/gateway/events/) defines each payload and its recipient scope.
 
-A [snowflake](/snowflakes/) is the identifier all four surfaces share. Voice runs on LiveKit, and [Voice](/voice/) defines the placement protocol and the media transport.
+A [snowflake](/snowflakes/) is the identifier all surfaces share. Voice runs on LiveKit, and [Voice](/voice/) defines the placement protocol and the media transport.
 
 ## Shared contracts
 
 | Read this | For |
 | --- | --- |
 | [Conventions](/conventions/) | Wire table notation, footnotes, omission and `null` |
-| [Authentication](/authentication/) | The `Authorization` grammar and the four credential kinds |
+| [Authentication](/authentication/) | The `Authorization` grammar and the credential kinds |
 | [Snowflakes](/snowflakes/) | Identifiers, ordering, and pagination cursors |
 | [Errors](/http-api/errors/) | The error envelope and the code registries |
 | [Rate limits](/topics/rate-limits/) | Buckets, the 429 body, and the `X-RateLimit-*` headers |
@@ -60,4 +60,4 @@ GET https://api.example.com/v1/users/@me
 Authorization: flx_ZDb1GURItsMuYl1zvrgxv2qLBxyNmgNSEaWT
 ```
 
-That credential is a user session token. [Log in with a password](/http-api/authentication/#log-in-with-a-password) issues one. A bot sends a bot token with the `Bot` prefix, issued by [Create application](/http-api/applications/#create-application). [Authentication](/authentication/) gives the exact form of all four kinds.
+That credential is a user session token. [Log in with a password](/http-api/authentication/#log-in-with-a-password) issues one. A bot sends a bot token with the `Bot` prefix, issued by [Create application](/http-api/applications/#create-application). [Authentication](/authentication/) gives the exact form of each kind.

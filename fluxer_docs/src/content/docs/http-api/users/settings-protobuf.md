@@ -46,7 +46,7 @@ The `SyncedPreferences` message is the root of the snapshot. Every field is a pr
 | Field | Type | Description |
 | --- | --- | --- |
 | accessibility? | [accessibility settings](#accessibility-settings-object) object | Accessibility, display, motion, media, and interaction preferences |
-| accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Dirty flags for three media settings, with no live consumer |
+| accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Dirty flags for media settings, with no live consumer |
 | textual_preview? | [textual preview settings](#textual-preview-settings-object) object | Textual preview wrapping preferences |
 | emoji_picker? | [emoji picker state](#emoji-picker-state-object) object | Emoji picker usage, favourites, and collapsed categories |
 | sticker_picker? | [sticker picker state](#sticker-picker-state-object) object | Sticker picker usage, favourites, and collapsed categories |
@@ -207,7 +207,7 @@ Field numbers 42 and 43 are reserved, together with the names `attachment_media_
 
 ## Accessibility overrides object
 
-The `accessibility_overrides` field holds three dirty flags that no live surface reads or writes. The settings they name also appear in [accessibility settings](#accessibility-settings-object) as a `mobile_*_overridden` flag with a matching `mobile_*_value`.
+The `accessibility_overrides` field holds dirty flags that no live surface reads or writes. The settings they name also appear in [accessibility settings](#accessibility-settings-object) as a `mobile_*_overridden` flag with a matching `mobile_*_value`.
 
 ### Structure
 
@@ -418,7 +418,7 @@ One entry names one grouping in the favourites view. The client chooses the iden
 
 ## Recent mentions settings object
 
-The `recent_mentions` field controls which mentions appear in the recent mentions view. The three filters combine, and `include_guilds` selects by channel.
+The `recent_mentions` field controls which mentions appear in the recent mentions view. The filters combine, and `include_guilds` selects by channel.
 
 ### Structure
 
@@ -468,7 +468,7 @@ The `unread_channels` field stores which channels are collapsed in the unread vi
 
 ## Mention frecency state object
 
-The `mention_frecency` field records how often and how recently the account mentioned each user, one record set per guild, so a client can rank mention autocomplete without a server call. It nests two messages, `MentionFrecencyState.Scope` and `MentionFrecencyState.Entry`.
+The `mention_frecency` field records how often and how recently the account mentioned each user, one record set per guild, so a client can rank mention autocomplete without a server call. It nests the messages `MentionFrecencyState.Scope` and `MentionFrecencyState.Entry`.
 
 ### Structure
 
@@ -770,7 +770,7 @@ The `sudo_prompt` field stores the verification method the account used most rec
 | --- | --- | --- |
 | last_used_mfa_method?<sup>1</sup> | int32 | [MFA method](#mfa-methods) most recently used for sudo verification |
 
-<sup>1</sup> The two assigned values correspond to `totp` and `webauthn` in `mfa_method` of the [sudo verification object](/http-api/users/mfa/#sudo-verification-object)
+<sup>1</sup> The assigned values correspond to `totp` and `webauthn` in `mfa_method` of the [sudo verification object](/http-api/users/mfa/#sudo-verification-object)
 
 ### MFA methods
 

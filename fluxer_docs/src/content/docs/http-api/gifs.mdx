@@ -32,7 +32,7 @@ Every response under `/gifs`, `/tenor`, and `/klipy` has these headers, includin
 | X-Fluxer-GIF-Provider-Display-Name<sup>1</sup> | string | The provider name a client displays |
 | X-Fluxer-GIF-Provider-Attribution-Required<sup>1</sup> | string | The literal `true` or `false`, stating whether a client shows the provider attribution mark |
 
-<sup>1</sup> All three are absent together while the instance has bound no provider key, which is the same condition that answers 403 `FEATURE_TEMPORARILY_DISABLED`
+<sup>1</sup> All are absent together while the instance has bound no provider key, which is the same condition that answers 403 `FEATURE_TEMPORARILY_DISABLED`
 
 ## Result freshness
 
@@ -126,7 +126,7 @@ To open the category, a client sends `name` as the `q` of [Search GIFs](#search-
 
 ## Deprecated vendor paths
 
-Two vendor-named prefixes serve the same handlers as `/gifs`. Each answers exactly as its successor does and has the same [provider headers](#provider-headers).
+The vendor-named prefixes serve the same handlers as `/gifs`. Each answers exactly as its successor does and has the same [provider headers](#provider-headers).
 
 | Method | Deprecated path | Successor |
 | --- | --- | --- |
@@ -142,7 +142,7 @@ Two vendor-named prefixes serve the same handlers as `/gifs`. Each answers exact
 | POST | `/v1/klipy/register-share` | [Register a GIF share](#register-a-gif-share) |
 
 :::caution[The vendor prefixes spell trending differently]
-Trending is `/trending` under `/gifs` and `/trending-gifs` under both vendor prefixes. The other paths keep the same last segment on all three prefixes.
+Trending is `/trending` under `/gifs` and `/trending-gifs` under both vendor prefixes. The other paths keep the same last segment on all prefixes.
 :::
 
 A response from a deprecated path has these further headers.

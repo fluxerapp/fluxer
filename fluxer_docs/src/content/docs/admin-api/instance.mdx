@@ -130,7 +130,7 @@ How often a client polls [Get experiment assignments](/http-api/experiments/#get
 
 Every field is present on read. A deployment that has stored nothing reports the defaults above.
 
-Both fields are served to every account, whether or not any experiment targets that account, and neither one is versioned by `config_version`. A client that has never reached the experiments route holds the same two values as built-in defaults, 300 seconds and 15 percent, so neither field reaches a client that cannot read the route.
+Both fields are served to every account, whether or not any experiment targets that account, and neither one is versioned by `config_version`. A client that has never reached the experiments route holds the same values as built-in defaults, 300 seconds and 15 percent, so neither field reaches a client that cannot read the route.
 
 ## Registration configuration object
 
@@ -257,7 +257,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 | direct_messages_locked<sup>1</sup> | boolean | Whether the direct message setting is locked against further change |
 | premium_mode | string | [Premium mode](#premium-modes) |
 | services | object | Operator overrides for `gif_enabled`, `youtube_enabled`, and `bluesky_enabled`. Each is nullable, and null means no override |
-| services_resolved<sup>2</sup> | object | The same three keys as concrete booleans, resolved from the override and the provider's own availability |
+| services_resolved<sup>2</sup> | object | The same keys as concrete booleans, resolved from the override and the provider's own availability |
 | services_available<sup>3</sup> | object | Provider availability for `gif`, `youtube`, and `bluesky`, with no operator override applied |
 | deferred_phone_gate | [deferred phone gate](#deferred-phone-gate-object) object | Delayed phone verification policy |
 
@@ -449,7 +449,7 @@ Trait definitions and the ordered rules that decide each [limit key](/http-api/i
 | traitDefinitions | array[string] | Trait names a rule filter can match |
 | rules | array[[limit rule](#limit-rule-object) object] | Ordered limit rules |
 
-The two field names are camelCase, unlike the rest of the Admin API.
+The field names are camelCase, unlike the rest of the Admin API.
 
 ## Limit rule object
 
@@ -535,7 +535,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 <sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
 
 :::note[Single sign-on URL validation is conditional]
-Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source. `issuer` stands in for the two endpoints and the claims source.
+Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source. `issuer` stands in for the endpoints and the claims source.
 :::
 
 #### Instance policy update structure

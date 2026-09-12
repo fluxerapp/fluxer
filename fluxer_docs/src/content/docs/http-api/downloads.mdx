@@ -10,9 +10,9 @@ The download resource serves the desktop application builds a deployment has sto
 
 ## Prefix and mounting
 
-Fluxer registers the routes under `/dl`, and the six desktop routes under `/dl/desktop`. A client builds the URL against `api_client` from the [instance endpoints object](/http-api/instance/#instance-endpoints-object).
+Fluxer registers the routes under `/dl`, and the desktop routes under `/dl/desktop`. A client builds the URL against `api_client` from the [instance endpoints object](/http-api/instance/#instance-endpoints-object).
 
-The prefix mounts at the root and at `/v1`, so `/v1/dl/desktop/...` resolves for the six routes that name their own segments.
+The prefix mounts at the root and at `/v1`, so `/v1/dl/desktop/...` resolves for the routes that name their own segments.
 
 :::caution[The catch-all has no `/v1` form]
 [Download stored object](#download-stored-object) builds its storage key from the raw request path and keeps only a path beginning `/dl`. A request to `/v1/dl/...` returns 404 while the same path without that prefix returns the object.
@@ -22,7 +22,7 @@ Every other route on this reference takes the `/v1` form, and [HTTP API](/http-a
 
 ## Methods
 
-Every route answers `GET`. The two checksum routes, the two artifact routes, and the catch-all also bind `HEAD`. [Get latest desktop version](#get-latest-desktop-version) and [List desktop versions](#list-desktop-versions) bind `GET` alone, and a `HEAD` still reaches them under the [shared rule for HEAD](/http-api/#request-format).
+Every route answers `GET`. The checksum routes, the artifact routes, and the catch-all also bind `HEAD`. [Get latest desktop version](#get-latest-desktop-version) and [List desktop versions](#list-desktop-versions) bind `GET` alone, and a `HEAD` still reaches them under the [shared rule for HEAD](/http-api/#request-format).
 
 A `HEAD` on either JSON route runs the same resolution as the `GET` and returns its status and headers with no body. It can therefore answer 404.
 
@@ -185,7 +185,7 @@ A release feed filename is any of these:
 
 ## Redirects
 
-Two deployment settings answer a download with 302.
+The deployment settings below answer a download with 302.
 
 A deployment that reports `self_hosted` false on the [instance features object](/http-api/instance/#instance-features-object) and configures a country list for GitHub redirects resolves the caller's country on every `desktop/` artifact request. When a complete and verified release descriptor names the file, a caller in a listed country receives 302 to that GitHub release asset. Every other outcome streams from storage, and every response under this setting has `Cache-Control: private, no-store`.
 
@@ -199,7 +199,7 @@ The client follows `Location` to read the file. Fluxer produces the redirect bef
 
 Every route accepts `test` as a query parameter. The value `1` or `true`, matched without regard to case, resolves the object against the `desktop-test/` storage prefix. Any other value is read as false.
 
-On the six desktop routes the flag replaces the prefix outright. On [Download stored object](#download-stored-object) it rewrites a key beginning `desktop/` and leaves any other key unchanged, and a path that already names `desktop-test/` resolves there with no flag at all.
+On the desktop routes the flag replaces the prefix outright. On [Download stored object](#download-stored-object) it rewrites a key beginning `desktop/` and leaves any other key unchanged, and a path that already names `desktop-test/` resolves there with no flag at all.
 
 A `url` and a `checksum_url` built for a request that sent the flag repeat `?test=1`, so a client following either one stays on the test prefix.
 
@@ -502,10 +502,10 @@ Streams one stored object addressed by its storage key. A release feed file has 
 | 206 | object bytes | The requested byte range was streamed |
 | 302 | empty | The deployment [redirects](#redirects) this download |
 | 400 | [error response](/http-api/#error-response) | The `test` value fails its schema and the request returns `INVALID_FORM_BODY` |
-| 404 | `Not Found` | The key is outside the two permitted prefixes, the request has the `/v1` prefix, or storage holds no such object |
+| 404 | `Not Found` | The key is outside the permitted prefixes, the request has the `/v1` prefix, or storage holds no such object |
 | 416 | empty | The requested range is unsatisfiable |
 
-:::caution[The catch-all reaches two prefixes only]
+:::caution[The catch-all reaches the permitted prefixes only]
 A key that does not begin `desktop/` or `desktop-test/` returns 404 before Fluxer reads storage.
 :::
 

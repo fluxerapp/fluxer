@@ -42,7 +42,7 @@ Every operation that returns Admin message objects also returns the matching pub
 | attachments | array[[Admin message attachment](#admin-message-attachment-object) object] | The attachments of the message (at most 10) |
 | user_prior_ncmec_report_ids?<sup>3</sup> | array[string] | The NCMEC report IDs previously filed against the author, ascending (at most 100) |
 
-<sup>1</sup> Every object in one response has the same values, taken from the channel named in the request path or query. All five are null when the channel no longer exists
+<sup>1</sup> Every object in one response has the same values, taken from the channel named in the request path or query. All are null when the channel no longer exists
 
 <sup>2</sup> Always absent from the objects these operations return. The same member is set on the [report message context object](/admin-api/reports/#report-message-context-object)
 
@@ -285,7 +285,7 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with t
 
 Searches the message index of one channel, or resolves one message in that channel by message ID or by attachment identity. Requires `message:lookup`.
 
-The three modes return two different response bodies, and the query decides which one arrives.
+The modes return a search body or a lookup body, and the query decides which one arrives.
 
 ### Query parameters
 
@@ -339,7 +339,7 @@ Returned when `message_id` or `attachment_id` was supplied. It is the same body 
 
 The result is empty for an unknown channel, for a message that does not exist, and for an attachment whose filename does not match. This operation never answers 404.
 
-With no message search service configured the search mode returns an empty `messages` array and `total` zero. The two lookup modes are unaffected.
+With no message search service configured the search mode returns an empty `messages` array and `total` zero. The lookup modes are unaffected.
 
 :::note[A deleted message never appears in a result]
 A hit whose message no longer exists is dropped from the page and excluded from `total`.
@@ -381,7 +381,7 @@ Shred jobs are created by [Shred user messages](/admin-api/users/#shred-user-mes
 
 Submits one image or video attachment to NCMEC and starts the account enforcement workflow for its author. Requires `csam:submit_ncmec`, `message:delete`, `user:delete`, and `archive:trigger:user`.
 
-A caller missing more than one of the four is refused with 403 `MISSING_ACL` naming the first it does not hold, in the order listed. The wildcard satisfies all four.
+A caller missing more than one of the four is refused with 403 `MISSING_ACL` naming the first it does not hold, in the order listed. The wildcard satisfies them all.
 
 This operation ignores `X-Audit-Log-Reason`. The reason on every audit entry the workflow produces is built from the assigned NCMEC report ID and the channel and attachment IDs, and it is returned as `audit_log_reason`.
 

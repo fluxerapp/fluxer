@@ -34,7 +34,7 @@ Create application, redeem gift, create private channel, and add group direct me
 
 ## Exemption
 
-Two exemptions skip the challenge. Fluxer tests both before it reads the token. A request that passes either one proceeds as though the instance had no provider configured.
+The exemptions below skip the challenge. Fluxer tests both before it reads the token. A request that passes either one proceeds as though the instance had no provider configured.
 
 The instance account policy grants the `captcha_exempt` capability to a contact address. A policy rule matches the address itself or the domain it belongs to, so one grant can cover a whole domain. Fluxer tests the capability against the resolved account's email address alone. An unauthenticated request never matches this exemption.
 

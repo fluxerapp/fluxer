@@ -34,11 +34,11 @@ The Gateway refuses a session start for draining, capacity, paused starts, the r
 
 ## Session start limit
 
-[`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) returns a [session start limit](/http-api/gateway/#session-start-limit-object) object for client compatibility. Its four values are constants. Admission is bounded by the source IP Identify budget, the per-user session count, the node's concurrent session-start bucket, and the rollout percentage.
+[`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) returns a [session start limit](/http-api/gateway/#session-start-limit-object) object for client compatibility. Its values are constants. Admission is bounded by the source IP Identify budget, the per-user session count, the node's concurrent session-start bucket, and the rollout percentage.
 
 ## Connection and command rate limits
 
-A Gateway node running with `FLUXER_DISABLE_RATE_LIMITS` set to `1`, `true`, or `TRUE` disables nine budgets together:
+A Gateway node running with `FLUXER_DISABLE_RATE_LIMITS` set to `1`, `true`, or `TRUE` disables these budgets together:
 
 - Connection payload budget
 - Session payload budget
@@ -54,7 +54,7 @@ The figures below are the enforced defaults.
 
 One WebSocket accepts 600 client payloads in a rolling 60-second window. One authenticated session accepts 600 client payloads in each fixed 60-second bucket. One source IP address accepts 6,000 client payloads in each fixed 60-second bucket. Exceeding any of these budgets closes the current connection with `4008` and reason `Rate limited`.
 
-Fluxer evaluates the three payload budgets before any command-specific budget. The session budget is skipped while the connection is unauthenticated.
+Fluxer evaluates the payload budgets before any command-specific budget. The session budget is skipped while the connection is unauthenticated.
 
 One source IP address holds 256 concurrent Gateway WebSockets. A further connection closes with `4008` and reason `Too many connections` before Hello is sent.
 

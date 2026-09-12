@@ -242,7 +242,7 @@ The operation returns 200 whenever the top-level request was valid, including wh
 
 A decoded image that is oversized, undecodable, in an unaccepted format, or matching a banned file hash fails one item.
 
-:::note[Two blocklist screens run with different floors]
+:::note[The blocklist screens run with different floors]
 The global body screen runs before the batch starts and ignores strings shorter than 3 characters, so a blocked string there fails the whole request. The per-item scan applies the same blocklist with no floor, and only a shorter match becomes an item failure.
 :::
 

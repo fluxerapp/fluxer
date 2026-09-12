@@ -10,10 +10,10 @@ A guild member is an account that has joined a guild. The membership has a nickn
 
 A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`. An existing guild where the caller is not a member returns 403 `MISSING_PERMISSIONS`. Fluxer refuses a guild an operator has marked unavailable with 403 `MISSING_ACCESS` before the route runs. [Transfer guild ownership](#transfer-guild-ownership) is the one exception to the 404, and returns 403 `ACCESS_DENIED` for a guild whose record survives without a Gateway process.
 
-The two modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
+The modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
 
 :::note[Fluxer reads the target before authorising the caller]
-A request whose target is not a member returns 404 `UNKNOWN_MEMBER` whether or not the caller can see the guild. The rule covers the two modify operations, [Remove guild member](#remove-guild-member), [Add guild member role](#add-guild-member-role), and [Remove guild member role](#remove-guild-member-role).
+A request whose target is not a member returns 404 `UNKNOWN_MEMBER` whether or not the caller can see the guild. The rule covers the modify operations, [Remove guild member](#remove-guild-member), [Add guild member role](#add-guild-member-role), and [Remove guild member role](#remove-guild-member-role).
 :::
 
 ## Guild member object
@@ -76,7 +76,7 @@ A client compares `communication_disabled_until` against the current time, becau
 
 ## Guild member profile flags
 
-A guild profile asset has three states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below blocks inheritance and renders the default.
+A guild profile asset has these states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below blocks inheritance and renders the default.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -115,7 +115,7 @@ The request body shared by [Modify current guild member](#modify-current-guild-m
 
 <sup>3</sup> Base64 image data with an optional data URL prefix, which is not counted
 
-<sup>4</sup> One of the three [reply mention preference](/http-api/users/#reply-mention-preferences) enum values, where 0 restores the account-level preference
+<sup>4</sup> One of the [reply mention preference](/http-api/users/#reply-mention-preferences) enum values, where 0 restores the account-level preference
 
 <sup>5</sup> Stored on the membership, so it applies whether or not the member holds a voice connection
 
@@ -497,7 +497,7 @@ The guild owner receives 404 `UNKNOWN_ROLE` for a role that does not exist in th
 
 ### Side effects
 
-When the member does not already hold the role, the operation adds it and makes a temporary membership permanent. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update). All four run whether or not the role set changed. A request naming a role the member already holds still writes an audit entry with an empty change list, published without a `changes` member.
+When the member does not already hold the role, the operation adds it and makes a temporary membership permanent. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update). These all run whether or not the role set changed. A request naming a role the member already holds still writes an audit entry with an empty change list, published without a `changes` member.
 
 The audit log response names the role only through the change list.
 
@@ -541,7 +541,7 @@ Removes one role from a member and returns 204 with an empty body. Requires memb
 
 ### Side effects
 
-When the member holds the role, the operation removes it. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update). All four run whether or not the role set changed. Removing a role does not change whether the membership is temporary.
+When the member holds the role, the operation removes it. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update). These all run whether or not the role set changed. Removing a role does not change whether the membership is temporary.
 
 ### Rate limit
 

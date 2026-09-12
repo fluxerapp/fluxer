@@ -116,7 +116,7 @@ A connection cannot change its compression stream after the upgrade. Changing it
 
 ## Signalling state machine
 
-A connection moves through five states: Opening, Unauthenticated, Starting, Replaying, and Ready. The tables below give every event a state accepts, the action it triggers, and the state it lands in. Heartbeat is accepted in every open state, and Closed is terminal for that WebSocket.
+A connection moves through these states: Opening, Unauthenticated, Starting, Replaying, and Ready. The tables below give every event a state accepts, the action it triggers, and the state it lands in. Heartbeat is accepted in every open state, and Closed is terminal for that WebSocket.
 
 ### Opening
 
@@ -248,7 +248,7 @@ Opcode 6 supplies the original token, the Ready `session_id`, and the last proce
 
 A successful Resume replays every retained Dispatch above `seq` in order and ends with [Resumed](/gateway/events/#resumed).
 
-All three fields are required. A missing field, a `token` or `session_id` that is not a string, or a `seq` that is not an integer closes with `4002` and reason `Invalid resume payload`.
+All fields are required. A missing field, a `token` or `session_id` that is not a string, or a `seq` that is not an integer closes with `4002` and reason `Invalid resume payload`.
 
 The Gateway retains a disconnected session for 60,000 ms. An accepted `seq` is no greater than the session's current sequence and no less than the sequence the session has already acknowledged. A `seq` outside either bound closes with `4007` and reason `Invalid sequence`.
 

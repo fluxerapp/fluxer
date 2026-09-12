@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A donation is a one-off or recurring payment, taken on an externally hosted checkout page. Fluxer tracks it by email address, and it grants no [premium](/http-api/premium/). [Billing](/http-api/billing/) defines the payment provider webhook that completes one.
 
-None of the three routes here takes a credential, and all three are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. A valid credential presented anyway keys the rate limit to the account.
+None of the routes here takes a credential, and all are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. A valid credential presented anyway keys the rate limit to the account.
 
 Fluxer uses a submitted address exactly as written and matches a donor by exact equality, so `Donor@example.com` and `donor@example.com` address two different donors.
 

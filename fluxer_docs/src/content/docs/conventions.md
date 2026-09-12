@@ -136,7 +136,7 @@ A `json` example shows one valid or representative wire value, and a `text` exam
 
 Inside inline code, angle brackets mark descriptive placeholder text standing for a real value, as in `Bot <token>` or `attachment://<filename>`. An ellipsis inside a JSON string value leaves out content the example does not need to show. Where inline code quotes an exact response body, the brackets are part of the literal value.
 
-A note states a consequence or a relationship to another rule. A caution states a detail a client would otherwise get wrong. That covers a contract that breaks the opposite assumption, a value the client must keep confidential, and an effect that cannot be undone. A danger is reserved for an outcome that destroys stored data, files an external report, revokes every credential on an account, or discloses a credential no later operation can return. All three are binding.
+A note states a consequence or a relationship to another rule. A caution states a detail a client would otherwise get wrong. That covers a contract that breaks the opposite assumption, a value the client must keep confidential, and an effect that cannot be undone. A danger is reserved for an outcome that destroys stored data, files an external report, revokes every credential on an account, or discloses a credential no later operation can return. All are binding.
 
 ## Independent protocol surfaces
 

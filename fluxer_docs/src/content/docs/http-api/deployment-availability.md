@@ -54,7 +54,7 @@ Without a provider client, the answer depends on the operation. An operation tha
 | POST | /v1/premium/cancel-pending-subscription-change | [Cancel pending subscription change](/http-api/premium/#cancel-pending-subscription-change) |
 | POST | /v1/premium/visionary/rejoin | [Rejoin Visionary guild](/http-api/premium/#rejoin-visionary-guild) |
 
-<sup>1</sup> These two are the only `/users/@me` routes a self-hosted deployment does not serve
+<sup>1</sup> These are the only `/users/@me` routes a self-hosted deployment does not serve
 
 <sup>2</sup> The webhook takes no credential and is authenticated by the provider signature header alone
 

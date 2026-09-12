@@ -292,7 +292,7 @@ Returns the [RTC region objects](#rtc-region-object) the authenticated user can 
 - The caller needs the same access as [Get channel](#get-channel).
 - The channel must be a guild voice channel.
 
-Fluxer returns a region only when the caller passes every restriction configured for it and at least one active voice server in that region is also accessible to the caller. The array can be empty. [Placement eligibility](/admin-api/voice/#placement-eligibility) states the four stored fields those restrictions come from.
+Fluxer returns a region only when the caller passes every restriction configured for it and at least one active voice server in that region is also accessible to the caller. The array can be empty. [Placement eligibility](/admin-api/voice/#placement-eligibility) states the stored fields those restrictions come from.
 
 :::note[An unconfigured deployment skips the channel check]
 On a deployment that configures no voice topology, a missing channel, an invisible channel, and a non-voice channel all return 200 with `[]`.
@@ -362,7 +362,7 @@ The stored channel type selects the body variant, and a `type` field in the requ
 
 #### Guild channel body
 
-Every field is optional, and an omitted field preserves its current value. The four guild variants share one field set, and a field the stored type does not own is accepted and discarded.
+Every field is optional, and an omitted field preserves its current value. The guild variants share one field set, and a field the stored type does not own is accepted and discarded.
 
 | Field | Type | Description |
 | --- | --- | --- |

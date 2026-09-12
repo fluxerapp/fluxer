@@ -8,7 +8,7 @@ description: Upgrading and rolling back an instance with the installer, what the
 We are grateful to everyone supporting the project through [Fluxer Plutonium](https://fluxer.app/plutonium) or [donations](https://fluxer.app/donate). All of our code is free and open source on [GitHub](https://github.com/fluxerapp/fluxer). The Operator Pass is coming, and adds a direct line to the team for help and feedback.
 :::
 
-An upgrade moves an instance to a newer release. `install.sh --update` does all of it: back up, download the new stack files, pull the new images, recreate the containers that changed. The stack files are the three compose files, the `Caddyfile` and `.env.example`. Allow about twenty minutes, most of it the backup and the pull.
+An upgrade moves an instance to a newer release. `install.sh --update` does all of it: back up, download the new stack files, pull the new images, recreate the containers that changed. The stack files are the compose files, the `Caddyfile` and `.env.example`. Allow about twenty minutes, most of it the backup and the pull.
 
 | Requirement | Value |
 | --- | --- |
@@ -33,7 +33,7 @@ The repository holds no ref by the name of a pinned image tag. A release tags ea
 | --- | --- |
 | Mint | Writes any key the refreshed stack requires that `.env` does not hold, listed under [Run the upgrade](#run-the-upgrade) |
 | Record | Writes the image references, the image ID each container has, and the tag `.env` names, into a new record directory |
-| Save | Copies `.env` and the five stack files into that record |
+| Save | Copies `.env` and the stack files into that record |
 | Dump | Dumps the database with the stack still serving, and checks the custom-format header on the result |
 | Copy | Stops the stack, copies the uploads volume, and starts it again on the images it was already running |
 | Fetch | Downloads the stack files at the ref into a staging directory inside the working directory |
@@ -79,7 +79,7 @@ Every step above sits in the script beside a comment holding the command that do
 
 ## Keep a local compose change
 
-The Place step replaces all five stack files with the copies at the ref. An edit made directly in `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile` is gone once that step runs. The run prints one line for the whole step and never names the files it replaced. `--dry-run` names every one of them, as `changes`, `unchanged` or `is new`.
+The Place step replaces all the stack files with the copies at the ref. An edit made directly in `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile` is gone once that step runs. The run prints one line for the whole step and never names the files it replaced. `--dry-run` names every one of them, as `changes`, `unchanged` or `is new`.
 
 The supported way to hold a local choice is a separate file, listed in `COMPOSE_FILE` in `.env`:
 
@@ -87,7 +87,7 @@ The supported way to hold a local choice is a separate file, listed in `COMPOSE_
 COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
 ```
 
-Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the five stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those five files, and no other file from the working directory. An override file is never backed up with them, so keep it wherever the rest of the configuration lives.
+Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those files, and no other file from the working directory. An override file is never backed up with them, so keep it wherever the rest of the configuration lives.
 
 `.env` needs no such file. The only value either upgrade mode replaces there is `FLUXER_IMAGE_TAG`, and the Mint step adds a required key the file does not hold at all.
 
@@ -180,7 +180,7 @@ wss://chat.example.com/livekit
 
 Only the path is wrong. `docker-compose.yml` derives `https://chat.example.com/livekit` when `.env` sets no `FLUXER_LIVEKIT_URL`, and the client rewrites a leading `http` to `ws` itself, so `https` and `wss` both work.
 
-The address browsers dial is a column on a voice server row in the database. No upgrade migrates that row, and it is corrected in two places.
+The address browsers dial is a column on a voice server row in the database. No upgrade migrates that row, and it is corrected in the places below.
 
 First `.env`. When it sets `FLUXER_LIVEKIT_URL`, put the new path in that line and run `docker compose up -d api`. `api` writes that value onto the default voice server row at every start, so a row corrected in the dashboard while `.env` still names the old path goes back to the old path on the next restart. Removing the line is also correct, and Compose then derives the URL from `FLUXER_PUBLIC_ORIGIN`, or from the scheme and the domain.
 
@@ -198,9 +198,9 @@ Each upgrade writes one record directory, named `record-` and a UTC stamp, under
 | `seaweedfs-data.tgz` | Every upload, avatar, report and harvest |
 | `.env` | Every secret the instance was built with |
 
-The five stack files sit in the record beside them, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
+The stack files sit in the record beside them, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
 
-Nothing else is copied. The dump covers `postgres-data`. The other five volumes either rebuild themselves or hold queued work, and [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists all seven with what each one holds.
+Nothing else is copied. The dump covers `postgres-data`. The other volumes either rebuild themselves or hold queued work, and [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists them all with what each one holds.
 
 Put a dump on a timer as well. On Linux and macOS, this crontab line writes one a night and keeps two weeks of them:
 
@@ -223,9 +223,9 @@ FLUXER_S3_REGION=eu-central-1
 FLUXER_S3_FORCE_PATH_STYLE=false
 ```
 
-`FLUXER_S3_PUBLIC_ENDPOINT` follows `FLUXER_S3_ENDPOINT` when it is not set on its own, and the credentials stay `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`. `FLUXER_S3_BUCKET_CDN`, `FLUXER_S3_BUCKET_UPLOADS`, `FLUXER_S3_BUCKET_DOWNLOADS`, `FLUXER_S3_BUCKET_REPORTS` and `FLUXER_S3_BUCKET_HARVESTS` name the five buckets. The bundled object store creates whichever names they hold, and a store outside the stack needs those buckets to exist already.
+`FLUXER_S3_PUBLIC_ENDPOINT` follows `FLUXER_S3_ENDPOINT` when it is not set on its own, and the credentials stay `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`. `FLUXER_S3_BUCKET_CDN`, `FLUXER_S3_BUCKET_UPLOADS`, `FLUXER_S3_BUCKET_DOWNLOADS`, `FLUXER_S3_BUCKET_REPORTS` and `FLUXER_S3_BUCKET_HARVESTS` name the buckets. The bundled object store creates whichever names they hold, and a store outside the stack needs those buckets to exist already.
 
-`FLUXER_KV_URL`, `FLUXER_NATS_URL`, `FLUXER_SEARCH_URL` and `FLUXER_LIVEKIT_INTERNAL_URL` move the other four bundled services the same way, and `FLUXER_NATS_JETSTREAM_URL` and `FLUXER_SVC_NATS_URL` follow `FLUXER_NATS_URL` when they are not set on their own.
+`FLUXER_KV_URL`, `FLUXER_NATS_URL`, `FLUXER_SEARCH_URL` and `FLUXER_LIVEKIT_INTERNAL_URL` move the other bundled services the same way, and `FLUXER_NATS_JETSTREAM_URL` and `FLUXER_SVC_NATS_URL` follow `FLUXER_NATS_URL` when they are not set on their own.
 
 Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. Take it out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
 
@@ -319,7 +319,7 @@ Run `sh install.sh --update` afterwards to finish the move on the refreshed file
 
 A pinned instance also pins its stack files. [Match the images to the stack files](#match-the-images-to-the-stack-files) has the `--ref` a pinned tag needs.
 
-The tag applies only to the eleven Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs` and `livekit` are pinned in `docker-compose.yml`, and they move only when an upgrade refreshes that file.
+The tag applies only to the Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs` and `livekit` are pinned in `docker-compose.yml`, and they move only when an upgrade refreshes that file.
 
 ## Change the domain or the passkey relying party
 
