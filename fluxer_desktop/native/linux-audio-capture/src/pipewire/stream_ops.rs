@@ -274,11 +274,12 @@ fn handle_param_changed(user_data: &mut DirectUserData, id: u32, param: Option<&
     }
 }
 
-fn decode_f32_into_scratch(raw_payload: &[u8], scratch: &mut [f32; MAX_FRAME_SAMPLES]) -> usize {
-    let sample_count = raw_payload.len() / mem::size_of::<f32>();
-    let take = sample_count.min(MAX_FRAME_SAMPLES);
+fn decode_f32_into_scratch(raw_payload: &[u8], byte_offset: usize, scratch: &mut [f32]) -> usize {
+    let available = raw_payload.len().saturating_sub(byte_offset);
+    let sample_count = available / mem::size_of::<f32>();
+    let take = sample_count.min(scratch.len());
     let mut written = 0usize;
-    let mut iter = raw_payload.chunks_exact(mem::size_of::<f32>());
+    let mut iter = raw_payload[byte_offset..].chunks_exact(mem::size_of::<f32>());
     for slot in scratch.iter_mut().take(take) {
         let Some(chunk) = iter.next() else {
             break;
@@ -293,40 +294,45 @@ pub(crate) fn process_audio_chunk(user_data: &mut DirectUserData, payload: &[u8]
     let Ok(mut scratch_guard) = user_data.scratch.lock() else {
         return;
     };
-    let written = decode_f32_into_scratch(payload, &mut scratch_guard);
-    if written == 0 {
-        return;
-    }
     let channels = user_data.format.channels().max(1);
-    let aligned = audio_contract::whole_frame_sample_count(written, channels);
-    if aligned == 0 {
+    if channels == 0 {
         return;
-    }
-    if let Ok(mut apm_guard) = user_data.apm.lock() {
-        let _ = apm_guard.process_in_place(&mut scratch_guard[..aligned]);
     }
     let now_ns = user_data.clock.now_ns();
-    if now_ns > 0 {
-        user_data.last_push_ns.store(now_ns, Ordering::Release);
-    }
-    if let Ok(guard) = user_data.screen_audio_sink.read()
-        && let Some(sink) = guard.as_ref()
-    {
-        let frames = aligned as u32 / channels;
-        if frames > 0 {
-            sink.enqueue_screen_audio_f32(
-                &scratch_guard[..aligned],
-                frames,
-                channels,
-                user_data.format.rate(),
-                (now_ns / 1_000) as i64,
-            );
+    let mut byte_offset = 0usize;
+    loop {
+        let written = decode_f32_into_scratch(payload, byte_offset, &mut scratch_guard[..]);
+        if written == 0 {
+            break;
         }
-        return;
-    }
-    if let Ok(mut samples_guard) = user_data.samples.lock() {
-        let now_us = (now_ns / 1_000) as i64;
-        samples_guard.push(&scratch_guard[..aligned], now_us);
+        byte_offset += written * mem::size_of::<f32>();
+        let aligned = audio_contract::whole_frame_sample_count(written, channels);
+        if aligned == 0 {
+            break;
+        }
+        if let Ok(mut apm_guard) = user_data.apm.lock() {
+            let _ = apm_guard.process_in_place(&mut scratch_guard[..aligned]);
+        }
+        if now_ns > 0 {
+            user_data.last_push_ns.store(now_ns, Ordering::Release);
+        }
+        if let Ok(guard) = user_data.screen_audio_sink.read()
+            && let Some(sink) = guard.as_ref()
+        {
+            let frames = aligned as u32 / channels;
+            if frames > 0 {
+                sink.enqueue_screen_audio_f32(
+                    &scratch_guard[..aligned],
+                    frames,
+                    channels,
+                    user_data.format.rate(),
+                    (now_ns / 1_000) as i64,
+                );
+            }
+        } else if let Ok(mut samples_guard) = user_data.samples.lock() {
+            let now_us = (now_ns / 1_000) as i64;
+            samples_guard.push(&scratch_guard[..aligned], now_us);
+        }
     }
 }
 
