@@ -69,6 +69,10 @@ const COMPONENTS: &[Component] = &[
         services: &["messages", "messages-shard"],
     },
     Component {
+        image: "fluxer-recon",
+        services: &[],
+    },
+    Component {
         image: "fluxer-snowflakes",
         services: &["snowflakes", "snowflakes-shard"],
     },

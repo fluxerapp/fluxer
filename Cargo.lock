@@ -1867,6 +1867,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "fluxer-recon"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64",
+ "fluxer-svc",
+ "hmac 0.13.0",
+ "reqwest",
+ "scylla",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "thiserror",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "fluxer-snowflakes"
 version = "0.1.0"
 dependencies = [

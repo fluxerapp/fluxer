@@ -114,7 +114,6 @@ import type {UserContactChangeLogService} from '../user/services/UserContactChan
 import {UserDeletionEligibilityService} from '../user/services/UserDeletionEligibilityService';
 import {UserHarvestRepository} from '../user/UserHarvestRepository';
 import type {UserPermissionUtils} from '../utils/UserPermissionUtils';
-import {VoiceReconciliationWorker} from '../voice/VoiceReconciliationWorker';
 import type {VoiceRepository} from '../voice/VoiceRepository';
 import type {VoiceTopology} from '../voice/VoiceTopology';
 import type {WorkerTaskName} from './WorkerLaneConfig';
@@ -165,7 +164,6 @@ export interface WorkerDependencies {
 	voiceRoomStore: IVoiceRoomStore;
 	liveKitService: ILiveKitService;
 	voiceTopology: VoiceTopology | null;
-	voiceReconciliationWorker: VoiceReconciliationWorker | null;
 	channelService: ChannelService;
 	guildAuditLogService: GuildAuditLogService;
 	contactChangeLogService: UserContactChangeLogService;
@@ -231,25 +229,8 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const voiceRoomStore = getVoiceRoomStoreInstance() ?? new InMemoryVoiceRoomStore();
 	const liveKitService = getLiveKitServiceInstance() ?? new DisabledLiveKitService();
 	const voiceAvailabilityService = getVoiceAvailabilityService();
-	const voiceReconciliationEnabled = Config.worker.enableVoiceReconciliation;
-	const voiceReconciliationWorker =
-		Config.voice.enabled && voiceTopology !== null && voiceReconciliationEnabled
-			? new VoiceReconciliationWorker({
-					gatewayService,
-					liveKitService,
-					voiceRoomStore,
-					kvClient,
-					logger: Logger,
-					intervalMs: Config.worker.voiceReconciliation.intervalMs,
-					staggerDelayMs: Config.worker.voiceReconciliation.staggerDelayMs,
-					lockTtlSeconds: Config.worker.voiceReconciliation.lockTtlSeconds,
-					cadenceTtlSeconds: Config.worker.voiceReconciliation.cadenceTtlSeconds,
-					gatewayOnlyGraceMs: Config.worker.voiceReconciliation.gatewayOnlyGraceMs,
-					liveKitOnlyGraceMs: Config.worker.voiceReconciliation.liveKitOnlyGraceMs,
-				})
-			: null;
 	if (Config.voice.enabled && voiceTopology !== null) {
-		Logger.info({reconciliationEnabled: voiceReconciliationEnabled}, 'Voice services initialized');
+		Logger.info('Voice services initialized');
 	}
 	const inviteRepository = getInviteRepository();
 	const webhookRepository = getWebhookRepository();
@@ -337,7 +318,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		voiceRoomStore,
 		liveKitService,
 		voiceTopology,
-		voiceReconciliationWorker,
 		channelService,
 		guildService,
 		donationRepository,
@@ -347,12 +327,4 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		ncmecSubmissionService,
 		stripe,
 	};
-}
-
-export async function shutdownWorkerDependencies(deps: WorkerDependencies): Promise<void> {
-	Logger.info('Shutting down worker dependencies...');
-	if (deps.voiceReconciliationWorker !== null) {
-		await deps.voiceReconciliationWorker.stop();
-	}
-	Logger.info('Worker dependencies shut down successfully');
 }
