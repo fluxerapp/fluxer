@@ -185,25 +185,6 @@ export class LiveKitWebhookService {
 				{guildId: context.guildId.toString(), channelId: context.channelId.toString()},
 				'Cleared guild voice room server pinning',
 			);
-			try {
-				const result = await this.gatewayService.disconnectAllVoiceUsersInChannel({
-					guildId: context.guildId,
-					channelId: context.channelId,
-				});
-				Logger.info(
-					{
-						guildId: context.guildId.toString(),
-						channelId: context.channelId.toString(),
-						disconnectedCount: result.disconnectedCount,
-					},
-					'Cleaned up zombie voice connections for finished room',
-				);
-			} catch (error) {
-				Logger.error(
-					{error, guildId: context.guildId.toString(), channelId: context.channelId.toString()},
-					'Failed to clean up voice connections for finished room',
-				);
-			}
 		}
 	}
 
