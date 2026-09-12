@@ -21,6 +21,7 @@ import type {
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
+import type {AuthMfaMethod} from '../../../../../packages/schema/src/domains/auth/AuthSchemas';
 
 const logger = new Logger('AuthService');
 const withAuthLocaleHeader = (headers?: Record<string, string>): Record<string, string> => ({
@@ -62,9 +63,7 @@ interface StandardLoginResponse extends AuthTokenResponse {
 interface MfaLoginResponse {
 	mfa: true;
 	ticket: string;
-	totp: boolean;
-	webauthn: boolean;
-	allowed_methods?: Array<string>;
+	allowed_methods?: Array<AuthMfaMethod>;
 }
 
 type LoginResponse = StandardLoginResponse | MfaLoginResponse;

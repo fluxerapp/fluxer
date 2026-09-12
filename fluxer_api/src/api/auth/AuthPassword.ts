@@ -8,7 +8,11 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
-import type {ForgotPasswordRequest, ResetPasswordRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import type {
+	AuthMfaMethod,
+	ForgotPasswordRequest,
+	ResetPasswordRequest,
+} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms, seconds} from 'itty-time';
 import type {ApiContext} from '../ApiContext';
 import {createMfaTicket, createPasswordResetToken} from '../BrandedTypes';
@@ -93,9 +97,7 @@ type ResetPasswordResult =
 	| {
 			mfa: true;
 			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
+			allowed_methods: Array<AuthMfaMethod>;
 	  };
 
 const pwnedPasswordCache = new PwnedPasswordCache(PWNED_PASSWORD_CACHE_MAX_PREFIXES, ms('1 hour'));
@@ -292,9 +294,7 @@ async function createMfaTicketResponse(
 ): Promise<{
 	mfa: true;
 	ticket: string;
-	allowed_methods: Array<string>;
-	totp: boolean;
-	webauthn: boolean;
+	allowed_methods: Array<AuthMfaMethod>;
 }> {
 	const {users, cache} = ctx.services;
 	const ticket = createMfaTicket(await AuthUtility.generateSecureToken(ctx));
@@ -302,14 +302,12 @@ async function createMfaTicketResponse(
 	const credentials = await users.listWebAuthnCredentials(user.id);
 	const hasWebauthn = credentials.length > 0;
 	const hasTotp = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
-	const allowedMethods: Array<string> = [];
+	const allowedMethods: Array<AuthMfaMethod> = [];
 	if (hasTotp) allowedMethods.push('totp');
 	if (hasWebauthn) allowedMethods.push('webauthn');
 	return {
 		mfa: true,
 		ticket: ticket,
 		allowed_methods: allowedMethods,
-		totp: hasTotp,
-		webauthn: hasWebauthn,
 	};
 }

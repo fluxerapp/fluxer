@@ -12,13 +12,12 @@ import {
 	type TestEmailRecord,
 	totpCodeNow,
 } from './AuthTestUtils';
+import type { AuthMfaMethod } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 
 interface MfaRequiredResponse {
 	mfa: true;
 	ticket: string;
-	allowed_methods: Array<string>;
-	totp: boolean;
-	webauthn: boolean;
+	allowed_methods: Array<AuthMfaMethod>;
 }
 
 async function waitForEmail(harness: ApiTestHarness, type: string, recipient: string): Promise<TestEmailRecord> {
@@ -64,8 +63,6 @@ describe('Auth reset password requires MFA', () => {
 			.execute();
 		expect(resetResp.mfa).toBe(true);
 		expect(resetResp.ticket).toBeDefined();
-		expect(resetResp.totp).toBe(true);
-		expect(resetResp.webauthn).toBe(false);
 		expect(resetResp.allowed_methods).toEqual(['totp']);
 		const mfaResp = await createBuilderWithoutAuth<{
 			token: string;
@@ -83,7 +80,6 @@ describe('Auth reset password requires MFA', () => {
 			.execute();
 		expect(login.mfa).toBe(true);
 		expect(login.ticket).toBeDefined();
-		expect(login.totp).toBe(true);
-		expect(login.webauthn).toBe(false);
+		expect(login.allowed_methods).toEqual(['totp']);
 	});
 });
