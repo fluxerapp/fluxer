@@ -33,6 +33,7 @@ import processPendingBulkMessageDeletions from './tasks/ProcessPendingBulkMessag
 import processPremiumStateReconciliationQueue from './tasks/ProcessPremiumStateReconciliationQueue';
 import processStripeWebhook from './tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from './tasks/PrunePostgresKvTtl';
+import recalculateAttachmentDecay from './tasks/RecalculateAttachmentDecay';
 import reconcileUserPayments from './tasks/ReconcileUserPayments';
 import refreshSearchIndex from './tasks/RefreshSearchIndex';
 import revalidateUserConnections from './tasks/RevalidateUserConnections';
@@ -60,6 +61,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
 	deleteUserMessagesInGuildByTime,
 	expireAttachments,
+	recalculateAttachmentDecay,
 	extractEmbeds,
 	finalizeNcmecAttachmentReport,
 	handleMentions,

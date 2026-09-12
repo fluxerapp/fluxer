@@ -305,9 +305,15 @@ export class MessageResponseDataService {
 				await this.connectionManager.connect();
 			}
 			const connection = this.connectionManager.getConnection();
+			const {getInstanceConfigRepository} = await import('../../../middleware/ServiceSingletons');
+			const attachmentDecayEnabled = await getInstanceConfigRepository().isAttachmentDecayEnabled();
+			const fullPayload = {
+				...payload,
+				attachment_decay_enabled: attachmentDecayEnabled,
+			};
 			const response = await connection.request(
 				MESSAGE_RESPONSE_SERVICE_SUBJECT,
-				this.codec.encode(JSON.stringify(payload)),
+				this.codec.encode(JSON.stringify(fullPayload)),
 				{timeout: MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS},
 			);
 			const decoded = this.codec.decode(response.data);
