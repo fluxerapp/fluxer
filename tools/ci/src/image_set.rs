@@ -446,25 +446,37 @@ fn run_promote(args: PromoteArgs) -> Result<()> {
         return Ok(());
     }
 
-    for other in COMPONENTS
-        .iter()
-        .filter(|other| other.image != component.image)
-    {
-        for tag in &tags {
-            inspect_digest(&format!("{}/{}:{tag}", args.registry, other.image)).with_context(
-                || {
-                    format!(
-                        "Refusing to advance {tag} for {}: {} has no published {tag} image; run the build-{} workflow first",
-                        component.image,
-                        other.image,
-                        workflow_suffix(other.image)
-                    )
-                },
-            )?;
-        }
+    for warning in unpublished_moving_tags(&args.registry, component.image, &tags, |reference| {
+        inspect_digest(reference).is_ok()
+    }) {
+        println!("warning: {warning}");
     }
 
     run_command(promote_command(&image, &digest, &tags))
+}
+
+fn unpublished_moving_tags<F>(
+    registry: &str,
+    component: &str,
+    tags: &[String],
+    mut published: F,
+) -> Vec<String>
+where
+    F: FnMut(&str) -> bool,
+{
+    let mut warnings = Vec::new();
+    for other in COMPONENTS.iter().filter(|other| other.image != component) {
+        for tag in tags {
+            if !published(&format!("{registry}/{}:{tag}", other.image)) {
+                warnings.push(format!(
+                    "{} has no published {tag} image, so {tag} stays an incomplete set until the build-{} workflow runs",
+                    other.image,
+                    workflow_suffix(other.image)
+                ));
+            }
+        }
+    }
+    warnings
 }
 
 fn write_release_files(out_dir: &Path, manifest: &ImageSetManifest) -> Result<()> {
@@ -1095,6 +1107,35 @@ mod tests {
                 &format!("ghcr.io/fluxerapp/fluxer-api@{digest}"),
             ]
         );
+    }
+
+    #[test]
+    fn unpublished_moving_tags_are_reported_without_blocking_the_promote() {
+        let tags = ["v1".to_string(), "latest".to_string()];
+        let complete = unpublished_moving_tags("ghcr.io/fluxerapp", "fluxer-docs", &tags, |_| true);
+        assert!(complete.is_empty());
+
+        let bootstrapping =
+            unpublished_moving_tags("ghcr.io/fluxerapp", "fluxer-docs", &tags, |reference| {
+                !reference.starts_with("ghcr.io/fluxerapp/fluxer-recon:")
+            });
+        assert_eq!(
+            bootstrapping,
+            [
+                "fluxer-recon has no published v1 image, so v1 stays an incomplete set until the build-recon workflow runs",
+                "fluxer-recon has no published latest image, so latest stays an incomplete set until the build-recon workflow runs",
+            ]
+        );
+    }
+
+    #[test]
+    fn unpublished_moving_tags_never_reports_the_component_being_promoted() {
+        let tags = ["v1".to_string()];
+        let warnings =
+            unpublished_moving_tags("ghcr.io/fluxerapp", "fluxer-recon", &tags, |reference| {
+                !reference.starts_with("ghcr.io/fluxerapp/fluxer-recon:")
+            });
+        assert!(warnings.is_empty());
     }
 
     #[test]
