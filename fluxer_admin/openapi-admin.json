@@ -11859,7 +11859,39 @@
 								},
 								"process_count": {"$ref": "#/components/schemas/Int32Type"},
 								"process_limit": {"$ref": "#/components/schemas/Int32Type"},
-								"uptime_seconds": {"$ref": "#/components/schemas/Int32Type"}
+								"uptime_seconds": {"$ref": "#/components/schemas/Int32Type"},
+								"cluster_metrics": {
+									"type": "object",
+									"properties": {
+										"gateway_cluster_member_count": {"$ref": "#/components/schemas/Int32Type"},
+										"gateway_cluster_discovery_resolve_failures_total": {"$ref": "#/components/schemas/Int32Type"},
+										"gateway_cluster_membership_transitions_total": {
+											"type": "object",
+											"properties": {
+												"up": {"$ref": "#/components/schemas/Int32Type"},
+												"down": {"$ref": "#/components/schemas/Int32Type"}
+											},
+											"required": ["up", "down"],
+											"additionalProperties": false
+										},
+										"gateway_node_router_owner_resolutions_total": {
+											"type": "object",
+											"properties": {
+												"self": {"$ref": "#/components/schemas/Int32Type"},
+												"peer": {"$ref": "#/components/schemas/Int32Type"}
+											},
+											"required": ["self", "peer"],
+											"additionalProperties": false
+										}
+									},
+									"required": [
+										"gateway_cluster_member_count",
+										"gateway_cluster_discovery_resolve_failures_total",
+										"gateway_cluster_membership_transitions_total",
+										"gateway_node_router_owner_resolutions_total"
+									],
+									"additionalProperties": false
+								}
 							},
 							"required": [
 								"node_id",

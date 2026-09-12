@@ -1140,6 +1140,20 @@ export const NodeStatsResponse = z.object({
 				process_count: Int32Type,
 				process_limit: Int32Type,
 				uptime_seconds: Int32Type,
+				cluster_metrics: z
+					.object({
+						gateway_cluster_member_count: Int32Type,
+						gateway_cluster_discovery_resolve_failures_total: Int32Type,
+						gateway_cluster_membership_transitions_total: z.object({
+							up: Int32Type,
+							down: Int32Type,
+						}),
+						gateway_node_router_owner_resolutions_total: z.object({
+							self: Int32Type,
+							peer: Int32Type,
+						}),
+					})
+					.optional(),
 			}),
 		)
 		.max(1000),
