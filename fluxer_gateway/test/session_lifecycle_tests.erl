@@ -286,23 +286,24 @@ handle_resume_replaces_existing_socket_test() ->
     end.
 
 handle_resume_restores_resume_status_after_offline_timer_test() ->
+    PresencePid = start_resume_presence_probe(self()),
     State0 = resume_test_state(#{
         seq => 1,
         buffer => [#{seq => 1, event => message_create, data => #{}}],
         status => offline,
         resume_status => dnd,
-        presence_pid => self()
+        presence_pid => PresencePid
     }),
     {reply, {ok, _Missed, 1}, State1} = session_lifecycle:handle_resume(0, self(), State0),
     ?assertEqual(dnd, maps:get(status, State1)),
     ?assertEqual(dnd, maps:get(resume_status, State1)),
     receive
-        {'$gen_call', {Worker, Tag}, {session_connect, PresenceUpdate}} ->
-            Worker ! {Tag, ok},
+        {presence_session_connect, PresenceUpdate} ->
             ?assertEqual(dnd, maps:get(status, PresenceUpdate))
     after 200 ->
         ?assert(false)
-    end.
+    end,
+    PresencePid ! stop.
 
 handle_resume_cancels_pending_offline_timer_test() ->
     Token = make_ref(),
@@ -350,21 +351,39 @@ handle_resume_reconnects_presence_when_owner_moved_test() ->
 
 handle_resume_refreshes_healthy_presence_attachment_test() ->
     SocketPid = spawn(fun resume_loop/0),
+    PresencePid = start_resume_presence_probe(self()),
     State0 = resume_test_state(#{
         seq => 1,
-        presence_pid => self(),
+        presence_pid => PresencePid,
         buffer => [#{seq => 1, event => message_create, data => #{}}]
     }),
     {reply, {ok, _Missed, 1}, State1} = session_lifecycle:handle_resume(0, SocketPid, State0),
-    ?assertEqual(self(), maps:get(presence_pid, State1)),
+    ?assertEqual(PresencePid, maps:get(presence_pid, State1)),
     receive
-        {'$gen_call', {Worker, Tag}, {session_connect, Req}} ->
-            Worker ! {Tag, ok},
+        {presence_session_connect, Req} ->
             ?assertEqual(<<"session-resume-test">>, maps:get(session_id, Req))
     after 1000 ->
         ?assert(false, healthy_resume_did_not_refresh_presence)
     end,
+    PresencePid ! stop,
     SocketPid ! stop.
+
+start_resume_presence_probe(SessionPid) ->
+    TestPid = self(),
+    spawn(fun() -> resume_presence_probe_loop(TestPid, SessionPid) end).
+
+resume_presence_probe_loop(TestPid, SessionPid) ->
+    receive
+        {'$gen_call', From, {has_session, <<"session-resume-test">>, SessionPid}} ->
+            gen_server:reply(From, true),
+            resume_presence_probe_loop(TestPid, SessionPid);
+        {'$gen_call', From, {session_connect, Req}} ->
+            TestPid ! {presence_session_connect, Req},
+            gen_server:reply(From, ok),
+            resume_presence_probe_loop(TestPid, SessionPid);
+        stop ->
+            ok
+    end.
 
 resume_loop() ->
     receive
