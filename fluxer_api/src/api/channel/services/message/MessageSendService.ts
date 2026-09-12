@@ -1355,6 +1355,7 @@ export class MessageSendService {
 			attachments: attachmentsToProcess,
 			attachmentUploadUserId: user.id,
 			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
 			messageReference,
 			messageSnapshots,
 			guildId: null,
