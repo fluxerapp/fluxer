@@ -130,7 +130,7 @@ pub fn run_command(args: &[&str], options: RunOptions<'_>) -> Result<Output> {
         .current_dir(options.cwd)
         .env_clear()
         .envs(env);
-    if options.capture {
+    let output = if options.capture {
         command.stdout(Stdio::piped()).stderr(Stdio::piped());
         let output = command
             .output()
@@ -142,27 +142,20 @@ pub fn run_command(args: &[&str], options: RunOptions<'_>) -> Result<Output> {
         if !text.trim_end().is_empty() {
             println!("{}", text.trim_end());
         }
-        if options.check && !output.status.success() {
-            let code = output.status.code().unwrap_or(-1);
-            bail!(
-                "Command failed with exit code {code}: {}",
-                format_command(args)
-            );
+        output
+    } else {
+        command
+            .stdin(Stdio::inherit())
+            .stdout(Stdio::inherit())
+            .stderr(Stdio::inherit());
+        let status = command
+            .status()
+            .with_context(|| format!("failed to run {}", format_command(args)))?;
+        Output {
+            status,
+            stdout: Vec::new(),
+            stderr: Vec::new(),
         }
-        return Ok(output);
-    }
-
-    command
-        .stdin(Stdio::inherit())
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit());
-    let status = command
-        .status()
-        .with_context(|| format!("failed to run {}", format_command(args)))?;
-    let output = Output {
-        status,
-        stdout: Vec::new(),
-        stderr: Vec::new(),
     };
     if options.check && !output.status.success() {
         let code = output.status.code().unwrap_or(-1);

@@ -60,6 +60,7 @@ catalog:
   '@lingui/swc-plugin': 5.11.0
   '@livekit/components-react': 2.9.20
   '@marsidev/react-turnstile': 1.4.2
+  '@mdx-js/mdx': 3.1.1
   '@messageformat/core': 3.4.0
   '@messageformat/parser': 5.1.1
   '@phosphor-icons/react': 2.1.10
@@ -79,6 +80,7 @@ catalog:
   '@types/hast': 3.0.5
   '@types/lodash': 4.17.24
   '@types/luxon': 3.7.1
+  '@types/mdast': 4.0.4
   '@types/node': 25.3.0
   '@types/nodemailer': 7.0.11
   '@types/pg': 8.16.0
@@ -127,6 +129,7 @@ catalog:
   luxon: 3.7.2
   match-sorter: 8.2.0
   maxmind: 5.0.5
+  mdast-util-mdx-jsx: 3.2.0
   mdast-util-to-hast: 13.2.1
   mime: 4.1.0
   mobx: 6.15.0
@@ -155,6 +158,7 @@ catalog:
   react-dom: 19.2.4
   react-hook-form: 7.71.2
   react-hotkeys-hook: 5.2.4
+  remark-gfm: 4.0.1
   rxjs: 7.8.2
   send: 1.2.1
   sharp: 0.35.4
@@ -171,6 +175,7 @@ catalog:
   typescript-eslint: 8.70.0
   uint8array-extras: 1.5.0
   undici: 7.29.0
+  undici-types: 7.18.2
   unique-names-generator: 4.7.1
   urlpattern-polyfill: 10.1.0
   valibot: 1.4.2

@@ -159,24 +159,6 @@ impl User {
             mention_flags: self.mention_flags,
         }
     }
-
-    pub fn to_api_partial(&self) -> ApiUserPartial {
-        if self.user_id == FLUXER_SYSTEM_USER_ID {
-            return fluxer_system_user();
-        }
-        ApiUserPartial {
-            id: self.user_id.to_string(),
-            username: self.username.clone(),
-            discriminator: format!("{:04}", self.discriminator),
-            global_name: self.global_name.clone(),
-            avatar: self.avatar_hash.clone(),
-            avatar_color: self.avatar_color,
-            bot: self.bot.filter(|bot| *bot),
-            system: self.system.filter(|system| *system),
-            flags: visible_user_flags(self.flags.unwrap_or_default()),
-            mention_flags: self.mention_flags.filter(|flags| *flags != 0),
-        }
-    }
 }
 
 impl UserPartial {
@@ -320,30 +302,10 @@ mod tests {
     }
 
     #[test]
-    fn direct_api_partial_matches_the_two_step_conversion() {
-        for user_id in [123, FLUXER_SYSTEM_USER_ID] {
-            for flags in [
-                0,
-                USER_FLAG_STAFF,
-                USER_FLAG_STAFF | USER_FLAG_STAFF_HIDDEN | USER_FLAG_PARTNER,
-                USER_FLAG_DELETED,
-            ] {
-                let user = user_with_flags(user_id, flags);
-
-                assert_eq!(
-                    serde_json::to_value(user.to_api_partial()).unwrap(),
-                    serde_json::to_value(user.to_partial().to_api_partial()).unwrap(),
-                    "user_id {user_id} flags {flags}"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn direct_api_partial_ignores_fields_outside_the_partial() {
+    fn api_partial_ignores_fields_outside_the_partial() {
         let mut user = user_with_flags(123, USER_FLAG_STAFF);
         user.mention_flags = Some(0);
-        let api_partial = user.to_api_partial();
+        let api_partial = user.to_partial().to_api_partial();
 
         assert_eq!(api_partial.id, "123");
         assert_eq!(api_partial.username, "Ada");

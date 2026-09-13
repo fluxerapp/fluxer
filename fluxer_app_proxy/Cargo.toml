@@ -10,6 +10,7 @@ anyhow = "1.0.104"
 axum = { version = "0.8.9", features = ["macros"] }
 base64 = "0.22"
 fluxer_common = { path = "../fluxer_common" }
+futures-util = { version = "0.3.32", default-features = false, features = ["std"] }
 hex = "0.4"
 rand = "0.10"
 reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "stream", "gzip", "brotli", "deflate"] }

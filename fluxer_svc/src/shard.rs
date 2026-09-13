@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::config::ServiceConfig;
-use crate::metrics::{ServiceMetrics, now_ms};
-use crate::transport::{Transport, TransportMessage, TransportSubscriber, reply_message};
+use crate::metrics::ServiceMetrics;
+use crate::transport::{
+    Transport, TransportMessage, TransportSubscriber, reply_bytes, reply_json_error,
+};
+use anyhow::Context;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tokio::sync::{Semaphore, TryAcquireError};
+use std::time::Instant;
+use tokio::sync::{Semaphore, TryAcquireError, oneshot};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
@@ -93,9 +97,14 @@ where
     let shard_is_serving = is_serving.clone();
     let shard_permits = request_permits.clone();
     let shard_metrics = metrics.clone();
-    tasks.spawn(async move {
-        loop {
-            let mut sub = shard_transport.subscribe(&shard_subject).await?;
+    let (stop_requests, mut stop_requests_rx) = oneshot::channel();
+    let request_task = tasks.spawn(async move {
+        let mut requests = JoinSet::new();
+        'listening: loop {
+            let mut sub = tokio::select! {
+                _ = &mut stop_requests_rx => break 'listening,
+                result = shard_transport.subscribe(&shard_subject) => result?,
+            };
             info!(
                 subject = shard_subject,
                 shard_id,
@@ -105,12 +114,23 @@ where
 
             loop {
                 tokio::select! {
+                    _ = &mut stop_requests_rx => break 'listening,
+                    result = requests.join_next(), if !requests.is_empty() => {
+                        if let Err(err) = result.expect("nonempty shard request set") {
+                            warn!(error = %err, "shard request task failed");
+                        }
+                    }
                     msg_opt = sub.next() => {
                         let Some(msg) = msg_opt else {
                             warn!("shard subscription stream ended, will re-subscribe");
                             break;
                         };
 
+                        while let Some(result) = requests.try_join_next() {
+                            if let Err(err) = result {
+                                warn!(error = %err, "shard request task failed");
+                            }
+                        }
                         if !shard_is_serving.load(Ordering::SeqCst) {
                             continue;
                         }
@@ -133,27 +153,25 @@ where
                                 debug!("shedding shard request, no permits available");
                                 shard_metrics.record_request();
                                 shard_metrics.record_request_error();
-                                reply_shard_error(&msg, &transport, "overloaded").await;
+                                reply_json_error(&msg, &transport, "overloaded").await;
                                 continue;
                             }
                             Err(TryAcquireError::Closed) => return anyhow::Ok(()),
                         };
-                        let raw_payload = msg.payload().to_vec();
-
-                        tokio::spawn(async move {
+                        requests.spawn(async move {
                             let _permit = permit;
                             if !is_serving.load(Ordering::SeqCst) {
                                 return;
                             }
-                            let request_start = now_ms();
+                            let request_start = Instant::now();
                             metrics.record_request();
-                            let encoding = WireEncoding::detect(&raw_payload);
-                            let request: S::Request = match encoding.decode(&raw_payload) {
+                            let encoding = WireEncoding::detect(msg.payload());
+                            let request: S::Request = match encoding.decode(msg.payload()) {
                                 Ok(r) => r,
                                 Err(err) => {
                                     warn!(error = %err, ?encoding, "failed to decode shard request");
                                     metrics.record_request_error();
-                                    reply_shard_error(&msg, &transport, "shard_request_decode_error")
+                                    reply_json_error(&msg, &transport, "shard_request_decode_error")
                                         .await;
                                     return;
                                 }
@@ -161,25 +179,20 @@ where
 
                             match service.handle(request).await {
                                 Ok(response) => {
-                                    let elapsed = (now_ms() - request_start).max(0) as u64;
-                                    metrics.record_request_duration(elapsed);
+                                    metrics.record_request_duration(request_start.elapsed().as_millis() as u64);
                                     if msg.has_reply() {
                                         match encoding.encode(&response) {
                                             Ok(response_bytes) => {
-                                                if let Err(err) =
-                                                    reply_message(&msg, &transport, &response_bytes).await
-                                                {
-                                                    debug!(
-                                                        error = %err,
-                                                        "failed to send shard reply"
-                                                    );
-                                                }
+                                                reply_bytes(&msg, &transport, &response_bytes).await;
                                             }
                                             Err(err) => {
                                                 warn!(
                                                     error = %err,
+                                                    ?encoding,
                                                     "failed to encode shard response"
                                                 );
+                                                metrics.record_request_error();
+                                                reply_json_error(&msg, &transport, "encode_error").await;
                                             }
                                         }
                                     }
@@ -187,20 +200,19 @@ where
                                 Err(err) => {
                                     warn!(error = %err, "shard handler returned error");
                                     metrics.record_request_error();
-                                    let elapsed = (now_ms() - request_start).max(0) as u64;
-                                    metrics.record_request_duration(elapsed);
-                                    reply_shard_error(&msg, &transport, "shard_handler_error").await;
+                                    metrics.record_request_duration(request_start.elapsed().as_millis() as u64);
+                                    reply_json_error(&msg, &transport, "shard_handler_error").await;
                                 }
                             }
                         });
                     }
-                    _ = shard_transport.wait_for_reconnect() => {
-                        info!("NATS reconnected, re-subscribing shard listener");
-                        break;
-                    }
                 }
             }
         }
+        while let Some(result) = requests.join_next().await {
+            result.context("shard request task failed while draining")?;
+        }
+        anyhow::Ok(())
     });
 
     tokio::select! {
@@ -217,34 +229,38 @@ where
 
             is_serving.store(false, Ordering::SeqCst);
 
-            let max_permits = config.max_concurrent_requests;
-            let drain_permits = request_permits.clone();
-            crate::shutdown::drain_with_timeout(
-                async move {
-                    if let Ok(_permit) = drain_permits.acquire_many(max_permits as u32).await {
-                        info!(
-                            max_concurrent_requests = max_permits,
-                            "all in-flight requests drained"
-                        );
+            let _ = stop_requests.send(());
+            let drain = async {
+                loop {
+                    let (task_id, result) = tasks.join_next_with_id().await
+                        .expect("running shard listener while draining")
+                        .context("shard service task failed while draining")?;
+                    result?;
+                    if task_id == request_task.id() {
+                        return anyhow::Ok(());
                     }
-                },
-                crate::shutdown::DEFAULT_DRAIN_TIMEOUT,
-            )
-            .await;
+                }
+            };
+            match tokio::time::timeout(crate::shutdown::DEFAULT_DRAIN_TIMEOUT, drain).await {
+                Ok(result) => {
+                    result?;
+                    info!(
+                        max_concurrent_requests = config.max_concurrent_requests,
+                        "all in-flight requests drained"
+                    );
+                    info!("graceful drain completed");
+                }
+                Err(_) => {
+                    warn!(
+                        timeout_secs = crate::shutdown::DEFAULT_DRAIN_TIMEOUT.as_secs(),
+                        "drain timeout exceeded, proceeding with shutdown"
+                    );
+                }
+            }
 
             info!("shard shutdown complete");
             Ok(())
         }
-    }
-}
-
-async fn reply_shard_error(msg: &impl TransportMessage, transport: &impl Transport, code: &str) {
-    if !msg.has_reply() {
-        return;
-    }
-    let response = serde_json::to_vec(&serde_json::json!({ "error": code })).unwrap_or_default();
-    if let Err(err) = reply_message(msg, transport, &response).await {
-        debug!(error = %err, "failed to send shard error reply");
     }
 }
 

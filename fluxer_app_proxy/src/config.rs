@@ -309,30 +309,20 @@ impl fmt::Display for CspReportUri {
     }
 }
 
-fn warn_invalid(error: InvalidAppProxyEnvironmentError) {
+fn warn_invalid(error: &InvalidAppProxyEnvironmentError) {
     tracing::warn!(%error, "ignoring invalid app proxy environment value");
 }
 
 fn parse_optional_http_url(name: &'static str, value: Option<String>) -> Option<HttpUrl> {
     let value = value?;
-    match HttpUrl::parse(name, &value) {
-        Ok(url) => Some(url),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    HttpUrl::parse(name, &value).inspect_err(warn_invalid).ok()
 }
 
 fn parse_optional_http_endpoint(name: &'static str, value: Option<String>) -> Option<HttpEndpoint> {
     let value = value?;
-    match HttpEndpoint::parse(name, &value) {
-        Ok(endpoint) => Some(endpoint),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    HttpEndpoint::parse(name, &value)
+        .inspect_err(warn_invalid)
+        .ok()
 }
 
 fn parse_env_or_warn<T: std::str::FromStr>(name: &str, raw: &str, default: T) -> T {
@@ -434,25 +424,19 @@ fn read_csp_sources(name: &'static str) -> Vec<CspSource> {
         .split([',', ' ', '\t', '\n'])
         .map(str::trim)
         .filter(|source| !source.is_empty())
-        .filter_map(|source| match CspSource::parse(name, source) {
-            Ok(source) => Some(source),
-            Err(error) => {
-                warn_invalid(error);
-                None
-            }
+        .filter_map(|source| {
+            CspSource::parse(name, source)
+                .inspect_err(warn_invalid)
+                .ok()
         })
         .collect()
 }
 
 fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
     let value = cfg::non_empty_env(name)?;
-    match CspReportUri::parse(name, &value) {
-        Ok(report_uri) => Some(report_uri),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    CspReportUri::parse(name, &value)
+        .inspect_err(warn_invalid)
+        .ok()
 }
 
 impl AppProxyConfig {
@@ -474,13 +458,10 @@ impl AppProxyConfig {
         );
         let s3_uploads_bucket = cfg::read_env("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads");
         let s3_uploads_endpoint = s3_public_endpoint.as_ref().and_then(|endpoint| {
-            match endpoint.with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim()) {
-                Ok(endpoint) => Some(endpoint),
-                Err(error) => {
-                    warn_invalid(error);
-                    None
-                }
-            }
+            endpoint
+                .with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim())
+                .inspect_err(warn_invalid)
+                .ok()
         });
 
         Self {
@@ -499,7 +480,7 @@ impl AppProxyConfig {
                 "FLUXER_STATIC_CDN_ENDPOINT",
                 cfg::non_empty_env("FLUXER_STATIC_CDN_ENDPOINT"),
             ),
-            s3_public_endpoint: s3_public_endpoint.clone(),
+            s3_public_endpoint,
             s3_uploads_endpoint,
             discovery_upstream_url: resolve_discovery_upstream_url_from_env(),
             discovery_refresh_interval_ms: parse_env_or_warn(

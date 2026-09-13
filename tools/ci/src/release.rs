@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, output_text, parse_version_instant, run_command};
+use crate::functions::sha256_reader;
 use anyhow::{Context, Result, bail, ensure};
 use chrono::{DateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs::{self, File};
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
@@ -753,20 +752,9 @@ fn local_release_assets(
 }
 
 fn sha256_file(path: &Path) -> Result<String> {
-    let mut file = File::open(path)
+    let file = File::open(path)
         .with_context(|| format!("Failed to open release asset {}", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read release asset {}", path.display()))?;
-        if read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
+    sha256_reader(file).with_context(|| format!("Failed to read release asset {}", path.display()))
 }
 
 fn create_draft_release(

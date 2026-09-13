@@ -26,10 +26,7 @@ async fn main() -> anyhow::Result<()> {
     );
 
     match config.mode {
-        Mode::Router => {
-            let router = UsersRouter::new(config.cache_max_entries, config.cache_ttl);
-            fluxer_svc::router::run_router(&config, router, transport).await
-        }
+        Mode::Router => fluxer_svc::router::run_router(&config, UsersRouter, transport).await,
         Mode::Shard => {
             let shard = match config.database_backend {
                 DatabaseBackend::Postgres => {
@@ -37,12 +34,7 @@ async fn main() -> anyhow::Result<()> {
                         fluxer_svc::postgres::PostgresConfig::from_service_config(&config);
                     let pool = fluxer_svc::postgres::connect(&postgres_config).await?;
                     let kv = fluxer_svc::postgres::KvClient::new(pool, &postgres_config)?;
-                    UsersShard::new_postgres(
-                        kv,
-                        transport.clone(),
-                        config.cache_max_entries,
-                        config.cache_ttl,
-                    )?
+                    UsersShard::new_postgres(kv, config.cache_max_entries, config.cache_ttl)
                 }
                 DatabaseBackend::Cassandra => {
                     #[cfg(feature = "scylla")]
@@ -50,13 +42,8 @@ async fn main() -> anyhow::Result<()> {
                         let scylla_config =
                             fluxer_svc::scylla::ScyllaConfig::from_service_config(&config);
                         let db = fluxer_svc::scylla::connect(&scylla_config).await?;
-                        UsersShard::new_scylla(
-                            db,
-                            transport.clone(),
-                            config.cache_max_entries,
-                            config.cache_ttl,
-                        )
-                        .await?
+                        UsersShard::new_scylla(db, config.cache_max_entries, config.cache_ttl)
+                            .await?
                     }
                     #[cfg(not(feature = "scylla"))]
                     {

@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::sync::Notify;
-use tracing::{info, warn};
+use tracing::{debug, info, warn};
 
 const NATS_SUBSCRIPTION_CAPACITY: usize = 8_192;
 const SLOW_CONSUMER_LOG_INTERVAL_MS: u64 = 1_000;
@@ -60,6 +60,29 @@ where
         transport.publish(subject, payload).await?;
     }
     Ok(())
+}
+
+pub(crate) async fn reply_bytes(
+    message: &impl TransportMessage,
+    transport: &impl Transport,
+    payload: &[u8],
+) {
+    if let Err(error) = reply_message(message, transport, payload).await {
+        debug!(error = %error, subject = message.subject(), "failed to send service reply");
+    }
+}
+
+pub(crate) async fn reply_json_error(
+    message: &impl TransportMessage,
+    transport: &impl Transport,
+    code: &str,
+) {
+    if !message.has_reply() {
+        return;
+    }
+    let payload = serde_json::to_vec(&serde_json::json!({ "error": code }))
+        .expect("service error responses contain only a JSON-serializable string");
+    reply_bytes(message, transport, &payload).await;
 }
 
 #[derive(Clone)]

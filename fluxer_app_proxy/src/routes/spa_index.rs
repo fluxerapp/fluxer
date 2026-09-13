@@ -410,19 +410,7 @@ fn build_spa_response(
     } else {
         headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     }
-    headers.insert(
-        header::STRICT_TRANSPORT_SECURITY,
-        HeaderValue::from_static("max-age=31536000; includeSubDomains; preload"),
-    );
-    headers.insert(
-        header::X_CONTENT_TYPE_OPTIONS,
-        HeaderValue::from_static("nosniff"),
-    );
-    headers.insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
-    headers.insert(
-        header::REFERRER_POLICY,
-        HeaderValue::from_static("strict-origin-when-cross-origin"),
-    );
+    super::set_security_headers(headers);
     headers.insert(
         axum::http::HeaderName::from_static("accept-ch"),
         HeaderValue::from_static(ACCEPT_CH_VALUE),
@@ -431,11 +419,6 @@ fn build_spa_response(
         axum::http::HeaderName::from_static("critical-ch"),
         HeaderValue::from_static(CRITICAL_CH_VALUE),
     );
-    headers.insert(
-        axum::http::HeaderName::from_static("permissions-policy"),
-        HeaderValue::from_static(super::PERMISSIONS_POLICY_VALUE),
-    );
-
     #[cfg(feature = "time-freeze")]
     {
         if let Some(tf) = time_freeze_header

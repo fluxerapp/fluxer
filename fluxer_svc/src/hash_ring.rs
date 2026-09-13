@@ -9,6 +9,10 @@ impl HashRing {
         Self { shard_count }
     }
 
+    pub fn shard_count(&self) -> u32 {
+        self.shard_count
+    }
+
     pub fn owner(&self, route_key: &str) -> u32 {
         let mut best_shard = 0u32;
         let mut best_score = 0u64;

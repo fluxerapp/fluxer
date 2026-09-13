@@ -6,6 +6,7 @@ use crate::common::{
     remove_dir_if_exists, require_env, resolve_calver, run_command, runner_temp, s3_client,
     trim_option, upload_s3_plan_append_only,
 };
+use crate::functions::sha256_reader;
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -13,11 +14,9 @@ use chrono::Utc;
 use clap::{Args, ValueEnum};
 use reqwest::Client;
 use serde_json::{Map, Value, json};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, File};
-use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -586,20 +585,8 @@ fn asset_tree_digests(root: &Path) -> Result<BTreeMap<String, String>> {
 }
 
 fn sha256_file(path: &Path) -> Result<String> {
-    let mut file =
-        File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
-        if read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
+    let file = File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    sha256_reader(file).with_context(|| format!("Failed to read {}", path.display()))
 }
 
 fn tree_differences(

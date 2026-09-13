@@ -2,7 +2,7 @@
 
 use axum::{
     Json,
-    http::{HeaderValue, header},
+    http::header,
     response::{IntoResponse, Response},
 };
 use serde_json::json;
@@ -19,10 +19,9 @@ pub async fn apple_app_site_association() -> Response {
         }
     });
 
-    let mut response = Json(body).into_response();
-    response.headers_mut().insert(
-        header::CACHE_CONTROL,
-        HeaderValue::from_static("public, max-age=1800"),
-    );
-    response
+    (
+        [(header::CACHE_CONTROL, "public, max-age=1800")],
+        Json(body),
+    )
+        .into_response()
 }

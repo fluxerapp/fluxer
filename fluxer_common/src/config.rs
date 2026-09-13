@@ -203,12 +203,12 @@ fn is_default_port(scheme: &str, port: u16) -> bool {
     )
 }
 
-fn strip_trailing_dot(host: &str) -> &str {
-    host.strip_suffix('.').unwrap_or(host)
-}
-
 fn canonicalize_domain(value: &str) -> String {
-    strip_trailing_dot(value.trim().to_lowercase().as_str()).to_owned()
+    let mut domain = value.trim().to_lowercase();
+    if domain.ends_with('.') {
+        domain.pop();
+    }
+    domain
 }
 
 fn default_port(scheme: &str) -> u16 {
@@ -285,10 +285,10 @@ where
 }
 
 pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Option<u16>) -> String {
-    let domain = canonicalize_domain(base_domain);
     let Some(port) = public_port.filter(|port| *port != 0) else {
         return url.to_owned();
     };
+    let domain = canonicalize_domain(base_domain);
     if domain.is_empty() {
         return url.to_owned();
     }

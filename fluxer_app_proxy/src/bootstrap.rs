@@ -132,7 +132,7 @@ pub fn inject_bootstrap(
     let media = media_endpoint.trim_end_matches('/');
 
     let nonced = html.replace("{{CSP_NONCE_PLACEHOLDER}}", nonce);
-    let nonced = apply_static_preconnect(&nonced, static_cdn);
+    let nonced = apply_static_preconnect(nonced, static_cdn);
     let nonced = nonced.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn);
     let nonced = apply_media_preconnect(&nonced, media, static_cdn);
 
@@ -143,20 +143,14 @@ pub fn inject_bootstrap(
         return nonced.replace("{{FLUXER_BOOTSTRAP}}", script_tag);
     }
 
-    if let Some(pos) = nonced.find("<head>") {
-        let insert_at = pos + "<head>".len();
-        let mut result = String::with_capacity(nonced.len() + script_tag.len() + 3);
-        result.push_str(&nonced[..insert_at]);
-        result.push_str("\n\t\t");
-        result.push_str(script_tag);
-        result.push_str(&nonced[insert_at..]);
-        return result;
-    }
-
-    if let Some(pos) = nonced.find("<head ")
-        && let Some(close) = nonced[pos..].find('>')
-    {
-        let insert_at = pos + close + 1;
+    let insert_at = nonced
+        .find("<head>")
+        .map(|pos| pos + "<head>".len())
+        .or_else(|| {
+            let pos = nonced.find("<head ")?;
+            nonced[pos..].find('>').map(|close| pos + close + 1)
+        });
+    if let Some(insert_at) = insert_at {
         let mut result = String::with_capacity(nonced.len() + script_tag.len() + 3);
         result.push_str(&nonced[..insert_at]);
         result.push_str("\n\t\t");
@@ -168,15 +162,14 @@ pub fn inject_bootstrap(
     nonced
 }
 
-fn apply_static_preconnect(html: &str, static_cdn: &str) -> String {
+fn apply_static_preconnect(mut html: String, static_cdn: &str) -> String {
     if !static_cdn.is_empty() {
-        return html.to_owned();
+        return html;
     }
-    let mut stripped = html.to_owned();
     for tag in STATIC_PRECONNECT_TAGS {
-        stripped = stripped.replace(&format!("{tag}\n"), "").replace(tag, "");
+        html = html.replace(&format!("{tag}\n"), "").replace(tag, "");
     }
-    stripped
+    html
 }
 
 fn apply_media_preconnect(html: &str, media: &str, static_cdn: &str) -> String {

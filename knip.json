@@ -12,7 +12,12 @@
 		"tailwindcss",
 		"upng-js"
 	],
-	"ignoreFiles": ["fluxer_admin/src/styles/app.css", "fluxer_admin/static/htmx.min.js"],
+	"ignoreFiles": [
+		"fluxer_admin/src/styles/app.css",
+		"fluxer_admin/static/htmx.min.js",
+		"tools/ci/templates/libfluxcore_wrapper.d.ts",
+		"tools/ci/templates/libfluxcore_wrapper.js"
+	],
 	"ignoreIssues": {
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
@@ -30,8 +35,7 @@
 	},
 	"workspaces": {
 		".": {
-			"ignoreDependencies": ["vite"],
-			"project": ["scripts/**/*.mjs"]
+			"ignoreDependencies": ["vite"]
 		},
 		"fluxer_api": {
 			"ignoreDependencies": [

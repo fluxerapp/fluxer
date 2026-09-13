@@ -287,15 +287,11 @@ fn extend_runtime_s3_sources(target: &mut Vec<String>, runtime_sources: &Runtime
 }
 
 fn extend_from(target: &mut Vec<String>, extra: &[CspSource], defaults: &[&str]) {
-    for source in defaults {
-        if target.iter().any(|existing| existing == source) {
-            continue;
-        }
-        target.push((*source).to_owned());
-    }
-
-    for source in extra {
-        let source = source.as_str();
+    for source in defaults
+        .iter()
+        .copied()
+        .chain(extra.iter().map(CspSource::as_str))
+    {
         if target.iter().any(|existing| existing == source) {
             continue;
         }

@@ -11,7 +11,7 @@ chrono = { version = "0.4", default-features = false }
 fluxer_common = { path = "../fluxer_common" }
 fluxer-svc = { path = "../fluxer_svc" }
 futures = "0.3.32"
-moka = { version = "0.12.15", features = ["future", "sync"] }
+moka = { version = "0.12.15", features = ["future"] }
 rmp-serde = "1.3"
 scylla = { version = "1.6.0", features = ["chrono-04"], optional = true }
 serde = { version = "1.0.228", features = ["derive"] }

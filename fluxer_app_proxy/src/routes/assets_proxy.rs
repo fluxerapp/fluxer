@@ -9,9 +9,7 @@ use axum::{
 };
 use std::path::{Path as FsPath, PathBuf};
 use std::time::Duration;
-use tokio::io::{AsyncWriteExt, DuplexStream};
 use tokio::sync::{OwnedSemaphorePermit, TryAcquireError};
-use tokio_util::io::ReaderStream;
 
 use super::file_stream::stream_file;
 use super::spa_static::{CORS_ALLOW_ANY_VALUE, asset_cache_control, guess_mime, is_font_mime};
@@ -19,7 +17,6 @@ use super::spa_static::{CORS_ALLOW_ANY_VALUE, asset_cache_control, guess_mime, i
 const ASSET_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 const PRECOMPRESSED_VARIANTS: &[(&str, &str)] = &[("br", "br"), ("gzip", "gz")];
 const MAX_ASSET_SIZE_BYTES: u64 = 100 * 1024 * 1024;
-const UPSTREAM_ASSET_PUMP_BUFFER_BYTES: usize = 64 * 1024;
 const UPSTREAM_FAILURE_CACHE_CONTROL: &str = "no-store";
 const UPSTREAM_FAILURE_STRIPPED_HEADERS: &[&str] = &[
     "cdn-cache-control",
@@ -148,38 +145,59 @@ pub async fn proxy_assets(
     response_headers.insert(header::CONTENT_SECURITY_POLICY, state.csp.asset_header());
     response_headers.remove("content-security-policy-report-only");
 
-    let body = Body::from_stream(upstream_asset_body(upstream_response, upstream_slot));
+    let body = upstream_asset_body(upstream_response, upstream_slot);
     let mut response = Response::new(body);
     *response.status_mut() = status;
     *response.headers_mut() = response_headers;
     response
 }
 
+struct UpstreamAssetReadState {
+    response: reqwest::Response,
+    _permit: OwnedSemaphorePermit,
+    remaining_bytes: u64,
+}
+
 fn upstream_asset_body(
-    mut upstream_response: reqwest::Response,
+    upstream_response: reqwest::Response,
     upstream_slot: OwnedSemaphorePermit,
-) -> ReaderStream<DuplexStream> {
-    let (writer, reader) = tokio::io::duplex(UPSTREAM_ASSET_PUMP_BUFFER_BYTES);
-    tokio::spawn(async move {
-        let _upstream_slot = upstream_slot;
-        let mut writer = writer;
-        loop {
-            match upstream_response.chunk().await {
-                Ok(Some(chunk)) => {
-                    if writer.write_all(&chunk).await.is_err() {
-                        return;
-                    }
-                }
-                Ok(None) => break,
-                Err(err) => {
+) -> Body {
+    let state = UpstreamAssetReadState {
+        response: upstream_response,
+        _permit: upstream_slot,
+        remaining_bytes: MAX_ASSET_SIZE_BYTES,
+    };
+    Body::from_stream(futures_util::stream::try_unfold(
+        state,
+        |mut state| async move {
+            let Some(chunk) = state
+                .response
+                .chunk()
+                .await
+                .inspect_err(|err| {
                     tracing::warn!(%err, "upstream asset body ended early");
-                    return;
-                }
+                })
+                .map_err(axum::Error::new)?
+            else {
+                return Ok(None);
+            };
+            let chunk_bytes = chunk.len() as u64;
+            if chunk_bytes > state.remaining_bytes {
+                tracing::warn!(
+                    maximum_bytes = MAX_ASSET_SIZE_BYTES,
+                    remaining_bytes = state.remaining_bytes,
+                    chunk_bytes,
+                    "upstream asset body exceeds size cap"
+                );
+                return Err(axum::Error::new(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("upstream asset body exceeds {MAX_ASSET_SIZE_BYTES} bytes"),
+                )));
             }
-        }
-        let _ = writer.shutdown().await;
-    });
-    ReaderStream::new(reader)
+            state.remaining_bytes -= chunk_bytes;
+            Ok(Some((chunk, state)))
+        },
+    ))
 }
 
 pub(super) async fn serve_local_asset(

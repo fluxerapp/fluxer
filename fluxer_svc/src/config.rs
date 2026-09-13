@@ -75,8 +75,9 @@ impl ServiceConfig {
         };
 
         let mode = match optional_from(&get, "FLUXER_SVC_MODE").as_deref() {
+            None | Some("router") => Mode::Router,
             Some("shard") => Mode::Shard,
-            _ => Mode::Router,
+            Some(other) => anyhow::bail!("unsupported FLUXER_SVC_MODE: {other}"),
         };
 
         let shard_count = optional_from(&get, "FLUXER_SVC_SHARD_COUNT")
