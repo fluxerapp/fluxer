@@ -6,7 +6,7 @@ description: Application inspection, the owner and guild selectors, and ownershi
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An application is an OAuth2 client, and it can own one bot account. These routes report its ownership, bot state, redirect configuration, and non-secret credential metadata. [Transfer application ownership](#transfer-application-ownership) is the only one that writes.
+An application is an OAuth2 client that can own one bot account. These routes inspect applications and [transfer their ownership](#transfer-application-ownership).
 
 These records are the same ones the public [Applications](/http-api/applications/) resource serves. Creation, deletion, renaming, bot creation, redirect URI editing, and credential rotation stay there.
 
@@ -204,7 +204,7 @@ Ownership is the only field this operation writes. The new owner need not be rel
 
 ### Side effects
 
-Fluxer rewrites the record with the new `owner_user_id` and increments its `version`. The application moves in both the `owner_id` selector of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). The operation emits no Gateway Dispatch.
+The transfer changes `owner_user_id`, increments `version`, and updates the results of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). It emits no Gateway Dispatch.
 
 Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the target type `application`, the target ID equal to the application ID, and the action `transfer_ownership`. Its metadata is `old_owner_id` and `new_owner_id`. Neither owner is resolved into `related_users`.
 

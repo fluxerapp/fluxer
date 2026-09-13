@@ -1,54 +1,68 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-type Callback = (entry: ResizeObserverEntry) => void;
+type ResizeCallback = (entry: ResizeObserverEntry) => void;
 
-const callbacks = new WeakMap<Element, Set<Callback>>();
+const callbacks = new Map<Element, Map<ResizeCallback, number>>();
 
 let nativeObserver: ResizeObserver | null = null;
-let observedElementCount = 0;
 
 function getObserver(): ResizeObserver {
 	if (nativeObserver) return nativeObserver;
-	nativeObserver = new ResizeObserver((entries) => {
-		for (let i = 0; i < entries.length; i++) {
-			const entry = entries[i];
+	const observer = new ResizeObserver((entries) => {
+		for (const entry of entries) {
+			if (nativeObserver !== observer) return;
 			const handlers = callbacks.get(entry.target);
 			if (!handlers) continue;
-			for (const cb of handlers) {
+			for (const callback of [...handlers.keys()]) {
+				if (callbacks.get(entry.target) !== handlers) break;
+				if (!handlers.has(callback)) continue;
 				try {
-					cb(entry);
+					callback(entry);
 				} catch (error) {
 					console.error('SharedResizeObserver callback threw:', error);
 				}
 			}
 		}
 	});
-	return nativeObserver;
+	nativeObserver = observer;
+	return observer;
 }
 
-export function observeResize(element: Element, callback: Callback): () => void {
+export function observeResize(element: Element, callback: ResizeCallback): () => void {
+	const observer = getObserver();
 	let handlers = callbacks.get(element);
 	if (!handlers) {
-		handlers = new Set();
-		callbacks.set(element, handlers);
-		observedElementCount++;
-		getObserver().observe(element);
-	}
-	handlers.add(callback);
-	return () => unobserveResize(element, callback);
-}
-
-export function unobserveResize(element: Element, callback: Callback): void {
-	const handlers = callbacks.get(element);
-	if (!handlers) return;
-	handlers.delete(callback);
-	if (handlers.size === 0) {
-		callbacks.delete(element);
-		nativeObserver?.unobserve?.(element);
-		observedElementCount = Math.max(0, observedElementCount - 1);
-		if (observedElementCount === 0) {
-			nativeObserver?.disconnect();
-			nativeObserver = null;
+		try {
+			observer.observe(element);
+		} catch (error) {
+			if (callbacks.size === 0) {
+				nativeObserver = null;
+				observer.disconnect();
+			}
+			throw error;
 		}
+		handlers = new Map();
+		callbacks.set(element, handlers);
 	}
+	handlers.set(callback, (handlers.get(callback) ?? 0) + 1);
+	let released = false;
+	return () => {
+		if (released) return;
+		released = true;
+		const count = handlers.get(callback);
+		if (!count) throw new Error('Resize subscription has no active callback');
+		if (count > 1) {
+			handlers.set(callback, count - 1);
+			return;
+		}
+		handlers.delete(callback);
+		if (handlers.size > 0) return;
+		callbacks.delete(element);
+		if (callbacks.size === 0) {
+			nativeObserver = null;
+			observer.disconnect();
+		} else {
+			observer.unobserve(element);
+		}
+	};
 }

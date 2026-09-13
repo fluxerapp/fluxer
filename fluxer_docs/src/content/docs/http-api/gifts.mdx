@@ -30,11 +30,11 @@ Both creation paths record a creator. A completed gift checkout records the purc
 | redeemed<sup>3</sup> | boolean | Whether the code has already been redeemed |
 | created_by?<sup>4</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The account that created the gift |
 
-<sup>1</sup> Exactly 32 characters drawn from the uppercase letters, the lowercase letters and the digits, regenerated until it does not collide with an existing code
+<sup>1</sup> Exactly 32 case-sensitive letters and digits
 
 <sup>2</sup> Non-negative, and positive on every gift the current code paths create. The exact value `0` means lifetime Visionary entitlement and appears only on a record that predates that constraint
 
-<sup>3</sup> Derived from the stored redemption timestamp. Neither the redemption time nor the redeeming account appears in this object
+<sup>3</sup> Neither the redemption time nor the redeeming account appears in this object
 
 <sup>4</sup> Always present and non-null on this route. A creator ID that resolves to no account becomes a placeholder partial with the unresolved ID, `DeletedUser`, `0000` and `Deleted User`
 
@@ -151,28 +151,13 @@ One redemption can be in flight for a code across the whole deployment, and a se
 
 The gift becomes redeemed, so [Get gift](#get-gift) reports `redeemed` as true and [List current user gifts](/http-api/users/gifts/#list-current-user-gifts) shows the redemption time and the redeemer to the buyer.
 
-A gift with a positive quantity extends recurring premium. Fluxer stacks the duration onto the payment provider subscription only when all of these hold:
+A positive quantity extends premium from the latest of the current time, the current premium end and the existing gift extension end. An eligible active subscription also has its trial or billing period extended without proration. A provider failure can return 400 `STRIPE_ERROR` and leave the code unredeemed.
 
-- The account's premium type is subscription.
-- The account's premium end is unset or in the future.
-- The account has a stored subscription identity.
-- The instance has a payment provider configured.
+A quantity of `0` grants lifetime Visionary premium and immediately cancels an active subscription without proration or a final invoice. It can also assign a Visionary sequence and join the [Visionary guild](/http-api/premium/#rejoin-visionary-guild).
 
-Stacking adds the duration to the existing trial end, or to the current period end when no trial end is set, and applies the update without proration.
+A failed Visionary guild join leaves the gift unredeemed. Guild limits return 400 `MAX_GUILDS` or `MAX_GUILD_MEMBERS`. Any subscription cancellation already completed is not reversed.
 
-The stacked and unstacked paths set the gift extension end to the gift duration added to the latest of the current time, the current premium end and the existing gift extension end. Both also clear an active grace deadline and set the premium type when the account has none. The stacked path also records the account as having ever purchased.
-
-The provider refuses a stacking attempt when the subscription is unknown, already cancelled, or has neither a trial end nor a current period end. That refusal clears the stored subscription identity, the billing cycle and any pending cancellation. The redemption then continues unstacked. Any other provider failure aborts the redemption and returns 400 `STRIPE_ERROR`, and the code stays unredeemed.
-
-A gift whose quantity is `0` grants lifetime Visionary entitlement. Fluxer then cancels an active subscription immediately, without proration and without a final invoice, and that cancellation also clears the stored subscription identity, the billing cycle and any pending cancellation. The account then receives lifetime premium with no premium end and no grace deadline.
-
-A lifetime gift that has no Visionary sequence leaves the account's own sequence alone, and an account that already holds one is not joined to the guild. Fluxer allocates a sequence to an account that holds none and joins it to the Visionary guild as described by [Rejoin Visionary guild](/http-api/premium/#rejoin-visionary-guild), including its Gateway Dispatches.
-
-When a lifetime gift has a Visionary sequence, Fluxer clears the recorded slot of whatever account holds it and joins the redeeming account to the Visionary guild whether or not it already holds a sequence. The gift's sequence overwrites the account's stored sequence, and the slot is reserved for the redeeming account. No current creation path records a sequence on a gift.
-
-A Visionary guild join that fails aborts the entitlement grant, so the redemption is rolled back and the code stays unredeemed. An account at its guild ceiling returns 400 `MAX_GUILDS` and a Visionary guild at its member ceiling returns 400 `MAX_GUILD_MEMBERS`. A subscription the same request already cancelled is not restored.
-
-Every entitlement change sends [User Update](/gateway/events/#user-update) to each session owned by the redeemer. Immediate subscription cancellation for a lifetime gift, and the clearing of a refused subscription identity, each produce their own User Update.
+Entitlement changes send [User Update](/gateway/events/#user-update) to the redeemer's sessions.
 
 ### Rate limit
 

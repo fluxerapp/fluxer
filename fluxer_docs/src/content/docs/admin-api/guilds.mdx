@@ -379,7 +379,7 @@ The groups run in a fixed order: image clears, settings, features, name, custom 
 
 ### Side effects
 
-Clearing an image field queues the previous stored object for deletion. Replacing the custom invite code deletes the invite record holding the previous code and creates one for the new code. Sending null deletes the previous record without creating another.
+Clearing an image schedules its deletion. Replacing or clearing the custom invite code invalidates the previous invite link.
 
 Supplying `add_features` or `remove_features` reconciles an existing discovery application. The application is approved when [DISCOVERABLE](/http-api/guilds/#guild-features) becomes present and it is not already approved, and it is marked removed when `DISCOVERABLE` becomes absent and it was approved. A guild that has never applied for [discovery](/admin-api/discovery/) gains no application.
 
@@ -423,15 +423,13 @@ Permanently deletes a guild and every record it owns. Requires `guild:delete`.
 | 200 | response body | Guild was deleted |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_GUILD`, because the guild does not exist |
 
-:::danger[A guild archive is the only way back]
+:::danger[Archive content before deleting the guild]
 The guild, its channels, roles, memberships, messages, and attachments are destroyed as soon as the request is accepted. Take a [guild archive](#create-guild-archive) first when the content has to be retained.
 :::
 
 ### Side effects
 
-Fluxer emits one [Guild Delete](/gateway/events/#guild-delete) Dispatch first, then detaches every member from the guild on the main Gateway. It deletes each member's [guild settings](/http-api/users/settings/) entry for the guild, and drops each human member's [guild folder](/http-api/users/settings/) references to the guild.
-
-Every invite, every webhook, every message of every channel, and every channel attachment are deleted. Any discovery application is deleted. The guild record is then deleted, the guild is stopped on the main Gateway, and it is removed from the guild search index.
+Members receive [Guild Delete](/gateway/events/#guild-delete). The guild disappears from their [settings and folders](/http-api/users/settings/) and from search. Its invites, webhooks, messages, attachments and discovery application are also deleted.
 
 One Admin audit entry is recorded with the action `delete_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
 
@@ -559,7 +557,7 @@ The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions
 
 ### Side effects
 
-Fluxer snapshots the membership metadata, including any communication timeout, so that a later rejoin restores it. It then deletes the membership, decreases the recorded member count by one, and detaches the user from the guild on the main Gateway. The member is removed from guild member search when the guild has an indexed member set.
+The user loses membership and disappears from guild member search. A later rejoin restores previous membership settings, including any communication timeout still in force.
 
 [Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
 
@@ -620,7 +618,7 @@ The ban record names the acting Admin account as moderator. It has the expiry, t
 
 A positive deletion window queues a background job that deletes the target's matching messages after the response, which fires [Message Delete Bulk](/gateway/events/#message-delete-bulk) as deletion progresses.
 
-[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. A target who was a member is then removed. That decreases the recorded member count, detaches the user from the guild on the main Gateway, removes the member from guild member search, and fires [Guild Member Remove](/gateway/events/#guild-member-remove). The ban path snapshots no membership metadata, so a communication timeout in force at the moment of the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log, and it emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
+[Guild Ban Add](/gateway/events/#guild-ban-add) fires to the guild. If the target was a member, they lose access, disappear from member search, and trigger [Guild Member Remove](/gateway/events/#guild-member-remove). A communication timeout in force at the ban is not restored on a later rejoin. This operation writes no entry to the guild's own audit log and emits no [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create).
 
 One Admin audit entry is recorded with the action `ban_member`, the target type `guild_member`, and the banned user as the target. Its metadata has the guild ID, the user ID, the `delete_message_days` value, and any supplied reason and duration.
 
@@ -911,4 +909,3 @@ The operation emits no Gateway Dispatch and records no Admin audit entry.
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
-

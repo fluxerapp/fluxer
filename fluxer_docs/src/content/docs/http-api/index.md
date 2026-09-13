@@ -4,35 +4,31 @@ title: HTTP API
 description: Request format, body representations, shared headers, cross-origin policy, and the error objects.
 ---
 
-The Fluxer HTTP API is the set of routes a client calls to read and change data. Every route is published under `/v1`, and `/v1` is the only version. The base URL comes from the [instance discovery document](/http-api/instance/#get-instance-discovery), which is served unversioned at `/.well-known/fluxer`. A third-party client reads `endpoints.api_public` there, and the first-party web application reads `endpoints.api_client`.
+Use the HTTP API to read and change resources. Discover the base URL through [`/.well-known/fluxer`](/http-api/instance/#get-instance-discovery). Third-party clients use `endpoints.api_public`, and the first-party web application uses `endpoints.api_client`.
 
-Every route is also mounted at the root, so a path resolves with or without the prefix. A client MUST use the `/v1` form. [Download stored object](/http-api/downloads/#download-stored-object) is the one exception, and it resolves at the root alone.
+Use `/v1`, the only API version. [Download stored object](/http-api/downloads/#download-stored-object) is unversioned and uses its documented root path.
 
-Numeric limits such as attachment counts, expression counts, and profile field lengths are instance configuration. Each deployment publishes its current values in its [instance discovery](/http-api/instance/#limit-keys) document, so a client reads them at runtime.
+Read resource limits from [instance discovery](/http-api/instance/#limit-keys). Attachment counts, expression counts and profile field lengths can differ between deployments.
 
-[API conventions](/conventions/) defines the wire notation and the omission and `null` semantics.
+[Field notation](/#field-notation) explains optional, nullable, and nullish fields.
 
 ## Request format
 
-A JSON request body has `Content-Type: application/json`. A response body is UTF-8 JSON with `Content-Type: application/json` unless the operation states another representation. Message operations and webhook execution accept multipart bodies, and the OAuth2 token operations accept form-encoded bodies.
+Send JSON bodies with `Content-Type: application/json`. Responses are UTF-8 JSON unless an operation states otherwise. Message operations and webhook execution also accept multipart bodies, and OAuth2 token operations accept form bodies.
 
-The API applies no generic byte limit to a request body. An operation that accepts an upload bounds that upload itself.
+An overloaded instance returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1`. Wait before retrying.
 
-Every request counts against one in-flight request ceiling for the whole instance. A request that arrives while the instance is at that ceiling returns 503 `SERVICE_UNAVAILABLE` with `Retry-After: 1` before the operation runs. The `/_health`, `/_healthz`, and `/_metrics` probe paths are exempt.
+Unknown paths and unsupported methods return 404 `NOT_FOUND` without an `Allow` header. Trailing slashes are significant.
 
-A request to a path that matches no route returns 404 `NOT_FOUND`. A request using a method the path does not register returns the same 404, and the response has no `Allow` header. Routing is strict, so a trailing slash is significant.
-
-The `GET` registered for a path also serves `HEAD`. A path that registers no `GET` serves no `HEAD` either. A `HEAD` response has the status and headers that `GET` returns, with no body. The request still reports `HEAD` as its method, so the [same-host origin check](#cross-origin-requests) can refuse a `HEAD` that has no `Origin` where the identical `GET` succeeds.
+Every `GET` route supports `HEAD`, returning the same status and headers without a body. Routes without `GET` do not support `HEAD`. The [same-host origin requirement](#cross-origin-requests) also applies to `HEAD`.
 
 ## Request body formats
 
-An operation documents its body under `JSON body`, `Form body`, or `Multipart body` and states any content-type restriction it enforces.
+Each operation documents its accepted body format and fields.
 
-A JSON body is parsed from the raw request text without inspecting `Content-Type`. The instance content filter scans a `POST`, `PUT`, or `PATCH` body that parses as JSON against the banned-phrase and banned-URL blocklists, whatever the header declares. It skips a body whose `Content-Type` contains `multipart/form-data` or `application/x-www-form-urlencoded`. A client MUST send the canonical media type.
+Use `application/json` for JSON and `application/x-www-form-urlencoded` for OAuth2 form bodies. OAuth2 token operations also accept `multipart/form-data`.
 
-Form bodies accept `application/x-www-form-urlencoded` and `multipart/form-data` interchangeably. The [OAuth2](/http-api/oauth2/) token operations are the only ones that take one. A field that occurs once is a string or file. Repeating the same field name produces an array in occurrence order, and a name ending in `[]` also collects its values into an array.
-
-[Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the only operations that define a multipart body of their own. Each selects the multipart parser when the request `Content-Type` contains `multipart/form-data` and parses the body as JSON otherwise. The OAuth2 token operations also accept `multipart/form-data`, but read it as an ordinary form body.
+[Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message) and [Execute webhook](/http-api/webhooks/#execute-webhook) accept these multipart fields:
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -53,7 +49,7 @@ Field-name failures are rejected with their own code:
 - More than one file supplied for one index returns `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED`.
 - Where the resolved limit is 0, any file field at all returns `ATTACHMENTS_NOT_ALLOWED_FOR_MESSAGE`.
 
-The `Content-Type` header supplies the multipart boundary. Each part's field name is in `Content-Disposition`. A body the multipart parser cannot read is rejected with `FAILED_TO_PARSE_MULTIPART_FORM_DATA`. A field name the operation does not recognise is ignored, and a `files[n]` part whose value is not a file is ignored once its index has been bounds-checked.
+Include the multipart boundary in `Content-Type` and each field name in `Content-Disposition`. Malformed multipart bodies return `FAILED_TO_PARSE_MULTIPART_FORM_DATA`. Unknown fields and non-file values for valid `files[n]` indices are ignored.
 
 A multipart message body MAY also have `content`, `nonce`, `tts`, `flags`, `favorite_meme_id`, and `sticker_ids` as plain form fields. Each overrides the member of the same name in the parsed `payload_json`, and `sticker_ids` collects every value it is given.
 
@@ -67,25 +63,23 @@ Each direct file's `files[n]` index is also the `id` in its attachment metadata 
 
 ## Input normalisation
 
-Field tables use the shared [wire table notation](/conventions/#wire-table-notation).
-
 :::note[Empty values are normalised before validation]
 An empty string becomes `null` at any depth, and an empty nested object becomes `null` below the root of the payload.
 :::
 
-The shared validator normalises the JSON body, a form body, the query string, path parameters, request headers, and cookies before their schemas run.
+This normalisation applies to JSON and form bodies, query strings, path parameters, request headers, and cookies.
 
-A nested object whose members have all become `null` becomes `null` in turn. The root object itself is never collapsed this way. An empty request body is read as an empty object, so the caller sees the operation's own required-field failures. A body that is present but does not parse as JSON returns 400 `INVALID_FORM_BODY` with one element at path `body` and code `INVALID_FORMAT`.
+A nested object containing only `null` values also becomes `null`. The root object is preserved. An empty body is treated as `{}` and validated for required fields. Malformed JSON returns 400 `INVALID_FORM_BODY` with a validation error at path `body` and code `INVALID_FORMAT`.
 
-:::caution[These operations bypass the shared validator]
-[Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) read their own body and apply none of that normalisation.
+:::caution[Message operations preserve empty values]
+[Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) do not apply this normalisation.
 :::
 
-An empty string stays an empty string and an empty nested object stays an empty object in those three. The first two reject a JSON body that does not parse. On a JSON body all collapse every schema failure to one validation entry, and each operation names that entry on its own page.
+Those operations document their own JSON validation errors.
 
 ## Authentication
 
-[Authentication](/authentication/) defines the accepted `Authorization` schemes, their exact token forms, and the OAuth2 scope registry. An operation that requires a credential states the scheme on its resource page. The [sudo verification object](/http-api/users/mfa/#sudo-verification-object) defines the sudo mode credential that guards sensitive account operations.
+[Authentication](/authentication/) defines the accepted `Authorization` schemes and links to the OAuth2 scope registry. Each operation states which credentials it accepts. The [sudo verification object](/http-api/users/mfa/#sudo-verification-object) defines the proof required for sensitive account operations.
 
 An OAuth2 bearer access token is accepted only where a route opts in, and the resource page says so. Everywhere else a bearer credential is refused with 403 `ACCESS_DENIED`. An account with a suspicious activity flag is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
@@ -96,7 +90,7 @@ These headers are accepted across resources. An operation-specific header is doc
 | Field | Type | Description |
 | --- | --- | --- |
 | Authorization? | string | The single credential for an authenticated request, in one of the [accepted schemes](/authentication/#authorization-schemes) |
-| Content-Type?<sup>1</sup> | string | The media type of the request body, which selects the multipart parser when it contains `multipart/form-data` |
+| Content-Type?<sup>1</sup> | string | Request body media type and, for multipart bodies, the boundary |
 | Accept-Language?<sup>2</sup> | string | Selects the locale used for an error `message` |
 | X-Audit-Log-Reason?<sup>3</sup> | string | Free-text reason recorded on the resulting audit log entry |
 | X-Fluxer-Client-Properties?<sup>4</sup> | string | Base64-encoded JSON with the native client's `os`, read when an authentication session is created |
@@ -107,7 +101,7 @@ These headers are accepted across resources. An operation-specific header is doc
 | User-Agent? | string | The originating client description recorded on a new authentication session and on an Admin audit entry |
 | Origin?<sup>8</sup> | string | The browser origin used for cross-origin negotiation and for the mutating same-host origin check |
 
-<sup>1</sup> Only the multipart message operations read it to decide how the body is parsed. The instance content filter reads it separately, as described under [request body formats](#request-body-formats)
+<sup>1</sup> Use the media type specified in [request body formats](#request-body-formats)
 
 <sup>2</sup> The configured locale of the authenticated account takes precedence, so this header selects the locale only for an unauthenticated request or an account with no configured locale
 

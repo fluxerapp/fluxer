@@ -67,7 +67,7 @@ One recorded guild change. An entry is immutable once written, except for a run 
 <sup>5</sup> The field is omitted when the action records no field change, so it is never returned as an empty array
 
 :::note[An entry expires 45 days after the write]
-An expired entry is removed from storage, so a page never returns one older than that horizon. A consolidated entry is a fresh write and starts a fresh 45-day expiry of its own.
+Entries remain available for 45 days. A consolidated entry starts a new 45-day period.
 :::
 
 ### Example
@@ -245,7 +245,7 @@ Recorded by [GUILD_UPDATE](#audit-actions).
 
 <sup>1</sup> The field holds the same value on both sides of every guild action, so it never produces a change object
 
-<sup>2</sup> Fluxer sorts the array by string value on both sides of the comparison, so a change object appears only when a feature was added or removed
+<sup>2</sup> A change object appears only when a feature was added or removed
 
 #### Channel change fields
 
@@ -449,7 +449,7 @@ A guild ID that names no guild returns 404 `UNKNOWN_GUILD`. A non-member of an e
 
 The read is ordered from newest to oldest by entry ID. `before` selects entries below the cursor and `after` selects entries above it, both read in that same descending order. An `after` page therefore begins with the newest entry above the cursor.
 
-Consolidation breaks that ordering. A consolidated entry keeps the array position of the first entry of the run it replaces. Its ID is newly issued and larger than every stored entry on the page, so a client that needs a strictly descending array sorts the page by ID itself.
+Consolidated entries have new IDs but retain the position of the run they replace. Sort the page by ID if a strictly descending array is required.
 
 A page holds fewer entries than `limit` only when the guild has no further matching entries in that direction.
 
@@ -464,17 +464,13 @@ A page holds fewer entries than `limit` only when the guild has no further match
 
 <sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for a guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features), or [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) without the instance staff flag, and `MISSING_PERMISSIONS` otherwise
 
-:::caution[An unfiltered read rewrites message deletion entries]
-A request supplying neither `user_id` nor `action_type` deletes every run of two or more consecutive [MESSAGE_DELETE](#audit-actions) entries sharing one actor and one channel, and writes one [MESSAGE_BULK_DELETE](#audit-actions) entry in its place.
-:::
-
-:::note[The same consolidation also runs in the background]
-Fluxer also applies consolidation to the 250 most recent entries about 30 seconds after a message deletion entry is written.
+:::caution[An unfiltered read consolidates message deletion entries]
+Without `user_id` or `action_type`, runs of two or more consecutive [MESSAGE_DELETE](#audit-actions) entries sharing one actor and one channel become a single [MESSAGE_BULK_DELETE](#audit-actions) entry.
 :::
 
 ### Side effects
 
-Consolidation writes the replacement entry with a fresh snowflake, `options.count` set to the run length, and no reason. It emits one [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) Dispatch, which the Gateway delivers only to guild sessions holding `VIEW_AUDIT_LOG`. A read that finds no run writes nothing and emits no Dispatch.
+A consolidated entry has a new ID, `options.count` equal to the number of replaced entries and no reason. It emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to guild sessions holding `VIEW_AUDIT_LOG`.
 
 ### Rate limit
 

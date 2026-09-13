@@ -34,7 +34,7 @@ A client opens the socket, waits for Hello, sends Identify, and then heartbeats 
 }
 ```
 
-`token` and `properties` are the only required fields. The token is the raw account or bot token, with no HTTP authentication prefix, so a bot sends it without the `Bot ` prefix the HTTP API requires. [Client commands](/gateway/commands/#identify) defines the rest. Everything the server sends after Ready is a [Dispatch](/gateway/events/#dispatch-delivery), which is one event payload with its name in `t` and its data in `d`.
+Only `token` and `properties` are required. Send the raw user or bot token without an HTTP authentication prefix. See [Identify](/gateway/commands/#identify) for optional fields. Account and guild updates arrive as [Dispatches](/gateway/events/#dispatch-delivery), with the event name in `t` and its data in `d`.
 
 ## Protocol version
 
@@ -104,7 +104,7 @@ Snowflakes are decimal strings. See [Snowflakes](/snowflakes/) for the identifie
 
 `zstd-stream` is a continuous stream in both directions. A client MUST feed every server frame to the same decompressor in arrival order and produce every client frame from the same compressor.
 
-The server compresses at level 3. One WebSocket message has exactly one Gateway payload.
+One WebSocket message has exactly one Gateway payload.
 
 Hello is already compressed on a connection that negotiated `zstd-stream`, so the first frame such a connection receives is a binary frame.
 
@@ -223,11 +223,7 @@ Opcode 1 is accepted before and after authentication. Before a session exists it
 
 The server answers with Opcode 11 Heartbeat ACK, which has no `d`. Once a session is attached, a `d` value that is neither `null` nor an integer closes with `4007` and reason `Invalid sequence`. A session that does not answer within 5,000 ms closes with the same code and reason.
 
-The Gateway also runs its own timer, which ticks every 13,750 ms. On the first tick at or after 37,125 ms since the last acknowledgement, it sends Opcode 1 with `d: null` and marks the connection as awaiting an acknowledgement. On the first tick more than 45,000 ms after that acknowledgement, it closes with `4009` and reason `Heartbeat timeout`. A connection that never answers is therefore asked at 41,250 ms and closed at 55,000 ms.
-
-A client MUST answer the server's Opcode 1 with its own Opcode 1.
-
-An accepted client Heartbeat resets the elapsed time and clears the awaiting state. The server's own Opcode 1 does neither, so the deadline keeps running from the last client Heartbeat.
+The server can request an immediate heartbeat with Opcode 1 and `d: null`. Answer it with your own Opcode 1. Continue sending heartbeats at the advertised interval. A connection that misses the heartbeat deadline closes with `4009` and reason `Heartbeat timeout`.
 
 A heartbeat with a sequence permanently trims every retained Dispatch at or below that sequence from the replay buffer and records it as the acknowledged sequence. A client MUST send the sequence it has processed, because a later Resume from a lower sequence closes with `4007`.
 

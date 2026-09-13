@@ -47,7 +47,7 @@ Generates the requested number of unredeemed gift codes. Requires `gift_codes:ge
 | --- | --- | --- |
 | codes<sup>1</sup> | array[string] | The complete redemption links, one for each generated code, in generation order |
 
-<sup>1</sup> Each entry is the instance's configured gift endpoint, with one trailing slash removed if present, followed by `/` and the code
+<sup>1</sup> Each link uses the instance's configured gift endpoint followed by `/` and the code
 
 ```json
 {
@@ -75,7 +75,7 @@ Reading a code back requires presenting it to [Get gift](/http-api/gifts/#get-gi
 
 Each code is 32 characters drawn from the uppercase letters, the lowercase letters, and the digits. Fluxer creates it unredeemed and records the system account with ID `0` as its creator, which is the creator the [gift object](/http-api/gifts/#gift-object) reports to the redeemer.
 
-Fluxer writes the codes one at a time. A failure part way through leaves the codes already written redeemable while the response reports the failure. Those codes appear in no response.
+A failed request can leave some codes redeemable without returning them. Retrying can therefore create additional codes.
 
 The operation records no Admin audit entry and emits no Gateway Dispatch.
 

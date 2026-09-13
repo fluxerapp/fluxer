@@ -149,7 +149,7 @@ Every `category_type` and `category_id` here is an integer of 0 through 8. A val
 
 Returns every pending application as an array of [Admin pending application](#admin-pending-application-object) objects. Requires `discovery:review`.
 
-Applications arrive in storage order, keyed by application time and then by guild ID. That direction is not specified, so a client that needs a stable order sorts the array itself. The response is a bare array, and the operation accepts no cursor and no limit.
+The response is a bare array with no guaranteed order, cursor or limit. Sort it locally if a stable order is required.
 
 A guild approved automatically on submission never appears here. An application whose stored record can no longer be read is dropped from the array. The request still succeeds.
 
@@ -271,7 +271,7 @@ A rebuild of the discovery search index does not change what this operation answ
 
 Returns every approved listing as an array of [Admin discovery listing](#admin-discovery-listing-object) objects. Requires `discovery:review`.
 
-Listings arrive in the same unspecified storage order as [List discovery applications](#list-discovery-applications). The response is a bare array, and the operation accepts no cursor and no limit. A pending, rejected, or removed application is never returned.
+The response is a bare array with no guaranteed order, cursor or limit. Pending, rejected and removed applications are excluded.
 
 ### Response
 
@@ -422,4 +422,3 @@ A removal whose guild can no longer be resolved still succeeds. Fluxer skips the
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
-

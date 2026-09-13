@@ -24,8 +24,6 @@ The global window is one second. The default allowance is 50 requests per second
 
 Some operations enforce a further limit inside the handler. `RATE_LIMIT_BYPASS` exempts an account from none of them. [Limits enforced inside a handler](#limits-enforced-inside-a-handler) has the complete set.
 
-A route bucket is consumed only after the global bucket admits the request.
-
 :::note[An allowance drains continuously]
 Every bucket is a leaky bucket. It admits at most the declared limit at once and refills continuously at that limit for each declared window, so a client that exhausts an allowance can send again as soon as enough of it has drained.
 :::
@@ -35,12 +33,10 @@ Every bucket is a leaky bucket. It admits at most the declared limit at once and
 :::
 
 :::note[A 429 can hide a 401 or 403]
-A route's rate limit middleware normally runs before its authentication policy, so an over-allowance request returns 429 `RATE_LIMITED` where the same request inside its allowance would return 401 or 403. Fluxer resolves the credential before either check, and both buckets are keyed by the authenticated account whenever one resolves.
+A rate-limited request can return 429 even if its credentials would otherwise be rejected with 401 or 403.
 :::
 
-The routes below charge a second bucket. [Create private channel](/http-api/users/private-channels/#create-private-channel) and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient) evaluate that second bucket after the authentication policy and the request validation, so an unauthenticated or malformed request is refused before it is consumed. Create private channel consumes `user:group_dm:create` only when the validated body supplies `recipients`. A one-to-one direct message create reaches no second bucket.
-
-[Delete guild emoji](/http-api/guild-emojis/#delete-guild-emoji) and [Delete guild sticker](/http-api/guild-stickers/#delete-guild-sticker) declare both of their buckets ahead of the authentication policy and the request validation, so an unauthenticated or malformed request consumes the second bucket too. The `guild:emoji:delete:daily::guild_id` and `guild:sticker:delete:daily::guild_id` buckets draw on the global allowance, and one delete request evaluates it twice.
+Some operations have additional allowances, including group direct message creation, adding group recipients, and deleting guild emoji or stickers. Each operation lists its limits. Rejected requests can still consume an allowance.
 
 :::caution[A global denial revokes a user session]
 When the global bucket denies a request authenticated by a non-bot account's user session token, Fluxer revokes that token before writing the 429. The client must authenticate again. A bot token, an OAuth2 access token, and an Admin API key are never revoked this way, and a route bucket denial never revokes a credential.
@@ -121,12 +117,12 @@ These headers describe a rate limit decision. An operation that answers 429 retu
 
 <sup>5</sup> Rounded to millisecond precision with trailing zeros removed on a successful response, and emitted as the exact computed decimal on a denial
 
-<sup>6</sup> The leading 16 hexadecimal characters of the SHA-256 digest of the route's declared bucket name before any path parameter is substituted, so it identifies the route and never the caller
+<sup>6</sup> An opaque identifier for the route's bucket, not the caller
 
 A 429 from a limit enforced inside a handler has the other route headers and no `X-RateLimit-Bucket`.
 
-:::note[A browser client reads none of these headers]
-The [cross-origin policy](/http-api/#cross-origin-requests) exposes only `X-Fluxer-Version`, so a script running on an allowed origin observes the 429 status and the response body, and no header.
+:::note[Cross-origin clients cannot read rate-limit headers]
+The [cross-origin policy](/http-api/#cross-origin-requests) does not expose these headers. Use the response body's `retry_after` value.
 :::
 
 ## Limits enforced inside a handler
@@ -164,7 +160,7 @@ The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Re
 | [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) | 3 per 5 days, keyed by the submitted number | `PHONE_RATE_LIMIT_EXCEEDED` |
 | [Resend IP authorisation](/http-api/authentication/#resend-ip-authorisation) | Nothing in the first 30 seconds after the ticket was issued, keyed by the authorisation ticket | `IP_AUTHORIZATION_RESEND_COOLDOWN` |
 
-Fluxer stores a further cooldown when the SMS provider itself throttles a send. The provider names the account, the number, or both, and a send inside that cooldown reports `PHONE_RATE_LIMIT_EXCEEDED` with the ordinary denial body and the remaining delay.
+SMS provider throttling can impose an additional cooldown. It returns `PHONE_RATE_LIMIT_EXCEEDED` with the remaining delay.
 
 The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Retry-After` header in whole seconds, and the body reports that delay again as a top-level `resend_available_in` and `retry_after`. A second resend on one ticket returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`. The allowance never refills, and the ticket expires 15 minutes after it was issued.
 

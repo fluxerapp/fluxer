@@ -81,7 +81,7 @@ One entry of the bulk hierarchy update. Entries are applied in array order, each
 
 <sup>4</sup> The copy runs only when the same entry also moves the channel into a category, and it replaces the moved channel's overwrites
 
-A supplied `position` is clamped to the number of destination siblings and converted into the preceding sibling at that index. An entry that omits both `position` and `preceding_sibling_id` appends a voice channel to the end of its destination siblings, and inserts any other channel directly before the first voice sibling.
+A `position` beyond the destination's last sibling places the channel last. Omitting both `position` and `preceding_sibling_id` places a voice channel last and any other channel directly before the first voice sibling.
 
 Naming a category as the preceding sibling places the moved channel after that category and after every channel already inside it.
 
@@ -237,14 +237,14 @@ Applies a guild channel hierarchy update and returns 204 with an empty body. Req
 
 `MANAGE_CHANNELS` is an [elevated permission](/http-api/permissions/#elevated-permissions), so it also requires an enrolled multi-factor authenticator when the guild [MFA level](/http-api/guilds/#mfa-levels) is elevated and the caller is not the guild owner.
 
-The request takes a guild-wide lock for its duration. A request that arrives while another hierarchy update owns the guild is rejected with 423 [`GENERAL_ERROR`](/http-api/errors/) and a `Retry-After` header of two seconds. The lock expires on its own after 30 seconds.
+Concurrent hierarchy updates to the same guild can return 423 [`GENERAL_ERROR`](/http-api/errors/) with a `Retry-After` header of two seconds.
 
-Fluxer resolves every channel, parent, and sibling named by any entry once before the first entry runs, so a request naming an unknown identifier anywhere applies nothing. After that check, each entry is committed as it is applied. A request that fails partway leaves the entries it already applied in place. Moving a category moves the channels inside it as one block, and that block is excluded from the sibling list an entry indexes into.
+An unknown channel, parent or sibling rejects the entire request. Other failures can leave earlier entries applied. Moving a category moves its children with it, and neither the category nor its children count as destination siblings.
 
-Each entry flattens the complete guild hierarchy into one list. In that list, each root channel appears in position order, each category is immediately followed by its children, and each category's children put text and link channels before voice channels. Fluxer lifts the moved channel out of that list, together with its children when it is a category, and reinserts it at its destination. It then renumbers the result densely from 1 through the channel count.
+After a move, positions run consecutively from 1 across the guild. Each category is followed by its children, with text and link channels before voice channels.
 
-:::note[Renumbering can rewrite a channel no entry named]
-An entry that changes the flattened order renumbers the guild's complete hierarchy, so a channel the request never mentioned can end up at a new position. An entry whose flattened result matches the list it started from writes nothing.
+:::note[A move can change other channels' positions]
+Renumbering can change positions of channels not named in the request. An entry that leaves the order unchanged has no effect.
 :::
 
 ### Path parameters
@@ -258,10 +258,10 @@ An entry that changes the flattened order renumbers the guild's complete hierarc
 The top-level body is an array of [channel position objects](#channel-position-object) of any length, including zero. Every channel, parent, and sibling an entry names must exist in this guild. A category cannot be given a parent, and a parent that is not a category is refused. A channel cannot be positioned relative to itself or to one of its own children. Moving a channel into a full category is refused with 400 `MAX_CATEGORY_CHANNELS`.
 
 :::caution[Inside a category, voice channels come last]
-Fluxer checks each entry's planned result before committing it. It refuses the request with `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS` when a voice channel would come to rest directly above a text or link sibling, or the reverse.
+Placing a voice channel above a text or link sibling, or placing a text or link channel below a voice sibling, returns `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`.
 :::
 
-The check inspects the moved channel alone, and only inside its current parent and its destination parent, so no other category can fail an entry. Channels at the guild root are exempt. Every applied entry still orders each category's children with text and link channels first, and a category that already violated the rule is rewritten into that order by the same renumbering.
+Channels at the guild root are exempt from this restriction.
 
 ### Response
 
@@ -279,11 +279,11 @@ The check inspects the moved channel alone, and only inside its current parent a
 
 ### Side effects
 
-The operation changes the position and parent of each affected channel, and every entry that changes the flattened order renumbers the guild's complete hierarchy densely from 1. It emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) per applied entry with the resulting hierarchy filtered to what each recipient can view. It sends nothing for an entry that leaves the order unchanged, and nothing to a recipient whose filtered list is empty.
+Each entry that changes the order emits [Channel Update Bulk](/gateway/events/#channel-update-bulk) with the resulting hierarchy filtered to channels each recipient can view.
 
-An entry with `lock_permissions` that changes the parent rewrites the moved channel's overwrites from the destination category after that entry's reorder has already been dispatched. The rewrite has no Gateway Dispatch and no audit entry, so a client must re-read the channel to observe the copied overwrites.
+When `lock_permissions` copies the destination category's overwrites, re-read the moved channel to obtain them. The copy has no Gateway event or audit entry.
 
-The rewrite requires more than [MANAGE_ROLES](/http-api/permissions/) in the moved channel. In that channel, the caller must also hold each deny bit the copy would remove and each allow bit it would add. Any bit the caller does not hold returns 403 `MISSING_PERMISSIONS` after the reorder has already been committed.
+The caller must hold [MANAGE_ROLES](/http-api/permissions/) in the moved channel and each deny bit the copy removes or allow bit it adds. Insufficient authority returns 403 `MISSING_PERMISSIONS`, but the channel move remains applied.
 
 ### Rate limit
 

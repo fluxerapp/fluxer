@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Admin voice
-description: Voice regions, voice servers, placement eligibility, and topology publication.
+description: Manage voice regions, servers, credentials, and placement eligibility.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -10,12 +10,12 @@ A voice region is a named group of media machines, and a voice server is one mac
 
 No operation here addresses a live session, a participant, or a track. [Get voice state counts](/admin-api/gateway/#get-voice-state-counts) reports occupancy, and [List RTC regions](/http-api/channels/#list-rtc-regions) is the caller-facing view of the same regions.
 
-:::note[A change decides placements made after the reload]
-Every write takes effect once each API node reloads its topology. No write moves, disconnects, or re-places a live session.
+:::note[Changes apply to new placements]
+Changes take effect across the instance after a short delay. No write moves or disconnects an existing session.
 :::
 
-:::caution[Each write runs in separate steps]
-A write stores the record, notifies every node to reload, then records the audit entry with the audit reason. A failure at the second or third step answers 500 with the record already stored, so read the record back before retrying.
+:::caution[A failed response can follow a successful change]
+A 500 response can arrive after the configuration has changed. Read it back before retrying.
 :::
 
 ## Media transport
@@ -44,7 +44,7 @@ With a guild present, a guild named by `allowed_guild_ids` is admitted at once a
 
 A region record has the identity a client sees, the coordinate placement measures distance from, and the eligibility fields described under [placement eligibility](#placement-eligibility). It has no capacity, no health, and no server count.
 
-The operator supplies `id` on creation, and it is the primary key. A channel stores it as its `rtc_region`, and [Modify call region](/http-api/calls/#modify-call-region) accepts it, so changing it means creating a new region and deleting the old one.
+The operator supplies `id` on creation. Channels reference it through `rtc_region`, and [Modify call region](/http-api/calls/#modify-call-region) accepts it. To change an ID, create a new region and delete the old one.
 
 ### Structure
 
@@ -350,7 +350,7 @@ Deletes a region and every server registered in it. Requires `voice:region:delet
 | region_id | string | The ID of the region (1-64 characters) |
 
 :::danger[Deleting a region deletes every server in it]
-The region record and every server record stored under it are removed in one batch. There is no confirmation step. The server records and their stored credentials cannot be recovered, so read the servers back first if they have to be recreated.
+There is no confirmation step or recovery operation. Save the server configuration and credentials separately before deleting a region if they will be needed again. Server reads do not return credentials.
 :::
 
 ### Response body
@@ -370,7 +370,7 @@ The region record and every server record stored under it are removed in one bat
 
 ### Side effects
 
-Each node reloads its topology once for the whole batch, and an operation that has to reach a deleted server afterwards fails. Sessions already placed in the region are not disconnected by the deletion itself.
+Operations that need a deleted server fail once the change takes effect. Existing sessions are not disconnected by the deletion itself.
 
 One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `delete_voice_region` and the target type `voice_region` records the region identifier and its name in metadata. No `delete_voice_server` entry is written for the servers deleted with the region.
 

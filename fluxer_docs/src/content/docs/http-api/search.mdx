@@ -10,7 +10,7 @@ Message search matches indexed messages against a text query and a filter set. O
 
 Fluxer resolves the requested scope to the set of channels the caller may search, then runs the query over that set. A private channel search covers the authenticated account alone, and the set holds a guild channel only while the caller can read its history.
 
-An instance backs message search with either Elasticsearch or Meilisearch. Term matching and typo tolerance belong to whichever it runs, so an instance can differ in how forgiving a match is. Filter matching is exact in every case.
+Term matching and typo tolerance can vary by deployment. Filter matching is exact.
 
 ## Message search result object
 
@@ -37,7 +37,7 @@ The body a completed search returns, holding one page of matching messages.
 
 [Search messages](#search-messages) never honours a supplied cursor, so page through a result set with `page` alone.
 
-The operation drops a hit whose message no longer exists. On an offset page the operation re-walks the result set so that `total` and the returned page both count only live messages. A request that supplied a `cursor` skips that reconciliation and only removes the stale hits, so the page can be shorter than `hits_per_page` while further pages exist.
+Deleted messages are omitted. When using `page`, the total counts only existing messages. Supplying a `cursor` can leave shorter pages even when more results exist.
 
 ### Example
 
@@ -249,10 +249,6 @@ Every field is optional, though the default `current` scope requires a context. 
 A `current` guild context rejects a requested channel outside that guild with 400 and the field code [ALL_CHANNELS_MUST_BELONG_TO_GUILD](/http-api/errors/). It rejects a channel inside the guild that the caller cannot read with 403 `MISSING_PERMISSIONS`. Every other scope rejects a requested channel its resolved set does not already contain with 403 `MISSING_PERMISSIONS`. Use `exclude_channel_id` to remove a channel.
 
 Fluxer compares `attachment_extension` without lowercasing it, so an uppercase value never matches. `include_nsfw` gates which channels a resolved scope keeps.
-
-:::caution[One stale hit re-reads the whole result set]
-The operation walks the set from the first page to skip stale hits, so a deep offset page costs proportionally more and returns no cursor.
-:::
 
 :::caution[Elasticsearch has a 10000 document result window]
 A plain text query pages past it. A page beyond that window fails with 500 `INTERNAL_SERVER_ERROR` when `contents` or `exact_phrases` is supplied.

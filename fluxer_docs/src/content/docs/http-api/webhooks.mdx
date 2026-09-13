@@ -110,7 +110,7 @@ Every operation returning a [webhook object](#webhook-object) or a token webhook
 | message_reference?<sup>4</sup> | ?[message reference input](/http-api/messages/#message-reference-input-object) object | Reply or forward reference, or null |
 | allowed_mentions?<sup>5</sup> | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Mention parsing policy, or null |
 | flags? | integer | [Message flags](/http-api/messages/#message-flags), where omission is treated as zero and every bit outside the sendable mask is cleared |
-| favorite_meme_id? | ?snowflake | Favorite meme to attach |
+| favorite_meme_id? | ?snowflake | Favourite meme to attach |
 | sticker_ids? | ?array[snowflake] | At most 3 sticker IDs |
 | tts?<sup>6</sup> | boolean | Text-to-speech request |
 | nonce?<sup>7</sup> | string \| integer | Client-generated message identifier (1-32 characters). A non-negative safe integer becomes its decimal string |
@@ -136,8 +136,6 @@ Every operation returning a [webhook object](#webhook-object) or a token webhook
 When `embeds` is absent, Fluxer rewrites the singular key `embed` to a one-element `embeds` array, and an `embed` of null becomes an empty array. When both are present, `embed` is dropped.
 
 A multipart body accepts both [pre-uploaded attachments](/http-api/messages/#pre-uploaded-attachment-object) and [direct multipart attachment metadata](/http-api/messages/#direct-multipart-attachment-metadata-object).
-
-Fluxer fetches an `avatar_url` through the media boundary.
 
 ## Webhook attachment input object
 
@@ -258,7 +256,7 @@ These objects define the body [Execute Slack webhook](#execute-slack-webhook) ac
 | value? | string | Field value, mapped to the embed field value |
 | short? | boolean | Whether the embed field is rendered inline (default false) |
 
-:::caution[Converted embeds skip the rich embed schema]
+:::caution[Slack embed fields have no individual length limits]
 No per-embed title, description, footer, or field maximum applies to a Slack value.
 :::
 
@@ -802,8 +800,6 @@ Creates a webhook in a guild text or voice channel and returns the new [webhook 
 
 Creation emits a [Webhooks Update](/gateway/events/#webhooks-update).
 
-Fluxer checks the request in a fixed order: the content filter, the rate limit, the credential, the body schema, channel access and `MANAGE_WEBHOOKS`, the guild allowance, the channel allowance, and the name scan. The avatar itself is checked last.
-
 The guild allowance is the resolved [max_webhooks_per_guild](/http-api/instance/#limit-keys) value for the guild, defaulting to 1000. The channel allowance is the resolved [max_webhooks_per_channel](/http-api/instance/#limit-keys) value, defaulting to 15.
 
 ### Path parameters
@@ -1306,7 +1302,7 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 
 ### Side effects
 
-The operation replaces the supplied fields, and a content change marks the message edited. An edit does not re-extract mentions, so the stored mention lists are kept and `allowed_mentions` is accepted and ignored. Supplying embeds replaces the complete embed collection and rechecks every attachment reference the embeds make. It emits [Message Update](/gateway/events/#message-update) to sessions that can read the channel.
+The operation replaces the supplied fields, and a content change marks the message edited. Existing mentions stay unchanged and `allowed_mentions` is ignored. Supplying embeds replaces the complete collection and validates its attachment references. Sessions that can read the channel receive [Message Update](/gateway/events/#message-update).
 
 ### Rate limit
 
@@ -1496,4 +1492,3 @@ Mention parsing is disabled for the created message, so no mention in a provider
 ### Rate limit
 
 200 requests per minute for each caller identity and webhook ID, on the `webhook:instatus::webhook_id` bucket, which is exempt from the global limit.
-

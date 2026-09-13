@@ -6,7 +6,7 @@ description: Administrative search index rebuilds, index names, and rebuild prog
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A search index holds the documents a search reads, and a rebuild writes those documents from current data. These routes queue a rebuild and read its progress. The rebuild itself runs as the `refreshSearchIndex` background task described by [Jobs](/admin-api/jobs/).
+These routes rebuild search indexes from current data and report progress. Rebuilds appear in [Jobs](/admin-api/jobs/) as `refreshSearchIndex`.
 
 Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
 
@@ -25,13 +25,13 @@ Both routes require the [ACL](/admin-api/#acl-evaluation) `guild:lookup`.
 | guild_members<sup>3</sup> | One guild | Members of one guild, requiring `guild_id` |
 | favorite_memes<sup>4</sup> | One user | Favourited [memes](/http-api/memes/) of one user, requiring `user_id` |
 
-<sup>1</sup> This name has no index of its own. It reads every approved listing and writes its description, category, primary language, and tags onto the existing guild documents in batches of 200
+<sup>1</sup> Refreshes the description, category, primary language and tags of approved discovery listings without removing guilds from search
 
-<sup>2</sup> This name indexes no message itself. It clears the message documents of every channel in the guild, then queues one `indexChannelMessages` job for each channel
+<sup>2</sup> Clears the guild's message index and queues `indexChannelMessages` jobs for its channels. Completion of the parent job does not mean those jobs have finished
 
-<sup>3</sup> The rebuild clears the guild's member documents first and stamps `members_indexed_at` on the guild when it finishes
+<sup>3</sup> Clears the guild's member index first and updates `members_indexed_at` on completion
 
-<sup>4</sup> No worker handler is registered for this name. The queued job fails before it writes any progress record
+<sup>4</sup> Rebuilding this index is not supported. The request is accepted, but the job fails without reporting progress
 
 Every instance-wide name other than `discovery` deletes its documents before the first batch is written, so search over that index is incomplete for the whole run.
 
@@ -88,7 +88,7 @@ Progress for one queued rebuild. The object shape is selected by `status`.
 
 <sup>3</sup> Rewritten on every progress report, so its value moves forward while the rebuild runs
 
-The failure write replaces the record with the status, the index type, the error text, and the failure time, so a `failed` record has neither `total` nor `indexed`.
+A failed result includes `status`, `index_type`, `error` and `failed_at`, but neither `total` nor `indexed`.
 
 ### Example
 
@@ -146,9 +146,9 @@ Search results over the named index can be incomplete until the rebuild finishes
 
 ### Side effects
 
-Fluxer rebuilds the named index from current data in batches of 1,000 documents. A guild-scoped rebuild does not check that the guild exists, so an unknown ID produces an empty index.
+A guild-scoped rebuild for an unknown guild produces an empty index.
 
-The job has an attempt budget of 1, so a rebuild that throws is not retried.
+A failed rebuild is not retried automatically.
 
 Fluxer records one Admin audit entry with the action `queue_refresh_index`, the target type `search_index`, and the target ID `0`. Its metadata has `index_type`, `job_id`, and whichever of `guild_id` and `user_id` the request supplied. Fluxer emits no Gateway Dispatch.
 

@@ -6,7 +6,7 @@ description: The safety blocklists, their value forms, and the operations that m
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A blocklist is a stored set of values Fluxer checks account access and user content against. Nine lists exist. Each has one canonical value form, one matching rule, and its own stored fields. Fluxer canonicalises every value before storage and before every check.
+Fluxer has nine blocklists for account access and user content. Each defines its accepted values, matching rules and metadata. Values are normalised consistently when added and checked.
 
 Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
 
@@ -420,7 +420,7 @@ Every hash is written with the category `manual`, the severity `2`, and a null c
 
 ### Side effects
 
-The job lowercases each hash and writes it as an upsert. It publishes one refresh notice after the last hash, so a job cancelled part way leaves the hashes it wrote invisible to other nodes. They become visible on a later write, or on the feed sync that runs every twelve hours. No Gateway Dispatch is emitted.
+Each hash is lowercased and replaces any existing entry. Changes become visible across the instance when the job completes. If it is cancelled, changes already made can remain unapplied on other nodes until a later blocklist update or the twelve-hour feed sync. No Gateway Dispatch is emitted.
 
 The job records one aggregate [Admin audit entry](/admin-api/#admin-audit-entry-object) under the action `bulk_ban_file_shas`, with the submitted, successful, and failed counts. A cancelled job records none.
 
@@ -454,7 +454,7 @@ The body is selected by `list_type`.
 
 <sup>1</sup> `avatar-hash` only, where it is the whole body
 
-<sup>2</sup> `profile-substring` only, where both are required. The body reuses the creation shape, so `reason` and `notes` parse and are then ignored
+<sup>2</sup> `profile-substring` only, where both are required. `reason` and `notes` are accepted but ignored
 
 ### Response
 
@@ -469,7 +469,7 @@ The operation is idempotent and reports no counts. A value with no stored row st
 
 ### Side effects
 
-Every removed row stops affecting subsequent blocklist decisions, and one refresh notice follows the last value. A value can remain blocked by another matching row. No Gateway Dispatch is emitted.
+Removed entries stop affecting subsequent blocklist decisions after changes propagate across the instance. A value can remain blocked by another matching entry. No Gateway Dispatch is emitted.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per canonical value processed.
 
@@ -598,7 +598,7 @@ Changing the `scope` of a `profile-substring` row writes a second row under the 
 
 ### Side effects
 
-The written fields take effect for subsequent matches, and the write publishes a refresh notice. No Gateway Dispatch is emitted.
+The updated fields take effect for subsequent matches after changes propagate across the instance. No Gateway Dispatch is emitted.
 
 The write records one [Admin audit entry](/admin-api/#admin-audit-entry-object) under the same action an add records, with the canonical value but no previous values of the changed fields.
 
@@ -696,7 +696,7 @@ Every account using that image shares the same truncated prefix, so blocking the
 
 ### Side effects
 
-The hash takes effect for subsequent avatar uploads, and the write publishes a refresh notice. No Gateway Dispatch is emitted.
+The hash blocks subsequent avatar uploads after the change propagates across the instance. No Gateway Dispatch is emitted.
 
 Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) under the action `ban_avatar_hash`, with the stored hash and the supplied reason.
 

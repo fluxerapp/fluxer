@@ -6,7 +6,7 @@ description: Instance discovery, client geolocation, the limit key registry, and
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-The Instance resource describes how one Fluxer deployment is set up. It publishes the discovery document, the client geolocation lookup, and the served OpenAPI document, and it owns the [limit key](#limit-keys) registry.
+Discover a deployment's endpoints, available features, and [limits](#limit-keys), look up the client's approximate location, or download its OpenAPI document.
 
 [Get instance discovery](#get-instance-discovery) is the entry point of the API. A client that knows only a Fluxer origin reads `/.well-known/fluxer` first, and that one unauthenticated response has every field of the [instance discovery object](#instance-discovery-object). Those values include the API base URLs, the [main Gateway](/gateway/overview/) WebSocket URL, and the [Media Proxy](/media-proxy/overview/) base URL. They override the [endpoint path defaults](#instance-endpoints-object) a deployment would otherwise serve from its canonical public origin.
 
@@ -437,7 +437,7 @@ The approximate location Fluxer resolved for the request, together with the regi
 | ageRestrictedGeos | array[[geo entry](#geo-entry-object) object] | Locations where mature content requires an age check |
 | ageBlockedGeos | array[[geo entry](#geo-entry-object) object] | Locations where mature content is unavailable |
 
-<sup>1</sup> Every detected field is null when the deployment has configured no geolocation database, when the client address is not a valid IP address, when the database holds no record for it, or when the lookup fails. A record that resolves can still omit the subdivision code or the coordinate pair
+<sup>1</sup> All detected fields are null when the location is unknown. A known location can still omit the subdivision code or coordinates
 
 <sup>2</sup> The value is upper case
 
@@ -493,9 +493,7 @@ The path has no `/v1` prefix.
 
 Returns the [geolocation object](#geolocation-object) for the request's client address.
 
-The client address is the first hop of the deployment's configured client IP header, which defaults to `x-forwarded-for`. A lookup that resolves nothing still returns 200 with `countryCode`, `regionCode`, `latitude`, and `longitude` all null. A client MUST treat an all-null result as an unknown location.
-
-A resolved result is cached for ten minutes against the address. An IPv4 address is cached individually and an IPv6 address is cached by its `/64`.
+A lookup that resolves nothing still returns 200 with `countryCode`, `regionCode`, `latitude`, and `longitude` all null. Treat this as an unknown location.
 
 ### Response
 
@@ -513,7 +511,7 @@ A resolved result is cached for ten minutes against the address. An IPv4 address
 
 Returns the deployment's OpenAPI 3.1 document as JSON with `Content-Type: application/json; charset=utf-8`.
 
-The document has no `ETag`. It declares one server entry, the deployment's `api_client` value from the [instance endpoints object](#instance-endpoints-object) followed by `/v1`. Every path key is relative to that entry. The server entry is the only part that varies by deployment, and the rest is fixed when the document is generated.
+The document has no `ETag`. Its server URL is the deployment's `api_client` [endpoint](#instance-endpoints-object) followed by `/v1`. Every path is relative to that URL.
 
 ### Response
 

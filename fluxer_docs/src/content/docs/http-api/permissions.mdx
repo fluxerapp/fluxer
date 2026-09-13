@@ -393,7 +393,7 @@ Reorders the role hierarchy and returns 204 with an empty body. Requires [MANAGE
 - The caller needs [hierarchy authority](#role-hierarchy) over every role whose entry supplies a position differing from that role's stored `position`.
 - An entry that omits the field or repeats the stored value is accepted without that check.
 
-Fluxer holds a guild-wide lock while the operation runs, so a concurrent position write on the same guild returns 423 `GENERAL_ERROR`.
+A concurrent role position change in the same guild can return 423 `GENERAL_ERROR`.
 
 Every role the caller can manage is sorted by its requested position in descending order. A role that supplied no position keeps its stored position as the sort key, and any remaining tie is resolved by the current order. Fluxer then puts those roles back into the same set of slots they held before, so a role the caller cannot manage never moves. Every role other than the everyone role is then renumbered to a dense position. The highest-ranked role receives the number of roles other than the everyone role, the lowest-ranked role receives 1, and the everyone role stays at 0.
 
@@ -440,7 +440,7 @@ Sets the member list position of one or more roles and returns 204 with an empty
 - The caller needs [hierarchy authority](#role-hierarchy) over every named role.
 - The everyone role cannot receive a hoist position.
 
-A hoist position orders the separately displayed member list groups and is independent of the permission hierarchy. The operation holds a guild-wide lock, so a concurrent hoist position write on the same guild returns 423 `GENERAL_ERROR`.
+A hoist position orders the separately displayed member list groups independently of the permission hierarchy. A concurrent hoist position change in the same guild can return 423 `GENERAL_ERROR`.
 
 ### Path parameters
 
@@ -480,7 +480,7 @@ Clears the member list position of every role in the guild and returns 204 with 
 
 - [Role hierarchy](#role-hierarchy) is not evaluated. The permission alone clears the hoist position of every role in the guild, including roles the caller does not outrank.
 
-The operation takes the same guild-wide lock as [Modify role hoist positions](#modify-role-hoist-positions).
+A concurrent hoist position change in the same guild can return 423 `GENERAL_ERROR`.
 
 ### Path parameters
 

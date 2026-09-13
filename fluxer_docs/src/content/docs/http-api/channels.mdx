@@ -239,10 +239,6 @@ Fluxer enforces age verification only for a guild text, voice, or link channel. 
 | 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the private channel, each returning `UNKNOWN_CHANNEL`, or the guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
 
-:::note[The guild resolves after the channel]
-A channel whose guild is gone fails with `UNKNOWN_GUILD`, not `UNKNOWN_CHANNEL`.
-:::
-
 ### Side effects
 
 Requesting the personal notes channel of the authenticated user creates it when it does not already exist, and returns it with no [Channel Create](/gateway/events/#channel-create) Dispatch.
@@ -292,7 +288,7 @@ Returns the [RTC region objects](#rtc-region-object) the authenticated user can 
 - The caller needs the same access as [Get channel](#get-channel).
 - The channel must be a guild voice channel.
 
-Fluxer returns a region only when the caller passes every restriction configured for it and at least one active voice server in that region is also accessible to the caller. The array can be empty. [Placement eligibility](/admin-api/voice/#placement-eligibility) states the stored fields those restrictions come from.
+Only regions available to the caller are returned. The array can be empty.
 
 :::note[An unconfigured deployment skips the channel check]
 On a deployment that configures no voice topology, a missing channel, an invisible channel, and a non-voice channel all return 200 with `[]`.
@@ -546,7 +542,7 @@ An account that stores neither a password nor a second factor is verified withou
 
 Deleting a guild category first clears the `parent_id` of every child channel and emits [Channel Update](/gateway/events/#channel-update) for each one. The category itself is then deleted like any other guild channel.
 
-Deleting a guild channel deletes its invites and webhooks, purges the stored attachments of its messages, deletes its messages, and removes those messages from search. Fluxer then emits [Channel Delete](/gateway/events/#channel-delete) to every session subscribed to the guild, records a channel delete audit log entry with the previous channel state and no reason, and removes the channel record. A guild that named the channel as its system, rules, or AFK channel has that reference cleared and emits [Guild Update](/gateway/events/#guild-update).
+Deleting a guild channel permanently removes its messages, attachments, invites and webhooks. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. A system, rules or AFK channel reference is cleared with [Guild Update](/gateway/events/#guild-update).
 
 Closing a direct message marks the channel closed for the caller alone and emits [Channel Delete](/gateway/events/#channel-delete) to that caller. The channel, its messages, and the other recipient's view are untouched.
 
@@ -614,7 +610,7 @@ The `MAX_GROUP_DM_RECIPIENTS` body has `max_recipients`, the exact ceiling that 
 
 ### Side effects
 
-A successful addition stores the new recipient set and opens the channel for the added user. The added user receives [Channel Create](/gateway/events/#channel-create), existing recipients receive [Channel Recipient Add](/gateway/events/#channel-recipient-add), and every recipient receives the addition system message through [Message Create](/gateway/events/#message-create). Adding a user who is already a recipient changes nothing, consumes no capacity, and emits no Dispatch.
+The added user receives [Channel Create](/gateway/events/#channel-create), existing recipients receive [Channel Recipient Add](/gateway/events/#channel-recipient-add), and every recipient receives an addition system message through [Message Create](/gateway/events/#message-create). Adding an existing recipient changes nothing and emits no Dispatch.
 
 ### Rate limit
 
@@ -674,7 +670,7 @@ The optional body has the same [sudo verification fields](#sudo-verification-fie
 
 ### Side effects
 
-The removal has the same state and Dispatch effects as leaving through [Delete or leave channel](#delete-or-leave-channel). It stores the reduced recipient set, removes the recipient's nickname, and closes the channel for the recipient. When the removed recipient owned the group, ownership transfers to one of the remaining recipients chosen at random.
+Removal closes the channel for the recipient and clears their nickname. If they owned the group, ownership transfers to a randomly selected remaining recipient, as for [Delete or leave channel](#delete-or-leave-channel).
 
 The removed recipient receives [Channel Delete](/gateway/events/#channel-delete). Remaining recipients receive [Channel Recipient Remove](/gateway/events/#channel-recipient-remove), and the removal system message through [Message Create](/gateway/events/#message-create) unless `silent` is true. No [Channel Update](/gateway/events/#channel-update) reports the ownership transfer or the removed nickname.
 

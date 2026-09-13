@@ -13,7 +13,7 @@ None of the routes here takes a credential, and all are hosted-only, as [deploym
 Fluxer uses a submitted address exactly as written and matches a donor by exact equality, so `Donor@example.com` and `donor@example.com` address two different donors.
 
 :::note[Donation management requires a completed donation]
-The payment provider webhook writes the donor record, and nothing else writes one.
+Donation management becomes available after payment is confirmed.
 :::
 
 ## Donation currencies
@@ -85,7 +85,7 @@ An address that resolves to no donor receives no email.
 
 <sup>2</sup> A padded address fails syntax validation
 
-<sup>3</sup> The domain is resolved by MX record first, and by A or AAAA record only when it publishes no MX record. A transient resolver failure counts as valid. Fluxer caches the result for 30 minutes when valid and 5 minutes when not
+<sup>3</sup> The domain must publish an MX, A or AAAA record
 
 ### Response
 
@@ -96,7 +96,7 @@ An address that resolves to no donor receives no email.
 
 ### Side effects
 
-Everything happens before the response. Fluxer resolves the address domain, looks up the donor, and, when a donor exists, creates a token and sends the email. A delivery failure is absorbed. An address held as hard bounced and a transport error both leave the token stored and still answer 204.
+An eligible donor receives an email. The 204 response does not guarantee delivery.
 
 Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid for 15 minutes, only when the address resolves to a donor. Issuing a new link deletes every earlier token for the same address, and a replaced link returns 400 `DONATION_MAGIC_LINK_INVALID`.
 
@@ -110,7 +110,7 @@ Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid 
 
 Consumes a donation management token. Answers 302 with `Location` set to the externally hosted billing portal for the matching donor. The token is the credential.
 
-Fluxer checks the token in a fixed order. An unknown token returns 400 `DONATION_MAGIC_LINK_INVALID`. A token past its 15 minute lifetime returns 400 `DONATION_MAGIC_LINK_EXPIRED`. An already consumed token returns 400 `DONATION_MAGIC_LINK_USED`, and a token that is both expired and consumed is reported as expired. None of those refusals consumes the token.
+An unknown token returns 400 `DONATION_MAGIC_LINK_INVALID`, an expired token returns `DONATION_MAGIC_LINK_EXPIRED`, and a used token returns `DONATION_MAGIC_LINK_USED`. An expired and used token reports `DONATION_MAGIC_LINK_EXPIRED`.
 
 A token whose address no longer resolves to a donor holding a payment provider customer is still consumed, and the redirect goes to the public donation page. For a donor holding a customer, a deployment with no configured payment provider returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` and a provider failure returns 400 `STRIPE_ERROR`, both after the token has already been consumed.
 
@@ -147,7 +147,7 @@ Creates a one-off or recurring donation checkout session. Returns a [donation ch
 
 An amount outside the selected currency's bounds fails validation with 400 `INVALID_FORM_BODY` and an `errors` entry on `amount_cents`. Where the deployment has no configured payment provider, the route returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` before it resolves the address. A provider failure while creating the session returns 400 `STRIPE_ERROR`.
 
-A recurring donation for an address that already holds an active recurring donation returns the public donation management page for that address, with the percent-encoded address in `email` and the literal value `active_subscription` in `alert`. An address holds an active recurring donation when its donor record has a subscription identifier, a current period end still in the future, and no scheduled cancellation.
+A recurring donation for an address with an active recurring donation returns the public donation management page, with the percent-encoded address in `email` and `active_subscription` in `alert`. A donation scheduled for cancellation does not block a new checkout.
 
 ### JSON body
 
@@ -174,11 +174,9 @@ A recurring donation for an address that already holds an active recurring donat
 
 ### Side effects
 
-The operation creates an externally hosted checkout for the submitted amount, currency, and interval. Tax identifier collection is enabled and automatic tax is disabled. A recurring donation uses subscription mode, and a one-off donation uses payment mode with invoice creation. The session returns the donor to the public donation success page once it completes, and to the public donation page if it is cancelled.
+Checkout opens on the provider's pages for the submitted amount, currency and interval. Completion returns the donor to the public donation success page, while cancellation returns to the public donation page.
 
-The session records that it is a donation, the submitted address, whether the donation is one-off or recurring, and the business flag. Fluxer reuses an existing donor's payment provider customer when one exists, and otherwise the provider creates one during checkout.
-
-This operation writes nothing to the donor record. [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) creates or updates the donor record on completion, makes the address eligible for [Request donation management link](#request-donation-management-link), and sends a confirmation email.
+Payment confirmation sends an email and enables [Request donation management link](#request-donation-management-link).
 
 ### Rate limit
 

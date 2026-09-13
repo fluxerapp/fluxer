@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Gateway control is the Admin view of the running [main Gateway](/gateway/overview/) cluster. It reads live node state and submits guild reload requests, and it exposes no session, presence, or call payload.
 
-Fluxer answers every operation on this page with one RPC call to the main Gateway. An unanswered call returns 504 `GATEWAY_TIMEOUT`. An overloaded cluster, or one with no responder, returns 503 `SERVICE_UNAVAILABLE`. A reply that cannot be interpreted returns 502 `BAD_GATEWAY`.
+An unanswered Gateway request returns 504 `GATEWAY_TIMEOUT`. An overloaded or unavailable cluster returns 503 `SERVICE_UNAVAILABLE`. An invalid Gateway response returns 502 `BAD_GATEWAY`.
 
 :::note[Every value is live state]
 The Gateway cluster answers each read at request time. Two consecutive reads can differ without any Admin action, and a node that is restarting can be absent from one response and present in the next.
@@ -99,7 +99,7 @@ Byte counts for one node, or for every polled node summed together. Each count i
 
 ## Guild memory statistics object
 
-One entry for each live guild process the read sampled. Every value except `nsfw_level` is read from the guild process itself.
+Memory and activity for one live guild.
 
 ### Structure
 
@@ -281,7 +281,7 @@ Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-upd
 
 ### Side effects
 
-Each node reloads its selection in batches of ten with a 100 millisecond delay between batches. A guild whose owner node cannot be resolved is not counted. The response returns once the last batch has been dispatched, so an individual reload can still be in progress when the caller receives it. No guild data is changed and no Admin audit entry is recorded.
+A guild whose owner node cannot be resolved is not counted. Reloads can still be in progress when the response arrives. No guild data is changed and no Admin audit entry is recorded.
 
 ### Rate limit
 

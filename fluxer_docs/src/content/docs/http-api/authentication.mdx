@@ -25,7 +25,7 @@ An invalid JSON shape returns 400 `INVALID_FORM_BODY` with [validation error obj
 When SSO is both enabled and enforced, every local authentication operation returns 403 `SSO_REQUIRED`. The SSO status route, SSO start and completion, logout, both session routes, and every handoff route stay available under enforcement. Every other route on this page is a local authentication operation.
 
 :::caution[SSO enforcement precedes every other check]
-The enforcement check runs before CAPTCHA verification, before the route rate limit, before authentication, and before body validation. An enforced instance therefore answers a malformed or unauthenticated local authentication request with 403 `SSO_REQUIRED`.
+An enforced instance returns 403 `SSO_REQUIRED` even for a malformed or unauthenticated local authentication request.
 :::
 
 A successful sign-in creates one authentication session and issues its token. Fluxer sets no ceiling on live sessions and evicts none when a further session starts, so an account holds one session per sign-in until it revokes them through [terminate authentication sessions](#terminate-authentication-sessions).
@@ -177,9 +177,9 @@ One live session belonging to the authenticated account. The listing is ordered 
 
 <sup>1</sup> This digest is the only session identifier the API exposes, and it is the exact value accepted by [terminate authentication sessions](#terminate-authentication-sessions)
 
-<sup>2</sup> The field is false on every entry
+<sup>2</sup> Exactly one entry is true, the session whose token authenticated the request
 
-A client that needs to identify its own session MUST compare the base64url SHA-256 digest of its own token against `id_hash`.
+A client that needs to identify its own session reads the entry whose `current` is true.
 
 ## Client info object
 
@@ -197,15 +197,7 @@ The parsed device metadata recorded for a session or a pending handoff.
 
 <sup>1</sup> A native or Electron client reports null, as does a session created by an unparseable request. A handoff omits the member entirely
 
-Fluxer recognises a native Fluxer client from a `User-Agent` beginning `Fluxer Android`, `Fluxer iOS`, `Fluxer Linux`, `Fluxer Desktop`, or `Fluxer Client`.
-
-- A native client's `platform` is the instance product name followed by the resolved operating system, with `Lite` inserted before the operating system for a non-mobile one. A native client that resolves no operating system reports the product name followed by `Lite`, so `platform` is never null for a native client.
-- An Electron client's `platform` is the product name followed by the resolved operating system, and the product name alone when no operating system resolves.
-- Every other client is parsed from the recorded `User-Agent`, and its `platform` is the browser name, or the operating system name when no browser resolves, and null when neither resolves.
-
-Fluxer resolves `device` from the recorded `User-Agent` and, for a native client, from the operating system reported through `X-Fluxer-Client-Properties`. A native or Electron client is `mobile` only when the resolved operating system is iOS or Android. Every other client is `mobile` when the parsed platform type is mobile or tablet, and `desktop` otherwise.
-
-A session reports a null `location` when the recorded IP address resolves to no location. A handoff always reports the object, and each of its members is null when that component is unavailable. For a session, an address with a known region and country but no known city reports the region as `city`, the country as `region`, and null as `country`.
+Device metadata is inferred from the client's request headers. Treat `platform` as a display label, not a stable application identifier. Location is approximate and can be unavailable. A session then reports null `location`, while a handoff reports an object with null members.
 
 ## Client location object
 
@@ -327,9 +319,7 @@ The operation stays available while SSO is enforced. It shares the `auth:sso:sta
 
 <RouteHeader method="POST" path="/v1/auth/sso/start" unauthenticated />
 
-Creates one SSO state with PKCE and nonce material. Authentication is not required. Returns an [SSO start](#sso-start-object) object.
-
-The returned `authorization_url` is the configured provider authorisation endpoint with `response_type` set to `code`, the configured `client_id` and `scope`, the resolved `redirect_uri`, the returned `state`, and a newly generated `nonce`. It also has a `code_challenge` computed as the base64url SHA-256 digest of the state's code verifier, with `code_challenge_method` set to `S256`.
+Starts a single sign-on flow. Authentication is not required. Returns an [SSO start](#sso-start-object) object. Send the user to `authorization_url` unchanged.
 
 ### JSON body
 
@@ -355,7 +345,7 @@ The returned `authorization_url` is the configured provider authorisation endpoi
 
 ### Side effects
 
-The returned state can be completed once and lives for ten minutes. It binds the PKCE verifier, nonce, redirect, and callback URI to the flow. No account state changes. No Gateway Dispatch is emitted.
+The returned state can be completed once and expires after ten minutes. Starting the flow changes no account state and emits no Gateway Dispatch.
 
 ### Rate limit
 
@@ -365,7 +355,7 @@ The returned state can be completed once and lives for ten minutes. It binds the
 
 <RouteHeader method="POST" path="/v1/auth/sso/complete" unauthenticated />
 
-Consumes the SSO state, exchanges the authorisation code, verifies the identity token against the provider key set and the bound nonce, resolves or provisions the account, and creates a user session. Authentication is not required. Returns an [SSO completion response](#sso-completion-response-object).
+Completes a single sign-on flow and signs in or creates the linked account. Authentication is not required. Returns an [SSO completion response](#sso-completion-response-object).
 
 ### JSON body
 
@@ -405,7 +395,7 @@ A verified provider email that adopts a bot account returns 403 `BOT_USER_AUTH_S
 
 ### Side effects
 
-Fluxer consumes the SSO state exactly once, before it attempts the provider exchange. A failed exchange still spends the state. A client MUST then start a fresh flow. On first sign-in, the provider identity becomes exclusive to the new account. The account starts with a verified email, no password, no authenticator, and its default settings. Provisioning joins no guild and accepts no invite, so no [Guild Member Add](/gateway/events/#guild-member-add) is emitted.
+A failed completion requires a fresh SSO flow. A newly created account has a verified email, no local password or authenticator, and default settings. SSO registration accepts no invite and joins no guild.
 
 Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` and creates no session. Otherwise the operation creates one authentication session and clears an expired temporary suspension.
 
@@ -540,7 +530,7 @@ When the instance has disabled new-IP authorisation or sends no email, Fluxer au
 Account policy can return 403 `REGISTRATION_PENDING_APPROVAL`, 403 `REGISTRATION_REJECTED`, 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
 :::note[A verified password reactivates the account]
-On an account the user had disabled, a correct password clears the disabled state. On an account with a pending self-scheduled deletion, a correct password cancels that deletion. Both happen during the login, before any second factor is requested, with no confirmation step and no reactivation ticket.
+On an account the user had disabled, a correct password clears the disabled state. It also cancels a self-scheduled deletion if erasure has not started. Both happen before any second factor is requested, without a separate confirmation step. Once erasure starts, login returns `ACCOUNT_SUSPENDED_PERMANENTLY`.
 :::
 
 The login clears an expired temporary suspension the same way, but returns the 403 of a live temporary or permanent administrator suspension without clearing it.
@@ -552,6 +542,7 @@ The login clears an expired temporary suspension the same way, but returns the 4
 | 200 | [authentication token response](#authentication-token-response) \| [MFA challenge response](#mfa-challenge-response) | The credentials are accepted |
 | 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, email, or password is invalid |
 | 403 | [error response](/http-api/#error-response) | Account policy, SSO enforcement, or IP authorisation prevents the login |
+| 409 | [error response](/http-api/#error-response) | `CONFLICT`, because the deletion state changed while cancelling a self-scheduled deletion |
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, or IP bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
@@ -675,7 +666,7 @@ This operation shares the MFA attempt allowances of [complete login with TOTP](#
 
 ### Side effects
 
-Success consumes the challenge and the ticket, records the credential's new signature counter and last use, and creates one authentication session. No Gateway Dispatch is emitted.
+Success consumes the challenge and ticket and creates one authentication session. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -740,7 +731,7 @@ A bot account returns 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED`. An account th
 
 ### Side effects
 
-Success consumes the challenge, records the credential's new signature counter and last use, clears an expired temporary suspension, and creates one authentication session. No Gateway Dispatch is emitted.
+Success consumes the challenge, clears an expired temporary suspension, and creates one authentication session. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -949,11 +940,7 @@ Consumes a valid reset token and replaces the account password, then issues a ne
 
 An unknown or already consumed token, and a token bound to a deleted account, return the field code `INVALID_OR_EXPIRED_RESET_TOKEN`. A live temporary suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. A permanent suspension returns the field code `INVALID_OR_EXPIRED_RESET_TOKEN` and never 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
-:::note[The breached-password check is an outbound request]
-The corpus is the public Pwned Passwords range service at `https://api.pwnedpasswords.com`, which is not configurable. Fluxer sends only the first five hexadecimal characters of the candidate password's SHA-1 digest to that service.
-:::
-
-Fluxer treats the password as unbreached when the service returns a non-success status, returns a malformed body, or does not answer inside five seconds. The same check runs during [registration](#register-an-account) and [email reversion](#revert-an-email-change).
+Passwords are checked against a breached-password corpus, as they are during [registration](#register-an-account) and [email reversion](#revert-an-email-change).
 
 :::caution[Resetting a password revokes every existing session]
 A successful reset terminates every authentication session on the account, including the one any other device is holding. It then issues one fresh session. An account with a second factor instead receives an MFA ticket, and the session follows the factor.
@@ -1018,11 +1005,9 @@ Fluxer checks the replacement password against the same breached-password corpus
 
 ### Side effects
 
-The operation restores the previous email address and marks it verified, sets the replacement password, and terminates every authentication session. Fluxer also clears the TOTP secret and every authenticator type, and deletes every MFA backup code and every registered WebAuthn credential. It then clears the authorised IP address set and authorises the requesting client IP address alone.
+The previous email address becomes verified and the replacement password takes effect. All other sessions, second factors and authorised IP addresses are removed. Only the requesting IP address remains authorised.
 
-Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states. [User Update](/gateway/events/#user-update) is emitted for the account, and Fluxer records the contact change.
-
-The operation then creates one new authentication session and returns it.
+The account receives [User Update](/gateway/events/#user-update). Existing Gateway sessions end as described under [shared behaviour](#shared-behaviour), and the response returns one new authentication session.
 
 ### Rate limit
 
@@ -1083,7 +1068,7 @@ The caller MUST send a valid sudo token in the `X-Fluxer-Sudo-Mode-JWT` header, 
 A `totp` method reads `mfa_code` as an authenticator code and accepts an unconsumed backup code in its place. A `webauthn` method reads `webauthn_response` and `webauthn_challenge` together, and it accepts only a challenge that was issued for the sudo context.
 
 :::caution[The caller can delete its own session]
-The operation deletes exactly the sessions identified by the supplied `id_hash` values. `current` is false on every entry, so a client that wants to keep its own session MUST omit its own `id_hash`. Revoking the calling credential still returns 204.
+The operation deletes exactly the sessions identified by the supplied `id_hash` values. A client that wants to keep its own session MUST omit the `id_hash` of the entry whose `current` is true. Revoking the calling credential still returns 204.
 :::
 
 Missing or unusable proof returns 403 `SUDO_MODE_REQUIRED`, whose error body has top-level `has_mfa` and `methods` members, and `methods` reports whether `totp` and `webauthn` are available.
@@ -1322,7 +1307,7 @@ A code that is not exactly 12 characters from the handoff alphabet after hyphens
 
 ### Side effects
 
-A successful lookup consumes one of the code's three lookups and records the code as inspected, which is the state [complete desktop handoff](#complete-desktop-handoff) requires. That record lasts for the remaining life of the code, and only completion and cancellation remove it. An expired result records one failed attempt against the client IP address. No account state changes. No Gateway Dispatch is emitted.
+A successful lookup consumes one of the code's three lookups and permits [complete desktop handoff](#complete-desktop-handoff). An expired result counts as a failed attempt. No account state changes or Gateway Dispatch occur.
 
 ### Rate limit
 
@@ -1354,7 +1339,7 @@ Fluxer reads that token from the `Authorization` header, or from the body `token
 Sending the token in `token` puts a live credential into a JSON payload. A client SHOULD use the `Authorization` header and omit `token`.
 :::
 
-A token that resolves to no live session returns 401 `INVALID_TOKEN`. A code that is not exactly 12 characters from the handoff alphabet after hyphens and whitespace are removed returns 400 `INVALID_HANDOFF_CODE`. A code that has never been inspected through [get desktop handoff information](#get-desktop-handoff-information) returns that same error code. So do an unknown or already completed code and a request from a client IP address that has exhausted its failed-attempt allowance. A code whose five minutes have elapsed is discarded with its handoff and returns `INVALID_HANDOFF_CODE`. `HANDOFF_CODE_EXPIRED` is returned only when the stored handoff is still present after its five minutes.
+A token that resolves to no live session returns 401 `INVALID_TOKEN`. A malformed, unknown, completed or uninspected code returns 400 `INVALID_HANDOFF_CODE`, as does an exhausted failed-attempt allowance. An expired code returns `INVALID_HANDOFF_CODE` or `HANDOFF_CODE_EXPIRED`. Start a new handoff in either case.
 
 Session creation can also return 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED` for a bot account, and 403 `REGISTRATION_PENDING_APPROVAL` or 403 `REGISTRATION_REJECTED` for an account that has not been admitted. A suspended account returns the suspension codes listed under [log in with a password](#log-in-with-a-password).
 
@@ -1436,7 +1421,7 @@ Reports the state of a handoff and delivers the new session token once, to a cal
 | poll_secret | string | The secret returned by [initiate desktop handoff](#initiate-desktop-handoff) |
 
 :::caution[The completed status is delivered exactly once]
-Reading a completed handoff deletes the stored token as it returns it. The very next poll with the same code reports `expired`, so the initiating device MUST retain the token when it is first received.
+The token is returned once. Later polls report `expired`, so the initiating device MUST retain it when first received.
 :::
 
 A secret that does not match reports `pending` and records a failed attempt for the polling IP address. The route reports no distinct error for a wrong secret, so a caller cannot tell a wrong secret from a handoff the approving device has not finished.
@@ -1454,7 +1439,7 @@ A secret that does not match reports `pending` and records a failed attempt for 
 
 ### Side effects
 
-A poll that matches the secret deletes the stored token as it delivers it, so later polls report `expired`. Every other poll leaves the handoff unchanged. No account state changes and no Gateway Dispatch is emitted.
+Retrieving the token completes the handoff. Other polls leave it unchanged. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -1490,9 +1475,8 @@ The route checks no credential and the code is its only input, so a party that l
 
 ### Side effects
 
-The pending handoff, its inspected record, and any completed token that has not yet been read are all deleted. Cancelling does not revoke a session that a completion already created. When the initiating device never polled that completion, the cancellation leaves a live session no device holds a token for. No Gateway Dispatch is emitted.
+Cancelling prevents any further token retrieval but does not revoke a session already created by completion. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
 10 requests per minute, on the `auth:handoff:cancel` bucket.
-

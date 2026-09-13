@@ -250,11 +250,11 @@ The values [Clear user profile fields](#clear-user-profile-fields) accepts in `f
 | outgoing_request | A friend request the account has sent |
 | blocked | An account this account has blocked |
 
-The first three categories are mirrored, so removing one also removes the matching row on the other account. A block has no mirror row.
+Removing a friendship or friend request removes it for both accounts. Removing a block affects only the account that set it.
 
 ## Admin user session object
 
-One entry for each authentication session of an account. A terminated session stays in the list as a tombstone, with `deleted_at` set. No operation returns the session token.
+One entry for each authentication session of an account. Terminated sessions remain listed with `deleted_at` set. No operation returns the session token.
 
 ### Structure
 
@@ -710,7 +710,7 @@ The operation accepts no request body and never clears verification, so the one 
 
 <RouteHeader method="POST" path="/v1/admin/users/{user_id}/verification-email" auditReason />
 
-Runs the account holder's own verification resend path against the target account. Requires `user:update:email`. Returns an empty 204 response.
+Requests a new verification email for the account. Requires `user:update:email`. Returns an empty 204 response.
 
 :::caution[An already verified account gets no email]
 An already verified account with no email reverification [suspicious activity flag](#suspicious-activity-flags) returns 204 without storing a token or sending anything.
@@ -720,7 +720,7 @@ An already verified account with no email reverification [suspicious activity fl
 Nothing is sent when the instance email transport is disabled or when the address is marked hard bounced. Neither case changes the status code, and the audit entry is recorded either way.
 :::
 
-A per-address control, independent of the Admin buckets, permits three verification emails for each address in fifteen minutes. Fluxer charges it before creating the token, so a request that uses it up returns 429 and stores no token.
+Each address can receive at most three verification emails in fifteen minutes, independently of the Admin rate limit. Further requests return 429 without issuing a token.
 
 ### Path parameters
 
@@ -1108,7 +1108,7 @@ Additions are applied before removals, so a flag named in both arrays ends up cl
 
 ### Side effects
 
-The stored flag bitfield is replaced with the computed value. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when a partial user field changed.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. A change to publicly visible user fields also sends [Guild Member Update](/gateway/events/#guild-member-update) to the account's guilds.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`. An empty array is omitted from the metadata map.
 
@@ -1154,7 +1154,7 @@ Premium flags control badge display, the premium override, the purchase block, a
 
 ### Side effects
 
-The stored premium flag bitfield is replaced with the computed value, and premium badge display changes for the account. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
+Premium badge display reflects the new flags. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_premium_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`.
 
@@ -1414,7 +1414,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Creates or replaces a recoverable account deletion schedule and returns the resulting account. Requires `user:delete`.
+Creates or replaces an account deletion schedule and returns the resulting account. Requires `user:delete`. A schedule cannot be changed once erasure starts.
 
 Fluxer raises the submitted delay to the minimum for the [deletion reason](#deletion-reasons), so a request for one day under any reason other than `USER_REQUESTED` is stored as 60 days.
 
@@ -1452,20 +1452,19 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | --- | --- | --- |
 | 200 | response body | The deletion schedule was stored |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
 
-The operation accepts the acting Admin's own account and compares no ACL sets, so an Admin holding `user:delete` can schedule the deletion of a stronger Admin. Sending the operation again replaces the stored schedule outright.
+The permission also allows scheduling deletion of the acting Admin or an account with broader permissions.
 
 ### Side effects
 
-`DELETED` is added to the account flags, and `pending_deletion_at`, `deletion_reason_code`, `deletion_public_reason`, and the private deletion audit reason are stored. The account is queued for final deletion at the stored deadline, replacing any previous queue entry. Every authentication session is deleted.
+The account can no longer authenticate, and its existing authentication sessions are deleted. Erasure is scheduled for the resulting deadline.
 
 Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. A failure in that path is logged, and the deletion still applies.
 
 The account holder is emailed the deadline and the supplied `public_reason` when the account has an email address.
 
-For every reason code other than `USER_REQUESTED`, further enforcement passes run. The first adds the account's email address to the email blocklist and marks its last active address, authorised addresses, live session addresses, and session tombstone addresses as suspicious IPs.
-
-The second resolves every pending report against the account, in pages of 100, and notifies each reporter through the ordinary [report](/admin-api/reports/) path. It runs only on an instance with a report search backend. Both passes log a failure and continue, so the request still succeeds.
+Reasons other than `USER_REQUESTED` also trigger email and IP blocking and resolution of pending reports. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
 
 [User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days` and `reason_code`. The identifier bans record their own blocklist entries, and a non-zero report pass records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
 
@@ -1477,7 +1476,7 @@ The second resolves every pending report against the account, in pages of 100, a
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Clears a pending deletion and returns the resulting account. Requires `user:delete`.
+Cancels a scheduled deletion and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
 
 :::caution[Cancellation does not undo enforcement]
 Clearing the deadline permits the account to authenticate again, but it does not restore deleted sessions, reinstate a cancelled subscription, lift the email and IP blocklist entries the schedule wrote, or reopen the reports it resolved.
@@ -1499,14 +1498,13 @@ Clearing the deadline permits the account to authenticate again, but it does not
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200<sup>1</sup> | response body | The deletion was cancelled |
+| 200 | response body | The deletion was cancelled, or no deletion was scheduled |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-
-<sup>1</sup> The operation checks no precondition and never returns `NO_PENDING_DELETION`. An account with no pending deletion is accepted and has the deletion fields written as null
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
 
 ### Side effects
 
-`DELETED` and `SELF_DELETED` are both removed from the account flags, and `pending_deletion_at`, `deletion_reason_code`, `deletion_public_reason`, and the private deletion audit reason are cleared. The queued final deletion is withdrawn.
+The deletion schedule and reasons are cleared, allowing the account to authenticate again unless another restriction applies.
 
 Fluxer emails the account holder when the account has an email address. The email quotes the `X-Audit-Log-Reason` value verbatim and falls back to the literal text `deletion canceled` when the header is absent or resolves to null.
 
@@ -1722,7 +1720,7 @@ Removals run one at a time, so a failure partway through leaves the earlier remo
 
 ### Side effects
 
-Each matching row is deleted. A `friend`, `incoming_request`, or `outgoing_request` also deletes the mirror row on the other account, while `blocked` deletes only the one row.
+Friendships and friend requests are removed for both accounts. Blocks are removed only for the target account.
 
 Both parties of a mirrored removal receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the target account, and ordinary delivery from the unblocked account resumes.
 
@@ -1764,7 +1762,7 @@ The operation addresses one category, so an account that is both a former friend
 
 ### Side effects
 
-The row is deleted, and a `friend`, `incoming_request`, or `outgoing_request` also deletes the mirror row on the other account.
+A friendship or friend request is removed for both accounts. A block is removed only for the owning account.
 
 Both parties of a mirrored removal receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the owning account.
 
@@ -1778,7 +1776,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/sessions" auditReason />
 
-Lists the authentication sessions of the account, including the tombstones of terminated ones. Requires `user:list:sessions`. IP, reverse DNS, and location fields also require `user:view:ip`.
+Lists the account's active and terminated authentication sessions. Requires `user:list:sessions`. IP, reverse DNS and location fields also require `user:view:ip`.
 
 :::caution[Listing sessions writes an audit entry]
 The `X-Audit-Log-Reason` header value is stored on the recorded entry.
@@ -1855,7 +1853,7 @@ The tombstone stays visible through [List user sessions](#list-user-sessions), b
 
 ### Side effects
 
-Every active session is deleted and a termination tombstone is written for each, so the terminated sessions remain listed with a non-null `deleted_at`. Every affected client is disconnected and must authenticate again.
+Every affected client is disconnected and must authenticate again. Terminated sessions remain listed with `deleted_at` set.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `terminate_sessions`, target type `user`, and no metadata.
 
@@ -1973,7 +1971,7 @@ The account's TOTP secret, authenticator type set, and every multi-factor backup
 
 Counts every message attributed to the account, and queues their deletion when the request is not a dry run. Requires `message:delete_all`.
 
-The operation walks the account's messages in pages of 200 before it answers, so the request time grows with the number of messages the account has sent. A misspelled `dry_run` parameter leaves the request a dry run.
+The request counts messages before responding, so accounts with more messages take longer. A misspelled `dry_run` parameter leaves the request a dry run.
 
 The operation does not resolve the target account, so it never answers `UNKNOWN_USER`. An ID with no matching account is accepted and matches no message.
 
@@ -2069,7 +2067,7 @@ The operation does not resolve the target account, so it never answers `UNKNOWN_
 A shred deletes every matching message with its reactions, purges the attachments it owned, and removes it from search. Only a preceding [Create user archive](#create-user-archive) retains the original text.
 :::
 
-The job is queued with a single attempt, so a worker failure does not retry it.
+A failed job is not retried automatically.
 
 ### Side effects
 
@@ -2149,7 +2147,7 @@ Archive progress, download, and expiry are documented under [Archives](/admin-ap
 | 200<sup>1</sup> | [archive](/admin-api/archives/#archive-object) object | The archive was queued |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, and no archive record or build job is created |
 
-<sup>1</sup> The status is 200 rather than 201, and the returned record is already stored with `progress_percent` at zero and `progress_step` set to `Queued`
+<sup>1</sup> The archive starts with `progress_percent` at zero and `progress_step` set to `Queued`
 
 ### Side effects
 

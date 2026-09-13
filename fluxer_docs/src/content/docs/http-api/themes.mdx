@@ -12,7 +12,7 @@ The route is user-only. A bot token and an OAuth2 bearer credential are both rej
 
 ## Theme identifier
 
-A theme identifier is 16 lowercase hexadecimal characters matching `^[a-f0-9]{16}$`. Fluxer draws eight cryptographically random bytes for each request and renders them as hex, so storing identical CSS twice produces two independent themes under two independent identifiers.
+A theme identifier is 16 lowercase hexadecimal characters matching `^[a-f0-9]{16}$`. Submitting identical CSS twice creates two independent themes.
 
 ### Example
 
@@ -93,7 +93,7 @@ The object has the identifier and nothing else.
 
 Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. The identifier addresses the document by the time the caller receives it.
 
-Nothing Fluxer stores links a theme to the account that created it. The [Media Proxy](/media-proxy/overview/) serves the stored document from `/themes/{id}.css`.
+The [Media Proxy](/media-proxy/overview/) serves the document from `/themes/{id}.css`.
 
 :::danger[Theme CSS is public and permanent]
 The identifier is the only thing guarding a stored document, and the read route is unauthenticated. The HTTP API replaces or deletes no stored theme. A caller MUST NOT put a credential, a token, or any other secret in a submitted document.

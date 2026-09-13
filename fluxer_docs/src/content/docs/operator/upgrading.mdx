@@ -53,9 +53,9 @@ The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and th
 
 The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data` and `edge-config`, so the old two are left unused and the edge requests its certificate again on the first start.
 
-`FLUXER_IMAGE_TAG` is the only line in `.env` that either upgrade mode rewrites once the instance holds every key the stack requires. An upgrade also writes a key the refreshed stack requires that `.env` does not hold at all, listed below, and it leaves every value already set as it is.
+Upgrades change `FLUXER_IMAGE_TAG` and add missing required secrets. Existing values are preserved, except for the unusable upload-relay placeholder described below.
 
-The refreshed `docker-compose.yml` requires `FLUXER_ERLANG_COOKIE`. An `.env` written by an earlier installer holds no such line, and `--update` writes one into `.env` before it reads anything, so an upgrade needs no edit for it. The value is 64 hex characters, which is what a fresh install writes. Until `.env` sets it, every Compose command against the stack stops with `set FLUXER_ERLANG_COOKIE in .env`.
+The refreshed stack requires `FLUXER_ERLANG_COOKIE`. `--update` generates a missing value as 64 hex characters. Without it, Compose commands fail with `set FLUXER_ERLANG_COOKIE in .env`.
 
 To write it by hand, run the generator in a shell:
 
@@ -63,9 +63,9 @@ To write it by hand, run the generator in a shell:
 printf '\nFLUXER_ERLANG_COOKIE=%s\n' "$(openssl rand -hex 32)" >> .env
 ```
 
-Pasting `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env` as text stores those characters as the value, because Compose reads a line literally and runs nothing in it. The leading newline keeps the key on its own line. An editor can leave the last line of `.env` without a newline, and the two would otherwise join.
+Do not paste `FLUXER_ERLANG_COOKIE=$(openssl rand -hex 32)` into `.env`. Compose does not execute shell commands in that file.
 
-`api` and `media-proxy` now refuse to start unless `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` decodes to at least 32 bytes. `.env.example` has shipped it as `CHANGE_ME`, which decodes to 6 bytes, and nothing read it before, so an instance can be running today with the placeholder. `--update` replaces an absent or `CHANGE_ME` value with a generated one before it reads anything. Both services read the same value from one `.env` line. A `CHANGE_ME` value stops `api` at boot with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes`, and an empty one with `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required for the API`.
+`api` and `media-proxy` require `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64` to decode to at least 32 bytes. `--update` replaces a missing or `CHANGE_ME` value with a generated secret. Both services must use the same value.
 
 To write it by hand, run the generator in a shell the same way:
 
@@ -75,11 +75,11 @@ printf '\nFLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=%s\n' "$(openssl rand -b
 
 ## The script is the reference
 
-Every step above sits in the script beside a comment holding the command that does that step alone and the reason the step exists. Read [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1) for Windows.
+Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows installer](https://fluxer.dev/install.ps1) before running it.
 
 ## Keep a local compose change
 
-The Place step replaces all the stack files with the copies at the ref. An edit made directly in `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile` is gone once that step runs. The run prints one line for the whole step and never names the files it replaced. `--dry-run` names every one of them, as `changes`, `unchanged` or `is new`.
+An upgrade replaces the stack files, including direct edits to `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile`. Use `--dry-run` to see which files will change.
 
 The supported way to hold a local choice is a separate file, listed in `COMPOSE_FILE` in `.env`:
 
@@ -89,7 +89,7 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml:local.compose.yml
 
 Compose merges the files left to right, so `local.compose.yml` wins over the ones before it. An upgrade refreshes the stack files and nothing else, so a file outside that set survives every upgrade untouched. A record copies `.env` and those files, and no other file from the working directory. An override file is never backed up with them, so keep it wherever the rest of the configuration lives.
 
-`.env` needs no such file. The only value either upgrade mode replaces there is `FLUXER_IMAGE_TAG`, and the Mint step adds a required key the file does not hold at all.
+Keep environment settings in `.env`. Upgrades preserve them apart from the tag and required-secret changes described above.
 
 [Enable the overlay](/operator/reverse-proxy/#enable-the-overlay) has the overlay this is most often used for. [Docker labels](/operator/reverse-proxy/#docker-labels) has a worked third file.
 
@@ -101,9 +101,7 @@ Compose merges the files left to right, so `local.compose.yml` wins over the one
 stat /srv/fluxer/docker-compose.proxy.yml: no such file or directory
 ```
 
-Every `docker compose` command stops there. An upgrade checks the list before it runs any of them, so it stops with a sentence naming the file and the `curl` that puts it back, and writes nothing.
-
-This happens on an instance older than the installer. `docker-compose.proxy.yml` and `tunnel.compose.yml` are files the upgrade downloads, so a `COMPOSE_FILE` line naming one of them in a directory that never held it fails long before the Fetch step that would have supplied it.
+Every `docker compose` command stops there. This can affect older installations whose `.env` names an overlay that has not been downloaded. The installer reports the missing file and a command to restore it.
 
 Download the missing file at the ref the upgrade moves to, then run the upgrade:
 
@@ -178,13 +176,9 @@ After:
 wss://chat.example.com/livekit
 ```
 
-Only the path is wrong. `docker-compose.yml` derives `https://chat.example.com/livekit` when `.env` sets no `FLUXER_LIVEKIT_URL`, and the client rewrites a leading `http` to `ws` itself, so `https` and `wss` both work.
+Both `https` and `wss` work. Update `FLUXER_LIVEKIT_URL` in `.env` to the new path, or remove it to use the derived address, then run `docker compose up -d api`.
 
-The address browsers dial is a column on a voice server row in the database. No upgrade migrates that row, and it is corrected in the places below.
-
-First `.env`. When it sets `FLUXER_LIVEKIT_URL`, put the new path in that line and run `docker compose up -d api`. `api` writes that value onto the default voice server row at every start, so a row corrected in the dashboard while `.env` still names the old path goes back to the old path on the next restart. Removing the line is also correct, and Compose then derives the URL from `FLUXER_PUBLIC_ORIGIN`, or from the scheme and the domain.
-
-Then the dashboard, at `https://chat.example.com/admin` under **Voice Servers**. The **Endpoint** field on that page holds the address. `api` writes one row only, the one in region `default` with server id `default-server-1`, and leaves every other row as it is. That row corrects itself on the first `api` start after `.env` is right, so the dashboard is for every other row. When that region or that server is absent, its log says `skipping config sync` and it writes nothing. A region added by hand, or one left from an older layout under another id, keeps the endpoint it already holds until that field is edited.
+This updates the existing `default-server-1` server in the `default` region. For any other server, change **Endpoint** under **Voice Servers** in the admin dashboard. Correct `.env` first, or a later restart can restore the old address on the default server.
 
 Voice media is unaffected. It never went through the edge, and `7881/tcp` and `7882/udp` still reach the host directly.
 
@@ -192,7 +186,7 @@ Voice media is unaffected. It never went through the edge, and `7881/tcp` and `7
 
 Each upgrade writes one record directory, named `record-` and a UTC stamp, under `backups` or wherever `--backup-dir` points. It holds:
 
-| Artifact | What it covers |
+| Artefact | What it covers |
 | --- | --- |
 | `fluxer.dump` | Every account, message, guild and configuration row, in the Postgres custom format |
 | `seaweedfs-data.tgz` | Every upload, avatar, report and harvest |
@@ -229,7 +223,7 @@ FLUXER_S3_FORCE_PATH_STYLE=false
 
 Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. Take it out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
 
-An upgrade backs up what the stack holds. The Dump step reaches into the `postgres` service and the Copy step reaches into the `seaweedfs` volume, so a stack that defines neither has neither step to run. The run says which one it skipped and goes on. Backing up a store outside the stack belongs to whoever runs it, and the record the upgrade writes holds no dump of it, so take one before upgrading if a rollback would need it.
+The installer backs up only the bundled database and object store. Arrange separate backups for external stores before upgrading, and keep them with the release's backup record.
 
 ## Roll back
 
@@ -244,11 +238,11 @@ On Windows it is `.\install.ps1 -Rollback`. It takes the newest record, puts bac
 
 A rollback never pulls, so it needs the old images still on the host. Run [Reclaim disk](#reclaim-disk) only once the upgrade is known good.
 
-The database does not move. `api`, `worker`, `users-shard` and `messages-shard` apply schema work in place while they start, and an older image does not undo it. Across a release that changed the schema, the dump in the record is the only way back, and a rollback never puts it back for you.
+A rollback does not undo database migrations or restore data. If the previous release requires the old schema, restore the database backup separately.
 
 ## Restore a backup
 
-Both artifacts go back with the stack stopped, so nothing writes while they are replaced. Name your own record directory instead of the one below.
+Restore both artefacts with the stack stopped, so nothing writes while they are replaced. Name your own record directory instead of the one below.
 
 The database restores from the custom-format dump:
 

@@ -157,7 +157,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: 'Reference',
-					items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes', 'conventions'],
+					items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes'],
 				},
 				{
 					label: 'Self-hosting',

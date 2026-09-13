@@ -154,7 +154,7 @@ Fluxer skips an entry when neither the capture nor the report records its channe
 
 ## Report message context object
 
-A context entry is one message copied into the report when the report was filed. A later edit or deletion of the message does not update it. Fluxer copies its attachments into a separate evidence bucket, so they survive deletion of the original.
+A context entry preserves a message as it was when the report was filed. Later edits or deletions do not change it, and attachment evidence survives deletion of the original.
 
 A message report captures the reported message together with at most 25 messages before it and at most 25 after it, for at most 51 entries. A message whose author account Fluxer could not read at capture time is absent from the report.
 
@@ -216,7 +216,7 @@ A message report captures the reported message together with at most 25 messages
 | ncmec_report_id | ?string | The NCMEC report ID, or null when the attachment was never submitted |
 | ncmec_failure_reason | ?string | The failure detail, or null unless `ncmec_status` is failed |
 
-<sup>9</sup> A presigned URL against the report evidence bucket, valid for five minutes, so a saved response body stops resolving attachments while the evidence copy is retained
+<sup>9</sup> The URL expires after five minutes. Fetch the report again for fresh attachment links
 
 <sup>10</sup> An in-flight submission is stored as `submitting`, a value the registry below does not list
 

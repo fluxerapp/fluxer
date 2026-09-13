@@ -27,7 +27,7 @@ By the end you have a Fluxer instance on a hostname you own, running the web app
 | Outbound | Working DNS resolution from inside the containers |
 | Host tools | `curl` and `openssl` on Linux. macOS ships both. The Windows installer needs neither |
 
-Those memory limits are ceilings that reserve nothing, so the host never needs their total free. On a 4 GB host, lower the `api` and `worker` limits first, because those two size their JavaScript heap from whatever limit they are given. Under Docker Desktop the figure to compare against is the RAM you have given its Linux virtual machine, which starts well below what the hardware has.
+Memory limits are ceilings, not reservations. On a 4 GB host, lower the `api` and `worker` limits first. With Docker Desktop, check the RAM assigned to its Linux virtual machine rather than the host's total.
 
 The stack is one Compose project. The edge and LiveKit are the only services that publish ports.
 
@@ -155,7 +155,7 @@ docker compose up -d
 
 Host 80 stays published on the `https` recipe and still answers the ACME challenge. Let's Encrypt only ever connects to the public 80 or 443, so the certificate is issued if a router in front forwards public 80 to this host. Serve your own certificate from the `Caddyfile` when it cannot.
 
-Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states that same address as one string, so an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names holds two addresses. Part of the instance then answers on one and part on the other, the web app sends no `Authorization` header to an API that is not on its own origin, the API answers 401, and the setup wizard reads that 401 as an expired session and returns to the account form. [The public origin](/operator/configuration/#the-public-origin) has the rest.
+Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with the public scheme, domain and port. Conflicting addresses can cause sign-in failures and setup loops. See [The public origin](/operator/configuration/#the-public-origin).
 
 ### Installer flags
 
@@ -180,7 +180,7 @@ Run `--dry-run` first to see what a set of flags does. The PowerShell script tak
 
 ### The script is the reference
 
-Every step in the script has a comment beside it with the command that does that step alone and why it exists: where each stack file comes from, how `.env` is built from `.env.example`, what each `CHANGE_ME` takes, and how the VAPID pair is derived. Read it at [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or the Windows script at [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1).
+Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows installer](https://fluxer.dev/install.ps1) before running it.
 
 ## Step 5: Check that it works
 
@@ -220,7 +220,7 @@ Every path returns 200. `/.well-known/fluxer` lists the endpoints clients use, w
 
 Open the hostname in a browser. A fresh instance is unconfigured, so it serves the setup wizard.
 
-The wizard runs in two halves. The first is a welcome, a theme choice, an admin introduction and an account form. Once that account exists, the second covers branding, registration mode, community policy, media expiry, the integrations, the service toggles and the premium model. Finishing marks the instance configured and takes the wizard down.
+Create an account, then choose branding, registration mode, community policy, media expiry, integrations and premium settings. Completing the wizard closes setup access.
 
 Create the owner account with an email address at a domain you control. The first registration that supplies one receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
 
@@ -236,7 +236,7 @@ The desktop client opens the hosted web app for its release channel, so reach yo
 
 ## Backups
 
-An instance comes back from these artifacts and its `.env`: a dump of the database, which covers `postgres-data`, and a tarball of `seaweedfs-data`, which holds every upload, avatar, report and harvest. [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists every volume and what it holds.
+Recovery requires `.env`, a database dump and a backup of `seaweedfs-data`, which holds uploads, avatars, reports and harvests. See [Volumes and buckets](/operator/configuration/#volumes-and-buckets) for everything that needs backing up.
 
 The dump costs no downtime, so run it on a schedule while the stack serves:
 
@@ -269,7 +269,7 @@ In PowerShell write `${PWD}` in place of `$PWD`.
 
 You are done when `backups` holds a dump and a tarball and every service reads `running` again.
 
-`sh install.sh --update` takes both artifacts before every upgrade. [What the backup covers](/operator/upgrading/#what-the-backup-covers) puts the dump on a nightly timer, and [Restore a backup](/operator/upgrading/#restore-a-backup) puts either artifact back.
+`sh install.sh --update` takes both backups before upgrading. See [What the backup covers](/operator/upgrading/#what-the-backup-covers) for scheduled backups and [Restore a backup](/operator/upgrading/#restore-a-backup) for recovery.
 
 ### Remove the instance
 

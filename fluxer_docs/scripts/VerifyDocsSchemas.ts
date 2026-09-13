@@ -9,14 +9,13 @@ import type {
 	OpenAPIDocument as Spec,
 } from '@fluxer/openapi/src/OpenAPITypes';
 
-import {DOCS_ROOT, listMarkdownFiles, slugifyHeading} from './DocsSource.ts';
+import {readRouteHeaders} from './DocsRouteHeaders.ts';
+import {DOCS_ROOT, HTTP_METHODS, readMarkdownPages, routeShape, slugifyHeading, splitTableRow} from './DocsSource.ts';
 
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json');
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
 
-const ROUTE_HEADER = /<RouteHeader\s+method="([A-Z]+)"\s+path="([^"]+)"/u;
-const TABLE_ROW = /^\|\s*([^|]+?)\s*\|/u;
 const OBJECT_REFERENCE = /\]\([^)]*#[a-z0-9-]*object\)/u;
 
 interface Mismatch {
@@ -33,31 +32,51 @@ function stripVersion(routePath: string): string {
 	return routePath;
 }
 
-function shape(method: string, routePath: string): string {
-	return `${method} ${routePath.split('?')[0].replace(/\{[^}]*\}/gu, '{}')}`;
+function resolveSchemaPointer(spec: Spec, reference: string): SchemaNode | boolean {
+	if (!reference.startsWith('#')) throw new Error(`Unsupported schema reference: ${reference}`);
+	const pointer = decodeURIComponent(reference.slice(1));
+	const prefix = '/components/schemas/';
+	if (!pointer.startsWith(prefix)) throw new Error(`Unsupported schema reference: ${reference}`);
+	let target: unknown = spec.components.schemas;
+	for (const token of pointer.slice(prefix.length).split('/')) {
+		if (/~(?:[^01]|$)/u.test(token)) throw new Error(`Invalid schema reference escape: ${reference}`);
+		const key = token.replace(/~1/gu, '/').replace(/~0/gu, '~');
+		if (
+			target === null ||
+			typeof target !== 'object' ||
+			(Array.isArray(target) && !/^(0|[1-9][0-9]*)$/u.test(key)) ||
+			!Object.hasOwn(target, key)
+		) {
+			throw new Error(`Missing schema reference: ${reference}`);
+		}
+		target = (target as Record<string, unknown>)[key];
+	}
+	if (typeof target === 'boolean') return target;
+	if (target === null || typeof target !== 'object' || Array.isArray(target)) {
+		throw new Error(`Reference does not identify a schema: ${reference}`);
+	}
+	return target as SchemaNode;
 }
 
 function resolveRef(spec: Spec, node: SchemaNode | boolean | undefined, depth = 0): SchemaNode | undefined {
-	if (node == null || typeof node === 'boolean') {
+	if (node == null || node === false) {
 		return undefined;
+	}
+	if (node === true) {
+		return {};
 	}
 	if (depth > 64) {
 		throw new Error('OpenAPI reference chain exceeds the supported depth');
 	}
 	if (node.$ref != null) {
-		const prefix = '#/components/schemas/';
-		if (!node.$ref.startsWith(prefix)) {
-			throw new Error(`Unsupported schema reference: ${node.$ref}`);
-		}
-		const name = decodeURIComponent(node.$ref.slice(prefix.length)).replace(/~1/gu, '/').replace(/~0/gu, '~');
-		const target = spec.components.schemas[name];
-		if (target == null) {
-			throw new Error(`Missing schema reference: ${node.$ref}`);
-		}
+		const target = resolveSchemaPointer(spec, node.$ref);
 		const resolved = resolveRef(spec, target, depth + 1);
 		const {$ref, ...siblings} = node;
 		if (resolved == null || Object.keys(siblings).length === 0) {
 			return resolved;
+		}
+		if (Object.keys(resolved).length === 0) {
+			return siblings;
 		}
 		return {...resolved, allOf: [...(resolved.allOf ?? []), siblings]};
 	}
@@ -195,20 +214,27 @@ function operationIndex(spec: Spec): Map<string, Operation> {
 	const index = new Map<string, Operation>();
 	for (const [routePath, item] of Object.entries(spec.paths)) {
 		for (const [method, operation] of Object.entries(item)) {
-			index.set(shape(method.toUpperCase(), stripVersion(routePath)), operation);
+			const upper = method.toUpperCase();
+			if (!HTTP_METHODS.has(upper)) continue;
+			const key = routeShape(upper, stripVersion(routePath));
+			if (index.has(key)) throw new Error(`Duplicate OpenAPI operation: ${key}`);
+			index.set(key, operation);
 		}
 	}
 	return index;
 }
 
-function cleanFieldName(cell: string): string | null {
-	const name = cell
+function fieldNameText(cell: string): string {
+	return cell
 		.replace(/<sup>.*?<\/sup>/gu, '')
 		.replace(/\*\*/gu, '')
 		.replace(/`/gu, '')
 		.replace(/\\/gu, '')
-		.trim()
-		.replace(/\?$/u, '');
+		.trim();
+}
+
+function cleanFieldName(cell: string): string | null {
+	const name = fieldNameText(cell).replace(/\?$/u, '');
 	if (name.length === 0) {
 		return null;
 	}
@@ -239,12 +265,11 @@ function sectionIsByReference(lines: ReadonlyArray<string>, start: number): bool
 	return sawReference && !sawTable;
 }
 
-function tableOptionality(lines: ReadonlyArray<string>, start: number): Map<string, boolean> {
-	const out = new Map<string, boolean>();
+function* firstTableRows(lines: ReadonlyArray<string>, start: number): Generator<string> {
 	let index = start;
 	while (index < lines.length && !lines[index].startsWith('|')) {
 		if (lines[index].startsWith('#')) {
-			return out;
+			return;
 		}
 		index += 1;
 	}
@@ -253,77 +278,30 @@ function tableOptionality(lines: ReadonlyArray<string>, start: number): Map<stri
 		if (!line.startsWith('|')) {
 			break;
 		}
-		const cells = line.split('|').slice(1, -1);
-		if (cells.length < 2) {
+		yield line;
+	}
+}
+
+interface DocumentedField {
+	readonly type: string | null;
+	readonly optional: boolean;
+}
+
+function tableFields(lines: ReadonlyArray<string>, start: number): Map<string, DocumentedField> {
+	const out = new Map<string, DocumentedField>();
+	for (const line of firstTableRows(lines, start)) {
+		const cells = splitTableRow(line);
+		if (cells.length === 0) {
 			continue;
 		}
-		const raw = cells[0]
-			.replace(/<sup>.*?<\/sup>/gu, '')
-			.replace(/`/gu, '')
-			.trim();
+		const raw = fieldNameText(cells[0]);
 		const name = cleanFieldName(cells[0]);
 		if (name == null) {
 			continue;
 		}
-		out.set(name, raw.endsWith('?'));
+		out.set(name, {type: cells[1] === undefined ? null : normaliseDocType(cells[1]), optional: raw.endsWith('?')});
 	}
 	return out;
-}
-
-function tableFieldTypes(lines: ReadonlyArray<string>, start: number): Map<string, string> {
-	const out = new Map<string, string>();
-	let index = start;
-	while (index < lines.length && !lines[index].startsWith('|')) {
-		if (lines[index].startsWith('#')) {
-			return out;
-		}
-		index += 1;
-	}
-	for (; index < lines.length; index += 1) {
-		const line = lines[index];
-		if (!line.startsWith('|')) {
-			break;
-		}
-		const cells = line.split('|').slice(1, -1);
-		if (cells.length < 2) {
-			continue;
-		}
-		const name = cleanFieldName(cells[0]);
-		if (name == null) {
-			continue;
-		}
-		const type = normaliseDocType(cells[1]);
-		if (type != null) {
-			out.set(name, type);
-		}
-	}
-	return out;
-}
-
-function tableFields(lines: ReadonlyArray<string>, start: number): Set<string> {
-	const fields = new Set<string>();
-	let index = start;
-	while (index < lines.length && !lines[index].startsWith('|')) {
-		if (lines[index].startsWith('#')) {
-			return fields;
-		}
-		index += 1;
-	}
-	for (; index < lines.length; index += 1) {
-		const line = lines[index];
-		if (!line.startsWith('|')) {
-			break;
-		}
-		const match = line.match(TABLE_ROW);
-		if (match == null) {
-			continue;
-		}
-		const name = cleanFieldName(match[1]);
-		if (name != null) {
-			fields.add(name);
-		}
-	}
-	return fields;
 }
 
 const mainSpec: Spec = JSON.parse(await readFile(MAIN_SPEC, 'utf8'));
@@ -352,18 +330,16 @@ function documentReferences(page: string, line: string): Set<string> {
 	return references;
 }
 
-const allFiles = await listMarkdownFiles(DOCS_ROOT);
+const pages = await readMarkdownPages(DOCS_ROOT);
 const anchorFields = new Map<string, Set<string>>();
 const anchorTypes = new Map<string, Map<string, string>>();
 const anchorReferences = new Map<string, Set<string>>();
 const objectAnchors = new Set<string>();
-for (const file of allFiles) {
-	const slug = path
-		.relative(DOCS_ROOT, file)
+for (const {relativePath, lines} of pages) {
+	const slug = relativePath
 		.replace(/\.(mdx|md)$/u, '')
 		.replace(/\/index$/u, '')
 		.replace(/^index$/u, '');
-	const lines = (await readFile(file, 'utf8')).split('\n');
 	let currentAnchors: Array<string> = [];
 	const pendingAnchors: Array<string> = [];
 	for (let i = 0; i < lines.length; i += 1) {
@@ -398,15 +374,14 @@ for (const file of allFiles) {
 		if (currentAnchors.length === 0 || !line.startsWith('|')) {
 			continue;
 		}
-		const row = line.match(TABLE_ROW);
-		if (row == null) {
+		const cells = splitTableRow(line);
+		if (cells.length === 0) {
 			continue;
 		}
-		const name = cleanFieldName(row[1]);
+		const name = cleanFieldName(cells[0]);
 		if (name == null) {
 			continue;
 		}
-		const cells = line.split('|').slice(1, -1);
 		const declaredType = cells.length >= 2 ? normaliseDocType(cells[1]) : null;
 		for (const anchor of currentAnchors) {
 			const anchorKey = `${slug}#${anchor}`;
@@ -436,22 +411,22 @@ let typesCompared = 0;
 let optionalityCompared = 0;
 const optionalityAdvisories: Array<string> = [];
 
-for (const file of allFiles) {
-	const relative = path.relative(DOCS_ROOT, file);
+for (const page of pages) {
+	const {relativePath: relative, lines} = page;
 	if (relative.startsWith('media-proxy/')) {
 		continue;
 	}
-	const lines = (await readFile(file, 'utf8')).split('\n');
+	const routeHeaders = readRouteHeaders(page);
 	const pageFields = new Set<string>();
 	for (let i = 0; i < lines.length; i += 1) {
 		if (!lines[i].startsWith('|')) {
 			continue;
 		}
-		const match = lines[i].match(TABLE_ROW);
-		if (match == null) {
+		const cells = splitTableRow(lines[i]);
+		if (cells.length === 0) {
 			continue;
 		}
-		const name = cleanFieldName(match[1]);
+		const name = cleanFieldName(cells[0]);
 		if (name != null) {
 			pageFields.add(name);
 		}
@@ -475,18 +450,14 @@ for (const file of allFiles) {
 	}
 
 	for (const section of sections) {
-		let header: RegExpMatchArray | null = null;
-		for (let i = section.start; i < section.end; i += 1) {
-			const match = lines[i].match(ROUTE_HEADER);
-			if (match != null) {
-				header = match;
-				break;
-			}
-		}
+		const header = routeHeaders.find((candidate) => candidate.line > section.start && candidate.line <= section.end);
 		if (header == null) {
 			continue;
 		}
-		const key = shape(header[1], stripVersion(header[2]));
+		if (header.endLine > section.end) {
+			throw new Error(`${relative}:${header.line}: RouteHeader crosses a section boundary`);
+		}
+		const key = routeShape(header.method, stripVersion(header.path));
 		const operation = index.get(key);
 		if (operation == null) {
 			continue;
@@ -580,9 +551,9 @@ for (const file of allFiles) {
 					continue;
 				}
 				checkedBodies += 1;
-				const documentedTypes = tableFieldTypes(lines, i + 1);
 				const actualTypes = collectPropertyTypes(spec, jsonSchema);
-				for (const [field, docType] of documentedTypes) {
+				for (const [field, {type: docType}] of documented) {
+					if (docType === null) continue;
 					const specType = actualTypes.get(field);
 					if (specType == null) {
 						continue;
@@ -601,11 +572,9 @@ for (const file of allFiles) {
 						detail: `${field}: documented ${docType}, schema ${specType}`,
 					});
 				}
-				const documentedOptional = tableOptionality(lines, i + 1);
 				const requiredFields = collectRequired(spec, jsonSchema);
-				const bodyProperties = collectProperties(spec, jsonSchema);
-				for (const [field, isOptional] of documentedOptional) {
-					if (!bodyProperties.has(field)) {
+				for (const [field, {optional: isOptional}] of documented) {
+					if (!actual.has(field)) {
 						continue;
 					}
 					const specRequired = requiredFields.has(field);
@@ -619,7 +588,7 @@ for (const file of allFiles) {
 							: `${relative}  ${key}  ${field}: documented required, schema marks it optional`,
 					);
 				}
-				for (const field of documented) {
+				for (const field of documented.keys()) {
 					if (actual.has(field)) {
 						continue;
 					}
@@ -650,7 +619,7 @@ for (const file of allFiles) {
 					continue;
 				}
 				checkedQueries += 1;
-				for (const field of documented) {
+				for (const field of documented.keys()) {
 					if (!actual.has(field)) {
 						mismatches.push({page: relative, operation: key, kind: 'query-extra', detail: field});
 					}
@@ -700,7 +669,7 @@ console.log(`bodies documented by reference to an object section: ${documentedBy
 console.log(`query parameter tables checked: ${checkedQueries.toString()}`);
 console.log(`success response schemas checked: ${responsesChecked.toString()}`);
 console.log(`response fields found documented on the page: ${responseFieldsFound.toString()}`);
-console.log(`request body field types compared: ${typesCompared.toString()}`);
+console.log(`request and response field types compared: ${typesCompared.toString()}`);
 console.log(`request body optionality compared: ${optionalityCompared.toString()}`);
 console.log(`optionality advisories: ${optionalityAdvisories.length.toString()}`);
 if (optionalityAdvisories.length > 0) {
@@ -732,4 +701,4 @@ if (mismatches.length > 0) {
 	console.error(`FAIL: ${mismatches.length.toString()} field mismatches`);
 	process.exit(1);
 }
-console.log('OK: every documented request body and query table matches the live schema');
+console.log('OK: no field mismatches found in the checked tables and checked-in OpenAPI schemas');

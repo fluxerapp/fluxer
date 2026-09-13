@@ -8,11 +8,11 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries live on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
 
-A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`. An existing guild where the caller is not a member returns 403 `MISSING_PERMISSIONS`. Fluxer refuses a guild an operator has marked unavailable with 403 `MISSING_ACCESS` before the route runs. [Transfer guild ownership](#transfer-guild-ownership) is the one exception to the 404, and returns 403 `ACCESS_DENIED` for a guild whose record survives without a Gateway process.
+An unknown guild returns 404 `UNKNOWN_GUILD`, a non-member receives 403 `MISSING_PERMISSIONS`, and a guild marked unavailable returns 403 `MISSING_ACCESS`. [Transfer guild ownership](#transfer-guild-ownership) can also return 403 `ACCESS_DENIED` when the guild cannot be accessed.
 
 The modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
 
-:::note[Fluxer reads the target before authorising the caller]
+:::note[A missing target returns 404]
 A request whose target is not a member returns 404 `UNKNOWN_MEMBER` whether or not the caller can see the guild. The rule covers the modify operations, [Remove guild member](#remove-guild-member), [Add guild member role](#add-guild-member-role), and [Remove guild member role](#remove-guild-member-role).
 :::
 
@@ -49,7 +49,7 @@ Every field except `user` describes state that belongs to the membership.
 
 <sup>6</sup> Omitted while the stored value is 0, so absence means no flag is set and, for `mention_flags`, that the account-level preference applies
 
-Premium sanitisation hides the stored avatar and banner hashes and keeps them on the membership. Fluxer applies it after the account loses its premium entitlement, to each membership that holds a guild avatar, banner, biography, or accent colour.
+Guild avatars and banners can be hidden after the account loses its premium entitlement.
 
 A client compares `communication_disabled_until` against the current time, because a non-null value can name a moment that has already passed. A [communication timeout](/http-api/permissions/#communication-timeout) does not reduce the member's computed permission mask.
 
@@ -202,8 +202,6 @@ Returns the authenticated account's own [guild member object](#guild-member-obje
 
 Returns one member's [guild member object](#guild-member-object). Requires membership of the guild and no permission.
 
-This route resolves the guild for the caller before it reads the target, so a non-member never learns whether the target is one.
-
 ### Path parameters
 
 | Field | Type | Description |
@@ -238,7 +236,7 @@ Modifies the authenticated account's own membership and returns the resulting [g
 
 A caller without `CHANGE_NICKNAME` does not fail the request. Fluxer discards the nickname change and applies every other supplied field. A member who holds the permission but is timed out is rejected with 403 `COMMUNICATION_DISABLED`.
 
-A supplied `nick`, `bio`, or `pronouns` is scanned against the instance phrase, URL, and profile substring blocklists, and a match returns 403 `CONTENT_BLOCKED`.
+A blocked `nick`, `bio` or `pronouns` returns 403 `CONTENT_BLOCKED`.
 
 Guild avatar, banner, biography, and accent colour also require the instance-configured `feature_per_guild_profiles` [limit](/http-api/instance/#limit-keys) for the calling account. Fluxer discards any of those fields supplied without that capability and applies every other field. Pronouns, `profile_flags`, and `mention_flags` do not require it.
 
@@ -277,7 +275,7 @@ The body is a [guild member update object](#guild-member-update-object) without 
 
 ### Side effects
 
-Fluxer updates the membership, replaces any supplied guild avatar or banner, updates member search results, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, and emits [Guild Member Update](/gateway/events/#guild-member-update).
+The operation updates the membership, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Member Update](/gateway/events/#guild-member-update).
 
 The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The audit entry and Dispatch are produced even when the resulting membership is unchanged, and an entry whose change list is empty is published without a `changes` member.
 
@@ -303,7 +301,7 @@ Modifies another member's guild state and returns the resulting [guild member ob
 - Applying `mute` requires [MUTE_MEMBERS](/http-api/permissions/), applying `deaf` requires [DEAFEN_MEMBERS](/http-api/permissions/), and both require hierarchy authority over the target.
 - Moving the target requires [MOVE_MEMBERS](/http-api/permissions/) and hierarchy authority, plus [VIEW_CHANNEL](/http-api/permissions/) and [CONNECT](/http-api/permissions/) for the caller in the destination.
 
-A supplied `nick` is scanned against the instance phrase, URL, and profile substring blocklists, and a match returns 403 `CONTENT_BLOCKED`.
+A blocked `nick` returns 403 `CONTENT_BLOCKED`.
 
 Hierarchy authority over the target is not checked for `roles`, so a caller who outranks every affected role can replace the role set of a member who outranks them. The everyone role in the array is rejected with the field code `INVALID_ROLE_ID`.
 
@@ -352,7 +350,7 @@ The body is a [guild member update object](#guild-member-update-object).
 
 ### Side effects
 
-The operation has the same membership, audit, search, [Guild Member Update](/gateway/events/#guild-member-update), and [Voice State Update](/gateway/events/#voice-state-update) effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty replacement role set to a temporary membership also makes the membership permanent. The target account always receives its own Guild Member Update, while every other guild session receives it subject to [event filtering](/gateway/event-filtering/).
+The operation has the same effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty role set also makes a temporary membership permanent.
 
 ### Rate limit
 
@@ -390,9 +388,9 @@ The caller and the guild owner cannot be removed through this operation, and bot
 
 ### Side effects
 
-The operation retains the member's first join time, leave time, and any stored communication timeout for one year. Rejoining during that period resumes a timeout that is still in the future.
+Rejoining within one year resumes any communication timeout that has not expired.
 
-It deletes the membership row and decreases the guild's member count, so the guild nickname, guild avatar hash, guild banner hash, biography, pronouns, accent colour, and role set are lost. The removed account's read states and guild settings are left untouched, and the guild is not removed from that account's guild folders.
+The member loses their guild profile and roles. Read states, guild settings and guild folders are unchanged.
 
 Fluxer records a [`MEMBER_KICK`](/http-api/guild-audit-logs/#audit-actions) audit entry with no change list and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create). Remaining guild sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove), subject to [event filtering](/gateway/event-filtering/). The removed account's sessions receive [Guild Delete](/gateway/events/#guild-delete).
 
@@ -412,7 +410,7 @@ Transfers guild ownership to another current member and returns the updated [gui
 - The target must be a current member.
 - A bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
 
-The operation requires sudo mode as described by the [sudo verification fields](/http-api/guilds/#sudo-verification-fields), which a bot credential satisfies without a proof. Fluxer verifies sudo mode before ownership, so a member who is not the owner must still prove sudo mode before receiving 403 `MISSING_PERMISSIONS`. An account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names the second factors the account holds.
+The operation requires the [sudo verification fields](/http-api/guilds/#sudo-verification-fields). A bot credential needs no proof. An account without a usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names its available second factors.
 
 ### Path parameters
 
@@ -497,7 +495,7 @@ The guild owner receives 404 `UNKNOWN_ROLE` for a role that does not exist in th
 
 ### Side effects
 
-When the member does not already hold the role, the operation adds it and makes a temporary membership permanent. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update). These all run whether or not the role set changed. A request naming a role the member already holds still writes an audit entry with an empty change list, published without a `changes` member.
+Adding a new role makes a temporary membership permanent. The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update), even if the member already holds the role. An unchanged role set produces an audit entry without `changes`.
 
 The audit log response names the role only through the change list.
 
@@ -541,7 +539,7 @@ Removes one role from a member and returns 204 with an empty body. Requires memb
 
 ### Side effects
 
-When the member holds the role, the operation removes it. It then updates member search results, records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Member Update](/gateway/events/#guild-member-update). These all run whether or not the role set changed. Removing a role does not change whether the membership is temporary.
+The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update), even if the member did not hold the role. Removing a role does not change whether the membership is temporary.
 
 ### Rate limit
 

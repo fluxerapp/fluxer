@@ -248,7 +248,7 @@ Schedules deletion of the current account and deletes every authentication sessi
 The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). It may be an empty object when the request presents an accepted sudo token.
 
 :::caution[Signing in before the deadline cancels the deletion]
-The request records a deletion deadline set 336 hours ahead by default and marks the account self-deleted with the reason `USER_REQUESTED`. Erasure after the deadline is irreversible.
+The deletion deadline is 14 days ahead by default. Once erasure starts, signing in cannot cancel it.
 :::
 
 :::note[Transfer guild ownership first]
@@ -261,6 +261,7 @@ Fluxer checks guild ownership before it accepts the deletion, so an owner of any
 | --- | --- | --- |
 | 204 | empty | Account deletion was scheduled |
 | 400 | [error response](/http-api/#error-response) | The caller owns at least one guild and the request returns `USER_OWNS_GUILDS` |
+| 409 | [error response](/http-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
 
 ### Side effects
 

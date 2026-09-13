@@ -8,10 +8,6 @@ Fluxer runs voice over LiveKit. The [main Gateway](/gateway/overview/) places a 
 
 [Client commands](/gateway/commands/) and [Gateway events](/gateway/events/) define the placement protocol.
 
-:::note[A voice rewrite is in progress]
-Every statement on this page is what an instance serves today, and a later release can change it. Re-read the page after an instance upgrade.
-:::
-
 ## Voice surfaces
 
 | Surface | What it is | Reference |
@@ -133,11 +129,7 @@ A member whose `communication_disabled_until` is still in the future is refused 
 
 `rtc_region` is written by [Modify channel](/http-api/channels/#modify-channel) and requires UPDATE_RTC_REGION. A null value selects automatic routing, and so does a stored value the placing account cannot reach.
 
-The first placement in the channel pins one voice server for it, and every later placement inherits that pinned server whatever its own coordinates are. A placement that finds no usable pin takes the accessible server nearest to the `latitude` and `longitude` the placement command supplied. Where the command supplied no usable coordinates, the placement falls back to the deployment's default region, and then to the first accessible region.
-
-A voice server can have a soft connection limit. A placement that has to choose a server prefers the servers below their limit and uses one that is at or above its limit only when no other server can take the placement. [Soft connection limits](/admin-api/voice/#soft-connection-limits) describes the rule in full.
-
-The pin drops when the channel's `rtc_region` changes, when a call changes region, when the pinned server stops being accessible, or when the media server reports the room finished. That last case also disconnects every connection in a guild voice channel.
+Automatic routing selects an available server, using the supplied `latitude` and `longitude` when possible. Participants in the same channel share a server. Always use the endpoint returned in [Voice Server Update](/gateway/events/#voice-server-update).
 
 The literal `automatic` is not a channel region. Only the `region` field of [Modify call region](/http-api/calls/#modify-call-region) accepts it, as a synonym for null.
 
@@ -173,7 +165,7 @@ The [Streams resource](/http-api/streams/) owns the operations addressed by that
 On an instance that is not self-hosted, Fluxer mutes a camera or screen share track above 1280x720 from a member without the higher video quality entitlement, and removes that source from the connection's grant. The voice connection stays up.
 :::
 
-Fluxer removes screen share audio from the grant together with screen share, and removes camera on its own. The member keeps publishing its remaining sources, and a connection whose grant has no source left may publish nothing. A track published without a `sid` is neither muted nor revoked.
+Losing screen share permission also stops its audio. Other permitted track sources remain available.
 
 ## Entrance sounds
 

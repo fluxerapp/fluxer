@@ -4,7 +4,7 @@ title: Client commands
 description: Every main Gateway client command, its payload, bounds, result, and close behaviour.
 ---
 
-A client command is a payload a client sends to Fluxer over the [Gateway](/gateway/overview/) WebSocket. Each one has an integer [opcode](/gateway/opcodes-and-close-codes/#opcodes) in `op` and the command data in `d`. Fluxer answers with a [Dispatch](/gateway/events/) event, a close frame, or nothing at all.
+Clients send commands over the [Gateway](/gateway/overview/) WebSocket, with an integer [opcode](/gateway/opcodes-and-close-codes/#opcodes) in `op` and the command data in `d`. A command can produce a [Dispatch](/gateway/events/), a close frame, or no response.
 
 Except for [Heartbeat](#heartbeat), [Identify](#identify), and [Resume](#resume), every command needs an authenticated session. Sending one too early closes with `4003` and reason `Not authenticated`. Heartbeat and Resume are accepted in any open state, and Identify is accepted only while the connection is unauthenticated.
 
@@ -53,7 +53,7 @@ Opcode `1` has the last Dispatch sequence the client processed, or `null` before
 
 Before authentication the Gateway accepts any `d` value and sends Opcode `11`. A payload with no `d` key closes with `4001` and reason `Unknown opcode`.
 
-Once a session exists, a `d` that is neither `null` nor an integer closes with `4007` and reason `Invalid sequence`. Every integer is accepted. A sequence below the one the session has already acknowledged leaves the acknowledged sequence unchanged. Any other integer becomes the acknowledged sequence and trims every retained Dispatch at or below it from the replay buffer.
+Once authenticated, a `d` that is neither `null` nor an integer closes with `4007` and reason `Invalid sequence`. Every integer is accepted, but acknowledgements never move backwards. Dispatches at or below the highest acknowledged sequence are no longer available for Resume.
 
 When the session ends, Fluxer sends Opcode `9` with `d: false`, after which heartbeats are acknowledged again. A heartbeat that arrives in the short window between the session ending and that frame closes with `4007`.
 
@@ -77,7 +77,7 @@ Opcode `2` authenticates and creates a new session.
 
 <sup>2</sup> Names are upper-cased and deduplicated. See [Event filtering](/gateway/event-filtering/) for the exact suppression rule
 
-<sup>3</sup> That guild is marked active and already synced when the session connects to it, so it delivers active traffic without a [Lazy Request](#lazy-request) and sends no [Guild Sync](/gateway/events/#guild-sync). Fluxer discards a value that is not a canonical decimal Snowflake string, and the Identify still succeeds
+<sup>3</sup> The guild delivers active traffic without a [Lazy Request](#lazy-request) and sends no initial [Guild Sync](/gateway/events/#guild-sync). A value that is not a canonical decimal Snowflake string is ignored without failing Identify
 
 <sup>4</sup> `shard_count` is an integer from 1 through 16,384, and `shard_id` is an integer that is at least 0 and below `shard_count`
 
@@ -207,7 +207,7 @@ An unknown or expired session produces Opcode `9` with `d: false` and leaves the
 
 A successful Resume replays every retained Dispatch strictly above `seq` in order and finishes with [Resumed](/gateway/events/#resumed). It also replaces the session's socket, and the displaced socket receives Opcode `7` followed by a close.
 
-Fluxer processes Resume in any authentication state. A socket that already has a session attached still processes a Resume, and the named session takes the attached session's place. Send Resume only on a fresh socket.
+Send Resume only on a fresh socket. It is also accepted on an authenticated socket, where it replaces the attached session.
 
 ## Presence Update
 
@@ -298,7 +298,7 @@ The command has no `session_id` field. The current Gateway session is the member
 
 Joining or replacing a grant produces [Voice Server Update](/gateway/events/#voice-server-update) with the token and endpoint for the media connection, and [Voice State Update](/gateway/events/#voice-state-update) for every session that can see the channel.
 
-The first two updates in a rolling one-second window are processed immediately. Later updates enter a [per-session queue](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) that holds at most 64 commands and drains one command every 500 ms. A newer update replaces an older queued update for the same `guild_id` and `connection_id` pair, and a full queue discards its oldest entry before accepting the new one.
+The first two updates in a rolling one-second window take effect immediately. Later updates can be delayed or replaced by newer updates for the same `guild_id` and `connection_id`. See [command rate limits](/gateway/limits-and-rate-limits/#connection-and-command-rate-limits) for the timing and capacity bounds.
 
 ## Request Guild Members
 
@@ -403,15 +403,13 @@ Opcode `14` sets the per-guild subscriptions that decide member list, typing, an
 
 <sup>1</sup> Both are Booleans when present. Any other value drops the rest of the command silently, without a close and without a result
 
-<sup>2</sup> A coalesced subscription waits 100 ms before Fluxer applies it, and ranges arriving inside that window merge into the ranges already buffered for the same channel. A request that has no ranges for a channel discards the ranges already buffered for it
+<sup>2</sup> Subscriptions may be combined over a 100 ms window. Ranges sent during that window are merged for the same channel, and an empty range list clears its pending ranges
 
 Fluxer applies each option only when its key is present, in the order `active`, `sync`, `member_list_channels`, `members`, `typing`.
 
 Marking a guild active changes how much traffic it produces, and [Event filtering](/gateway/event-filtering/) specifies the difference. A transition from passive to active, and a transition from active to passive, both imply a sync even when `sync` is absent. Every sync request, implied or explicit, is dropped when the guild is already marked synced for that session. Going passive clears that mark, so the next sync request produces a fresh Guild Sync.
 
 `member_list_channels` maps a channel ID to a list of `[start, end]` ranges. A range needs `start` at least 0, `end` at least `start`, `end` at most 100,000, and `end - start` at most 99. Ranges that fail those bounds are dropped, and each channel keeps at most the first 10 that pass. A channel key that is not a Snowflake is skipped.
-
-Fluxer applies a subscription at once when the guild has no coalescing window open, its buffer is empty, and the channel's member list is already built. That request opens the window. Fluxer buffers it as applied and does not apply it a second time when the window closes. Every other subscription waits out the window, including one for a channel whose member list is not built yet and one arriving while the window is open.
 
 `VIEW_CHANNEL` and `VIEW_CHANNEL_MEMBERS` together control the member list subscription, and both are evaluated for each channel separately. A channel the session cannot view, or can view without holding `VIEW_CHANNEL_MEMBERS` there, receives no [Guild Member List Update](/gateway/events/#guild-member-list-update) while its siblings subscribe normally.
 
@@ -442,7 +440,7 @@ Opcode `15` requests current count records.
 
 Entries that are not positive Snowflakes are dropped. A guild the session is not connected to is skipped. A `nonce` outside the length bound is omitted from the result. The command never closes the connection.
 
-Results arrive in one [Guild Counts Update](/gateway/events/#guild-counts-update). Each guild is queried with a 2,000 ms deadline under an overall 3,000 ms batch deadline, so a slow guild is omitted from the result.
+Results arrive in one [Guild Counts Update](/gateway/events/#guild-counts-update). The request has a 3,000 ms deadline, and a guild that does not answer within 2,000 ms is omitted.
 
 ## Request Channel Member Counts
 

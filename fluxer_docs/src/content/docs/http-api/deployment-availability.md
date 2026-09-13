@@ -8,7 +8,7 @@ A small set of routes exists only on the deployment Fluxer hosts. An operator ru
 
 A self-hosted deployment does not register those routes. A request to one returns 404 `NOT_FOUND` with no feature-specific code, so a caller cannot tell an unavailable route from an unrecognised path.
 
-The API decides registration once at process start from the deployment configuration. No credential, permission, premium state, or OAuth2 scope changes the answer. A client resolves the deployment kind from instance discovery.
+Credentials, permissions, premium state and OAuth2 scopes do not change route availability. Read the deployment kind from instance discovery.
 
 ## Deployment kind
 

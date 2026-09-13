@@ -641,7 +641,7 @@ An `attachment://` reference on a request that has no attachment fails with the 
 
 Fluxer issues an upload URL for an attachment before any message can reference it. [Request attachment upload URLs](#request-attachment-upload-urls) plans the upload. A plan whose declared size exceeds 10 MiB is a multipart plan, and [Complete attachment upload](#complete-attachment-upload) finishes it.
 
-An `upload_url` is either a presigned object storage URL or a Fluxer [upload relay](/media-proxy/upload-relay/) URL, and the instance picks which per request from the caller's country. A caller whose IP is unknown, or whose country is not on the instance's direct-upload list, is given a relay URL. A client MUST send the URL exactly as issued and MUST NOT assume either shape.
+An `upload_url` can point to object storage or the Fluxer [upload relay](/media-proxy/upload-relay/). Send it exactly as issued without assuming its shape.
 
 An upload key can be referenced only by a message that the same identity creates in the same channel.
 
@@ -952,7 +952,7 @@ Fluxer checks each declared `file_size` separately against the attachment size l
 
 ### Side effects
 
-The operation records one pending upload for each declaration against the caller and the channel, and opens a storage multipart upload for each multipart plan. It creates no message.
+The operation reserves the uploads for the caller and channel. It creates no message.
 
 An issued `upload_filename` becomes an attachment only when a later [Create message](#create-message) or [Modify message](#modify-message) request references it from a [pre-uploaded attachment](#pre-uploaded-attachment-object) entry. A singlepart plan needs no completion step, so a message can reference its key as soon as the `PUT` succeeds.
 
@@ -1013,7 +1013,7 @@ Fluxer reports the field code `UPLOADED_ATTACHMENT_NOT_FOUND` for an upload key 
 
 ### Side effects
 
-The operation finishes each multipart upload and records its completion time and completion IP. It creates no message, and the upload key stays available until a message consumes it.
+The operation makes each completed upload available for a message. It creates no message.
 
 ### Rate limit
 
@@ -1055,7 +1055,7 @@ The request body is read as a multipart form when `Content-Type` contains `multi
 | message_reference? | ?[message reference input](#message-reference-input-object) object | Reply or forward reference |
 | allowed_mentions? | ?[allowed mentions](#allowed-mentions-object) object | Active mention policy |
 | flags?<sup>3</sup> | integer | [Message flags](#message-flags), defaulting to `0` |
-| favorite_meme_id?<sup>4</sup> | ?snowflake | Favorite meme to attach |
+| favorite_meme_id?<sup>4</sup> | ?snowflake | Favourite meme to attach |
 | sticker_ids? | ?array[snowflake] | At most 3 sticker IDs |
 | tts?<sup>5</sup> | boolean | Whether to request text-to-speech |
 
@@ -1197,7 +1197,7 @@ Modifies a message. Returns the updated [message](#message-object) object. Emits
 - `MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 - A caller who does not hold the bit at all is treated as any other non-author and receives 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/) and adding an upload requires [ATTACH_FILES](/http-api/permissions/).
-- The route takes a per-message write lock for the duration of the edit, and a request that cannot take it fails with 429 `RESOURCE_LOCKED` and a `Retry-After` of 1.
+- A concurrent edit can fail with 429 `RESOURCE_LOCKED` and `Retry-After: 1`.
 
 The body is read exactly as it is for [Create message](#create-message), so a `multipart/form-data` request is accepted with the same `payload_json` and `files[N]` fields. A file that is not uploaded directly must first be planned through [Request attachment upload URLs](#request-attachment-upload-urls) and then referenced by its `upload_filename`.
 
@@ -1283,7 +1283,7 @@ Deletes the authenticated identity's read state entry for one channel. Returns 2
 
 ### Side effects
 
-The operation deletes the caller's stored read-through marker, mention count, and pin acknowledgement for the channel, and invalidates the caller's cached unread badge count. It emits no Gateway Dispatch.
+The operation deletes the caller's read-through marker, mention count, and pin acknowledgement for the channel. It emits no Gateway Dispatch.
 
 ### Rate limit
 
@@ -1444,7 +1444,7 @@ Deletes every message in the authenticated user's personal notes channel. Return
 
 - The channel must be the caller's own `DM_PERSONAL_NOTES` channel, and any other channel fails with 400 `INVALID_CHANNEL_TYPE`.
 
-The deletion runs inside the request in pages of 100 messages, so a channel with a very large history holds the request open until the last message is gone.
+The response is returned only after deletion finishes, which can take longer for a large history.
 
 ### Path parameters
 
@@ -2119,7 +2119,7 @@ Without `manual`, the marker advances to the larger of its current value and `me
 
 ### Side effects
 
-The operation stores the new read-through marker and the supplied mention count for the caller and channel. It invalidates the caller's cached unread badge count, clears the channel's delivered notifications through the acknowledged watermark, and emits [Message ACK](/gateway/events/#message-ack) to the caller's own sessions only.
+The operation updates the caller's read-through marker and mention count, clears delivered notifications through the acknowledged watermark, and emits [Message ACK](/gateway/events/#message-ack) to the caller's own sessions only.
 
 A non-manual acknowledgement whose `message_id` is below the stored watermark leaves the stored watermark and mention count unchanged. The Dispatch reports the stored values.
 

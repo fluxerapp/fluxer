@@ -23,8 +23,8 @@ An account satisfying none of them is refused with 403 `PHONE_ADD_NOT_ELIGIBLE`.
 
 Both operations run the check before they examine the submitted number. A refused account receives no message and consumes no challenge. [Start inbound phone challenge](#start-inbound-phone-challenge) skips the check entirely and issues a challenge for any non-bot session.
 
-:::note[Eligibility reads the stored bitfield]
-The [required actions](/http-api/users/#required-actions) array is filtered: empty for an account with no email address, empty for a contact address holding the required-actions exemption, and stripped of requirements the account already satisfies. An account with no visible required actions can still be eligible.
+:::note[Visible required actions do not determine eligibility]
+An account can qualify even when its [required actions](/http-api/users/#required-actions) array is empty.
 :::
 
 ## Deferred phone requirement
@@ -69,7 +69,7 @@ Keep phone numbers, verification codes, and challenge codes out of logs, analyti
 
 ## Provider lookup verdicts
 
-[Verify phone code](#verify-phone-code) resolves the destination through the configured lookup provider before it checks the code. [Send phone verification](#send-phone-verification) does the same before it sends a code, except on an attempt that policy routes inbound before the lookup, where no lookup runs. A lookup result is cached for 7 days and reused for later attempts against the same number. The rules below run in order, and the first match decides.
+Outbound SMS requires the number to pass the following checks. The first matching verdict applies. A number routed directly to an inbound challenge does not need this lookup.
 
 | Order | Condition | Verdict |
 | --- | --- | --- |
@@ -242,8 +242,6 @@ On the 429, `X-RateLimit-Scope` reports `shared` when the per-number control or 
 ### Side effects
 
 On an outbound result, Fluxer asks the configured SMS provider to deliver a one-time code. On an inbound result, it creates a one-use challenge for the current account.
-
-Fluxer records an attempt against the phone attempt risk counters only once it reaches [provider lookup](#provider-lookup-verdicts).
 
 ### Rate limit
 

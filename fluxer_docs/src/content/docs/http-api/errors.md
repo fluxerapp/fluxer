@@ -34,9 +34,7 @@ The error code determines which supplementary members a failure has, and most co
 
 Fluxer answers a field-level failure with 400 and a top-level `errors` array. Each element identifies one failed input field. The [validation error object](/http-api/#validation-error-object) documents the element shape.
 
-A boundary schema validates one of the request targets: the JSON body, the form body, the query string, and the path parameters. A failure on any of them returns the top-level code `INVALID_FORM_BODY`, and each element has a `code` drawn from the [validation error code registry](#validation-error-code-registry) together with a localised `message`.
-
-An operation can also report against a named field without the boundary schema. That failure returns `INVALID_FORM_BODY` as well. Its element has an enumerated `code` and localised `message` when the failure declares a registry code. Otherwise it has a fixed English `message` written at the failure site and no `code`. Every element `code` a client observes is a registry value.
+Invalid JSON bodies, form bodies, query strings and path parameters return `INVALID_FORM_BODY`. Each entry in `errors` identifies a field and its message. An entry can also include a stable `code` from the [validation error code registry](#validation-error-code-registry). Entries without a code have an English message.
 
 [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) is the one operation that answers such a failure with the top-level code `VALIDATION_ERROR` instead of `INVALID_FORM_BODY`. Its trusted domain, age restriction, and synced preferences decisions each report one element with a registry `code` and a fixed English `message`.
 
@@ -112,14 +110,10 @@ Fluxer answers an unrecognised failure with 500 `INTERNAL_SERVER_ERROR` and a ge
 
 ## Client errors as an abuse signal
 
-Every `4xx` response to a request that resolved no authenticated user contributes a weighted abuse signal keyed by the client IP identity. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. Fluxer records a signal only when the client address is public and not exempt. An IPv4 client is keyed by its exact address and an IPv6 client by its `/64`. One request records at most one client error signal. A denial produced by an existing IP ban records no signal.
-
-Fluxer records a second signal of weight 1 for a credential that fails to resolve. A request that presents an unrecognised token and is answered 401 contributes both. That signal also records a hash of the credential presented, and Fluxer tracks the number of distinct hashes seen for one IP identity beside the score.
-
-The score and the credential hashes accumulate inside a fixed window, and the window restarts once it elapses. The triggers below fire an automatic ban. The credential trigger fires the first time the count of distinct rejected credentials reaches its threshold. The score trigger fires only after the score has crossed its threshold in three separate windows, which is the default. Both thresholds depend on the address classification, which is datacentre, anonymising, mobile, or residential. An unclassified address takes the residential thresholds. Fluxer never bans a mobile address automatically.
+Repeated invalid requests or credentials can trigger a temporary IP ban. A `4xx` answer to a request with no authenticated user adds to that signal, weighted by status. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. One request adds at most one signal, and a request from a private or exempt address adds none. Stop using a rejected credential and respect rate-limit responses instead of retrying unchanged requests.
 
 :::caution[An automatic ban answers every request for 24 hours]
-The window length, both thresholds, and the number of windows the score trigger requires are instance configuration. A tripped ban lasts 24 hours by default. While it holds, Fluxer answers every request from that identity with 403 and the code `GLOBAL_IP_TEMPORARILY_BANNED`.
+A temporary ban lasts 24 hours by default. Requests from the banned address return 403 `GLOBAL_IP_TEMPORARILY_BANNED`. Use `expires_at` from the response when available.
 :::
 
 ## API error code registry
@@ -186,17 +180,9 @@ Bad request
 
 We couldn't resolve that Bluesky handle
 
-### `BLUESKY_OAUTH_CALLBACK_FAILED`
-
-We couldn't complete the Bluesky connection
-
 ### `BLUESKY_OAUTH_NOT_ENABLED`
 
 Bluesky connections are not enabled on this instance
-
-### `BLUESKY_OAUTH_STATE_INVALID`
-
-The authorization request has expired or is invalid
 
 ### `BOTS_CANNOT_CREATE_GUILDS`
 
@@ -1405,7 +1391,7 @@ Discoverable communities must have a verification level of at least Low
 
 ### `DISCRIMINATOR_INVALID_FORMAT`
 
-Discriminator must be {min}–{max} digits
+`Discriminator must be {min}–{max} digits`
 
 ### `DISCRIMINATOR_OUT_OF_RANGE`
 
@@ -2130,10 +2116,6 @@ Webhook name must be between {min} and {max} characters
 
 ## Localisation
 
-An error `message` is rendered in one resolved locale. Fluxer uses the configured locale of the authenticated account when the request is authenticated and the account has one. Otherwise it negotiates the request `Accept-Language` value against the canonical [supported locale registry](/topics/locales/#supported-locales). [Locales](/topics/locales/#negotiation) defines the resolution algorithm, including weights, language subtag reduction, and the `en-US` result.
+Messages use the account's locale or the request's `Accept-Language` header, with an English fallback. Early rejections such as IP bans can use the header rather than the account locale. See [Locales](/topics/locales/).
 
-A failure raised before the request locale is resolved, such as an IP ban denial, cannot see the account locale and negotiates `Accept-Language` on its own. That negotiation reads the header entries in order, ignores quality weights, and falls back to `en-US`.
-
-Fluxer localises the `message` of a validation element that has a `code` the same way. A validation element with no `code` has the fixed English string written at the failure site. The `code` field is never localised, either in the envelope or in a validation element.
-
-A code whose catalogue entry is missing for the resolved locale falls back to its English source template. Where no template is registered at all, the `message` falls back to the one the failure supplied, or to the code itself.
+The `code` field is never translated. Validation entries without a code have an English message.

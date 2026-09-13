@@ -328,7 +328,7 @@ An operation records one of the following actions. The field is a free-form stri
 
 ## Audit reasons
 
-Fluxer reads the `X-Audit-Log-Reason` header once at the boundary, on every request to the API, Admin or not. The header is read raw and never percent-decoded, so a client that URI-encodes the value has the encoded form stored.
+Send `X-Audit-Log-Reason` on operations that support an audit reason. Values are not percent-decoded, so a URI-encoded reason remains encoded in the audit log.
 
 Normalisation strips control and format characters and trims surrounding whitespace. An absent header, a blank value, and a value whose normalised length exceeds 512 characters all resolve to null. Fluxer never fails a request during this normalisation, so an over-long reason is dropped silently.
 

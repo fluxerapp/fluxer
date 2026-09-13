@@ -16,7 +16,7 @@ Proof Key for Code Exchange, or PKCE, supports the `S256` and `plain` challenge 
 
 ## Credentials and lifetimes
 
-Fluxer generates an authorisation code, a client secret, an access token, and a refresh token as 32 random bytes encoded as base64url, and a bot token is the application ID, a full stop, then such a secret. Retrying an interrupted exchange with the same inputs is rejected as an invalid grant, and the client restarts the grant.
+Treat authorisation codes, client secrets, and tokens as opaque credentials. Retrying an interrupted exchange with the same inputs is rejected as an invalid grant. Restart the grant instead.
 
 An authorisation code expires 10 minutes after it is issued, an access token after 7 days, and a refresh token after 30 days. Every refresh exchange issues a replacement with a new 30 day life, so a grant ends 30 days after its last refresh.
 
@@ -273,9 +273,9 @@ One application the current user has authorised, aggregated across its live refr
 | scopes<sup>1</sup> | array[string] | The scopes aggregated across the user's live refresh tokens for the application |
 | authorized_at<sup>2</sup> | ISO8601 timestamp | The earliest creation time among the refresh tokens that contributed to this entry |
 
-<sup>1</sup> The refresh token that first contributes an application contributes only its recognised scopes other than `bot`. Every further refresh token for the same application contributes its stored scope set unfiltered, so `bot` and an unrecognised value can appear once more than one refresh token contributes
+<sup>1</sup> Scopes have no defined order and can include `bot` or an unrecognised value. Ignore unrecognised values
 
-<sup>2</sup> Lowered by every refresh token that contributes to the entry, including one that has only `bot`
+<sup>2</sup> The earliest issue time among the application's current refresh grants
 
 An authorisation appears only while the application holds a live refresh grant with a recognised scope other than `bot`.
 

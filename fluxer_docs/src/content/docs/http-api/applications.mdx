@@ -15,7 +15,7 @@ Every route except [Get public application](#get-public-application) requires a 
 The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
 
 :::caution[Credentials are shown once]
-A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a [bot token](/authentication/#token-formats) only by [Create application](#create-application) and [Reset bot token](#reset-bot-token). Both are stored as one-way hashes.
+A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a [bot token](/authentication/#token-formats) only by [Create application](#create-application) and [Reset bot token](#reset-bot-token).
 :::
 
 ## Rate limits
@@ -89,7 +89,7 @@ The bot account an application owns. [Create application](#create-application) c
 A bot token is the application ID, a full stop, and an opaque secret of 32 random bytes encoded as base64url.
 :::
 
-Fluxer identifies the application from the token itself and rejects an invalid secret without saying whether the application exists. The built-in `Fluxer Admin` application owns no bot account, so a token bearing its ID is always rejected.
+An invalid bot token returns the same error whether or not its application exists.
 
 ## Public application object
 
@@ -140,7 +140,7 @@ The application as the bot token that application issued sees it.
 
 <sup>1</sup> Read from the bot account, so it changes with [Update bot profile](#update-bot-profile), and it is null when the application has no bot account
 
-<sup>2</sup> Fluxer stores no application signing key
+<sup>2</sup> No application signing key is available
 
 <sup>3</sup> The request fails with 401 `INVALID_TOKEN` when the owning account no longer exists
 
@@ -359,7 +359,7 @@ Returns one [application](#application-object) object. Only the owner can read i
 | 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
 | 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
 
-Fluxer reports existence before ownership, so an application the caller does not own returns 403 `ACCESS_DENIED` and never 404.
+An existing application owned by another account returns 403 `ACCESS_DENIED`.
 
 ### Rate limit
 
@@ -586,11 +586,9 @@ A 204 response means the removal has finished. Repeating the request afterwards 
 
 ### Side effects
 
-Fluxer reassigns every message the bot authored to a newly created placeholder account with the deleted-account representation. It creates that placeholder only when the bot authored at least one message. The bot's tag is released for reuse.
+The bot's messages remain attributed to a deleted account, and its tag becomes available for reuse. The bot is removed from every guild and its profile is anonymised as `DeletedUser#0000`, with the global name `Deleted User`.
 
-The bot is removed from every guild it is a member of. The bot account record is retained and rewritten to the deleted-account representation. That representation has the username `DeletedUser`, the global name `Deleted User`, and the discriminator `0000`. It has no email, no password, no authenticators, no avatar, banner, biography, pronouns, accent colour, timezone, or date of birth, and only the deleted flag is set. Fluxer then deletes the application record.
-
-The bot token and the client secret stop authenticating as soon as the application record is gone. No further token exchange, refresh, introspection, or revocation succeeds for the application. Access and refresh tokens already issued to it are not deleted, and an outstanding access token keeps authenticating a scope-gated route until it expires. [Get current OAuth2 authorisation](/http-api/oauth2/#get-current-oauth2-authorisation) and [Get OAuth2 user information](/http-api/oauth2/#get-oauth2-user-information) resolve the application as well, so both return 401 `INVALID_TOKEN` for that token.
+The bot token and client secret stop working. Token exchange, refresh, introspection, and revocation also fail. An existing access token can still authenticate a scope-gated route until it expires, but [Get current OAuth2 authorisation](/http-api/oauth2/#get-current-oauth2-authorisation) and [Get OAuth2 user information](/http-api/oauth2/#get-oauth2-user-information) return 401 `INVALID_TOKEN`.
 
 ### Rate limit
 

@@ -16,7 +16,7 @@ A completed harvest records a deadline exactly seven days after the archive was 
 
 ## Harvest status values
 
-The status is derived from the recorded timestamps in a fixed order, testing `failed_at` first, then `completed_at`, then `started_at`.
+Use `status` to track preparation of the archive.
 
 | Value | Description |
 | --- | --- |
@@ -94,7 +94,7 @@ A short English label describing the current stage. Every value is fixed except 
 | Downloading attachments and creating archive | The ZIP archive is being written, with progress 65 |
 | Completed | The archive is ready, with progress 100 |
 
-<sup>1</sup> Skipped entirely when the harvest collected no message. Its progress is 5 plus the whole part of N divided by 200, capped at 55
+<sup>1</sup> Skipped when no messages are collected
 
 ## Harvest download object
 
@@ -182,7 +182,7 @@ A harvest record is created with a new [snowflake](/snowflakes/), the request ti
 
 Fluxer prepares the archive in the background. It contains:
 
-- `user.json`, the account document
+- `user.json`, the account document, including connections with their identifiers, visibility settings and verification dates but no credentials
 - one `channels/{channel_id}/messages.json` file for each channel that contributed a message, with its messages ordered oldest first
 - `payments/payment_history.json`
 - `integrations/oauth.json`, the [applications](/http-api/applications/) the account owns, with no entry for an application it only authorised
@@ -191,7 +191,7 @@ Fluxer prepares the archive in the background. It contains:
 
 Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
 
-Every authored message is collected, with no ceiling on the count. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued.
+Every authored message is collected, with no ceiling on the count. Messages that no longer exist are omitted. Other read failures fail the attempt. After completion, Fluxer attempts to email a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued. Email failure does not prevent downloading a completed archive.
 
 ### Rate limit
 
@@ -234,7 +234,7 @@ The side effects match [Request data harvest](#request-data-harvest), except tha
 
 Returns the account's most recently created [harvest status](#harvest-status-object) object.
 
-The most recent harvest is the one with the highest ID, and because IDs are [Snowflakes](/snowflakes/) that ordering is creation order. The result is the newest record whatever its state, so a completed archive is not preferred over a newer failed one.
+Returns the newest harvest regardless of status, including a failed harvest newer than a completed one.
 
 :::note[An account with no harvest receives 200 and `null`]
 The body is the literal JSON value `null`, so decode it before treating the response as an object.
@@ -316,7 +316,7 @@ The URL takes one of the forms below. When the instance has presigned harvest do
 
 Streams the archive of one completed harvest.
 
-The signed `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) is the whole authorisation, so the link stays usable from the harvest completion email and from a plain browser. It binds the account, the harvest ID, the stored object key, and an expiry.
+The `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) authorises the download without a session. Use the complete issued URL and keep it secret.
 
 The operation is active only while the instance has presigned harvest downloads disabled. That setting is enabled by default, so a default deployment answers every request here as 404 without inspecting the token.
 

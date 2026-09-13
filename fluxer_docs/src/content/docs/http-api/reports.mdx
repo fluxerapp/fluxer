@@ -370,7 +370,7 @@ One reporter creates at most 5 reports each hour across all report types.
 
 Issues a Digital Services Act verification code for an email address and returns a [success object](#success-object).
 
-The address must be deliverable. A domain publishing no MX record and no A or AAAA record returns 400 `INVALID_FORM_BODY` with the validation code `INVALID_EMAIL_ADDRESS` on `email`. A DNS lookup that fails for a transient reason is treated as deliverable. A domain result is cached for 30 minutes when it resolves and 5 minutes when it does not.
+The address must be deliverable. A domain with no MX, A, or AAAA record returns 400 `INVALID_FORM_BODY` with `INVALID_EMAIL_ADDRESS` on `email`. A temporary DNS failure does not reject the address.
 
 ### JSON body
 
@@ -389,9 +389,9 @@ The address must be deliverable. A domain publishing no MX record and no A or AA
 
 ### Side effects
 
-The operation stores one verification record for the normalised address. The record expires 10 minutes after issue. It is keyed by address alone, so sending again for the same address replaces the previous code and restarts the 10 minute window. The code is nine characters in `XXXX-XXXX` form drawn from uppercase letters and digits.
+The code expires after 10 minutes. Sending again to the same address replaces the previous code and restarts that window. Codes use uppercase letters and digits in `XXXX-XXXX` form.
 
-Fluxer attempts delivery inside the request and discards the outcome. The operation creates no ticket and emits no Gateway Dispatch.
+The operation creates no ticket and emits no Gateway Dispatch.
 
 :::caution[A 200 covers every delivery outcome]
 The response is 200 when the provider accepts the message and when it refuses it. It is 200 for an address recorded as a hard bounce, and on an instance with email delivery switched off.

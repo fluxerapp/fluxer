@@ -269,7 +269,7 @@ There is no grace period and no restore operation.
 
 ### Side effects
 
-The attachments the message owned are purged from storage and from the CDN, the message row is deleted, and its search index document is removed.
+The message and its attachments are permanently removed, including from search results and the CDN.
 
 [Message Delete](/gateway/events/#message-delete) is sent to the guild when the channel belongs to one, and to each recipient when the channel is private. No other Dispatch is emitted, and deleting a pinned message here emits no [Channel Pins Update](/gateway/events/#channel-pins-update).
 
@@ -431,7 +431,7 @@ The request disables the author's account and schedules that account for deletio
 
 Fluxer resolves the attachment from the live message when that message still exists and has an author, and from the frozen evidence named by `source_report_id` otherwise. Fluxer accepts the attachment only when its resolved content type begins with `image/` or `video/`.
 
-Fluxer marks the attachment `submitting`, opens an NCMEC report, uploads the attachment bytes, submits its file details with the viewed flag set, and finishes the report. On success the attachment is marked `submitted` with the assigned report ID. On failure the opened report is retracted, the attachment is marked `failed` with the raw reason, and the request returns `NCMEC_SUBMISSION_FAILED`. A retraction that itself fails is logged and does not change the recorded state.
+The attachment is `submitting` while the request runs, then `submitted` with its report ID on success. A failed submission attempts to retract the opened report, marks the attachment `failed` with the raw reason, and returns `NCMEC_SUBMISSION_FAILED`. A failed retraction is logged without changing that recorded state.
 
 When the resolved attachment has an author who has not already been enforced against, Fluxer sets the account's deleted and disabled flags, clears any temporary ban, and records the deletion reason for child sexual content. It then schedules deletion 60 days ahead, deletes every authentication session, propagates the resulting user update, and triggers a user archive for that account.
 

@@ -60,7 +60,7 @@ The path has no signature and no expiry, so anyone holding the URL reads the obj
 
 [When a transformation runs](/media-proxy/transformations/#when-a-transformation-runs) defines the trigger.
 
-Without a transformation Fluxer streams the object from the store and forwards the range to it. With one it reads the complete object into memory first, and the range applies to the transformed bytes.
+When a transformation is requested, `Range` selects bytes from the transformed result.
 
 An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only an `mp` endpoint rasterises it, always as lossless WebP. An `upload` endpoint returns the stored SVG bytes.
 
@@ -83,7 +83,7 @@ A video source requires an explicit image `format`. Another transformation param
 
 <RouteHeader method="GET" path="/external/{signature}/{target}" />
 
-Returns external media through Fluxer, optionally transformed. Fluxer verifies the signature before it decodes or fetches the target.
+Returns external media through Fluxer, optionally transformed. Use the signed URL supplied by the HTTP API.
 
 Fluxer constructs the signed path and exposes it on these fields:
 
@@ -99,10 +99,8 @@ A field holds a signed path only when its source URL is external. A URL already 
 
 | Field | Type | Description |
 | --- | --- | --- |
-| signature | string | The unpadded base64url HMAC-SHA256 of the target component under the deployment secret |
-| target<sup>1</sup> | string | The encoded target component, which can contain `/` separators |
-
-<sup>1</sup> The opaque form is `v2/` followed by the unpadded base64url of the complete URL. The segmented form joins an optional percent-encoded `?query` segment, the scheme, the host and port, and the percent-encoded path segments with `/`
+| signature | string | The signature from the issued URL |
+| target | string | The opaque target from the issued URL |
 
 A client MUST preserve both components exactly as issued and MUST NOT decode or reconstruct either one. The signature covers the target component alone, so adding or changing a query parameter does not invalidate it. A path with no `/` after `/external/` returns 400.
 
@@ -114,7 +112,7 @@ Anyone holding a signed path fetches that external target through Fluxer for as 
 
 Fluxer validates the decoded target before every request and again for every redirect hop. It must be at most 8,192 bytes, must use `http` or `https`, must have a non-zero port when it names one, and must not contain credentials or a control character. A fragment is dropped before the fetch.
 
-The target must resolve to a public address. A hostname must be at most 253 bytes and must contain at least one dot. Its labels use only ASCII letters, digits, and `-`, run to at most 63 bytes, and begin and end alphanumerically. The final label is not digits only. Fluxer rejects a literal address in an unspecified, loopback, private, link-local, carrier-grade NAT, benchmarking, documentation, 6to4 relay, multicast, reserved, broadcast, unique-local, IPv4-mapped, 6to4, or NAT64-embedded range. Fluxer validates every address DNS returns the same way before it opens the connection.
+The target must resolve to a public internet address. Private, local and reserved addresses are rejected, including through redirects.
 
 A hostname whose lookup fails or resolves to no address returns 400.
 
@@ -135,11 +133,9 @@ A redirect beyond the [five-redirect bound](/media-proxy/responses-and-limits/#r
 
 A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so it still selects 206 or 416.
 
-A non-transforming request forwards the client range to the origin under the filter [byte ranges](/media-proxy/overview/#byte-ranges) defines, and relays an origin 206 with its `Content-Range` and `Content-Length` unchanged. An origin that ignores the range answers 200, and Fluxer streams that whole body through when the origin names an `image/`, `video/`, or `audio/` media type other than `image/svg+xml`. Fluxer buffers a transforming request, an SVG body, and any body whose declared media type is empty, `application/octet-stream`, or outside those categories. A buffered response has the range applied to the bytes the route finally serves, so a client range over a buffered origin 200 produces 206.
+A non-transforming request can forward the range to the origin. Handle both 200 and 206 responses and use their range headers, as described in [Byte ranges](/media-proxy/overview/#byte-ranges).
 
-A body the [external buffer budget](/media-proxy/responses-and-limits/#request-and-media-limits) cannot cover returns 503.
-
-This is the one route whose `HEAD` can answer differently from its `GET`. A `HEAD` with no transformation and no range is served from an origin `HEAD` when that origin returns 200, declares a `Content-Length` of at most 500 MiB, and names a non-SVG media type. Any other `HEAD` runs the `GET` path and returns its headers with an empty body. [Methods](/media-proxy/overview/#methods) defines how that origin `HEAD` resolves the media type.
+Insufficient capacity to process the body returns 503. Origin metadata can make `HEAD` representation headers differ from `GET`.
 
 A video target requires an explicit image `format` to produce a thumbnail. Without one, Fluxer returns the original bytes unchanged, and it does the same for a target that is neither an image nor a video.
 
@@ -154,7 +150,7 @@ A video target requires an explicit image `format` to produce a thumbnail. Witho
 | 413 | Payload too large | The origin declared or delivered more than 500 MiB |
 | 416 | empty | A local range is unsatisfiable |
 | 502 | Bad gateway | The origin could not be reached, exceeded the redirect bound, or returned a status outside the retained set |
-| 503 | Service unavailable | The external buffer budget cannot cover the body, or the buffer allocation failed |
+| 503 | Service unavailable | Insufficient capacity to process the body |
 | 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
 <sup>1</sup> A forwarded range relays the origin `Content-Range` and `Content-Length` unchanged and omits either header the origin did not send, so a chunked origin 206 produces a 206 with no `Content-Length`. A local range over buffered or transformed bytes always has both
@@ -207,7 +203,7 @@ Returns the stored audio of a user entrance sound. The [entrance sounds resource
 
 <sup>1</sup> A non-empty run of ASCII digits. Any other value makes the path unroutable and returns 404
 
-<sup>2</sup> The hash is non-empty and ASCII alphanumeric, and Fluxer issues the first 16 hexadecimal characters of the MD5 digest of the audio. The extension is the exact lowercase `mp3`, `ogg`, `m4a`, or `wav`
+<sup>2</sup> Use the hash returned by the API. The extension is the exact lowercase `mp3`, `ogg`, `m4a`, or `wav`
 
 The route selects no representation, accepts a `Range`, and sends no `Content-Disposition`. A successful response streams the stored bytes with the detected audio media type and the one-year `no-transform` cache policy.
 
@@ -233,9 +229,7 @@ An attachment has its own `url` and `proxy_url`, a signed external media path ha
 
 Fluxer matches an asset path by its shape alone. A path with the wrong number of segments, an empty owner segment, or a filename without exactly one dot is not an asset path and returns 404. A hash containing anything but ASCII letters, digits, and `_` returns 404 as well, as does an extension outside the known image set. The known set is `png`, `jpg`, `jpeg`, `webp`, `gif`, `apng`, `avif`, `heic`, `heif`, `jxl`, and `svg`, matched case-insensitively.
 
-Fluxer issues an eight-character lowercase hexadecimal hash, taken from the MD5 digest of the submitted image before metadata stripping. An owner segment is any non-empty segment, and Fluxer never checks it against a snowflake.
-
-The storage key drops an `a_` prefix from the hash, except on an emoji or sticker path, whose key keeps the filename stem exactly as given. A path whose key is missing is also tried under the canonical name of its extension, so both `.jpg` and `.JPG` resolve an object stored as `.jpeg`.
+Use the hash returned by the API. Do not calculate one from the image yourself.
 
 An owner segment of the literal `.` or `..` parses as an asset path but produces an unsafe storage key and returns 400. So does a hash of the literal `a_` on a path that strips the prefix.
 
@@ -438,7 +432,7 @@ Returns the emoji image under the emoji size class with a square cover crop.
 
 <sup>2</sup> An extension whose encoder is not enabled for output selects WebP instead
 
-Fluxer issues emoji paths without an `a_` prefix, so an emoji request defaults to static output and needs `animated=true` for animation. The parser still reads a leading `a_` as an animation request and keeps the stem verbatim in the storage key, so `/emojis/a_123.webp` names a different object than `/emojis/123.webp`.
+Emoji requests default to static output. Use `animated=true` for animation, without adding an `a_` prefix to the identifier.
 
 ### Response
 
@@ -459,7 +453,7 @@ Returns the sticker image under the sticker size class with a square cover crop.
 
 <sup>1</sup> Any non-empty run of ASCII letters, digits, and `_`. Fluxer clients request `{sticker_id}.webp`
 
-Fluxer issues sticker paths without an `a_` prefix, so a sticker request defaults to static output and needs `animated=true` for animation. The parser still reads a leading `a_` as an animation request and keeps the stem verbatim in the storage key.
+Sticker requests default to static output. Use `animated=true` for animation, without adding an `a_` prefix to the identifier.
 
 ### Response
 

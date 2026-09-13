@@ -34,11 +34,11 @@ An invite object describes one code and the target it admits into. The `type` se
 
 <sup>3</sup> Null when the record stores no creator, which is always the case for a custom invite URL
 
-<sup>4</sup> A guild invite reports the counts the main Gateway holds, and both are `0` when it holds none
+<sup>4</sup> Guild counts are `0` when unavailable
 
 <sup>5</sup> Computed from the creation time plus the stored lifetime, and null whenever that lifetime is `0`
 
-<sup>6</sup> Enforced only for a guild invite. A group direct message invite stores and reports the flag without ever reading it
+<sup>6</sup> Has no effect on a group direct message invite
 
 :::note[Branch on `type` to know which fields arrive]
 A guild invite always has `guild`, `channel`, `member_count`, and `presence_count`. A group direct message invite has `channel` and `member_count` only.
@@ -137,9 +137,9 @@ A partial recipient has only the username.
 
 ## Custom invite URLs
 
-[Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url) creates and replaces a custom invite code and stores it as a guild invite record of type `0`. It stores no target channel, creator, maximum uses, or lifetime, so a resolved custom invite URL reports a null `inviter`, a null `expires_at`, `max_uses` of `0`, and `max_age` of `0`. Its channel is the first guild text channel in channel order that the default role can view.
+[Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url) creates or replaces a custom invite code. It has type `0`, null `inviter` and `expires_at`, and `max_uses` and `max_age` of `0`. Its channel is the first guild text channel in channel order that the default role can view.
 
-A custom invite code is stored lowercased, so [Get invite](#get-invite) and [Accept invite](#accept-invite) resolve it in any case through their lowercase retry. Clearing or replacing the code deletes the invite record outright, and a released code stops resolving immediately.
+Custom invite codes are case-insensitive. Clearing or replacing a code makes the old link stop resolving immediately.
 
 [Accept invite](#accept-invite) records the join as a custom invite URL admission and attributes no inviter and no source invite code. [List channel invites](#list-channel-invites) and [List guild invites](#list-guild-invites) exclude custom invite URLs, and [Delete invite](#delete-invite) refuses them.
 
@@ -151,14 +151,14 @@ Reads one invite. Returns an [invite object](#invite-object) on success.
 
 An `Authorization` header that cannot be resolved is ignored, and the route returns the same representation to every caller. The read consumes no use.
 
-Fluxer retries a lookup that misses once against the lowercase form of the supplied code. A code allocated by [Create channel invite](#create-channel-invite) is drawn from a mixed-case alphanumeric alphabet and is matched exactly.
+Codes from [Create channel invite](#create-channel-invite) are case-sensitive. Custom invite codes are case-insensitive.
 
 :::note[Every admission gate runs at accept time]
 Resolving an invite proves that the record exists and that its target is describable. [Accept invite](#accept-invite) evaluates bans, disabled invites, exhausted uses, missing presence, and target capacity.
 :::
 
-:::note[Expiry removes the record from storage]
-A record's storage lifetime equals `max_age`. An exhausted record survives until an acceptance attempt or an explicit deletion removes it.
+:::note[Lookup does not guarantee admission]
+Expired invites no longer resolve. An exhausted invite may still resolve until an acceptance attempt removes it.
 :::
 
 ### Path parameters
@@ -195,8 +195,8 @@ A guild admission emits [Guild Create](/gateway/events/#guild-create), [Guild Me
 - User-only, so a bot token is rejected with 403 `ACCESS_DENIED`.
 - The caller needs no permission.
 
-:::caution[Exhausting an invite deletes it]
-An acceptance attempt against an invite whose maximum uses are already spent deletes the record before the request fails with 404 `UNKNOWN_INVITE`, so the failing caller removes it. A custom invite URL is never deleted this way.
+:::caution[Exhausted invites stop working]
+Accepting an exhausted invite returns 404 `UNKNOWN_INVITE` and makes the code stop resolving. Custom invite URLs have no use limit.
 :::
 
 ### Path parameters
@@ -227,7 +227,7 @@ An acceptance attempt against an invite whose maximum uses are already spent del
 
 ### Side effects
 
-An account already in the target receives the invite unchanged without consuming a use or emitting a Dispatch. Otherwise `uses` advances exactly once after admission completes, and the record is deleted when that advance spends its last use. A failed admission consumes no use. Fluxer builds the response body after the admission has committed, through the same target resolution [Get invite](#get-invite) performs. A guild invite whose stored target channel has since been deleted therefore admits the account and advances `uses` before the request returns 404 `UNKNOWN_CHANNEL`.
+An account already in the target receives the invite unchanged without consuming a use or emitting a Dispatch. A new admission consumes one use and removes the invite when its limit is reached. A failed admission consumes no use. If the invite's channel has been deleted, the account can still join and consume a use even though the response is 404 `UNKNOWN_CHANNEL`.
 
 A guild admission creates the membership, records whether the join used a custom invite URL or an instant invite, and adds the guild to the caller's settings and folder layout. A temporary invite marks the membership temporary.
 
@@ -302,7 +302,7 @@ Creates an invite for a channel, or returns an existing equivalent invite. Retur
 - An age-restricted guild channel also requires an age-verified account.
 - A private channel requires the caller to be a current recipient, and no ownership is required.
 
-`CREATE_INSTANT_INVITE` is read directly from the main Gateway, so this operation never requires elevated multi-factor authentication.
+This operation does not require elevated multi-factor authentication.
 
 :::note[Guild affiliation determines the invite type]
 A channel that belongs to a guild creates a guild invite. Any other channel the caller can resolve creates a type `1` invite, including a direct message and the personal notes channel. Only a group direct message admits an account afterwards.
@@ -329,7 +329,7 @@ Every field is optional and nullable, and an omitted or null value takes the sta
 
 <sup>2</sup> When false or omitted the operation returns an existing invite whose creator, target channel, maximum uses, lifetime, and temporary flag all match the request exactly. A custom invite URL never matches
 
-<sup>3</sup> Stored and never enforced on a private channel invite
+<sup>3</sup> Has no effect on a private channel invite
 
 ### Response
 
@@ -350,9 +350,9 @@ Returning an existing equivalent invite changes nothing, records no audit entry,
 
 Creating an invite allocates a random eight-character code drawn from the mixed-case alphanumeric alphabet. A guild invite records an [INVITE_CREATE audit action](/http-api/guild-audit-logs/#audit-actions) targeting the invite code, with the channel, creator, maximum uses, lifetime, and temporary flag as metadata and the supplied reason, then delivers [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding `VIEW_AUDIT_LOG`. Fluxer logs a failure to write that entry and still completes the request. The `X-Audit-Log-Reason` header is read but never recorded for a private channel.
 
-The guild delivers [Invite Create](/gateway/events/#invite-create) to the sessions holding `MANAGE_CHANNELS` on the invite's channel, as [event filtering](/gateway/event-filtering/) states. The payload has no `channel_id` member, so that filter reads the channel from the nested `channel.id`. A passive session in a guild with more than 250 members is suppressed after that filter. A private channel invite records no audit entry and delivers Invite Create to every current recipient's sessions.
+The guild delivers [Invite Create](/gateway/events/#invite-create) to sessions holding `MANAGE_CHANNELS` on the invite's channel, subject to [event filtering](/gateway/event-filtering/). A private channel invite records no audit entry and delivers the event to every current recipient's sessions.
 
-The guild invite ceiling is the configured `max_guild_invites` value for the guild's feature set, which defaults to 1,000. It counts every guild invite across all channels, including the custom invite URL record, and Fluxer compares it before writing a new record.
+The guild invite ceiling is its configured `max_guild_invites` limit, which defaults to 1,000. It includes invites across all channels and the custom invite URL.
 
 ### Rate limit
 

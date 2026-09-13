@@ -79,14 +79,14 @@ Only [Create Admin API key](#create-admin-api-key) returns this object. It has t
 | expires_at<sup>2</sup> | ?ISO8601 timestamp | Time the key expires, or null when the key does not expire |
 | acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key |
 
-<sup>1</sup> Has the form `fa_<key_id>_<32 characters>` described by [token formats](/authentication/#token-formats), and is presented as `Admin <token>` in the `Authorization` header
+<sup>1</sup> An opaque key, presented as `Admin <token>` in the [Authorization header](/authentication/#authorization-schemes)
 
 <sup>2</sup> Derived from `expires_in_days` at the instant the key is created, and null when that field is omitted
 
 <sup>3</sup> Reflects the stored set, so a value repeated in the request appears once
 
 :::caution[The secret is returned once]
-Fluxer stores the value as a password hash, so no later operation returns it and none rotates it. A key whose raw value is lost must be revoked and replaced.
+The secret cannot be retrieved or rotated later. If it is lost, revoke the key and create a replacement.
 :::
 
 ### Example

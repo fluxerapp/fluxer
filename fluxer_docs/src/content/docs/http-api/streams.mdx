@@ -81,7 +81,7 @@ A short-lived URL that accepts one stream's preview image. [Create stream previe
 
 A client MUST send the URL exactly as returned and MUST NOT rebuild or reorder it. Rebuilding drops the signed capability in `t`, and a relay URL that arrives without `t` returns 401.
 
-The capability keeps accepting `PUT` requests until it expires. Nothing records that it has been redeemed, and each request overwrites the object the previous one wrote.
+The URL accepts repeated `PUT` requests until it expires. Each replaces the previous preview.
 
 ### Example
 
@@ -229,9 +229,7 @@ A `thumbnail` that is not [canonical base64](/topics/uploads/#stream-previews) r
 
 The decoded bytes replace whatever preview the stream key already had, and the preview metadata expires one day after the write. Fluxer emits no Gateway Dispatch, so a viewer observes the new image on its next [Get stream preview](#get-stream-preview) read.
 
-Fluxer absorbs a transient object storage failure. The request still answers 204 and the previous preview remains readable, so a publisher that needs the image present re-uploads on its normal interval.
-
-A transient failure of the metadata write also answers 204. The next read returns the new bytes under the `Content-Type` and the expiry recorded by the previous write. When no metadata existed at all, the object is stored and no read finds it.
+A 204 does not guarantee that the new preview is readable. A temporary failure can leave the previous image, content type, or expiry in place, or leave no readable preview. Publishers should continue uploading on their normal interval.
 
 ### Rate limit
 
@@ -277,7 +275,7 @@ Returns a [stream preview upload object](#stream-preview-upload-object) granting
 
 ### Side effects
 
-The operation issues one bounded upload capability and immediately points the stream key's preview metadata at the object that capability writes to. There is no separate completion call. The preview becomes readable as soon as the `PUT` lands, and until then a [Get stream preview](#get-stream-preview) read answers an empty 404 or still returns the previous image.
+There is no separate completion call. After the `PUT` succeeds, [Get stream preview](#get-stream-preview) returns the uploaded image. Until then it returns an empty 404 or the previous image.
 
 A client MUST send the returned `content_type` with the `PUT` and MUST NOT exceed `max_bytes`. The preview metadata expires one day after this call, so a capability used later than that writes an object no read can find. Fluxer emits no Gateway Dispatch.
 
@@ -317,7 +315,7 @@ Deletes the stored preview for a stream and returns 204 with an empty body. Dele
 
 ### Side effects
 
-Fluxer drops the preview metadata first and removes the stored object second, so the preview stops being readable even when a transient storage failure leaves the object in place. Fluxer emits no Gateway Dispatch, and a viewer observes the removal on its next [Get stream preview](#get-stream-preview) read.
+The preview stops being readable. No Gateway Dispatch is emitted, so viewers observe the removal on their next [Get stream preview](#get-stream-preview) request.
 
 ### Rate limit
 

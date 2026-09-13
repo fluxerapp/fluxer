@@ -260,11 +260,9 @@ A blocked purchase always fails on [create localised card preapproval](#create-l
 
 ### Side effects
 
-The operation creates a payment provider customer when the account has none and records the customer identifier on the account. It also reconciles the account's stored subscription identifier with whatever the provider reports for that customer. Where a blocking subscription can still grant premium, Fluxer repairs the account's premium type, start, end, cancellation flag, billing cycle and grace deadline before it refuses the request.
+Checkout collects the required consent, tax information and any promotion code on the provider's pages.
 
-It then creates an externally hosted checkout with terms of service consent, the withdrawal waiver text attached to that consent, automatic tax, tax identifier collection and promotion codes. It records a pending payment row with the resolved countries and the waiver decision.
-
-A converted purchase creates no checkout session and no payment row. Fluxer builds or updates the subscription schedule, clears pending cancellation, and sends [User Update](/gateway/events/#user-update) to every account session.
+A converted purchase schedules a billing cycle change instead of opening checkout. It clears pending cancellation and sends [User Update](/gateway/events/#user-update) to every account session.
 
 Premium entitlement otherwise changes only after the matching signed event reaches [receive Stripe webhook](#receive-stripe-webhook).
 
@@ -311,9 +309,7 @@ A submitted `payment_method` is validated against the enum and then discarded. T
 
 ### Side effects
 
-The operation creates a payment provider customer when the account has none and reconciles subscription state exactly as [create subscription checkout](#create-subscription-checkout) does, then creates an externally hosted setup session restricted to cards.
-
-It also records a preapproval flow keyed by a newly generated continuation token, holding the price, country, business flag, waiver decision and observed countries. The flow expires one day after its most recent state change. The token is returned in the session's success callback URL.
+The returned URL opens a card-only setup flow. Its success callback includes the continuation token. The flow expires one day after its most recent state change.
 
 The flow stays pending until [receive Stripe webhook](#receive-stripe-webhook) processes the matching completion event. It is approved only when the card issuing country equals the pricing country. Otherwise the flow records a [preapproval rejection reason](#preapproval-rejection-reasons), and for `country_mismatch` the detected country. No entitlement changes.
 
@@ -410,7 +406,7 @@ A submitted `pix` or `upi` is validated against the enum and then discarded. The
 
 ### Side effects
 
-The operation creates a payment provider customer when necessary, creates an externally hosted one-off checkout with invoice creation enabled, and records a pending payment row for the session. No [gift](/http-api/gifts/#gift-object) exists yet. The gift is created only after [receive Stripe webhook](#receive-stripe-webhook) processes the matching paid event, after which it appears in [List current user gifts](/http-api/users/gifts/#list-current-user-gifts).
+The returned URL opens a one-off checkout. The [gift](/http-api/gifts/#gift-object) appears in [List current user gifts](/http-api/users/gifts/#list-current-user-gifts) only after payment is confirmed.
 
 ### Rate limit
 
@@ -443,8 +439,6 @@ The session requests 3-D Secure authentication on the card and takes no payment.
 
 ### Side effects
 
-The operation creates a payment provider customer when necessary, records the customer identifier on the account, and creates an externally hosted setup session restricted to cards.
-
 Adult age verification is granted only after [receive Stripe webhook](#receive-stripe-webhook) processes the matching completion event and confirms a credit card. The grant sets the age-verified adult flag and sends [User Update](/gateway/events/#user-update) to every session owned by the account.
 
 ### Rate limit
@@ -459,10 +453,10 @@ Returns the [refund eligibility](#refund-eligibility-object) object for the auth
 
 A deployment with no configured payment provider answers with `eligible` false and the reason `feature_unavailable`. Otherwise the operation lists the five most recent invoices for the account's payment provider customer and selects the first that is paid, has a positive amount, and resolves a payment intent or a charge.
 
-A provider listing failure is logged and treated as no refundable purchase, and the request still succeeds. An account that has never had a payment provider customer created is treated the same way.
+A failed payment-history lookup or an account with no payment history reports no refundable purchase.
 
 :::note[The same object appears inside premium state]
-[Get premium state](/http-api/premium/#get-premium-state) returns this object as `billing.refund_eligibility`, computed from the mirrored invoices, so the two can disagree while the mirror is behind.
+[Get premium state](/http-api/premium/#get-premium-state) also returns `billing.refund_eligibility`, which can lag behind this endpoint.
 :::
 
 ### Response
@@ -518,7 +512,7 @@ The operation creates a refund for the invoice amount paid, reduced by one minor
 
 A refund the provider confirms as succeeded in the same call cancels the subscription that produced the invoice and starts the 30-day cooldown from that moment. A refund still reported as pending or as awaiting further action does neither. [Receive Stripe webhook](#receive-stripe-webhook) cancels the subscription and starts the cooldown when it processes the provider event that confirms the refund.
 
-A confirmed refund that cancels the account's current subscription clears the stored subscription, billing cycle, cancellation flag and grace deadline, and every account session receives [User Update](/gateway/events/#user-update). A cancellation that fails is logged and left for the webhook to reconcile.
+A confirmed refund that cancels the current subscription updates the account's premium state and sends [User Update](/gateway/events/#user-update) to every account session.
 
 ### Rate limit
 
@@ -528,15 +522,13 @@ A confirmed refund that cancels the account's current subscription clears the st
 
 <RouteHeader method="POST" path="/v1/stripe/webhook" unauthenticated />
 
-Authenticates a payment provider event against the exact raw request body and queues it for asynchronous processing, returning a [webhook received](#webhook-received-object) object. The signature header is the credential.
+Accepts a signed payment provider event for asynchronous processing and returns a [webhook received](#webhook-received-object) object. The signature header is the credential.
 
 ### Limitations
 
 - A missing signature header returns 400 `STRIPE_WEBHOOK_SIGNATURE_MISSING`.
 - A deployment with no payment provider client or webhook secret configured then returns 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`.
 - A signature header that does not verify returns 401 `STRIPE_WEBHOOK_SIGNATURE_INVALID`.
-
-The route verifies the signature with the payment provider library's default timestamp tolerance.
 
 :::caution[The signature covers the exact bytes]
 A proxy that re-encodes, reorders or pretty-prints the payload invalidates the signature.
@@ -561,11 +553,7 @@ A proxy that re-encodes, reorders or pretty-prints the payload invalidates the s
 
 The response comes before processing, and a redelivered event is applied once.
 
-A recognised event first refreshes the local mirror of its provider object, covering customers, products, prices, checkout sessions, subscriptions, invoices, payment intents, payment methods, charges, refunds and disputes. [Get premium state](/http-api/premium/#get-premium-state) reads that mirror.
-
-Later processing can create a purchased gift, grant or extend premium, settle or fail a checkout, and update invoice failure state. It can also record or clear the post-cancellation grace deadline, apply subscription changes, resolve a card preapproval, complete a donation and send its confirmation email, and complete adult age verification. A dispute or fraud warning reverses a gift and emails the redeemer whose entitlement was withdrawn. A dispute that closes in Fluxer's favour restores the account and emails that account holder. A refund reverses entitlement and settles the self-service refund.
-
-Each account-addressed message is sent only when the receiving account has an email address. The resulting account changes reach connected sessions as [User Update](/gateway/events/#user-update).
+Accepted events update payment, subscription, gift, donation and age-verification results. Resulting account changes reach connected sessions as [User Update](/gateway/events/#user-update).
 
 ### Rate limit
 

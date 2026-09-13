@@ -22,7 +22,7 @@ One resolution of every defined experiment against one account. Every field is p
 | poll_jitter_percent | integer | How far to spread the wait around the interval, from 0 through 50 |
 | assignments | [assignment map](#assignment-map-object) object | One entry for each experiment the server defines |
 
-The polling fields sit on the envelope rather than on any one experiment, because the cadence is a property of the route and not of a rollout. They are the operator's [experiment delivery configuration](/admin-api/instance/#experiment-delivery-configuration-object) read back unchanged, so they hold the same values for every account and every experiment, whatever those experiments resolve to.
+The polling fields apply to every experiment and account on the instance.
 
 ## Assignment map object
 
@@ -34,7 +34,7 @@ One entry per experiment. The envelope reports this object even when it is empty
 | --- | --- | --- |
 | voice_noise_suppression? | [noise suppression assignment](#noise-suppression-assignment-object) object | The caller's noise suppression assignment |
 
-Every key here is optional in the schema so that a peer running a different server version still validates the envelope. A client reading a server that has not defined an experiment it knows about, or that defines one it does not, drops the unknown key and treats the missing one as off rather than as an error.
+Ignore unknown experiments and treat a missing experiment as off.
 
 This server version writes `voice_noise_suppression` on every response, including while the rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client can tell an operator write from a no-op without a second request.
 
@@ -73,7 +73,7 @@ One resolution of the instance noise suppression rollout against one account. Ev
 | stereo_enabled | boolean | Whether the client publishes a stereo microphone track |
 | suppression_strength | integer | Suppression strength from 0 through 100, which only a backend that reads it applies |
 
-`config_version` counts operator writes, not assignment changes. It is raised by every [Update instance configuration](/admin-api/instance/#update-instance-configuration) request that sets at least one noise suppression field, so it can advance while the caller's assignment stays byte for byte the same.
+`config_version` identifies the configuration revision. It can change without changing the caller's assignment.
 
 ### Resolution outcomes
 
@@ -135,7 +135,7 @@ A client sends the `ETag` it last received. Fluxer compares it against the tag o
 | Cache-Control | string | The literal value `private, no-cache` |
 | Vary | string | The literal value `Authorization`, replaced by `Origin` where the [cross-origin policy](/http-api/#cross-origin-requests) echoed an allowed origin |
 
-The tag is a hash of the body alone, so two accounts resolving to the same envelope receive the same tag. It changes whenever any field changes, the polling fields and `config_version` included.
+The `ETag` changes when the response changes. Treat it as an opaque value.
 
 `ETag` is listed in `Access-Control-Expose-Headers` and `If-None-Match` in `Access-Control-Allow-Headers`, so a cross-origin client reads the tag and revalidates with it.
 
@@ -143,7 +143,7 @@ The tag is a hash of the body alone, so two accounts resolving to the same envel
 
 A client reads this route once per session and then again every `poll_interval_seconds`, offset by a random amount up to `poll_jitter_percent` of that interval in either direction. It sends the last `ETag` on every request after the first. A client MUST NOT poll faster than the lower end of that jitter range.
 
-Raising `poll_interval_seconds` sheds request volume. Raising `poll_jitter_percent` spreads a fleet that has synchronised on one interval. A client that has never reached this route holds the built-in defaults of 300 seconds and 15 percent, so neither value reaches a client that cannot read it.
+Until the first successful response, use 300 seconds with 15 percent jitter.
 
 ### Rate limit
 

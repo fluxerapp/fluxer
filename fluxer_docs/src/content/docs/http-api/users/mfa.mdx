@@ -50,7 +50,7 @@ An account that lost its saved backup codes reads the set back through an emaile
 
 [Sudo mode](#sudo-mode) applies to none of the four, so a user who no longer has the authenticator app still reaches the codes through the email address. The account needs a verified email address and TOTP enabled. Only [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) checks the address, and [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) checks TOTP a second time.
 
-A ticket is a version 4 UUID and is valid for 30 minutes from its last write. Starting the challenge, resending the code, and verifying the code each write the ticket. Regeneration reads it and writes nothing, so the window runs from the verification that preceded it. A ticket Fluxer no longer holds, or one opened by another account, fails with `INVALID_OR_EXPIRED_TICKET`.
+A ticket is a version 4 UUID valid for 30 minutes after the challenge starts, the code is resent, or the code is verified. Regeneration does not extend it. An expired, unknown, or another account's ticket fails with `INVALID_OR_EXPIRED_TICKET`.
 
 A verification code is eight characters drawn from the uppercase Latin alphabet and the decimal digits, written as two four-character groups separated by a hyphen. A code is valid for 10 minutes from the moment it is sent, and each send replaces the code the previous send issued.
 
@@ -58,7 +58,7 @@ A verification code is eight characters drawn from the uppercase Latin alphabet 
 Fluxer trims the submitted value, uppercases it, and removes every hyphen before it compares. A wrong value fails with `INVALID_VERIFICATION_CODE` on the path `code`.
 :::
 
-Verification issues a proof, a version 4 UUID, and clears the code from the ticket. Fluxer compares a submitted proof in constant time and rejects a mismatch with `INVALID_PROOF_TOKEN`. A ticket holding no proof at all fails with `INVALID_OR_EXPIRED_TICKET` on the path `verification_proof`.
+Verification consumes the code and issues a proof as a version 4 UUID. An incorrect proof fails with `INVALID_PROOF_TOKEN`. A ticket with no proof fails with `INVALID_OR_EXPIRED_TICKET` on `verification_proof`.
 
 Every ticket, code, and proof failure named here arrives as HTTP 400 whose top-level code is `INVALID_FORM_BODY`. The named value is the `code` of one [validation error](/http-api/#validation-error-object) entry, and that entry's `path` is the field it belongs to.
 
@@ -77,7 +77,7 @@ Fluxer refuses a resend for 30 seconds after the previous send on the same ticke
 
 Sudo mode is a short-lived proof that the human in front of the session is still the account holder. An operation that requires it accepts a valid `X-Fluxer-Sudo-Mode-JWT` request header or the [sudo verification object](#sudo-verification-object) fields inside the JSON body.
 
-The sudo token is an HS256 JSON Web Token with a lifetime of exactly five minutes. Its subject is the account [snowflake](/snowflakes/), and verification rejects a token whose subject is any other account. The token is opaque, and it is not bound to the session that obtained it. Fluxer generates one only when the account has at least one MFA authenticator and the request proved identity with MFA.
+A sudo token lasts five minutes and works only for the account that obtained it, across that account's sessions. Treat it as opaque. A new token is issued only after an MFA proof from an account with an enrolled authenticator.
 
 :::caution[The echoed header repeats the request value]
 When Fluxer issues no fresh token it echoes the request's `X-Fluxer-Sudo-Mode-JWT` value back unchanged and never re-signs it, so the five-minute window never slides. Fluxer echoes the value even when it fails verification.
@@ -200,7 +200,7 @@ The backup codes and the proof a verified challenge returns.
 
 ## WebAuthn credential object
 
-An account holds at most 10 WebAuthn credentials. Fluxer checks the limit twice, once before [create WebAuthn registration options](#create-webauthn-registration-options) issues a challenge and again before [Register WebAuthn credential](#register-webauthn-credential) stores the result. It refuses parallel enrolment flows at whichever step first sees the tenth credential.
+An account holds at most 10 WebAuthn credentials. Both [Create WebAuthn registration options](#create-webauthn-registration-options) and [Register WebAuthn credential](#register-webauthn-credential) enforce this limit.
 
 Fluxer verifies every assertion against the relying party identifier and the allowed origins configured for the instance. The credential's signature counter strictly increases, unless both the stored and reported counters are zero, which is how an authenticator without a counter appears.
 
@@ -256,7 +256,7 @@ The browser WebAuthn `PublicKeyCredential` serialisation. Its field names are ca
 | clientExtensionResults | [WebAuthn client extension results](#webauthn-client-extension-results-object) object | Client extension outputs |
 | type | string | Credential type, always `public-key` |
 
-The boundary does not validate the shape of this object, so no validation entry is ever reported against `webauthn_response` itself. Fluxer forwards it to WebAuthn verification exactly as supplied, and a malformed assertion fails that verification and surfaces as the `mfa_code` entry described in [sudo mode](#sudo-mode).
+Malformed fields return `INVALID_FORM_BODY`. Each operation documents its cryptographic verification errors.
 
 ## WebAuthn assertion response object
 
@@ -284,7 +284,7 @@ The boundary does not validate the shape of this object, so no validation entry 
 | clientExtensionResults | [WebAuthn client extension results](#webauthn-client-extension-results-object) object | Client extension outputs |
 | type | string | Credential type, always `public-key` |
 
-The boundary does not validate this shape either. An unusable attestation returns `INVALID_WEBAUTHN_CREDENTIAL`, and no validation entry names a field of this object.
+Malformed fields return `INVALID_FORM_BODY`. An attestation that fails verification returns `INVALID_WEBAUTHN_CREDENTIAL`.
 
 ## WebAuthn attestation response object
 
@@ -533,7 +533,7 @@ Neither a verified email nor an authenticator is required, so an account with no
 A backup code sent as `mfa_code` to satisfy sudo mode is consumed. With `regenerate` false it comes back with `consumed` set to true. With `regenerate` true it is deleted with the rest of the previous set and does not appear.
 
 :::caution[Regeneration replaces the previous set immediately]
-Every code from the previous set is invalid as soon as an operation with `regenerate` set to true returns. The deletion and the insertion are separate writes, so the account holds no backup code at all between them.
+Every previous code becomes invalid. If regeneration fails, the old codes may already be unusable.
 :::
 
 ### JSON body
@@ -671,7 +671,7 @@ The ticket and its proof are the only authorisation. Without TOTP enabled the re
 A ticket holding no proof returns `INVALID_OR_EXPIRED_TICKET` on the path `verification_proof`, and a proof that does not match returns `INVALID_PROOF_TOKEN`.
 
 :::caution[Regeneration leaves the ticket usable]
-The operation reads the proof and writes nothing back to the ticket. The same pair replaces the set again on every call until the ticket expires, 30 minutes after its verification.
+The same ticket and proof can replace the set again until the ticket expires, 30 minutes after verification.
 :::
 
 ### JSON body
@@ -690,7 +690,7 @@ The operation reads the proof and writes nothing back to the ticket. The same pa
 
 ### Side effects
 
-Every code from the previous set is deleted and 10 replacements are written. The deletion and the insertion are separate writes, so the account holds no backup code at all between them. The authenticator types are unchanged and Fluxer emits no Gateway event.
+The previous set is replaced with 10 new codes. A failure can leave the old codes unusable. Authenticator types are unchanged and no Gateway event is emitted.
 
 ### Rate limit
 
@@ -899,4 +899,3 @@ Fluxer issues a sudo challenge for the current user. It expires after five minut
 ### Rate limit
 
 10 requests per minute for each authenticated user, on the `sudo:webauthn:options` bucket.
-

@@ -6,7 +6,7 @@ description: Provider-backed GIF search, featured and trending listings, search 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A GIF is one animated media item held by the deployment's active GIF provider. Fluxer stores none of them, so every route on this page reads the provider live and returns provider URLs beside signed [Media Proxy](/media-proxy/overview/) URLs.
+A GIF is an animated media item from the instance's active provider. Results include provider URLs and [Media Proxy](/media-proxy/overview/) URLs.
 
 Every route requires a session credential. A bot token and an OAuth2 bearer credential are both refused with 403 `ACCESS_DENIED`. [Save meme from URL](/http-api/memes/#save-meme-from-url) saves a result into the account's own collection.
 
@@ -36,16 +36,7 @@ Every response under `/gifs`, `/tenor`, and `/klipy` has these headers, includin
 
 ## Result freshness
 
-Fluxer caches one answer for each combination of operation, locale, country, and query. Past the refresh bound a request still receives the stored answer, and past the discard bound it waits for a fresh answer.
-
-| Answer | Refresh bound | Discard bound |
-| --- | --- | --- |
-| Search results | 30 seconds | 5 minutes |
-| Search suggestions | 1 minute | 10 minutes |
-| Featured GIFs and trending GIFs | 5 minutes | 30 minutes |
-| Featured categories | 24 hours | 48 hours |
-
-A deployment can configure a further cache in front of those bounds. Neither cache is keyed by the caller, so two accounts sending the same query in the same country receive the same answer. No route on this page invalidates a cached answer.
+Results may be cached and can lag behind the provider. Repeating a request does not force a refresh.
 
 ## GIF object
 
@@ -252,7 +243,7 @@ Returns at most 50 trending [GIF objects](#gif-object) for the resolved locale a
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
-Trending and featured read the same provider listing, trending for 50 results and featured for one. The two are cached separately, so the single GIF in a [featured](#get-featured-gifs) response can be older than the first entry here.
+The [featured](#get-featured-gifs) GIF is not guaranteed to match the first trending result.
 
 ### Rate limit
 
@@ -271,7 +262,7 @@ Returns search-term suggestions for a partial query, as an array of strings.
 | q | string | The partial search term (1-256 characters) |
 | locale? | string | A [supported locale](/topics/locales/#supported-locales), default `en-US` |
 
-This route sends no country to the provider. Its answers are keyed by locale and query alone, and do not vary with the requesting address.
+Suggestions depend on the locale and query, not the requesting address.
 
 ### Response
 
@@ -325,7 +316,7 @@ The deadline on this route is 3 seconds.
 
 The registration reaches the provider and changes no Fluxer state, so it emits no Gateway Dispatch and does not add the GIF to the account's [memes](/http-api/memes/).
 
-Fluxer neither caches nor deduplicates the call, so registering the same `id` twice reaches the provider twice.
+Each request registers a separate share, including repeated requests for the same `id`.
 
 ### Rate limit
 

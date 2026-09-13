@@ -10,7 +10,7 @@ A sticker is an image a guild stores for its members to send with a message. It 
 
 Every route names a guild in its path. A guild that has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) rejects the request with 403 `MISSING_ACCESS` before the operation runs. [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. On [Clone guild sticker](#clone-guild-sticker) the gate covers the target guild and never the source guild.
 
-The instance-wide content filter screens every route with a JSON body before the route runs. A body string of at least 3 characters matching the phrase blocklist, or a URL matching the URL blocklist, returns 403 `CONTENT_BLOCKED`. The `image` member is exempt.
+Names, descriptions, tags and uploaded images must pass the instance's content policy. Blocked content returns 403 `CONTENT_BLOCKED`.
 
 A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is distinguishable from guild membership. [Modify guild sticker](#modify-guild-sticker) answers 404 `UNKNOWN_STICKER` for such a guild.
 
@@ -18,7 +18,7 @@ There is no single-sticker read scoped to a guild. [List guild stickers](#list-g
 
 ## Guild sticker object
 
-A guild sticker object is the complete stored form of one sticker. The stored image is written once at creation and is never replaced. Only the name, description, and tags are mutable.
+A guild sticker object describes one sticker. Only its name, description and tags can change. Replacing the image requires creating a new sticker.
 
 ### Structure
 
@@ -168,8 +168,6 @@ One response has the complete collection. The operation is not paginated. A stic
 
 Creates one sticker from submitted image data and returns its [guild sticker object](#guild-sticker-object) without `user`. Requires membership of the guild and [CREATE_EXPRESSIONS](/http-api/permissions/). Emits a [Guild Stickers Update](/gateway/events/#guild-stickers-update) Gateway event.
 
-Admission checks run in a fixed order. Fluxer scans the submitted name, description, and tags for prohibited content, then resolves guild existence and membership, then `CREATE_EXPRESSIONS`, then the slot limit, and only then the image. A guild at its slot limit therefore returns `MAX_STICKERS` even when the image would also have been rejected.
-
 The slot limit is the operator-configured [max_guild_stickers](/http-api/instance/#limit-keys) value resolved against the guild's complete feature set, defaulting to 500. A guild with [UNLIMITED_STICKERS](/http-api/guilds/#guild-features) bypasses that configuration and receives a fixed ceiling of 999999.
 
 ### Path parameters
@@ -197,7 +195,7 @@ The body is one [sticker create object](#sticker-create-object).
 
 ### Side effects
 
-The operation consumes one guild sticker slot, stores the metadata-stripped image, emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) with the guild's complete sticker collection, and then writes a [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason. A failed creation leaves no sticker, audit entry, or Dispatch and consumes no slot.
+Creating a sticker consumes one guild sticker slot, emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) with the complete collection and records a [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason.
 
 ### Rate limit
 
@@ -242,13 +240,13 @@ The operation returns 200 whenever the top-level request was valid, including wh
 
 A decoded image that is oversized, undecodable, in an unaccepted format, or matching a banned file hash fails one item.
 
-:::note[The blocklist screens run with different floors]
-The global body screen runs before the batch starts and ignores strings shorter than 3 characters, so a blocked string there fails the whole request. The per-item scan applies the same blocklist with no floor, and only a shorter match becomes an item failure.
+:::note[Blocked text can reject the whole batch]
+A blocked name, description or tag of at least 3 characters rejects the whole request. A shorter blocked value fails only that item.
 :::
 
 ### Side effects
 
-Each successful item consumes one guild sticker slot, stores its image, and writes the supplied audit reason into its [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) entry. A failed item leaves no sticker or audit entry and consumes no slot.
+Each successful item consumes one guild sticker slot and records a [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason.
 
 Fluxer emits one [Guild Stickers Update](/gateway/events/#guild-stickers-update) after the batch when at least one item succeeded, with the guild's complete sticker collection. A batch in which no item succeeded emits nothing.
 
@@ -264,9 +262,7 @@ Copies an existing sticker into the target guild and returns the new [guild stic
 
 The caller needs membership of the target guild and [CREATE_EXPRESSIONS](/http-api/permissions/) there. Membership of the source guild is not required. The source guild must have [CLONE_STICKER_ENABLED](/http-api/guilds/#guild-features), which a guild holds only after it opts in.
 
-The name, description, tags, animation state, and stored image bytes are copied server-side, so the caller does not re-upload the image and cannot override any copied value.
-
-The availability gate on the target guild runs first. An unknown source sticker is then reported before a missing source guild, before target membership and permission, and before the target slot limit. A request naming an unknown source sticker against a target guild that does not exist returns 404 `UNKNOWN_STICKER`.
+The name, description, tags, animation state and image are copied unchanged.
 
 [Get sticker metadata](/http-api/expressions/#get-sticker-metadata) reports whether a source permits cloning without attempting the operation.
 
@@ -301,7 +297,7 @@ A source guild that no longer exists returns 403 `MISSING_ACCESS`, so a caller c
 
 ### Side effects
 
-The operation consumes one target guild sticker slot and creates a copy whose uploader is the caller. It emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) with the target guild's complete sticker collection and then writes a [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. The source sticker and source guild are unchanged and receive no Dispatch.
+The copy consumes one target guild sticker slot and names the caller as uploader. It emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) in the target guild and records a [`STICKER_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. The source is unchanged.
 
 ### Rate limit
 
@@ -319,7 +315,7 @@ Replaces sticker metadata and returns the [guild sticker object](#guild-sticker-
 - Neither permission is subject to the guild [MFA level](/http-api/guilds/#mfa-levels).
 - The stored image cannot be replaced, so an image change requires creating a new sticker.
 
-The sticker is resolved before any permission is evaluated. A sticker that belongs to another guild and a sticker in a guild that does not exist are both reported as an unknown sticker.
+A sticker that does not belong to the guild in the path returns 404 `UNKNOWN_STICKER`.
 
 :::caution[Every request writes `description` and `tags`]
 Only `name` is required. Omitting `description` clears the stored description and omitting `tags` clears the stored tags. A client changing one field submits the current value of the other two alongside it.
@@ -375,10 +371,8 @@ Deletes the sticker record and returns 204 with an empty body. Emits a [Guild St
 - The uploader can delete their own sticker with [CREATE_EXPRESSIONS](/http-api/permissions/), and any other caller requires [MANAGE_EXPRESSIONS](/http-api/permissions/).
 - Setting `purge` needs the guild to have [EXPRESSION_PURGE_ALLOWED](/http-api/guilds/#guild-features).
 
-Fluxer checks membership, then purge eligibility, then the sticker, and only then the permission. A non-member receives `MISSING_PERMISSIONS` whatever `purge` is set to, and a purging request in a guild without the required feature is refused before the sticker is looked up.
-
 :::caution[Purging the stored image cannot be undone]
-Without `purge`, the sticker leaves the guild but its image remains available through the [Media Proxy](/media-proxy/routes/#image-asset-contract). With `purge`, the stored image and its `png`, `jpeg`, `apng`, `gif`, `webp`, `avif`, and `svg` CDN representations are queued for permanent deletion.
+Without `purge`, the sticker leaves the guild but its image remains available through the [Media Proxy](/media-proxy/routes/#image-asset-contract). With `purge`, the image is scheduled for permanent deletion.
 :::
 
 :::note[A clone outlives a purge of its source]
@@ -416,7 +410,7 @@ A later purge of the source sticker does not affect an existing clone in another
 
 The operation removes the sticker from the guild, returns its slot, emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) with the guild's remaining sticker collection, and then writes a [`STICKER_DELETE`](/http-api/guild-audit-logs/#audit-actions) audit entry.
 
-When `purge` is true, the stored image and each cached representation are deleted after the response, so the image can still be served for a short time after the 204. Messages that reference the sticker are not rewritten. No message Dispatch is produced.
+With `purge`, the image can remain available briefly after the 204. Existing messages that reference the sticker are unchanged.
 
 ### Rate limit
 

@@ -12,8 +12,6 @@ An instance can require a CAPTCHA solution on a small set of abuse-sensitive ope
 
 The value `none` means the instance challenges no operation. A gated operation then proceeds with no CAPTCHA header. The values `hcaptcha` and `turnstile` name the provider whose widget a client renders.
 
-Fluxer names a provider only while that provider holds both a site key and a secret key. An incomplete pair reports `none`, so a named provider means the instance enforces verification.
-
 ## Gated operations
 
 The following operations verify a CAPTCHA while the instance enforces verification.
@@ -30,19 +28,9 @@ The following operations verify a CAPTCHA while the instance enforces verificati
 
 Create private channel is gated only on the group direct message path, where the request body has a `recipients` member. A one-to-one direct message request omits the field and is never gated.
 
-Create application, redeem gift, create private channel, and add group direct message recipient reject an unauthenticated request before Fluxer reads the CAPTCHA. The authentication operations accept a request with no credential. When the instance enforces single sign-on, each of them returns 403 `SSO_REQUIRED` before Fluxer reads the CAPTCHA.
-
 ## Exemption
 
-The exemptions below skip the challenge. Fluxer tests both before it reads the token. A request that passes either one proceeds as though the instance had no provider configured.
-
-The instance account policy grants the `captcha_exempt` capability to a contact address. A policy rule matches the address itself or the domain it belongs to, so one grant can cover a whole domain. Fluxer tests the capability against the resolved account's email address alone. An unauthenticated request never matches this exemption.
-
-The other exemption is the `APP_STORE_REVIEWER` user flag. Fluxer tests it against the resolved account, then against the account an `email` member of the request body resolves to. The body check parses the request body as JSON and reads a string `email` member, and a body that is absent, is not JSON, or is not a JSON object yields no address. That check exempts a login or a registration attempt before any account is resolved.
-
-Both exemptions run before request validation on the authentication operations, on create application, and on redeem gift. Create private channel and add group direct message recipient validate the request first, so an invalid request is rejected before any exemption is tested.
-
-No exemption is visible in an API response. A client cannot predict one and handles a challenge on every gated operation.
+Instance policy can exempt a request. Exemptions are not advertised, so clients must handle a challenge on every gated operation.
 
 ## Request headers
 
@@ -57,11 +45,9 @@ No exemption is visible in an API response. A client cannot predict one and hand
 
 ## The retry handshake
 
-A client that has never been challenged sends the gated request without any CAPTCHA header. When the instance enforces verification and no exemption applies, that request fails with 400 `CAPTCHA_REQUIRED`.
+Send the request without CAPTCHA headers. On 400 `CAPTCHA_REQUIRED`, obtain a solution through the selected provider's widget using its advertised site key. Retry the same request with `X-Captcha-Token` set to the solution and, optionally, `X-Captcha-Type` set to the provider.
 
-The client then renders the selected provider's widget with its advertised site key, obtains a solution, and repeats the identical request with `X-Captcha-Token` set to the solution. It can send `X-Captcha-Type` to state which provider produced the solution.
-
-A retry succeeds when the provider accepts the solution and fails with 400 `INVALID_CAPTCHA` when it does not.
+An accepted solution allows the operation to proceed. A rejected solution returns 400 `INVALID_CAPTCHA`.
 
 :::caution[A solution is single-use]
 The provider treats an already redeemed solution as invalid. A client obtains a new solution before retrying after `INVALID_CAPTCHA` and MUST NOT replay the previous `X-Captcha-Token` value.
@@ -69,9 +55,7 @@ The provider treats an already redeemed solution as invalid. A client obtains a 
 
 ## Provider verification
 
-Fluxer submits the solution to the selected provider's verification endpoint over HTTPS with a 10-second deadline. It sends the caller's client IP address alongside the solution and omits it when the request resolves none.
-
-Any outcome other than a successful provider verdict answers 400 `INVALID_CAPTCHA`. That covers an unsuccessful verdict, a non-2xx provider status, an unparseable provider payload, the 10-second timeout, and any transport failure. A rejected solution is therefore never distinguishable from an unreachable provider.
+A rejected solution or unavailable provider returns 400 `INVALID_CAPTCHA`. The response does not distinguish between these causes.
 
 ## Error codes
 

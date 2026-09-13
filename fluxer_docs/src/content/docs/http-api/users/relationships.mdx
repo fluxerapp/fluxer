@@ -6,7 +6,7 @@ description: Friendships, blocks, and pending friend requests in both directions
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A relationship is the caller's stored record of one friendship, block, or pending friend request. Each account holds its own record, so one friendship is two records. The private note the caller keeps against another account lives on [User notes](/http-api/users/notes/).
+A relationship describes a friendship, block, or pending friend request from the caller's perspective. Private notes belong to [User notes](/http-api/users/notes/).
 
 The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
@@ -378,7 +378,7 @@ The body can be omitted, in which case it is treated as an empty object and the 
 
 Each matched request removes the caller's `INCOMING_REQUEST` record and the sender's `OUTGOING_REQUEST` record, and emits [Relationship Remove](/gateway/events/#relationship-remove) to the caller and to the sender. A call that matches nothing changes nothing.
 
-Fluxer processes senders one at a time, and the operation is not atomic across them. A failure part of the way through keeps the removals already made, and the call returns no count.
+A failed request can leave some requests removed without returning a count. Read the relationships again to reconcile.
 
 ### Rate limit
 

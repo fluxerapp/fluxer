@@ -38,10 +38,10 @@ Queues one message for delivery to every supplied recipient. Requires `system_dm
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The delivery job was queued |
-| 500 | [error response](/admin-api/#error-response) | The ledger row or the queue message could not be written |
+| 500 | [error response](/admin-api/#error-response) | The broadcast could not be scheduled |
 
 :::caution[The job continues past a failed recipient]
-The job logs every recipient it cannot deliver to. A run that reaches the last recipient settles as `succeeded` whatever the failure count.
+Failed deliveries do not stop the remaining recipients. A completed run reports `succeeded` even when some deliveries failed.
 :::
 
 :::caution[The response has no job ID]
@@ -52,9 +52,9 @@ Filter [List jobs](/admin-api/jobs/#list-jobs) by the `sendSystemDm` task type t
 
 For each recipient the job opens the direct message channel between the system account and that recipient, then sends the message. [Channel Create](/gateway/events/#channel-create) reaches a recipient only when the channel is newly created or was closed on that recipient's side. A recipient who already has the channel open observes only [Message Create](/gateway/events/#message-create).
 
-The job opens the channel with no admission check, so a recipient who has never interacted with the system account still receives the message. It also skips direct message spam mitigation. On [Create private channel](/http-api/users/private-channels/#create-private-channel) that mitigation puts a caller holding the [SPAMMER](/http-api/users/#public-user-flags) flag into a channel only that caller sees.
+Recipients need not have interacted with the system account before. Broadcasts bypass normal direct message spam restrictions.
 
-Before each recipient the job checks for cancellation, so cancelling stops further delivery and leaves sent messages in place. The [job](/admin-api/jobs/#admin-job-object) then settles as `cancelled`.
+Cancellation stops remaining deliveries and leaves sent messages in place. The [job](/admin-api/jobs/#admin-job-object) then reports `cancelled`.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `system_dm.send`, the target type `system_dm`, and the target ID `0`. Its metadata has `recipient_count` and `content_length` as decimal strings, and the content itself is not recorded.
 

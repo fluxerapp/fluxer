@@ -26,6 +26,7 @@ import UserSettings from '@app/features/user/state/UserSettings';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
 import {TimeFormatTypes} from '@fluxer/constants/src/UserConstants';
 import {getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
+import {localeUses12Hour} from '@fluxer/date_utils/src/DateHourCycle';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -293,29 +294,6 @@ const LanguageTab = observer(() => {
 		const appLocale = UserSettings.getLocale();
 		const browserLocale = navigator.language;
 		const effectiveLocale = Accessibility.useBrowserLocaleForTimeFormat ? browserLocale : appLocale;
-		const localeUses12Hour = (locale: string): boolean => {
-			const lang = locale.toLowerCase();
-			const twelveHourLocales = [
-				'en-us',
-				'en-ca',
-				'en-au',
-				'en-nz',
-				'en-ph',
-				'en-in',
-				'en-pk',
-				'en-bd',
-				'en-za',
-				'es-mx',
-				'es-co',
-				'ar',
-				'hi',
-				'bn',
-				'ur',
-				'fil',
-				'tl',
-			];
-			return twelveHourLocales.some((l) => lang.startsWith(l));
-		};
 		const uses12Hour = localeUses12Hour(effectiveLocale);
 		const sampleDate = new Date(2025, 0, 1, 14, 30, 0);
 		const format = getFormattedTime(sampleDate, effectiveLocale, uses12Hour);

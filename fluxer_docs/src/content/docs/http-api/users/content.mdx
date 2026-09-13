@@ -12,8 +12,8 @@ These routes are user-only. Fluxer rejects a bot or OAuth2 bearer credential wit
 
 Every route except [Delete current user's messages](#delete-current-users-messages) reaches the main Gateway, and a Gateway failure returns 502 `BAD_GATEWAY`, 503 `SERVICE_UNAVAILABLE`, or 504 `GATEWAY_TIMEOUT`. [Save message](#save-message) resolves the channel before it writes, so a failure there stores nothing. The request still returns 204 when a [Saved Message Create](/gateway/events/#saved-message-create), [Saved Message Delete](/gateway/events/#saved-message-delete), or [Recent Mention Delete](/gateway/events/#recent-mention-delete) Dispatch fails to publish after the write.
 
-:::caution[The schedule is written before the Dispatch]
-[Request bulk message deletion](#request-bulk-message-deletion) and [Cancel bulk message deletion](#cancel-bulk-message-deletion) publish [User Update](/gateway/events/#user-update) after the account row is written. A Gateway failure returns 502, 503, or 504 with the stored schedule already changed.
+:::caution[A failed response can still change the schedule]
+[Request bulk message deletion](#request-bulk-message-deletion) and [Cancel bulk message deletion](#cancel-bulk-message-deletion) can return 502, 503, or 504 after changing the schedule. Read the account again before deciding whether to retry.
 :::
 
 ## Saved message object
@@ -343,7 +343,7 @@ Neither scope includes the caller's personal notes channel, so this operation ca
 
 An account holding an MFA authenticator that proved sudo mode with MFA receives a fresh proof in the response header. A request that already had a valid proof gets that same token echoed back without an extended lifetime.
 
-Fluxer queues the work with at most 5 attempts. As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs, and the deleted messages' attachments are permanently removed.
+As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs. The deleted messages' attachments are permanently removed.
 
 On completion the system account sends the caller a direct message in the account locale reporting the total deleted message count and the number of channels touched. That message arrives through the ordinary [Message Create](/gateway/events/#message-create) Dispatch.
 
@@ -382,12 +382,12 @@ The 204 has `X-Fluxer-Sudo-Mode-JWT` when sudo verification issued or reused a t
 
 ### Side effects
 
-Any pending deletion for the account is removed from the queue first. The account then records a scheduled moment exactly one day in the future together with the number of messages and channels the deletion would affect. Those counts are computed once at scheduling time and are not recomputed while the deletion waits.
+The new schedule replaces any pending deletion and starts exactly one day later. Its message and channel counts reflect the account at scheduling time and do not update while it waits.
 
 The updated counts and schedule are published to the caller through [User Update](/gateway/events/#user-update). No message is deleted by this request, so no channel receives a Dispatch until the scheduled work runs.
 
 :::caution[Nothing announces that the deletion finished]
-When the scheduled work runs it clears the stored fields directly and emits no [User Update](/gateway/events/#user-update).
+When deletion runs, the pending schedule becomes null without a [User Update](/gateway/events/#user-update).
 :::
 
 ### Rate limit

@@ -12,7 +12,7 @@ Decode the string before reading any preference, and encode a valid `SyncedPrefe
 
 The empty string in a response means nothing is stored. Sending null or the empty string clears it. A stored snapshot reaches the account's other sessions through [User Settings Update](/gateway/events/#user-settings-update).
 
-Fluxer decodes every submitted snapshot and re-encodes it in canonical form before storing it, so a read can return a different string from the one submitted. Known fields are emitted in ascending field number order, and an unrecognised field number is preserved and re-emitted after them. Enums here are open, and an unassigned numeric value survives the round trip. When every known field holds its zero value and no unrecognised field is present, the snapshot encodes to zero bytes and is stored as the empty string.
+A returned snapshot can have a different encoding from the submitted one. Unknown fields and enum values survive the round trip. A snapshot containing only default values is returned as the empty string.
 
 A submission may use either the standard or the URL-safe base64 alphabet, with or without padding. Fluxer always returns the standard alphabet with padding.
 
@@ -39,7 +39,7 @@ An over-length string draws two entries for the one path.
 
 ## Synced preferences object
 
-The `SyncedPreferences` message is the root of the snapshot. Every field is a preference group defined in its own section, except `sanitize_urls` and `save_camera_uploads_to_device`, which are bools. Field numbers are allocated in blocks: 1 to 3, 20 to 25, 40 to 45, 60 to 63, 80 to 82, and 100 to 113. Never derive a field number from a field's position in this table.
+`SyncedPreferences` is the root message. Most fields are preference groups. Use the Protobuf schema for field numbers, not their position in this table.
 
 ### Structure
 
@@ -173,7 +173,7 @@ The `accessibility` field has display, motion, message, media, voice, and intera
 
 <sup>6</sup> The complete CSS of the account's synced custom theme, stored inline. A client that has opted out of syncing its theme applies a local one instead and re-emits this value unchanged, so it does not overwrite the value on the devices that do sync
 
-<sup>7</sup> A multiplier, where 1 is unscaled. The first-party client keeps its zoom level in browser storage and does not read or write this field
+<sup>7</sup> A multiplier, where 1 is unscaled. Unused by the first-party client
 
 <sup>8</sup> A multiplier, where 1 is the unmodified speaking rate
 
@@ -207,7 +207,7 @@ Field numbers 42 and 43 are reserved, together with the names `attachment_media_
 
 ## Accessibility overrides object
 
-The `accessibility_overrides` field holds dirty flags that no live surface reads or writes. The settings they name also appear in [accessibility settings](#accessibility-settings-object) as a `mobile_*_overridden` flag with a matching `mobile_*_value`.
+The `accessibility_overrides` field is unused by the first-party client. Use the `mobile_*_overridden` and matching `mobile_*_value` fields in [accessibility settings](#accessibility-settings-object).
 
 ### Structure
 

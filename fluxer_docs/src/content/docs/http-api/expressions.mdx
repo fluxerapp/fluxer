@@ -118,8 +118,8 @@ Returns the [emoji metadata object](#emoji-metadata-object) of any guild emoji. 
 
 <sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for a missing emoji and `UNKNOWN_GUILD` when the emoji record survives but its guild does not
 
-:::caution[Cloning reads the emoji's guild again]
-[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) resolves the source emoji and the source guild again. When the source guild drops `CLONE_EMOJI_ENABLED` between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+:::caution[Cloning permission can change]
+[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) returns 403 `MISSING_ACCESS` if the source guild no longer allows cloning.
 :::
 
 ### Rate limit
@@ -147,8 +147,8 @@ Returns the [sticker metadata object](#sticker-metadata-object) of any guild sti
 
 <sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_STICKER` for a missing sticker and `UNKNOWN_GUILD` when the sticker record survives but its guild does not
 
-:::caution[Cloning reads the sticker's guild again]
-[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) resolves the source sticker and the source guild again. When the source guild drops `CLONE_STICKER_ENABLED` between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+:::caution[Cloning permission can change]
+[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) returns 403 `MISSING_ACCESS` if the source guild no longer allows cloning.
 :::
 
 ### Rate limit

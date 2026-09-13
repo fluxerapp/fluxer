@@ -82,32 +82,17 @@ The third-party origin chose the status, and Fluxer passed it through.
 
 Proxied or stored media is limited to 500 MiB, and exceeding that returns 413. The bound applies to a streamed object, a buffered object, an external response body, and any input selected for transformation. When a streamed external body passes the bound only after the response head is committed, the Media Proxy truncates it.
 
-A decoded signed external target URL is limited to 8,192 bytes, and a longer URL returns 400. The route follows at most five redirects. A sixth redirect returns 502, and so does a redirect back to an already visited URL. Every redirect target is subject to the same bound and the same address policy as the original URL. Content detection inspects the leading 8,192 bytes of a body.
-
-Buffered external bodies share one endpoint budget of 500 MiB for every [work admission](#work-admission) slot plus 512 KiB. A body the budget cannot cover returns 503, and so does a failed buffer allocation.
+A decoded signed external target URL is limited to 8,192 bytes, and a longer URL returns 400. The route follows at most five redirects. A sixth redirect or a redirect loop returns 502. Every redirect target is subject to the same URL limit and address policy.
 
 Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is limited to 20,000 frames and 1,073,741,824 decoded pixels across all frames. No configuration changes these bounds. [Transformations](/media-proxy/transformations/#transformation-limits) defines the resulting failure statuses.
 
-The upload relay limits a body to the smaller of the capability's declared maximum and the endpoint's configured body limit. That endpoint limit defaults to the same 500 MiB ceiling and can be configured from 1 byte through 5 GiB. A request that declares no `Content-Length` is spooled to disk first, and spooled bodies share an 8 GiB endpoint budget by default.
+The upload relay limits a body to the smaller of the authorised upload size and the endpoint body limit. That endpoint limit defaults to 500 MiB and can be configured from 1 byte through 5 GiB.
 
 An internal `/_metadata`, `/_thumbnail`, or `/_frames` request body is limited to the base64 expansion of the 500 MiB media bound plus 1 MiB. All answer a larger body with 413.
 
 ## Work admission
 
-A transformation first takes an admission slot without waiting. The pool holds one slot for every concurrent native transform plus one for every queued transform. When no slot is free the request returns 504 immediately.
-
-| Setting | Default | Configurable range |
-| --- | --- | --- |
-| Native transform concurrency | The process parallelism clamped to 2 through 8 | 1 through 128 |
-| Queue depth | Eight times the native transform concurrency | 1 through 8192 |
-
-Once admitted, the transformation waits for a native transform permit until the transformation deadline. A wait that outlives the deadline also returns 504.
-
-The image branch of `/_thumbnail` follows the same admission and deadline rules. Its video branch takes no admission slot and no permit at all.
-
-A successful transformation stays in the memory cache for 120,000 ms by default, within a 256 MiB total budget and a 64 MiB per-entry budget<sup>1</sup>. External content-type hints are cached for the same interval across at most 4,096 targets.
-
-<sup>1</sup> The per-entry budget is clamped to the total budget, and setting the interval, the total budget, or the per-entry budget to zero disables the transform cache
+A transformation returns 504 when capacity is unavailable or its deadline expires. Upload and external-media requests can return 503 when their capacity is exhausted.
 
 ## Deadlines
 
@@ -123,7 +108,7 @@ A successful transformation stays in the memory cache for 120,000 ms by default,
 
 The same socket timeout bounds every streamed response body. A streamed stored object and a streamed signed external response terminate when the gap between two body chunks exceeds that timeout. The whole transfer has a second deadline of that timeout plus one second for every 16 KiB of expected length, which is a floor of 16 KiB per second. A body that ends before, or runs past, the advertised `Content-Length` also terminates with an error.
 
-Animated encoding stops adding frames 3,000 ms before the transformation deadline, so the encoder has time to flush what it already holds. The request then succeeds with a shorter animation. The separate 30,000 ms animation bound caps the playback length of the encoded animation, and [Transformations](/media-proxy/transformations/#transformation-limits) defines it.
+An animated response can be shortened to meet its deadline or playback limit. See [Transformation limits](/media-proxy/transformations/#transformation-limits).
 
 :::caution[A deadline after the head truncates the body]
 A status and its headers are chosen before the body is sent. A streamed object store or external response that fails afterwards terminates the body, so the observed body can be shorter than the advertised `Content-Length`.

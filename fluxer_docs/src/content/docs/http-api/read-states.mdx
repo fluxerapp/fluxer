@@ -124,11 +124,7 @@ The route resolves no channel and evaluates no permission. The write changes onl
 
 <sup>1</sup> One entry for each submitted acknowledgement, in the submitted order. An entry whose watermark did not move reports the values already stored
 
-:::note[A plain list takes the batched path]
-When no entry sets `manual` and no entry has a `mention_count` above `0`, Fluxer applies the whole list through the batched path [Mark channels as read](#mark-channels-as-read) uses.
-:::
-
-A list with one manual entry or one positive mention count takes the entry-by-entry path in submitted order. On that path, a later entry naming the same channel is evaluated against the earlier entry's result.
+When any entry is manual or has a positive mention count, entries for the same channel apply in submitted order. Otherwise, each entry is evaluated against the state before the request.
 
 ### Response
 
@@ -139,11 +135,11 @@ A list with one manual entry or one positive mention count takes the entry-by-en
 
 ### Side effects
 
-Each entry updates its channel watermark according to the entry's `manual` value and stores the submitted mention count. The write invalidates the account's unread badge total.
+Each entry updates its channel watermark according to `manual` and sets the submitted mention count.
 
-One [Message ACK](/gateway/events/#message-ack) goes to the caller's own sessions for every submitted entry, including one that leaves the watermark and mention count unchanged. The Dispatch has the resulting `message_id`, `mention_count`, and `version`, so a non-manual entry below the stored watermark reports the higher stored value. The entry-by-entry path also has the submitted `manual` value, and the batched path has no `manual` at all.
+One [Message ACK](/gateway/events/#message-ack) goes to the caller's sessions for every submitted entry, including an unchanged one. It reports the resulting `message_id`, `mention_count`, and `version`. It also includes the submitted `manual` value when any entry is manual or has a positive mention count.
 
-Fluxer logs a failed Dispatch or a failed unread badge invalidation on either path and does not fail the request. A client that misses a Dispatch reconciles from a later read.
+A successful acknowledgement can have no corresponding Dispatch. Reconcile from a later read when needed.
 
 Every entry also clears delivered notifications for its channel through the submitted `message_id`, so a discarded or rewound entry clears a different range than the entry stores.
 
@@ -176,11 +172,11 @@ Every entry advances its channel watermark monotonically and sets the channel's 
 
 ### Side effects
 
-An entry equal to the stored watermark still produces a write, and two entries naming the same channel produce two writes. The unread badge total is invalidated once for the whole request.
+An entry equal to the current watermark resets the mention count to `0`.
 
 One [Message ACK](/gateway/events/#message-ack) goes to the caller's own sessions for every submitted entry, including a skipped one. Every entry clears delivered notifications for its channel through the submitted `message_id`. The Dispatch has no `manual`, and a skipped entry reports the stored watermark and mention count.
 
-Fluxer logs a failed Dispatch or a failed unread badge invalidation and does not fail the request, so a client tolerates a missing Dispatch for an entry the write applied.
+A successful acknowledgement can have no corresponding Dispatch.
 
 :::note[A failed request can leave some entries written]
 A request that fails partway leaves the entries already written in place. A retry is safe, because a repeated monotonic acknowledgement is idempotent.

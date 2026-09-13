@@ -6,7 +6,7 @@ description: Administrative bulk mutations over an explicit user or guild set.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A bulk job applies one operation to an explicit set of users or guilds. The `task` discriminator selects the payload contract, the [Admin ACL](/admin-api/#acl-registry) evaluated for the request, and the worker task that runs.
+A bulk job applies one operation to an explicit set of users or guilds. The `task` field selects the request body and required [Admin ACL](/admin-api/#acl-registry).
 
 Every target is a list of IDs. There is no search, role, tag, email, or IP selector, so the caller resolves its own target set first with [List users](/admin-api/users/#list-users) or [List guilds](/admin-api/guilds/#list-guilds).
 
@@ -22,7 +22,7 @@ A bulk job creation has the identifier of the queued job.
 | --- | --- | --- |
 | job_id<sup>1</sup> | snowflake | The job that applies the requested operation, readable through [Get job](/admin-api/jobs/#get-job) |
 
-<sup>1</sup> Fluxer writes the ledger row before it queues the job, so the identifier in a 200 is always readable
+<sup>1</sup> The job is readable as soon as this response arrives
 
 ### Example
 
@@ -144,11 +144,11 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 
 ### Side effects
 
-This operation writes no Admin audit entry. It records one [Jobs](/admin-api/jobs/) ledger row naming the acting Admin as the requester and storing the audit reason, then queues the worker task. When the ledger row cannot be written, Fluxer returns 500 `INTERNAL_SERVER_ERROR` and queues nothing.
+The [job](/admin-api/jobs/) records the acting Admin and audit reason. Queueing writes no Admin audit entry. Failure to create the job returns 500 `INTERNAL_SERVER_ERROR` without starting the operation.
 
-The worker processes entities in the submitted order, one at a time. A cancellation check runs before each entity, so [Cancel job](/admin-api/jobs/#cancel-job) stops the run between two entities and settles the job as `cancelled`. Every entity changed before cancellation or failure stays changed. An entity that fails, including an ID that resolves to nothing, is counted as failed and skipped, and the run continues through the rest of the set.
+Entities are processed in the submitted order. [Cancel job](/admin-api/jobs/#cancel-job) stops the run between entities and sets its status to `cancelled`. Completed changes remain in place. A failed or unknown entity counts as failed without stopping the remaining work.
 
-The worker reports progress before the run starts, after every 25 entities, and once at the end. `schedule_user_deletion` reports after every 10 accounts instead. The closing progress message has the successful and failed counts.
+Progress updates arrive before work starts, after every 25 entities, and at completion. `schedule_user_deletion` updates after every 10 accounts instead. The final message includes successful and failed counts.
 
 Every task writes one summary Admin audit entry when it finishes, with the action `bulk_update_user_flags`, `bulk_update_suspicious_activity_flags`, `bulk_update_guild_features`, `bulk_add_guild_members`, or `bulk_schedule_deletion`. The summary has the audit reason, the entity count, the operation-specific parameters, and the successful and failed counts. Its `target_id` is the guild for `add_guild_members` and `0` for every other task. A cancelled or failed job writes no summary entry.
 

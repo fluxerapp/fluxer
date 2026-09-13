@@ -69,7 +69,7 @@ One stored audio clip owned by one account. Every field except `name` is fixed a
 | url<sup>3</sup> | string | The absolute CDN URL the clip is fetched from |
 | created_at | ISO8601 timestamp | The time the clip was uploaded |
 
-<sup>1</sup> The leading 16 hexadecimal characters of the MD5 digest of the decoded bytes, so two clips with identical audio have an identical `hash`
+<sup>1</sup> A content hash. Clips with identical audio have the same `hash`
 
 <sup>2</sup> Measured from the decoded audio and rounded to the nearest millisecond
 
@@ -124,8 +124,8 @@ A scope with no assigned sound has no selection object. Clearing a scope deletes
 
 `scope_id` must match one of these forms exactly. Any other value fails with the validation code `INVALID_FORMAT` at the `scope_id` path.
 
-:::note[Fluxer stores scopes but never resolves them]
-A selection records which sound belongs to which scope and nothing more. [Play entrance sound](#play-entrance-sound) names the sound explicitly, so the client decides which selection applies to a channel.
+:::note[Clients select the sound to play]
+Use the scope selections to choose a clip, then pass its ID to [Play entrance sound](#play-entrance-sound).
 :::
 
 ## List entrance sounds
@@ -174,7 +174,7 @@ Invisible characters in `name` are not stripped and count towards the 32 charact
 
 ### Validation
 
-Every failure below is a 400 `INVALID_FORM_BODY`. One response can report two of the first four rows when both fields are bad. The remaining rows are reported one at a time, in the order the table lists them.
+Every failure below returns 400 `INVALID_FORM_BODY`. A response can contain more than one field error.
 
 | Failure | Validation code | Path |
 | --- | --- | --- |
@@ -207,8 +207,8 @@ The validation entry has no member naming which duration bound the clip crossed.
 
 The operation assigns no scope and emits no Gateway Dispatch.
 
-:::note[Identical audio shares one stored object]
-Uploading the same bytes twice creates a second entry with the same `hash`, so both entries have the same `url`. Fluxer deletes the stored object only when the last entry that references it is removed.
+:::note[Duplicate audio can share a URL]
+Uploading the same bytes twice creates distinct library entries with the same `hash` and `url`. Deleting one leaves the other usable.
 :::
 
 ### Rate limit
@@ -274,7 +274,7 @@ Deletes one clip from the current account's library, clears every scope selectio
 
 ### Side effects
 
-Fluxer removes every selection naming the clip first, then the library entry, then the stored audio object unless another clip in the library has the same `hash` and `extension`. A storage failure is logged, and the request still returns 204, so the entry is removed either way. Fluxer emits no Gateway Dispatch.
+The clip and every selection naming it are removed from the library. No Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -295,7 +295,7 @@ Assigns one of the account's clips to one [scope](#entrance-sound-scopes), or cl
 
 <sup>1</sup> Required. An explicit null clears the scope, succeeds even when the scope had no selection, and looks up no clip
 
-Fluxer accepts a `guild:{guild_id}` scope on its shape alone. It neither resolves the guild nor checks membership, so a selection can name a guild the account has left. A non-null `sound_id` must name a clip the account owns, and Fluxer writes the scope only after that lookup succeeds.
+A `guild:{guild_id}` scope does not require current guild membership. A non-null `sound_id` must name a clip the account owns.
 
 ### Response
 
@@ -318,7 +318,7 @@ Fluxer writes or removes the scope's selection. One clip can be selected in any 
 
 Fans the caller's chosen clip out to everyone else connected to a voice channel and returns 204 with an empty body. The caller must already hold a voice state in that channel and must own the clip. Emits an [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) Gateway event.
 
-Nothing is published to the media servers. Each recipient receives a Dispatch naming the clip's CDN URL, then fetches and plays it locally.
+Recipients fetch and play the clip locally from the URL in the event.
 
 ### Path parameters
 

@@ -20,7 +20,7 @@ Searching, applying, editing, withdrawing, and joining fail with 400 `DISCOVERY_
 
 ## Discovery guild object
 
-One search result. Every field except `member_count` and `online_count` is read from the discovery search index.
+One public guild listing.
 
 ### Structure
 
@@ -39,16 +39,16 @@ One search result. Every field except `member_count` and `online_count` is read 
 | features | array[string] | The [guild features](/http-api/guilds/#guild-features) the guild has |
 | verification_level<sup>4</sup> | integer | The effective [verification level](/http-api/guilds/#verification-levels) of the guild |
 
-<sup>1</sup> These listing fields come from the guild's approved application as it stood at index time, and an entry that stores no category is reported as category `0`
+<sup>1</sup> These fields describe the approved application. An unspecified category is reported as `0`
 
-<sup>2</sup> Refreshed from the main Gateway at response time. When that refresh fails, the operation still succeeds and reports the indexed member count with an `online_count` of `0`
+<sup>2</sup> Counts are approximate. When live counts are unavailable, `member_count` can be stale and `online_count` is `0`
 
 <sup>3</sup> An animated hash retains its `a_` prefix, which is the animation indicator for this object
 
 <sup>4</sup> A listed guild is reported at least at level `1`, so a guild that stores level `0` is reported as `1` while it remains discoverable
 
-:::note[Index values lag the guild record]
-A guild that changed its name, icon, banner, features, or verification level since the last synchronisation is still reported with the indexed values, for up to 15 minutes.
+:::note[Listing updates can take time]
+Changes to a guild's name, icon, banner, features or verification level can take up to 15 minutes to appear.
 :::
 
 ### Example
@@ -361,7 +361,7 @@ A pending, rejected, removed, or absent application fails with 400 `DISCOVERY_NO
 <sup>1</sup> An account whose phone requirement was deferred is re-evaluated against the target guild at join time, so an account that satisfies the standing check can still be refused here
 
 :::note[A guild that never existed returns 400, not 404]
-No approved application names it, so the request fails with `DISCOVERY_NOT_DISCOVERABLE` before any guild record is read.
+A guild with no approved listing returns `DISCOVERY_NOT_DISCOVERABLE`.
 :::
 
 ### Side effects
@@ -370,7 +370,7 @@ An account that is already a member receives the same 204 response with no Dispa
 
 The joining account's sessions receive [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is dispatched guild-wide and reaches whichever sessions [event filtering](/gateway/event-filtering/) selects. A bot session always receives it, and a passive user session in a guild with more than 250 members does not receive it until [Lazy Request](/gateway/commands/#lazy-request) marks that guild active. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join changes its restricted guild set or its folder layout, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its account default hides muted channels.
 
-Unless join notifications are suppressed or the guild stores no system channel, the operation creates a [USER_JOIN](/http-api/messages/#message-types) system message in that channel and delivers [Message Create](/gateway/events/#message-create). The new member is indexed for [Guild member search](/http-api/guild-member-search/) only in a guild whose member list has already been indexed. No invite use is consumed.
+Unless join notifications are suppressed or no system channel is configured, the join emits a [USER_JOIN](/http-api/messages/#message-types) system message through [Message Create](/gateway/events/#message-create). No invite use is consumed.
 
 ### Rate limit
 
@@ -401,7 +401,7 @@ Its submission time is also its review time, it gains the discoverable feature, 
 | primary_language?<sup>3</sup> | string | The [supported primary language](#supported-primary-languages) code of the listing (default en-US) |
 | custom_tags?<sup>4</sup> | array[string] | The [custom tags](#custom-tags) to store (at most 10) |
 
-<sup>1</sup> Scanned against the instance content blocklists before the guild is read and before the eligibility and duplicate checks run, and a match returns 403 `CONTENT_BLOCKED`
+<sup>1</sup> A value blocked by instance content policy returns 403 `CONTENT_BLOCKED`
 
 <sup>2</sup> A value outside 0 through 8, a negative value, or a non-integer value is rejected by body validation
 
@@ -428,7 +428,7 @@ Its submission time is also its review time, it gains the discoverable feature, 
 
 The submitted listing replaces a previous rejected or removed application.
 
-A pending application changes no guild feature, does not appear in search, and emits no Dispatch. An automatic approval adds the discoverable feature, indexes the listing so that [Search discovery guilds](#search-discovery-guilds) returns it, and delivers [Guild Update](/gateway/events/#guild-update) to every session that can see the guild.
+A pending application stays out of search and emits no Dispatch. Automatic approval makes the guild discoverable and sends [Guild Update](/gateway/events/#guild-update) to every session that can see it.
 
 ### Rate limit
 
@@ -457,7 +457,7 @@ Every field is optional, and an omitted field preserves the stored value.
 | primary_language?<sup>3</sup> | string | The [supported primary language](#supported-primary-languages) code of the listing |
 | custom_tags?<sup>4</sup> | array[string] | The [custom tags](#custom-tags) to store (at most 10) |
 
-<sup>1</sup> A supplied value is scanned against the instance content blocklists before the stored application is read, and a match returns 403 `CONTENT_BLOCKED`
+<sup>1</sup> A value blocked by instance content policy returns 403 `CONTENT_BLOCKED`
 
 <sup>2</sup> A value outside 0 through 8 is rejected by body validation
 
@@ -483,7 +483,7 @@ Every field is optional, and an omitted field preserves the stored value.
 
 ### Side effects
 
-The supplied fields update the listing while preserving its status, submission time, review time, and review reason. Editing an approved listing reindexes its result for [Search discovery guilds](#search-discovery-guilds). A pending listing remains absent from search. No guild feature changes.
+Editing preserves the listing's status and review details. Approved changes appear in [Search discovery guilds](#search-discovery-guilds), while pending listings remain absent. No guild feature changes.
 
 ### Rate limit
 

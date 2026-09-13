@@ -63,11 +63,7 @@ Every read route accepts `GET` and `HEAD`. HEAD returns the same status and repr
 
 The relay path accepts `PUT`. Any other method there returns 405 with an `Allow` header. An unknown path returns 404.
 
-The [signed external route](/media-proxy/routes/#get-signed-external-media) is the one place a HEAD can answer differently from the matching GET. A HEAD with no range and no transformation is served from an origin HEAD when that origin returns 200, declares a length within the [500 MiB media bound](/media-proxy/responses-and-limits/#request-and-media-limits), and names a non-SVG media type.
-
-:::note[An origin HEAD resolves the type without bytes]
-That answer uses the declared type and the filename alone, so an origin that mislabels its bytes produces a different `Content-Type` and `Content-Disposition` than the GET of the same URL.
-:::
+On the [signed external route](/media-proxy/routes/#get-signed-external-media), origin metadata can cause HEAD representation headers to differ from GET.
 
 ## Request headers
 
@@ -86,7 +82,7 @@ Only `Range` affects the representation a public read returns. `X-Forwarded-For`
 
 ## Access restrictions
 
-An operator MAY gate public reads on a CDN edge address allowlist. The gate is disabled by default. When it is enabled, the process fetches the Bunny edge address list at startup and refreshes it every 3600 seconds by default, and a process whose first fetch fails does not start.
+An operator can restrict public reads to a CDN edge address allowlist. This restriction is disabled by default.
 
 A request from an address outside the list returns 403. `/_health`, `/_metrics`, `/_metadata`, `/_thumbnail`, `/_frames`, and every path below `/v1/relay/` are exempt.
 
@@ -98,7 +94,7 @@ A read route names its representation in its query string. The attachment, signe
 
 Query names and values use URL form decoding, so `+` decodes to a space and a percent escape decodes to its byte. When a name occurs more than once, the final value wins. An unknown name is ignored.
 
-The Media Proxy canonicalises nothing and issues no redirect for a noncanonical target. Two spellings of the same selection are two separate cache entries.
+The Media Proxy does not redirect alternative spellings to a canonical URL.
 
 A Boolean is true only for case-insensitive `true` or the exact value `1`. Every other value, including `false` and `0`, is false. [Transformations](/media-proxy/transformations/) defines dimensions, formats, quality values, and animation flags.
 
@@ -118,14 +114,10 @@ A reversed range, a zero-length suffix, a start outside the representation, or a
 
 The route forwards a range to the origin only when no transformation is requested. It sends the range verbatim when the value after `bytes=` is non-empty and every byte of it is an ASCII graphic character. A multiple range therefore reaches the origin, and the origin decides how to answer it. A value with a space anywhere is dropped, and no range is sent. The route relays the origin partial response with the origin `Content-Range` unchanged.
 
-A transforming request forwards no range to the origin, and the client range applies to the transformed bytes, so it still returns 206 or 416. On a non-transforming request, an origin 200 is relayed as that 200 when its declared type is trustworthy and the response is not SVG by declared type, filename, or leading bytes. The relayed 200 does not reapply the client range. Fluxer rasterises an SVG response and applies the client range to the rasterised bytes.
-
-A trustworthy type is a normalised `image/`, `video/`, or `audio/` type other than `application/octet-stream`. An absent or empty `Content-Type`, `text/plain`, `application/pdf`, and `application/zip` are all untrustworthy. Fluxer buffers the body of a 200 under an untrustworthy type and applies the client range to those bytes, so that read returns 206.
-
-The route fetches twice in exactly one case. When an origin answers a forwarded range with 206 under a declared SVG media type, Fluxer discards that partial response and fetches the whole object again without a range. It rasterises the object and applies the client range to the rasterised bytes.
+A range on a transformed response selects bytes from the result and returns 206 or 416. Without a transformation, an origin that ignores the range can produce a complete 200 response. Always check the response status and range headers.
 
 :::caution[A mislabelled SVG reaches the client as bytes]
-The re-fetch tests the declared media type alone. An origin that answers a forwarded range with SVG bytes under another type produces a 206 of raw SVG under that type.
+An origin that answers a forwarded range with SVG bytes under another media type can produce a 206 containing raw SVG.
 :::
 
 Disposition follows that declared type, so SVG mislabelled as an image or video media type is served inline.
@@ -171,19 +163,13 @@ A 416 response has `Accept-Ranges`, `Content-Range`, `Access-Control-Allow-Origi
 
 ## Content detection
 
-For a streamed object, Fluxer first reads stored media type metadata that names an image, audio, or video. Otherwise it takes the filename extension, then any other non-empty declared type except `application/octet-stream`, and finally `application/octet-stream`.
-
-When the complete input is available, detected SVG takes precedence. Another trustworthy declared image, audio, or video type remains authoritative. Without one, Fluxer checks the leading 8,192 bytes, then the filename extension, then the declared type, and finally uses `application/octet-stream`.
-
-A filename extension that identifies MP4 audio overrides a declared `video/mp4` with `audio/mp4`.
+Use the response's `Content-Type`. It can differ from the filename extension or the origin's declared type.
 
 ## Content disposition
 
 Disposition follows the resolved media type. An image other than SVG and a video are served inline. Every other type, including SVG and PDF, is served as an attachment. An explicit `download` request forces attachment disposition on every route that accepts the parameter.
 
-The disposition filename comes from the route. An attachment or signed external read uses the filename in the path or target URL. An image asset uses the path hash with any `a_` prefix stripped, followed by the canonical name of the path extension, so `/avatars/1/a_abcd1234.jpg` is offered as `abcd1234.jpeg`.
-
-When `download` resolves to true and the served media type has a canonical extension the filename does not already use, the filename keeps its stem and takes that extension. A PNG transformation of `holiday.jpg` is offered as `holiday.png`. When a filename is not safe as a quoted ASCII value, Fluxer sends a sanitised quoted fallback and an RFC 5987 `filename*` parameter.
+Use the filename from `Content-Disposition` when saving a response. Transformations can change its extension, and non-ASCII filenames can use the `filename*` parameter.
 
 :::caution[A scriptable document is never inline]
 The attachment, image asset, and signed external routes rasterise SVG to WebP, so a browser does not execute the document in the Media Proxy origin.

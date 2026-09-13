@@ -8,6 +8,8 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An archive is a snapshot of one user account or one guild, built in the background and downloaded as a file. [Create user archive](/admin-api/users/#create-user-archive) and [Create guild archive](/admin-api/guilds/#create-guild-archive) request one. The operations here read archive state and issue time-limited download URLs.
 
+Assets that no longer exist are omitted. Other read or write failures fail the attempt.
+
 Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject type it touches.
 
 - A user archive needs `archive:view_all` or `archive:trigger:user`.
@@ -15,7 +17,7 @@ Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject 
 - Reading both types at once needs `archive:view_all`, or `archive:trigger:user` and `archive:trigger:guild` together.
 
 :::note[An expired archive stops being readable]
-`expires_at` is 365 days after the archive is requested and is never extended. The archive record is removed at that instant, and no operation reads the stored file afterwards.
+An archive becomes unavailable through these routes at `expires_at`, 365 days after it was requested. Its lifetime is never extended.
 :::
 
 ## Archive object
@@ -45,9 +47,9 @@ An archive is in one of these lifecycle states. It is building while `completed_
 
 <sup>2</sup> A new archive starts at 0 with the step `Queued`, and completion sets 100 and `Completed`. Failure leaves `progress_percent` where it was and sets the step to `Failed`
 
-<sup>3</sup> Written once, at completion, to one year after the archive file was uploaded. [Create archive download](#create-archive-download) returns a URL with its own expiry, and no operation here updates this field
+<sup>3</sup> Written at completion using the archive's fixed `expires_at`. [Create archive download](#create-archive-download) returns a URL with its own expiry
 
-<sup>4</sup> The value is 365 days after `requested_at`, and every write fills the field in
+<sup>4</sup> The value is 365 days after `requested_at`
 
 ### Example
 
@@ -123,7 +125,7 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 
 <sup>4</sup> The listing is not paginated and returns no cursor. Only a narrower filter reaches older records
 
-<sup>5</sup> The value counts as true only for `true`, `True`, or `1`. Expired archives are dropped after `limit` rows have been read, so a response can hold fewer than `limit` archives
+<sup>5</sup> The value counts as true only for `true`, `True`, or `1`. Excluding expired archives can leave fewer than `limit` results
 
 :::note[The default filter narrows to the account's ACLs]
 `all` is the default, and Fluxer resolves it to the subject types the account's ACLs cover. An account holding only `archive:trigger:user` reads user archives, one holding only `archive:trigger:guild` reads guild archives, and one holding `archive:view_all` reads both. An account holding none of the three is refused with 403 `MISSING_ACL`.

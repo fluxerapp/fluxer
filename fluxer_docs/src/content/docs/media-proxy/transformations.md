@@ -60,7 +60,7 @@ Transformations never enlarge an image.
 A cover crop scales a still image to cover the requested rectangle and crops it centrally. It applies to an attachment or signed external request that supplies both `width` and `height`, and to every emoji or sticker asset. Every other image asset fits inside the selected square and preserves its full aspect ratio.
 
 :::note[An animated transformation fits the whole frame]
-The Media Proxy downgrades a cover crop to a plain fit whenever it opens the decoder for every page. An animated emoji or sticker is fitted inside its square.
+Animated output fits inside the requested bounds without cropping, including animated emoji and stickers.
 :::
 
 ## Asset size selection
@@ -120,33 +120,33 @@ Quality names are matched exactly and are case-sensitive. An unrecognised value 
 
 <sup>1</sup> PNG, APNG, and GIF have fixed encoder settings and ignore `quality`, so the quality number reaches WebP and JPEG output only
 
-<sup>2</sup> Resolves to `lossless` only for animated WebP output whose source sniffs as GIF or APNG, is at most 4,194,304 bytes, and decodes to at most 16,777,216 pixels across all frames. It resolves to `high` otherwise, and an animated palette WebP that fails those tests uses WebP encoder effort 0 unless an attachment request supplies `effort`
+<sup>2</sup> Selects quality automatically based on the source
 
 <sup>3</sup> Lossless applies to WebP alone, and JPEG at quality 100 is still a lossy encode
 
 An image asset defaults to `high`. An attachment or signed external image defaults to `lossless`, except that a JPEG, HEIC, or HEIF source defaults to `high`. Animated WebP output defaults to `auto` on every route that reads `quality`. Fluxer extracts a video thumbnail at `high`, and `quality` then applies only to the resize step that `width` or `height` requests. A non-transforming SVG rasterisation always uses `lossless`.
 
-Encoder effort defaults to 2 for animated output or `low` quality and 4 otherwise, and it applies to WebP output only. JPEG and PNG have fixed encoder settings, and GIF always encodes at effort 7. The attachment-only `effort` parameter replaces the default and is clamped to 9. Static WebP output clamps it again to 6, and so does lossy animated WebP. Only lossless animated WebP uses 7 through 9.
+The attachment-only `effort` parameter controls WebP encoding effort. Values above the selected encoder's maximum are clamped. Other output formats ignore it.
 
 ## Animation
 
-An owner-and-hash asset whose hash begins with `a_` requests animated output by default, and a bare hash requests static output by default. The prefix is stripped from the storage key, so both spellings read the same stored object.
+An owner-and-hash asset whose hash begins with `a_` requests animated output by default. A bare hash requests static output.
 
 The `animated` parameter overrides that default in both directions. It is read whenever the name is present, so `animated=false` forces static output even for an `a_` hash. Omitting the name keeps the route default.
 
 Fluxer issues emoji and sticker paths without an `a_` prefix, so those requests default to static output and need `animated=true` for animation. An attachment or signed external request also defaults to static output.
 
-When encoding occurs, animation survives only when `animated` resolves to true and the selected output is WebP, GIF, or APNG. The Media Proxy rejects the original bytes when the stored bytes sniff as animated and the request resolves to static, so that request is re-encoded to a single frame. Only a read that selects no transformation returns the source animation without `animated=true`.
+For transformed output, animation requires an animated request and WebP, GIF or APNG output. Static output contains one frame. A read that selects no transformation preserves the source animation.
 
 :::caution[PNG and JPEG output stacks the frames]
-PNG and JPEG have no animation, but `animated=true` still opens every page of the source. The encoder receives the frames stacked vertically and writes one tall image.
+PNG and JPEG cannot represent animation. Requesting them with `animated=true` can produce one tall image with the frames stacked vertically.
 :::
 
 An animated GIF request for GIF output is resized in its original container, and is returned untouched when the requested size would not change it. Requesting a cover crop routes it through the image pipeline, which still emits GIF.
 
 ## Video thumbnails
 
-Fluxer extracts one thumbnail from a video only when the request supplies an explicit image `format`. The video itself is never transcoded. The extractor scans at most 512 packets to find a frame and encodes it as JPEG, PNG, WebP, GIF, or APNG. A `format` value with no output encoder has already been coerced to WebP, so no other target reaches the extractor. `width` and `height` fit the thumbnail inside the requested rectangle without cropping.
+Supply an image `format` to extract a video thumbnail. The video itself is never transcoded. `width` and `height` fit the thumbnail inside the requested rectangle without cropping.
 
 An attachment video request with another transformation parameter but no `format` returns 400. A signed external video request without `format` returns the original bytes instead.
 
@@ -158,7 +158,7 @@ The Media Proxy returns the original bytes when the source already has the selec
 
 An `effort` value forces encoding, and a `quality` value forces encoding for every source except GIF. With neither `width` nor `height`, an animated attachment or signed external request for the source's own GIF, WebP, or APNG format bypasses both tests and can still reuse the original animation.
 
-The response `Content-Type` comes from the content when the stored media type is empty, is case-insensitively `application/octet-stream`, or is outside the set `image/jpeg`, `image/png`, `image/webp`, `image/gif`, `image/apng`, `image/avif`, `image/heic`, `image/heif`, `image/jxl`, and `image/svg+xml`. An original response can therefore use a different media type from the stored metadata. A stored media type from that set is trusted even when it disagrees with the bytes and is served unchanged.
+Use the response `Content-Type`, which can differ from the filename extension or stored metadata.
 
 ## Transformation limits
 
@@ -168,7 +168,7 @@ Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixel
 
 Animated WebP and animated APNG output is bounded again at encode time, and exceeding one of those bounds truncates the output. The encoder stops adding frames after 20,000 frames, or once the accumulated frame delays reach 30,000 ms of playback, and emits the frames it already has. An operator can configure the frame cap from 1 through 100,000 and the playback cap from 100 through 600,000 ms. Animated GIF output has neither cap on either of its paths, so the decode limits above are its only bound.
 
-The overall transformation deadline defaults to 15,000 ms and can be configured from 1,000 through 120,000 ms. An animated WebP or APNG encode stops 3,000 ms before that deadline so it has time to flush what it has already encoded. Animated GIF output has no such headroom, and a GIF resize that reaches the deadline fails.
+The transformation deadline defaults to 15,000 ms and can be configured from 1,000 through 120,000 ms. WebP or APNG animation can be shortened to meet it. A GIF resize that reaches the deadline fails.
 
 An attachment or signed external transformation failure returns 400. An image asset transformation failure returns 500 when the source is not directly displayable, and otherwise returns 200 with the original stored bytes and no `Content-Disposition`.
 

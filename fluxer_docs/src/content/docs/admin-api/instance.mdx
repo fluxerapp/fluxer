@@ -26,6 +26,8 @@ A secret is reported by a companion boolean such as `client_secret_set`. Except 
 
 The complete runtime configuration of the deployment. Every configuration operation here except the limit configuration and the heap snapshot returns it.
 
+Missing settings use the defaults documented below. Invalid stored configuration causes an error rather than silently resetting a policy. Operators can find recovery guidance under [stored instance policy](/operator/configuration/#stored-instance-policy).
+
 ### Structure
 
 | Field | Type | Description |
@@ -88,7 +90,9 @@ Admission and dispatch tuning for the Gateway cluster.
 | gateway_dispatch_relay_max_queue | integer | Dispatch relay queue ceiling (0-1000000, default 50000) |
 | voice_e2ee_scope | string | `guild_feature_only` or `platform_wide` (default `guild_feature_only`) |
 
-Every field is present on read. A deployment that has stored nothing reports the defaults above.
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+Admin requests use `rpc_request_timeout_ms`. The legacy stored name is covered in the [operator configuration reference](/operator/configuration/#stored-instance-policy).
 
 ## Voice noise suppression configuration object
 
@@ -111,7 +115,7 @@ The instance rollout of client-side noise suppression. [Experiments](/http-api/e
 | stereo_enabled | boolean | Whether a drawn client publishes a stereo microphone track (default false) |
 | suppression_strength | integer | Suppression strength (0-100, default 80) |
 
-Every field is present on read. A deployment that has stored nothing reports the defaults above.
+Every field is present on read. An absent document or missing field uses the defaults above.
 
 `excluded_user_ids` is applied before `included_user_ids`, so an account in both is never drawn. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
 
@@ -128,7 +132,7 @@ How often a client polls [Get experiment assignments](/http-api/experiments/#get
 | poll_interval_seconds | integer | Seconds between client revalidations (60-86400, default 300) |
 | poll_jitter_percent | integer | Spread applied to each revalidation (0-50, default 15) |
 
-Every field is present on read. A deployment that has stored nothing reports the defaults above.
+Every field is present on read. An absent document or missing field uses the defaults above.
 
 Both fields are served to every account, whether or not any experiment targets that account, and neither one is versioned by `config_version`. A client that has never reached the experiments route holds the same values as built-in defaults, 300 seconds and 15 percent, so neither field reaches a client that cannot read the route.
 
@@ -340,20 +344,22 @@ Outbound email settings, and the provider resolved from them.
 
 ## Bluesky integration object
 
-Client identity the deployment presents to Bluesky, and the number of signing keys it stores.
+Client identity the deployment presents to Bluesky, and the number of signing keys in its effective configuration.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | enabled | ?boolean | Operator override, or null for no override |
-| effective_enabled | boolean | Whether the integration is in force |
+| effective_enabled | boolean | Whether the integration is enabled with at least one configured signing key |
 | client_name | ?string | Client name presented to Bluesky |
 | client_uri | ?string | Client URI |
 | logo_uri | ?string | Client logo URI |
 | tos_uri | ?string | Client terms URI |
 | policy_uri | ?string | Client policy URI |
-| key_count | integer | Number of stored signing keys |
+| key_count | integer | Number of configured signing keys |
+
+Signing keys are write-only and must have unique identifiers.
 
 ## Instance media object
 
@@ -365,7 +371,9 @@ Attachment retention overrides the operator has set, and the values in force.
 | --- | --- | --- |
 | attachment_decay<sup>1</sup> | object | Nullable operator overrides plus an `effective` object of the same keys with concrete values |
 
-<sup>1</sup> The override keys are `enabled`, `min_size_mb`, `max_size_mb`, `max_eligible_size_mb`, `min_lifetime_days`, `max_lifetime_days`, `curve`, `renew_threshold_days`, and `renew_window_days`. Each is null when the deployment default applies, and `effective` reports the value in force. `enabled` is a boolean, `curve` is a number from 0 to 1, the `_mb` keys are positive numbers, and the `_days` keys are positive integers
+<sup>1</sup> The override keys are `enabled`, `min_size_mb`, `max_size_mb`, `max_eligible_size_mb`, `min_lifetime_days`, `max_lifetime_days`, `curve`, `renew_threshold_days`, and `renew_window_days`. Each is null when the deployment default applies, and `effective` reports the value in force. `enabled` is a boolean, `curve` is a number from 0 to 1, the `_mb` keys are positive numbers, and the `_days` keys are positive safe integers
+
+Conflicting maximum size or lifetime overrides are cleared and resolved from deployment defaults. The effective size range must have a finite maximum above its minimum, and retention must produce a valid expiry date. Check the returned `effective` values after an update.
 
 ## Branding asset kinds
 
@@ -417,13 +425,13 @@ One issued registration URL together with the link an Admin hands out.
 
 ## Limit configuration response object
 
-The stored limit configuration together with the deployment defaults and the metadata an editor needs.
+The effective limit configuration together with the deployment defaults and the metadata an editor needs.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| limit_config | [limit configuration](#limit-configuration-object) object | Stored configuration in force |
+| limit_config | [limit configuration](#limit-configuration-object) object | Effective configuration on the serving node |
 | limit_config_json | string | The same document rendered as JSON indented by two spaces, for an editor to display |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
 | defaults<sup>1</sup> | map[string, map[string, integer]] | Deployment default limits, keyed by rule identifier and then by limit key |
@@ -432,7 +440,7 @@ The stored limit configuration together with the deployment defaults and the met
 | limit_keys | array[string] | Every [limit key](/http-api/instance/#limit-keys) in registry order |
 | bounds?<sup>3</sup> | map[string, object] | Optional `min` and `max` pair for each limit key |
 
-<sup>1</sup> Built with the premium mode treated as `everyone`, so on a self-hosted deployment whose premium mode is `mirror` it omits the `premium` rule that is applied
+<sup>1</sup> Built for the deployment and the premium mode currently loaded by the serving node. Self-hosted `mirror` mode includes the `premium` rule
 
 <sup>2</sup> The keys are `messages`, `guilds`, `channels`, `expressions`, `files`, `social`, and `features`
 
@@ -464,7 +472,7 @@ One rule in that ordered set, with the filters that scope it and the limits it s
 | limits | map[string, integer] | Non-negative value for each [limit key](/http-api/instance/#limit-keys) the rule sets |
 | modifiedFields?<sup>1</sup> | array[string] | Limit keys whose value differs from the deployment default |
 
-<sup>1</sup> A rule whose identifier matches no default rule and no rule named `default` reports every key it sets. A rule with no differing key omits the field
+<sup>1</sup> Compared with the deployment default rule of the same identifier, or with the deployment's `default` rule for a custom identifier. A set key absent from that default counts as modified. A rule with no differing key omits the field. Explicit limit values remain unchanged
 
 ## Limit key metadata object
 
@@ -550,7 +558,7 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | services? | object | Nullable `gif_enabled`, `youtube_enabled`, and `bluesky_enabled` overrides |
 | deferred_phone_gate?<sup>3</sup> | object | `enabled`, `window_hours`, and `member_threshold` |
 
-<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists, and otherwise creates a community using `single_community_name` or the configured product name. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
+<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists. When none is designated or the designated guild was deleted, it creates a community using `single_community_name` or the configured product name. A malformed designation or other datastore lookup error fails the operation instead of creating a replacement. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
 
 <sup>2</sup> The setting can be changed only while `direct_messages_locked` is false, and a change attempted after the lock is set fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` unless the same request sets `direct_messages_locked` to false. Re-enabling direct messages sets the lock again
 
@@ -571,7 +579,7 @@ The order is `gateway_rollout`, `voice_noise_suppression`, `experiment_delivery`
 
 ### Side effects
 
-Fluxer validates a Gateway rollout change against the complete stored configuration and then publishes it to the Gateway cluster. A premium mode change reloads the resolved limit configuration on every node. Enabling single community mode creates the community when none is designated, and the acting Admin becomes its owner.
+Gateway rollout changes apply across the cluster. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
 
 Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
 
@@ -742,13 +750,15 @@ Approves or rejects one pending registration and returns the resulting [instance
 
 <sup>1</sup> An account that no longer exists still answers 200. The pending registration is removed, no trait is written, and no audit entry is recorded
 
-:::caution[A decision is final]
-Both decisions remove the pending registration, so the same account cannot be decided again here. Rejecting an account writes the `registration_rejected` trait. Reversing the decision means clearing that trait through [Set user traits](/admin-api/users/#set-user-traits).
+:::caution[Decisions apply even without a pending entry]
+Both decisions remove the pending registration, but the endpoint does not require the account to be in that list. Rejecting writes the `registration_rejected` trait. A later approval can clear it again. The trait can also be changed through [Set user traits](/admin-api/users/#set-user-traits).
 :::
 
 ### Side effects
 
 Approval removes both the `registration_pending_approval` trait and the `registration_rejected` trait, and joins the account to the single community when that mode is enabled and a guild is designated. A join that fails is logged and does not fail the request. Rejection removes the `registration_pending_approval` trait and adds the `registration_rejected` trait, which blocks login and every later session creation. A session issued before the decision stays valid. The pending registration is removed either way.
+
+Invalid pending-registration data prevents the decision. A later failure can still leave account changes applied, so check the account and pending list before retrying.
 
 One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account, records the audit reason, and has no metadata.
 
@@ -845,7 +855,7 @@ A deployment behind a load balancer needs several attempts to reach a particular
 
 ### Side effects
 
-The snapshot is written to a temporary file on the serving node, streamed to the caller, and deleted once the stream closes. No configuration is changed and no Admin audit entry is recorded.
+No configuration is changed and no Admin audit entry is recorded.
 
 ### Rate limit
 

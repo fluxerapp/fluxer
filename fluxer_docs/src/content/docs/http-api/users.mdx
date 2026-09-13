@@ -159,7 +159,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>5</sup> For an OAuth2 bearer credential without the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is `null`
 
-<sup>6</sup> The account record stores no phone number. The field is retained so an older client keeps parsing the response
+<sup>6</sup> Always null
 
 <sup>7</sup> The pair is present only while the account has the staff flag, and it is absent for every other account
 
@@ -185,7 +185,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>18</sup> The value is false while premium entitlements are not active, even when a dismissal was recorded earlier
 
-<sup>19</sup> Both values derive from the difference between the stored gift inventory sequence and the sequence the account has acknowledged, and they report `false` and `0` when no gift has ever been recorded
+<sup>19</sup> Reports whether unread gifts exist and how many. An account with no gifts reports `false` and `0`
 
 :::note[A bearer read returns zero values]
 `acls`, `traits`, and `required_actions` become empty arrays. `email_bounced` and `authenticator_types` are dropped. Every field marked <sup>3</sup> above that is a boolean becomes `false`, every timestamp or nullable field becomes `null`, and `unread_gift_inventory_count` becomes `0`.
@@ -640,7 +640,7 @@ A read that passes the access check can still be restricted. A restricted read n
 
 ### Side effects
 
-When the target's premium period and grace interval have both elapsed, this read clears the stored premium state on the target account before returning it. The cleared fields are the premium type, activation time, end time, gift extension, cancellation flag, billing cycle, and grace end. That write emits no Gateway Dispatch. The background sweep that performs the same clearing emits [User Update](/gateway/events/#user-update). The profile is still returned when the clearing write fails.
+Reading a profile can clear expired premium state after its grace period. That change emits no Gateway Dispatch and does not prevent the profile from being returned.
 
 ### Rate limit
 
@@ -663,7 +663,7 @@ Reports whether a username and discriminator pair is unavailable.
 
 <sup>2</sup> The value is parsed as a decimal integer before the lookup, so `7`, `07`, and `0007` describe the same tag
 
-Fluxer reports `false` for the caller's own current tag without a lookup. That comparison reads the username case-insensitively and the discriminator as an integer.
+The caller's current tag returns `false`. The username comparison is case-insensitive and the discriminator is compared as an integer.
 
 A reserved username fails validation with `USERNAME_RESERVED_VALUE` or `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`, and no `taken` value comes back for it.
 

@@ -49,7 +49,7 @@ curl -i http://127.0.0.1:8080/_health
 `/_health` returns `200 OK` from the edge itself without reaching an upstream, so it is the health check to give your proxy.
 
 :::note[There is nothing to configure inside the instance]
-The routing lives in a config file inside the stack. Point your proxy at the port and leave that file alone.
+Forward all paths unchanged to the edge. No internal routing changes are needed.
 :::
 
 ## What every proxy must do
@@ -115,7 +115,7 @@ FLUXER_PUBLIC_PORT=8443
 
 Your proxy holds the public port, and the overlay pins the edge to plain HTTP on `8080` whatever that port is, so nothing else in `.env` moves with it.
 
-Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states the same address as one string, and an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names puts part of the instance on `chat.example.com:8443` and part on `chat.example.com`, where the web app sends no `Authorization` header across the gap. [The public origin](/operator/configuration/#the-public-origin) has the rest.
+Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with all three settings. Conflicting addresses can break sign-in and setup. See [The public origin](/operator/configuration/#the-public-origin).
 
 ## nginx
 
@@ -174,7 +174,7 @@ chat.example.com {
 }
 ```
 
-Caddy trusts no proxy by default and takes the client address from the connection. Set the global `trusted_proxies` option when another proxy or a CDN sits in front of Caddy, or it records that hop as the client. Caddy appends its own peer to the end of the address list, and Fluxer reads the first entry.
+Caddy trusts no proxy by default. If another proxy or CDN sits in front of it, configure Caddy's global `trusted_proxies` option and Fluxer's [trusted proxies](#trusted-proxies) so requests retain the real client address.
 
 ## Traefik
 
@@ -380,67 +380,27 @@ Nginx Proxy Manager appends to `X-Forwarded-For`, so the visitor's own value arr
 
 ## What the single port routes
 
-The instance rewrites paths before handing them to an upstream. Your proxy must not rewrite anything itself.
+Forward every path and query string unchanged. The edge handles routing:
 
-#### `/_health`
+| Public path | Purpose |
+| --- | --- |
+| `/_health` | Edge health check |
+| `/gateway`, `/gateway/*` | Gateway connections and health |
+| `/api/*` | HTTP API |
+| `/media/*` | Media and attachment delivery |
+| `/livekit/*` | Voice signalling |
+| `/admin`, `/admin/*` | Admin dashboard |
+| `/web/*`, `/emoji/*`, `/libs/*`, `/avatars/*`, `/badges/*`, `/desktop/*`, `/embeds/*` | Static assets |
+| `/.well-known/fluxer` | Instance discovery |
+| `/.well-known/apple-app-site-association`, `/apple-app-site-association` | Apple app association |
+| `/.well-known/assetlinks.json` | Android app association |
+| `/version.json` | Client version metadata |
 
-No upstream. Answered by the edge itself.
-
-#### `/gateway?v=1&encoding=json&compress=zstd-stream&stream=1`
-
-Goes to `gateway:8080` and reaches the upstream as `/?v=1&encoding=json&compress=zstd-stream&stream=1`.
-
-#### `/gateway/foo`
-
-Goes to `gateway:8080` and reaches the upstream as `/foo`.
-
-#### `/api/v1/users/@me`
-
-Goes to `api:8080` and reaches the upstream as `/v1/users/@me`.
-
-#### `/media/attachments/1/2/a.png`
-
-Goes to `media-proxy:8080` and reaches the upstream as `/attachments/1/2/a.png`.
-
-#### `/livekit/rtc/v1`
-
-Goes to `livekit:7880` and reaches the upstream as `/rtc/v1`.
-
-#### `/admin`
-
-Goes to `admin:8080` and reaches the upstream as `/`.
-
-#### `/admin/users`
-
-Goes to `admin:8080` and reaches the upstream as `/users`.
-
-#### Static asset paths
-
-`/web/*`, `/emoji/*`, `/libs/*`, `/avatars/*`, `/badges/*`, `/desktop/*` and `/embeds/*` go to `static-proxy:8080` unchanged.
-
-#### `/.well-known/fluxer`
-
-Goes to `api:8080` unchanged.
-
-#### Apple app site association
-
-`/.well-known/apple-app-site-association`, and `/apple-app-site-association` for older iOS, go to `app-proxy:8080` unchanged.
-
-#### `/.well-known/assetlinks.json`
-
-Goes to `app-proxy:8080` unchanged.
-
-#### `/version.json`
-
-Goes to `app-proxy:8080` unchanged.
-
-#### Anything else
-
-Goes to `app-proxy:8080` unchanged.
+All other paths serve the web app.
 
 Pass the query string on `/gateway` through untouched. Clients always send `?v=`, `?encoding=`, `?compress=` and `?stream=`, and `1` is the only version the Gateway accepts.
 
-Apple and Google fetch the association files at those fixed paths, for saved-password autofill in the iOS apps and link handling in the Android ones. The last entry already has them all, so a proxy that forwards `/` needs no extra rule. A proxy that forwards a named path allowlist has to list these paths along with everything else that entry covers.
+Apple and Google require the association files at those fixed paths for saved-password autofill and app links. A proxy that forwards all paths needs no extra rules. Include them explicitly if you use a path allowlist.
 
 `/_metrics` on the API, Media Proxy, and Gateway, plus `/_health/ready`, `/_health/drain`, and `/_health/undrain` on the Gateway, are gated to loopback and are unreachable through any proxy. The probes that work through a proxy are `/_health`, `/api/_health`, `/gateway/_health`, and `/media/_health`.
 

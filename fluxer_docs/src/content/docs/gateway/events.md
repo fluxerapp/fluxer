@@ -4,7 +4,7 @@ title: Gateway events
 description: Every main Gateway Dispatch event, its payload, its delivery scope, and its replay behaviour.
 ---
 
-A Dispatch is a message from the [Gateway](/gateway/overview/) that tells a client something happened, such as a new message arriving or a member joining a guild. Every Dispatch has [Opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, the name of the event, and the event's data. [Event filtering](/gateway/event-filtering/) defines the gates each one passes on its way to a socket.
+A Dispatch reports a change or command result through the [Gateway](/gateway/overview/). It has [opcode](/gateway/opcodes-and-close-codes/#opcodes) 0, an event name, and a payload.
 
 ## Dispatch envelope
 
@@ -28,7 +28,7 @@ A Dispatch is a message from the [Gateway](/gateway/overview/) that tells a clie
 
 ## Dispatch delivery
 
-A guild-scoped Dispatch is filtered by guild availability, then by channel visibility and permissions, then by the session's active or passive state, and finally by the session-level shard filter and `ignored_events` list. An account-scoped Dispatch is subject only to the session-level filters. [Event filtering](/gateway/event-filtering/) defines each gate.
+[Event filtering](/gateway/event-filtering/) defines delivery by guild availability, channel visibility, permissions, and session settings. Account-scoped Dispatches use only the session-level filters.
 
 Most guild-scoped Dispatches have a `guild_id` string. [Guild Create](#guild-create) and [Guild Sync](#guild-sync) identify the guild as `id`, and so does every [Guild Delete](#guild-delete) other than the one the guild itself dispatches when the guild is deleted. [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) have no top-level `guild_id`, and each entry in their `counts` array has its own.
 
@@ -265,7 +265,7 @@ That budget admits one unfiltered member request per bot account and guild every
 
 The current user's account record changed. The payload is the complete [user object](/http-api/users/#user-object) in its private representation.
 
-Fluxer also pushes the change to every account that holds a presence subscription for this user. Those accounts receive it as a [Presence Update](#presence-update) whose `user` is the new representation, so a username or avatar change reaches them without a second lookup. Fluxer sends none of those when the user's published presence is `offline`.
+Presence subscribers receive the updated `user` in a [Presence Update](#presence-update), unless the user's published status is `offline`.
 
 ### <span id="user-settings-update"></span>USER_SETTINGS_UPDATE
 
@@ -484,7 +484,7 @@ One operation changed several channels together, most often a reorder.
 | guild_id | snowflake | Guild the channels belong to |
 | channels | array[[channel](/http-api/channels/#channel-object) object] | Every changed channel in its complete updated representation |
 
-Fluxer trims each recipient's copy of `channels` to the channels that recipient can view, so two sessions in the same guild can receive different arrays from one operation. A recipient whose trimmed array would be empty receives no Dispatch at all and consumes no sequence number.
+Each recipient sees only channels they can view. An empty result produces no Dispatch and consumes no sequence number.
 
 ### <span id="channel-delete"></span>CHANNEL_DELETE
 
@@ -663,9 +663,9 @@ One visible presence changed. The payload is a [presence object](#presence-objec
 
 A session receives a presence for a friend, for a recipient of a group direct message it belongs to, and for a guild member it subscribed to through the `members` array of a [Lazy Request](/gateway/commands/#lazy-request). A bot session holds no friend or group direct message subscription, so the guild path is the only one that reaches it.
 
-The session holds every Presence Update from Identify until it dispatches [Ready](#ready), so a client never receives a presence before its initial state arrives. Right after Ready the session drops every held presence for a subject the Ready `presences` array already covers and releases the rest in one burst. When Ready has not been dispatched 10,000 ms after Identify, the session releases the queue anyway.
+Presence Updates normally follow [Ready](#ready). The initial Presence Update burst omits users already included in Ready. If Ready takes more than 10,000 ms, Presence Updates can arrive before it.
 
-After the burst a Dispatch is held again when the session cannot place it. The session holds a guild-scoped Presence Update while it is not connected to the guild in `guild_id`. It holds an account-scoped one while the subject is neither a friend nor a recipient of a group direct message the session belongs to. A later [Relationship Add](#relationship-add), [Relationship Update](#relationship-update), [Channel Create](#channel-create), [Channel Update](#channel-update), or [Channel Recipient Add](#channel-recipient-add) naming the same account releases the held Dispatch. The hold queue keeps at most 2,048 entries and drops the oldest, so a held presence that is never placed is eventually discarded.
+Later presences can be delayed until their guild, relationship, or group direct message becomes visible. They may arrive after [Relationship Add](#relationship-add), [Relationship Update](#relationship-update), [Channel Create](#channel-create), [Channel Update](#channel-update), or [Channel Recipient Add](#channel-recipient-add). Delivery is not guaranteed for a subject that never becomes visible.
 
 #### Presence object
 
@@ -709,7 +709,7 @@ Every entry has the batch's guild context. A client MUST treat each entry as if 
 
 ### <span id="passive-updates"></span>PASSIVE_UPDATES
 
-A passive session in a guild with more than 250 members receives the changes it would otherwise have missed. The guild runs the cycle every 30,000 ms and sends nothing when the cycle finds no change.
+A passive session in a guild with more than 250 members receives missed changes every 30,000 ms. No event is sent when nothing changed.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -813,7 +813,7 @@ Neither `id` nor `animated` is ever null. A Unicode reaction omits both, so a cl
 
 ### <span id="message-reaction-add-many"></span>MESSAGE_REACTION_ADD_MANY
 
-A session that set the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-flags) merges a run of reaction additions in a private channel into one Dispatch. A reaction in a guild channel is never merged and arrives as its own [Message Reaction Add](#message-reaction-add). The session opens a 650 ms window on the first addition and sends the merged Dispatch when the window closes. The window holds at most 512 additions and drops the oldest beyond that.
+With the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-flags), private-channel additions are grouped over 650 ms and delivered together. Each window keeps the latest 512 additions. Guild-channel additions always arrive as individual [Message Reaction Add](#message-reaction-add) events.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -822,7 +822,7 @@ A session that set the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/comm
 | guild_id?<sup>1</sup> | snowflake | Guild the channel belongs to |
 | reactions | array[[reaction addition object](#reaction-addition-object)] | The merged additions, in arrival order |
 
-<sup>1</sup> Taken from the first addition of the group. The window is per session and groups its additions by guild, channel, and message when it closes, so each group is one Dispatch and every addition in `reactions` is on the message these fields name
+<sup>1</sup> Every addition in `reactions` belongs to this message. A window covering several messages produces a separate Dispatch for each
 
 When the window closes holding exactly one addition, the session sends [Message Reaction Add](#message-reaction-add) instead. A session without the flag receives one Message Reaction Add per addition.
 
@@ -849,7 +849,7 @@ One user's reaction was removed from a message.
 
 Exclusion works exactly as it does for [Message Reaction Add](#message-reaction-add), so the acting session is dropped in a guild channel and kept in a private one.
 
-For a debouncing session, a removal that matches a still-buffered addition by message, user, and emoji removes both, so neither reaches the socket.
+With reaction debouncing enabled, an addition removed within the same window produces neither event for that message, user, and emoji.
 
 ### <span id="message-reaction-remove-all"></span>MESSAGE_REACTION_REMOVE_ALL
 
@@ -993,11 +993,11 @@ A private channel call began, or became visible in the session's initial state.
 | recipients?<sup>2</sup> | array[snowflake] | Every recipient of the channel |
 | created_at?<sup>2</sup> | integer | Unix milliseconds when the call was opened |
 
-<sup>1</sup> Each entry also has the `region_id` and `server_id` fields a [Voice State Update](#voice-state-update) omits. Both are internal routing identity, and a client MUST NOT depend on them
+<sup>1</sup> Entries also include `region_id` and `server_id`, which clients MUST ignore
 
-<sup>2</sup> Present only when the session pulled the call's state for itself
+<sup>2</sup> Present on initial or recovered call state
 
-A session pulls the call's state for itself in the cases below. The first is the Call Create it receives shortly after [Ready](#ready) for a private channel that already has a call. The second is the Call Create that reattaches the session to a call it lost, whether or not that loss produced a [Call Delete](#call-delete).
+Initial call state arrives shortly after [Ready](#ready). Recovered state can arrive after a lost call connection, whether or not the client received [Call Delete](#call-delete).
 
 Recipients are every recipient of the channel, whether or not they joined the call. The same set receives [Call Update](#call-update) and [Call Delete](#call-delete).
 
@@ -1005,7 +1005,7 @@ Recipients are every recipient of the channel, whether or not they joined the ca
 
 The ringing set, participant roster, or region of an active call changed. The payload has the same structure as [Call Create](#call-create) without `recipients` and `created_at`.
 
-A Call Update is sent only when the computed payload differs from the last one the call published, so an operation with no visible effect produces nothing.
+An operation with no visible effect produces no Call Update.
 
 ### <span id="call-delete"></span>CALL_DELETE
 
@@ -1018,7 +1018,7 @@ A call ended, or became unavailable.
 
 <sup>1</sup> Absent when the call ended
 
-With `unavailable: true` the call became unreachable. The session schedules a reattach 1,000 ms later and retries with backoff up to 15 times. A successful reattach delivers a fresh [Call Create](#call-create) with `recipients` and `created_at`, and an exhausted one delivers nothing further. A client MUST hold the call in a placeholder state.
+With `unavailable: true`, the client MUST retain a placeholder for the call. If it becomes available again, a fresh [Call Create](#call-create) includes `recipients` and `created_at`. Recovery is not guaranteed.
 
 ## Count response events
 
@@ -1067,6 +1067,4 @@ A channel the session cannot view, and a channel on which it lacks `VIEW_CHANNEL
 
 Every resource object named on this page has the representation defined by the [HTTP API](/http-api/). A Dispatch payload with a resource object has the same fields, with the guild-scoped events adding `guild_id` and the message and reaction events adding `member`.
 
-The reductions below are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and moves those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
-
-Every Dispatch payload also drops the fields the Gateway keeps for its own indexing: `recipient_ids`, `role_index`, `channel_index`, `member_role_index`, `role_perms_cache`, and `overwrite_perms_cache`.
+These reductions are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and moves those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.

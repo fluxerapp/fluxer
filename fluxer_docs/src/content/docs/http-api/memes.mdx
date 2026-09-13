@@ -6,7 +6,7 @@ description: Saved favourite media and batch GIF URL resolution.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A meme is an image, video, or audio asset the current account has saved as a favourite. Every meme is a durable Fluxer copy held as an account-owned attachment, so it keeps working after the URL or message it came from disappears.
+A meme is an image, video, or audio asset saved as a favourite. Its copy remains available after the source URL or message disappears.
 
 The routes here are user-only and operate on the caller's own collection. Fluxer rejects a bot token with 403 `ACCESS_DENIED`. [Create message](/http-api/messages/#create-message) sends a stored meme through its `favorite_meme_id` field, and the [GIF provider API](/http-api/gifs/) searches the configured provider for a GIF to save.
 
@@ -203,9 +203,9 @@ Fetches an absolute media URL, stores a durable Fluxer copy, and returns the cre
 
 <sup>4</sup> Stored only when the request resolved to a provider GIF and the map is non-empty, and discarded otherwise
 
-The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot. It then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. Where the segment normalises to nothing, or to only dots and underscores, the filename is `unnamed`. The extension is `bin` when the content type maps to none.
+The filename is derived from the URL and media type. Use the returned `filename` rather than constructing one.
 
-Fluxer fetches the asset and resolves its metadata before it stores anything. A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. When the request resolves to a provider GIF, the provider's canonical share URL is unfurled and the video content hash it reports replaces the fetched hash for [deduplication](#deduplication).
+A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. Saving media already in the collection fails as described under [Deduplication](#deduplication).
 
 ### Response
 
@@ -221,8 +221,6 @@ Fluxer fetches the asset and resolves its metadata before it stores anything. A 
 <sup>5</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path and `MEDIA_ALREADY_IN_FAVORITE_MEMES` at the `media` path
 
 ### Side effects
-
-The meme is created against a new attachment of its own holding the fetched bytes.
 
 The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-create) with the created object to the caller's own sessions.
 
@@ -265,7 +263,7 @@ When neither key selects anything, Fluxer takes the message's first attachment. 
 
 Only an `image/*`, `video/*`, or `audio/*` asset can be saved. `attachment_id` is matched only when the message or one of its snapshots has at least one attachment. An ID matching none of them fails with `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE` at the `attachment_id` path. When the message has no attachment at all, Fluxer ignores the ID and takes the first usable embed. Only the selected attachment is tried, so a message whose chosen attachment has an unsupported type falls through to its embeds. A selection that resolves to no supported media fails with `NO_VALID_MEDIA_IN_MESSAGE` at the `media` path.
 
-An embed selection uses the embed's image, video, or thumbnail, in that order. When the URL is one the instance's own media endpoint serves, Fluxer copies the asset without a fetch. Any other URL is fetched over the network, and a fetch that resolves no metadata fails with 400 `MEDIA_METADATA_ERROR`.
+An embed selection uses its image, video, or thumbnail, in that order. Media whose metadata cannot be resolved fails with 400 `MEDIA_METADATA_ERROR`.
 
 ### Response
 
@@ -290,7 +288,7 @@ A guild caller that can view the channel but lacks `READ_MESSAGE_HISTORY` receiv
 
 ### Side effects
 
-Fluxer copies the selected asset into the account's own attachment space under a new attachment ID and creates the meme record against that attachment. Reading the source message renews its attachment decay deadline when attachment decay is enabled. The source message, its attachments, and its embeds are untouched.
+The meme gets its own copy of the selected asset. Reading the source message renews its attachment decay deadline when attachment decay is enabled. Its content is otherwise unchanged.
 
 The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-create) with the created object to the caller's own sessions.
 
@@ -401,7 +399,7 @@ Every meme owns its stored bytes, so deletion removes them permanently. The meme
 
 ### Side effects
 
-The operation removes the meme record and permanently deletes its stored copy. A storage failure is logged and does not fail the request, so the record is removed either way.
+The meme is removed from the collection even if its stored copy cannot be deleted.
 
 It emits one [Favorite Meme Delete](/gateway/events/#favorite-meme-delete) with `meme_id` to the caller's own sessions. A request naming a meme the account does not own emits nothing.
 
@@ -441,7 +439,7 @@ Fluxer derives a two-letter country from the requesting address by geolocation, 
 
 <sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result by position against its request
 
-Fluxer resolves a URL in stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. When a stage fails, Fluxer downgrades that URL's entry alone. A URL that none of the stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
+An unresolved URL still returns an entry with its signed proxy URL and an empty `media` map. Unavailable dimensions are zero and an unknown `content_type` is the empty string. One URL's failure does not fail the batch.
 
 ### Response
 
