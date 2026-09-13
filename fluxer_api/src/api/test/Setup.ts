@@ -64,7 +64,6 @@ function setDefaultTestEnv(): void {
 		FLUXER_MEDIA_PROXY_SECRET_KEY: 'test-media-secret',
 		FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 		FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
-		FLUXER_MARKETING_SECRET_KEY_BASE: 'test-marketing-secret',
 		FLUXER_APP_PROXY_PORT: '8773',
 		FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 		FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-rpc-token',

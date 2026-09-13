@@ -149,12 +149,6 @@ function defaultConfig(): MasterConfig {
 				secret_key_base: '',
 				oauth_client_secret: '',
 			},
-			marketing: {
-				port: 3010,
-				host: '0.0.0.0',
-				base_path: '/marketing',
-				secret_key_base: '',
-			},
 			app_proxy: {
 				port: 8773,
 				assets_dir: 'fluxer_app/dist',
@@ -486,9 +480,6 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateUploadRelaySecret(config.services.media_proxy.upload_relay.secret_base64, config.services.media_proxy.mode);
 	requireString(config.services.admin.secret_key_base, 'FLUXER_ADMIN_SECRET_KEY_BASE');
 	requireString(config.services.admin.oauth_client_secret, 'FLUXER_ADMIN_OAUTH_CLIENT_SECRET');
-	if (!config.instance.self_hosted) {
-		requireString(config.services.marketing.secret_key_base, 'FLUXER_MARKETING_SECRET_KEY_BASE');
-	}
 	requireString(config.services.gateway.rpc_auth_token, 'FLUXER_GATEWAY_RPC_AUTH_TOKEN');
 	return config;
 }

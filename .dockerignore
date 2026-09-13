@@ -9,7 +9,6 @@
 **/.git/**
 /.github/
 /.pnpm-store/
-/fluxer_marketing
 
 **/.env
 **/.env.*.local

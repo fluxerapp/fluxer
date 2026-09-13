@@ -522,10 +522,6 @@ fn validate_component(component: &str) -> Result<()> {
         }),
         "Invalid release component {component:?}: expected lowercase letters, digits, and single hyphen separators"
     );
-    ensure!(
-        component != "fluxer-marketing" && component != "marketing",
-        "Marketing must not publish a public GitHub Release"
-    );
     Ok(())
 }
 

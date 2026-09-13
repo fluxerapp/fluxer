@@ -22,7 +22,6 @@ const MINIMAL_ENV: Record<string, string> = {
 	FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 	FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 	FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
-	FLUXER_MARKETING_SECRET_KEY_BASE: 'test-marketing-secret',
 	FLUXER_APP_PROXY_PORT: '8773',
 	FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 	FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-token',
@@ -404,23 +403,6 @@ describe('ConfigLoader', () => {
 
 		expect(config.instance.self_hosted).toBe(true);
 		expect(config.database.postgres.ssl).toBe(false);
-	});
-
-	test('does not require a marketing secret for self-hosted instances', async () => {
-		stubMinimalEnv({FLUXER_SELF_HOSTED: 'true'});
-		vi.stubEnv('FLUXER_MARKETING_SECRET_KEY_BASE', undefined);
-
-		const config = await loadConfig();
-
-		expect(config.instance.self_hosted).toBe(true);
-		expect(config.services.marketing.secret_key_base).toBe('');
-	});
-
-	test('requires a marketing secret for hosted instances', async () => {
-		stubMinimalEnv();
-		vi.stubEnv('FLUXER_MARKETING_SECRET_KEY_BASE', undefined);
-
-		await expect(loadConfig()).rejects.toThrow('FLUXER_MARKETING_SECRET_KEY_BASE');
 	});
 
 	test('still requires TLS for non-self-hosted production Postgres', async () => {

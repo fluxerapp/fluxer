@@ -155,12 +155,6 @@ export interface MasterConfig {
 			secret_key_base: string;
 			oauth_client_secret: string;
 		};
-		marketing: {
-			port: number;
-			host: string;
-			base_path: string;
-			secret_key_base: string;
-		};
 		app_proxy: {
 			port: number;
 			assets_dir: string;
