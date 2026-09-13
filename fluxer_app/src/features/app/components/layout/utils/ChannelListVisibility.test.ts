@@ -123,26 +123,32 @@ describe('shouldShowChannelInCollapsedCategory', () => {
 	it('keeps visible unread channels reachable in collapsed categories', () => {
 		expect(
 			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: false,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: true,
+				hasMentions: false,
 			}),
 		).toBe(true);
 	});
 
-	it('keeps selected and connected channels visible without unread state', () => {
+	it('keeps selected and connected channels visible without unread state, even in muted categories', () => {
 		expect(
 			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
 				isSelected: true,
 				isConnected: false,
 				hasVisibleUnread: false,
+				hasMentions: false,
 			}),
 		).toBe(true);
 		expect(
 			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
 				isSelected: false,
 				isConnected: true,
 				hasVisibleUnread: false,
+				hasMentions: false,
 			}),
 		).toBe(true);
 	});
@@ -150,10 +156,36 @@ describe('shouldShowChannelInCollapsedCategory', () => {
 	it('hides read channels in collapsed categories', () => {
 		expect(
 			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: false,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: false,
+				hasMentions: false,
 			}),
 		).toBe(false);
+	});
+
+	it('hides unread channels without mentions in muted collapsed categories', () => {
+		expect(
+			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: true,
+				hasMentions: false,
+			}),
+		).toBe(false);
+	});
+
+	it('keeps mentioned channels reachable in muted collapsed categories', () => {
+		expect(
+			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: true,
+				hasMentions: true,
+			}),
+		).toBe(true);
 	});
 });
