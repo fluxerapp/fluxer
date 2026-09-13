@@ -51,7 +51,6 @@ export class AttachmentDecayService {
 
 	async upsertMany(payloads: Array<AttachmentDecayPayload>): Promise<void> {
 		const config = await this.resolveConfig();
-		if (!config.enabled) return;
 		const rules = buildDecayRules(config);
 		for (const payload of payloads) {
 			const decay = computeDecay({sizeBytes: payload.sizeBytes, uploadedAt: payload.uploadedAt, rules});
@@ -80,7 +79,6 @@ export class AttachmentDecayService {
 	async extendForAttachments(attachments: Array<AttachmentDecayPayload>): Promise<void> {
 		if (attachments.length === 0) return;
 		const config = await this.resolveConfig();
-		if (!config.enabled) return;
 		const rules = buildDecayRules(config);
 		const attachmentIds = attachments.map((a) => a.attachmentId);
 		const existingRecords = await this.repo.fetchByIds(attachmentIds);

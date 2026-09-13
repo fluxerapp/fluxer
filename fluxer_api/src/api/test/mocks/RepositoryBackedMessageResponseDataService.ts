@@ -29,7 +29,7 @@ import {
 	MessageResponseDataService,
 	messageResponseAccessForChannel,
 } from '../../channel/services/message/MessageResponseDataService';
-import {getChannelRepository, getUserRepository} from '../../middleware/ServiceSingletons';
+import {getChannelRepository, getInstanceConfigRepository, getUserRepository} from '../../middleware/ServiceSingletons';
 import type {Attachment} from '../../models/Attachment';
 import type {CallInfo} from '../../models/CallInfo';
 import type {Embed} from '../../models/Embed';
@@ -352,19 +352,22 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		message: Message,
 	): Promise<Array<MessageAttachmentResponse> | null> {
 		if (attachments.length === 0) return null;
-		await this.attachmentDecayService.extendForAttachments(
-			attachments.map((attachment) => ({
-				attachmentId: attachment.id,
-				channelId: message.channelId,
-				messageId: message.id,
-				filename: attachment.filename,
-				sizeBytes: attachment.size,
-				uploadedAt: snowflakeToDate(message.id),
-			})),
-		);
+		const attachmentDecayEnabled = await getInstanceConfigRepository().isAttachmentDecayEnabled();
+		if (attachmentDecayEnabled) {
+			await this.attachmentDecayService.extendForAttachments(
+				attachments.map((attachment) => ({
+					attachmentId: attachment.id,
+					channelId: message.channelId,
+					messageId: message.id,
+					filename: attachment.filename,
+					sizeBytes: attachment.size,
+					uploadedAt: snowflakeToDate(message.id),
+				})),
+			);
+		}
 		return Promise.all(
 			attachments.map(async (attachment) => {
-				const decay = await this.attachmentDecayRepository.fetchById(attachment.id);
+				const decay = attachmentDecayEnabled ? await this.attachmentDecayRepository.fetchById(attachment.id) : null;
 				const url = this.mapAttachmentUrl(message, attachment);
 				return {
 					id: attachment.id.toString(),
