@@ -316,7 +316,7 @@ Update semantics belong to the [user settings update object](/http-api/users/set
 
 <sup>5</sup> Duplicate identifiers are removed and the array is returned in ascending identifier order
 
-<sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 262144 bytes, the 256 KiB ceiling
+<sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 524288 bytes, the 512 KiB ceiling
 
 <sup>7</sup> The field is read-only here and is changed by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing)
 

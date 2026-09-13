@@ -254,7 +254,7 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 
 <sup>12</sup> The field is staff-only
 
-<sup>13</sup> The value runs to at most 349528 characters of base64 and decodes to at most 262144 bytes, the 256 KiB ceiling. A longer string fails at the boundary, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
+<sup>13</sup> The value runs to at most 699052 characters of base64 and decodes to at most 524288 bytes, the 512 KiB ceiling. A longer string fails at the boundary, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
 
 Fluxer decodes an accepted `synced_preferences` value, re-encodes it canonically, and stores the result, so a snapshot with only zero values is stored as cleared and read back as the empty string.
 

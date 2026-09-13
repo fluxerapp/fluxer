@@ -30,9 +30,9 @@ Fluxer reports every entry in the resulting `errors` array against the path `syn
 
 | Condition | Status and code | Element codes |
 | --- | --- | --- |
-| Encoded string longer than 349528 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
+| Encoded string longer than 699052 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
 | Encoded string outside the base64 alphabet | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
-| Decoded message above 262144 bytes | 400 `INVALID_FORM_BODY` | `TOO_LARGE` |
+| Decoded message above 524288 bytes | 400 `INVALID_FORM_BODY` | `TOO_LARGE` |
 | Bytes that do not decode as `SyncedPreferences` | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
 
 An over-length string draws two entries for the one path.
