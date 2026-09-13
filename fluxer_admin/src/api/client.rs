@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::GeneratedClient;
 use crate::{config::AdminConfig, session::Session};
+use progenitor_client::ClientInfo;
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderName, HeaderValue};
 use reqwest::{Method, RequestBuilder};
 use serde::Serialize;
@@ -34,46 +36,39 @@ impl<T> ApiResultExt<T> for ApiResult<T> {
 }
 
 pub struct AdminApiClient {
-    http_client: reqwest::Client,
-    generated: crate::api::generated::GeneratedClient,
-    base_url: String,
-    access_token: String,
-    proxy_client_ip_headers: HeaderMap,
+    generated: GeneratedClient,
 }
 
 impl AdminApiClient {
     pub fn new(http_client: &reqwest::Client, config: &AdminConfig, session: &Session) -> Self {
-        let generated_http_client = build_generated_http_client(config, session);
-        let generated = crate::api::generated::GeneratedClient::new_with_client(
+        let generated = GeneratedClient::new_with_client(
             &config.api_endpoint,
-            generated_http_client,
+            http_client.clone(),
+            build_session_headers(config, session),
         );
-        Self {
-            http_client: http_client.clone(),
-            generated,
-            base_url: config.api_endpoint.clone(),
-            access_token: session.access_token.clone(),
-            proxy_client_ip_headers: build_proxy_client_ip_headers(config),
-        }
+        Self { generated }
     }
 
     fn build_url(&self, path: &str, query_params: Option<&[(&str, &str)]>) -> String {
-        let base = format!("{}{}", self.base_url, path);
-        match query_params {
-            None => base,
-            Some(params) => {
-                let filtered: Vec<_> = params.iter().filter(|(_, v)| !v.is_empty()).collect();
-                if filtered.is_empty() {
-                    return base;
-                }
-                let query = filtered
-                    .iter()
-                    .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
-                    .collect::<Vec<_>>()
-                    .join("&");
-                format!("{base}?{query}")
-            }
+        let mut url = format!("{}{}", self.generated.baseurl(), path);
+        let query = query_params
+            .unwrap_or_default()
+            .iter()
+            .filter(|(_, value)| !value.is_empty())
+            .map(|(key, value)| {
+                format!(
+                    "{}={}",
+                    urlencoding::encode(key),
+                    urlencoding::encode(value)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("&");
+        if !query.is_empty() {
+            url.push('?');
+            url.push_str(&query);
         }
+        url
     }
 
     fn request(
@@ -81,30 +76,26 @@ impl AdminApiClient {
         method: Method,
         path: &str,
         query_params: Option<&[(&str, &str)]>,
-    ) -> RequestBuilder {
-        let url = self.build_url(path, query_params);
-        self.http_client
-            .request(method, &url)
-            .header("Authorization", format!("Bearer {}", self.access_token))
-            .header("Content-Type", "application/json")
-            .headers(self.proxy_client_ip_headers.clone())
-    }
-
-    fn with_audit_log_reason(
-        builder: RequestBuilder,
         audit_log_reason: Option<&str>,
-    ) -> RequestBuilder {
-        match audit_log_reason {
-            Some(reason) => builder.header("X-Audit-Log-Reason", reason),
-            None => builder,
-        }
+    ) -> ApiResult<RequestBuilder> {
+        let url = self.build_url(path, query_params);
+        Ok(self
+            .generated
+            .client()
+            .request(method, &url)
+            .header("Content-Type", "application/json")
+            .headers(self.headers_with_reason(audit_log_reason)?))
     }
 
-    fn with_json_body(builder: RequestBuilder, body: Option<&serde_json::Value>) -> RequestBuilder {
-        match body {
-            Some(body) => builder.json(body),
-            None => builder,
+    fn headers_with_reason(&self, audit_log_reason: Option<&str>) -> ApiResult<HeaderMap> {
+        let mut headers = self.generated.inner().clone();
+        if let Some(reason) = audit_log_reason {
+            let mut value = HeaderValue::from_str(reason)
+                .map_err(|_| ApiError::Parse("invalid audit log reason header".to_owned()))?;
+            value.set_sensitive(true);
+            headers.insert("x-audit-log-reason", value);
         }
+        Ok(headers)
     }
 
     async fn send_request(builder: RequestBuilder) -> ApiResult<reqwest::Response> {
@@ -114,12 +105,28 @@ impl AdminApiClient {
             .map_err(|e| ApiError::Network(e.to_string()))
     }
 
+    async fn send_json<B: Serialize + ?Sized>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&B>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<reqwest::Response> {
+        let builder = self.request(method, path, None, audit_log_reason)?;
+        let builder = match body {
+            Some(body) => builder.json(body),
+            None => builder,
+        };
+        Self::send_request(builder).await
+    }
+
     pub async fn get<T: DeserializeOwned>(
         &self,
         path: &str,
         query_params: Option<&[(&str, &str)]>,
     ) -> ApiResult<T> {
-        let response = Self::send_request(self.request(Method::GET, path, query_params)).await?;
+        let response =
+            Self::send_request(self.request(Method::GET, path, query_params, None)?).await?;
         Self::parse_response(response).await
     }
 
@@ -149,9 +156,9 @@ impl AdminApiClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
-        let response = Self::send_request(builder.json(body)).await?;
+        let response = self
+            .send_json(Method::POST, path, Some(body), audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -161,9 +168,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::POST, path, body, audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -177,9 +184,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::POST, path, body, audit_log_reason)
+            .await?;
         Self::parse_void_response(response).await
     }
 
@@ -197,9 +204,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::PATCH, path, body, audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -213,9 +220,9 @@ impl AdminApiClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
-        let response = Self::send_request(builder.json(body)).await?;
+        let response = self
+            .send_json(Method::PATCH, path, Some(body), audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -225,9 +232,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::PUT, path, body, audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -241,9 +248,9 @@ impl AdminApiClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
-        let response = Self::send_request(builder.json(body)).await?;
+        let response = self
+            .send_json(Method::PUT, path, Some(body), audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -253,9 +260,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::PUT, path, body, audit_log_reason)
+            .await?;
         Self::parse_void_response(response).await
     }
 
@@ -269,9 +276,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::DELETE, path, body, audit_log_reason)
+            .await?;
         Self::parse_void_response(response).await
     }
 
@@ -281,9 +288,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::DELETE, path, body, audit_log_reason)
+            .await?;
         Self::parse_response(response).await
     }
 
@@ -302,8 +309,19 @@ impl AdminApiClient {
         Err(ApiError::Http { status, message })
     }
 
-    pub(crate) fn generated(&self) -> &crate::api::generated::GeneratedClient {
+    pub(crate) fn generated(&self) -> &GeneratedClient {
         &self.generated
+    }
+
+    pub(crate) fn generated_with_reason(
+        &self,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<GeneratedClient> {
+        Ok(GeneratedClient::new_with_client(
+            self.generated.baseurl(),
+            self.generated.client().clone(),
+            self.headers_with_reason(audit_log_reason)?,
+        ))
     }
 
     pub(crate) fn generated_value<T, U>(&self, value: U) -> ApiResult<T>
@@ -346,17 +364,14 @@ impl AdminApiClient {
     }
 }
 
-fn build_generated_http_client(config: &AdminConfig, session: &Session) -> reqwest::Client {
+fn build_session_headers(config: &AdminConfig, session: &Session) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    let auth_value = HeaderValue::from_str(&format!("Bearer {}", session.access_token))
+    let mut auth_value = HeaderValue::from_str(&format!("Bearer {}", session.access_token))
         .expect("failed to build generated API Authorization header");
+    auth_value.set_sensitive(true);
     headers.insert(AUTHORIZATION, auth_value);
     headers.extend(build_proxy_client_ip_headers(config));
-    reqwest::Client::builder()
-        .user_agent(format!("FluxerAdmin/{} (Rust)", config.build_version))
-        .default_headers(headers)
-        .build()
-        .expect("failed to create generated API HTTP client")
+    headers
 }
 
 pub(crate) fn with_proxy_client_ip_header(

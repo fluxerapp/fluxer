@@ -45,8 +45,8 @@ fn ncmec_badge(att: &Attachment) -> Markup {
 }
 
 fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
-    let images: Vec<&Attachment> = msg.attachments.iter().filter(|a| is_image(a)).collect();
-    if images.is_empty() {
+    let mut images = msg.attachments.iter().filter(|a| is_image(a)).peekable();
+    if images.peek().is_none() {
         return html! {};
     }
     let spacer = if !msg.content.is_empty() {
@@ -56,7 +56,7 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
     };
     html! {
         div class=(spacer) {
-            @for att in &images {
+            @for att in images {
                 div class="max-w-xl overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50" {
                     a href=(att.url) target="_blank" rel="noopener noreferrer"
                       class="block overflow-hidden bg-neutral-100" {
@@ -116,8 +116,8 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
 }
 
 fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Markup {
-    let others: Vec<&Attachment> = msg.attachments.iter().filter(|a| !is_image(a)).collect();
-    if others.is_empty() {
+    let mut others = msg.attachments.iter().filter(|a| !is_image(a)).peekable();
+    if others.peek().is_none() {
         return html! {};
     }
     let spacer = if has_content_or_images {
@@ -127,7 +127,7 @@ fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Marku
     };
     html! {
         div class=(spacer) {
-            @for att in &others {
+            @for att in others {
                 div class="flex flex-wrap items-center gap-2 text-xs" {
                     (paperclip_icon("text-neutral-400"))
                     a href=(att.url) target="_blank" rel="noopener noreferrer"

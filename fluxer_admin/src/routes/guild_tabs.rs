@@ -43,7 +43,7 @@ pub async fn render(
             let page = query.members_page.unwrap_or(0);
             let limit: u32 = 50;
             let resp = client
-                .list_guild_members(guild_id, limit, page * limit)
+                .list_guild_members(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild members")?;
             Some(tabs::members::members_tab(
@@ -57,7 +57,7 @@ pub async fn render(
             let page = query.reports_page.unwrap_or(0);
             let limit: u32 = 25;
             let resp = client
-                .search_reports_by_guild(guild_id, limit, page * limit)
+                .search_reports_by_guild(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild reports")?;
             Some(tabs::reports::reports_tab(

@@ -26,7 +26,7 @@ use axum::{
 };
 use serde::Deserialize;
 
-const MAX_REPORT_OFFSET: u32 = 10_000;
+const MAX_REPORT_OFFSET: u64 = 10_000;
 
 #[derive(Deserialize)]
 struct ReportsQuery {
@@ -75,7 +75,7 @@ async fn reports_list(
     let config = state.config();
     let page = query.page.unwrap_or(0);
     let limit = query.limit.unwrap_or(25).clamp(1, 200);
-    let offset = page.saturating_mul(limit);
+    let offset = u64::from(page) * u64::from(limit);
     if offset > MAX_REPORT_OFFSET {
         return reports_error_page(
             config,

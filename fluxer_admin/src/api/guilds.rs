@@ -16,7 +16,7 @@ impl AdminApiClient {
         &self,
         query: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchGuildsResponse> {
         let limit = limit.to_string();
         let offset = offset.to_string();
@@ -97,7 +97,7 @@ impl AdminApiClient {
         &self,
         guild_id: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<ListGuildMembersResponse> {
         let limit = limit.to_string();
         let offset = offset.to_string();
@@ -252,7 +252,7 @@ impl AdminApiClient {
         &self,
         guild_id: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchReportsResponse> {
         self.search_reports(&SearchReportsParams {
             reported_guild_id: Some(guild_id),

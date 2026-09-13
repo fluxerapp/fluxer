@@ -12,8 +12,6 @@ const RESOURCE_LINK_CLASS: &str = "text-neutral-900 underline decoration-neutral
                       hover:text-neutral-600 hover:decoration-neutral-500 text-sm";
 const NAV_LINK_CLASS: &str = "label rounded-lg border border-neutral-300 bg-white \
                       px-3 py-2 text-neutral-700 transition-colors hover:bg-neutral-50";
-const TEXT_LINK_CLASS: &str = "text-neutral-900 underline decoration-neutral-300 \
-         hover:text-neutral-600 hover:decoration-neutral-500";
 
 impl ResourceType {
     fn path_segment(self) -> &'static str {
@@ -89,20 +87,5 @@ pub fn resource_link_peek(
 pub fn nav_link(href: &str, content: Markup) -> Markup {
     html! {
         a href=(href) class=(NAV_LINK_CLASS) { (content) }
-    }
-}
-
-pub fn text_link(href: &str, content: Markup, external: bool, _mono: bool) -> Markup {
-    if external {
-        html! {
-            a href=(href) class=(TEXT_LINK_CLASS)
-              target="_blank" rel="noopener noreferrer" {
-                (content)
-            }
-        }
-    } else {
-        html! {
-            a href=(href) class=(TEXT_LINK_CLASS) { (content) }
-        }
     }
 }

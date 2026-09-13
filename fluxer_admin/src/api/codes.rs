@@ -9,7 +9,7 @@ impl AdminApiClient {
     pub async fn generate_gift_codes(
         &self,
         count: u32,
-        duration_type: &str,
+        duration_type: generated_types::GiftCodeDurationTypeSchema,
         duration_quantity: u32,
     ) -> ApiResult<CodesResponse> {
         let body = generated_types::GenerateGiftCodesRequest {
@@ -22,8 +22,7 @@ impl AdminApiClient {
             )
             .map_err(ApiError::Parse)?
             .into(),
-            duration_type: generated_types::GiftCodeDurationTypeSchema::try_from(duration_type)
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
+            duration_type,
         };
         let response = self
             .generated()

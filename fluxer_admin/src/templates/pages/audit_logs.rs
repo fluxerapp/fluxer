@@ -72,27 +72,22 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
 }
 
 fn build_pagination_url(base: &str, page: u32, params: &AuditLogsParams<'_>) -> String {
-    let mut url = format!("{base}/audit-logs?page={page}");
-    if !params.query.is_empty() {
-        url.push_str(&format!("&q={}", params.query));
-    }
-    if !params.admin_user_id.is_empty() {
-        url.push_str(&format!("&admin_user_id={}", params.admin_user_id));
-    }
-    if !params.target_id.is_empty() {
-        url.push_str(&format!("&target_id={}", params.target_id));
-    }
-    if !params.target_type.is_empty() {
-        url.push_str(&format!("&target_type={}", params.target_type));
-    }
-    if !params.sort_by.is_empty() {
-        url.push_str(&format!("&sort_by={}", params.sort_by));
-    }
-    if !params.sort_order.is_empty() {
-        url.push_str(&format!("&sort_order={}", params.sort_order));
-    }
-    url.push_str(&format!("&limit={}", params.limit));
-    url
+    let mut query = url::form_urlencoded::Serializer::new(String::new());
+    query.append_pair("page", &page.to_string());
+    query.extend_pairs(
+        [
+            ("q", params.query),
+            ("admin_user_id", params.admin_user_id),
+            ("target_id", params.target_id),
+            ("target_type", params.target_type),
+            ("sort_by", params.sort_by),
+            ("sort_order", params.sort_order),
+        ]
+        .into_iter()
+        .filter(|(_, value)| !value.is_empty()),
+    );
+    query.append_pair("limit", &params.limit.to_string());
+    format!("{base}/audit-logs?{}", query.finish())
 }
 
 pub fn audit_logs_page(
@@ -107,10 +102,15 @@ pub fn audit_logs_page(
             let total = data.total;
             let entries = &data.logs;
             let total_pages = if params.limit > 0 {
-                ((total as f64) / (params.limit as f64)).ceil().max(1.0) as u64
+                total.div_ceil(u64::from(params.limit)).max(1)
             } else {
                 1
             };
+            let page_number = u64::from(params.current_page) + 1;
+            let next_page = params
+                .current_page
+                .checked_add(1)
+                .filter(|page| u64::from(*page) < total_pages);
             let showing = format!("Showing {} of {} entries", entries.len(), total);
             html! {
                 (page_header_with_actions("Audit Logs", None, html! {
@@ -134,10 +134,10 @@ pub fn audit_logs_page(
                             }
                         } @else { span {} }
                         span class="text-sm text-neutral-500" {
-                            "Page " (params.current_page + 1) " of " (total_pages)
+                            "Page " (page_number) " of " (total_pages)
                         }
-                        @if (params.current_page + 1) < total_pages as u32 {
-                            a href=(build_pagination_url(base, params.current_page + 1, params))
+                        @if let Some(page) = next_page {
+                            a href=(build_pagination_url(base, page, params))
                                 class="text-sm text-neutral-900 underline" {
                                 (PreEscaped("Next &rarr;"))
                             }

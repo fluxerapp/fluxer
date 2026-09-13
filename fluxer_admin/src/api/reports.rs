@@ -22,7 +22,7 @@ pub struct SearchReportsParams<'a> {
     pub sort_by: Option<&'a str>,
     pub sort_order: Option<&'a str>,
     pub limit: u32,
-    pub offset: u32,
+    pub offset: u64,
 }
 
 impl AdminApiClient {
@@ -129,7 +129,7 @@ impl AdminApiClient {
         &self,
         reporter_id: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchReportsResponse> {
         self.search_reports(&SearchReportsParams {
             reporter_id: Some(reporter_id),
@@ -144,7 +144,7 @@ impl AdminApiClient {
         &self,
         reported_user_id: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchReportsResponse> {
         self.search_reports(&SearchReportsParams {
             reported_user_id: Some(reported_user_id),

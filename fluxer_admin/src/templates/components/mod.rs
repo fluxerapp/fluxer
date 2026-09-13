@@ -17,7 +17,6 @@ pub mod message_data;
 pub mod message_list;
 pub mod nsfw_indicators;
 pub mod page_container;
-pub mod pagination;
 pub mod resource_link;
 pub mod section_card;
 pub mod stack;

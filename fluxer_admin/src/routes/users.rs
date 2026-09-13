@@ -93,7 +93,7 @@ async fn users_list(
             .log_error("lookup users by ids")
             .map(|users| (users, false))
     } else if params.has_search() {
-        let offset = params.page.saturating_mul(params.limit);
+        let offset = u64::from(params.page) * u64::from(params.limit);
         client
             .search_users(
                 params.search_query(),
@@ -105,7 +105,7 @@ async fn users_list(
             .await
             .log_error("search users")
             .map(|r| {
-                let has_more = u64::from(offset) + (r.users.len() as u64) < r.total;
+                let has_more = (r.users.len() as u64) < r.total.saturating_sub(offset);
                 (r.users, has_more)
             })
     } else {

@@ -13,7 +13,7 @@ pub struct SearchAuditLogsParams {
     pub sort_by: Option<String>,
     pub sort_order: Option<String>,
     pub limit: u32,
-    pub offset: u32,
+    pub offset: u64,
 }
 
 impl AdminApiClient {

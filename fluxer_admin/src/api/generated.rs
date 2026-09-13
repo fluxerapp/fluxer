@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use progenitor_client::{ClientHooks, ClientInfo, Error, OperationInfo};
+use reqwest::header::HeaderMap;
+
 #[allow(
     clippy::all,
     unused_imports,
@@ -15,6 +18,20 @@ mod inner {
 pub use inner::types;
 
 pub use inner::Client as GeneratedClient;
+
+impl ClientHooks<HeaderMap> for GeneratedClient {
+    async fn pre<E>(
+        &self,
+        request: &mut reqwest::Request,
+        _info: &OperationInfo,
+    ) -> Result<(), Error<E>> {
+        let headers = request.headers_mut();
+        for (name, value) in self.inner() {
+            headers.entry(name.clone()).or_insert_with(|| value.clone());
+        }
+        Ok(())
+    }
+}
 
 pub(crate) fn snowflake(value: &str) -> types::SnowflakeType {
     types::SnowflakeType::Variant0(value.to_owned())

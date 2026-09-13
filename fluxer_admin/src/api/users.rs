@@ -15,7 +15,7 @@ impl AdminApiClient {
         email: Option<&str>,
         last_active_ip: Option<&str>,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchUsersResponse> {
         let limit = limit.to_string();
         let offset = offset.to_string();
@@ -35,7 +35,8 @@ impl AdminApiClient {
         let response = response.into_inner();
         Ok(SearchUsersResponse {
             users: self.generated_value(response.users)?,
-            total: response.total as u64,
+            total: crate::api::generated::number_to_u64(response.total, "total")
+                .map_err(ApiError::Parse)?,
         })
     }
 
@@ -426,6 +427,7 @@ impl AdminApiClient {
         reason_code: i32,
         public_reason: Option<&str>,
         days_until_deletion: u32,
+        audit_log_reason: Option<&str>,
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserDeletionScheduleRequest {
             days_until_deletion: crate::api::generated::nonzero_u32(
@@ -439,10 +441,10 @@ impl AdminApiClient {
                 .map_err(ApiError::Parse)?,
         };
         let response = self
-            .generated()
+            .generated_with_reason(audit_log_reason)?
             .schedule_admin_user_deletion(&snowflake(user_id), &body)
             .await
-            .map_err(|e| self.generated_error(e))?;
+            .map_err(|error| self.generated_error(error))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
         Ok(resp.user)
     }

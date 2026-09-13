@@ -25,7 +25,9 @@ pub fn members_tab(
     let total = response.total;
     let total_pages = if limit > 0 { total.div_ceil(limit) } else { 1 };
     let has_previous = page > 0;
-    let has_next = (page as u64) < total_pages.saturating_sub(1);
+    let next_page = page
+        .checked_add(1)
+        .filter(|page| u64::from(*page) < total_pages);
 
     html! {
         div class="space-y-4" {
@@ -34,12 +36,16 @@ pub fn members_tab(
                     "Guild Members (" (total) ")"
                 }
                 p class="text-sm text-neutral-500" {
-                    @let start = response.offset + 1;
-                    @let end = std::cmp::min(
-                        response.offset + response.members.len() as u64,
-                        total,
-                    );
-                    "Showing " (start) "-" (end) " of " (total)
+                    @if response.members.is_empty() {
+                        "Showing 0 of " (total)
+                    } @else {
+                        @let start = u128::from(response.offset) + 1;
+                        @let end = std::cmp::min(
+                            u128::from(response.offset) + response.members.len() as u128,
+                            u128::from(total),
+                        );
+                        "Showing " (start) "-" (end) " of " (total)
+                    }
                 }
             }
 
@@ -70,10 +76,10 @@ pub fn members_tab(
                         }
                     }
                     p class="text-sm text-neutral-500" {
-                        "Page " (page + 1) " of " (total_pages)
+                        "Page " (u64::from(page) + 1) " of " (total_pages)
                     }
-                    @if has_next {
-                        a href={(base) "/guilds/" (guild.id) "?tab=members&page=" (page + 1)}
+                    @if let Some(next_page) = next_page {
+                        a href={(base) "/guilds/" (guild.id) "?tab=members&page=" (next_page)}
                             class="inline-flex items-center rounded-md bg-brand-primary px-3 \
                                    py-2 text-sm font-medium text-white hover:bg-brand-primary-dark" {
                             "Next \u{2192}"

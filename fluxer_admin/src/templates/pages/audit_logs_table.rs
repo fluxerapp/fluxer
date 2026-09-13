@@ -14,12 +14,7 @@ use crate::{
 use maud::{Markup, html};
 
 pub fn format_action(action: &str) -> String {
-    let replaced = action.replace('_', " ");
-    let mut chars = replaced.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(c) => c.to_uppercase().to_string() + chars.as_str(),
-    }
+    capitalise(&action.replace('_', " "))
 }
 
 pub fn action_badge_variant(action: &str) -> BadgeVariant {
@@ -92,10 +87,8 @@ pub fn admin_user_cell(base: &str, entry: &AuditLogEntry) -> Markup {
     }
 }
 
-fn target_guild_label(guild: Option<&AuditLogGuildSummary>) -> String {
-    guild
-        .map(|guild| guild.name.clone())
-        .unwrap_or_else(|| "Guild".to_owned())
+fn target_guild_label(guild: Option<&AuditLogGuildSummary>) -> &str {
+    guild.map(|guild| guild.name.as_str()).unwrap_or("Guild")
 }
 
 pub fn target_cell(base: &str, entry: &AuditLogEntry) -> Markup {

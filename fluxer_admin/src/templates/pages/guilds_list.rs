@@ -64,7 +64,6 @@ impl GuildsListParams {
 pub struct GuildsListResults<'a> {
     pub guilds: Option<&'a [GuildInfo]>,
     pub total: Option<u64>,
-    pub has_more: bool,
 }
 
 pub fn guilds_list_page(
@@ -73,14 +72,12 @@ pub fn guilds_list_page(
     params: &GuildsListParams,
     results: Option<&[GuildInfo]>,
     total: Option<u64>,
-    has_more: bool,
     is_htmx: bool,
 ) -> Markup {
     let base = &config.base_path;
     let result_state = GuildsListResults {
         guilds: results,
         total,
-        has_more,
     };
     let has_results = results.is_some_and(|guilds| !guilds.is_empty());
     let header = html! {
@@ -164,7 +161,10 @@ fn render_results(
 fn pagination(config: &AdminConfig, params: &GuildsListParams, total: u64) -> Markup {
     let total_pages = total.div_ceil(u64::from(params.limit)).max(1);
     let has_previous = params.page > 0;
-    let has_next = u64::from(params.page) < total_pages.saturating_sub(1);
+    let next_page = params
+        .page
+        .checked_add(1)
+        .filter(|page| u64::from(*page) < total_pages);
     html! {
         div class="mt-6 flex items-center justify-center gap-3" {
             @if has_previous {
@@ -181,10 +181,10 @@ fn pagination(config: &AdminConfig, params: &GuildsListParams, total: u64) -> Ma
                 }
             }
             span class="text-neutral-600 text-sm" {
-                "Page " (params.page + 1) " of " (total_pages)
+                "Page " (u64::from(params.page) + 1) " of " (total_pages)
             }
-            @if has_next {
-                a href=(pagination_url(&config.base_path, params, params.page + 1))
+            @if let Some(next_page) = next_page {
+                a href=(pagination_url(&config.base_path, params, next_page))
                     class="rounded-lg bg-neutral-900 px-6 py-2 font-medium text-sm \
                            text-white no-underline transition-colors hover:bg-neutral-800" {
                     "Next \u{2192}"
@@ -200,8 +200,7 @@ fn pagination(config: &AdminConfig, params: &GuildsListParams, total: u64) -> Ma
 }
 
 fn pagination_url(base: &str, params: &GuildsListParams, page: u32) -> String {
-    let mut parts = Vec::new();
-    parts.push(format!("page={page}"));
+    let mut parts = vec![format!("page={page}"), format!("limit={}", params.limit)];
     if !params.q.is_empty() {
         parts.push(format!("q={}", urlencoding::encode(&params.q)));
     }

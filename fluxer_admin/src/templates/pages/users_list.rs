@@ -393,6 +393,7 @@ fn render_users_table(config: &AdminConfig, users: &[AdminUser], can_view_email:
 }
 
 fn pagination_controls(base: &str, params: &UserListParams, has_more: bool) -> Markup {
+    let next_page = params.page.checked_add(1).filter(|_| has_more);
     html! {
         div class="mt-4 flex items-center justify-between" {
             @if params.page > 0 {
@@ -403,8 +404,8 @@ fn pagination_controls(base: &str, params: &UserListParams, has_more: bool) -> M
             } @else {
                 span {}
             }
-            @if has_more {
-                a href=(users_url(base, params, params.page + 1))
+            @if let Some(next_page) = next_page {
+                a href=(users_url(base, params, next_page))
                     class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
                     "Next >"
                 }

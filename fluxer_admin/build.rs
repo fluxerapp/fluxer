@@ -41,6 +41,11 @@ fn generate_admin_api(manifest_dir: &Path, out_dir: &Path) {
 
     let mut settings = progenitor::GenerationSettings::new();
     settings.with_interface(progenitor::InterfaceStyle::Positional);
+    settings.with_inner_type(
+        "reqwest::header::HeaderMap"
+            .parse()
+            .expect("valid generated client header type"),
+    );
 
     let mut generator = progenitor::Generator::new(&settings);
     let tokens = generator
