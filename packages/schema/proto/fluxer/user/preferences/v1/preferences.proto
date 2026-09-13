@@ -49,6 +49,7 @@ message SyncedPreferences {
   KeybindSettings keybinds = 111;
   ChatInputSettings chat_input = 112;
   optional bool save_camera_uploads_to_device = 113;
+  ReactionEmoji double_tap_reaction = 114;
 
 }
 
@@ -261,4 +262,9 @@ enum MfaMethod {
 
 message ChatInputSettings {
   optional bool convert_emoticons = 1;
+}
+
+message ReactionEmoji {
+  optional string id = 1;
+  string name = 2;
 }

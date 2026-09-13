@@ -19,7 +19,10 @@ import {
 	FavoriteGifSettingsSchema,
 	SoundSettingsSchema,
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
-import {ChatInputSettingsSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
+import {
+	ChatInputSettingsSchema,
+	ReactionEmojiSchema,
+} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {describe, expect, it} from 'vitest';
 
 describe('SyncedPreferencesCodec', () => {
@@ -83,6 +86,22 @@ describe('SyncedPreferencesCodec', () => {
 		const decoded = decodeSyncedPreferences(encodeSyncedPreferences(original));
 		expect(equals(SyncedPreferencesSchema, decoded, original)).toBe(true);
 		expect(decoded.chatInput?.convertEmoticons).toBe(true);
+	});
+	it('round-trips a unicode and a custom double tap reaction', () => {
+		const unicode = create(SyncedPreferencesSchema, {
+			doubleTapReaction: create(ReactionEmojiSchema, {name: '👍'}),
+		});
+		const decodedUnicode = decodeSyncedPreferences(encodeSyncedPreferences(unicode));
+		expect(equals(SyncedPreferencesSchema, decodedUnicode, unicode)).toBe(true);
+		expect(decodedUnicode.doubleTapReaction?.id).toBeUndefined();
+		expect(decodedUnicode.doubleTapReaction?.name).toBe('👍');
+		const custom = create(SyncedPreferencesSchema, {
+			doubleTapReaction: create(ReactionEmojiSchema, {id: '123456789012345678', name: 'party'}),
+		});
+		const decodedCustom = decodeSyncedPreferences(encodeSyncedPreferences(custom));
+		expect(equals(SyncedPreferencesSchema, decodedCustom, custom)).toBe(true);
+		expect(decodedCustom.doubleTapReaction?.id).toBe('123456789012345678');
+		expect(decodedCustom.doubleTapReaction?.name).toBe('party');
 	});
 	it('produces canonical encodings for equal inputs', () => {
 		const a = create(SyncedPreferencesSchema, {

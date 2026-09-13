@@ -81,6 +81,7 @@ An over-length string draws two entries for the one path.
 | keybinds? | [keybind settings](#keybind-settings-object) object | Custom keybinds and transmit mode preferences |
 | chat_input? | [chat input settings](#chat-input-settings-object) object | Chat composer behaviour preferences |
 | save_camera_uploads_to_device?<sup>4</sup> | bool | Whether a camera upload is also written to the device |
+| double_tap_reaction? | [reaction emoji](#reaction-emoji-object) object | Emoji a double tap on a message adds as a reaction |
 
 <sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
 
@@ -850,3 +851,16 @@ The `chat_input` field controls message composer behaviour.
 | Field | Type | Description |
 | --- | --- | --- |
 | convert_emoticons? | bool | Whether emoticons are converted to emoji |
+
+## Reaction emoji object
+
+The `double_tap_reaction` field stores the emoji that a double tap on a message adds as a reaction. It has the same shape as the [reaction emoji object](/gateway/events/#reaction-emoji-object). A Unicode emoji sets only `name`, and a custom emoji sets both `id` and `name`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id?<sup>1</sup> | string | Custom emoji ID, absent for a Unicode emoji |
+| name | string | Unicode emoji, or the custom emoji's name |
+
+<sup>1</sup> The decimal form of a [snowflake](/snowflakes/). Fluxer never resolves it, so it can name a custom emoji the account can no longer use
