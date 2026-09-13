@@ -1187,17 +1187,21 @@ Default empty. The Klipy GIF provider key. GIF search reports itself unavailable
 
 Default empty. The YouTube Data API key. Also read by `unfurl`, which accepts `YOUTUBE_API_KEY` as a fallback.
 
-#### `FLUXER_BUNNY_PURGE_ENABLED`
+#### `FLUXER_CACHE_PURGE_ADAPTER`
 
-Default `false`. Bunny CDN cache purging. Needs `FLUXER_BUNNY_API_KEY` and `FLUXER_BUNNY_PULL_ZONE_ID`.
+Default `none`. How cached copies of deleted or replaced media are purged. `none` or `http`. Anything else fails startup. With `none`, nothing is queued or sent.
 
-#### `FLUXER_BUNNY_API_KEY`
+#### `FLUXER_CACHE_PURGE_HTTP_ENDPOINT`
 
-Default empty. The Bunny API key. Paired with the pull zone.
+Default empty. Required when the adapter is `http`. Must be an absolute `http` or `https` URL without credentials, or startup fails. While purges are queued, the worker posts JSON `{"exact": [...], "prefix": [...]}` here every 10 seconds. Redirects are not followed. Any 2xx marks the batch done. The endpoint purges every proxy that caches media. A `400` or `422` makes the worker resend each URL alone, and a URL refused alone moves to the `cache_purge:rejected` key. Any other failure is retried on a later run.
 
-#### `FLUXER_BUNNY_PULL_ZONE_ID`
+#### `FLUXER_CACHE_PURGE_HTTP_TOKEN`
 
-Default `0`. The Bunny pull zone. Integer.
+Default empty. The bearer token sent in the `Authorization` header of each purge request. Empty sends no header. When the adapter is `http`, a token with spaces, line breaks or non-ASCII characters fails startup.
+
+#### `FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS`
+
+Default `10000`. Purge request timeout. Accepts 1000 to 10000. The range is checked only when the adapter is `http`.
 
 #### `FLUXER_GEOIP_DB_PATH`
 
@@ -1396,18 +1400,6 @@ Default empty. An external NSFW classifier. No such service ships with the stack
 #### `FLUXER_MEDIA_PROXY_NSFW_THRESHOLD`
 
 Default `0.85`. The media-side NSFW cutoff. Accepts 0.0 to 1.0 and finite. Distinct from the API threshold.
-
-#### `FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED`
-
-Default `false`. Restricts reads to Bunny edge IPs.
-
-#### `FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES`
-
-Default empty. Extra trusted addresses for that gate. Every entry must parse as an IP or the process exits.
-
-#### `FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS`
-
-Default `3600`. How often the edge IP list refreshes. Accepts 60 to 86400.
 
 `media-proxy` range-checks these values at startup and then reads them nowhere: `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`. A bad value still fails the boot.
 
@@ -2004,7 +1996,7 @@ CORS origins are exactly the app and marketing endpoints. Serving the client fro
 | edge-config | The edge's own state | No |
 | meilisearch-data | The search index, rebuildable | No |
 
-Losing `valkey-data` can delay scheduled account and bulk-message deletions while their queues are rebuilt. Pending asset deletions and CDN purges can be lost, so do not treat this volume as disposable cache.
+Losing `valkey-data` can delay scheduled account and bulk-message deletions while their queues are rebuilt. Pending asset deletions and cache purges can be lost, so do not treat this volume as disposable cache.
 
 `nats-data` retains pending jobs in `JOBS` for up to 7 days and failed jobs in `JOBS_DLQ` for up to 30 days. A full jobs stream rejects new work. A full dead-letter stream drops its oldest entries, so investigate failures promptly. If dead-letter storage is unavailable, failed jobs remain in `JOBS` only until they expire. Losing this volume loses queued work, which is not automatically recovered from the database.
 

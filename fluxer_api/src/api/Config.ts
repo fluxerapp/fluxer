@@ -409,10 +409,13 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				: undefined,
 			legacyPrices: master.integrations.stripe.legacy_prices,
 		},
-		bunny: {
-			purgeEnabled: master.integrations.bunny.purge_enabled,
-			apiKey: master.integrations.bunny.api_key,
-			pullZoneId: master.integrations.bunny.pull_zone_id,
+		cachePurge: {
+			adapter: master.integrations.cache_purge.adapter,
+			http: {
+				endpoint: master.integrations.cache_purge.http.endpoint,
+				token: master.integrations.cache_purge.http.token,
+				timeoutMs: master.integrations.cache_purge.http.timeout_ms,
+			},
 		},
 		clamav: {
 			enabled: master.integrations.clamav.enabled,

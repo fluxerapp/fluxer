@@ -17,7 +17,7 @@ import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EmbedService} from '@app/api/infrastructure/EmbedService';
 import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';

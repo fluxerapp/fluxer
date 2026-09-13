@@ -8,10 +8,10 @@ use crate::constants;
 use crate::secret::{SecretBytes, SecretString};
 use parse::{
     EnvMap, decode_upload_relay_secret, default_native_transform_concurrency, non_empty,
-    parse_bool, parse_bucket_style, parse_f32, parse_ip_list_env, parse_mode_env,
-    parse_storage_backend, parse_u16, parse_u64, parse_usize, validate_read_endpoint,
+    parse_bool, parse_bucket_style, parse_f32, parse_mode_env, parse_storage_backend, parse_u16,
+    parse_u64, parse_usize, validate_read_endpoint,
 };
-use std::{env, net::IpAddr, path::PathBuf};
+use std::{env, path::PathBuf};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -92,9 +92,6 @@ pub struct Config {
     pub storage: StorageConfig,
     pub media: MediaServingConfig,
     pub upload_relay: UploadRelayConfig,
-    pub bunny_ip_gate_enabled: bool,
-    pub bunny_ip_gate_trusted_proxies: Vec<IpAddr>,
-    pub bunny_ip_gate_refresh_secs: u64,
 }
 
 impl Config {
@@ -170,22 +167,6 @@ impl Config {
             storage: StorageConfig::load(&env)?,
             media: MediaServingConfig::load(&env)?,
             upload_relay: UploadRelayConfig::load(&env, mode)?,
-            bunny_ip_gate_enabled: parse_bool(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED"),
-            )?
-            .unwrap_or(false),
-            bunny_ip_gate_trusted_proxies: parse_ip_list_env(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES"),
-            )?,
-            bunny_ip_gate_refresh_secs: parse_u64(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS"),
-                3_600,
-                60,
-                24 * 60 * 60,
-            )?,
         })
     }
 }

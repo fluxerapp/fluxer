@@ -16,7 +16,7 @@ import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMeme
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {EmbedService} from '@app/api/infrastructure/EmbedService';
 import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';

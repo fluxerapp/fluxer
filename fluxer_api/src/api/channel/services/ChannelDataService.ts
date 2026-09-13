@@ -12,7 +12,7 @@ import type {MessagePersistenceService} from '@app/api/channel/services/message/
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';

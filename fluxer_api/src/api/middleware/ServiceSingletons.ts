@@ -31,7 +31,7 @@ import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildDiscoveryService} from '@app/api/guild/services/GuildDiscoveryService';
 import {AssetDeletionQueue} from '@app/api/infrastructure/AssetDeletionQueue';
 import {AvatarService} from '@app/api/infrastructure/AvatarService';
-import {BunnyPurgeQueue, type IPurgeQueue, NoopPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import {CachePurgeQueue, type IPurgeQueue, NoopPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import {DisabledVirusScanService} from '@app/api/infrastructure/DisabledVirusScanService';
 import {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
@@ -240,7 +240,7 @@ export const getLimitConfigService = singleton(
 	},
 );
 export const getPurgeQueue: () => IPurgeQueue = singleton(() =>
-	Config.bunny.purgeEnabled ? new BunnyPurgeQueue(getKVClient()) : new NoopPurgeQueue(),
+	Config.cachePurge.adapter === 'none' ? new NoopPurgeQueue() : new CachePurgeQueue(getKVClient()),
 );
 export const getAssetDeletionQueue: () => IAssetDeletionQueue = singleton(() => new AssetDeletionQueue(getKVClient()));
 

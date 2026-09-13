@@ -6,7 +6,7 @@ import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IC
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
 import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';

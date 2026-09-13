@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
 import type {ResolvedDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
@@ -12,6 +13,15 @@ export interface PushProviderAppConfig {
 	topic?: string;
 	environment?: PushProviderEnvironment;
 	projectId?: string;
+}
+
+export interface APICachePurgeConfig {
+	adapter: CachePurgeAdapterName;
+	http: {
+		endpoint: string;
+		token: string;
+		timeoutMs: number;
+	};
 }
 
 interface APIGeoipFilesystemConfig {
@@ -262,11 +272,7 @@ export interface APIConfig {
 		};
 		legacyPrices?: Record<string, Array<string> | undefined>;
 	};
-	bunny: {
-		purgeEnabled: boolean;
-		apiKey?: string;
-		pullZoneId?: number;
-	};
+	cachePurge: APICachePurgeConfig;
 	clamav: {
 		enabled: boolean;
 		host: string;

@@ -11,7 +11,7 @@ import {
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
 import {assertMutableUserId} from '@app/api/constants/Core';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';

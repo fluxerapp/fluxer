@@ -7,7 +7,7 @@ import type {
 	MessageSnapshot as CassandraMessageSnapshot,
 	MessageAttachment,
 } from '@app/api/database/types/MessageTypes';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
@@ -353,21 +353,17 @@ export async function purgeMessageAttachments(
 			continue;
 		}
 		cdnKeys.add(cdnKey);
-		if (Config.bunny.purgeEnabled) {
-			cdnUrls.push(makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename));
-		}
+		cdnUrls.push(makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename));
 	}
 	for (const embedKey of collectEmbedReferencedAttachmentCdnKeys(message, ownedCdnKeys)) {
 		if (cdnKeys.has(embedKey)) {
 			continue;
 		}
 		cdnKeys.add(embedKey);
-		if (Config.bunny.purgeEnabled) {
-			cdnUrls.push(`${Config.endpoints.media}/${embedKey}`);
-		}
+		cdnUrls.push(`${Config.endpoints.media}/${embedKey}`);
 	}
 	await Promise.all([...cdnKeys].map((cdnKey) => storageService.deleteObject(Config.s3.buckets.cdn, cdnKey)));
-	if (Config.bunny.purgeEnabled && cdnUrls.length > 0) {
+	if (cdnUrls.length > 0) {
 		await purgeQueue.addUrls(cdnUrls);
 	}
 }

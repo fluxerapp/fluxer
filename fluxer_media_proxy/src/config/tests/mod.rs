@@ -410,7 +410,7 @@ fn every_deployment_mode_and_storage_backend_variant_parses() {
 }
 
 #[test]
-fn upload_relay_spool_and_bunny_ip_gate_keys_apply() {
+fn upload_relay_spool_keys_apply() {
     let cfg = Config::load_from_iter([
         ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
         (
@@ -425,12 +425,6 @@ fn upload_relay_spool_and_bunny_ip_gate_keys_apply() {
             "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
             "1073741824",
         ),
-        ("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED", "yes"),
-        (
-            "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES",
-            "10.0.0.1, 2001:db8::1 ,",
-        ),
-        ("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS", "900"),
     ])
     .unwrap();
 
@@ -440,31 +434,6 @@ fn upload_relay_spool_and_bunny_ip_gate_keys_apply() {
     );
     assert_eq!(2 << 20, cfg.upload_relay.spool_chunk_bytes);
     assert_eq!(1 << 30, cfg.upload_relay.spool_max_total_bytes);
-    assert!(cfg.bunny_ip_gate_enabled);
-    assert_eq!(
-        vec![
-            "10.0.0.1".parse::<IpAddr>().unwrap(),
-            "2001:db8::1".parse::<IpAddr>().unwrap(),
-        ],
-        cfg.bunny_ip_gate_trusted_proxies
-    );
-    assert_eq!(900, cfg.bunny_ip_gate_refresh_secs);
-}
-
-#[test]
-fn rejects_invalid_bunny_ip_gate_trusted_proxies() {
-    let err = Config::load_from_iter([
-        ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
-        (
-            "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES",
-            "10.0.0.1,not-an-ip",
-        ),
-    ])
-    .unwrap_err();
-    assert!(
-        err.to_string()
-            .contains("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES")
-    );
 }
 
 #[test]

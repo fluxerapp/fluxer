@@ -9,7 +9,7 @@ import {isOperationDisabled, purgeMessageAttachments} from '@app/api/channel/ser
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';

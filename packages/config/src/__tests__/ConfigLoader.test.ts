@@ -513,6 +513,90 @@ describe('ConfigLoader', () => {
 		expect((await loadConfig()).integrations.captcha.enabled).toBe(false);
 	});
 
+	test('defaults the cache purge adapter to none', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).integrations.cache_purge).toEqual({
+			adapter: 'none',
+			http: {endpoint: '', token: '', timeout_ms: 10_000},
+		});
+	});
+
+	test('reads the http cache purge settings from the environment', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+			FLUXER_CACHE_PURGE_HTTP_TOKEN: 'purge-token',
+			FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: '5000',
+		});
+		expect((await loadConfig()).integrations.cache_purge).toEqual({
+			adapter: 'http',
+			http: {endpoint: 'https://purge.internal/purge', token: 'purge-token', timeout_ms: 5000},
+		});
+	});
+
+	test('rejects an unknown cache purge adapter', async () => {
+		stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'varnish'});
+		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_CACHE_PURGE_ADAPTER: varnish');
+	});
+
+	test('rejects the http cache purge adapter without an endpoint', async () => {
+		stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'http'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_ENDPOINT is required');
+	});
+
+	test('rejects a cache purge endpoint that is not an absolute http URL', async () => {
+		for (const endpoint of ['/purge', 'purge.internal/purge', 'ftp://purge.internal/purge']) {
+			stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'http', FLUXER_CACHE_PURGE_HTTP_ENDPOINT: endpoint});
+			await expect(loadConfig()).rejects.toThrow(
+				'FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials',
+			);
+		}
+	});
+
+	test('rejects a cache purge endpoint that carries credentials', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purger:secret@purge.internal/purge',
+		});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials',
+		);
+	});
+
+	test('rejects a cache purge timeout outside 1000 to 10000', async () => {
+		for (const timeout of ['999', '10001']) {
+			stubMinimalEnv({
+				FLUXER_CACHE_PURGE_ADAPTER: 'http',
+				FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+				FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: timeout,
+			});
+			await expect(loadConfig()).rejects.toThrow(
+				'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS must be an integer between 1000 and 10000',
+			);
+		}
+	});
+
+	test('rejects a cache purge token with spaces or control characters without echoing it', async () => {
+		for (const token of ['secret\nvalue', 'secret\rvalue', 'secret value', 'secret-value\n']) {
+			stubMinimalEnv({
+				FLUXER_CACHE_PURGE_ADAPTER: 'http',
+				FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+				FLUXER_CACHE_PURGE_HTTP_TOKEN: token,
+			});
+			await expect(loadConfig()).rejects.toThrow(
+				/^FLUXER_CACHE_PURGE_HTTP_TOKEN must contain only visible ASCII characters$/,
+			);
+		}
+	});
+
+	test('leaves the cache purge settings unvalidated when the adapter is none', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'ftp://purge.internal/purge',
+			FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: '1',
+		});
+		expect((await loadConfig()).integrations.cache_purge.adapter).toBe('none');
+	});
+
 	test('leaves Bluesky login off with no legal URLs by default', async () => {
 		stubMinimalEnv();
 

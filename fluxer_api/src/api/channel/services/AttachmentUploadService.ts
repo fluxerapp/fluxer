@@ -21,7 +21,7 @@ import {
 } from '@app/api/channel/services/message/MessageHelpers';
 import {applyUploadRelayDecision, resolveUploadRelayDecision} from '@app/api/channel/services/UploadRelay';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -387,10 +387,8 @@ export class AttachmentUploadService {
 		}
 		const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
 		await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
-		if (Config.bunny.purgeEnabled) {
-			const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
-			await this.purgeQueue.addUrls([cdnUrl]);
-		}
+		const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
+		await this.purgeQueue.addUrls([cdnUrl]);
 		const updatedAttachments = message.attachments.filter((a: Attachment) => a.id !== attachmentId);
 		const updatedRowData = {
 			...message.toRow(),

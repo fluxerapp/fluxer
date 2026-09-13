@@ -5,6 +5,8 @@ import type {DerivedEndpoints} from '@fluxer/config/src/EndpointDerivation';
 export type RuntimeEnv = 'development' | 'production' | 'test';
 export type DatabaseBackend = 'postgres' | 'cassandra';
 export type PublicScheme = 'http' | 'https';
+export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http'] as const;
+export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
 
 export interface InstanceBrandingConfig {
 	product_name: string;
@@ -274,10 +276,13 @@ export interface MasterConfig {
 		youtube: {
 			api_key: string;
 		};
-		bunny: {
-			purge_enabled: boolean;
-			api_key: string;
-			pull_zone_id: number;
+		cache_purge: {
+			adapter: CachePurgeAdapterName;
+			http: {
+				endpoint: string;
+				token: string;
+				timeout_ms: number;
+			};
 		};
 		blocklist_feeds: {
 			enabled?: boolean;

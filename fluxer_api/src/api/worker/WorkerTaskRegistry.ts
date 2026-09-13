@@ -25,7 +25,7 @@ import indexChannelMessages from '@app/api/worker/tasks/IndexChannelMessages';
 import indexGuildMembers from '@app/api/worker/tasks/IndexGuildMembers';
 import messageShred from '@app/api/worker/tasks/MessageShred';
 import processAssetDeletionQueue from '@app/api/worker/tasks/ProcessAssetDeletionQueue';
-import processBunnyPurgeQueue from '@app/api/worker/tasks/ProcessBunnyPurgeQueue';
+import processCachePurgeQueue from '@app/api/worker/tasks/ProcessCachePurgeQueue';
 import processExpiredPremiumSweep from '@app/api/worker/tasks/ProcessExpiredPremiumSweep';
 import processInactivityDeletions from '@app/api/worker/tasks/ProcessInactivityDeletions';
 import processPendingBulkMessageDeletions from '@app/api/worker/tasks/ProcessPendingBulkMessageDeletions';
@@ -69,7 +69,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	indexGuildMembers,
 	messageShred,
 	processAssetDeletionQueue,
-	processBunnyPurgeQueue,
+	processCachePurgeQueue,
 	processStripeWebhook,
 	processExpiredPremiumSweep,
 	processInactivityDeletions,

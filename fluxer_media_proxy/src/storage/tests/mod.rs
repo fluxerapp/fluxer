@@ -75,9 +75,6 @@ fn test_config(root: &Path) -> Config {
             spool_chunk_bytes: 64 * 1024,
             spool_max_total_bytes: 1 << 30,
         },
-        bunny_ip_gate_enabled: false,
-        bunny_ip_gate_trusted_proxies: Vec::new(),
-        bunny_ip_gate_refresh_secs: 3_600,
     }
 }
 

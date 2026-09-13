@@ -11,7 +11,7 @@ import {
 	parsePublicOrigin,
 	parseWebOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
-import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
+import {CACHE_PURGE_ADAPTER_NAMES, type MasterConfig} from '@fluxer/config/src/MasterConfig';
 
 let cachedConfig: MasterConfig | null = null;
 
@@ -235,10 +235,13 @@ function defaultConfig(): MasterConfig {
 			youtube: {
 				api_key: '',
 			},
-			bunny: {
-				purge_enabled: false,
-				api_key: '',
-				pull_zone_id: 0,
+			cache_purge: {
+				adapter: 'none',
+				http: {
+					endpoint: '',
+					token: '',
+					timeout_ms: 10_000,
+				},
 			},
 			blocklist_feeds: {},
 			risk_integration: {
@@ -449,6 +452,27 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 	}
 }
 
+function validateCachePurgeConfig(config: MasterConfig): void {
+	const cachePurge = config.integrations.cache_purge;
+	if (cachePurge.adapter !== 'http') {
+		return;
+	}
+	requireString(cachePurge.http.endpoint, 'FLUXER_CACHE_PURGE_HTTP_ENDPOINT');
+	const endpoint = URL.parse(cachePurge.http.endpoint);
+	if (
+		endpoint === null ||
+		(endpoint.protocol !== 'http:' && endpoint.protocol !== 'https:') ||
+		endpoint.username !== '' ||
+		endpoint.password !== ''
+	) {
+		throw new Error('FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials');
+	}
+	if (!/^[\x21-\x7e]*$/u.test(cachePurge.http.token)) {
+		throw new Error('FLUXER_CACHE_PURGE_HTTP_TOKEN must contain only visible ASCII characters');
+	}
+	assertIntegerInRange(cachePurge.http.timeout_ms, 'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS', 1_000, 10_000);
+}
+
 function validateDomain(value: string, envName: string): void {
 	if (value === '') return;
 	const parsed = URL.parse(`http://${value}/`);
@@ -507,6 +531,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	assertOneOf(config.integrations.captcha.provider, ['hcaptcha', 'turnstile', 'none'], 'FLUXER_CAPTCHA_PROVIDER');
 	assertOneOf(config.integrations.search.engine, ['elasticsearch', 'meilisearch'], 'FLUXER_SEARCH_ENGINE');
+	assertOneOf(config.integrations.cache_purge.adapter, CACHE_PURGE_ADAPTER_NAMES, 'FLUXER_CACHE_PURGE_ADAPTER');
 	assertOneOf(
 		config.instance.abuse_policy.direct_contact_spam.action,
 		['flag_spammer', 'suppress_delivery'],
@@ -515,6 +540,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validatePostgresConfig(config);
 	validateCaptchaConfig(config);
 	validateApiWorkerConfig(config);
+	validateCachePurgeConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);
 	assertIntegerInRange(config.services.api.request_timeout_ms, 'FLUXER_API_REQUEST_TIMEOUT_MS', 1_000, 3_600_000);

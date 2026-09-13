@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AssetDeletionQueue} from '@app/api/infrastructure/AssetDeletionQueue';
-import {NoopPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import {NoopPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';

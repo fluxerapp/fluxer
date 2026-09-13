@@ -5,7 +5,7 @@ import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
-import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';

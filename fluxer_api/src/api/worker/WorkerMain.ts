@@ -54,8 +54,8 @@ const SEARCH_REQUIRED_TASKS = new Set<string>([
 
 function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
-	if (Config.bunny.purgeEnabled) {
-		cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *', {ledger: false});
+	if (Config.cachePurge.adapter !== 'none') {
+		cron.upsert('processCachePurgeQueue', 'processCachePurgeQueue', {}, '*/10 * * * * *', {ledger: false});
 	}
 	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *', {
 		ledger: false,
@@ -80,7 +80,7 @@ function registerCronJobs(cron: CronScheduler): void {
 	Logger.info(
 		{
 			blocklistFeeds: Config.blocklistFeeds.enabled,
-			bunnyPurge: Config.bunny.purgeEnabled,
+			cachePurgeAdapter: Config.cachePurge.adapter,
 			selfHosted: Config.instance.selfHosted,
 		},
 		'Cron jobs registered successfully',
