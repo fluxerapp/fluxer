@@ -5,6 +5,7 @@ import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarne
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {createTestAccount, createTotpSecret, generateTotpCode} from './AuthTestUtils';
 import {createAuthenticationResponse, createRegistrationResponse, createWebAuthnDevice} from './WebAuthnTestUtils';
+import type {AuthMfaMethod} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{
@@ -15,8 +16,7 @@ interface BackupCodesResponse {
 interface LoginMfaResponse {
 	mfa: true;
 	ticket: string;
-	totp: boolean;
-	webauthn: boolean;
+	allowed_methods: Array<AuthMfaMethod>;
 }
 
 interface WebAuthnRegistrationOptions {
@@ -299,6 +299,6 @@ describe('WebAuthn MFA Consistency Tests', () => {
 			.execute();
 		expect(login2.mfa).toBe(true);
 		expect(login2.ticket).toBeTruthy();
-		expect(login2.webauthn).toBe(true);
+		expect(login2.allowed_methods).toContain('webauthn');
 	});
 });

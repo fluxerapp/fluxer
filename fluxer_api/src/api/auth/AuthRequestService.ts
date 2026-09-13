@@ -6,6 +6,7 @@ import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedErr
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	AuthLoginResponse,
+	AuthMfaMethod,
 	AuthorizeIpRequest,
 	AuthRegisterResponse,
 	AuthSessionsResponse,
@@ -406,17 +407,12 @@ export class AuthRequestService {
 			| {
 					mfa: true;
 					ticket: string;
-					allowed_methods: Array<string>;
+					allowed_methods: Array<AuthMfaMethod>;
 			  },
 	): Promise<AuthLoginResponse> {
 		if (!('mfa' in result)) {
 			return await this.toAuthTokenResponse(result);
 		}
-		const allowedMethods = new Set(result.allowed_methods);
-		return {
-			...result,
-			totp: allowedMethods.has('totp'),
-			webauthn: allowedMethods.has('webauthn'),
-		};
+		return result;
 	}
 }

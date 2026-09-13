@@ -76,8 +76,8 @@ export async function loginWithPassword({
 			challenge: {
 				ticket: response.ticket,
 				sms: (response as {sms?: boolean}).sms ?? false,
-				totp: response.totp,
-				webauthn: response.webauthn,
+				totp: response.allowed_methods?.includes('totp') ?? false,
+				webauthn: response.allowed_methods?.includes('webauthn') ?? false,
 			},
 		};
 	}
@@ -265,8 +265,8 @@ export async function resetPassword(token: string, password: string): Promise<Pa
 		challenge: {
 			ticket: response.ticket,
 			sms: (response as {sms?: boolean}).sms ?? false,
-			totp: response.totp,
-			webauthn: response.webauthn,
+			totp: response.allowed_methods?.includes('totp') ?? false,
+			webauthn: response.allowed_methods?.includes('webauthn') ?? false,
 		},
 	};
 }

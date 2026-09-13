@@ -164,12 +164,14 @@ export const AuthRegistrationPendingApprovalResponse = z.object({
 
 export type AuthRegistrationPendingApprovalResponse = z.infer<typeof AuthRegistrationPendingApprovalResponse>;
 
+export const AuthMfaMethod = z.enum(['totp', 'webauthn']);
+
+export type AuthMfaMethod = z.infer<typeof AuthMfaMethod>;
+
 const AuthMfaRequiredResponse = z.object({
 	mfa: z.literal(true).describe('Indicates MFA is required to complete authentication'),
 	ticket: z.string().describe('MFA ticket to use when completing MFA verification'),
-	allowed_methods: z.array(z.string()).max(10).describe('List of allowed MFA methods'),
-	totp: z.boolean().describe('Whether TOTP authenticator MFA is available'),
-	webauthn: z.boolean().describe('Whether WebAuthn security key MFA is available'),
+	allowed_methods: z.array(AuthMfaMethod).max(10).describe('List of allowed MFA methods'),
 });
 
 export const AuthLoginResponse = z.union([AuthTokenWithUserIdResponse, AuthMfaRequiredResponse]);
