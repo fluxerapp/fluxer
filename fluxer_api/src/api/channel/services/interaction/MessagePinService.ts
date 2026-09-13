@@ -142,11 +142,13 @@ export class MessagePinService extends MessageInteractionBase {
 		authChannel,
 		messageId,
 		userId,
+		auditLogReason,
 	}: {
 		authChannel: AuthenticatedChannel;
 		messageId: MessageID;
 		userId: UserID;
 		requestCache: RequestCache;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		const {channel, guild, checkPermission} = authChannel;
 		if (guild) {
@@ -182,7 +184,7 @@ export class MessagePinService extends MessageInteractionBase {
 					channel_id: channel.id.toString(),
 					message_id: messageId.toString(),
 				})
-				.withReason(null)
+				.withReason(auditLogReason ?? null)
 				.commit();
 		}
 	}
@@ -191,11 +193,13 @@ export class MessagePinService extends MessageInteractionBase {
 		authChannel,
 		messageId,
 		userId,
+		auditLogReason,
 	}: {
 		authChannel: AuthenticatedChannel;
 		messageId: MessageID;
 		userId: UserID;
 		requestCache: RequestCache;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		const {channel, guild, checkPermission} = authChannel;
 		if (guild) {
@@ -227,7 +231,7 @@ export class MessagePinService extends MessageInteractionBase {
 					channel_id: channel.id.toString(),
 					message_id: messageId.toString(),
 				})
-				.withReason(null)
+				.withReason(auditLogReason ?? null)
 				.commit();
 		}
 	}

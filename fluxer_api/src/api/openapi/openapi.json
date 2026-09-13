@@ -28261,7 +28261,10 @@
 							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
 							"message_hover_tracking": {"$ref": "#/components/schemas/MessageHoverTrackingAssignmentResponse"},
 							"message_keyboard_focus": {"$ref": "#/components/schemas/MessageKeyboardFocusAssignmentResponse"},
-							"blocked_message_groups": {"$ref": "#/components/schemas/BlockedMessageGroupsAssignmentResponse"}
+							"blocked_message_groups": {"$ref": "#/components/schemas/BlockedMessageGroupsAssignmentResponse"},
+							"guild_activity_log_presentation": {
+								"$ref": "#/components/schemas/GuildActivityLogPresentationAssignmentResponse"
+							}
 						},
 						"additionalProperties": false
 					}
@@ -31999,6 +32002,17 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try"]},
+			"GuildActivityLogPresentationAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+					"user_targeted": {"type": "boolean"},
+					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
+				},
+				"required": ["enabled", "config_version", "user_targeted", "source"],
+				"additionalProperties": false
+			},
 			"BlockedMessageGroupsAssignmentResponse": {
 				"type": "object",
 				"properties": {
@@ -32328,7 +32342,10 @@
 						"description": "The ID of the affected entity (user, channel, role, invite code, etc.)",
 						"anyOf": [{"type": "string"}, {"type": "null"}]
 					},
-					"reason": {"description": "The reason provided for the action", "type": "string"},
+					"reason": {
+						"description": "The audit log reason. For bans and timeouts without an X-Audit-Log-Reason header this is the reason sent in the request body",
+						"type": "string"
+					},
 					"options": {
 						"description": "Additional options depending on action type",
 						"type": "object",
@@ -32336,15 +32353,22 @@
 							"channel_id": {"description": "Channel ID for relevant actions", "type": "string"},
 							"count": {"description": "Count of items affected", "type": "number"},
 							"delete_member_days": {
-								"description": "Number of days of messages to delete on member ban",
+								"description": "Deprecated. Whole days of messages deleted, written only by bans recorded before delete_message_seconds",
 								"type": "string"
+							},
+							"delete_message_seconds": {
+								"description": "Seconds of the banned user's messages that the ban deleted, present only when positive",
+								"type": "number"
 							},
 							"id": {"description": "ID of the affected entity", "type": "string"},
 							"integration_type": {"description": "Type of integration", "type": "number"},
 							"message_id": {"description": "Message ID for relevant actions", "type": "string"},
 							"members_removed": {"description": "Number of members removed", "type": "number"},
-							"role_name": {"description": "Name of the role", "type": "string"},
-							"type": {"description": "Type identifier", "type": "number"},
+							"role_name": {"description": "Name of the role when the entry was written", "type": "string"},
+							"type": {
+								"description": "Channel type for CHANNEL_CREATE, CHANNEL_UPDATE and CHANNEL_DELETE. Overwrite target type (0 role, 1 member) for CHANNEL_OVERWRITE_*",
+								"type": "number"
+							},
 							"inviter_id": {"description": "ID of the user who created the invite", "type": "string"},
 							"max_age": {"description": "Maximum age of the invite in seconds", "type": "number"},
 							"max_uses": {"description": "Maximum number of uses for the invite", "type": "number"},

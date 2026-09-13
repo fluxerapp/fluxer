@@ -629,7 +629,9 @@ Each item has exactly one of the fields.
 
 ### <span id="guild-audit-log-entry-create"></span>GUILD_AUDIT_LOG_ENTRY_CREATE
 
-An audit log entry was written. The payload has the shape of a [guild audit log entry object](/http-api/guild-audit-logs/#guild-audit-log-entry-object) with `guild_id` added. It always has `id`, `action_type`, `user_id`, and `target_id`. It has `reason` when the request supplied one, `options` when the entry recorded any metadata, and `changes` when at least one change survives scrubbing.
+An audit log entry was written. The payload is the [guild audit log entry object](/http-api/guild-audit-logs/#guild-audit-log-entry-object) that [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) returns for the same entry, with `guild_id` added. It always has `id`, `action_type`, `user_id`, and `target_id`. `reason` is resolved as the [audit log reason](/http-api/guild-audit-logs/#audit-log-reason) describes, and `options` has only the published [audit log options](/http-api/guild-audit-logs/#audit-log-options-object) keys, with the same number and boolean types. `changes` is present when at least one change survives scrubbing.
+
+An update that changes nothing records no entry, as the [audit actions](/http-api/guild-audit-logs/#audit-actions) registry states, so it emits no event.
 
 The `ip` change key is stripped from `changes`, so an entry whose only change was `ip` has no `changes` at all. A client MUST treat an absent `options` or `changes` as an empty set.
 

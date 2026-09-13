@@ -28,6 +28,10 @@ import {
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
+	GuildActivityLogPresentationConfigResponse,
+	GuildActivityLogPresentationConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
+import {
 	MessageHoverTrackingConfigResponse,
 	MessageHoverTrackingConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -641,6 +645,7 @@ export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
+	guild_activity_log_presentation: GuildActivityLogPresentationConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	message_hover_tracking: MessageHoverTrackingConfigResponse,
 	message_keyboard_focus: MessageKeyboardFocusConfigResponse,
@@ -680,6 +685,7 @@ const InstancePolicyUpdateSchema = z.object({
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
+	guild_activity_log_presentation: GuildActivityLogPresentationConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	message_hover_tracking: MessageHoverTrackingConfigUpdateRequest.nullish(),
 	message_keyboard_focus: MessageKeyboardFocusConfigUpdateRequest.nullish(),

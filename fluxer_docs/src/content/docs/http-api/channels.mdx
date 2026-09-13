@@ -317,7 +317,7 @@ On a deployment that configures no voice topology, a missing channel, an invisib
 
 ## Modify channel
 
-<RouteHeader method="PATCH" path="/v1/channels/{channel_id}" bot />
+<RouteHeader method="PATCH" path="/v1/channels/{channel_id}" bot auditReason />
 
 Modifies a guild channel or a group direct message and returns the updated [channel object](#channel-object). Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
 
@@ -455,7 +455,7 @@ A guild channel change emits [Channel Update](/gateway/events/#channel-update) t
 
 Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel, so each user's next message is checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
 
-A request that changes at least one field creates a channel update audit log entry with no reason. Supplying `permission_overwrites` also creates one overwrite create, update, or delete audit log entry for each overwrite the array adds, changes, or removes.
+A request that changes at least one field creates a channel update audit log entry with the supplied reason. Supplying `permission_overwrites` also creates one overwrite create, update, or delete audit log entry for each overwrite the array adds, changes, or removes.
 
 A group direct message change emits [Channel Update](/gateway/events/#channel-update) to every current recipient. A name or successful icon change creates a system message delivered with [Message Create](/gateway/events/#message-create), and replacing the icon permanently deletes the previous one. Ownership and nickname changes create no system message and no audit entry.
 
@@ -465,7 +465,7 @@ A group direct message change emits [Channel Update](/gateway/events/#channel-up
 
 ## Delete or leave channel
 
-<RouteHeader method="DELETE" path="/v1/channels/{channel_id}" bot />
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}" bot auditReason />
 
 Deletes a guild channel, closes a direct message, or removes the caller from a group direct message. Returns 204 with an empty body. Emits a [Channel Delete](/gateway/events/#channel-delete) Gateway event.
 
@@ -682,7 +682,7 @@ Removing the final recipient permanently deletes the channel's messages, removes
 
 ## Set channel permission overwrite
 
-<RouteHeader method="PUT" path="/v1/channels/{channel_id}/permissions/{overwrite_id}" bot />
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/permissions/{overwrite_id}" bot auditReason />
 
 Creates or replaces one permission overwrite on a guild channel and returns 204 with an empty body. Requires [MANAGE_ROLES](/http-api/permissions/) in that channel. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
 
@@ -737,7 +737,7 @@ A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_O
 
 Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the submitted overwrite exactly matches the stored one. When the channel is a category, every child whose overwrites exactly matched the category's previous values receives a copy of the category's new overwrites and its own Channel Update.
 
-The operation records an overwrite create or update audit entry with no reason. An unchanged overwrite records no audit entry.
+The operation records an overwrite create or update audit entry with the supplied reason. An unchanged overwrite records no audit entry.
 
 ### Rate limit
 
@@ -745,7 +745,7 @@ The operation records an overwrite create or update audit entry with no reason. 
 
 ## Delete channel permission overwrite
 
-<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/permissions/{overwrite_id}" bot />
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/permissions/{overwrite_id}" bot auditReason />
 
 Deletes one permission overwrite from a guild channel and returns 204 with an empty body. Requires [MANAGE_ROLES](/http-api/permissions/) in that channel. Emits a [Channel Update](/gateway/events/#channel-update) Gateway event.
 
@@ -774,7 +774,7 @@ The operation is idempotent, does not require `VIEW_CHANNEL`, and never returns 
 
 ### Side effects
 
-Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the identifier names no existing overwrite. Removing an overwrite that exists also records an overwrite delete audit entry with the previous overwrite state and no reason. An identifier that names no existing overwrite records no audit entry. When the target channel is a category, each child whose overwrites exactly matched the category's previous overwrites receives a copy of the category's new overwrites and its own Channel Update.
+Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the identifier names no existing overwrite. Removing an overwrite that exists also records an overwrite delete audit entry with the previous overwrite state and the supplied reason. An identifier that names no existing overwrite records no audit entry. When the target channel is a category, each child whose overwrites exactly matched the category's previous overwrites receives a copy of the category's new overwrites and its own Channel Update.
 
 ### Rate limit
 

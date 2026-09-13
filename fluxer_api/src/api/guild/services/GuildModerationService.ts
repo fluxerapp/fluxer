@@ -121,13 +121,15 @@ export class GuildModerationService {
 		});
 		if (!skipGuildAuditLog) {
 			const metadata: Record<string, string> | undefined =
-				deleteMessageDays !== undefined ? {delete_member_days: deleteMessageDays.toString()} : undefined;
+				effectiveDeleteMessageSeconds && effectiveDeleteMessageSeconds > 0
+					? {delete_message_seconds: String(effectiveDeleteMessageSeconds)}
+					: undefined;
 			await this.recordAuditLog({
 				guildId,
 				userId,
 				action: AuditLogActionType.MEMBER_BAN_ADD,
 				targetId: targetId,
-				auditLogReason: auditLogReason ?? null,
+				auditLogReason: auditLogReason ?? (reason || null),
 				metadata,
 				changes: this.guildAuditLogService.computeChanges(null, this.serializeBanForAudit(ban)),
 			});

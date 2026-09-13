@@ -19,6 +19,8 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
+const VANITY_AUDIT_KEYS: ReadonlySet<string> = new Set(['vanity_url_code']);
+
 export class GuildVanityService {
 	constructor(
 		private readonly guildRepository: IGuildRepositoryAggregate,
@@ -83,8 +85,7 @@ export class GuildVanityService {
 					action: AuditLogActionType.GUILD_UPDATE,
 					targetId: guildId,
 					auditLogReason: auditLogReason ?? null,
-					metadata: {vanity_url_code: ''},
-					changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+					changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, VANITY_AUDIT_KEYS),
 				});
 				return {code: null};
 			}
@@ -122,8 +123,7 @@ export class GuildVanityService {
 			action: AuditLogActionType.GUILD_UPDATE,
 			targetId: guildId,
 			auditLogReason: auditLogReason ?? null,
-			metadata: {vanity_url_code: code},
-			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, VANITY_AUDIT_KEYS),
 		});
 		return {code};
 	}

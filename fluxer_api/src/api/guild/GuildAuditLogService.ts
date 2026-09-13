@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createRoleID, type GuildID, type RoleID, type UserID} from '@app/api/BrandedTypes';
 import type {GuildAuditLogRow} from '@app/api/database/types/GuildTypes';
+import {isNoopGuildAuditLog, mapGuildAuditLogEntry} from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {AuditLogChange, GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -35,16 +36,6 @@ interface CreateGuildAuditLogParams {
 	metadata?: Map<string, string> | Record<string, string> | Array<[string, string]>;
 	changes?: GuildAuditLogChange | null;
 	createdAt?: Date;
-}
-
-interface GuildAuditLogDispatchEntry {
-	id: string;
-	action_type: number;
-	user_id: string;
-	target_id: string | null;
-	reason?: string;
-	options?: Record<string, string>;
-	changes?: GuildAuditLogChange;
 }
 
 function normalizeAuditLogMetadata(metadata?: CreateGuildAuditLogParams['metadata']): Map<string, string> {
@@ -251,17 +242,37 @@ export class GuildAuditLogService {
 					: before && !after
 						? AuditLogActionType.CHANNEL_OVERWRITE_DELETE
 						: AuditLogActionType.CHANNEL_OVERWRITE_UPDATE;
-			const builder = this.createBuilder(params.guildId, params.userId)
-				.withAction(action, targetId.toString())
-				.withReason(params.reason ?? null)
-				.withMetadata({
+			let roleName: string | null = null;
+			if (overwriteType === 0 && targetId.toString() !== params.guildId.toString()) {
+				try {
+					const role = await this.guildRepository.getRole(createRoleID(BigInt(targetId)), params.guildId);
+					roleName = role?.name ?? null;
+				} catch (error) {
+					Logger.warn(
+						{
+							error,
+							guildId: params.guildId.toString(),
+							roleId: targetId.toString(),
+						},
+						'Failed to resolve role name for guild audit log',
+					);
+				}
+			}
+			try {
+				const metadata: Record<string, string> = {
 					id: targetId.toString(),
 					type: overwriteType.toString(),
 					channel_id: params.channelId.toString(),
-				})
-				.withChanges(changes);
-			try {
-				await builder.commit();
+				};
+				if (roleName !== null) {
+					metadata['role_name'] = roleName;
+				}
+				await this.createBuilder(params.guildId, params.userId)
+					.withAction(action, targetId.toString())
+					.withReason(params.reason ?? null)
+					.withMetadata(metadata)
+					.withChanges(changes)
+					.commit();
 			} catch (error) {
 				Logger.error(
 					{
@@ -356,41 +367,12 @@ export class GuildAuditLogService {
 		return JSON.stringify(a) === JSON.stringify(b);
 	}
 
-	private mapDispatchOptions(options: Map<string, string>): Record<string, string> | undefined {
-		if (options.size === 0) {
-			return undefined;
-		}
-		return Object.fromEntries(options);
-	}
-
-	private scrubSensitiveChanges(changes: GuildAuditLogChange | null): GuildAuditLogChange | undefined {
-		if (!changes) {
-			return undefined;
-		}
-		const scrubbedChanges = changes.filter((change) => change.key !== 'ip');
-		return scrubbedChanges.length > 0 ? scrubbedChanges : undefined;
-	}
-
-	private buildDispatchEntry(log: GuildAuditLog): GuildAuditLogDispatchEntry {
-		const options = this.mapDispatchOptions(log.options);
-		const changes = this.scrubSensitiveChanges(log.changes);
-		return {
-			id: log.logId.toString(),
-			action_type: log.actionType,
-			user_id: log.userId.toString(),
-			target_id: log.targetId,
-			reason: log.reason ?? undefined,
-			options,
-			changes,
-		};
-	}
-
 	private async dispatchAuditLogEntryCreate(log: GuildAuditLog): Promise<void> {
 		try {
 			await this.gatewayService.dispatchGuild({
 				guildId: log.guildId,
 				event: 'GUILD_AUDIT_LOG_ENTRY_CREATE',
-				data: this.buildDispatchEntry(log),
+				data: {...mapGuildAuditLogEntry(log), guild_id: log.guildId.toString()},
 			});
 		} catch (error) {
 			Logger.error(
@@ -459,9 +441,12 @@ class GuildAuditLogBuilder {
 		return this;
 	}
 
-	async commit(): Promise<GuildAuditLog> {
+	async commit(): Promise<GuildAuditLog | null> {
 		if (this.params.actionType === undefined) {
 			throw new Error('Audit log action type must be set before committing');
+		}
+		if (isNoopGuildAuditLog(this.params.actionType, this.params.changes)) {
+			return null;
 		}
 		return this.service.createLog({
 			guildId: this.params.guildId!,

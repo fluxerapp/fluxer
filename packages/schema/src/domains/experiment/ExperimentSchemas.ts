@@ -9,6 +9,10 @@ import {
 	INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {
+	GuildActivityLogPresentationAssignmentResponse,
+	INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
+import {
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 	MessageHoverTrackingAssignmentResponse,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -57,6 +61,7 @@ const ExperimentAssignmentsSchema = z.object({
 	message_hover_tracking: MessageHoverTrackingAssignmentResponse.optional(),
 	message_keyboard_focus: MessageKeyboardFocusAssignmentResponse.optional(),
 	blocked_message_groups: BlockedMessageGroupsAssignmentResponse.optional(),
+	guild_activity_log_presentation: GuildActivityLogPresentationAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -95,4 +100,10 @@ export function readBlockedMessageGroupsAssignment(
 	response: ExperimentAssignmentsResponse,
 ): BlockedMessageGroupsAssignmentResponse {
 	return response.assignments.blocked_message_groups ?? INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT;
+}
+
+export function readGuildActivityLogPresentationAssignment(
+	response: ExperimentAssignmentsResponse,
+): GuildActivityLogPresentationAssignmentResponse {
+	return response.assignments.guild_activity_log_presentation ?? INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT;
 }

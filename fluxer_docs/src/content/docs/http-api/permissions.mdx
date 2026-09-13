@@ -376,7 +376,7 @@ Every field is optional, and an omitted field leaves the stored value unchanged.
 
 ### Side effects
 
-The operation creates a [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason and emits [Guild Role Update](/gateway/events/#guild-role-update) to every session that can see the guild. A permission change adds a [permissions_diff](/http-api/guild-audit-logs/#guild-role-change-fields) change entry recording the exact added and removed permission names. A request whose values all match the current role still emits the Dispatch and still records the entry, with no change rows in it.
+The operation creates a [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason and emits [Guild Role Update](/gateway/events/#guild-role-update) to every session that can see the guild. A permission change adds a [permissions_diff](/http-api/guild-audit-logs/#guild-role-change-fields) change entry recording the exact added and removed permission names. A request whose values all match the current role still emits the Dispatch and records no entry.
 
 ### Rate limit
 
@@ -423,7 +423,7 @@ The top-level body is an array of [role position objects](#role-position-object)
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose position changed. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role that moved, under the [ordering rule](/http-api/guild-audit-logs/#guild-role-change-fields) the audit log defines. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with every role whose stored position changed to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch and records no audit entry.
 
 ### Rate limit
 
@@ -464,7 +464,7 @@ The top-level body is an array of [role hoist position objects](#role-hoist-posi
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role whose hoist position changed. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with the changed roles to every session that can see the guild. Setting the current positions again changes nothing, creates no audit entry, and emits no Dispatch.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role that moved in the member list order, under the [ordering rule](/http-api/guild-audit-logs/#guild-role-change-fields) the audit log defines, and for each changed role that is not hoisted. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with every role whose hoist position changed to every session that can see the guild. Setting the current positions again changes nothing, creates no audit entry, and emits no Dispatch.
 
 ### Rate limit
 
@@ -502,7 +502,7 @@ The request has no body.
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose hoist position is cleared. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each cleared role that moved in the member list order, under the [ordering rule](/http-api/guild-audit-logs/#guild-role-change-fields) the audit log defines, and for each cleared role that is not hoisted. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with every cleared role to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
 
 ### Rate limit
 

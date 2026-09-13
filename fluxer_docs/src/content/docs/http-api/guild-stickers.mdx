@@ -354,7 +354,7 @@ A non-member who names an existing sticker receives `MISSING_PERMISSIONS`.
 
 ### Side effects
 
-The operation writes the supplied metadata, emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) with the guild's complete sticker collection, and then records a [`STICKER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. Both are produced even when the submitted values match the stored ones. The audit entry then has no `changes`.
+The operation writes the supplied metadata, emits [Guild Stickers Update](/gateway/events/#guild-stickers-update) with the guild's complete sticker collection, and then records a [`STICKER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. Submitted values that match the stored ones still emit the Dispatch and record no audit entry.
 
 ### Rate limit
 

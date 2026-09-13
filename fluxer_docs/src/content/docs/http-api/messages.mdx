@@ -1291,7 +1291,7 @@ The operation deletes the caller's read-through marker, mention count, and pin a
 
 ## Delete message
 
-<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/messages/{message_id}" bot />
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/messages/{message_id}" bot auditReason />
 
 Deletes one message. Returns 204 with an empty body on success. Emits a [Message Delete](/gateway/events/#message-delete) Gateway event.
 
@@ -1301,7 +1301,6 @@ Deletes one message. Returns 204 with an empty body on success. Emits a [Message
 - The author can delete their own message anywhere.
 - Deleting another user's guild message requires both [SEND_MESSAGES](/http-api/permissions/) and [MANAGE_MESSAGES](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions). No caller can delete another user's private channel message.
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
-- The operation reads no audit reason header.
 
 ### Path parameters
 
@@ -1330,7 +1329,7 @@ The operation permanently deletes the message, its reactions, and its attachment
 
 It emits [Message Delete](/gateway/events/#message-delete) to every session that can see the channel. When the message was pinned, it also removes the channel pin entry and emits [Channel Pins Update](/gateway/events/#channel-pins-update) with the channel's unchanged last-pin timestamp.
 
-Every deletion in a guild channel writes one `MESSAGE_DELETE` guild audit log entry with no reason, including deletion of the caller's own message.
+Every deletion in a guild channel writes one `MESSAGE_DELETE` guild audit log entry with the supplied reason, including deletion of the caller's own message.
 
 ### Rate limit
 
@@ -1378,7 +1377,7 @@ The operation permanently deletes the stored attachment object, purges it from m
 
 ## Bulk delete messages
 
-<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/bulk-delete" bot mfa />
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/bulk-delete" bot auditReason mfa />
 
 Deletes from 1 through 100 messages in one guild channel. Returns 204 with an empty body on success. Emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) Gateway event.
 
@@ -1388,7 +1387,6 @@ Deletes from 1 through 100 messages in one guild channel. Returns 204 with an em
 - The caller requires [MANAGE_MESSAGES](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions).
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 - The operation applies no age boundary, so a message of any age can be selected.
-- The operation reads no audit reason header.
 
 ### Path parameters
 
@@ -1428,7 +1426,7 @@ The operation permanently removes every selected message, attachment, and reacti
 
 When at least one ID matched, it emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) with every requested ID to sessions that can see the channel, including an ID that matched nothing. It emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete).
 
-It writes one `MESSAGE_BULK_DELETE` guild audit log entry with the matched count and no reason.
+It writes one `MESSAGE_BULK_DELETE` guild audit log entry with the matched count and the supplied reason.
 
 ### Rate limit
 
@@ -1593,7 +1591,7 @@ Acknowledging pins is a separate operation, [Acknowledge pins](#acknowledge-pins
 
 ## Pin message
 
-<RouteHeader method="PUT" path="/v1/channels/{channel_id}/pins/{message_id}" bot />
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/pins/{message_id}" bot auditReason />
 
 Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. Emits [Message Update](/gateway/events/#message-update), [Channel Pins Update](/gateway/events/#channel-pins-update), and [Message Create](/gateway/events/#message-create) Gateway events.
 
@@ -1630,7 +1628,7 @@ Pinning a message that is not already pinned sets its pin timestamp, advances th
 
 It emits [Message Update](/gateway/events/#message-update) for the target, [Channel Pins Update](/gateway/events/#channel-pins-update) for the channel, and [Message Create](/gateway/events/#message-create) for the system message, each to every session that can see the channel.
 
-A guild pin also writes one `MESSAGE_PIN` guild audit log entry with no reason. Pinning an already pinned message changes nothing and emits no Dispatch.
+A guild pin also writes one `MESSAGE_PIN` guild audit log entry with the supplied reason. Pinning an already pinned message changes nothing and emits no Dispatch.
 
 ### Rate limit
 
@@ -1638,7 +1636,7 @@ A guild pin also writes one `MESSAGE_PIN` guild audit log entry with no reason. 
 
 ## Unpin message
 
-<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/pins/{message_id}" bot />
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/pins/{message_id}" bot auditReason />
 
 Unpins a message. Returns 204 with an empty body on success. Emits [Message Update](/gateway/events/#message-update) and [Channel Pins Update](/gateway/events/#channel-pins-update) Gateway events.
 
@@ -1668,7 +1666,7 @@ Unpins a message. Returns 204 with an empty body on success. Emits [Message Upda
 
 ### Side effects
 
-Unpinning a pinned message clears its pin timestamp and emits [Message Update](/gateway/events/#message-update) and [Channel Pins Update](/gateway/events/#channel-pins-update) to every session that can see the channel. A guild unpin also writes one `MESSAGE_UNPIN` guild audit log entry with no reason.
+Unpinning a pinned message clears its pin timestamp and emits [Message Update](/gateway/events/#message-update) and [Channel Pins Update](/gateway/events/#channel-pins-update) to every session that can see the channel. A guild unpin also writes one `MESSAGE_UNPIN` guild audit log entry with the supplied reason.
 
 It creates no system message. The `CHANNEL_PINNED_MESSAGE` system message the original pin created stays in the channel, and the channel's last-pin timestamp is unchanged.
 

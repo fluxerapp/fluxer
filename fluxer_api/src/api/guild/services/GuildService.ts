@@ -2,11 +2,16 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
-import {createUserID, createWebhookID} from '@app/api/BrandedTypes';
+import {createWebhookID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {
+	collectGuildAuditLogUserIds,
+	isNoopGuildAuditLog,
+	mapGuildAuditLogEntry,
+	type StoredGuildAuditLogEntryResponse,
+} from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
 import {GuildContentService} from '@app/api/guild/services/GuildContentService';
@@ -41,9 +46,7 @@ import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGu
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildStickerError} from '@fluxer/errors/src/domains/guild/UnknownGuildStickerError';
 import type {
-	AuditLogOptions,
 	AuditLogWebhookResponse,
-	GuildAuditLogEntryResponse,
 	GuildAuditLogListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {
@@ -54,10 +57,6 @@ import type {GuildUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildReq
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-
-interface StoredGuildAuditLogEntryResponse extends Omit<GuildAuditLogEntryResponse, 'changes'> {
-	changes?: GuildAuditLogChange;
-}
 
 interface StoredAuditLogWebhookResponse extends Omit<AuditLogWebhookResponse, 'type'> {
 	type: number;
@@ -338,13 +337,13 @@ export class GuildService {
 			if (shouldBatch) {
 				const batchResult = await this.guildAuditLogService.batchConsecutiveMessageDeleteLogs(guildId, logs);
 				for (const log of batchResult.processedLogs) {
-					if (processedLogs.length < effectiveLimit) {
+					if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
 						processedLogs.push(log);
 					}
 				}
 			} else {
 				for (const log of logs) {
-					if (processedLogs.length < effectiveLimit) {
+					if (processedLogs.length < effectiveLimit && !isNoopGuildAuditLog(log.actionType, log.changes)) {
 						processedLogs.push(log);
 					}
 				}
@@ -362,10 +361,8 @@ export class GuildService {
 		processedLogs = processedLogs.slice(0, effectiveLimit);
 		const userIdSet = new Set<UserID>();
 		for (const log of processedLogs) {
-			userIdSet.add(log.userId);
-			const targetUserId = this.getAuditLogTargetUserId(log);
-			if (targetUserId) {
-				userIdSet.add(targetUserId);
+			for (const referencedUserId of collectGuildAuditLogUserIds(log)) {
+				userIdSet.add(referencedUserId);
 			}
 		}
 		const [userPartials, webhookRecords] = await Promise.all([
@@ -376,7 +373,7 @@ export class GuildService {
 			}),
 			this.loadAuditLogWebhooks(processedLogs),
 		]);
-		const entries = processedLogs.map((log) => this.mapAuditLogToEntry(log));
+		const entries = processedLogs.map((log) => mapGuildAuditLogEntry(log));
 		const users = Array.from(userPartials.values());
 		const webhooks = this.buildAuditLogWebhookResponses(webhookRecords.webhooks);
 		return {
@@ -384,102 +381,6 @@ export class GuildService {
 			users,
 			webhooks,
 		};
-	}
-
-	private mapAuditLogToEntry(log: GuildAuditLog): StoredGuildAuditLogEntryResponse {
-		return {
-			id: log.logId.toString(),
-			action_type: log.actionType,
-			user_id: log.userId.toString(),
-			target_id: log.targetId,
-			reason: log.reason ?? undefined,
-			options: this.buildAuditLogOptions(log.options),
-			changes: this.scrubSensitiveChanges(log.changes),
-		};
-	}
-
-	private scrubSensitiveChanges(changes: GuildAuditLogChange | null | undefined): GuildAuditLogChange | undefined {
-		if (!changes) {
-			return undefined;
-		}
-		const scrubbed = changes.filter((change) => change.key !== 'ip');
-		return scrubbed.length > 0 ? scrubbed : undefined;
-	}
-
-	private buildAuditLogOptions(options: Map<string, string>): AuditLogOptions | undefined {
-		if (!options.size) {
-			return undefined;
-		}
-		const mapped: AuditLogOptions = {};
-		for (const [key, value] of options) {
-			switch (key) {
-				case 'channel_id':
-					mapped.channel_id = value;
-					break;
-				case 'count':
-					this.assignNumericOption(mapped, 'count', value);
-					break;
-				case 'delete_member_days':
-					mapped.delete_member_days = value;
-					break;
-				case 'delete_message_days':
-					if (!mapped.delete_member_days) {
-						mapped.delete_member_days = value;
-					}
-					break;
-				case 'id':
-					mapped.id = value;
-					break;
-				case 'integration_type':
-					this.assignNumericOption(mapped, 'integration_type', value);
-					break;
-				case 'message_id':
-					mapped.message_id = value;
-					break;
-				case 'members_removed':
-					this.assignNumericOption(mapped, 'members_removed', value);
-					break;
-				case 'role_name':
-					mapped.role_name = value;
-					break;
-				case 'type':
-					this.assignNumericOption(mapped, 'type', value);
-					break;
-				case 'inviter_id':
-					mapped.inviter_id = value;
-					break;
-				case 'max_age':
-					this.assignNumericOption(mapped, 'max_age', value);
-					break;
-				case 'max_uses':
-					this.assignNumericOption(mapped, 'max_uses', value);
-					break;
-				case 'uses':
-					this.assignNumericOption(mapped, 'uses', value);
-					break;
-				case 'temporary':
-					mapped.temporary = this.parseBooleanOption(value);
-					break;
-				default:
-					break;
-			}
-		}
-		return Object.keys(mapped).length === 0 ? undefined : mapped;
-	}
-
-	private parseBooleanOption(value: string): boolean {
-		return value === 'true' || value === '1';
-	}
-
-	private assignNumericOption(
-		target: AuditLogOptions,
-		key: 'count' | 'integration_type' | 'members_removed' | 'type' | 'max_age' | 'max_uses' | 'uses',
-		value: string,
-	): void {
-		const parsed = Number(value);
-		if (!Number.isNaN(parsed)) {
-			target[key] = parsed;
-		}
 	}
 
 	private async loadAuditLogWebhooks(logs: Array<GuildAuditLog>): Promise<{
@@ -522,31 +423,6 @@ export class GuildService {
 			actionType === AuditLogActionType.WEBHOOK_CREATE ||
 			actionType === AuditLogActionType.WEBHOOK_UPDATE ||
 			actionType === AuditLogActionType.WEBHOOK_DELETE
-		);
-	}
-
-	private getAuditLogTargetUserId(log: GuildAuditLog): UserID | null {
-		if (!log.targetId || !this.isUserTargetAction(log.actionType)) {
-			return null;
-		}
-		try {
-			return createUserID(BigInt(log.targetId));
-		} catch {
-			return null;
-		}
-	}
-
-	private isUserTargetAction(actionType: AuditLogActionType): boolean {
-		return (
-			actionType === AuditLogActionType.MEMBER_KICK ||
-			actionType === AuditLogActionType.MEMBER_PRUNE ||
-			actionType === AuditLogActionType.MEMBER_BAN_ADD ||
-			actionType === AuditLogActionType.MEMBER_BAN_REMOVE ||
-			actionType === AuditLogActionType.MEMBER_UPDATE ||
-			actionType === AuditLogActionType.MEMBER_ROLE_UPDATE ||
-			actionType === AuditLogActionType.MEMBER_MOVE ||
-			actionType === AuditLogActionType.MEMBER_DISCONNECT ||
-			actionType === AuditLogActionType.BOT_ADD
 		);
 	}
 
