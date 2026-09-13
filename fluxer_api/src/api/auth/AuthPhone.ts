@@ -33,7 +33,6 @@ import type {ApiContext} from '../ApiContext';
 import type {UserID} from '../BrandedTypes';
 import {Logger} from '../Logger';
 import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
 import {mapUserToPartialResponse, mapUserToPrivateResponse} from '../user/UserMappers';
 import {phonePrefixBanCache} from './PhonePrefixBanCache';
 import {requiresInboundPhoneVerification} from './PhoneVerificationPrefixPolicy';
@@ -367,12 +366,6 @@ async function attachVerifiedPhoneToAccount(ctx: ApiContext, userId: UserID, pho
 		reason: 'user_requested',
 		actorUserId: userId,
 	});
-	const userSearchService = getUserSearchService();
-	if (userSearchService && 'updateUser' in userSearchService) {
-		await userSearchService.updateUser(updatedUser).catch((error) => {
-			Logger.error({userId, error}, 'Failed to update user in search index');
-		});
-	}
 	await gateway.dispatchPresence({
 		userId,
 		event: 'USER_UPDATE',

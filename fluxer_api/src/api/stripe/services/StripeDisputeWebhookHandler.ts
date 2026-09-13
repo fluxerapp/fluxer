@@ -80,24 +80,20 @@ export class StripeDisputeWebhookHandler {
 			throw new StripeError('User not found for chargeback withdrawal');
 		}
 		if (user.flags & UserFlags.DELETED && user.deletionReasonCode === DeletionReasons.BILLING_DISPUTE_OR_ABUSE) {
+			const updatedUser = await this.userRepository.updateDeletionSchedule(user, {
+				flags: user.flags & ~UserFlags.DELETED,
+				pending_deletion_at: null,
+				deletion_reason_code: null,
+				deletion_public_reason: null,
+				deletion_audit_log_reason: null,
+				first_refund_at: user.firstRefundAt || new Date(),
+			});
 			await clearPendingDeletion({
 				userId: payment.userId,
 				pendingDeletionAt: user.pendingDeletionAt,
 				userRepository: this.userRepository,
 				deletionQueue: this.kvDeletionQueue,
 			});
-			const updatedUser = await this.userRepository.patchUpsert(
-				payment.userId,
-				{
-					flags: user.flags & ~UserFlags.DELETED,
-					pending_deletion_at: null,
-					deletion_reason_code: null,
-					deletion_public_reason: null,
-					deletion_audit_log_reason: null,
-					first_refund_at: user.firstRefundAt || new Date(),
-				},
-				user.toRow(),
-			);
 			await this.userCacheService.setUserPartialResponseFromUser(updatedUser);
 			if (updatedUser.email) {
 				await this.emailService.sendUnbanNotification(

@@ -18,7 +18,7 @@ import {resetAdminSecretHashForTesting} from '../oauth/repositories/ApplicationR
 import {resetIpBanExemptionsForTesting} from '../risk/IpBanExemptions';
 import {setThemeCssMaxBytesForTesting} from '../theme/ThemeService';
 
-export function resetServiceStateForTesting(): void {
+export async function resetServiceStateForTesting(): Promise<void> {
 	resetServiceRegistryForTesting();
 	resetServiceSingletonsForTesting();
 	resetServiceMiddlewareForTesting();
@@ -28,9 +28,9 @@ export function resetServiceStateForTesting(): void {
 	resetSsoRequestUrlPolicyForTesting();
 	resetAdminSecretHashForTesting();
 	setThemeCssMaxBytesForTesting(undefined);
-	ipBanCache.shutdown();
+	await ipBanCache.shutdown();
 	ipBanCache.resetCaches();
-	torExitListCache.shutdown();
+	await torExitListCache.shutdown();
 	torExitListCache.clearForTesting();
 	urlBlocklistCache.resetForTesting();
 	resetGeoipReadersForTesting();

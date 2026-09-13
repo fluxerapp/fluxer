@@ -146,7 +146,7 @@ describe('GET /experiments', () => {
 		const etag = first.response.headers.get('etag');
 		expect(etag).toMatch(/^"[0-9a-f]{64}"$/);
 		expect(first.response.headers.get('cache-control')).toBe('private, no-cache');
-		expect(first.response.headers.get('vary')).toBe('Authorization');
+		expect(first.response.headers.get('vary')).toBe('Authorization, Origin');
 
 		const revalidated = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
 			.get(ENDPOINT)
@@ -156,6 +156,7 @@ describe('GET /experiments', () => {
 		expect(revalidated.response.status).toBe(NOT_MODIFIED);
 		expect(revalidated.json).toBeUndefined();
 		expect(revalidated.response.headers.get('etag')).toBe(etag);
+		expect(revalidated.response.headers.get('vary')).toBe('Authorization, Origin');
 	});
 
 	it('lets a cross-origin client send If-None-Match and read the etag back', async () => {

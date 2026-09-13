@@ -28,11 +28,13 @@ async function triggerGuildArchive(
 	adminToken: string,
 	guildId: string,
 ): Promise<ArchiveResponse> {
-	return await createBuilder<ArchiveResponse>(harness, `${adminToken}`)
+	const archive = await createBuilder<ArchiveResponse>(harness, `${adminToken}`)
 		.post(`/admin/guilds/${guildId}/archives`)
 		.body({})
 		.expect(HTTP_STATUS.OK)
 		.execute();
+	await new AdminArchiveRepository().markAsStarted(await loadArchive(guildId, archive.archive_id));
+	return archive;
 }
 
 async function loadArchive(guildId: string, archiveId: string): Promise<AdminArchive> {

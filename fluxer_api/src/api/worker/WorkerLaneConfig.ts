@@ -49,7 +49,6 @@ const LANE_CONFIG = {
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
-			'revalidateUserConnections',
 			'bulkUpdateUserFlags',
 			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',

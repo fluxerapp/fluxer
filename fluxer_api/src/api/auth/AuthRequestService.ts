@@ -228,8 +228,8 @@ export class AuthRequestService {
 		return await this.toAuthLoginResponse(result);
 	}
 
-	getAuthSessions(userId: UserID): Promise<AuthSessionsResponse> {
-		return AuthSession.getAuthSessions(this.apiContext, userId);
+	getAuthSessions(userId: UserID, currentSessionIdHash?: Uint8Array): Promise<AuthSessionsResponse> {
+		return AuthSession.getAuthSessions(this.apiContext, userId, currentSessionIdHash);
 	}
 
 	async logoutAuthSessions({user, data}: AuthLogoutAuthSessionsRequest): Promise<void> {

@@ -240,6 +240,12 @@ export class StorageService implements IStorageService {
 			return;
 		}
 		const stream = fs.createReadStream(filePath, {highWaterMark: 1024 * 1024});
+		const errors = new Set<unknown>();
+		const onSourceError = (error: Error) => {
+			errors.add(error);
+		};
+		stream.on('error', onSourceError);
+		const closed = new Promise<void>((resolve) => stream.once('close', resolve));
 		try {
 			const upload = new Upload({
 				client: this.client,
@@ -255,10 +261,18 @@ export class StorageService implements IStorageService {
 				leavePartsOnError: false,
 			});
 			await upload.done();
+			if (!stream.readableEnded) {
+				throw new Error('File upload completed before its source stream ended');
+			}
 		} catch (error) {
+			errors.add(error);
+		} finally {
 			stream.destroy();
-			throw error;
+			await closed;
+			stream.off('error', onSourceError);
 		}
+		if (errors.size === 1) throw errors.values().next().value;
+		if (errors.size > 1) throw new AggregateError(errors, 'File upload and source stream failed');
 	}
 
 	async getPresignedDownloadURL({

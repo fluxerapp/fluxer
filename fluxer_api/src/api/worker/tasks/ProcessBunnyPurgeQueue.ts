@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
 import {Config} from '../../Config';
@@ -59,6 +60,7 @@ async function purgeUrls(
 				signal: AbortSignal.timeout(ms('30 seconds')),
 			});
 			if (response.status === 429) {
+				FetchUtils.discardResponseBody(response.body, response.status);
 				const remaining = urls.slice(index);
 				await queue.addUrls(remaining);
 				stats.requeued += remaining.length;
@@ -68,21 +70,30 @@ async function purgeUrls(
 			}
 			if (!response.ok) {
 				stats.failures++;
-				const errorText = await FetchUtils.streamToStringWithLimit(response.body, {
+				const errorBody = await FetchUtils.streamToBufferWithLimit(response.body, {
 					maxBytes: EXTERNAL_RESPONSE_LIMITS.bunnyErrorBytes,
 					headers: response.headers,
 					url: response.url,
 					description: 'Bunny CDN purge response',
 				});
-				Logger.error({status: response.status, error: errorText, url, label}, 'Failed to purge URL via Bunny CDN');
+				Logger.error(
+					{
+						status: response.status,
+						responseBodyBytes: errorBody.byteLength,
+						url: formatUrlForDiagnostics(url),
+						label,
+					},
+					'Failed to purge URL via Bunny CDN',
+				);
 				await queue.addUrls([url]);
 				stats.requeued++;
 				continue;
 			}
+			FetchUtils.discardResponseBody(response.body, response.status);
 			stats.purged++;
 		} catch (error) {
 			stats.failures++;
-			Logger.error({error, url, label}, 'Error purging URL via Bunny CDN');
+			Logger.error({error, url: formatUrlForDiagnostics(url), label}, 'Error purging URL via Bunny CDN');
 			await queue.addUrls([url]);
 			stats.requeued++;
 		}

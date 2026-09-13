@@ -61,17 +61,13 @@ export class AdminUserDeletionService {
 		const daysUntilDeletion = Math.max(data.days_until_deletion, minDays);
 		const pendingDeletionAt = new Date();
 		pendingDeletionAt.setDate(pendingDeletionAt.getDate() + daysUntilDeletion);
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.DELETED,
-				pending_deletion_at: pendingDeletionAt,
-				deletion_reason_code: data.reason_code,
-				deletion_public_reason: data.public_reason ?? null,
-				deletion_audit_log_reason: auditLogReason,
-			},
-			user.toRow(),
-		);
+		const updatedUser = await userRepository.updateDeletionSchedule(user, {
+			flags: user.flags | UserFlags.DELETED,
+			pending_deletion_at: pendingDeletionAt,
+			deletion_reason_code: data.reason_code,
+			deletion_public_reason: data.public_reason ?? null,
+			deletion_audit_log_reason: auditLogReason,
+		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,
@@ -191,23 +187,19 @@ export class AdminUserDeletionService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
+		const updatedUser = await userRepository.updateDeletionSchedule(user, {
+			flags: user.flags & ~UserFlags.DELETED & ~UserFlags.SELF_DELETED,
+			pending_deletion_at: null,
+			deletion_reason_code: null,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: null,
+		});
 		await clearPendingDeletion({
 			userId,
 			pendingDeletionAt: user.pendingDeletionAt,
 			userRepository,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags & ~UserFlags.DELETED & ~UserFlags.SELF_DELETED,
-				pending_deletion_at: null,
-				deletion_reason_code: null,
-				deletion_public_reason: null,
-				deletion_audit_log_reason: null,
-			},
-			user.toRow(),
-		);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		if (user.email) {
 			await emailService.sendUnbanNotification(

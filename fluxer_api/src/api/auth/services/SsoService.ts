@@ -10,6 +10,7 @@ import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlo
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {ms, seconds} from 'itty-time';
 import {
 	type CryptoKey,
@@ -377,6 +378,9 @@ export class SsoService {
 			throw new RegistrationClosedError();
 		}
 		const pendingApproval = registrationConfig.mode === 'approval';
+		if (pendingApproval) {
+			await this.instanceConfigRepository.getPendingRegistrations();
+		}
 		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval});
 		if (pendingApproval) {
 			await this.instanceConfigRepository.addPendingRegistration({
@@ -675,6 +679,7 @@ export class SsoService {
 				{requestUrlPolicy: getSsoRequestUrlPolicy()},
 			);
 			if (response.status < 200 || response.status >= 300) {
+				FetchUtils.discardResponseBody(response.stream, response.status);
 				throw new Error(`Failed to fetch JWKS: HTTP ${response.status}`);
 			}
 			const rawBody = await FetchUtils.streamToStringWithLimit(response.stream, {
@@ -774,6 +779,7 @@ export class SsoService {
 			{requestUrlPolicy: getSsoRequestUrlPolicy()},
 		);
 		if (resp.status < 200 || resp.status >= 300) {
+			FetchUtils.discardResponseBody(resp.stream, resp.status);
 			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_FETCH_SSO_USER_INFO);
 		}
 		try {
@@ -836,6 +842,7 @@ export class SsoService {
 			{requestUrlPolicy: getSsoRequestUrlPolicy()},
 		);
 		if (resp.status < 200 || resp.status >= 300) {
+			FetchUtils.discardResponseBody(resp.stream, resp.status);
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_SSO_AUTHORIZATION_CODE);
 		}
 		const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
@@ -926,7 +933,10 @@ export class SsoService {
 		try {
 			return await this.assertPublicOutboundUrl(rawUrl, fieldName);
 		} catch (error) {
-			getLogger().warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
+			getLogger().warn(
+				{fieldName, rawUrl: formatUrlForDiagnostics(rawUrl), error},
+				'Ignoring SSO URL that failed outbound policy validation',
+			);
 			return null;
 		}
 	}

@@ -35,6 +35,13 @@ class FakeConsumerMessages {
 		this.end();
 	}
 
+	stop(error?: Error): void {
+		if (error) {
+			this.failure = error;
+		}
+		this.end();
+	}
+
 	async *[Symbol.asyncIterator](): AsyncGenerator<JsMsg> {
 		while (true) {
 			while (this.pending.length > 0) {
@@ -66,7 +73,7 @@ function createRunner(streams: Array<FakeConsumerMessages>): {runner: WorkerRunn
 			getJetStreamClient: () => ({
 				consumers: {
 					get: async () => ({
-						consume: async () => {
+						fetch: async () => {
 							const stream = streams[consumed];
 							consumed += 1;
 							if (!stream) {

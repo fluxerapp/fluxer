@@ -13,6 +13,7 @@ class FakeConsumerMessages {
 	private readonly pending: Array<JsMsg> = [];
 	private notify: (() => void) | null = null;
 	private closed = false;
+	private failure: Error | null = null;
 
 	push(msg: JsMsg): void {
 		this.pending.push(msg);
@@ -20,6 +21,13 @@ class FakeConsumerMessages {
 	}
 
 	async close(): Promise<void> {
+		this.stop();
+	}
+
+	stop(error?: Error): void {
+		if (error) {
+			this.failure = error;
+		}
 		this.closed = true;
 		this.wake();
 	}
@@ -28,6 +36,9 @@ class FakeConsumerMessages {
 		while (true) {
 			while (this.pending.length > 0) {
 				yield this.pending.shift()!;
+			}
+			if (this.failure !== null) {
+				throw this.failure;
 			}
 			if (this.closed) {
 				return;
@@ -51,7 +62,7 @@ function createQueueStub(messages: FakeConsumerMessages) {
 			getJetStreamClient: () => ({
 				consumers: {
 					get: async () => ({
-						consume: async () => messages as unknown as ConsumerMessages,
+						fetch: async () => messages as unknown as ConsumerMessages,
 					}),
 				},
 			}),

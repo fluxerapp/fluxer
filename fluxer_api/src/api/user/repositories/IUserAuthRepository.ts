@@ -22,7 +22,6 @@ export interface IUserAuthRepository {
 	createAuthSession(sessionData: AuthSessionRow): Promise<AuthSession>;
 	updateAuthSessionLastUsed(sessionIdHash: Buffer): Promise<void>;
 	deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void>;
-	revokeAuthSession(sessionIdHash: Buffer): Promise<void>;
 	deleteAllAuthSessions(userId: UserID): Promise<void>;
 	recordCountrySighting(userId: UserID, country: string): Promise<void>;
 	hasCountrySightingOutsideSet(userId: UserID, countryCodes: Iterable<string>): Promise<boolean>;

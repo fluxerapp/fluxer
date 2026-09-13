@@ -32,7 +32,7 @@ class RecordingLogger implements ILogger {
 }
 
 class UnreadableStateKVProvider extends MockKVProvider {
-	override async exists(): Promise<number> {
+	override async get(): Promise<string | null> {
 		throw new Error('kv unavailable');
 	}
 }

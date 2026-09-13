@@ -92,7 +92,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 	const mockBlueskyOAuthService = new MockBlueskyOAuthService();
 	setInjectedBlueskyOAuthService(mockBlueskyOAuthService);
 	setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-	resetServiceStateForTesting();
+	await resetServiceStateForTesting();
 	const {
 		app,
 		initialize: initializeApp,
@@ -154,7 +154,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		setInjectedMediaService(new TestMediaService(fallbackStorageService));
 		setInjectedSearchProviderService(new NullSearchProvider());
 		setInjectedBlueskyOAuthService(new MockBlueskyOAuthService());
-		resetServiceStateForTesting();
+		await resetServiceStateForTesting();
 		resetApiServicesForTesting();
 	}
 	async function requestJson(params: {

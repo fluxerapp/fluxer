@@ -3,7 +3,7 @@
 import type {UserID} from '../../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import {Db} from '../../database/CassandraTypes';
-import type {AdminApiKeyRow} from '../../database/types/AdminAuthTypes';
+import type {AdminApiKeyByCreatorRow, AdminApiKeyRow} from '../../database/types/AdminAuthTypes';
 import {AdminApiKey} from '../../models/AdminApiKey';
 import {AdminApiKeys, AdminApiKeysByCreator} from '../../Tables';
 import {hashPassword} from '../../utils/PasswordUtils';
@@ -29,39 +29,24 @@ export class AdminApiKeyRepository implements IAdminApiKeyRepository {
 			version: 1,
 			acls: data.acls,
 		};
+		const creatorRow: AdminApiKeyByCreatorRow = {
+			created_by_user_id: row.created_by_user_id,
+			key_id: row.key_id,
+			created_at: row.created_at,
+			name: row.name,
+			expires_at: row.expires_at,
+			last_used_at: row.last_used_at,
+			version: row.version,
+			acls: row.acls,
+		};
 		const batch = new BatchBuilder();
 		if (data.expiresAt) {
 			const ttlSeconds = computeTtlSeconds(data.expiresAt);
 			batch.addPrepared(AdminApiKeys.insertWithTtl(row, ttlSeconds));
-			batch.addPrepared(
-				AdminApiKeysByCreator.insertWithTtl(
-					{
-						created_by_user_id: row.created_by_user_id,
-						key_id: row.key_id,
-						created_at: row.created_at,
-						name: row.name,
-						expires_at: row.expires_at,
-						last_used_at: row.last_used_at,
-						version: row.version,
-						acls: row.acls,
-					},
-					ttlSeconds,
-				),
-			);
+			batch.addPrepared(AdminApiKeysByCreator.insertWithTtl(creatorRow, ttlSeconds));
 		} else {
 			batch.addPrepared(AdminApiKeys.upsertAll(row));
-			batch.addPrepared(
-				AdminApiKeysByCreator.upsertAll({
-					created_by_user_id: row.created_by_user_id,
-					key_id: row.key_id,
-					created_at: row.created_at,
-					name: row.name,
-					expires_at: row.expires_at,
-					last_used_at: row.last_used_at,
-					version: row.version,
-					acls: row.acls,
-				}),
-			);
+			batch.addPrepared(AdminApiKeysByCreator.upsertAll(creatorRow));
 		}
 		await batch.execute();
 		return new AdminApiKey(row);
@@ -133,7 +118,7 @@ export class AdminApiKeyRepository implements IAdminApiKeyRepository {
 
 	async updateLastUsed(keyId: bigint, expiresAt: Date | null): Promise<void> {
 		if (expiresAt) {
-			const remainingTtl = Math.max(Math.floor((expiresAt.getTime() - Date.now()) / 1000), 1);
+			const remainingTtl = computeTtlSeconds(expiresAt);
 			await upsertOne(AdminApiKeys.patchByPkWithTtl({key_id: keyId}, {last_used_at: Db.set(new Date())}, remainingTtl));
 		} else {
 			await upsertOne(AdminApiKeys.patchByPk({key_id: keyId}, {last_used_at: Db.set(new Date())}));

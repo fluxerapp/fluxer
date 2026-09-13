@@ -17,6 +17,7 @@ import {Logger} from '../../Logger';
 import type {LimitConfigService} from '../../limits/LimitConfigService';
 import type {AuthSession} from '../../models/AuthSession';
 import type {User} from '../../models/User';
+import {runAllInOrder} from '../../utils/ConcurrencyUtils';
 import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
 import type {IUserChannelRepository} from '../repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
@@ -102,7 +103,6 @@ export class UserAccountService {
 			guildRepository,
 			entityAssetService,
 			rateLimitService,
-			updatePropagator: this.updatePropagator,
 			limitConfigService,
 		});
 		this.securityService = new UserAccountSecurityService({
@@ -150,10 +150,11 @@ export class UserAccountService {
 			const profileFlags = profileResult.updates.flags ?? user.flags;
 			updates.flags = profileFlags | (securityResult.updates.flags & ~user.flags);
 		}
-		const metadata = {
-			...securityResult.metadata,
-			...profileResult.metadata,
-		};
+		const securityPremiumFlags = securityResult.updates.premium_flags;
+		if (securityPremiumFlags !== undefined && securityPremiumFlags !== null) {
+			const profilePremiumFlags = profileResult.updates.premium_flags ?? user.premiumFlags;
+			updates.premium_flags = profilePremiumFlags | (securityPremiumFlags & ~user.premiumFlags);
+		}
 		const emailChanged = data.email !== undefined;
 		if (emailChanged) {
 			updates.email_verified = !!emailVerifiedViaToken;
@@ -168,55 +169,57 @@ export class UserAccountService {
 		try {
 			updatedUser = await this.userAccountRepository.patchUpsert(user.id, updates, user.toRow());
 		} catch (error) {
-			await this.profileService.rollbackAssetChanges(profileResult);
-			Logger.error({error, userId: user.id}, 'User update failed, rolled back asset uploads');
+			Logger.error(
+				{error, userId: user.id},
+				'User profile update failed with unknown commit status; retaining uploaded assets',
+			);
 			throw error;
 		}
-		await this.contactChangeLogService.recordDiff({
-			oldUser: user,
-			newUser: updatedUser,
-			reason: 'user_requested',
-			actorUserId: user.id,
-		});
-		await this.profileService.commitAssetChanges(profileResult).catch((error) => {
-			Logger.error({error, userId: user.id}, 'Failed to commit asset changes after successful DB update');
-		});
-		await this.updatePropagator.dispatchUserUpdate(updatedUser);
-		if (hasPartialUserFieldsChanged(user, updatedUser)) {
-			await this.updatePropagator.updateUserCache(updatedUser);
+		const finalizationSteps: Array<() => Promise<unknown>> = [
+			() =>
+				this.contactChangeLogService.recordDiff({
+					oldUser: user,
+					newUser: updatedUser,
+					reason: 'user_requested',
+					actorUserId: user.id,
+				}),
+			async () => {
+				try {
+					await this.profileService.commitAssetChanges(profileResult);
+				} catch (error) {
+					Logger.error({error, userId: user.id}, 'Failed to commit asset changes after successful DB update');
+				}
+			},
+			() => this.updatePropagator.dispatchUserUpdate(updatedUser),
+			async () => {
+				if (hasPartialUserFieldsChanged(user, updatedUser)) {
+					await this.updatePropagator.updateUserCache(updatedUser);
+				}
+			},
+			async () => {
+				const nameChanged =
+					user.username !== updatedUser.username ||
+					user.discriminator !== updatedUser.discriminator ||
+					user.globalName !== updatedUser.globalName;
+				if (nameChanged) {
+					void this.reindexGuildMembersForUser(updatedUser);
+				}
+			},
+		];
+		if (securityResult.metadata.invalidateAuthSessions) {
+			finalizationSteps.push(
+				() => this.securityService.invalidateAndRecreateSessions({user, oldAuthSession, request}),
+				() => this.userAccountRepository.deleteAllPasswordResetTokens(user.id),
+			);
 		}
-		const nameChanged =
-			user.username !== updatedUser.username ||
-			user.discriminator !== updatedUser.discriminator ||
-			user.globalName !== updatedUser.globalName;
-		if (nameChanged) {
-			void this.reindexGuildMembersForUser(updatedUser);
-		}
-		if (metadata.invalidateAuthSessions) {
-			await this.securityService.invalidateAndRecreateSessions({user, oldAuthSession, request});
-			await this.userAccountRepository.deleteAllPasswordResetTokens(user.id);
-		}
+		await runAllInOrder(finalizationSteps, 'Failed to finalize user update');
 		return updatedUser;
 	}
 
 	private async reindexGuildMembersForUser(updatedUser: User): Promise<void> {
 		try {
 			const guildIds = await this.userAccountRepository.getUserGuildIds(updatedUser.id);
-			if (guildIds.length === 0) return;
-			const guilds = await this.guildRepository.listGuilds(guildIds);
-			const indexedGuilds = guilds.filter((guild) => guild.membersIndexedAt != null);
-			if (indexedGuilds.length === 0) return;
-			const members = await Promise.all(
-				indexedGuilds.map((guild) => this.guildRepository.getMember(guild.id, updatedUser.id)),
-			);
-			for (let i = 0; i < members.length; i++) {
-				const member = members[i];
-				if (member) {
-					const guild = indexedGuilds[i]!;
-					const includeDefault = guild.membersIndexedAt != null;
-					void this.searchIndexService.updateMember(member, updatedUser, {includeDefault});
-				}
-			}
+			await this.searchIndexService.updateUserMembers(updatedUser, guildIds, this.guildRepository);
 		} catch (error) {
 			Logger.error({userId: updatedUser.id.toString(), error}, 'Failed to reindex guild members after user update');
 		}

@@ -130,29 +130,6 @@ export function ConnectionController(app: HonoApp) {
 			return ctx.body(null, 204);
 		},
 	);
-	app.post(
-		'/users/@me/connections/:type/:connection_id/verify',
-		RateLimitMiddleware(ConnectionRateLimitConfigs.CONNECTION_VERIFY),
-		LoginRequired,
-		DefaultUserOnly,
-		Validator('param', ConnectionTypeParam),
-		OpenAPI({
-			operationId: 'verify_connection',
-			summary: 'Verify connection',
-			responseSchema: ConnectionResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Connections'],
-			description: 'Triggers verification for an external service connection.',
-		}),
-		async (ctx) => {
-			const {type, connection_id} = ctx.req.valid('param');
-			const connection = await ctx
-				.get('connectionRequestService')
-				.verifyConnection(ctx.get('user').id, type, connection_id);
-			return ctx.json(connection);
-		},
-	);
 	app.patch(
 		'/users/@me/connections/reorder',
 		RateLimitMiddleware(ConnectionRateLimitConfigs.CONNECTION_UPDATE),

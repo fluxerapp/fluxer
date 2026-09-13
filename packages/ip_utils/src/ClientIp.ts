@@ -52,31 +52,11 @@ function toStringHeaderValue(value: string | Array<string> | null | undefined): 
 	return typeof value === 'string' ? value : null;
 }
 
-function parseSingleIpValue(value: string): ParsedIpAddress | null {
-	const trimmed = value.trim();
-	if (!trimmed) {
-		return null;
-	}
-	return parseIpAddress(trimmed);
-}
-
 function parseClientIpHeaderValue(value: string | null): ParsedIpAddress | null {
 	if (value === null) {
 		return null;
 	}
-	const [firstHop] = value.split(',');
-	if (firstHop === undefined) {
-		return null;
-	}
-	return parseSingleIpValue(firstHop);
-}
-
-function createRequestHeaderReader(request: Request): HeaderReader {
-	return {
-		get: (name: string): string | null => {
-			return request.headers.get(name);
-		},
-	};
+	return parseIpAddress(value.split(',', 1)[0]);
 }
 
 function getHeaderValue(headers: HeadersLike, name: string): string | null {
@@ -121,7 +101,7 @@ function extractClientIpDetailsFromReader(
 }
 
 export function extractClientIpDetails(req: Request, options?: ClientIpExtractionOptions): ExtractedClientIp | null {
-	return extractClientIpDetailsFromReader(createRequestHeaderReader(req), options);
+	return extractClientIpDetailsFromReader(req.headers, options);
 }
 
 export function extractClientIp(req: Request, options?: ClientIpExtractionOptions): string | null {

@@ -10,7 +10,8 @@ import type {UserID} from '../../../BrandedTypes';
 import {Db, type DbOp} from '../../../database/CassandraTypes';
 import type {UserRow} from '../../../database/types/UserTypes';
 import {User} from '../../../models/User';
-import {UserDataRepository} from './crud/UserDataRepository';
+import type {UserDeletionScheduleUpdate} from '../IUserAccountRepository';
+import {UserDataRepository, type UserDeletionTransition} from './crud/UserDataRepository';
 import {type EmailClaimReservation, UserEmailOwnershipRepository} from './crud/UserEmailOwnershipRepository';
 import {UserIndexRepository} from './crud/UserIndexRepository';
 import {UserSearchRepository} from './crud/UserSearchRepository';
@@ -96,23 +97,45 @@ export class UserAccountRepository {
 	}
 
 	async patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User> {
+		return this.patchAccount(userId, patchData, oldData);
+	}
+
+	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
+		return this.patchAccount(user.id, patch, user.toRow(), 'schedule');
+	}
+
+	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
+		return this.dataRepo.startDeletion(userId, pendingDeletionAt);
+	}
+
+	async anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User> {
+		return this.patchAccount(user.id, patch, user.toRow(), 'anonymise');
+	}
+
+	async completeDeletion(user: User): Promise<void> {
+		await this.dataRepo.patchDeletion(user, {pending_deletion_at: Db.clear()}, 'complete');
+	}
+
+	private async patchAccount(
+		userId: UserID,
+		patchData: Partial<UserRow>,
+		oldData?: UserRow | null,
+		deletionTransition?: UserDeletionTransition,
+	): Promise<User> {
 		if (!oldData) {
 			const existingUser = await this.findUniqueAssert(userId);
 			oldData = existingUser.toRow();
 		}
 		patchData = this.migratePremiumFlagsInPatch(patchData, oldData);
-		const definedPatchData = Object.fromEntries(Object.entries(patchData).filter(([, v]) => v !== undefined));
 		const userPatch: Record<string, DbOp<unknown>> = {};
-		for (const [key, value] of Object.entries(definedPatchData)) {
-			if (key === 'user_id') continue;
-			const userRowKey = key as keyof UserRow;
-			if (value === null) {
-				const oldVal = oldData?.[userRowKey];
-				if (oldVal !== null && oldVal !== undefined) {
-					userPatch[key] = Db.clear();
-				}
-			} else {
+		for (const [key, value] of Object.entries(patchData)) {
+			if (key === 'user_id' || value === undefined) continue;
+			if (value !== null) {
 				userPatch[key] = Db.set(value);
+				continue;
+			}
+			if (oldData[key as keyof UserRow] != null) {
+				userPatch[key] = Db.clear();
 			}
 		}
 		const nextEmail = typeof patchData.email === 'string' ? patchData.email : null;
@@ -123,7 +146,9 @@ export class UserAccountRepository {
 		}
 		let dataCommitted = false;
 		try {
-			const result = await this.dataRepo.patchUser(userId, userPatch, oldData);
+			const result = deletionTransition
+				? await this.dataRepo.patchDeletion(new User(oldData), userPatch, deletionTransition)
+				: await this.dataRepo.patchUser(userId, userPatch, oldData);
 			if (result.finalVersion === null) {
 				throw new Error(`Failed to update user ${userId} due to concurrent modification`);
 			}
@@ -133,7 +158,9 @@ export class UserAccountRepository {
 			const updatedUser = new User(updatedData);
 			await this.emailOwnershipRepo.finalizeEmailClaim(emailClaim);
 			await this.releasePreviousEmailIfChanged(previousData, updatedData);
-			await this.indexRepo.syncIndices(updatedData, previousData);
+			if (deletionTransition !== 'anonymise') {
+				await this.indexRepo.syncIndices(updatedData, previousData);
+			}
 			await this.searchRepo.updateUser(updatedUser);
 			return updatedUser;
 		} catch (error) {

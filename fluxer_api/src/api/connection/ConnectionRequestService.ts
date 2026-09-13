@@ -82,15 +82,6 @@ export class ConnectionRequestService {
 		await this.connectionService.deleteConnection(userId, connectionType, connectionId);
 	}
 
-	async verifyConnection(
-		userId: UserID,
-		connectionType: ConnectionType,
-		connectionId: string,
-	): Promise<ConnectionResponse> {
-		const row = await this.connectionService.verifyConnection(userId, connectionType, connectionId);
-		return mapConnectionToResponse(row);
-	}
-
 	async reorderConnections(userId: UserID, connectionIds: Array<string>): Promise<void> {
 		await this.connectionService.reorderConnections(userId, connectionIds);
 	}

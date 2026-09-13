@@ -228,9 +228,7 @@ export const ERROR_I18N_MESSAGES = {
 	'connections.already_exists': 'A connection of this type with this identifier already exists.',
 	'connections.bluesky_oauth_authorization_failed':
 		"We couldn't resolve that Bluesky handle. Please check it and try again.",
-	'connections.bluesky_oauth_callback_failed': "We couldn't complete the Bluesky connection. Please try again.",
 	'connections.bluesky_oauth_not_enabled': 'Bluesky connections are not enabled on this instance.',
-	'connections.bluesky_oauth_state_invalid': 'The authorization request has expired or is invalid. Please try again.',
 	'connections.initiation_token_invalid': 'The connection initiation token is invalid or has expired.',
 	'connections.invalid_type': 'The connection type is not supported.',
 	'connections.limit_reached': "You've reached the maximum number of connections ({limit}).",

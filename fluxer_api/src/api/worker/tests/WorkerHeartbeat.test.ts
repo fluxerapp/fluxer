@@ -36,6 +36,10 @@ class FakeConsumerMessages {
 	private closed = false;
 
 	async close(): Promise<void> {
+		this.stop();
+	}
+
+	stop(): void {
 		this.closed = true;
 		const notify = this.notify;
 		this.notify = null;
@@ -59,7 +63,7 @@ function createRunner(messages: FakeConsumerMessages, heartbeat: WorkerHeartbeat
 				getJetStreamClient: () => ({
 					consumers: {
 						get: async () => ({
-							consume: async () => messages as unknown as ConsumerMessages,
+							fetch: async () => messages as unknown as ConsumerMessages,
 						}),
 					},
 				}),

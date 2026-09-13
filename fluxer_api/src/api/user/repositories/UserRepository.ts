@@ -39,6 +39,7 @@ import type {UserSettings} from '../../models/UserSettings';
 import type {VisionarySlot} from '../../models/VisionarySlot';
 import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
 import {ReadStateRepository} from '../../read_state/ReadStateRepository';
+import type {UserDeletionScheduleUpdate} from './IUserAccountRepository';
 import type {
 	HistoricalDmChannelSummary,
 	ListHistoricalDmChannelOptions,
@@ -81,6 +82,22 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User> {
 		return this.accountRepo.patchUpsert(userId, patchData, oldData);
+	}
+
+	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
+		return this.accountRepo.updateDeletionSchedule(user, patch);
+	}
+
+	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
+		return this.accountRepo.startDeletion(userId, pendingDeletionAt);
+	}
+
+	async anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User> {
+		return this.accountRepo.anonymizeForDeletion(user, patch);
+	}
+
+	async completeDeletion(user: User): Promise<void> {
+		return this.accountRepo.completeDeletion(user);
 	}
 
 	async findUnique(userId: UserID): Promise<User | null> {
@@ -258,10 +275,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void> {
 		return this.authRepo.deleteAuthSessions(userId, sessionIdHashes);
-	}
-
-	async revokeAuthSession(sessionIdHash: Buffer): Promise<void> {
-		return this.authRepo.revokeAuthSession(sessionIdHash);
 	}
 
 	async deleteAllAuthSessions(userId: UserID): Promise<void> {

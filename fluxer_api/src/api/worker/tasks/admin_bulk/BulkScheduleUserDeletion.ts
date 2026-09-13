@@ -59,17 +59,13 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 			if (!user) throw new Error('user_not_found');
 			const pendingDeletionAt = new Date();
 			pendingDeletionAt.setDate(pendingDeletionAt.getDate() + daysUntilDeletion);
-			const updatedUser = await deps.userRepository.patchUpsert(
-				userId,
-				{
-					flags: user.flags | UserFlags.DELETED,
-					pending_deletion_at: pendingDeletionAt,
-					deletion_reason_code: payload.reason_code,
-					deletion_public_reason: payload.public_reason ?? null,
-					deletion_audit_log_reason: payload.audit_log_reason ?? null,
-				},
-				user.toRow(),
-			);
+			const updatedUser = await deps.userRepository.updateDeletionSchedule(user, {
+				flags: user.flags | UserFlags.DELETED,
+				pending_deletion_at: pendingDeletionAt,
+				deletion_reason_code: payload.reason_code,
+				deletion_public_reason: payload.public_reason ?? null,
+				deletion_audit_log_reason: payload.audit_log_reason ?? null,
+			});
 			await reschedulePendingDeletion({
 				userId,
 				currentPendingDeletionAt: user.pendingDeletionAt,

@@ -49,7 +49,10 @@ const FEED_SOURCES: Array<FeedSource> = [
 
 async function fetchFeed(source: FeedSource): Promise<Array<string>> {
 	const res = await fetch(source.url, {signal: AbortSignal.timeout(120000)});
-	if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${source.url}`);
+	if (!res.ok) {
+		FetchUtils.discardResponseBody(res.body, res.status);
+		throw new Error(`HTTP ${res.status} fetching ${source.url}`);
+	}
 	const text = await FetchUtils.streamToStringWithLimit(res.body, {
 		maxBytes: EXTERNAL_RESPONSE_LIMITS.urlBlocklistBytes,
 		headers: res.headers,

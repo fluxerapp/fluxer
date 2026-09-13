@@ -15,10 +15,12 @@ import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '.
 import {ipBanCache} from '../middleware/IpBanMiddleware';
 import {initializeServiceSingletons, shutdownReportService} from '../middleware/ServiceMiddleware';
 import {
+	closeOwnedKVClient,
 	ensureVoiceResourcesInitialized,
 	getKVClient,
 	getSnowflakeService,
 	setInjectedWorkerService,
+	shutdownVoiceResources,
 } from '../middleware/ServiceRegistry';
 import {
 	getCacheService,
@@ -26,6 +28,8 @@ import {
 	getKVAccountDeletionQueue,
 	getReportRepository,
 	getUserRepository,
+	shutdownInstanceConfigRepository,
+	shutdownServiceSingletons,
 } from '../middleware/ServiceSingletons';
 import {torExitListCache} from '../middleware/TorExitListCache';
 import {ensureApnsSigningKey} from '../push/ApnsPushService';
@@ -38,6 +42,42 @@ import {WorkerService} from '../worker/WorkerService';
 import {ensureDeletionQueueState} from './DeletionQueueStartup';
 
 let jsConnectionManager: JetStreamConnectionManager | null = null;
+
+interface RefreshCacheLifecycle {
+	initialize(): Promise<void>;
+	shutdown(): Promise<void>;
+}
+
+const refreshCaches = new Map<RefreshCacheLifecycle, string>();
+let refreshCacheShutdownPromise: Promise<void> | null = null;
+
+async function initializeRefreshCache(cache: RefreshCacheLifecycle, name: string, logger: ILogger): Promise<void> {
+	refreshCaches.set(cache, name);
+	await cache.initialize();
+	logger.info(`${name} initialized`);
+}
+
+async function shutdownRefreshCaches(logger: ILogger): Promise<void> {
+	if (refreshCacheShutdownPromise) return await refreshCacheShutdownPromise;
+	const caches = [...refreshCaches];
+	refreshCaches.clear();
+	const shutdown = Promise.all(
+		caches.map(async ([cache, name]) => {
+			try {
+				await cache.shutdown();
+				logger.info(`${name} shut down`);
+			} catch (error) {
+				logger.error({error}, `Error shutting down ${name}`);
+			}
+		}),
+	).then(() => undefined);
+	refreshCacheShutdownPromise = shutdown;
+	try {
+		await shutdown;
+	} finally {
+		if (refreshCacheShutdownPromise === shutdown) refreshCacheShutdownPromise = null;
+	}
+}
 
 function unsupportedDatabaseBackend(backend: never): never {
 	throw new Error(`Unsupported database backend during shutdown: ${String(backend)}`);
@@ -70,7 +110,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 				);
 			}
 			if (config.database.backend === 'postgres' && !hasDatabaseQueryExecutor()) {
-				await initPostgres(config.postgres);
+				await initPostgres(config.postgres, (diagnostic) => logger.error(diagnostic, 'Postgres connection error'));
 				const postgres = getDefaultPostgresClient();
 				await ensurePostgresKvSchema(postgres);
 				setDatabaseQueryExecutor(new PostgresKvQueryExecutor(postgres));
@@ -93,8 +133,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			}
 			const kvClient = getKVClient();
 			ipBanCache.setRefreshSubscriber(kvClient);
-			await ipBanCache.initialize();
-			logger.info('IP ban cache initialized');
+			await initializeRefreshCache(ipBanCache, 'IP ban cache', logger);
 			await startAbuseReplicationSubscriber(kvClient);
 			logger.info('Abusive-IP auto-banner replication started');
 			torExitListCache.setKvClient(kvClient);
@@ -104,24 +143,19 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			urlBlocklistCache.setRefreshSubscriber(kvClient);
 			const {getStorageService} = await import('../middleware/ServiceSingletons');
 			urlBlocklistCache.setStorageService(getStorageService());
-			await urlBlocklistCache.initialize();
-			logger.info('URL blocklist cache initialized');
+			await initializeRefreshCache(urlBlocklistCache, 'URL blocklist cache', logger);
 			const {fileShaCache} = await import('../middleware/FileShaCache');
 			fileShaCache.setRefreshSubscriber(kvClient);
-			await fileShaCache.initialize();
-			logger.info('File SHA blocklist cache initialized');
+			await initializeRefreshCache(fileShaCache, 'File SHA blocklist cache', logger);
 			const {phraseBlocklistCache} = await import('../middleware/PhraseBlocklistCache');
 			phraseBlocklistCache.setRefreshSubscriber(kvClient);
-			await phraseBlocklistCache.initialize();
-			logger.info('Phrase blocklist cache initialized');
+			await initializeRefreshCache(phraseBlocklistCache, 'Phrase blocklist cache', logger);
 			const {bannedAvatarHashCache} = await import('../middleware/BannedAvatarHashCache');
 			bannedAvatarHashCache.setRefreshSubscriber(kvClient);
-			await bannedAvatarHashCache.initialize();
-			logger.info('Banned avatar hash cache initialized');
+			await initializeRefreshCache(bannedAvatarHashCache, 'Banned avatar hash cache', logger);
 			const {profileSubstringBlocklistCache} = await import('../middleware/ProfileSubstringBlocklistCache');
 			profileSubstringBlocklistCache.setRefreshSubscriber(kvClient);
-			await profileSubstringBlocklistCache.initialize();
-			logger.info('Profile substring blocklist cache initialized');
+			await initializeRefreshCache(profileSubstringBlocklistCache, 'Profile substring blocklist cache', logger);
 			await initializeServiceSingletons();
 			logger.info('Service singletons initialized');
 			if (!config.dev.testModeEnabled) {
@@ -210,6 +244,12 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 export function createShutdown(config: APIConfig, logger: ILogger): () => Promise<void> {
 	return async (): Promise<void> => {
 		logger.info('Shutting down API service...');
+		try {
+			await shutdownVoiceResources();
+			logger.info('Voice resources shut down');
+		} catch (error) {
+			logger.error({error}, 'Error shutting down voice resources');
+		}
 		if (jsConnectionManager) {
 			try {
 				await jsConnectionManager.drain();
@@ -226,25 +266,29 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 			logger.error({error}, 'Error shutting down search service');
 		}
 		try {
-			ipBanCache.shutdown();
-			logger.info('IP ban cache shut down');
-		} catch (error) {
-			logger.error({error}, 'Error shutting down IP ban cache');
-		}
-		try {
 			await stopAbuseReplicationSubscriber();
 			logger.info('Abusive-IP auto-banner replication stopped');
 		} catch (error) {
 			logger.error({error}, 'Error stopping abusive-IP auto-banner replication');
 		}
+		await Promise.all([
+			shutdownRefreshCaches(logger),
+			shutdownServiceSingletons()
+				.then(() => {
+					logger.info('Service singletons shut down');
+				})
+				.catch((error) => {
+					logger.error({error}, 'Error shutting down service singletons');
+				}),
+		]);
 		try {
-			torExitListCache.shutdown();
+			await torExitListCache.shutdown();
 			logger.info('Tor exit list cache shut down');
 		} catch (error) {
 			logger.error({error}, 'Error shutting down Tor exit list cache');
 		}
 		try {
-			getInstanceConfigRepository().shutdown();
+			await shutdownInstanceConfigRepository();
 			logger.info('Instance config repository shut down');
 		} catch (error) {
 			logger.error({error}, 'Error shutting down instance config repository');
@@ -275,6 +319,12 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 				break;
 			default:
 				unsupportedDatabaseBackend(config.database.backend);
+		}
+		try {
+			closeOwnedKVClient();
+			logger.info('Key-value client closed');
+		} catch (error) {
+			logger.error({error}, 'Error closing key-value client');
 		}
 		logger.info('API service shutdown complete');
 	};

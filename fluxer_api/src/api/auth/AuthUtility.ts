@@ -104,6 +104,7 @@ function checkAccountBanStatus(_ctx: ApiContext, user: User): AccountBanStatus {
 
 export async function handleBanStatus(ctx: ApiContext, user: User): Promise<User> {
 	const {users} = ctx.services;
+	if (user.deletionStartedAt) throw new AccountPermanentlySuspendedError();
 	const banStatus = checkAccountBanStatus(ctx, user);
 	if (banStatus.isPermanentlyBanned) {
 		throw new AccountPermanentlySuspendedError();

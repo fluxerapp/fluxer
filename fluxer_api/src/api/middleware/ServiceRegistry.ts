@@ -26,29 +26,12 @@ import type {InstanceConfigRepository} from '../instance/InstanceConfigRepositor
 import {Logger} from '../Logger';
 import {setInjectedSearchProvider} from '../SearchFactory';
 import type {ISearchProvider} from '../search/ISearchProvider';
+import {readOptionalIntegerEnv} from '../utils/IntegerOptions';
 import {VoiceAvailabilityService} from '../voice/VoiceAvailabilityService';
 import {VoiceRepository} from '../voice/VoiceRepository';
 import {VoiceServerLoadTracker} from '../voice/VoiceServerLoad';
 import {VoiceTopology} from '../voice/VoiceTopology';
 import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
-
-const DEFAULT_SNOWFLAKE_SERVICE_BATCH_SIZE = 128;
-const DEFAULT_SNOWFLAKE_SERVICE_LOW_WATERMARK = 32;
-const DEFAULT_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS = 5000;
-const DEFAULT_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS = 6000;
-
-function readPositiveIntegerEnv(names: string | Array<string>, fallback: number): number {
-	const envNames = Array.isArray(names) ? names : [names];
-	const value = envNames.map((name) => process.env[name]).find((candidate) => candidate && candidate.length > 0);
-	if (!value) {
-		return fallback;
-	}
-	const parsed = Number(value);
-	if (!Number.isInteger(parsed) || parsed <= 0) {
-		return fallback;
-	}
-	return parsed;
-}
 
 export function createSnowflakeService(): SnowflakeService {
 	const connectionManager = new NatsConnectionManager({
@@ -58,24 +41,15 @@ export function createSnowflakeService(): SnowflakeService {
 	});
 	return new SnowflakeService({
 		connectionManager,
-		subject: process.env.FLUXER_SNOWFLAKE_SERVICE_SUBJECT || 'svc.snowflakes',
-		batchSize: readPositiveIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE', DEFAULT_SNOWFLAKE_SERVICE_BATCH_SIZE),
-		lowWatermark: readPositiveIntegerEnv(
-			'FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK',
-			DEFAULT_SNOWFLAKE_SERVICE_LOW_WATERMARK,
-		),
-		maxBufferAgeMs: readPositiveIntegerEnv(
-			'FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS',
-			DEFAULT_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS,
-		),
-		requestTimeoutMs: readPositiveIntegerEnv(
-			'FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS',
-			DEFAULT_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS,
-		),
+		subject: process.env.FLUXER_SNOWFLAKE_SERVICE_SUBJECT || undefined,
+		batchSize: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE'),
+		lowWatermark: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK'),
+		maxBufferAgeMs: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS'),
+		requestTimeoutMs: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_REQUEST_TIMEOUT_MS'),
 	});
 }
 
-let _kvClient: IKVProvider | null = null;
+let _kvClient: KVClient | null = null;
 let _injectedKVProvider: IKVProvider | undefined;
 
 export function setInjectedKVProvider(provider: IKVProvider | undefined): void {
@@ -95,6 +69,15 @@ export function getKVClient(): IKVProvider {
 		});
 	}
 	return _kvClient;
+}
+
+export function closeOwnedKVClient(): void {
+	const client = _kvClient;
+	if (client === null) {
+		return;
+	}
+	client.close();
+	_kvClient = null;
 }
 
 let _injectedWorkerService: IWorkerService<WorkerTaskName> | undefined;
@@ -126,6 +109,11 @@ export function getGatewayService(): IGatewayService {
 let _snowflakeService: SnowflakeService | null = null;
 let _injectedSnowflakeService: ISnowflakeService | undefined;
 
+export interface SnowflakeServiceHandle {
+	readonly service: ISnowflakeService;
+	readonly owned: boolean;
+}
+
 export function setInjectedSnowflakeService(service: ISnowflakeService | undefined): void {
 	_injectedSnowflakeService = service;
 }
@@ -138,6 +126,19 @@ export function getSnowflakeService(): ISnowflakeService {
 		_snowflakeService = createSnowflakeService();
 	}
 	return _snowflakeService;
+}
+
+export function acquireSnowflakeService(): SnowflakeServiceHandle {
+	return {service: getSnowflakeService(), owned: _injectedSnowflakeService === undefined};
+}
+
+export async function releaseSnowflakeService({service, owned}: SnowflakeServiceHandle): Promise<void> {
+	if (!owned) return;
+	try {
+		await service.shutdown();
+	} finally {
+		if (_snowflakeService === service) _snowflakeService = null;
+	}
 }
 
 let _billingRepository: BillingRepository | null = null;
@@ -177,17 +178,26 @@ export function getInjectedSearchProvider(): ISearchProvider | undefined {
 	return _injectedSearchProvider;
 }
 
+interface BlueskyOAuthServiceSelection {
+	readonly config: BlueskyOAuthConfig;
+	readonly signature: string;
+	readonly service: Promise<IBlueskyOAuthService>;
+}
+
 let _injectedBlueskyOAuthService: IBlueskyOAuthService | undefined;
-let _blueskyOAuthService: IBlueskyOAuthService | undefined;
-let _blueskyOAuthInitializationPromise: Promise<IBlueskyOAuthService> | null = null;
-let _blueskyOAuthConfigSignature: string | null = null;
-let _blueskyOAuthInitializationSignature: string | null = null;
-let _blueskyOAuthSignatureSource: BlueskyOAuthConfig | null = null;
-let _blueskyOAuthSignatureValue: string | null = null;
+let _blueskyOAuthSelection: BlueskyOAuthServiceSelection | undefined;
+let _blueskyOAuthGeneration = Symbol();
 let _disabledBlueskyOAuthService: DisabledBlueskyOAuthService | undefined;
 
 export function setInjectedBlueskyOAuthService(service: IBlueskyOAuthService | undefined): void {
 	_injectedBlueskyOAuthService = service;
+	resetBlueskyOAuthServiceCache();
+}
+
+function resetBlueskyOAuthServiceCache(): void {
+	_blueskyOAuthSelection = undefined;
+	_blueskyOAuthGeneration = Symbol();
+	_disabledBlueskyOAuthService = undefined;
 }
 
 function getDisabledBlueskyOAuthService(): DisabledBlueskyOAuthService {
@@ -197,14 +207,19 @@ function getDisabledBlueskyOAuthService(): DisabledBlueskyOAuthService {
 	return _disabledBlueskyOAuthService;
 }
 
-function getBlueskyOAuthConfigSignature(config: BlueskyOAuthConfig): string {
-	if (_blueskyOAuthSignatureSource === config && _blueskyOAuthSignatureValue !== null) {
-		return _blueskyOAuthSignatureValue;
+async function createBlueskyOAuthService(config: BlueskyOAuthConfig): Promise<IBlueskyOAuthService> {
+	const disabledService = getDisabledBlueskyOAuthService();
+	if (!config.enabled) return disabledService;
+	if (config.keys.length === 0) {
+		Logger.warn('Bluesky OAuth is enabled but no signing keys are configured; disabling Bluesky OAuth.');
+		return disabledService;
 	}
-	const signature = JSON.stringify(config);
-	_blueskyOAuthSignatureSource = config;
-	_blueskyOAuthSignatureValue = signature;
-	return signature;
+	try {
+		return await BlueskyOAuthService.create(config, getKVClient(), Config.endpoints.apiPublic);
+	} catch (error) {
+		Logger.error({error}, 'Bluesky OAuth initialization failed; disabling Bluesky OAuth for this configuration.');
+		return disabledService;
+	}
 }
 
 export async function resolveBlueskyOAuthService(
@@ -213,127 +228,150 @@ export async function resolveBlueskyOAuthService(
 	if (_injectedBlueskyOAuthService) {
 		return _injectedBlueskyOAuthService;
 	}
+	const generation = _blueskyOAuthGeneration;
 	const blueskyConfig = instanceConfigRepository
 		? await instanceConfigRepository.getEffectiveBlueskyConfig()
 		: Config.auth.bluesky;
-	const signature = getBlueskyOAuthConfigSignature(blueskyConfig);
-	if (_blueskyOAuthService !== undefined && _blueskyOAuthConfigSignature === signature) {
-		return _blueskyOAuthService;
+	if (_injectedBlueskyOAuthService) {
+		return _injectedBlueskyOAuthService;
 	}
-	if (!blueskyConfig.enabled) {
-		_blueskyOAuthService = getDisabledBlueskyOAuthService();
-		_blueskyOAuthConfigSignature = signature;
-		return _blueskyOAuthService;
+	if (generation !== _blueskyOAuthGeneration) {
+		throw new Error('Bluesky OAuth service resolution was invalidated before initialization');
 	}
-	if (blueskyConfig.keys.length === 0) {
-		Logger.warn(
-			'Bluesky OAuth is enabled but no signing keys are configured – disabling. Run scripts/bootstrap/generate_bluesky_oauth_keys.sh or configure keys manually.',
-		);
-		_blueskyOAuthService = getDisabledBlueskyOAuthService();
-		_blueskyOAuthConfigSignature = signature;
-		return _blueskyOAuthService;
-	}
-	if (!_blueskyOAuthInitializationPromise || _blueskyOAuthInitializationSignature !== signature) {
-		_blueskyOAuthInitializationSignature = signature;
-		_blueskyOAuthInitializationPromise = BlueskyOAuthService.create(
-			blueskyConfig,
-			getKVClient(),
-			Config.endpoints.apiPublic,
-		)
-			.then((service) => {
-				_blueskyOAuthService = service;
-				_blueskyOAuthConfigSignature = signature;
-				return service;
-			})
-			.catch((error) => {
-				Logger.error({error}, 'Bluesky OAuth signing keys were rejected – disabling Bluesky OAuth.');
-				_blueskyOAuthService = getDisabledBlueskyOAuthService();
-				_blueskyOAuthConfigSignature = signature;
-				return _blueskyOAuthService;
-			})
-			.finally(() => {
-				_blueskyOAuthInitializationPromise = null;
-				_blueskyOAuthInitializationSignature = null;
-			});
-	}
-	return _blueskyOAuthInitializationPromise;
+	const selection = _blueskyOAuthSelection;
+	if (selection?.config === blueskyConfig) return selection.service;
+	const signature = JSON.stringify(blueskyConfig);
+	if (selection?.signature === signature) return selection.service;
+	const next: BlueskyOAuthServiceSelection = {
+		config: blueskyConfig,
+		signature,
+		service: createBlueskyOAuthService(blueskyConfig),
+	};
+	_blueskyOAuthSelection = next;
+	return next.service;
 }
 
-let voiceTopology: VoiceTopology | null = null;
-let voiceAvailabilityService: VoiceAvailabilityService | null = null;
-let liveKitServiceInstance: ILiveKitService | null = null;
-let voiceRoomStoreInstance: IVoiceRoomStore | null = null;
-let voiceConfigSubscriber: IKVProvider | null = null;
-let voiceInitializationPromise: Promise<void> | null = null;
+interface VoiceResources {
+	readonly topology: VoiceTopology | null;
+	readonly availability: VoiceAvailabilityService | null;
+	readonly liveKit: ILiveKitService;
+	readonly roomStore: IVoiceRoomStore;
+}
+
+class VoiceResourceSession {
+	readonly ready: Promise<void>;
+	private current: VoiceResources | null = null;
+	private stopCompletion: Promise<void> | null = null;
+
+	constructor(
+		private readonly topology: VoiceTopology | null,
+		createResources: () => VoiceResources,
+	) {
+		this.ready = Promise.resolve().then(() => this.initialize(createResources));
+	}
+
+	get resources(): VoiceResources | null {
+		return this.current;
+	}
+
+	get isStopped(): boolean {
+		return this.stopCompletion !== null;
+	}
+
+	private async initialize(createResources: () => VoiceResources): Promise<void> {
+		try {
+			if (this.isStopped) throw new Error('Voice resources stopped before initialization');
+			await this.topology?.initialize();
+			if (this.isStopped) throw new Error('Voice resources stopped during initialization');
+			this.current = createResources();
+		} catch (error) {
+			try {
+				await this.topology?.shutdown();
+			} catch (cleanupError) {
+				throw new AggregateError([error, cleanupError], 'Failed to initialize and close voice resources');
+			}
+			throw error;
+		}
+	}
+
+	shutdown(): Promise<void> {
+		this.current = null;
+		this.stopCompletion ??= this.close();
+		return this.stopCompletion;
+	}
+
+	private async close(): Promise<void> {
+		const [closed] = await Promise.allSettled([this.topology?.shutdown(), this.ready]);
+		if (closed.status === 'rejected') throw closed.reason;
+	}
+}
+
+let voiceSession: VoiceResourceSession | null = null;
+let voiceResourcesStopped = false;
+
+function createVoiceSession(): VoiceResourceSession {
+	if (!Config.voice.enabled) {
+		return new VoiceResourceSession(null, () => ({
+			topology: null,
+			availability: null,
+			liveKit: new DisabledLiveKitService(),
+			roomStore: new InMemoryVoiceRoomStore(),
+		}));
+	}
+	const kvClient = getKVClient();
+	const gatewayService = getGatewayService();
+	const topology = new VoiceTopology(new VoiceRepository(), kvClient);
+	return new VoiceResourceSession(topology, () => ({
+		topology,
+		availability: new VoiceAvailabilityService(topology, new VoiceServerLoadTracker({gatewayService})),
+		liveKit: new LiveKitService(topology),
+		roomStore: new VoiceRoomStore(kvClient),
+	}));
+}
 
 export async function ensureVoiceResourcesInitialized(): Promise<void> {
-	if (!Config.voice.enabled) {
-		if (!liveKitServiceInstance) {
-			liveKitServiceInstance = new DisabledLiveKitService();
-		}
-		if (!voiceRoomStoreInstance) {
-			voiceRoomStoreInstance = new InMemoryVoiceRoomStore();
-		}
-		voiceTopology = null;
-		voiceAvailabilityService = null;
-		return;
+	if (voiceResourcesStopped) throw new Error('Voice resources are shut down');
+	const session = (voiceSession ??= createVoiceSession());
+	try {
+		await session.ready;
+	} catch (error) {
+		if (voiceSession === session) voiceSession = null;
+		throw error;
 	}
-	if (voiceTopology && voiceAvailabilityService && liveKitServiceInstance && voiceRoomStoreInstance) {
-		return;
-	}
-	if (!voiceInitializationPromise) {
-		voiceInitializationPromise = (async () => {
-			const voiceRepository = new VoiceRepository();
-			if (!voiceConfigSubscriber) {
-				voiceConfigSubscriber = getKVClient();
-			}
-			const topology = new VoiceTopology(voiceRepository, voiceConfigSubscriber);
-			await topology.initialize();
-			voiceTopology = topology;
-			voiceAvailabilityService = new VoiceAvailabilityService(
-				topology,
-				new VoiceServerLoadTracker({gatewayService: getGatewayService()}),
-			);
-			liveKitServiceInstance = new LiveKitService(topology);
-			voiceRoomStoreInstance = new VoiceRoomStore(getKVClient());
-		})().finally(() => {
-			voiceInitializationPromise = null;
-		});
-	}
-	await voiceInitializationPromise;
+	if (voiceSession !== session) throw new Error('Voice resource initialization was superseded');
+	if (session.isStopped) throw new Error('Voice resources stopped during initialization');
+}
+
+export async function shutdownVoiceResources(): Promise<void> {
+	voiceResourcesStopped = true;
+	await voiceSession?.shutdown();
 }
 
 export function getVoiceTopology(): VoiceTopology | null {
-	return voiceTopology;
+	return voiceSession?.resources?.topology ?? null;
 }
 
 export function getVoiceAvailabilityService(): VoiceAvailabilityService | null {
-	return voiceAvailabilityService;
+	return voiceSession?.resources?.availability ?? null;
 }
 
 export function getLiveKitServiceInstance(): ILiveKitService | null {
-	return liveKitServiceInstance;
+	return voiceSession?.resources?.liveKit ?? null;
 }
 
 export function getVoiceRoomStoreInstance(): IVoiceRoomStore | null {
-	return voiceRoomStoreInstance;
+	return voiceSession?.resources?.roomStore ?? null;
 }
 
 export function resetServiceRegistryForTesting(): void {
 	_kvClient = null;
 	_snowflakeService = null;
 	_billingRepository = null;
-	_blueskyOAuthService = undefined;
-	_blueskyOAuthInitializationPromise = null;
-	_blueskyOAuthConfigSignature = null;
-	_blueskyOAuthInitializationSignature = null;
-	_blueskyOAuthSignatureSource = null;
-	_blueskyOAuthSignatureValue = null;
-	_disabledBlueskyOAuthService = undefined;
-	voiceTopology = null;
-	voiceAvailabilityService = null;
-	liveKitServiceInstance = null;
-	voiceRoomStoreInstance = null;
-	voiceConfigSubscriber = null;
-	voiceInitializationPromise = null;
+	resetBlueskyOAuthServiceCache();
+	const previousVoiceSession = voiceSession;
+	voiceSession = null;
+	voiceResourcesStopped = false;
+	void previousVoiceSession?.shutdown().catch((error) => {
+		Logger.error({error}, 'Failed to close voice resources during registry reset');
+	});
 }

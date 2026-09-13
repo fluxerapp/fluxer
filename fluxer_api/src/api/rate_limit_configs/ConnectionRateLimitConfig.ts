@@ -20,10 +20,6 @@ export const ConnectionRateLimitConfigs = {
 		bucket: 'connection:delete',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	CONNECTION_VERIFY: {
-		bucket: 'connection:verify',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
 	CONNECTION_VERIFY_AND_CREATE: {
 		bucket: 'connection:verify_and_create',
 		config: {limit: 5, windowMs: ms('1 minute')},

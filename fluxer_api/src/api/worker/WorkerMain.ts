@@ -10,15 +10,20 @@ import {Config} from '../Config';
 import {setDatabaseQueryExecutor} from '../database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '../database/PostgresKvQueryExecutor';
 import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
+import type {InstanceConfigRepository} from '../instance/InstanceConfigRepository';
 import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
 import {Logger} from '../Logger';
+import type {LimitConfigService} from '../limits/LimitConfigService';
 import {
+	closeOwnedKVClient,
 	createSnowflakeService,
 	setInjectedSnowflakeService,
 	setInjectedWorkerService,
+	shutdownVoiceResources,
 } from '../middleware/ServiceRegistry';
-import {getCacheService} from '../middleware/ServiceSingletons';
+import {getCacheService, getInstanceConfigRepository, getLimitConfigService} from '../middleware/ServiceSingletons';
 import {initializeSearch, shutdownSearch} from '../SearchFactory';
+import {awaitAll} from '../utils/ConcurrencyUtils';
 import {CronScheduler} from './CronScheduler';
 import {JetStreamWorkerQueue} from './JetStreamWorkerQueue';
 import {clearWorkerDependencies, setWorkerDependencies} from './WorkerContext';
@@ -88,12 +93,14 @@ export async function startWorkerMain(): Promise<void> {
 	let postgresInitialized = false;
 	let jsConnectionManager: JetStreamConnectionManager | null = null;
 	let snowflakeService: ISnowflakeService | null = null;
+	let limitConfigService: LimitConfigService | null = null;
+	let instanceConfigRepository: InstanceConfigRepository | null = null;
 	let dependencies: WorkerDependencies | null = null;
 	let cron: CronScheduler | null = null;
 	const heartbeat = new WorkerHeartbeat({logger: Logger});
 	const runners: Array<WorkerRunner> = [];
 	let searchInitialized = false;
-	let shuttingDown = false;
+	let shutdownPromise: Promise<void> | null = null;
 
 	const cleanupStep = async (label: string, fn: () => Promise<void> | void): Promise<void> => {
 		try {
@@ -103,17 +110,18 @@ export async function startWorkerMain(): Promise<void> {
 		}
 	};
 
-	const shutdown = async (): Promise<void> => {
-		if (shuttingDown) {
-			return;
-		}
-		shuttingDown = true;
+	const performShutdown = async (): Promise<void> => {
 		Logger.info('Shutting down worker backend...');
+		const voiceShutdown = cleanupStep('voice resources', shutdownVoiceResources);
 		await cleanupStep('heartbeat', () => heartbeat.stop());
 		await cleanupStep('cron', () => cron?.stop());
 		await cleanupStep('runners', async () => {
-			await Promise.all(runners.map((runner) => runner.stop()));
+			await awaitAll(
+				runners.map((runner) => runner.stop()),
+				'Failed to stop worker runners',
+			);
 		});
+		await voiceShutdown;
 		await cleanupStep('jetstream', async () => {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
@@ -122,6 +130,18 @@ export async function startWorkerMain(): Promise<void> {
 			dependencies = null;
 			clearWorkerDependencies();
 			setInjectedWorkerService(undefined);
+		});
+		await cleanupStep('limit config', async () => {
+			if (limitConfigService) {
+				await limitConfigService.shutdown();
+				limitConfigService = null;
+			}
+		});
+		await cleanupStep('instance config repository', async () => {
+			if (instanceConfigRepository) {
+				await instanceConfigRepository.shutdown();
+				instanceConfigRepository = null;
+			}
 		});
 		await cleanupStep('search', async () => {
 			if (searchInitialized) {
@@ -149,15 +169,20 @@ export async function startWorkerMain(): Promise<void> {
 			}
 			setInjectedSnowflakeService(undefined);
 		});
+		await cleanupStep('key-value client', closeOwnedKVClient);
+	};
+	const shutdown = (): Promise<void> => {
+		shutdownPromise ??= Promise.resolve().then(performShutdown);
+		return shutdownPromise;
 	};
 
 	try {
 		if (Config.database.backend === 'postgres') {
-			await initPostgres(Config.postgres);
+			await initPostgres(Config.postgres, (diagnostic) => Logger.error(diagnostic, 'Postgres connection error'));
+			postgresInitialized = true;
 			const postgres = getDefaultPostgresClient();
 			await ensurePostgresKvSchema(postgres);
 			setDatabaseQueryExecutor(new PostgresKvQueryExecutor(postgres));
-			postgresInitialized = true;
 			Logger.info('Postgres KV client initialised for worker backend');
 		}
 		if (Config.database.backend === 'cassandra') {
@@ -209,6 +234,8 @@ export async function startWorkerMain(): Promise<void> {
 		const jobLedger = new JobLedgerRepository();
 		const workerService = new WorkerService(queue, snowflakeService, jobLedger);
 		setInjectedWorkerService(workerService);
+		instanceConfigRepository = getInstanceConfigRepository();
+		limitConfigService = getLimitConfigService();
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
 		if (Config.blocklistFeeds.enabled) {

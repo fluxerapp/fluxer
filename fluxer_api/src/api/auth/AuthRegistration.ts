@@ -7,12 +7,10 @@ import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/Registrat
 import {RegistrationUrlInvalidError} from '@fluxer/errors/src/domains/auth/RegistrationUrlInvalidError';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {RegisterRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
-import type {RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
 import {types} from 'cassandra-driver';
 import {ms} from 'itty-time';
 import type {ApiContext} from '../ApiContext';
@@ -43,10 +41,10 @@ import {deferPhoneFlagsUntilCommunityJoin} from '../risk/DeferredPhoneGate';
 import type {IRiskHistoryRepository} from '../risk/HistoricalOutcomeRepository';
 import type {IRiskAssessmentRepository} from '../risk/RiskAssessmentRepository';
 import {deriveLatestRiskContext} from '../risk/RiskHistoryContext';
-import {getUserSearchService} from '../SearchFactory';
 import * as AgeUtils from '../utils/AgeUtils';
 import {extractEmailDomain} from '../utils/EmailDomainUtils';
 import {lookupGeoip} from '../utils/IpUtils';
+import {createRateLimitError} from '../utils/RateLimitUtils';
 import {generateRandomUsername} from '../utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '../utils/UsernameSuggestionUtils';
 import * as AuthPassword from './AuthPassword';
@@ -55,18 +53,6 @@ import * as AuthUtility from './AuthUtility';
 import type {IRegistrationRiskEvaluator} from './services/IRegistrationRiskEvaluator';
 
 const DEFAULT_MINIMUM_AGE = 13;
-
-function getRetryAfterSeconds(result: RateLimitResult): number {
-	return result.retryAfter ?? Math.max(0, Math.ceil((result.resetTime.getTime() - Date.now()) / 1000));
-}
-
-function throwRegistrationRateLimit(result: RateLimitResult): never {
-	throw new RateLimitError({
-		retryAfter: getRetryAfterSeconds(result),
-		limit: result.limit,
-		resetTime: result.resetTime,
-	});
-}
 
 function parseDobLocalDate(dateOfBirth: string): types.LocalDate {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOfBirth);
@@ -149,6 +135,9 @@ export async function register(
 	}
 	const now = new Date();
 	const registrationAccess = await resolveRegistrationAccess(instanceConfigRepository, data.registration_url_code);
+	if (registrationAccess.pendingApproval) {
+		await instanceConfigRepository.getPendingRegistrations();
+	}
 	const clientIp = requireClientIp(request, {
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
 		clientIpHeaderName: config.proxy.client_ip_header,
@@ -410,7 +399,6 @@ export async function register(
 			);
 		}
 	}
-	await maybeIndexUser(user);
 	if (rawEmail && emailEnabled) await maybeSendVerificationEmail(ctx, {user, email: rawEmail});
 	await users.createAuthorizedIp(userId, clientIp);
 	if (registrationAccess.registrationUrl) {
@@ -506,18 +494,6 @@ async function resolveRegistrationAccess(
 	};
 }
 
-async function maybeIndexUser(user: User): Promise<void> {
-	const userSearchService = getUserSearchService();
-	if (!userSearchService) return;
-	if ('indexUser' in userSearchService) {
-		try {
-			await userSearchService.indexUser(user);
-		} catch (error) {
-			Logger.error({userId: user.id, error}, 'Failed to index user in search');
-		}
-	}
-}
-
 async function maybeSendVerificationEmail(ctx: ApiContext, params: {user: User; email: string}): Promise<void> {
 	const {users, email: emailService} = ctx.services;
 	const {user, email} = params;
@@ -570,14 +546,14 @@ async function enforceRegistrationRateLimits(
 			maxAttempts: 3,
 			windowMs: ms('15 minutes'),
 		});
-		if (!emailRateLimit.allowed) throwRegistrationRateLimit(emailRateLimit);
+		if (!emailRateLimit.allowed) throw createRateLimitError(emailRateLimit);
 	}
 	const ipRateLimit = await rateLimit.checkLimit({
 		identifier: `registration:ip:${getSameIpDecisionKey(clientIp) ?? clientIp}`,
 		maxAttempts: 3,
 		windowMs: ms('1 hour'),
 	});
-	if (!ipRateLimit.allowed) throwRegistrationRateLimit(ipRateLimit);
+	if (!ipRateLimit.allowed) throw createRateLimitError(ipRateLimit);
 	const subnet = getSubnet(clientIp);
 	if (subnet) {
 		const subnetRateLimit = await rateLimit.checkLimit({
@@ -585,7 +561,7 @@ async function enforceRegistrationRateLimits(
 			maxAttempts: 15,
 			windowMs: ms('1 hour'),
 		});
-		if (!subnetRateLimit.allowed) throwRegistrationRateLimit(subnetRateLimit);
+		if (!subnetRateLimit.allowed) throw createRateLimitError(subnetRateLimit);
 	}
 }
 

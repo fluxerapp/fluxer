@@ -8,7 +8,6 @@ import {
 } from '@fluxer/constants/src/ConnectionConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {createUserID, type UserID} from '../../BrandedTypes';
-import type {IBlueskyOAuthService} from '../../bluesky/IBlueskyOAuthService';
 import {setCassandraQueryExecutorForTesting} from '../../database/CassandraQueryExecution';
 import type {UserConnectionRow} from '../../database/types/ConnectionTypes';
 import type {IGatewayService} from '../../infrastructure/IGatewayService';
@@ -54,11 +53,7 @@ describe('ConnectionService connection limit', () => {
 		for (let index = 0; index < MAX_CONNECTIONS_PER_USER; index++) {
 			await repository.create(connectionRow(userId, `connection-${index}`, index));
 		}
-		const service = new ConnectionService(
-			repository,
-			{} as unknown as IGatewayService,
-			{} as unknown as IBlueskyOAuthService,
-		);
+		const service = new ConnectionService(repository, {} as unknown as IGatewayService);
 
 		const error = await service.initiateConnection(userId, ConnectionTypes.DOMAIN, 'over-the-limit.example').then(
 			() => null,
@@ -78,11 +73,7 @@ describe('ConnectionService connection limit', () => {
 		for (let index = 0; index < MAX_CONNECTIONS_PER_USER - 1; index++) {
 			await repository.create(connectionRow(userId, `connection-${index}`, index));
 		}
-		const service = new ConnectionService(
-			repository,
-			{} as unknown as IGatewayService,
-			{} as unknown as IBlueskyOAuthService,
-		);
+		const service = new ConnectionService(repository, {} as unknown as IGatewayService);
 
 		await expect(
 			service.initiateConnection(userId, ConnectionTypes.DOMAIN, 'under-the-limit.example'),

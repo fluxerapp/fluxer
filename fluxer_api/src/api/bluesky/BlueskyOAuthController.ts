@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
 import {
 	BlueskyAuthorizeRequest,
 	BlueskyAuthorizeResponse,
 } from '@fluxer/schema/src/domains/connection/BlueskyOAuthSchemas';
 import {Config} from '../Config';
 import {BlueskyOAuthAuthorizationFailedError} from '../connection/errors/BlueskyOAuthAuthorizationFailedError';
-import {BlueskyOAuthCallbackFailedError} from '../connection/errors/BlueskyOAuthCallbackFailedError';
 import {BlueskyOAuthNotEnabledError} from '../connection/errors/BlueskyOAuthNotEnabledError';
-import {BlueskyOAuthStateInvalidError} from '../connection/errors/BlueskyOAuthStateInvalidError';
-import {ConnectionAlreadyExistsError} from '../connection/errors/ConnectionAlreadyExistsError';
 import {Logger} from '../Logger';
 import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
@@ -18,20 +14,31 @@ import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
 import {ConnectionRateLimitConfigs} from '../rate_limit_configs/ConnectionRateLimitConfig';
 import type {HonoApp} from '../types/HonoEnv';
 import {Validator} from '../Validator';
+import {BlueskyOAuthStateInvalidError, BlueskyOAuthStoreError} from './BlueskyOAuthStores';
 import {DisabledBlueskyOAuthService} from './DisabledBlueskyOAuthService';
-import type {BlueskyAuthorizeResult, BlueskyCallbackResult} from './IBlueskyOAuthService';
+import type {BlueskyAuthorizeResult, IBlueskyOAuthService} from './IBlueskyOAuthService';
 
 const BLUESKY_PROFILE_URL_RE = /^https?:\/\/bsky\.app\/profile\//i;
+type BlueskyCallbackPhase = 'callback' | 'connection';
+type BlueskyCallbackFailureReason = 'not_enabled' | 'state_invalid' | 'callback_failed' | 'unknown';
 
 function normalizeBlueskyHandle(input: string): string {
-	let handle = input.trim();
-	handle = handle.replace(BLUESKY_PROFILE_URL_RE, '');
-	handle = handle.replace(/^@/, '');
-	return handle;
+	return input.trim().replace(BLUESKY_PROFILE_URL_RE, '').replace(/^@/, '');
 }
 
-function isBlueskyOAuthEnabled(service: unknown): boolean {
-	return service != null && !(service instanceof DisabledBlueskyOAuthService);
+function isBlueskyOAuthEnabled(service: IBlueskyOAuthService): boolean {
+	return !(service instanceof DisabledBlueskyOAuthService);
+}
+
+function getCallbackFailureReason(error: unknown, phase: BlueskyCallbackPhase): BlueskyCallbackFailureReason {
+	if (error instanceof BlueskyOAuthNotEnabledError) return 'not_enabled';
+	if (
+		error instanceof BlueskyOAuthStateInvalidError ||
+		(error instanceof BlueskyOAuthStoreError && error.kind === 'state')
+	) {
+		return 'state_invalid';
+	}
+	return phase === 'callback' ? 'callback_failed' : 'unknown';
 }
 
 export function BlueskyOAuthController(app: HonoApp) {
@@ -84,15 +91,6 @@ export function BlueskyOAuthController(app: HonoApp) {
 			const {handle: rawHandle} = ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const handle = normalizeBlueskyHandle(rawHandle);
-			const connectionService = ctx.get('connectionService');
-			const connections = await connectionService.getConnectionsForUser(userId);
-			const lowerHandle = handle.toLowerCase();
-			const existing = connections.find(
-				(c) => c.connection_type === ConnectionTypes.BLUESKY && c.name.toLowerCase() === lowerHandle,
-			);
-			if (existing) {
-				throw new ConnectionAlreadyExistsError();
-			}
 			let result: BlueskyAuthorizeResult;
 			try {
 				result = await service.authorize(handle, userId);
@@ -100,7 +98,7 @@ export function BlueskyOAuthController(app: HonoApp) {
 				if (error instanceof BlueskyOAuthNotEnabledError) {
 					throw error;
 				}
-				Logger.error({error, handle}, 'Bluesky OAuth authorize failed');
+				Logger.error({error}, 'Bluesky OAuth authorize failed');
 				throw new BlueskyOAuthAuthorizationFailedError();
 			}
 			return ctx.json({authorize_url: result.authorizeUrl});
@@ -110,46 +108,26 @@ export function BlueskyOAuthController(app: HonoApp) {
 		'/connections/bluesky/callback',
 		RateLimitMiddleware(ConnectionRateLimitConfigs.BLUESKY_CALLBACK),
 		async (ctx) => {
-			const appUrl = Config.endpoints.webApp;
-			const callbackUrl = `${appUrl}/connection-callback`;
+			const callbackUrl = `${Config.endpoints.webApp}/connection-callback`;
 			const service = ctx.get('blueskyOAuthService');
 			if (!isBlueskyOAuthEnabled(service)) {
 				return ctx.redirect(`${callbackUrl}?status=error&reason=not_enabled`);
 			}
+			let phase: BlueskyCallbackPhase = 'callback';
 			try {
-				const params = new URLSearchParams(ctx.req.url.split('?')[1] ?? '');
-				let result: BlueskyCallbackResult;
-				try {
-					result = await service.callback(params);
-				} catch (callbackError) {
-					if (callbackError instanceof BlueskyOAuthNotEnabledError) {
-						throw callbackError;
-					}
-					Logger.error({error: callbackError}, 'Bluesky OAuth callback error from upstream');
-					if (
-						callbackError instanceof Error &&
-						(callbackError.message.toLowerCase().includes('state') ||
-							callbackError.message.toLowerCase().includes('expired'))
-					) {
-						throw new BlueskyOAuthStateInvalidError();
-					}
-					throw new BlueskyOAuthCallbackFailedError();
-				}
+				const params = new URL(ctx.req.url).searchParams;
+				const result = await service.callback(params);
+				phase = 'connection';
 				const connectionService = ctx.get('connectionService');
-				await connectionService.createOrUpdateBlueskyConnection(result.userId, result.did, result.handle);
+				await connectionService.createOrUpdateBlueskyConnection(result);
 				return ctx.redirect(`${callbackUrl}?status=connected`);
 			} catch (error) {
-				Logger.error({error}, 'Bluesky OAuth callback failed');
-				if (error instanceof BlueskyOAuthStateInvalidError) {
-					return ctx.redirect(`${callbackUrl}?status=error&reason=state_invalid`);
-				}
-				if (error instanceof BlueskyOAuthCallbackFailedError) {
-					return ctx.redirect(`${callbackUrl}?status=error&reason=callback_failed`);
-				}
-				if (error instanceof BlueskyOAuthNotEnabledError) {
-					return ctx.redirect(`${callbackUrl}?status=error&reason=not_enabled`);
-				}
-				return ctx.redirect(`${callbackUrl}?status=error&reason=unknown`);
+				const reason = getCallbackFailureReason(error, phase);
+				Logger.error(
+					{phase, reason, storeError: error instanceof BlueskyOAuthStoreError ? error.message : undefined},
+					'Bluesky OAuth callback failed',
+				);
+				return ctx.redirect(`${callbackUrl}?status=error&reason=${reason}`);
 			}
 		},
 	);

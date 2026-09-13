@@ -44,7 +44,7 @@ export async function warmupAdminSearchIndexes(deps: SearchWarmupDeps): Promise<
 			logger.info({total: testResult.total}, 'Guild index already populated, skipping warmup');
 		}
 	}
-	if (userSearchService && 'indexUser' in userSearchService) {
+	if (userSearchService) {
 		const testResult = await userSearchService.searchUsers('', {}, {limit: 1});
 		if (testResult.total === 0) {
 			logger.info('User index is empty, populating from database');
@@ -93,19 +93,15 @@ async function warmupUsers(
 ): Promise<void> {
 	let pageState: string | null = null;
 	let totalIndexed = 0;
-	while (true) {
+	do {
 		const page = await userRepository.scanAllUsersPage(BATCH_SIZE, pageState);
-		const users = page.users;
-		if (users.length > 0) {
-			await userSearchService.indexUsers(users);
-			totalIndexed += users.length;
-			logger.debug({count: users.length, total: totalIndexed}, 'Indexed user batch');
-		}
 		pageState = page.pageState;
-		if (!pageState) {
-			break;
-		}
-	}
+		const users = page.users;
+		if (users.length === 0) continue;
+		await userSearchService.indexUsers(users);
+		totalIndexed += users.length;
+		logger.debug({count: users.length, total: totalIndexed}, 'Indexed user batch');
+	} while (pageState);
 	logger.info({total: totalIndexed}, 'User warmup complete');
 }
 
@@ -120,9 +116,7 @@ async function warmupReports(
 	while (hasMore) {
 		const reports = await reportRepository.listAllReportsPaginated(BATCH_SIZE, lastReportId);
 		if (reports.length > 0) {
-			if ('indexReports' in reportSearchService) {
-				await reportSearchService.indexReports(reports);
-			}
+			await reportSearchService.indexReports(reports);
 			totalIndexed += reports.length;
 			lastReportId = reports[reports.length - 1]!.reportId;
 			logger.debug({count: reports.length, total: totalIndexed}, 'Indexed report batch');

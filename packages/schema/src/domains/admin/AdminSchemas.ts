@@ -413,6 +413,8 @@ export const GenerateGiftCodesRequest = z.object({
 
 export type GenerateGiftCodesRequest = z.infer<typeof GenerateGiftCodesRequest>;
 
+const SsoAllowedDomainsSchema = z.array(z.string()).max(100);
+
 const SsoConfigResponse = z.object({
 	enabled: z.boolean(),
 	enforced: z.boolean(),
@@ -425,7 +427,7 @@ const SsoConfigResponse = z.object({
 	client_id: z.string().nullable(),
 	client_secret_set: z.boolean(),
 	scope: z.string().nullable(),
-	allowed_domains: z.array(z.string()).max(100),
+	allowed_domains: SsoAllowedDomainsSchema,
 	auto_provision: z.boolean(),
 	redirect_uri: z.string().nullable(),
 });
@@ -448,6 +450,7 @@ const RegistrationUrlResponse = z.object({
 	last_used_at: z.iso.datetime().nullable(),
 	last_used_by_user_id: SnowflakeStringType.nullable(),
 });
+export type RegistrationUrlResponse = z.infer<typeof RegistrationUrlResponse>;
 
 const PendingRegistrationResponse = z.object({
 	user_id: SnowflakeStringType,
@@ -459,6 +462,7 @@ const PendingRegistrationResponse = z.object({
 	registration_url_id: createStringType(1, 128).nullable(),
 	client_ip: z.string().nullable(),
 });
+export type PendingRegistrationResponse = z.infer<typeof PendingRegistrationResponse>;
 
 const InstanceRegistrationResponse = InstanceRegistrationConfigResponse.extend({
 	urls: z.array(RegistrationUrlResponse),
@@ -636,6 +640,28 @@ export const InstanceConfigResponse = z.object({
 
 export type InstanceConfigResponse = z.infer<typeof InstanceConfigResponse>;
 
+const InstancePolicyUpdateSchema = z.object({
+	single_community_enabled: z.boolean().optional(),
+	single_community_name: z.string().trim().min(1).max(100).optional(),
+	direct_messages_disabled: z.boolean().optional(),
+	direct_messages_locked: z.literal(false).optional(),
+	premium_mode: z.enum(['mirror', 'everyone']).optional(),
+	services: z
+		.object({
+			gif_enabled: z.boolean().nullish(),
+			youtube_enabled: z.boolean().nullish(),
+			bluesky_enabled: z.boolean().nullish(),
+		})
+		.nullish(),
+	deferred_phone_gate: z
+		.object({
+			enabled: z.boolean().optional(),
+			window_hours: z.number().positive().max(8760).optional(),
+			member_threshold: z.number().int().positive().max(1_000_000).optional(),
+		})
+		.nullish(),
+});
+
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
@@ -659,7 +685,7 @@ export const InstanceConfigUpdateRequest = z.object({
 			client_id: z.string().nullish(),
 			client_secret: z.string().nullish(),
 			scope: z.string().nullish(),
-			allowed_domains: z.array(z.string()).max(100).optional(),
+			allowed_domains: SsoAllowedDomainsSchema.optional(),
 			auto_provision: z.boolean().optional(),
 		})
 		.nullish(),
@@ -741,29 +767,7 @@ export const InstanceConfigUpdateRequest = z.object({
 				.nullish(),
 		})
 		.nullish(),
-	policy: z
-		.object({
-			single_community_enabled: z.boolean().optional(),
-			single_community_name: z.string().trim().min(1).max(100).optional(),
-			direct_messages_disabled: z.boolean().optional(),
-			direct_messages_locked: z.literal(false).optional(),
-			premium_mode: z.enum(['mirror', 'everyone']).optional(),
-			services: z
-				.object({
-					gif_enabled: z.boolean().nullish(),
-					youtube_enabled: z.boolean().nullish(),
-					bluesky_enabled: z.boolean().nullish(),
-				})
-				.nullish(),
-			deferred_phone_gate: z
-				.object({
-					enabled: z.boolean().optional(),
-					window_hours: z.number().positive().max(8760).optional(),
-					member_threshold: z.number().int().positive().max(1_000_000).optional(),
-				})
-				.nullish(),
-		})
-		.nullish(),
+	policy: InstancePolicyUpdateSchema.nullish(),
 });
 
 export type InstanceConfigUpdateRequest = z.infer<typeof InstanceConfigUpdateRequest>;

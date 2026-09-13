@@ -291,10 +291,15 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 						.catch(() => {});
 					return finalize(params);
 				};
+				const controller = new AbortController();
+				const timer = setTimeout(() => {
+					controller.abort(new DOMException('The operation was aborted due to timeout', 'TimeoutError'));
+				}, FETCH_TIMEOUT_MS);
+				timer.unref();
 				let payload: unknown;
 				try {
 					const res = await fetch(fetchUrl, {
-						signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+						signal: controller.signal,
 						headers: {Accept: 'application/json'},
 					});
 					if (!res.ok) {
@@ -312,6 +317,9 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 						outcome: 'request_failed',
 						httpStatus: null,
 					});
+				} finally {
+					clearTimeout(timer);
+					controller.abort();
 				}
 				const parsedResponse = RawIpInfoResponseSchema.safeParse(payload);
 				if (!parsedResponse.success) {

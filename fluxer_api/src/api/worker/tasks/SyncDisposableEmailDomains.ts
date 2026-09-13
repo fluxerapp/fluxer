@@ -36,7 +36,10 @@ interface SourceCollectResult {
 
 async function fetchSource(url: string): Promise<SourceFetchResult> {
 	const res = await fetch(url, {signal: AbortSignal.timeout(60000)});
-	if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+	if (!res.ok) {
+		FetchUtils.discardResponseBody(res.body, res.status);
+		throw new Error(`HTTP ${res.status} fetching ${url}`);
+	}
 	const contentType = res.headers.get('content-type') ?? '';
 	const responseText = await FetchUtils.streamToStringWithLimit(res.body, {
 		maxBytes: EXTERNAL_RESPONSE_LIMITS.disposableEmailBytes,
@@ -62,7 +65,7 @@ function forEachTextLine(text: string, callback: (line: string) => void): number
 	for (let i = 0; i <= text.length; i++) {
 		const isEnd = i === text.length;
 		if (!isEnd && text.charCodeAt(i) !== 10) continue;
-		const line = text.slice(start, isEnd ? i : i).trim();
+		const line = text.slice(start, i).trim();
 		start = i + 1;
 		if (!line || line.startsWith('#')) continue;
 		raw++;

@@ -468,21 +468,14 @@ describe('Stripe Webhook Dispute Events', () => {
 				checkout_session_id: 'cs_test_dispute_won',
 				payment_intent_id: paymentIntentId,
 			});
-			await createBuilderWithoutAuth(harness)
-				.patch(`/test/users/${purchaser.userId}/flags`)
-				.body({flags: Number(UserFlags.DELETED)})
-				.execute();
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(purchaser.userId));
-			const user = await userRepository.findUnique(userId);
-			await userRepository.patchUpsert(
-				userId,
-				{
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-				},
-				user!.toRow(),
-			);
+			const user = await userRepository.findUniqueAssert(userId);
+			await userRepository.updateDeletionSchedule(user, {
+				flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+				deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+				pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			});
 			const userBeforeWin = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
@@ -523,21 +516,14 @@ describe('Stripe Webhook Dispute Events', () => {
 				checkout_session_id: 'cs_test_dispute_lost',
 				payment_intent_id: paymentIntentId,
 			});
-			await createBuilderWithoutAuth(harness)
-				.patch(`/test/users/${purchaser.userId}/flags`)
-				.body({flags: Number(UserFlags.DELETED)})
-				.execute();
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(purchaser.userId));
-			const user = await userRepository.findUnique(userId);
-			await userRepository.patchUpsert(
-				userId,
-				{
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-				},
-				user!.toRow(),
-			);
+			const user = await userRepository.findUniqueAssert(userId);
+			await userRepository.updateDeletionSchedule(user, {
+				flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+				deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+				pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			});
 			const eventData: StripeWebhookEventData = {
 				type: 'charge.dispute.closed',
 				data: {

@@ -359,10 +359,13 @@ export class GuildMemberOperationsService {
 		try {
 			updatedMember = await this.guildRepository.upsertMember(updatedMemberData);
 		} catch (error) {
-			await this.rollbackPreparedAssets(preparedAssets);
+			Logger.error(
+				{error, guildId, userId: targetId},
+				'Guild member update failed with unknown commit status; retaining uploaded assets',
+			);
 			throw error;
 		}
-		await this.commitPreparedAssets(preparedAssets);
+		await this.entityAssetService.commitAssetChanges([preparedAssets.avatar, preparedAssets.banner]);
 		if (shouldRemoveTemporaryStatus) {
 			await this.gatewayService.removeTemporaryGuild({userId: targetId, guildId});
 		}
@@ -1032,17 +1035,6 @@ export class GuildMemberOperationsService {
 			rollbackPromises.push(this.entityAssetService.rollbackAssetUpload(preparedAssets.banner));
 		}
 		await Promise.all(rollbackPromises);
-	}
-
-	private async commitPreparedAssets(preparedAssets: PreparedMemberAssets): Promise<void> {
-		const commitPromises: Array<Promise<void>> = [];
-		if (preparedAssets.avatar) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: preparedAssets.avatar}));
-		}
-		if (preparedAssets.banner) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: preparedAssets.banner}));
-		}
-		await Promise.all(commitPromises);
 	}
 
 	private async snapshotMembershipMetadata(member: GuildMember): Promise<void> {

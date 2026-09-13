@@ -41,7 +41,6 @@
 		"@pkgs/email": "workspace:*",
 		"@pkgs/geoip": "workspace:*",
 		"@pkgs/http_client": "workspace:*",
-		"@pkgs/initialization": "workspace:*",
 		"@pkgs/kv_client": "workspace:*",
 		"@pkgs/locale": "workspace:*",
 		"@pkgs/media_proxy_utils": "workspace:*",

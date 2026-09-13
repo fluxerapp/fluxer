@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import type {IKVProvider, KVPurgeBatchResult} from '@pkgs/kv_client/src/IKVProvider';
 import {Logger} from '../Logger';
 
 export interface IPurgeQueue {
@@ -59,7 +59,10 @@ export class BunnyPurgeQueue implements IPurgeQueue {
 			await Promise.all(ops);
 			Logger.debug({exact: exactUrls.length, prefix: prefixUrls.length}, 'Added URLs to CDN purge queue');
 		} catch (error) {
-			Logger.error({error, urls}, 'Failed to add URLs to CDN purge queue');
+			Logger.error(
+				{error, exact: exactUrls.length, prefix: prefixUrls.length},
+				'Failed to add URLs to CDN purge queue',
+			);
 			throw error;
 		}
 	}
@@ -87,10 +90,7 @@ export class BunnyPurgeQueue implements IPurgeQueue {
 		}
 	}
 
-	async dequeueExactBatch(maxItems: number): Promise<{
-		urls: Array<string>;
-		tokensConsumed: number;
-	}> {
+	async dequeueExactBatch(maxItems: number): Promise<KVPurgeBatchResult> {
 		return this.kvClient.dequeuePurgeBatch(
 			EXACT_QUEUE_KEY,
 			EXACT_BUCKET_KEY,
@@ -101,10 +101,7 @@ export class BunnyPurgeQueue implements IPurgeQueue {
 		);
 	}
 
-	async dequeuePrefixBatch(maxItems: number): Promise<{
-		urls: Array<string>;
-		tokensConsumed: number;
-	}> {
+	async dequeuePrefixBatch(maxItems: number): Promise<KVPurgeBatchResult> {
 		return this.kvClient.dequeuePurgeBatch(
 			PREFIX_QUEUE_KEY,
 			PREFIX_BUCKET_KEY,

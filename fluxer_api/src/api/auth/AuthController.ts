@@ -343,7 +343,8 @@ export function AuthController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			return ctx.json(await ctx.get('authRequestService').getAuthSessions(userId));
+			const currentSessionIdHash = ctx.get('authSession')?.sessionIdHash;
+			return ctx.json(await ctx.get('authRequestService').getAuthSessions(userId, currentSessionIdHash));
 		},
 	);
 	app.post(

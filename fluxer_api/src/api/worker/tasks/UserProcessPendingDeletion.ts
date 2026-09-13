@@ -10,6 +10,7 @@ import {getWorkerDependencies} from '../WorkerContext';
 const PayloadSchema = z.object({
 	userId: z.string(),
 	deletionReasonCode: z.number(),
+	pendingDeletionAt: z.iso.datetime().optional(),
 });
 const userProcessPendingDeletion: WorkerTaskHandler = async (payload, helpers) => {
 	const validated = PayloadSchema.parse(payload);
@@ -17,7 +18,14 @@ const userProcessPendingDeletion: WorkerTaskHandler = async (payload, helpers) =
 	const userId = createUserID(BigInt(validated.userId));
 	try {
 		const deps = getWorkerDependencies();
-		await processUserDeletion(userId, validated.deletionReasonCode, deps);
+		const scheduledAt = validated.pendingDeletionAt
+			? new Date(validated.pendingDeletionAt)
+			: ((await deps.userRepository.findUnique(userId))?.pendingDeletionAt ?? null);
+		if (scheduledAt === null) {
+			Logger.info({userId}, 'Account deletion schedule is no longer eligible');
+			return;
+		}
+		await processUserDeletion(userId, scheduledAt, validated.deletionReasonCode, deps);
 	} catch (error) {
 		Logger.error({error, userId}, 'Failed to delete user account');
 		throw error;

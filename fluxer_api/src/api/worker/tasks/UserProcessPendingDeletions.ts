@@ -7,6 +7,7 @@ import {
 	isPendingDeletionBlocked,
 	resolvePendingDeletionReasonCode,
 } from '../../user/services/PendingDeletionCoordinator';
+import {getValidTimestamp} from '../../utils/TimestampUtils';
 import {getWorkerDependencies} from '../WorkerContext';
 
 const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers) => {
@@ -18,18 +19,21 @@ const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers)
 		if (needsRebuild) {
 			Logger.info('Deletion queue needs rebuild, acquiring lock');
 			const lockToken = await deletionQueueService.acquireRebuildLock();
-			if (lockToken) {
-				try {
-					await deletionQueueService.rebuildState(lockToken);
-					await deletionQueueService.releaseRebuildLock(lockToken);
-				} catch (error) {
-					await deletionQueueService.releaseRebuildLock(lockToken);
-					throw error;
-				}
-			} else {
+			if (!lockToken) {
 				Logger.info('Another worker is rebuilding the queue, skipping this run');
 				return;
 			}
+			try {
+				await deletionQueueService.rebuildState(lockToken);
+			} catch (error) {
+				try {
+					await deletionQueueService.releaseRebuildLock(lockToken);
+				} catch (releaseError) {
+					Logger.error({error: releaseError}, 'Failed to release deletion queue lock after rebuild failure');
+				}
+				throw error;
+			}
+			await deletionQueueService.releaseRebuildLock(lockToken);
 		}
 		const nowMs = Date.now();
 		const pendingDeletions = await deletionQueueService.getReadyDeletions(nowMs, 1000);
@@ -44,18 +48,24 @@ const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers)
 					await deletionQueueService.removeFromQueue(userId);
 					continue;
 				}
-				if (isPendingDeletionBlocked(user)) {
+				if (!user.deletionStartedAt && isPendingDeletionBlocked(user)) {
 					Logger.info({userId}, 'User is not eligible for automated deletion, removing from KV');
 					await deletionQueueService.removeFromQueue(userId);
 					continue;
 				}
+				const scheduledAt = getValidTimestamp(user.pendingDeletionAt, `Pending deletion timestamp for user ${userId}`);
 				const deletionReasonCode = resolvePendingDeletionReasonCode(user, deletion.deletionReasonCode);
+				if (scheduledAt > nowMs) {
+					Logger.debug({userId, scheduledAt}, 'Requeueing pending user deletion that is not due yet');
+					await deletionQueueService.scheduleDeletion(userId, user.pendingDeletionAt, deletionReasonCode);
+					continue;
+				}
 				await workerService.addJob('userProcessPendingDeletion', {
 					userId: deletion.userId.toString(),
 					deletionReasonCode,
+					pendingDeletionAt: user.pendingDeletionAt.toISOString(),
 				});
 				await deletionQueueService.removeFromQueue(userId);
-				await userRepository.removePendingDeletion(userId, user.pendingDeletionAt);
 				scheduled++;
 			} catch (error) {
 				Logger.error({error, userId: deletion.userId.toString()}, 'Failed to schedule user deletion');

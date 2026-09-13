@@ -8,13 +8,11 @@ import {IpAuthorizationResendLimitExceededError} from '@fluxer/errors/src/domain
 import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
 import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {formatGeoipLocation, UNKNOWN_LOCATION} from '@pkgs/geoip/src/GeoipLookup';
-import type {RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import {ms, seconds} from 'itty-time';
 import type {ApiContext} from '../ApiContext';
@@ -33,6 +31,7 @@ import {createRequestCache} from '../middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
 import type {User} from '../models/User';
 import {lookupGeoip} from '../utils/IpUtils';
+import {createRateLimitError} from '../utils/RateLimitUtils';
 import * as AuthMfa from './AuthMfa';
 import * as AuthPassword from './AuthPassword';
 import * as AuthSession from './AuthSession';
@@ -78,18 +77,6 @@ interface LoginMfaResult {
 }
 
 type LoginResult = LoginTokenResult | LoginMfaResult;
-
-function getRetryAfterSeconds(result: RateLimitResult): number {
-	return result.retryAfter ?? Math.max(0, Math.ceil((result.resetTime.getTime() - Date.now()) / 1000));
-}
-
-function throwLoginRateLimit(result: RateLimitResult): never {
-	throw new RateLimitError({
-		retryAfter: getRetryAfterSeconds(result),
-		limit: result.limit,
-		resetTime: result.resetTime,
-	});
-}
 
 export interface IpAuthorizationTicketCache {
 	userId: string;
@@ -202,7 +189,7 @@ export async function login(
 		windowMs: ms('15 minutes'),
 	});
 	if (!emailRateLimit.allowed && !skipRateLimits) {
-		throwLoginRateLimit(emailRateLimit);
+		throw createRateLimitError(emailRateLimit);
 	}
 	const clientIp = requireClientIp(request, {
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
@@ -214,7 +201,7 @@ export async function login(
 		windowMs: ms('30 minutes'),
 	});
 	if (!ipRateLimit.allowed && !skipRateLimits) {
-		throwLoginRateLimit(ipRateLimit);
+		throw createRateLimitError(ipRateLimit);
 	}
 	const user = await users.findByEmail(data.email);
 	if (!user) {
@@ -254,22 +241,19 @@ export async function login(
 		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on login');
 	}
 	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {
-		if (currentUser.pendingDeletionAt) {
-			await users.removePendingDeletion(currentUser.id, currentUser.pendingDeletionAt);
+		const pendingDeletionAt = currentUser.pendingDeletionAt;
+		const updatedFlags = currentUser.flags & ~UserFlags.SELF_DELETED;
+		currentUser = await users.updateDeletionSchedule(currentUser, {
+			flags: updatedFlags,
+			pending_deletion_at: null,
+			deletion_reason_code: null,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: null,
+		});
+		if (pendingDeletionAt) {
+			await users.removePendingDeletion(currentUser.id, pendingDeletionAt);
 		}
 		await kvDeletionQueue.removeFromQueue(currentUser.id);
-		const updatedFlags = currentUser.flags & ~UserFlags.SELF_DELETED;
-		currentUser = await users.patchUpsert(
-			currentUser.id,
-			{
-				flags: updatedFlags,
-				pending_deletion_at: null,
-				deletion_reason_code: null,
-				deletion_public_reason: null,
-				deletion_audit_log_reason: null,
-			},
-			currentUser.toRow(),
-		);
 		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on login');
 	}
 	if (currentUser.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) {

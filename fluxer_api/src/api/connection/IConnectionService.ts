@@ -2,6 +2,7 @@
 
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
 import type {UserID} from '../BrandedTypes';
+import type {BlueskyCallbackResult} from '../bluesky/IBlueskyOAuthService';
 import type {UserConnectionRow} from '../database/types/ConnectionTypes';
 import type {UpdateConnectionParams} from './IConnectionRepository';
 
@@ -33,18 +34,7 @@ export abstract class IConnectionService {
 
 	abstract deleteConnection(userId: UserID, connectionType: ConnectionType, connectionId: string): Promise<void>;
 
-	abstract verifyConnection(
-		userId: UserID,
-		connectionType: ConnectionType,
-		connectionId: string,
-	): Promise<UserConnectionRow>;
-
 	abstract reorderConnections(userId: UserID, connectionIds: Array<string>): Promise<void>;
 
-	abstract revalidateConnection(connection: UserConnectionRow): Promise<{
-		isValid: boolean;
-		updateParams: UpdateConnectionParams | null;
-	}>;
-
-	abstract createOrUpdateBlueskyConnection(userId: UserID, did: string, handle: string): Promise<UserConnectionRow>;
+	abstract createOrUpdateBlueskyConnection(result: BlueskyCallbackResult): Promise<UserConnectionRow>;
 }

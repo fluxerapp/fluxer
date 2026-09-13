@@ -127,8 +127,6 @@ export class UserAccountSecurityService {
 		if (user.isBot) {
 			updates.global_name = null;
 		} else if (data.global_name !== undefined) {
-			if (data.global_name !== user.globalName) {
-			}
 			if (
 				data.global_name &&
 				!isProfileSubstringExempt(user) &&

@@ -4,24 +4,26 @@ import {type BinaryExpression, type Identifier, Node, type Project, type SourceF
 
 export const UNRESOLVED = Symbol('unresolved');
 
+type StaticPrimitive = string | number | boolean | null;
+
 export type StaticValue =
-	| string
-	| number
-	| boolean
-	| null
+	| StaticPrimitive
 	| ReadonlyArray<StaticValue>
-	| {readonly [key: string]: StaticValue};
+	| {readonly [key: string]: StaticValue}
+	| typeof UNRESOLVED;
 
-type Resolved = StaticValue | typeof UNRESOLVED;
+export type Scope = ReadonlyMap<Node, StaticValue>;
 
-export type Scope = ReadonlyMap<string, StaticValue>;
-
-export const EMPTY_SCOPE: Scope = new Map<string, StaticValue>();
+export const EMPTY_SCOPE: Scope = new Map<Node, StaticValue>();
 
 const MAX_DEPTH = 48;
 
-function isPlainObject(value: Resolved): value is {readonly [key: string]: StaticValue} {
+function isPlainObject(value: StaticValue): value is {readonly [key: string]: StaticValue} {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isPrimitive(value: StaticValue): value is StaticPrimitive {
+	return value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
 }
 
 function unwrap(node: Node): Node {
@@ -38,13 +40,21 @@ function unwrap(node: Node): Node {
 	return current;
 }
 
+export function getIdentifierDeclarations(node: Identifier): ReadonlyArray<Node> {
+	const parent = node.getParent();
+	const symbol =
+		Node.isShorthandPropertyAssignment(parent) && parent.getNameNode() === node
+			? parent.getValueSymbol()
+			: node.getSymbol();
+	return symbol?.getDeclarations() ?? [];
+}
+
 export class StaticPathResolver {
-	private readonly moduleConstants = new Map<SourceFile, Map<string, Node>>();
 	private readonly inFlight = new Set<Node>();
 
 	constructor(private readonly project: Project) {}
 
-	public resolve(node: Node, scope: Scope): Resolved {
+	public resolve(node: Node, scope: Scope): StaticValue {
 		return this.evaluate(node, scope, 0);
 	}
 
@@ -53,7 +63,19 @@ export class StaticPathResolver {
 		return typeof value === 'string' ? value : null;
 	}
 
-	private evaluate(rawNode: Node, scope: Scope, depth: number): Resolved {
+	public resolvePropertyName(node: Node, scope: Scope): string | null {
+		const name = this.evaluatePropertyName(node, scope, 0);
+		return name === UNRESOLVED ? null : name;
+	}
+
+	private evaluatePropertyName(node: Node, scope: Scope, depth: number): string | typeof UNRESOLVED {
+		if (Node.isIdentifier(node)) return node.getText();
+		const expression = Node.isComputedPropertyName(node) ? node.getExpression() : node;
+		const value = this.evaluate(expression, scope, depth + 1);
+		return isPrimitive(value) ? String(value) : UNRESOLVED;
+	}
+
+	private evaluate(rawNode: Node, scope: Scope, depth: number): StaticValue {
 		if (depth > MAX_DEPTH) {
 			return UNRESOLVED;
 		}
@@ -77,7 +99,7 @@ export class StaticPathResolver {
 			let text = node.getHead().getLiteralText();
 			for (const span of node.getTemplateSpans()) {
 				const value = this.evaluate(span.getExpression(), scope, depth + 1);
-				if (value === UNRESOLVED || Array.isArray(value) || isPlainObject(value)) {
+				if (!isPrimitive(value)) {
 					return UNRESOLVED;
 				}
 				text += String(value);
@@ -94,7 +116,7 @@ export class StaticPathResolver {
 				return UNRESOLVED;
 			}
 			const name = node.getName();
-			return name in target ? target[name] : UNRESOLVED;
+			return Object.hasOwn(target, name) ? target[name] : UNRESOLVED;
 		}
 		if (Node.isElementAccessExpression(node)) {
 			const target = this.evaluate(node.getExpression(), scope, depth + 1);
@@ -113,50 +135,45 @@ export class StaticPathResolver {
 			}
 			if (isPlainObject(target)) {
 				const name = String(key);
-				return name in target ? target[name] : UNRESOLVED;
+				return Object.hasOwn(target, name) ? target[name] : UNRESOLVED;
 			}
 			return UNRESOLVED;
 		}
 		if (Node.isArrayLiteralExpression(node)) {
 			const values: Array<StaticValue> = [];
 			for (const element of node.getElements()) {
-				if (Node.isSpreadElement(element)) {
-					return UNRESOLVED;
-				}
-				const value = this.evaluate(element, scope, depth + 1);
+				const value = this.evaluate(
+					Node.isSpreadElement(element) ? element.getExpression() : element,
+					scope,
+					depth + 1,
+				);
 				if (value === UNRESOLVED) {
 					return UNRESOLVED;
 				}
-				values.push(value);
+				if (Node.isSpreadElement(element)) {
+					if (!Array.isArray(value)) return UNRESOLVED;
+					values.push(...value);
+				} else {
+					values.push(value);
+				}
 			}
 			return values;
 		}
 		if (Node.isObjectLiteralExpression(node)) {
-			const result: Record<string, StaticValue> = {};
+			const properties = new Map<string, StaticValue>();
 			for (const property of node.getProperties()) {
-				if (Node.isPropertyAssignment(property)) {
-					const initializer = property.getInitializer();
-					if (initializer == null) {
-						return UNRESOLVED;
-					}
-					const value = this.evaluate(initializer, scope, depth + 1);
-					if (value === UNRESOLVED) {
-						continue;
-					}
-					result[property.getName()] = value;
-					continue;
+				if (!Node.isPropertyAssignment(property) && !Node.isShorthandPropertyAssignment(property)) return UNRESOLVED;
+				const nameNode = property.getNameNode();
+				const name = this.evaluatePropertyName(nameNode, scope, depth + 1);
+				if (name === UNRESOLVED) return UNRESOLVED;
+				if (Node.isPropertyAssignment(property) && name === '__proto__' && !Node.isComputedPropertyName(nameNode)) {
+					return UNRESOLVED;
 				}
-				if (Node.isShorthandPropertyAssignment(property)) {
-					const value = this.evaluate(property.getNameNode(), scope, depth + 1);
-					if (value === UNRESOLVED) {
-						continue;
-					}
-					result[property.getName()] = value;
-					continue;
-				}
-				return UNRESOLVED;
+				const initializer = Node.isPropertyAssignment(property) ? property.getInitializer() : nameNode;
+				if (initializer === undefined) return UNRESOLVED;
+				properties.set(name, this.evaluate(initializer, scope, depth + 1));
 			}
-			return result;
+			return Object.fromEntries(properties);
 		}
 		if (Node.isConditionalExpression(node)) {
 			const condition = this.evaluate(node.getCondition(), scope, depth + 1);
@@ -178,7 +195,7 @@ export class StaticPathResolver {
 		return UNRESOLVED;
 	}
 
-	private evaluateBinary(node: BinaryExpression, scope: Scope, depth: number): Resolved {
+	private evaluateBinary(node: BinaryExpression, scope: Scope, depth: number): StaticValue {
 		const operator = node.getOperatorToken().getText();
 		const left = this.evaluate(node.getLeft(), scope, depth + 1);
 		if (left === UNRESOLVED) {
@@ -197,86 +214,53 @@ export class StaticPathResolver {
 		if (right === UNRESOLVED) {
 			return UNRESOLVED;
 		}
-		if (operator === '+') {
-			if (typeof left === 'string' && (typeof right === 'string' || typeof right === 'number')) {
-				return left + String(right);
+		if (!isPrimitive(left) || !isPrimitive(right)) return UNRESOLVED;
+		switch (operator) {
+			case '+':
+				return typeof left === 'string' || typeof right === 'string'
+					? String(left) + String(right)
+					: Number(left) + Number(right);
+			case '===':
+				return left === right;
+			case '!==':
+				return left !== right;
+			case '==':
+			case '!=': {
+				const equal =
+					typeof left === typeof right || left === null || right === null
+						? left === right
+						: Number(left) === Number(right);
+				return operator === '==' ? equal : !equal;
 			}
-			if (typeof left === 'number' && typeof right === 'number') {
-				return left + right;
-			}
-			return UNRESOLVED;
+			default:
+				return UNRESOLVED;
 		}
-		const comparable =
-			(typeof left === 'string' || typeof left === 'number' || typeof left === 'boolean' || left === null) &&
-			(typeof right === 'string' || typeof right === 'number' || typeof right === 'boolean' || right === null);
-		if (!comparable) {
-			return UNRESOLVED;
-		}
-		if (operator === '===' || operator === '==') {
-			return left === right;
-		}
-		if (operator === '!==' || operator === '!=') {
-			return left !== right;
-		}
-		return UNRESOLVED;
 	}
 
-	private evaluateIdentifier(node: Identifier, scope: Scope, depth: number): Resolved {
-		const name = node.getText();
-		if (name === 'undefined') {
-			return UNRESOLVED;
+	private evaluateIdentifier(node: Identifier, scope: Scope, depth: number): StaticValue {
+		const declarations = getIdentifierDeclarations(node);
+		if (declarations.length !== 1) return UNRESOLVED;
+		const declaration = declarations[0];
+		const bound = scope.get(declaration);
+		if (bound !== undefined) return bound;
+		if (Node.isImportSpecifier(declaration)) {
+			if (declaration.isTypeOnly() || declaration.getImportDeclaration().isTypeOnly()) return UNRESOLVED;
+			return this.evaluateImportedConstant(node.getSourceFile(), node.getText(), depth);
 		}
-		const bound = scope.get(name);
-		if (bound !== undefined) {
-			return bound;
-		}
-		const local = this.findBindingInScopeChain(node, name);
-		if (local != null) {
-			return this.evaluateBinding(local, scope, depth);
-		}
-		return this.evaluateImportedConstant(node.getSourceFile(), name, depth);
+		return this.evaluateBinding(declaration, scope, depth);
 	}
 
-	private findBindingInScopeChain(from: Node, name: string): Node | null {
-		for (const ancestor of from.getAncestors()) {
-			if (!Node.isBlock(ancestor) && !Node.isSourceFile(ancestor) && !Node.isCaseClause(ancestor)) {
-				continue;
-			}
-			for (const statement of ancestor.getStatements()) {
-				if (!Node.isVariableStatement(statement)) {
-					continue;
-				}
-				if (statement.getDeclarationKind() !== 'const') {
-					continue;
-				}
-				for (const declaration of statement.getDeclarations()) {
-					const nameNode = declaration.getNameNode();
-					if (Node.isIdentifier(nameNode)) {
-						if (nameNode.getText() === name) {
-							return declaration;
-						}
-						continue;
-					}
-					if (Node.isObjectBindingPattern(nameNode) || Node.isArrayBindingPattern(nameNode)) {
-						for (const element of nameNode.getElements()) {
-							if (Node.isBindingElement(element) && element.getName() === name) {
-								return element;
-							}
-						}
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	private evaluateBinding(binding: Node, scope: Scope, depth: number): Resolved {
+	private evaluateBinding(binding: Node, scope: Scope, depth: number): StaticValue {
 		if (this.inFlight.has(binding)) {
 			return UNRESOLVED;
 		}
 		this.inFlight.add(binding);
 		try {
 			if (Node.isVariableDeclaration(binding)) {
+				const declarationList = binding.getParent();
+				if (!Node.isVariableDeclarationList(declarationList) || declarationList.getDeclarationKind() !== 'const') {
+					return UNRESOLVED;
+				}
 				const initializer = binding.getInitializer();
 				return initializer == null ? UNRESOLVED : this.evaluate(initializer, scope, depth + 1);
 			}
@@ -291,6 +275,10 @@ export class StaticPathResolver {
 			if (!Node.isVariableDeclaration(declaration)) {
 				return UNRESOLVED;
 			}
+			const declarationList = declaration.getParent();
+			if (!Node.isVariableDeclarationList(declarationList) || declarationList.getDeclarationKind() !== 'const') {
+				return UNRESOLVED;
+			}
 			const initializer = declaration.getInitializer();
 			if (initializer == null) {
 				return UNRESOLVED;
@@ -303,8 +291,8 @@ export class StaticPathResolver {
 				if (!isPlainObject(source)) {
 					return UNRESOLVED;
 				}
-				const key = binding.getPropertyNameNode()?.getText() ?? binding.getName();
-				return key in source ? source[key] : UNRESOLVED;
+				const key = this.evaluatePropertyName(binding.getPropertyNameNode() ?? binding.getNameNode(), scope, depth + 1);
+				return key !== UNRESOLVED && Object.hasOwn(source, key) ? source[key] : UNRESOLVED;
 			}
 			if (Node.isArrayBindingPattern(pattern)) {
 				if (!Array.isArray(source)) {
@@ -319,17 +307,15 @@ export class StaticPathResolver {
 		}
 	}
 
-	private evaluateImportedConstant(sourceFile: SourceFile, name: string, depth: number): Resolved {
+	private evaluateImportedConstant(sourceFile: SourceFile, name: string, depth: number): StaticValue {
 		const target = this.resolveImportTarget(sourceFile, name);
 		if (target == null) {
 			return UNRESOLVED;
 		}
-		const constants = this.constantsOf(target.sourceFile);
-		const initializer = constants.get(target.exportedName);
-		if (initializer == null) {
-			return UNRESOLVED;
-		}
-		return this.evaluate(initializer, EMPTY_SCOPE, depth + 1);
+		const exported = target.sourceFile.getExportSymbols().find((symbol) => symbol.getName() === target.exportedName);
+		const declarations = (exported?.getAliasedSymbol() ?? exported)?.getDeclarations();
+		if (declarations?.length !== 1) return UNRESOLVED;
+		return this.evaluateBinding(declarations[0], EMPTY_SCOPE, depth + 1);
 	}
 
 	private resolveImportTarget(
@@ -368,27 +354,5 @@ export class StaticPathResolver {
 			}
 		}
 		return null;
-	}
-
-	private constantsOf(sourceFile: SourceFile): Map<string, Node> {
-		const cached = this.moduleConstants.get(sourceFile);
-		if (cached != null) {
-			return cached;
-		}
-		const constants = new Map<string, Node>();
-		for (const statement of sourceFile.getVariableStatements()) {
-			if (statement.getDeclarationKind() !== 'const') {
-				continue;
-			}
-			for (const declaration of statement.getDeclarations()) {
-				const nameNode = declaration.getNameNode();
-				const initializer = declaration.getInitializer();
-				if (Node.isIdentifier(nameNode) && initializer != null) {
-					constants.set(nameNode.getText(), initializer);
-				}
-			}
-		}
-		this.moduleConstants.set(sourceFile, constants);
-		return constants;
 	}
 }

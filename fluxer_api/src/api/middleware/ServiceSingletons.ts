@@ -90,16 +90,20 @@ import {UserRepository} from '../user/repositories/UserRepository';
 import {VisionarySlotRepository} from '../user/repositories/VisionarySlotRepository';
 import {UserActivityBuffer} from '../user/services/UserActivityBuffer';
 import {UserContactChangeLogService} from '../user/services/UserContactChangeLogService';
+import {awaitAll} from '../utils/ConcurrencyUtils';
 import {UserPermissionUtils} from '../utils/UserPermissionUtils';
 import {VoiceRepository} from '../voice/VoiceRepository';
 import {SweegoWebhookService} from '../webhook/SweegoWebhookService';
 import {WebhookRepository} from '../webhook/WebhookRepository';
 import {
+	acquireSnowflakeService,
 	getGatewayService,
 	getKVClient,
 	getMediaService,
 	getSnowflakeService,
 	getWorkerService,
+	releaseSnowflakeService,
+	type SnowflakeServiceHandle,
 } from './ServiceRegistry';
 import {clearSingletonsForTesting, singleton} from './Singleton';
 
@@ -123,10 +127,25 @@ export const getPasswordChangeRepository = singleton(() => new PasswordChangeRep
 const getUserContactChangeLogRepository = singleton(() => new UserContactChangeLogRepository());
 export const getDonationRepository = singleton(() => new DonationRepository());
 const getAdminApiKeyRepository = singleton(() => new AdminApiKeyRepository());
+let instanceConfigRepositoryInstance: InstanceConfigRepository | null = null;
 export const getInstanceConfigRepository = singleton(
-	() => new InstanceConfigRepository(getKVClient()),
-	(repository) => repository.shutdown(),
+	() => {
+		const repository = new InstanceConfigRepository(getKVClient());
+		instanceConfigRepositoryInstance = repository;
+		return repository;
+	},
+	(repository) => {
+		if (instanceConfigRepositoryInstance === repository) instanceConfigRepositoryInstance = null;
+		void repository.shutdown().catch((error) => {
+			Logger.error({error}, 'Failed to shut down instance config repository');
+		});
+	},
 );
+
+export async function shutdownInstanceConfigRepository(): Promise<void> {
+	await instanceConfigRepositoryInstance?.shutdown();
+}
+
 export const getGatewayRolloutConfigPublisher = singleton(
 	() =>
 		new GatewayRolloutConfigPublisher(
@@ -203,9 +222,22 @@ const getDownloadsStorageService: () => IStorageService = (() => {
 	return () => override() ?? getStorageService();
 })();
 export const getErrorI18nService = singleton(() => new ErrorI18nService());
+let limitConfigServiceInstance: LimitConfigService | null = null;
 export const getLimitConfigService = singleton(
-	() => new LimitConfigService(getInstanceConfigRepository(), getCacheService(), getKVClient()),
-	(service) => service.shutdown(),
+	() => {
+		const service = new LimitConfigService(getInstanceConfigRepository(), getCacheService(), getKVClient());
+		limitConfigServiceInstance = service;
+		return service;
+	},
+	(service) => {
+		const shutdown = limitConfigServiceInstance === service ? shutdownServiceSingletons() : service.shutdown();
+		if (limitConfigServiceInstance === service) {
+			limitConfigServiceInstance = null;
+		}
+		void shutdown.catch((err) => {
+			Logger.error({err}, 'Failed to shut down service singletons');
+		});
+	},
 );
 export const getPurgeQueue: () => IPurgeQueue = singleton(() =>
 	Config.bunny.purgeEnabled ? new BunnyPurgeQueue(getKVClient()) : new NoopPurgeQueue(),
@@ -455,26 +487,102 @@ export function createUserCacheService(): UserCacheService {
 	return new UserCacheService(createUsersServiceClient());
 }
 
+interface ServiceSingletonInitializationOwner {
+	stopping: boolean;
+	snowflake: SnowflakeServiceHandle;
+	limitConfigService: LimitConfigService | null;
+}
+
+let serviceSingletonInitializationOwner: ServiceSingletonInitializationOwner | null = null;
 let serviceSingletonInitializationPromise: Promise<void> | null = null;
+let serviceSingletonShutdownPromise: Promise<void> | null = null;
+
+function assertServiceSingletonInitializationActive(owner: ServiceSingletonInitializationOwner): void {
+	if (owner.stopping) {
+		throw new Error('Service singleton initialization was stopped');
+	}
+}
 
 export async function initializeServiceSingletons(): Promise<void> {
+	if (serviceSingletonShutdownPromise) {
+		throw new Error('Service singletons are shutting down');
+	}
 	if (!serviceSingletonInitializationPromise) {
+		const owner: ServiceSingletonInitializationOwner = {
+			stopping: false,
+			snowflake: acquireSnowflakeService(),
+			limitConfigService: null,
+		};
+		serviceSingletonInitializationOwner = owner;
 		serviceSingletonInitializationPromise = (async () => {
-			const snowflakeService = getSnowflakeService();
-			await snowflakeService.initialize();
+			await owner.snowflake.service.initialize();
+			assertServiceSingletonInitializationActive(owner);
 			const limitConfigService = getLimitConfigService();
+			owner.limitConfigService = limitConfigService;
+			await getInstanceConfigRepository().initialize();
+			assertServiceSingletonInitializationActive(owner);
 			await limitConfigService.initialize();
+			assertServiceSingletonInitializationActive(owner);
 			limitConfigService.setAsGlobalInstance();
 		})();
 	}
-	await serviceSingletonInitializationPromise;
+	const initialization = serviceSingletonInitializationPromise;
+	try {
+		await initialization;
+	} catch (error) {
+		if (serviceSingletonInitializationPromise === initialization) {
+			try {
+				await shutdownServiceSingletons();
+			} catch (cleanupError) {
+				throw new AggregateError([error, cleanupError], 'Service singleton initialization and cleanup failed');
+			}
+		}
+		throw error;
+	}
+}
+
+export async function shutdownServiceSingletons(): Promise<void> {
+	if (serviceSingletonShutdownPromise) {
+		return await serviceSingletonShutdownPromise;
+	}
+	const initialization = serviceSingletonInitializationPromise;
+	const owner = serviceSingletonInitializationOwner;
+	const service = owner?.limitConfigService ?? limitConfigServiceInstance;
+	if (!initialization && !owner && !service) return;
+	if (owner) owner.stopping = true;
+	const shutdown = awaitAll(
+		[
+			Promise.resolve().then(() => service?.shutdown()),
+			(async () => {
+				await Promise.allSettled([initialization]);
+				if (owner) await releaseSnowflakeService(owner.snowflake);
+			})(),
+		],
+		'Failed to shut down service singletons',
+	);
+	serviceSingletonShutdownPromise = shutdown;
+	try {
+		await shutdown;
+	} finally {
+		if (serviceSingletonInitializationPromise === initialization) {
+			serviceSingletonInitializationPromise = null;
+		}
+		if (serviceSingletonInitializationOwner === owner) {
+			serviceSingletonInitializationOwner = null;
+		}
+		if (serviceSingletonShutdownPromise === shutdown) {
+			serviceSingletonShutdownPromise = null;
+		}
+	}
 }
 
 export function resetServiceSingletonsForTesting(): void {
+	void shutdownServiceSingletons().catch((error) => {
+		Logger.error({error}, 'Failed to reset service singletons');
+	});
 	activityTracker?.shutdown();
 	clearSingletonsForTesting();
 	_virusScanInitPromise = null;
-	serviceSingletonInitializationPromise = null;
 	bulkMessageDeletionQueue = null;
 	bulkMessageDeletionQueueClient = null;
 	premiumStateQueue = null;

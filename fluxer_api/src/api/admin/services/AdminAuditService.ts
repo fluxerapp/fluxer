@@ -55,7 +55,7 @@ export class AdminAuditService {
 			created_at: new Date(),
 		});
 		const auditLogSearchService = getAuditLogSearchService();
-		if (auditLogSearchService && 'indexAuditLog' in auditLogSearchService) {
+		if (auditLogSearchService) {
 			auditLogSearchService.indexAuditLog(log).catch((error) => {
 				Logger.error({error, logId: log.logId}, 'Failed to index audit log to search');
 			});

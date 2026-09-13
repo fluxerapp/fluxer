@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {isDeepStrictEqual} from 'node:util';
 import {type SchemaIO, ZodOpenAPIConverter} from '@fluxer/openapi/src/converters/ZodToOpenAPI';
+import {createOpenAPIComponentRef, validateOpenAPIComponentName} from '@fluxer/openapi/src/OpenAPIComponentRef';
 import type {OpenAPISchemaTarget} from '@fluxer/openapi/src/OpenAPIGenerationTypes';
 import type {OpenAPIDocument, OpenAPIRef, OpenAPISchema} from '@fluxer/openapi/src/OpenAPITypes';
 import {core} from 'zod';
@@ -16,6 +17,7 @@ export class SchemaRegistry {
 	}
 
 	register(name: string, schema: OpenAPISchema): void {
+		validateOpenAPIComponentName(name);
 		if (this.zodSchemas.has(name)) throw new Error(`OpenAPI schema also has a Zod definition: ${name}`);
 		const existing = this.schemas.get(name);
 		if (existing && !isDeepStrictEqual(existing, schema)) throw new Error(`Conflicting OpenAPI schemas: ${name}`);
@@ -23,6 +25,7 @@ export class SchemaRegistry {
 	}
 
 	registerZod(name: string, schema: core.$ZodType): void {
+		validateOpenAPIComponentName(name);
 		if (this.schemas.has(name)) throw new Error(`Zod schema also has an OpenAPI definition: ${name}`);
 		const existing = this.zodSchemas.get(name);
 		if (existing && existing !== schema) throw new Error(`Duplicate Zod schema export: ${name}`);
@@ -34,7 +37,7 @@ export class SchemaRegistry {
 		const schema = this.zodSchemas.get(name);
 		if (schema) return this.converter.getRef(name, schema, io);
 		if (!this.schemas.has(name)) throw new Error(`Unknown OpenAPI schema: ${name}`);
-		return {$ref: `#/components/schemas/${name}`};
+		return createOpenAPIComponentRef(name);
 	}
 
 	get(name: string, io: SchemaIO = 'input'): OpenAPISchema | undefined {
@@ -43,7 +46,7 @@ export class SchemaRegistry {
 	}
 
 	get size(): number {
-		return new Set([...this.schemas.keys(), ...this.zodSchemas.keys()]).size;
+		return this.schemas.size + this.zodSchemas.size;
 	}
 
 	acceptsEmptyObject(name: string): boolean {

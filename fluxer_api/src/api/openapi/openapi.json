@@ -14009,75 +14009,6 @@
 				]
 			}
 		},
-		"/users/@me/connections/{type}/{connection_id}/verify": {
-			"post": {
-				"operationId": "verify_connection",
-				"summary": "Verify connection",
-				"tags": ["Connections"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ConnectionResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Triggers verification for an external service connection.",
-				"security": [{"sessionToken": []}],
-				"parameters": [
-					{
-						"name": "type",
-						"in": "path",
-						"required": true,
-						"schema": {"$ref": "#/components/schemas/ConnectionType"},
-						"description": "The type of external connection"
-					},
-					{
-						"name": "connection_id",
-						"in": "path",
-						"required": true,
-						"schema": {"type": "string", "description": "The unique identifier of the connection"},
-						"description": "The unique identifier of the connection"
-					}
-				]
-			}
-		},
 		"/users/@me/delete": {
 			"post": {
 				"operationId": "delete_current_user_account",
@@ -24259,25 +24190,6 @@
 				"enum": ["bsky", "domain"],
 				"type": "string"
 			},
-			"ConnectionResponse": {
-				"type": "object",
-				"properties": {
-					"id": {"type": "string", "description": "The unique identifier for this connection"},
-					"type": {"description": "The type of connection", "$ref": "#/components/schemas/ConnectionType"},
-					"name": {"type": "string", "description": "The display name of the connection (handle or domain)"},
-					"verified": {"type": "boolean", "description": "Whether the connection has been verified"},
-					"visibility_flags": {
-						"description": "Bitfield controlling who can see this connection",
-						"$ref": "#/components/schemas/ConnectionVisibilityFlags"
-					},
-					"sort_order": {
-						"description": "The display order of this connection",
-						"$ref": "#/components/schemas/Int32Type"
-					}
-				},
-				"required": ["id", "type", "name", "verified", "visibility_flags", "sort_order"],
-				"additionalProperties": false
-			},
 			"UpdateConnectionRequest": {
 				"type": "object",
 				"properties": {
@@ -24304,6 +24216,25 @@
 					}
 				},
 				"required": ["initiation_token"]
+			},
+			"ConnectionResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "description": "The unique identifier for this connection"},
+					"type": {"description": "The type of connection", "$ref": "#/components/schemas/ConnectionType"},
+					"name": {"type": "string", "description": "The display name of the connection (handle or domain)"},
+					"verified": {"type": "boolean", "description": "Whether the connection has been verified"},
+					"visibility_flags": {
+						"description": "Bitfield controlling who can see this connection",
+						"$ref": "#/components/schemas/ConnectionVisibilityFlags"
+					},
+					"sort_order": {
+						"description": "The display order of this connection",
+						"$ref": "#/components/schemas/Int32Type"
+					}
+				},
+				"required": ["id", "type", "name", "verified", "visibility_flags", "sort_order"],
+				"additionalProperties": false
 			},
 			"ReorderConnectionsRequest": {
 				"type": "object",

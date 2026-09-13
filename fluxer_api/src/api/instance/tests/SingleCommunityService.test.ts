@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {describe, expect, it} from 'vitest';
 import type {User} from '../../models/User';
 import type {InstancePolicyConfig} from '../InstanceConfigRepository';
@@ -30,7 +31,7 @@ function createHarness(params: {designatedGuildId: string | null; designatedGuil
 	const guildDataService = {
 		getGuildSystem: async () => {
 			if (!params.designatedGuildExists) {
-				throw new Error('unknown guild');
+				throw new UnknownGuildError();
 			}
 			return {} as never;
 		},
@@ -70,9 +71,9 @@ describe('SingleCommunityService.ensureStockCommunity', () => {
 		expect(harness.createdNames).toEqual(['Fluxer']);
 	});
 
-	it('creates a fresh community when the stored guild id is not a snowflake', async () => {
+	it('rejects an invalid stored guild id without creating a community', async () => {
 		const harness = createHarness({designatedGuildId: 'not-a-snowflake', designatedGuildExists: true});
-		await harness.service.ensureStockCommunity({owner: OWNER, name: 'Fluxer'});
-		expect(harness.createdNames).toEqual(['Fluxer']);
+		await expect(harness.service.ensureStockCommunity({owner: OWNER, name: 'Fluxer'})).rejects.toThrow(SyntaxError);
+		expect(harness.createdNames).toEqual([]);
 	});
 });

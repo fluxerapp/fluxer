@@ -66,6 +66,7 @@ export interface UserRow {
 	pending_bulk_message_deletion_channel_count: Nullish<number>;
 	pending_bulk_message_deletion_message_count: Nullish<number>;
 	pending_deletion_at: Nullish<Date>;
+	deletion_started_at?: Nullish<Date>;
 	deletion_reason_code: Nullish<number>;
 	deletion_public_reason: Nullish<string>;
 	deletion_audit_log_reason: Nullish<string>;
@@ -129,6 +130,7 @@ export const USER_COLUMNS = [
 	'pending_bulk_message_deletion_channel_count',
 	'pending_bulk_message_deletion_message_count',
 	'pending_deletion_at',
+	'deletion_started_at',
 	'deletion_reason_code',
 	'deletion_public_reason',
 	'deletion_audit_log_reason',
@@ -191,6 +193,7 @@ export const EMPTY_USER_ROW: UserRow = {
 	pending_bulk_message_deletion_channel_count: null,
 	pending_bulk_message_deletion_message_count: null,
 	pending_deletion_at: null,
+	deletion_started_at: null,
 	deletion_reason_code: null,
 	deletion_public_reason: null,
 	deletion_audit_log_reason: null,
@@ -391,9 +394,11 @@ export interface UserHarvestRow {
 	user_id: UserID;
 	harvest_id: bigint;
 	requested_at: Date;
+	attempt_id?: string | null;
 	started_at: Nullish<Date>;
 	completed_at: Nullish<Date>;
 	failed_at: Nullish<Date>;
+	terminal_failed_at?: Date | null;
 	storage_key: Nullish<string>;
 	file_size: Nullish<bigint>;
 	progress_percent: number;
@@ -406,9 +411,11 @@ export const USER_HARVEST_COLUMNS = [
 	'user_id',
 	'harvest_id',
 	'requested_at',
+	'attempt_id',
 	'started_at',
 	'completed_at',
 	'failed_at',
+	'terminal_failed_at',
 	'storage_key',
 	'file_size',
 	'progress_percent',

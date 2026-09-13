@@ -41,11 +41,7 @@ function assertValidSequenceValue(sequence: number): void {
 }
 
 export function extractTimestamp(snowflake: string): number {
-	try {
-		return extractTimestampWithEpoch(BigInt(snowflake), FLUXER_EPOCH);
-	} catch (_error) {
-		return Number.NaN;
-	}
+	return extractTimestampFromSnowflake(snowflake);
 }
 
 export function extractTimestampBigInt(snowflake: bigint): number {
@@ -53,11 +49,7 @@ export function extractTimestampBigInt(snowflake: bigint): number {
 }
 
 export function fromTimestamp(timestamp: number): string {
-	const clampedTimestamp = toClampedTimestamp(timestamp);
-	if (clampedTimestamp === FLUXER_EPOCH_NUMBER) {
-		return '0';
-	}
-	return createSnowflake({timestamp: clampedTimestamp}).toString();
+	return fromTimestampBigInt(timestamp).toString();
 }
 
 export function fromTimestampBigInt(timestamp: number): bigint {
@@ -131,13 +123,7 @@ export function compareBigInt(snowflake1: bigint | null, snowflake2: bigint | nu
 	if (snowflake1 == null) {
 		return -1;
 	}
-	if (snowflake1 > snowflake2) {
-		return 1;
-	}
-	if (snowflake1 < snowflake2) {
-		return -1;
-	}
-	return 0;
+	return snowflake1 > snowflake2 ? 1 : -1;
 }
 
 export function isProbablyAValidSnowflake(value: string | null | undefined): boolean {
@@ -178,9 +164,6 @@ export function age(snowflake: string): number {
 
 export function ageBigInt(snowflake: bigint): number {
 	const timestamp = extractTimestampBigInt(snowflake);
-	if (Number.isNaN(timestamp)) {
-		return 0;
-	}
 	return Date.now() - timestamp;
 }
 
@@ -202,11 +185,7 @@ export function extractTimestampFromSnowflakeAsDate(snowflake: string, epoch?: s
 }
 
 export function extractTimestampFromSnowflakeAsDateBigInt(snowflake: bigint): Date {
-	const timestamp = extractTimestampBigInt(snowflake);
-	if (Number.isNaN(timestamp)) {
-		return new Date();
-	}
-	return new Date(timestamp);
+	return new Date(extractTimestampBigInt(snowflake));
 }
 
 export interface SnowflakeSequenceOptions {

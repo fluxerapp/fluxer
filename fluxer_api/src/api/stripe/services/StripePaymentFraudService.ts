@@ -191,22 +191,20 @@ export class StripePaymentFraudService {
 					throw new StripeError('User not found for payment fraud action');
 				}
 				const pendingDeletionAt = new Date(Date.now() + FRAUD_DELETION_DELAY_MS);
-				const subscriptionCancelled = await this.cancelStripeSubscriptionImmediately(user);
+				const cancelledUser = await this.cancelStripeSubscriptionImmediately(user);
+				const subscriptionCancelled = cancelledUser !== null;
+				const currentUser = cancelledUser ?? user;
 				const auditReason = this.getAuditReason({source, fraudType});
-				const updatedUser = await this.deps.userRepository.patchUpsert(
-					userId,
-					{
-						flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
-						pending_deletion_at: pendingDeletionAt,
-						deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-						deletion_public_reason: 'Payment fraud',
-						deletion_audit_log_reason: auditReason,
-					},
-					user.toRow(),
-				);
+				const updatedUser = await this.deps.userRepository.updateDeletionSchedule(currentUser, {
+					flags: (currentUser.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+					pending_deletion_at: pendingDeletionAt,
+					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+					deletion_public_reason: 'Payment fraud',
+					deletion_audit_log_reason: auditReason,
+				});
 				await reschedulePendingDeletion({
 					userId,
-					currentPendingDeletionAt: user.pendingDeletionAt,
+					currentPendingDeletionAt: currentUser.pendingDeletionAt,
 					nextPendingDeletionAt: pendingDeletionAt,
 					deletionReasonCode: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
 					userRepository: this.deps.userRepository,
@@ -536,9 +534,9 @@ export class StripePaymentFraudService {
 		);
 	}
 
-	private async cancelStripeSubscriptionImmediately(user: User): Promise<boolean> {
+	private async cancelStripeSubscriptionImmediately(user: User): Promise<User | null> {
 		if (!user.stripeSubscriptionId) {
-			return false;
+			return null;
 		}
 		try {
 			await this.getStripe().subscriptions.cancel(
@@ -569,7 +567,7 @@ export class StripePaymentFraudService {
 			user.toRow(),
 		);
 		await this.dispatchUser(updatedUser);
-		return true;
+		return updatedUser;
 	}
 
 	private isMissingOrCancelledSubscriptionError(error: unknown): boolean {

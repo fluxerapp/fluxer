@@ -17,6 +17,7 @@ import type {User} from '../models/User';
 import {lookupGeoip} from '../utils/IpUtils';
 import {isFluxerNativeUserAgent, parseReportedClientOs} from '../utils/SessionClientIdentity';
 import {mapAuthSessionsToResponse} from './AuthModel';
+import {revokeAllAuthSessions, revokeAuthSessions} from './AuthSessionRevocation';
 import * as AuthUtility from './AuthUtility';
 
 export interface SessionOrigin {
@@ -134,10 +135,14 @@ export async function getAuthSessionByToken(ctx: ApiContext, token: string): Pro
 	return users.getAuthSessionByToken(Buffer.from(AuthUtility.getTokenIdHash(ctx, token)));
 }
 
-export async function getAuthSessions(ctx: ApiContext, userId: UserID): Promise<Array<AuthSessionResponse>> {
+export async function getAuthSessions(
+	ctx: ApiContext,
+	userId: UserID,
+	currentSessionIdHash?: Uint8Array,
+): Promise<Array<AuthSessionResponse>> {
 	const {users} = ctx.services;
 	const authSessions = await users.listAuthSessions(userId);
-	return await mapAuthSessionsToResponse({authSessions});
+	return await mapAuthSessionsToResponse({authSessions, currentSessionIdHash});
 }
 
 export async function updateAuthSessionLastUsed(ctx: ApiContext, tokenHash: Uint8Array): Promise<void> {
@@ -145,52 +150,28 @@ export async function updateAuthSessionLastUsed(ctx: ApiContext, tokenHash: Uint
 }
 
 export async function revokeToken(ctx: ApiContext, token: string): Promise<void> {
-	const {users, gateway} = ctx.services;
+	const {users} = ctx.services;
 	const tokenHash = Buffer.from(AuthUtility.getTokenIdHash(ctx, token));
 	const authSession = await users.getAuthSessionByToken(tokenHash);
 	if (!authSession) return;
-	const sessionIdHash = Buffer.from(authSession.sessionIdHash).toString('base64url');
-	await users.deletePushSubscriptionsForAuthSessions(authSession.userId, [sessionIdHash], {
-		deleteUnboundSubscriptions: true,
-	});
-	await gateway.invalidatePushSubscriptions({userId: authSession.userId});
-	await users.revokeAuthSession(tokenHash);
-	await gateway.terminateSession({
-		userId: authSession.userId,
-		sessionIdHashes: [sessionIdHash],
-	});
+	await revokeAuthSessions(ctx.services, authSession.userId, [
+		{sessionIdHash: tokenHash, encodedIdHash: encodeSessionIdHash(authSession.sessionIdHash)},
+	]);
 }
 
 export async function logoutAuthSessions(
 	ctx: ApiContext,
 	{user, sessionIdHashes}: LogoutAuthSessionsParams,
 ): Promise<void> {
-	const {users, gateway} = ctx.services;
-	const hashes = sessionIdHashes.map((hash) => Buffer.from(hash, 'base64url'));
-	await users.deletePushSubscriptionsForAuthSessions(user.id, sessionIdHashes, {
-		deleteUnboundSubscriptions: true,
-	});
-	await gateway.invalidatePushSubscriptions({userId: user.id});
-	await users.deleteAuthSessions(user.id, hashes);
-	await gateway.terminateSession({
-		userId: user.id,
-		sessionIdHashes,
-	});
+	await revokeAuthSessions(
+		ctx.services,
+		user.id,
+		sessionIdHashes.map((encodedIdHash) => ({sessionIdHash: Buffer.from(encodedIdHash, 'base64url'), encodedIdHash})),
+	);
 }
 
 export async function terminateAllUserSessions(ctx: ApiContext, userId: UserID): Promise<number> {
-	const {users, gateway} = ctx.services;
-	const authSessions = await users.listAuthSessions(userId);
-	await users.deleteAllPushSubscriptions(userId);
-	await gateway.invalidatePushSubscriptions({userId});
-	if (authSessions.length === 0) return 0;
-	const hashes = authSessions.map((s) => s.sessionIdHash);
-	await users.deleteAuthSessions(userId, hashes);
-	await gateway.terminateSession({
-		userId,
-		sessionIdHashes: authSessions.map((s) => Buffer.from(s.sessionIdHash).toString('base64url')),
-	});
-	return authSessions.length;
+	return await revokeAllAuthSessions(ctx.services, userId);
 }
 
 export async function replaceCurrentAuthSession(
@@ -229,20 +210,14 @@ async function deleteAndTerminateAuthSessions(
 	if (authSessions.length === 0) {
 		return;
 	}
-	const {users, gateway} = ctx.services;
-	const sessionIdHashes = authSessions.map((authSession) => encodeSessionIdHash(authSession.sessionIdHash));
-	await users.deletePushSubscriptionsForAuthSessions(userId, sessionIdHashes, {
-		deleteUnboundSubscriptions: true,
-	});
-	await gateway.invalidatePushSubscriptions({userId});
-	await users.deleteAuthSessions(
+	await revokeAuthSessions(
+		ctx.services,
 		userId,
-		authSessions.map((authSession) => authSession.sessionIdHash),
+		authSessions.map((authSession) => ({
+			sessionIdHash: authSession.sessionIdHash,
+			encodedIdHash: encodeSessionIdHash(authSession.sessionIdHash),
+		})),
 	);
-	await gateway.terminateSession({
-		userId,
-		sessionIdHashes,
-	});
 }
 
 function encodeSessionIdHash(sessionIdHash: Uint8Array): string {

@@ -46,8 +46,8 @@ async function createHarness(users: Array<User>) {
 		},
 	} as unknown as UserRepository;
 	const workerService = {
-		async addJob(name: string, payload: {userId: string}): Promise<bigint> {
-			scheduledJobs.push(`${name}:${payload.userId}`);
+		async addJob(name: string, payload: {userId: string; pendingDeletionAt: string}): Promise<bigint> {
+			scheduledJobs.push(`${name}:${payload.userId}:${payload.pendingDeletionAt}`);
 			return 0n;
 		},
 	} as unknown as IWorkerService;
@@ -94,8 +94,10 @@ describe('userProcessPendingDeletions', () => {
 		const queueSizeAfterFirstPass = await harness.deletionQueueService.getQueueSize();
 		await userProcessPendingDeletions({}, createHelpers());
 
-		expect(harness.scheduledJobs).toEqual([`userProcessPendingDeletion:${genuineUserId.toString()}`]);
-		expect(harness.removedPendingDeletions).toEqual([genuineUserId.toString()]);
+		expect(harness.scheduledJobs).toEqual([
+			`userProcessPendingDeletion:${genuineUserId.toString()}:${genuineAt.toISOString()}`,
+		]);
+		expect(harness.removedPendingDeletions).toEqual([]);
 		expect(queueSizeAfterFirstPass).toBe(1);
 		expect(await harness.deletionQueueService.getQueueSize()).toBe(0);
 	});

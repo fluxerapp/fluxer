@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -13,17 +14,11 @@ const LIMIT_RULE_IDS = {
 	VERY_LARGE_GUILD: 'very_large_guild',
 } as const;
 
-export interface CachedLimitConfig {
-	config: LimitConfigSnapshot;
-	defaultsHash: string;
-}
-
-export function getLimitConfigKvKey(selfHosted: boolean): string {
+export function getLegacyLimitConfigKvKey(selfHosted: boolean): string {
 	return `limit_config:${selfHosted ? 'self_hosted' : 'saas'}`;
 }
 
 export const LIMIT_CONFIG_REFRESH_CHANNEL = 'limit-config-refresh';
-export const LIMIT_CONFIG_REFRESH_LOCK_KEY = 'limit-config-refresh-lock';
 
 function cloneLimitConfigSnapshot(config: LimitConfigSnapshot): LimitConfigSnapshot {
 	return structuredClone(config);
@@ -107,6 +102,8 @@ export function mergeWithCurrentDefaults(
 	const selfHosted = options?.selfHosted ?? false;
 	const premiumMode = options?.premiumMode ?? 'everyone';
 	const newDefaults = createDefaultLimitConfig({selfHosted, premiumMode});
+	const defaultBaseRule = newDefaults.rules.find((rule) => rule.id === LIMIT_RULE_IDS.DEFAULT);
+	assert(defaultBaseRule, 'Limit configuration defaults must include a default rule');
 	const mergedRules: Array<LimitRule> = [];
 	const existingRulesMap = new Map<string, LimitRule>();
 	for (const rule of stored.rules) {
@@ -119,14 +116,9 @@ export function mergeWithCurrentDefaults(
 			continue;
 		}
 		const mergedLimits: Partial<Record<LimitKey, number>> = {...defaultRule.limits};
-		const modifiedFields: Array<LimitKey> = [];
-		for (const key of LIMIT_KEYS) {
-			const existingValue = existingRule.limits[key];
-			const defaultValue = defaultRule.limits[key];
-			if (existingValue !== undefined && existingValue !== defaultValue) {
-				mergedLimits[key] = existingValue;
-				modifiedFields.push(key);
-			}
+		const modifiedFields = findModifiedLimits(existingRule.limits, defaultRule.limits);
+		for (const key of modifiedFields) {
+			mergedLimits[key] = existingRule.limits[key];
 		}
 		mergedRules.push({
 			id: existingRule.id,
@@ -137,15 +129,26 @@ export function mergeWithCurrentDefaults(
 		existingRulesMap.delete(defaultRule.id);
 	}
 	for (const [, rule] of existingRulesMap) {
+		const modifiedFields = findModifiedLimits(rule.limits, defaultBaseRule.limits);
 		mergedRules.push({
 			id: rule.id,
 			filters: rule.filters,
 			limits: rule.limits,
-			modifiedFields: rule.modifiedFields ?? (Object.keys(rule.limits) as Array<LimitKey>),
+			modifiedFields: modifiedFields.length > 0 ? modifiedFields : undefined,
 		});
 	}
 	return {
 		traitDefinitions: stored.traitDefinitions,
 		rules: mergedRules,
 	};
+}
+
+function findModifiedLimits(
+	currentLimits: Partial<Record<LimitKey, number>>,
+	defaultLimits: Partial<Record<LimitKey, number>>,
+): Array<LimitKey> {
+	return LIMIT_KEYS.filter((key) => {
+		const currentValue = currentLimits[key];
+		return currentValue !== undefined && currentValue !== defaultLimits[key];
+	});
 }

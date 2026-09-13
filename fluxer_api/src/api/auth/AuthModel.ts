@@ -28,10 +28,10 @@ async function resolveAuthSessionLocation(session: AuthSession): Promise<string 
 
 export async function mapAuthSessionsToResponse({
 	authSessions,
-	currentSessionId,
+	currentSessionIdHash,
 }: {
 	authSessions: Array<AuthSession>;
-	currentSessionId?: Uint8Array;
+	currentSessionIdHash?: Uint8Array;
 }): Promise<Array<AuthSessionResponse>> {
 	const sortedSessions = authSessions.toSorted((a, b) => {
 		const aTime = a.approximateLastUsedAt?.getTime() || 0;
@@ -51,7 +51,7 @@ export async function mapAuthSessionsToResponse({
 			productName: branding.product_name,
 		});
 		const idHash = uint8ArrayToBase64(authSession.sessionIdHash, {urlSafe: true});
-		const isCurrent = currentSessionId ? Buffer.compare(authSession.sessionIdHash, currentSessionId) === 0 : false;
+		const isCurrent = currentSessionIdHash ? authSession.sessionIdHash.equals(currentSessionIdHash) : false;
 		return {
 			id_hash: idHash,
 			client_info: {

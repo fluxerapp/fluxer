@@ -548,6 +548,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 		async (ctx) => {
 			const userId = ctx.req.valid('param').user_id.toString();
 			const decision = ctx.req.valid('json').status === 'approved' ? 'approve' : 'reject';
+			await instanceConfigRepository.getPendingRegistrations();
 			await updatePendingRegistrationUser(ctx, userId, decision);
 			await instanceConfigRepository.removePendingRegistration(userId);
 			return ctx.json(await buildInstanceConfigResponse());
@@ -626,11 +627,10 @@ async function applyInstancePolicyUpdate(
 			patch.deferred_phone_gate_member_threshold = policy.deferred_phone_gate.member_threshold;
 		}
 	}
-	if (Object.keys(patch).length > 0) {
+	if (patch.premium_mode !== undefined) {
+		await ctx.get('limitConfigService').updatePolicyConfig(patch);
+	} else if (Object.keys(patch).length > 0) {
 		await instanceConfigRepository.setInstancePolicyConfig(patch);
-	}
-	if (policy.premium_mode !== undefined && policy.premium_mode !== current.premium_mode) {
-		await ctx.get('limitConfigService').reloadForPolicyChange();
 	}
 }
 

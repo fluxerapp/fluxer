@@ -652,18 +652,14 @@ export class NcmecSubmissionService {
 		const privateReason = `Confirmed CSAM - NCMEC Report ${ncmecReportId} - ${contextLabel}`;
 		const pendingDeletionAt = new Date();
 		pendingDeletionAt.setDate(pendingDeletionAt.getDate() + NCMEC_DELETION_GRACE_DAYS);
-		const updatedUser = await this.deps.userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.DELETED | UserFlags.DISABLED,
-				temp_banned_until: null,
-				pending_deletion_at: pendingDeletionAt,
-				deletion_reason_code: DeletionReasons.CHILD_SEXUAL_CONTENT,
-				deletion_public_reason: null,
-				deletion_audit_log_reason: privateReason,
-			},
-			user.toRow(),
-		);
+		const updatedUser = await this.deps.userRepository.updateDeletionSchedule(user, {
+			flags: user.flags | UserFlags.DELETED | UserFlags.DISABLED,
+			temp_banned_until: null,
+			pending_deletion_at: pendingDeletionAt,
+			deletion_reason_code: DeletionReasons.CHILD_SEXUAL_CONTENT,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: privateReason,
+		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,

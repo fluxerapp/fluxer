@@ -3,6 +3,7 @@
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {createUserID} from '../../BrandedTypes';
 import {Logger} from '../../Logger';
+import {getValidTimestamp} from '../../utils/TimestampUtils';
 import {getWorkerDependencies} from '../WorkerContext';
 
 const processPendingBulkMessageDeletions: WorkerTaskHandler = async (_payload, helpers) => {
@@ -17,9 +18,15 @@ const processPendingBulkMessageDeletions: WorkerTaskHandler = async (_payload, h
 		}
 		try {
 			await bulkMessageDeletionQueueService.rebuildState();
-		} finally {
-			await bulkMessageDeletionQueueService.releaseRebuildLock(lockToken);
+		} catch (error) {
+			try {
+				await bulkMessageDeletionQueueService.releaseRebuildLock(lockToken);
+			} catch (releaseError) {
+				Logger.error({error: releaseError}, 'Failed to release bulk message deletion queue lock after rebuild failure');
+			}
+			throw error;
 		}
+		await bulkMessageDeletionQueueService.releaseRebuildLock(lockToken);
 	}
 	const nowMs = Date.now();
 	const pendingDeletions = await bulkMessageDeletionQueueService.getReadyDeletions(nowMs, 100);
@@ -28,19 +35,19 @@ const processPendingBulkMessageDeletions: WorkerTaskHandler = async (_payload, h
 		try {
 			const userId = createUserID(deletion.userId);
 			const user = await userRepository.findUnique(userId);
-			if (!user) {
+			if (!user?.pendingBulkMessageDeletionAt) {
 				await bulkMessageDeletionQueueService.removeFromQueue(userId);
 				continue;
 			}
-			if (!user.pendingBulkMessageDeletionAt) {
-				await bulkMessageDeletionQueueService.removeFromQueue(userId);
-				continue;
-			}
-			if (user.pendingBulkMessageDeletionAt.getTime() > nowMs) {
+			const scheduledAt = getValidTimestamp(
+				user.pendingBulkMessageDeletionAt,
+				`Pending bulk message deletion timestamp for user ${userId}`,
+			);
+			if (scheduledAt > nowMs) {
 				Logger.debug(
 					{
 						userId: userId.toString(),
-						scheduledAt: user.pendingBulkMessageDeletionAt.getTime(),
+						scheduledAt,
 					},
 					'Requeueing pending bulk message deletion that is not due yet',
 				);
@@ -51,14 +58,14 @@ const processPendingBulkMessageDeletions: WorkerTaskHandler = async (_payload, h
 				'bulkDeleteUserMessages',
 				{
 					userId: userId.toString(),
-					scheduledAt: user.pendingBulkMessageDeletionAt.getTime(),
+					scheduledAt,
 				},
 				{maxAttempts: 5},
 			);
 			Logger.debug(
 				{
 					userId: userId.toString(),
-					scheduledAt: user.pendingBulkMessageDeletionAt.getTime(),
+					scheduledAt,
 				},
 				'Queued worker job for pending bulk message deletion',
 			);

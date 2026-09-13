@@ -3,9 +3,14 @@
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 
+export interface WorkerTaskAttempt {
+	readonly isLastAttempt: boolean;
+}
+
 export interface WorkerTaskHelpers {
 	logger: LoggerInterface;
 	jobId: bigint;
+	attempt?: WorkerTaskAttempt;
 	addJob: <TPayload extends WorkerJobPayload = WorkerJobPayload>(
 		taskType: string,
 		payload: TPayload,

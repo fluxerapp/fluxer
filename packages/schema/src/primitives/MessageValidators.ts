@@ -7,35 +7,25 @@ import {
 	MessageReferenceTypesDescriptions,
 	MessageTypes,
 } from '@fluxer/constants/src/ChannelConstants';
-import {
-	createInt32EnumType,
-	createNamedStringLiteralUnion,
-	withOpenApiType,
-} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createInt32EnumType, createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 
-export const MessageTypeSchema = withOpenApiType(
-	createInt32EnumType(
+export const MessageTypeSchema = createInt32EnumType(
+	[
+		[MessageTypes.DEFAULT, 'DEFAULT', 'A regular message'],
+		[MessageTypes.RECIPIENT_ADD, 'RECIPIENT_ADD', 'A system message indicating a user was added to the conversation'],
 		[
-			[MessageTypes.DEFAULT, 'DEFAULT', 'A regular message'],
-			[MessageTypes.RECIPIENT_ADD, 'RECIPIENT_ADD', 'A system message indicating a user was added to the conversation'],
-			[
-				MessageTypes.RECIPIENT_REMOVE,
-				'RECIPIENT_REMOVE',
-				'A system message indicating a user was removed from the conversation',
-			],
-			[MessageTypes.CALL, 'CALL', 'A message representing a call'],
-			[MessageTypes.CHANNEL_NAME_CHANGE, 'CHANNEL_NAME_CHANGE', 'A system message indicating the channel name changed'],
-			[MessageTypes.CHANNEL_ICON_CHANGE, 'CHANNEL_ICON_CHANGE', 'A system message indicating the channel icon changed'],
-			[
-				MessageTypes.CHANNEL_PINNED_MESSAGE,
-				'CHANNEL_PINNED_MESSAGE',
-				'A system message indicating a message was pinned',
-			],
-			[MessageTypes.USER_JOIN, 'USER_JOIN', 'A system message indicating a user joined'],
-			[MessageTypes.REPLY, 'REPLY', 'A reply message'],
+			MessageTypes.RECIPIENT_REMOVE,
+			'RECIPIENT_REMOVE',
+			'A system message indicating a user was removed from the conversation',
 		],
-		'The type of message',
-	),
+		[MessageTypes.CALL, 'CALL', 'A message representing a call'],
+		[MessageTypes.CHANNEL_NAME_CHANGE, 'CHANNEL_NAME_CHANGE', 'A system message indicating the channel name changed'],
+		[MessageTypes.CHANNEL_ICON_CHANGE, 'CHANNEL_ICON_CHANGE', 'A system message indicating the channel icon changed'],
+		[MessageTypes.CHANNEL_PINNED_MESSAGE, 'CHANNEL_PINNED_MESSAGE', 'A system message indicating a message was pinned'],
+		[MessageTypes.USER_JOIN, 'USER_JOIN', 'A system message indicating a user joined'],
+		[MessageTypes.REPLY, 'REPLY', 'A reply message'],
+	],
+	'The type of message',
 	'MessageType',
 );
 export const MessageReferenceTypeSchema = createInt32EnumType(

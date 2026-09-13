@@ -100,15 +100,11 @@ export class UserAccountLifecycleService {
 		}
 		const gracePeriodMs = Config.deletionGracePeriodHours * ms('1 hour');
 		const pendingDeletionAt = new Date(Date.now() + gracePeriodMs);
-		const updatedUser = await this.deps.userAccountRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.SELF_DELETED,
-				pending_deletion_at: pendingDeletionAt,
-				deletion_reason_code: DeletionReasons.USER_REQUESTED,
-			},
-			user.toRow(),
-		);
+		const updatedUser = await this.deps.userAccountRepository.updateDeletionSchedule(user, {
+			flags: user.flags | UserFlags.SELF_DELETED,
+			pending_deletion_at: pendingDeletionAt,
+			deletion_reason_code: DeletionReasons.USER_REQUESTED,
+		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,

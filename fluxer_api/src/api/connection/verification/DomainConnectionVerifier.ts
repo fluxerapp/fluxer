@@ -111,6 +111,7 @@ export class DomainConnectionVerifier implements IConnectionVerifier {
 				serviceName: 'connection_verification',
 			});
 			if (response.status < 200 || response.status >= 300) {
+				FetchUtils.discardResponseBody(response.stream, response.status);
 				return false;
 			}
 			const body = await FetchUtils.streamToStringWithLimit(response.stream, {

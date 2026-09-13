@@ -44,13 +44,14 @@ export async function getIpAddressReverse(
 		if (cached !== null) return cached === '' ? null : cached;
 	}
 	let result: string | null = null;
+	let timeout: NodeJS.Timeout | undefined;
 	try {
 		const reversePromise: Promise<Array<string>> = dns.promises.reverse(ip);
 		let hostnames: Array<string>;
 		if (options.timeoutMs !== undefined) {
 			const timeoutMs = options.timeoutMs;
 			const timeoutPromise = new Promise<Array<string>>((_, reject) => {
-				setTimeout(() => reject(new Error(`reverse DNS timeout after ${timeoutMs}ms`)), timeoutMs);
+				timeout = setTimeout(() => reject(new Error(`reverse DNS timeout after ${timeoutMs}ms`)), timeoutMs);
 			});
 			hostnames = await Promise.race([reversePromise, timeoutPromise]);
 		} else {
@@ -59,6 +60,8 @@ export async function getIpAddressReverse(
 		result = hostnames[0] ?? null;
 	} catch {
 		result = null;
+	} finally {
+		clearTimeout(timeout);
 	}
 	if (cacheService) {
 		await cacheService.set(cacheKey, result ?? '', options.cacheTtlSeconds ?? REVERSE_DNS_CACHE_TTL_SECONDS);

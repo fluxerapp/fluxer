@@ -90,14 +90,8 @@ export class AdminUserProfileService {
 				updates['global_name'] = null;
 			}
 		}
-		let updatedUser: User;
-		try {
-			updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
-		} catch (error) {
-			await Promise.all(preparedAssets.map((p) => entityAssetService.rollbackAssetUpload(p)));
-			throw error;
-		}
-		await Promise.all(preparedAssets.map((p) => entityAssetService.commitAssetChange({prepared: p})));
+		const updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
+		await entityAssetService.commitAssetChanges(preparedAssets);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,
@@ -334,21 +328,7 @@ export class AdminUserProfileService {
 			const {users: userRepository} = this.deps.apiContext.services;
 			const {guildRepository} = this.deps;
 			const guildIds = await userRepository.getUserGuildIds(updatedUser.id);
-			if (guildIds.length === 0) return;
-			const guilds = await guildRepository.listGuilds(guildIds);
-			const indexedGuilds = guilds.filter((guild) => guild.membersIndexedAt != null);
-			if (indexedGuilds.length === 0) return;
-			const members = await Promise.all(
-				indexedGuilds.map((guild) => guildRepository.getMember(guild.id, updatedUser.id)),
-			);
-			for (let i = 0; i < members.length; i++) {
-				const member = members[i];
-				if (member) {
-					const guild = indexedGuilds[i]!;
-					const includeDefault = guild.membersIndexedAt != null;
-					void this.searchIndexService.updateMember(member, updatedUser, {includeDefault});
-				}
-			}
+			await this.searchIndexService.updateUserMembers(updatedUser, guildIds, guildRepository);
 		} catch (error) {
 			Logger.error(
 				{userId: updatedUser.id.toString(), error},

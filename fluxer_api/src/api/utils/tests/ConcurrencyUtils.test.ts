@@ -91,16 +91,20 @@ describe('mapWithConcurrency', () => {
 		expect(calls).toBe(0);
 	});
 
-	it('propagates a mapper rejection without waiting for another in-flight item', async () => {
+	it('waits for in-flight work before propagating a mapper rejection', async () => {
 		const first = Promise.withResolvers<number>();
 		const second = Promise.withResolvers<number>();
 		const failure = new Error('Mapper failed');
+		const completed: Array<unknown> = [];
+		const secondCompleted = second.promise.then((value) => completed.push(value));
 		const result = mapWithConcurrency([first.promise, second.promise], 2, (promise) => promise);
-		const rejected = expect(result).rejects.toBe(failure);
+		const rejected = result.catch((error) => completed.push(error));
 		first.reject(failure);
-		await rejected;
+		await new Promise<void>((resolve) => setImmediate(resolve));
 		second.resolve(2);
-		await second.promise;
+		await Promise.all([rejected, secondCompleted]);
+		expect(completed).toEqual([2, failure]);
+		expect(completed[1]).toBe(failure);
 	});
 
 	it('rejects synchronous mapper failures without starting queued serial work', async () => {

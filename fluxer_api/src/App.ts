@@ -4,7 +4,6 @@ import {createAPIApp} from '@app/api/App';
 import {buildAPIServerOptions, initializeConfig} from '@app/api/Config';
 import {initializeLogger} from '@app/api/Logger';
 import {Config} from '@app/Config';
-import {shutdownInstrumentation} from '@app/Instrument';
 import {Logger} from '@app/Logger';
 import {createServer, setupGracefulShutdown} from '@fluxer/hono/src/Server';
 
@@ -40,7 +39,6 @@ async function main(): Promise<void> {
 		async () => {
 			await closeHttpServer(server);
 			await shutdown();
-			await shutdownInstrumentation();
 		},
 		{logger: Logger, timeoutMs: 30000},
 	);

@@ -15,7 +15,10 @@ const syncFileShaBlocklists: WorkerTaskHandler = async (_payload, helpers) => {
 	let added = 0;
 	try {
 		const res = await fetch(MALWARE_BAZAAR_SHA256_URL, {signal: AbortSignal.timeout(120000)});
-		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		if (!res.ok) {
+			FetchUtils.discardResponseBody(res.body, res.status);
+			throw new Error(`HTTP ${res.status}`);
+		}
 		const text = await FetchUtils.streamToStringWithLimit(res.body, {
 			maxBytes: EXTERNAL_RESPONSE_LIMITS.fileBlocklistBytes,
 			headers: res.headers,

@@ -11,7 +11,7 @@ import {createGuildID, createUserID, type GuildID, type UserID} from '../../../B
 import type {GuildRow} from '../../../database/types/GuildTypes';
 import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
 import type {EntityAssetService, PreparedAssetUpload} from '../../../infrastructure/EntityAssetService';
-import type {Guild} from '../../../models/Guild';
+import {Logger} from '../../../Logger';
 import {mapGuildToAdminResponse} from '../../models/GuildTypes';
 import type {AdminAuditService} from '../AdminAuditService';
 import type {AdminGuildUpdatePropagator} from './AdminGuildUpdatePropagator';
@@ -82,62 +82,37 @@ export class AdminGuildUpdateService {
 		}
 		const patch: Partial<GuildRow> = {};
 		const preparedAssets: Array<PreparedAssetUpload> = [];
+		const imageFields = {
+			icon: {previousHash: guild.iconHash, patchField: 'icon_hash'},
+			banner: {previousHash: guild.bannerHash, patchField: 'banner_hash'},
+			splash: {previousHash: guild.splashHash, patchField: 'splash_hash'},
+			embed_splash: {previousHash: guild.embedSplashHash, patchField: 'embed_splash_hash'},
+		} as const;
 		for (const field of data.fields) {
-			if (field === 'icon') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'icon',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.iconHash,
-					base64Image: null,
-					errorPath: 'icon',
-				});
-				preparedAssets.push(prepared);
-				patch.icon_hash = prepared.newHash;
-			} else if (field === 'banner') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'banner',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.bannerHash,
-					base64Image: null,
-					errorPath: 'banner',
-				});
-				preparedAssets.push(prepared);
-				patch.banner_hash = prepared.newHash;
-			} else if (field === 'splash') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'splash',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.splashHash,
-					base64Image: null,
-					errorPath: 'splash',
-				});
-				preparedAssets.push(prepared);
-				patch.splash_hash = prepared.newHash;
-			} else if (field === 'embed_splash') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'embed_splash',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.embedSplashHash,
-					base64Image: null,
-					errorPath: 'embed_splash',
-				});
-				preparedAssets.push(prepared);
-				patch.embed_splash_hash = prepared.newHash;
-			}
+			const {previousHash, patchField} = imageFields[field];
+			const prepared = await entityAssetService.prepareAssetUpload({
+				assetType: field,
+				entityType: 'guild',
+				entityId: guildId,
+				previousHash,
+				base64Image: null,
+				errorPath: field,
+			});
+			preparedAssets.push(prepared);
+			patch[patchField] = prepared.newHash;
 		}
-		let updatedGuild: Guild;
-		try {
-			updatedGuild =
-				Object.keys(patch).length === 0 ? guild : await guildRepository.upsertPartial(guildId, patch, guild.toRow());
-		} catch (error) {
-			await Promise.allSettled(preparedAssets.map((p) => entityAssetService.rollbackAssetUpload(p)));
-			throw error;
+		const updatedGuild =
+			Object.keys(patch).length === 0 ? guild : await guildRepository.upsertPartial(guildId, patch, guild.toRow());
+		const commitResults = await Promise.allSettled(
+			preparedAssets.map((prepared) => entityAssetService.commitAssetChange(prepared)),
+		);
+		for (const [index, result] of commitResults.entries()) {
+			if (result.status === 'fulfilled') continue;
+			Logger.error(
+				{error: result.reason, guildId, previousS3Key: preparedAssets[index].previousS3Key},
+				'Failed to queue cleared guild asset for deletion after successful DB update',
+			);
 		}
-		await Promise.allSettled(preparedAssets.map((p) => entityAssetService.commitAssetChange({prepared: p})));
 		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild);
 		await auditService.createAuditLog({
 			adminUserId,

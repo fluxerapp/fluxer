@@ -82,6 +82,20 @@ describe('native Zod conversion', () => {
 		});
 	});
 
+	it('drops the inlined expansion beside a reference for OpenAPI 3.0', () => {
+		const child = z.union([z.string(), z.number()]).describe('Shared value');
+		const converter = new ZodOpenAPIConverter('openapi-3.0');
+		converter.register('Child', child);
+		converter.getRef('Parent', z.object({child: child.describe('Field value')}), 'input');
+		const document = documentFor(converter);
+		document.openapi = '3.0.3';
+		converter.normalizeComponents(document);
+		expect(document.components.schemas.Parent.properties?.child).toEqual({
+			description: 'Field value',
+			allOf: [{$ref: '#/components/schemas/Child'}],
+		});
+	});
+
 	it.each(['openapi-3.0', 'draft-2020-12'] as const)('converts binary archive responses for %s', (target) => {
 		const converter = new ZodOpenAPIConverter(target);
 		const schema = converter.getSchema('HarvestArchiveResponse', HarvestArchiveResponse, 'output');

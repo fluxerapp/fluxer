@@ -15,14 +15,4 @@ export class DisabledBlueskyOAuthService implements IBlueskyOAuthService {
 	async callback(_params: URLSearchParams): Promise<BlueskyCallbackResult> {
 		throw new BlueskyOAuthNotEnabledError();
 	}
-
-	async restoreAndVerify(_did: string): Promise<{
-		handle: string;
-	} | null> {
-		throw new BlueskyOAuthNotEnabledError();
-	}
-
-	async revoke(_did: string): Promise<void> {
-		throw new BlueskyOAuthNotEnabledError();
-	}
 }

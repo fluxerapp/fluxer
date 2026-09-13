@@ -21,6 +21,9 @@ import {
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
+const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
+const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
+const INSTANCE_INTEGRATIONS_CONFIG_KEY = 'instance_integrations_config';
 
 class CountingInMemoryCassandraQueryExecutor extends InMemoryCassandraQueryExecutor {
 	instanceConfigSelects = 0;
@@ -156,6 +159,106 @@ describe('InstanceConfigRepository', () => {
 			enabled: true,
 			provider: 'turnstile',
 		});
+	});
+
+	it('keeps the stored setup state when a branding field is invalid', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			APP_PUBLIC_CONFIG_KEY,
+			JSON.stringify({branding: {product_name: 'Kept', icon_url: 42}, setup: {configured: false}}),
+		);
+
+		const config = await repository.getAppPublicConfig();
+		expect(config.setup.configured).toBe(false);
+		expect(config.branding.product_name).toBe('Kept');
+	});
+
+	it('keeps valid stored instance policy flags when one field is invalid', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			INSTANCE_POLICY_CONFIG_KEY,
+			JSON.stringify({direct_messages_disabled: true, single_community_enabled: true, premium_mode: 'nonsense'}),
+		);
+
+		const policy = await repository.getInstancePolicyConfig();
+		expect(policy.direct_messages_disabled).toBe(true);
+		expect(policy.single_community_enabled).toBe(true);
+		expect(policy.premium_mode).toBe('everyone');
+	});
+
+	it('keeps valid stored integration settings when one field is invalid', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			INSTANCE_INTEGRATIONS_CONFIG_KEY,
+			JSON.stringify({bluesky: {client_name: 'Kept Instance', enabled: 'yes'}}),
+		);
+
+		expect((await repository.getEffectiveBlueskyConfig()).client_name).toBe('Kept Instance');
+		expect((await repository.getInstanceIntegrationsConfig()).bluesky.enabled).toBeNull();
+	});
+
+	it('drops invalid stored SSO allowed domains and keeps the valid ones', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig('sso_allowed_domains', JSON.stringify(['example.com', 'nope@example.com', 'Kept.ORG']));
+
+		expect((await repository.getSsoConfig()).allowedEmailDomains).toEqual(['example.com', 'kept.org']);
+	});
+
+	it('falls back to the default SSO flags when a stored flag is not a boolean', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig('sso_enabled', 'yes');
+		await repository.setConfig('sso_enforced', 'sometimes');
+		await repository.setConfig('sso_auto_provision', 'maybe');
+
+		const config = await repository.getSsoConfig();
+		expect(config.enabled).toBe(false);
+		expect(config.enforced).toBe(false);
+		expect(config.autoProvision).toBe(true);
+	});
+
+	it('clears an invalid allowed domain list only while SSO is disabled', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const cleared = await repository.setSsoConfig({enabled: false, allowedEmailDomains: ['nope@example.com']});
+		expect(cleared.allowedEmailDomains).toEqual([]);
+
+		await expect(repository.setSsoConfig({enabled: true, allowedEmailDomains: ['nope@example.com']})).rejects.toThrow();
+	});
+
+	it('keeps an all-invalid stored allowed domain list non-empty so SSO still rejects every domain', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig('sso_allowed_domains', JSON.stringify(['nope@example.com', 'bad/domain']));
+
+		const domains = (await repository.getSsoConfig()).allowedEmailDomains;
+		expect(domains.length).toBeGreaterThan(0);
+		expect(domains).not.toContain('example.com');
 	});
 
 	it('returns the default voice noise suppression config when the key is absent', async () => {

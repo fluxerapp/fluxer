@@ -36,15 +36,11 @@ async function scheduleDeletion(
 ): Promise<void> {
 	const gracePeriodMs = Config.deletionGracePeriodHours * ms('1 hour');
 	const pendingDeletionAt = new Date(Date.now() + gracePeriodMs);
-	await userRepository.patchUpsert(
-		userId,
-		{
-			flags: user.flags | UserFlags.SELF_DELETED,
-			pending_deletion_at: pendingDeletionAt,
-			deletion_reason_code: DeletionReasons.INACTIVITY,
-		},
-		user.toRow(),
-	);
+	await userRepository.updateDeletionSchedule(user, {
+		flags: user.flags | UserFlags.SELF_DELETED,
+		pending_deletion_at: pendingDeletionAt,
+		deletion_reason_code: DeletionReasons.INACTIVITY,
+	});
 	await reschedulePendingDeletion({
 		userId,
 		currentPendingDeletionAt: user.pendingDeletionAt,
@@ -197,12 +193,11 @@ export async function processInactivityDeletionsCore(
 	};
 	let pageState: string | null = null;
 	let processedUsers = 0;
-	while (true) {
+	do {
 		const page = await userRepository.scanAllUsersPage(BATCH_SIZE, pageState);
+		pageState = page.pageState;
 		const users = page.users;
-		if (users.length === 0) {
-			break;
-		}
+		if (users.length === 0) continue;
 		const pageActivities = await loadPageActivities(activityTracker, users);
 		await mapWithConcurrency(users, USER_PROCESSING_CONCURRENCY, async (user) => {
 			try {
@@ -213,17 +208,13 @@ export async function processInactivityDeletionsCore(
 			}
 		});
 		processedUsers += users.length;
-		pageState = page.pageState;
 		if (processedUsers % 1000 === 0) {
 			Logger.debug(
 				{processedUsers, warningsSent: result.warningsSent, deletionsScheduled: result.deletionsScheduled},
 				'Inactivity deletion progress',
 			);
 		}
-		if (!pageState) {
-			break;
-		}
-	}
+	} while (pageState);
 	Logger.info(
 		{
 			processedUsers,

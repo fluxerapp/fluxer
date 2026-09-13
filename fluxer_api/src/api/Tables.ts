@@ -4,7 +4,9 @@ import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserI
 import {defineTable} from './database/CassandraTableDsl';
 import {
 	ADMIN_ARCHIVE_COLUMNS,
+	ADMIN_ARCHIVE_INDEX_COLUMNS,
 	ADMIN_AUDIT_LOG_COLUMNS,
+	type AdminArchiveIndexRow,
 	type AdminArchiveRow,
 	type AdminAuditLogRow,
 	BANNED_AVATAR_HASH_COLUMNS,
@@ -146,7 +148,7 @@ import {
 	WEBHOOK_COLUMNS,
 	type WebhookRow,
 } from './database/types/ChannelTypes';
-import {USER_CONNECTION_COLUMNS, type UserConnectionRow} from './database/types/ConnectionTypes';
+import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from './database/types/ConnectionTypes';
 import {
 	NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
 	NCMEC_USER_WORKFLOW_COLUMNS,
@@ -427,9 +429,9 @@ export const UserContactChangeLogs = defineTable<UserContactChangeLogRow, 'user_
 	columns: USER_CONTACT_CHANGE_LOG_COLUMNS,
 	primaryKey: ['user_id', 'event_id'],
 });
-export const UserConnections = defineTable<UserConnectionRow, 'user_id' | 'connection_type' | 'connection_id'>({
+export const UserConnections = defineTable<UserConnectionStorageRow, 'user_id' | 'connection_type' | 'connection_id'>({
 	name: 'user_connections',
-	columns: USER_CONNECTION_COLUMNS,
+	columns: USER_CONNECTION_STORAGE_COLUMNS,
 	primaryKey: ['user_id', 'connection_type', 'connection_id'],
 	partitionKey: ['user_id'],
 });
@@ -739,14 +741,14 @@ export const AdminArchivesBySubject = defineTable<AdminArchiveRow, 'subject_type
 	columns: ADMIN_ARCHIVE_COLUMNS,
 	primaryKey: ['subject_type', 'subject_id', 'archive_id'],
 });
-export const AdminArchivesByRequester = defineTable<AdminArchiveRow, 'requested_by' | 'archive_id'>({
+export const AdminArchivesByRequester = defineTable<AdminArchiveIndexRow, 'requested_by' | 'archive_id'>({
 	name: 'admin_archives_by_requester',
-	columns: ADMIN_ARCHIVE_COLUMNS,
+	columns: ADMIN_ARCHIVE_INDEX_COLUMNS,
 	primaryKey: ['requested_by', 'archive_id'],
 });
-export const AdminArchivesByType = defineTable<AdminArchiveRow, 'subject_type' | 'archive_id'>({
+export const AdminArchivesByType = defineTable<AdminArchiveIndexRow, 'subject_type' | 'archive_id'>({
 	name: 'admin_archives_by_type',
-	columns: ADMIN_ARCHIVE_COLUMNS,
+	columns: ADMIN_ARCHIVE_INDEX_COLUMNS,
 	primaryKey: ['subject_type', 'archive_id'],
 });
 export const AdminAuditLogs = defineTable<AdminAuditLogRow, 'log_id'>({

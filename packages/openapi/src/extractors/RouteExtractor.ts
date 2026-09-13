@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {
 	EMPTY_SCOPE,
+	getIdentifierDeclarations,
 	type Scope,
 	StaticPathResolver,
 	type StaticValue,
@@ -21,8 +22,40 @@ import {
 	Project,
 	type SourceFile,
 } from 'ts-morph';
+import {z} from 'zod';
 
 const HTTP_METHODS: ReadonlySet<string> = new Set(['get', 'post', 'put', 'patch', 'delete']);
+const SCHEMA_METADATA_FIELDS: ReadonlySet<string> = new Set(['responseSchema', 'requestSchema', 'requestFormSchema']);
+const MetadataStringList = z
+	.union([z.string(), z.array(z.string())])
+	.transform((value) => (typeof value === 'string' ? [value] : value));
+const MetadataStatusCode = z.int().min(100).max(599);
+const MetadataSecurityScheme = z.enum(['botToken', 'oauth2Token', 'bearerToken', 'sessionToken', 'adminApiKey']);
+const RouteMetadata = z.strictObject({
+	operationId: z.string().regex(/^[a-z][a-z0-9_]*$/),
+	summary: z.string().min(1),
+	description: z.string(),
+	responseSchema: z.string().min(1).nullable(),
+	responseContentType: z.string().optional(),
+	requestSchema: z.string().min(1).optional(),
+	requestFormSchema: z.string().min(1).optional(),
+	requestBodyRequired: z.boolean().optional(),
+	statusCode: z
+		.union([MetadataStatusCode, z.array(MetadataStatusCode)])
+		.transform((value) => (typeof value === 'number' ? [value] : value))
+		.optional(),
+	bodylessStatusCodes: z.array(MetadataStatusCode).optional(),
+	security: z
+		.union([MetadataSecurityScheme, z.array(MetadataSecurityScheme)])
+		.transform((value) => (typeof value === 'string' ? [value] : value))
+		.optional(),
+	tags: MetadataStringList,
+	deprecated: z.boolean().optional(),
+	externalDocs: z.strictObject({url: z.string(), description: z.string().optional()}).optional(),
+});
+const RouteOptionsMetadata = RouteMetadata.pick({description: true, responseContentType: true}).extend({
+	description: z.string().min(1),
+});
 function isHttpMethod(method: string): method is HttpMethod {
 	return HTTP_METHODS.has(method);
 }
@@ -38,25 +71,8 @@ function extractStringLiteral(node: Node): string | null {
 	}
 	return null;
 }
-function extractNumberArray(value: unknown): Array<number> | null {
-	if (typeof value === 'number') return [value];
-	if (Array.isArray(value)) {
-		if (!value.every((entry): entry is number => typeof entry === 'number')) {
-			throw new Error('OpenAPI status-list metadata must contain only numbers');
-		}
-		return value;
-	}
-	return null;
-}
-function extractStringArray(value: unknown): Array<string> | null {
-	if (typeof value === 'string') return [value];
-	if (Array.isArray(value)) {
-		if (!value.every((entry): entry is string => typeof entry === 'string')) {
-			throw new Error('OpenAPI string-list metadata must contain only strings');
-		}
-		return value;
-	}
-	return null;
+function isHttpStatusCode(value: unknown): value is number {
+	return typeof value === 'number' && Number.isInteger(value) && value >= 100 && value <= 599;
 }
 function extractOAuth2ScopeArgs(args: ReadonlyArray<Node>): Array<string> | null {
 	const scopes: Array<string> = [];
@@ -73,70 +89,44 @@ interface MetadataContext {
 	readonly resolver: StaticPathResolver;
 	readonly scope: Scope;
 }
-function resolveMetadataText(node: Node, context: MetadataContext): string | null {
+function resolveMetadataValue(node: Node, context: MetadataContext): StaticValue {
 	const value = context.resolver.resolve(node, context.scope);
-	return typeof value === 'string' ? value : null;
+	if (value === UNRESOLVED) throw new Error(`Unresolved OpenAPI metadata expression: ${node.getText()}`);
+	return value;
 }
-function extractObjectLiteralValue(node: Node, context: MetadataContext): unknown {
-	if (Node.isStringLiteral(node) || Node.isNoSubstitutionTemplateLiteral(node)) {
-		return node.getLiteralValue();
-	}
-	if (Node.isTemplateExpression(node) || Node.isConditionalExpression(node)) {
-		return resolveMetadataText(node, context);
-	}
-	if (Node.isNumericLiteral(node)) {
-		return Number.parseFloat(node.getText());
-	}
-	if (Node.isTrueLiteral(node)) {
-		return true;
-	}
-	if (Node.isFalseLiteral(node)) {
-		return false;
-	}
-	if (Node.isNullLiteral(node)) {
-		return null;
-	}
-	if (Node.isIdentifier(node)) {
-		return node.getText();
-	}
-	if (Node.isPropertyAccessExpression(node)) {
-		return resolveMetadataText(node, context) ?? node.getText();
-	}
-	if (Node.isCallExpression(node)) {
-		return node.getText();
-	}
-	if (Node.isArrayLiteralExpression(node)) {
-		const values: Array<unknown> = [];
-		for (const element of node.getElements()) {
-			if (Node.isSpreadElement(element)) {
-				const spread = context.resolver.resolve(element.getExpression(), context.scope);
-				if (spread == null || spread === UNRESOLVED || !Array.isArray(spread)) {
-					values.push(null);
-					continue;
-				}
-				values.push(...spread);
-				continue;
-			}
-			values.push(extractObjectLiteralValue(element, context));
-		}
-		return values;
-	}
-	if (Node.isObjectLiteralExpression(node)) {
-		return parseObjectLiteralMetadata(node, context);
-	}
-	return null;
+function extractSchemaName(node: Node, context: MetadataContext): string | null {
+	const value = context.resolver.resolve(node, context.scope);
+	if (value === null) return null;
+	if (value === UNRESOLVED && Node.isIdentifier(node)) return node.getText();
+	throw new Error(`OpenAPI schemas must use a named schema export: ${node.getText()}`);
 }
 function parseObjectLiteralMetadata(
 	objLiteral: ObjectLiteralExpression,
 	context: MetadataContext,
 ): Record<string, unknown> {
-	const metadata: Record<string, unknown> = {};
+	const metadata = new Map<string, unknown>();
 	for (const property of objLiteral.getProperties()) {
-		if (!Node.isPropertyAssignment(property)) continue;
-		const initializer = property.getInitializer();
-		if (initializer) metadata[property.getName()] = extractObjectLiteralValue(initializer, context);
+		if (!Node.isPropertyAssignment(property) && !Node.isShorthandPropertyAssignment(property)) {
+			throw new Error(`Unsupported OpenAPI metadata property: ${property.getText()}`);
+		}
+		const name = context.resolver.resolvePropertyName(property.getNameNode(), context.scope);
+		if (name === null) throw new Error(`Unresolved OpenAPI metadata key: ${property.getName()}`);
+		if (
+			Node.isPropertyAssignment(property) &&
+			name === '__proto__' &&
+			!Node.isComputedPropertyName(property.getNameNode())
+		) {
+			throw new Error('OpenAPI metadata cannot set an object prototype');
+		}
+		const initializer = Node.isPropertyAssignment(property) ? property.getInitializerOrThrow() : property.getNameNode();
+		metadata.set(
+			name,
+			SCHEMA_METADATA_FIELDS.has(name)
+				? extractSchemaName(initializer, context)
+				: resolveMetadataValue(initializer, context),
+		);
 	}
-	return metadata;
+	return Object.fromEntries(metadata);
 }
 function extractValidatorInfo(callExpr: CallExpression): ExtractedValidator | null {
 	const expression = callExpr.getExpression();
@@ -172,43 +162,43 @@ interface MiddlewareInfo {
 	explicitDeprecated?: boolean;
 	explicitExternalDocs?: OpenAPIExternalDocs;
 }
-function metadataString(value: unknown): string | undefined {
-	return typeof value === 'string' ? value : undefined;
-}
-function extractExternalDocs(value: unknown): OpenAPIExternalDocs | undefined {
-	if (!value || typeof value !== 'object' || !('url' in value) || typeof value.url !== 'string') return undefined;
-	return {url: value.url, description: 'description' in value ? metadataString(value.description) : undefined};
-}
 function extractOpenAPIMetadata(args: ReadonlyArray<Node>, context: MetadataContext): MiddlewareInfo {
 	const [first, summary, responseSchema, options] = args;
 	if (!first) throw new Error('OpenAPI requires route metadata');
-	const metadata = Node.isObjectLiteralExpression(first)
+	if (options !== undefined && !Node.isObjectLiteralExpression(options)) {
+		throw new Error(`OpenAPI options must be an object literal: ${options.getText()}`);
+	}
+	const value = Node.isObjectLiteralExpression(first)
 		? parseObjectLiteralMetadata(first, context)
 		: {
-				...(options && Node.isObjectLiteralExpression(options) ? parseObjectLiteralMetadata(options, context) : {}),
-				operationId: extractStringLiteral(first),
-				summary: summary ? extractStringLiteral(summary) : undefined,
-				responseSchema: responseSchema?.getText(),
+				...(options ? RouteOptionsMetadata.parse(parseObjectLiteralMetadata(options, context)) : {}),
+				operationId: resolveMetadataValue(first, context),
+				summary: summary ? resolveMetadataValue(summary, context) : undefined,
+				responseSchema: responseSchema ? extractSchemaName(responseSchema, context) : undefined,
+				tags: [],
 			};
-	const schemaName = metadataString(metadata.responseSchema);
+	const parsed = RouteMetadata.safeParse(value);
+	if (!parsed.success) {
+		throw new Error(`Invalid OpenAPI metadata at line ${first.getStartLineNumber()}`, {cause: parsed.error});
+	}
+	const metadata = parsed.data;
 	return {
 		middlewareName: 'OpenAPI',
-		responseSchemaName: schemaName,
-		hasNoContent: schemaName === undefined || schemaName === 'null',
-		bodylessStatusCodes: extractNumberArray(metadata.bodylessStatusCodes),
-		responseContentType: metadataString(metadata.responseContentType),
-		explicitRequestSchemaName: metadataString(metadata.requestSchema),
-		explicitRequestFormSchemaName: metadataString(metadata.requestFormSchema),
-		explicitRequestBodyRequired:
-			typeof metadata.requestBodyRequired === 'boolean' ? metadata.requestBodyRequired : undefined,
-		explicitSummary: metadataString(metadata.summary),
-		explicitOperationId: metadataString(metadata.operationId),
-		explicitDescription: metadataString(metadata.description),
-		explicitStatusCodes: extractNumberArray(metadata.statusCode),
-		explicitSecurity: extractStringArray(metadata.security),
-		explicitTags: extractStringArray(metadata.tags),
-		explicitDeprecated: metadata.deprecated === true,
-		explicitExternalDocs: extractExternalDocs(metadata.externalDocs),
+		responseSchemaName: metadata.responseSchema ?? undefined,
+		hasNoContent: metadata.responseSchema === null,
+		bodylessStatusCodes: metadata.bodylessStatusCodes,
+		responseContentType: metadata.responseContentType,
+		explicitRequestSchemaName: metadata.requestSchema,
+		explicitRequestFormSchemaName: metadata.requestFormSchema,
+		explicitRequestBodyRequired: metadata.requestBodyRequired,
+		explicitSummary: metadata.summary,
+		explicitOperationId: metadata.operationId,
+		explicitDescription: metadata.description,
+		explicitStatusCodes: metadata.statusCode,
+		explicitSecurity: metadata.security,
+		explicitTags: metadata.tags,
+		explicitDeprecated: metadata.deprecated,
+		explicitExternalDocs: metadata.externalDocs,
 	};
 }
 function extractMiddlewareInfo(callExpr: CallExpression, context: MetadataContext): MiddlewareInfo | null {
@@ -251,8 +241,8 @@ function extractSuccessStatusCodes(handler: Node): Array<number> {
 		if (args.length < 2) return;
 		const statusArg = args[1];
 		if (!Node.isNumericLiteral(statusArg)) return;
-		const parsed = Number.parseInt(statusArg.getText(), 10);
-		if (!Number.isFinite(parsed)) return;
+		const parsed = statusArg.getLiteralValue();
+		if (!isHttpStatusCode(parsed)) throw new Error(`Invalid HTTP response status: ${statusArg.getText()}`);
 		if (parsed >= 200 && parsed <= 299) {
 			codes.add(parsed);
 		}
@@ -293,43 +283,24 @@ function methodsFromOnArgument(node: Node, resolver: StaticPathResolver, scope: 
 	}
 	return methods.length > 0 ? methods : null;
 }
-const HONO_TYPE_PATTERN = /\bHono(App|Env)?\b/u;
 function isHonoReceiver(receiver: Node): boolean {
-	if (!Node.isIdentifier(receiver)) {
-		return false;
-	}
-	const name = receiver.getText();
-	for (const ancestor of receiver.getAncestors()) {
-		if (
-			Node.isFunctionDeclaration(ancestor) ||
-			Node.isArrowFunction(ancestor) ||
-			Node.isFunctionExpression(ancestor) ||
-			Node.isMethodDeclaration(ancestor)
-		) {
-			for (const parameter of ancestor.getParameters()) {
-				const nameNode = parameter.getNameNode();
-				if (Node.isIdentifier(nameNode) && nameNode.getText() === name) {
-					return HONO_TYPE_PATTERN.test(parameter.getTypeNode()?.getText() ?? '');
-				}
-			}
-		}
-		if (Node.isBlock(ancestor) || Node.isSourceFile(ancestor)) {
-			for (const statement of ancestor.getStatements()) {
-				if (!Node.isVariableStatement(statement)) {
-					continue;
-				}
-				for (const declaration of statement.getDeclarations()) {
-					const nameNode = declaration.getNameNode();
-					if (Node.isIdentifier(nameNode) && nameNode.getText() === name) {
-						const annotation = declaration.getTypeNode()?.getText() ?? '';
-						const initializer = declaration.getInitializer()?.getText() ?? '';
-						return HONO_TYPE_PATTERN.test(`${annotation} ${initializer}`);
-					}
-				}
-			}
+	if (!Node.isIdentifier(receiver)) return false;
+	const declarations = getIdentifierDeclarations(receiver);
+	if (declarations.length !== 1) return false;
+	const declaration = declarations[0];
+	if (!Node.isParameterDeclaration(declaration) && !Node.isVariableDeclaration(declaration)) return false;
+	const typeNode = declaration.getTypeNode();
+	if (typeNode !== undefined && Node.isTypeReference(typeNode)) {
+		const typeName = typeNode.getTypeName();
+		if (Node.isIdentifier(typeName) && (typeName.getText() === 'HonoApp' || typeName.getText() === 'Hono')) {
+			return true;
 		}
 	}
-	return false;
+	if (!Node.isVariableDeclaration(declaration)) return false;
+	const initializer = declaration.getInitializer();
+	if (initializer === undefined || !Node.isNewExpression(initializer)) return false;
+	const constructorExpression = initializer.getExpression();
+	return Node.isIdentifier(constructorExpression) && constructorExpression.getText() === 'Hono';
 }
 function isRegistrationCall(callExpr: CallExpression): boolean {
 	const expression = callExpr.getExpression();
@@ -498,8 +469,14 @@ function bindParameters(
 	callerScope: Scope,
 	resolver: StaticPathResolver,
 ): Scope {
-	const scope = new Map<string, StaticValue>();
+	const scope = new Map(callerScope);
+	for (const declaration of scope.keys()) {
+		if (declaration.getAncestors().includes(fn)) scope.delete(declaration);
+	}
+	const firstSpreadIndex = args.findIndex(Node.isSpreadElement);
 	fn.getParameters().forEach((parameter, index) => {
+		if (parameter.isRestParameter()) return;
+		if (firstSpreadIndex !== -1 && index >= firstSpreadIndex) return;
 		const arg = args[index];
 		if (arg == null) {
 			return;
@@ -510,15 +487,16 @@ function bindParameters(
 		}
 		const nameNode = parameter.getNameNode();
 		if (Node.isIdentifier(nameNode)) {
-			scope.set(nameNode.getText(), value);
+			scope.set(parameter, value);
 			return;
 		}
 		if (Node.isObjectBindingPattern(nameNode) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
 			const record = value as {readonly [key: string]: StaticValue};
 			for (const element of nameNode.getElements()) {
-				const key = element.getPropertyNameNode()?.getText() ?? element.getName();
-				if (key in record) {
-					scope.set(element.getName(), record[key]);
+				if (element.getDotDotDotToken() !== undefined) continue;
+				const key = resolver.resolvePropertyName(element.getPropertyNameNode() ?? element.getNameNode(), scope);
+				if (key !== null && Object.hasOwn(record, key)) {
+					scope.set(element, record[key]);
 				}
 			}
 		}
@@ -531,11 +509,7 @@ function scopesForFunction(
 	resolver: StaticPathResolver,
 	visiting: Set<FunctionDeclaration>,
 ): Array<Scope> {
-	if (visiting.has(fn)) {
-		return [EMPTY_SCOPE];
-	}
-	const name = fn.getName();
-	if (name == null) {
+	if (visiting.has(fn) || fn.getName() === undefined) {
 		return [EMPTY_SCOPE];
 	}
 	visiting.add(fn);
@@ -546,7 +520,7 @@ function scopesForFunction(
 				return;
 			}
 			const callee = node.getExpression();
-			if (!Node.isIdentifier(callee) || callee.getText() !== name) {
+			if (!Node.isIdentifier(callee) || !getIdentifierDeclarations(callee).includes(fn)) {
 				return;
 			}
 			const enclosing = owningFunction(node);
@@ -586,7 +560,7 @@ function expandLoops(
 			continue;
 		}
 		const initializer = loop.getInitializer();
-		if (!Node.isVariableDeclarationList(initializer)) {
+		if (!Node.isVariableDeclarationList(initializer) || initializer.getDeclarationKind() !== 'const') {
 			return scopes;
 		}
 		const declaration = initializer.getDeclarations()[0];
@@ -602,7 +576,7 @@ function expandLoops(
 			}
 			for (const element of iterated) {
 				const next = new Map(scope);
-				next.set(nameNode.getText(), element);
+				next.set(declaration, element);
 				expanded.push(next);
 			}
 		}
@@ -678,17 +652,18 @@ export function extractRoutesFromControllers(controllerPaths: Array<string>): Ar
 	const project = new Project({
 		skipAddingFilesFromTsConfig: true,
 		skipFileDependencyResolution: true,
+		compilerOptions: {noResolve: true, noLib: true, types: []},
 	});
 	const resolver = new StaticPathResolver(project);
 	const routes: Array<ExtractedRoute> = [];
 	const unresolved: Array<UnresolvedRegistration> = [];
-	for (const controllerPath of controllerPaths) {
+	const sourceFiles = controllerPaths.map((controllerPath) => project.addSourceFileAtPath(controllerPath));
+	for (const sourceFile of sourceFiles) {
 		try {
-			const sourceFile = project.addSourceFileAtPath(controllerPath);
 			const fileRoutes = findRoutesInSourceFile(sourceFile, resolver, unresolved);
 			routes.push(...fileRoutes);
 		} catch (error) {
-			throw new Error(`Could not extract routes from ${controllerPath}`, {cause: error});
+			throw new Error(`Could not extract routes from ${sourceFile.getFilePath()}`, {cause: error});
 		}
 	}
 	if (unresolved.length > 0) {

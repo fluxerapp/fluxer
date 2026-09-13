@@ -85,15 +85,15 @@ export function createDomainAgeChecker(opts: DomainAgeCheckerOptions = {}) {
 }
 
 async function fetchFromRdap(domain: string): Promise<CachedDomainAge> {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), RDAP_TIMEOUT_MS);
 	try {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), RDAP_TIMEOUT_MS);
 		const response = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
 			signal: controller.signal,
 			headers: {Accept: 'application/rdap+json'},
 		});
-		clearTimeout(timeout);
 		if (!response.ok) {
+			FetchUtils.discardResponseBody(response.body, response.status);
 			return {
 				domain,
 				available: false,
@@ -130,6 +130,8 @@ async function fetchFromRdap(domain: string): Promise<CachedDomainAge> {
 			creationDate: null,
 			failureNote: `RDAP lookup error: ${message.slice(0, 100)}`,
 		};
+	} finally {
+		clearTimeout(timeout);
 	}
 }
 

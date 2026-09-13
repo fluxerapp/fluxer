@@ -2,10 +2,10 @@
 
 import type {Readable} from 'node:stream';
 import {S3ServiceException} from '@aws-sdk/client-s3';
-import type archiver from 'archiver';
 import {Config} from '../../Config';
 import type {IStorageService} from '../../infrastructure/IStorageService';
 import {Logger} from '../../Logger';
+import type {ArchiveEntryWriter} from './ArchiveFile';
 
 let _cdnBucket: string | null = null;
 
@@ -74,7 +74,7 @@ export async function streamCdnAssetIfExists(
 }
 
 interface AppendAssetToArchiveParams {
-	archive: archiver.Archiver;
+	archive: ArchiveEntryWriter;
 	storageService: IStorageService;
 	storageKey: string;
 	archiveName: string;
@@ -95,5 +95,5 @@ export async function appendAssetToArchive({
 		Logger.warn({subjectId, storageKey}, `Skipping missing ${label}`);
 		return;
 	}
-	archive.append(buffer, {name: archiveName});
+	await archive.append(buffer, {name: archiveName});
 }

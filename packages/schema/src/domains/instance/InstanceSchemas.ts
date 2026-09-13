@@ -128,7 +128,6 @@ export const InstanceRegistrationModeSchema = createNamedStringLiteralUnion(
 	],
 	'Registration mode',
 );
-export type InstanceRegistrationMode = z.infer<typeof InstanceRegistrationModeSchema>;
 
 export const InstanceRegistrationSchema = z
 	.object({

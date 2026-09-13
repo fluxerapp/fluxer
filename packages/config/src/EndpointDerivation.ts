@@ -53,27 +53,25 @@ function defaultPortForScheme(scheme: PublicOriginScheme): number {
 	return scheme === 'https' ? 443 : 80;
 }
 
-export function parsePublicOrigin(origin: string): PublicOrigin | null {
+export function parseWebOrigin(origin: string): URL | null {
 	const trimmed = origin.trim();
-	if (trimmed.length === 0) {
+	const authority = /^https?:\/\/([^/?#\\\s]+)\/?$/i.exec(trimmed)?.[1];
+	if (!authority || /\p{Cc}/u.test(origin) || authority.includes('@') || authority.endsWith(':')) {
 		return null;
 	}
-	let parsed: URL;
-	try {
-		parsed = new URL(trimmed);
-	} catch {
+	const parsed = URL.parse(trimmed);
+	if (!parsed || parsed.port === '0' || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
 		return null;
 	}
-	const scheme = parsed.protocol.slice(0, -1);
-	if (scheme !== 'http' && scheme !== 'https') {
+	return parsed;
+}
+
+export function parsePublicOrigin(origin: string): PublicOrigin | null {
+	const parsed = parseWebOrigin(origin);
+	if (!parsed) {
 		return null;
 	}
-	if (parsed.pathname !== '/' || parsed.search.length > 0 || parsed.hash.length > 0) {
-		return null;
-	}
-	if (parsed.username.length > 0 || parsed.password.length > 0) {
-		return null;
-	}
+	const scheme = parsed.protocol === 'https:' ? 'https' : 'http';
 	const base_domain = canonicalizeDomain(parsed.hostname);
 	if (base_domain.length === 0) {
 		return null;

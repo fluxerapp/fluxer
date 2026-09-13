@@ -2,6 +2,8 @@
 
 import type cassandra from 'cassandra-driver';
 
+const MAX_TTL_SECONDS = 630_720_000;
+
 export type DbOp<T> =
 	| {
 			kind: 'set';
@@ -22,6 +24,13 @@ export const Db = {
 
 export function nextVersion(current: number | null | undefined): number {
 	return (current ?? 0) + 1;
+}
+
+export function validateTtlSeconds(value: number): number {
+	if (!Number.isInteger(value) || value < 0 || value > MAX_TTL_SECONDS) {
+		throw new Error(`Cassandra TTL must be an integer between 0 and ${MAX_TTL_SECONDS} seconds`);
+	}
+	return value;
 }
 
 export type ColumnName<Row> = Extract<keyof Row, string>;
@@ -49,6 +58,32 @@ export interface KvTableSpec<Row extends object = Record<string, unknown>> {
 	partitionKey: ReadonlyArray<ColumnName<Row>>;
 }
 
+export interface KvColumnParam<Row extends object = Record<string, unknown>> {
+	col: ColumnName<Row>;
+	param: string;
+}
+
+export interface KvQueryCondition<Row extends object = Record<string, unknown>> {
+	col: ColumnName<Row>;
+	expectedParam: string;
+}
+
+interface KvConditionalBatchKey<Row extends object> {
+	pk: ReadonlyArray<KvColumnParam<Row>>;
+}
+
+export type KvConditionalBatchEntry<Row extends object = Record<string, unknown>> = KvConditionalBatchKey<Row> &
+	(
+		| {action: 'insert'; values: ReadonlyArray<KvColumnParam<Row>>; ttlParamName?: string}
+		| {
+				action: 'patch';
+				patch: ReadonlyArray<KvColumnParam<Row>>;
+				conditions: ReadonlyArray<KvQueryCondition<Row>>;
+				ttlParamName?: string;
+		  }
+		| {action: 'delete'; conditions: ReadonlyArray<KvQueryCondition<Row>>}
+	);
+
 export interface KvQueryMeta<Row extends object = Record<string, unknown>> {
 	action: KvAction;
 	table: KvTableSpec<Row>;
@@ -62,11 +97,8 @@ export interface KvQueryMeta<Row extends object = Record<string, unknown>> {
 	ttlSeconds?: number;
 	ttlParamName?: string;
 	nowColumn?: ColumnName<Row>;
-	condition?: {
-		col: ColumnName<Row>;
-		expectedParam: string;
-		expectedValue: unknown;
-	};
+	conditions?: ReadonlyArray<KvQueryCondition<Row>>;
+	batchEntries?: ReadonlyArray<KvConditionalBatchEntry<Row>>;
 	ifNotExists?: boolean;
 }
 
@@ -78,6 +110,15 @@ export interface PreparedQuery<P extends CassandraParams = CassandraParams> {
 
 export function prepared<P extends CassandraParams>(cql: string, params: P, kvMeta?: KvQueryMeta): PreparedQuery<P> {
 	return {cql, params, kvMeta};
+}
+
+export function isConditionalQuery(query: PreparedQuery): boolean {
+	return (
+		query.kvMeta?.conditions !== undefined ||
+		query.kvMeta?.batchEntries !== undefined ||
+		query.kvMeta?.ifNotExists === true ||
+		/\bIF\b/i.test(query.cql)
+	);
 }
 
 export interface QueryTemplate<P extends CassandraParams = CassandraParams> {
@@ -131,6 +172,19 @@ export type OrderBy<Row extends object> = {
 	direction?: 'ASC' | 'DESC';
 };
 
+export type ConditionalWriteEntry<Row extends object, PK extends ColumnName<Row>> =
+	| {action: 'insert'; row: Row; ttlSeconds?: number}
+	| {
+			action: 'patch';
+			pk: Pick<Row, PK>;
+			patch: Partial<{
+				[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+			}>;
+			expected: Partial<Row>;
+			ttlSeconds?: number;
+	  }
+	| {action: 'delete'; pk: Pick<Row, PK>; expected: Partial<Row>};
+
 export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey extends ColumnName<Row> = PK> {
 	name: string;
 	columns: ReadonlyArray<ColumnName<Row>>;
@@ -157,13 +211,31 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
 		}>,
 	): PreparedQuery;
+	conditionalPatchByPk(
+		pk: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		expected: Partial<Row>,
+	): PreparedQuery;
+	conditionalPatchByPkWithTtl(
+		pk: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		expected: Partial<Row>,
+		ttlSeconds: number,
+	): PreparedQuery;
+	conditionalBatch(entries: ReadonlyArray<ConditionalWriteEntry<Row, PK>>): PreparedQuery;
 	deleteCql(opts?: {where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>}): string;
 	delete(opts?: {where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>}): QueryTemplate;
 	deleteByPk(pk: Pick<Row, PK>): PreparedQuery;
+	conditionalDeleteByPk(pk: Pick<Row, PK>, expected: Partial<Row>): PreparedQuery;
 	deletePartition(pk: Pick<Row, PartKey>): PreparedQuery;
 	insertCql(opts?: {ttlParam?: string}): string;
 	insert(row: Row): PreparedQuery;
 	insertIfNotExists(row: Row): PreparedQuery;
+	insertIfNotExistsWithTtl(row: Row, ttlSeconds: number): PreparedQuery;
 	insertWithTtl(row: Row, ttlSeconds: number): PreparedQuery;
 	insertWithTtlParam(row: Row, ttlParamName: string): PreparedQuery;
 	selectCountCql(opts?: {where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>}): string;

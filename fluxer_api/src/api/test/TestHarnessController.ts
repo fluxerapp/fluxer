@@ -22,7 +22,6 @@ import {UnknownSuspiciousFlagError} from '@fluxer/errors/src/domains/core/Unknow
 import {UpdateFailedError} from '@fluxer/errors/src/domains/core/UpdateFailedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
-import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 import {InvalidBotFlagError} from '@fluxer/errors/src/domains/oauth/InvalidBotFlagError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {UnknownUserFlagError} from '@fluxer/errors/src/domains/user/UnknownUserFlagError';
@@ -81,6 +80,7 @@ import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '../Tables';
 import type {HonoApp, HonoEnv} from '../types/HonoEnv';
 import {UserSearchRepository} from '../user/repositories/account/crud/UserSearchRepository';
 import {AuthSessionRepository} from '../user/repositories/auth/AuthSessionRepository';
+import type {UserDeletionScheduleUpdate} from '../user/repositories/IUserAccountRepository';
 import {UserChannelRepository} from '../user/repositories/UserChannelRepository';
 import {UserRepository} from '../user/repositories/UserRepository';
 import {processUserDeletion} from '../user/services/UserDeletionService';
@@ -591,13 +591,13 @@ export function TestHarnessController(app: HonoApp) {
 		} catch {
 			throw new InvalidTimestampError();
 		}
-		const updates: Record<string, unknown> = {pending_deletion_at: date};
+		const updates: UserDeletionScheduleUpdate = {pending_deletion_at: date};
 		const shouldSetSelfDeleted = setSelfDeletedFlag !== false;
 		if (shouldSetSelfDeleted) {
 			const nextFlags = (user.flags ?? 0n) | UserFlags.SELF_DELETED;
 			updates['flags'] = nextFlags;
 		}
-		const updated = await userRepository.patchUpsert(userId, updates, user.toRow());
+		const updated = await userRepository.updateDeletionSchedule(user, updates);
 		const kvClient = getKVClient();
 		const kvDeletionQueue = new KVAccountDeletionQueueService(kvClient, userRepository);
 		try {
@@ -1630,8 +1630,7 @@ export function TestHarnessController(app: HonoApp) {
 					continue;
 				}
 				const pendingDeletionAt = user.pendingDeletionAt;
-				await processUserDeletion(userId, deletion.deletionReasonCode, workerDeps);
-				await userRepository.removePendingDeletion(userId, pendingDeletionAt);
+				await processUserDeletion(userId, pendingDeletionAt, deletion.deletionReasonCode, workerDeps);
 				await kvDeletionQueue.removeFromQueue(userId);
 				Logger.info({userId: userId.toString()}, '[test/worker/process-pending-deletions] Deletion completed');
 				processed++;
@@ -1694,7 +1693,7 @@ export function TestHarnessController(app: HonoApp) {
 		try {
 			const snowflakeService = getSnowflakeService();
 			const workerDeps = await initializeWorkerDepsWithHarnessEmail(ctx, snowflakeService);
-			await processUserDeletion(userId, deletionReasonCode, workerDeps);
+			await processUserDeletion(userId, user.pendingDeletionAt, deletionReasonCode, workerDeps);
 			Logger.info(
 				{userId: userId.toString()},
 				'[test/worker/process-pending-deletion/:userId] Deletion completed successfully',
@@ -2135,12 +2134,7 @@ export function TestHarnessController(app: HonoApp) {
 			throw new InvalidTimestampError();
 		}
 		const harvestRepository = new UserHarvestRepository();
-		const harvest = await harvestRepository.findByUserAndHarvestId(userId, harvestId);
-		if (!harvest) {
-			throw new UnknownHarvestError();
-		}
-		harvest.downloadUrlExpiresAt = date;
-		await harvestRepository.update(harvest);
+		await harvestRepository.setDownloadUrlExpiry(userId, harvestId, date);
 		return ctx.json({success: true}, 200);
 	});
 	app.get('/test/users/:userId/presence/has-active', async (ctx) => {

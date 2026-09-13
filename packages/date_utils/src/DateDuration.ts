@@ -28,28 +28,28 @@ export function formatDuration(seconds: number): string {
 export function formatShortRelativeTime(timestamp: DateInput, minUnit: '1m' | 'now' = 'now'): string {
 	const date = parseDate(timestamp);
 	const now = new Date();
-	const diffMs = date.getTime() - now.getTime();
+	const diffMs = Math.abs(date.getTime() - now.getTime());
 	const diffSeconds = Math.floor(diffMs / 1000);
 	const diffMinutes = Math.floor(diffSeconds / SECONDS_PER_MINUTE);
 	const diffHours = Math.floor(diffMinutes / MINUTES_PER_HOUR);
 	const diffDays = Math.floor(diffHours / HOURS_PER_DAY);
-	if (Math.abs(diffSeconds) < SECONDS_PER_MINUTE) {
+	if (diffSeconds < SECONDS_PER_MINUTE) {
 		return minUnit === '1m' ? '1m' : 'now';
 	}
-	if (Math.abs(diffMinutes) < MINUTES_PER_HOUR) {
-		return `${Math.abs(diffMinutes)}m`;
+	if (diffMinutes < MINUTES_PER_HOUR) {
+		return `${diffMinutes}m`;
 	}
-	if (Math.abs(diffHours) < HOURS_PER_DAY) {
-		return `${Math.abs(diffHours)}h`;
+	if (diffHours < HOURS_PER_DAY) {
+		return `${diffHours}h`;
 	}
-	if (Math.abs(diffDays) < DAYS_PER_WEEK) {
-		return `${Math.abs(diffDays)}d`;
+	if (diffDays < DAYS_PER_WEEK) {
+		return `${diffDays}d`;
 	}
-	if (Math.abs(diffDays) < DAYS_PER_MONTH) {
-		return `${Math.floor(Math.abs(diffDays) / DAYS_PER_WEEK)}w`;
+	if (diffDays < DAYS_PER_MONTH) {
+		return `${Math.floor(diffDays / DAYS_PER_WEEK)}w`;
 	}
-	if (Math.abs(diffDays) < DAYS_PER_YEAR) {
-		return `${Math.floor(Math.abs(diffDays) / DAYS_PER_MONTH)}mo`;
+	if (diffDays < DAYS_PER_YEAR) {
+		return `${Math.floor(diffDays / DAYS_PER_MONTH)}mo`;
 	}
-	return `${Math.floor(Math.abs(diffDays) / DAYS_PER_YEAR)}y`;
+	return `${Math.floor(diffDays / DAYS_PER_YEAR)}y`;
 }

@@ -63,12 +63,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 		return this.authSessionRepository.deleteAuthSessions(userId, sessionIdHashes);
 	}
 
-	async revokeAuthSession(sessionIdHash: Buffer): Promise<void> {
-		const session = await this.getAuthSessionByToken(sessionIdHash);
-		if (!session) return;
-		await this.deleteAuthSessions(session.userId, [sessionIdHash]);
-	}
-
 	async deleteAllAuthSessions(userId: UserID): Promise<void> {
 		return this.authSessionRepository.deleteAllAuthSessions(userId);
 	}

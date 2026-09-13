@@ -192,12 +192,11 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 	}
 	Logger.debug('Starting expired premium sweep');
 	let pageState: string | null = null;
-	while (true) {
+	do {
 		const page = await deps.userRepository.scanAllUsersPage(BATCH_SIZE, pageState);
+		pageState = page.pageState;
 		const users = page.users;
-		if (users.length === 0) {
-			break;
-		}
+		if (users.length === 0) continue;
 		for (const user of users) {
 			try {
 				await processUser(user, deps, result);
@@ -207,17 +206,13 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 			}
 		}
 		result.processed += users.length;
-		pageState = page.pageState;
 		if (result.processed % 1000 === 0) {
 			Logger.debug(
 				{processed: result.processed, stripped: result.stripped, sanitized: result.sanitized},
 				'Expired premium sweep progress',
 			);
 		}
-		if (!pageState) {
-			break;
-		}
-	}
+	} while (pageState);
 	Logger.info(
 		{
 			processed: result.processed,

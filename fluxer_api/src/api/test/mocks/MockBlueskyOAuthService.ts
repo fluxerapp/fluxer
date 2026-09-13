@@ -11,9 +11,6 @@ import type {
 interface MockBlueskyOAuthServiceOptions {
 	authorizeResult?: BlueskyAuthorizeResult;
 	callbackResult?: BlueskyCallbackResult;
-	restoreAndVerifyResult?: {
-		handle: string;
-	} | null;
 	shouldFailAuthorize?: boolean;
 	shouldFailCallback?: boolean;
 }
@@ -21,8 +18,6 @@ interface MockBlueskyOAuthServiceOptions {
 export class MockBlueskyOAuthService implements IBlueskyOAuthService {
 	readonly authorizeSpy = vi.fn();
 	readonly callbackSpy = vi.fn();
-	readonly restoreAndVerifySpy = vi.fn();
-	readonly revokeSpy = vi.fn();
 	readonly clientMetadata: Record<string, unknown> = {client_id: 'https://test/metadata.json'};
 	readonly jwks: Record<string, unknown> = {keys: []};
 	private options: MockBlueskyOAuthServiceOptions;
@@ -48,10 +43,6 @@ export class MockBlueskyOAuthService implements IBlueskyOAuthService {
 			}
 			return this.options.callbackResult;
 		});
-		this.restoreAndVerifySpy.mockImplementation(async () => {
-			return this.options.restoreAndVerifyResult ?? null;
-		});
-		this.revokeSpy.mockResolvedValue(undefined);
 	}
 
 	async authorize(handle: string, userId: UserID): Promise<BlueskyAuthorizeResult> {
@@ -62,16 +53,6 @@ export class MockBlueskyOAuthService implements IBlueskyOAuthService {
 		return this.callbackSpy(params);
 	}
 
-	async restoreAndVerify(did: string): Promise<{
-		handle: string;
-	} | null> {
-		return this.restoreAndVerifySpy(did);
-	}
-
-	async revoke(did: string): Promise<void> {
-		return this.revokeSpy(did);
-	}
-
 	configure(options: Partial<MockBlueskyOAuthServiceOptions>): void {
 		this.options = {...this.options, ...options};
 		this.setupDefaults();
@@ -80,8 +61,6 @@ export class MockBlueskyOAuthService implements IBlueskyOAuthService {
 	reset(): void {
 		this.authorizeSpy.mockReset();
 		this.callbackSpy.mockReset();
-		this.restoreAndVerifySpy.mockReset();
-		this.revokeSpy.mockReset();
 		this.options = {};
 		this.setupDefaults();
 	}

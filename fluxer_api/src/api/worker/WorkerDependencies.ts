@@ -25,14 +25,12 @@ import type {GuildRepository} from '../guild/repositories/GuildRepository';
 import type {GuildService} from '../guild/services/GuildService';
 import type {AvatarService} from '../infrastructure/AvatarService';
 import type {IPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
-import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
 import type {DiscriminatorService} from '../infrastructure/DiscriminatorService';
 import type {EmbedService} from '../infrastructure/EmbedService';
 import type {IAssetDeletionQueue} from '../infrastructure/IAssetDeletionQueue';
 import type {IGatewayService} from '../infrastructure/IGatewayService';
 import type {ILiveKitService} from '../infrastructure/ILiveKitService';
 import type {IMediaService} from '../infrastructure/IMediaService';
-import {InMemoryVoiceRoomStore} from '../infrastructure/InMemoryVoiceRoomStore';
 import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
 import type {IStorageService} from '../infrastructure/IStorageService';
 import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
@@ -58,7 +56,6 @@ import {
 	getVoiceRoomStoreInstance,
 	getVoiceTopology,
 	getWorkerService,
-	resolveBlueskyOAuthService,
 } from '../middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -192,7 +189,9 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const userHarvestRepository = new UserHarvestRepository();
 	const connectionRepository = getConnectionRepository();
 	const cacheService = getCacheService();
+	const instanceConfigRepository = getInstanceConfigRepository();
 	const limitConfigService = getLimitConfigService();
+	await instanceConfigRepository.initialize();
 	await limitConfigService.initialize();
 	limitConfigService.setAsGlobalInstance();
 	const userCacheService = createUserCacheService();
@@ -200,9 +199,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const assetDeletionQueue = getAssetDeletionQueue();
 	const purgeQueue = getPurgeQueue();
 	const gatewayService = getGatewayService();
-	const instanceConfigRepository = getInstanceConfigRepository();
-	const blueskyOAuthService = await resolveBlueskyOAuthService(instanceConfigRepository);
-	const connectionService = new ConnectionService(connectionRepository, gatewayService, blueskyOAuthService);
+	const connectionService = new ConnectionService(connectionRepository, gatewayService);
 	const mediaService = getMediaService();
 	const discriminatorService = getDiscriminatorService();
 	const ncmecSubmissionService = getNcmecSubmissionService();
@@ -226,8 +223,11 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	await ensureVoiceResourcesInitialized();
 	const voiceRepository = getVoiceRepository();
 	const voiceTopology = getVoiceTopology();
-	const voiceRoomStore = getVoiceRoomStoreInstance() ?? new InMemoryVoiceRoomStore();
-	const liveKitService = getLiveKitServiceInstance() ?? new DisabledLiveKitService();
+	const voiceRoomStore = getVoiceRoomStoreInstance();
+	const liveKitService = getLiveKitServiceInstance();
+	if (voiceRoomStore === null || liveKitService === null) {
+		throw new Error('Voice resources are unavailable during worker initialization');
+	}
 	const voiceAvailabilityService = getVoiceAvailabilityService();
 	if (Config.voice.enabled && voiceTopology !== null) {
 		Logger.info('Voice services initialized');

@@ -10,7 +10,7 @@ import {
 import type {CacheLogger, CacheTelemetry} from '@pkgs/cache/src/CacheProviderTypes';
 import {parseCachedValue, safeJsonParse, serializeValue} from '@pkgs/cache/src/CacheSerialization';
 import {type CacheLookupResult, ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import type {IKVPipeline, IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {runSlotBatches, splitIntoSlotBatches} from '@pkgs/kv_client/src/KVHashSlots';
 
 interface KVCacheProviderConfig {
@@ -67,6 +67,14 @@ export class KVCacheProvider extends ICacheService {
 				dimensions: {operation, cache_name: this.cacheName},
 			});
 			throw error;
+		}
+	}
+
+	private async executePipeline(pipeline: IKVPipeline): Promise<void> {
+		for (const [error] of await pipeline.exec()) {
+			if (error) {
+				throw error;
+			}
 		}
 	}
 
@@ -153,11 +161,7 @@ export class KVCacheProvider extends ICacheService {
 					pipeline.set(entry.key, entry.value);
 				}
 			}
-			for (const [error] of await pipeline.exec()) {
-				if (error) {
-					throw error;
-				}
-			}
+			await this.executePipeline(pipeline);
 		});
 	}
 
@@ -204,7 +208,7 @@ export class KVCacheProvider extends ICacheService {
 		if (ttlSeconds) {
 			pipeline.expire(key, ttlSeconds);
 		}
-		await pipeline.exec();
+		await this.executePipeline(pipeline);
 	}
 
 	async srem(key: string, member: string): Promise<void> {

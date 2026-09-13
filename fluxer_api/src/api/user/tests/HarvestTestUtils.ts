@@ -45,19 +45,29 @@ export async function expectHarvestDownloadFailsWithError(
 
 export async function markHarvestCompleted(userId: string, harvestId: string, expiresAt: Date): Promise<void> {
 	const harvestRepository = new UserHarvestRepository();
-	const userIdTyped = createUserID(BigInt(userId));
-	const harvestIdTyped = BigInt(harvestId);
-	await harvestRepository.markAsCompleted(userIdTyped, harvestIdTyped, `test/${harvestId}.zip`, 1024n, expiresAt);
+	const harvest = await claimHarvest(harvestRepository, userId, harvestId);
+	await harvestRepository.markAsCompleted(harvest, `test/${harvestId}.zip`, 1024n, expiresAt);
 }
 
 export async function markHarvestFailed(userId: string, harvestId: string, errorMessage: string): Promise<void> {
 	const harvestRepository = new UserHarvestRepository();
-	await harvestRepository.markAsFailed(createUserID(BigInt(userId)), BigInt(harvestId), errorMessage);
+	const harvest = await claimHarvest(harvestRepository, userId, harvestId);
+	await harvestRepository.markAsFailed(harvest, errorMessage);
 }
 
 export async function markHarvestStarted(userId: string, harvestId: string): Promise<void> {
 	const harvestRepository = new UserHarvestRepository();
-	await harvestRepository.markAsStarted(createUserID(BigInt(userId)), BigInt(harvestId));
+	await claimHarvest(harvestRepository, userId, harvestId);
+}
+
+async function claimHarvest(
+	repository: UserHarvestRepository,
+	userId: string,
+	harvestId: string,
+): Promise<UserHarvest> {
+	const harvest = await repository.findByUserAndHarvestId(createUserID(BigInt(userId)), BigInt(harvestId));
+	if (!harvest) throw new Error(`Harvest ${harvestId} for user ${userId} not found`);
+	return repository.markAsStarted(harvest);
 }
 
 export async function findHarvest(userId: string, harvestId: string): Promise<UserHarvest | null> {
