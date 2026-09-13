@@ -3,6 +3,22 @@
 import {randomUUID} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {isAbsolute} from 'node:path';
+import type {UserID} from '@app/api/BrandedTypes';
+import {
+	BlueskyOAuthStateInvalidError,
+	BlueskyOAuthStoreError,
+	createSessionStore,
+	createStateStore,
+	validateBlueskyGrantOwner,
+} from '@app/api/bluesky/BlueskyOAuthStores';
+import type {
+	BlueskyAuthorizeResult,
+	BlueskyCallbackResult,
+	BlueskyOAuthGrantOwner,
+	IBlueskyOAuthService,
+} from '@app/api/bluesky/IBlueskyOAuthService';
+import type {BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
+import {ConnectionCredentialRepository} from '@app/api/connection/ConnectionCredentialRepository';
 import {Agent} from '@atproto/api';
 import {JoseKey} from '@bluesky-social/jwk-jose';
 import {
@@ -14,22 +30,6 @@ import {
 	requestLocalLock,
 } from '@bluesky-social/oauth-client-node';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {UserID} from '../BrandedTypes';
-import type {BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '../config/APIConfig';
-import {ConnectionCredentialRepository} from '../connection/ConnectionCredentialRepository';
-import {
-	BlueskyOAuthStateInvalidError,
-	BlueskyOAuthStoreError,
-	createSessionStore,
-	createStateStore,
-	validateBlueskyGrantOwner,
-} from './BlueskyOAuthStores';
-import type {
-	BlueskyAuthorizeResult,
-	BlueskyCallbackResult,
-	BlueskyOAuthGrantOwner,
-	IBlueskyOAuthService,
-} from './IBlueskyOAuthService';
 
 interface BlueskyClientConfiguration {
 	clientMetadata: OAuthClientMetadataInput;

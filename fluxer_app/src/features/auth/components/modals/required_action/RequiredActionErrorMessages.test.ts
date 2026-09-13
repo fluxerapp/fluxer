@@ -32,7 +32,9 @@ vi.mock('@app/features/auth/state/SudoPrompt', () => ({isAbortError: () => false
 
 const {APIErrorCodes} = await import('@fluxer/constants/src/ApiErrorCodes');
 const {HttpError} = await import('@app/features/platform/types/EndpointError');
-const {resolveRequiredActionErrorMessage} = await import('./RequiredActionShared');
+const {resolveRequiredActionErrorMessage} = await import(
+	'@app/features/auth/components/modals/required_action/RequiredActionShared'
+);
 const {
 	ENTER_VALID_PHONE_DESCRIPTOR,
 	PHONE_CANNOT_BE_USED_DESCRIPTOR,
@@ -44,7 +46,7 @@ const {
 	PHONE_NOT_MOBILE_DESCRIPTOR,
 	SOMETHING_WENT_WRONG_TRY_AGAIN_DESCRIPTOR,
 	TOO_MANY_ATTEMPTS_DESCRIPTOR,
-} = await import('./RequiredActionDescriptors');
+} = await import('@app/features/auth/components/modals/required_action/RequiredActionDescriptors');
 
 const i18n = setupI18n({locale: 'en', messages: {en: {}}});
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {CreateJobInput, IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import type {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
+import {WorkerService} from '@app/api/worker/WorkerService';
 import {describe, expect, test} from 'vitest';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {CreateJobInput, IJobLedgerRepository} from '../../jobs/IJobLedgerRepository';
-import type {JetStreamWorkerQueue} from '../JetStreamWorkerQueue';
-import {WorkerService} from '../WorkerService';
 
 const JOB_ID = 4242n;
 

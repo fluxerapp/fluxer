@@ -1,37 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {BlueskyOAuthService} from '@app/api/bluesky/BlueskyOAuthService';
+import {DisabledBlueskyOAuthService} from '@app/api/bluesky/DisabledBlueskyOAuthService';
+import type {IBlueskyOAuthService} from '@app/api/bluesky/IBlueskyOAuthService';
+import {Config} from '@app/api/Config';
+import type {BlueskyOAuthConfig} from '@app/api/config/APIConfig';
+import {DisabledLiveKitService} from '@app/api/infrastructure/DisabledLiveKitService';
+import {GatewayService as ProdGatewayService} from '@app/api/infrastructure/GatewayService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import {InMemoryVoiceRoomStore} from '@app/api/infrastructure/InMemoryVoiceRoomStore';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import {LiveKitService} from '@app/api/infrastructure/LiveKitService';
+import {MediaService as ProdMediaService} from '@app/api/infrastructure/MediaService';
+import {SnowflakeService} from '@app/api/infrastructure/SnowflakeService';
+import {VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {Logger} from '@app/api/Logger';
+import {setInjectedSearchProvider} from '@app/api/SearchFactory';
+import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import {readOptionalIntegerEnv} from '@app/api/utils/IntegerOptions';
+import {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import {VoiceRepository} from '@app/api/voice/VoiceRepository';
+import {VoiceServerLoadTracker} from '@app/api/voice/VoiceServerLoad';
+import {VoiceTopology} from '@app/api/voice/VoiceTopology';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {KVClient} from '@pkgs/kv_client/src/KVClient';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {BillingRepository} from '../billing/repositories/BillingRepository';
-import {BlueskyOAuthService} from '../bluesky/BlueskyOAuthService';
-import {DisabledBlueskyOAuthService} from '../bluesky/DisabledBlueskyOAuthService';
-import type {IBlueskyOAuthService} from '../bluesky/IBlueskyOAuthService';
-import {Config} from '../Config';
-import type {BlueskyOAuthConfig} from '../config/APIConfig';
-import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
-import {GatewayService as ProdGatewayService} from '../infrastructure/GatewayService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {ILiveKitService} from '../infrastructure/ILiveKitService';
-import type {IMediaService} from '../infrastructure/IMediaService';
-import {InMemoryVoiceRoomStore} from '../infrastructure/InMemoryVoiceRoomStore';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
-import {LiveKitService} from '../infrastructure/LiveKitService';
-import {MediaService as ProdMediaService} from '../infrastructure/MediaService';
-import {SnowflakeService} from '../infrastructure/SnowflakeService';
-import {VoiceRoomStore} from '../infrastructure/VoiceRoomStore';
-import type {InstanceConfigRepository} from '../instance/InstanceConfigRepository';
-import {Logger} from '../Logger';
-import {setInjectedSearchProvider} from '../SearchFactory';
-import type {ISearchProvider} from '../search/ISearchProvider';
-import {readOptionalIntegerEnv} from '../utils/IntegerOptions';
-import {VoiceAvailabilityService} from '../voice/VoiceAvailabilityService';
-import {VoiceRepository} from '../voice/VoiceRepository';
-import {VoiceServerLoadTracker} from '../voice/VoiceServerLoad';
-import {VoiceTopology} from '../voice/VoiceTopology';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
 
 export function createSnowflakeService(): SnowflakeService {
 	const connectionManager = new NatsConnectionManager({

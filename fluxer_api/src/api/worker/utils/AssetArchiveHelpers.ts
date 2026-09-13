@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {ArchiveEntryWriter} from '@app/api/worker/utils/ArchiveFile';
 import {S3ServiceException} from '@aws-sdk/client-s3';
-import {Config} from '../../Config';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import type {ArchiveEntryWriter} from './ArchiveFile';
 
 let _cdnBucket: string | null = null;
 

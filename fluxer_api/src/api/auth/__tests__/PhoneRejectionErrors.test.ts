@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {errorForPhoneRejectReason} from '@app/api/auth/AuthPhone';
+import type {PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {describe, expect, it} from 'vitest';
-import {errorForPhoneRejectReason} from '../AuthPhone';
-import type {PhoneAttemptRejectReason} from '../services/PhoneLookupRepository';
 
 const EXPECTED_CODES: ReadonlyArray<[PhoneAttemptRejectReason, string]> = [
 	['invalid_format', APIErrorCodes.INVALID_PHONE_NUMBER],

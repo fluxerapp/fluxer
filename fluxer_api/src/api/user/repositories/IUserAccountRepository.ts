@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
 
 export interface UserDeletionScheduleUpdate {
 	pending_deletion_at: Date | null;

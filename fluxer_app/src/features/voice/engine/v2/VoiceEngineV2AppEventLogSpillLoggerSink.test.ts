@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2EventLogEntry} from '@fluxer/voice_engine_v2';
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceEngineV2AppEventLogSpillLoggerSink,
 	type VoiceEngineV2AppEventLogSpillLogger,
-} from './VoiceEngineV2AppEventLogSpillLoggerSink';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppEventLogSpillLoggerSink';
+import type {VoiceEngineV2EventLogEntry} from '@fluxer/voice_engine_v2';
+import {describe, expect, it} from 'vitest';
 
 function makeEntry(sequence: number, atMs: number = sequence * 10): VoiceEngineV2EventLogEntry {
 	return {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
 import {HttpResponse, http, type RequestHandler} from 'msw';
-import {STRIPE_API_VERSION} from '../../../stripe/StripeApiVersion';
 
 const STRIPE_API_BASE = 'https://api.stripe.com';
 

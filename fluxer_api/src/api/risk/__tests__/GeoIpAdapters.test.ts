@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGeoIpAsnAdapter, createGeoIpCityAdapter} from '@app/api/risk/adapters/GeoIpAdapters';
 import type {GeoipAsnResult, GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import {describe, expect, it} from 'vitest';
-import {createGeoIpAsnAdapter, createGeoIpCityAdapter} from '../adapters/GeoIpAdapters';
 
 function throwingIpInfoService(): IpInfoService {
 	return {

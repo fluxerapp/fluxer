@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, createUniqueEmail} from '@app/api/auth/tests/AuthTestUtils';
+import {sendMessageWithAttachments, setupTestGuildAndChannel} from '@app/api/channel/tests/AttachmentTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_CREDENTIALS, TEST_USER_DATA} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount, createUniqueEmail} from '../../auth/tests/AuthTestUtils';
-import {sendMessageWithAttachments, setupTestGuildAndChannel} from '../../channel/tests/AttachmentTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {phraseBlocklistCache} from '../../middleware/PhraseBlocklistCache';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_CREDENTIALS, TEST_USER_DATA} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface ValidationErrorResponse {
 	code: string;

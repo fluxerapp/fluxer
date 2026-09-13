@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import {convertToSearchableAuditLog} from '@app/api/search/auditlog/AuditLogSearchSerializer';
+import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
+import {SearchAdapterServiceBase} from '@app/api/search/SearchAdapterServiceBase';
 import type {SearchResult as SchemaSearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {AuditLogSearchFilters, SearchableAuditLog} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {
 	ElasticsearchAuditLogAdapter,
 	type ElasticsearchAuditLogAdapterOptions,
 } from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchAuditLogAdapter';
-import type {AdminAuditLog} from '../../admin/IAdminRepository';
-import {convertToSearchableAuditLog} from '../auditlog/AuditLogSearchSerializer';
-import type {IAuditLogSearchService} from '../IAuditLogSearchService';
-import {SearchAdapterServiceBase} from '../SearchAdapterServiceBase';
 
 interface ElasticsearchAuditLogSearchServiceOptions extends ElasticsearchAuditLogAdapterOptions {}
 

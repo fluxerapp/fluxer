@@ -116,7 +116,7 @@ function loadStreamingPriority({
 		if (specifier === 'node:os') return osModule;
 		if (specifier === 'electron') return {app, powerSaveBlocker};
 		if (specifier === 'electron-log') return log;
-		if (specifier === './WindowsScreenCaptureGuard') return guard;
+		if (specifier === '@electron/main/WindowsScreenCaptureGuard') return guard;
 		throw new Error(`Unexpected import: ${specifier}`);
 	}
 

@@ -1,5 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {
+	type AttachmentID,
+	type ChannelID,
+	createAttachmentID,
+	createChannelID,
+	createMessageID,
+	createUserID,
+	type MessageID,
+	type ReportID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {
+	collectMessageAttachments,
+	makeAttachmentCdnKey,
+	makeAttachmentCdnUrl,
+	purgeMessageAttachments,
+} from '@app/api/channel/services/message/MessageHelpers';
+import type {NcmecApiClient} from '@app/api/csam/NcmecReporter';
+import {buildNcmecFileDetailsXml, buildNcmecReportXml} from '@app/api/csam/NcmecReporter';
+import type {NcmecRepository} from '@app/api/csam/NcmecRepository';
+import type {AttachmentUploadTraceByAttachmentRow} from '@app/api/database/types/AttachmentUploadTypes';
+import type {NcmecAttachmentSubmissionRow, NcmecUserWorkflowRow} from '@app/api/database/types/CsamTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {Embed} from '@app/api/models/Embed';
+import type {EmbedMedia} from '@app/api/models/EmbedMedia';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {IARMessageContext, IARSubmission} from '@app/api/report/IReportRepository';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {CATEGORY_CHILD_SAFETY} from '@fluxer/constants/src/ReportCategories';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -13,51 +58,6 @@ import type {NcmecSubmissionStatus} from '@fluxer/schema/src/domains/admin/Admin
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
-import type {AdminArchiveService} from '../admin/services/AdminArchiveService';
-import type {AdminAuditService} from '../admin/services/AdminAuditService';
-import {AdminUserUpdatePropagator} from '../admin/services/AdminUserUpdatePropagator';
-import {
-	type AttachmentID,
-	type ChannelID,
-	createAttachmentID,
-	createChannelID,
-	createMessageID,
-	createUserID,
-	type MessageID,
-	type ReportID,
-	type UserID,
-} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {AttachmentUploadTraceRepository} from '../channel/repositories/message/AttachmentUploadTraceRepository';
-import {
-	collectMessageAttachments,
-	makeAttachmentCdnKey,
-	makeAttachmentCdnUrl,
-	purgeMessageAttachments,
-} from '../channel/services/message/MessageHelpers';
-import type {AttachmentUploadTraceByAttachmentRow} from '../database/types/AttachmentUploadTypes';
-import type {NcmecAttachmentSubmissionRow, NcmecUserWorkflowRow} from '../database/types/CsamTypes';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {IPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import {Logger} from '../Logger';
-import type {Embed} from '../models/Embed';
-import type {EmbedMedia} from '../models/EmbedMedia';
-import type {Message} from '../models/Message';
-import type {User} from '../models/User';
-import type {IARMessageContext, IARSubmission} from '../report/IReportRepository';
-import type {ReportRepository} from '../report/ReportRepository';
-import {deleteMessageSearchDocuments} from '../search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '../user/IUserRepository';
-import {reschedulePendingDeletion} from '../user/services/PendingDeletionCoordinator';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
-import type {NcmecApiClient} from './NcmecReporter';
-import {buildNcmecFileDetailsXml, buildNcmecReportXml} from './NcmecReporter';
-import type {NcmecRepository} from './NcmecRepository';
 
 export interface NcmecAttachmentStatusResponse {
 	status: NcmecSubmissionStatus;

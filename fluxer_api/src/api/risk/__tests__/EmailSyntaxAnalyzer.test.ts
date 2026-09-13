@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {analyzeEmailSyntax} from '@app/api/risk/adapters/EmailSyntaxAnalyzer';
 import {describe, expect, it} from 'vitest';
-import {analyzeEmailSyntax} from '../adapters/EmailSyntaxAnalyzer';
 
 describe('analyzeEmailSyntax', () => {
 	it('rejects malformed addresses', () => {

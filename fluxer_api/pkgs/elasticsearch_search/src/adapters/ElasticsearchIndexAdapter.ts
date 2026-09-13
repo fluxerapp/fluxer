@@ -11,9 +11,9 @@ import type {
 	SortResults,
 } from '@elastic/elasticsearch/lib/api/types';
 import type {ISearchAdapter, SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
-import type {ElasticsearchFilter} from '../ElasticsearchFilterUtils';
-import {compactFilters} from '../ElasticsearchFilterUtils';
-import type {ElasticsearchIndexDefinition} from '../ElasticsearchIndexDefinitions';
+import type {ElasticsearchFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {compactFilters} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import type {ElasticsearchIndexDefinition} from '@pkgs/elasticsearch_search/src/ElasticsearchIndexDefinitions';
 
 const ELASTICSEARCH_MAX_RESULT_WINDOW = 10000;
 const DEEP_PAGINATION_BATCH_SIZE = 1000;

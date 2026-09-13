@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createApiTestHarness} from '../../test/ApiTestHarness';
-import type {MockKVProvider} from '../../test/mocks/MockKVProvider';
 import {
 	drainAbuseAutoBanTasksForTests,
 	drainAbuseIpClassLookupsForTests,
@@ -14,9 +9,14 @@ import {
 	setAbuseIpClassTtlsForTests,
 	startAbuseReplicationSubscriber,
 	stopAbuseReplicationSubscriber,
-} from '../AbusiveIpAutoBanner';
-import {ipBanCache} from '../IpBanMiddleware';
-import {setInjectedIpInfoService} from '../ServiceMiddleware';
+} from '@app/api/middleware/AbusiveIpAutoBanner';
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {setInjectedIpInfoService} from '@app/api/middleware/ServiceMiddleware';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 function ipInfoResult(ip: string, overrides: Partial<IpInfoLookupResult> = {}): IpInfoLookupResult {
 	return {

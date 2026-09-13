@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import type {
 	MobileDevicesListResponse,
 	PushSubscribeResponse,
@@ -11,8 +13,6 @@ import type {
 	UserSettingsResponse,
 	UserTagCheckResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 export async function fetchUserMe(
 	harness: ApiTestHarness,

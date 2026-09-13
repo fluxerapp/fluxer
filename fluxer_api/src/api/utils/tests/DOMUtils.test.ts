@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {decodeHTMLEntities, htmlToMarkdown, stripHtmlTags} from '@app/api/utils/DOMUtils';
 import {describe, expect, it} from 'vitest';
-import {decodeHTMLEntities, htmlToMarkdown, stripHtmlTags} from '../DOMUtils';
 
 describe('decodeHTMLEntities', () => {
 	it('returns empty string for null input', () => {

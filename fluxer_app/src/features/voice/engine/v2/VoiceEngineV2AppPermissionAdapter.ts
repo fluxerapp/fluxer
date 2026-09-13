@@ -30,7 +30,7 @@ export {
 	createVoiceEngineV2AppSystemPermissionAdapter,
 	VoiceEngineV2AppSystemPermissionAdapter,
 	type VoiceEngineV2SystemPermissionsApi,
-} from './VoiceEngineV2AppSystemPermissionAdapter';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppSystemPermissionAdapter';
 
 const logger = new Logger('VoiceEngineV2AppPermissionAdapter');
 

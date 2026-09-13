@@ -14,12 +14,12 @@ import {
 	voiceMediaGraphPublicationMissingDeadlineKey,
 	voiceMediaGraphWatchAttemptDeadlineKey,
 	WATCH_ATTEMPT_TIMEOUT_MS,
-} from './VoiceMediaGraphDeadlines';
+} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
 import {
 	reconcileVoiceMediaGraphSubscriptionEntry,
 	voiceMediaGraphCommandAlreadyQueued,
-} from './VoiceMediaGraphReconcile';
-import type {VoiceMediaGraphPartialTrackInfo} from './VoiceMediaGraphStats';
+} from '@app/features/voice/engine/VoiceMediaGraphReconcile';
+import type {VoiceMediaGraphPartialTrackInfo} from '@app/features/voice/engine/VoiceMediaGraphStats';
 import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsPlatform,
@@ -27,7 +27,7 @@ import {
 	type VoiceMediaGraphStatsTrackTarget,
 	voiceMediaGraphStatsObservationMatchesTarget,
 	voiceMediaGraphStatsTrackKey,
-} from './VoiceMediaGraphStatsObservations';
+} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import type {
 	VoiceMediaGraphPublicationLostEvent,
 	VoiceMediaGraphPublicationObservedEvent,
@@ -51,22 +51,25 @@ import type {
 	VoiceMediaGraphSubscriptionSubscribeEvent,
 	VoiceMediaGraphSubscriptionTarget,
 	VoiceMediaGraphVideoQuality,
-} from './VoiceMediaGraphSubscriptionTypes';
-import type {VoiceTrackSource} from './VoiceTrackSource';
+} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
+import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 
 export function voiceMediaGraphAttemptKeyIsOperation(attemptKey: string): boolean {
 	assert.ok(attemptKey.length > 0, 'attemptKey is required');
 	return attemptKey.includes(':operation:');
 }
 
-export {systemVoiceMediaGraphClock, type VoiceMediaGraphClockPort} from './VoiceMediaGraphClock';
+export {
+	systemVoiceMediaGraphClock,
+	type VoiceMediaGraphClockPort,
+} from '@app/features/voice/engine/VoiceMediaGraphClock';
 export {
 	buildVoiceMediaGraphNativeCameraQualityCommand,
 	buildVoiceMediaGraphNativeCameraSubscriptionCommand,
 	buildVoiceMediaGraphNativeScreenShareEnabledCommand,
 	buildVoiceMediaGraphNativeScreenShareQualityCommand,
 	buildVoiceMediaGraphNativeScreenShareSubscriptionCommands,
-} from './VoiceMediaGraphCommands';
+} from '@app/features/voice/engine/VoiceMediaGraphCommands';
 export {
 	PUBLICATION_MISSING_TIMEOUT_MS,
 	PUBLISHER_REPUBLISH_GRACE_MS,
@@ -77,15 +80,18 @@ export {
 	voiceMediaGraphPublicationMissingDeadlineKey,
 	voiceMediaGraphWatchAttemptDeadlineKey,
 	WATCH_ATTEMPT_TIMEOUT_MS,
-} from './VoiceMediaGraphDeadlines';
-export {reconcileVoiceMediaGraphSubscriptionEntry, voiceMediaGraphCommandsEquivalent} from './VoiceMediaGraphReconcile';
+} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
+export {
+	reconcileVoiceMediaGraphSubscriptionEntry,
+	voiceMediaGraphCommandsEquivalent,
+} from '@app/features/voice/engine/VoiceMediaGraphReconcile';
 export {
 	mergeVoiceMediaGraphTrackInfo,
 	type VoiceMediaGraphNativeStatsTarget,
 	type VoiceMediaGraphPartialTrackInfo,
 	type VoiceMediaGraphPerTrackStatsTarget,
 	type VoiceMediaGraphTrackInfo,
-} from './VoiceMediaGraphStats';
+} from '@app/features/voice/engine/VoiceMediaGraphStats';
 export type {
 	VoiceMediaGraphStatsDirection,
 	VoiceMediaGraphStatsEntry,
@@ -93,7 +99,7 @@ export type {
 	VoiceMediaGraphStatsPlatform,
 	VoiceMediaGraphStatsTrackObservation,
 	VoiceMediaGraphStatsTrackTarget,
-} from './VoiceMediaGraphStatsObservations';
+} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 export type {
 	VoiceMediaGraphPublicationLostEvent,
 	VoiceMediaGraphPublicationObservedEvent,
@@ -125,7 +131,7 @@ export type {
 	VoiceMediaGraphSubscriptionTarget,
 	VoiceMediaGraphSubscriptionUnsubscribeEvent,
 	VoiceMediaGraphVideoQuality,
-} from './VoiceMediaGraphSubscriptionTypes';
+} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
 
 export const VOICE_MEDIA_GRAPH_ENTRY_LIMIT = 256;
 export const VOICE_MEDIA_GRAPH_SCREEN_SHARE_SOURCE = 'screen_share';

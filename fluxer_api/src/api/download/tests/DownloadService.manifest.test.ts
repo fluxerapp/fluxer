@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
+import {DownloadService} from '@app/api/download/DownloadService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {describe, expect, it} from 'vitest';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {DownloadService} from '../DownloadService';
 
 const PREFIX = 'desktop/stable/darwin/x64';
 const MANIFEST_KEY = `${PREFIX}/manifest.json`;

@@ -69,7 +69,7 @@ vi.mock('@app/features/voice/state/VoiceSettings', () => ({
 	},
 }));
 
-const VoiceSettingsCommands = await import('./VoiceSettingsCommands');
+const VoiceSettingsCommands = await import('@app/features/voice/commands/VoiceSettingsCommands');
 
 describe('screen-share codec settings reactions', () => {
 	beforeEach(() => {

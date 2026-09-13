@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
 import {describe, expect, it} from 'vitest';
-import {calculateDistance, parseCoordinate} from '../GeoUtils';
 
 describe('calculateDistance', () => {
 	it('returns 0 for identical coordinates', () => {

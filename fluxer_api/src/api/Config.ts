@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {APIConfig, BlueskyOAuthConfig} from '@app/api/config/APIConfig';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {resolveDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
-import type {APIConfig, BlueskyOAuthConfig} from './config/APIConfig';
-import type {WorkerTaskName} from './worker/WorkerLaneConfig';
 
 function extractHostname(url: string): string {
 	try {

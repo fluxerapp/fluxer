@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GENERAL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {
-	VOICE_DEAFEN_DESCRIPTOR,
-	VOICE_DEAFEN_SOUND_DESCRIPTOR,
-} from '@app/features/voice/utils/VoiceMessageDescriptors';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	ACCESSIBILITY_DESCRIPTOR,
 	AUDIO_2_DESCRIPTOR,
@@ -25,7 +20,12 @@ import {
 	TTS_DESCRIPTOR,
 	UNREAD_DESCRIPTOR,
 	VOLUME_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	VOICE_DEAFEN_DESCRIPTOR,
+	VOICE_DEAFEN_SOUND_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const NOTIFICATIONS_2_DESCRIPTOR = msg({
 	message: 'Notifications',

@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import {
+	canEscapePhoneGate,
+	type DeferredPhoneGateConfig,
+	evaluateDeferredPhoneGate,
+	guildTriggersPhoneGate,
+	restorePhoneGateDeferral,
+} from '@app/api/risk/DeferredPhoneGate';
+import {resolveDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -9,16 +19,6 @@ import {
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
 import {describe, expect, it} from 'vitest';
-import type {Guild} from '../models/Guild';
-import type {User} from '../models/User';
-import {
-	canEscapePhoneGate,
-	type DeferredPhoneGateConfig,
-	evaluateDeferredPhoneGate,
-	guildTriggersPhoneGate,
-	restorePhoneGateDeferral,
-} from './DeferredPhoneGate';
-import {resolveDeferredPhoneGateEnabled} from './DeferredPhoneGateCache';
 
 const CONFIG: DeferredPhoneGateConfig = {
 	enabled: true,

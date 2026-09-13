@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
+import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
+import {Logger} from '@app/api/Logger';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type Msg, StringCodec} from 'nats';
-import {Logger} from '../Logger';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from './GatewayRpcError';
-import type {IGatewayRpcTransport} from './IGatewayRpcTransport';
 
 const NATS_REQUEST_TIMEOUT_MS = 5000;
 const NATS_SUBJECT_PREFIX = 'rpc.gateway.';

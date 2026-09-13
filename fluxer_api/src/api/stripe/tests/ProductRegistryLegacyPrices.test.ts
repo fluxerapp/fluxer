@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {ProductRegistry, ProductType} from '@app/api/stripe/ProductRegistry';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, describe, expect, test} from 'vitest';
-import {Config} from '../../Config';
-import {ProductRegistry, ProductType} from '../ProductRegistry';
 
 // Mirrors the live BRL/TRY configuration after the repricing: the BRL slots point at the new list
 // prices, TRY is not configured at all (production has no TRY prices), and every retired price id

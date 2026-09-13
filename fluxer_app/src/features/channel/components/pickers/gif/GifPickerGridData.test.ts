@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {FavoriteGifEntry} from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
+import {buildGifPickerGridData} from '@app/features/channel/components/pickers/gif/GifPickerGridData';
+import type {FavoriteAwareGif} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
 import {describe, expect, it} from 'vitest';
-import type {FavoriteGifEntry} from './FavoriteGifTypes';
-import {buildGifPickerGridData} from './GifPickerGridData';
-import type {FavoriteAwareGif} from './GifPickerTypes';
 
 function gif(id: string, width = 200, height = 120): FavoriteAwareGif {
 	return {

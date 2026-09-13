@@ -1,6 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
+import {createAttachmentID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {
+	getContentType,
+	isMediaFile,
+	makeAttachmentCdnKey,
+	validateAttachmentIds,
+} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import {contentModerationService, type ModerationContext} from '@app/api/infrastructure/ContentModerationService';
+import type {
+	IMediaService,
+	MediaProxyMetadataResponse,
+	MediaProxyNsfwMode,
+} from '@app/api/infrastructure/IMediaService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService, ProcessedStorageObjectMetadata} from '@app/api/infrastructure/IStorageService';
+import {hashFileSha256} from '@app/api/infrastructure/StorageObjectHelpers';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MEDIA_DURATION_SECONDS} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -12,25 +36,6 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import {temporaryFile} from 'tempy';
-import {createAttachmentID, type UserID} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import type {MessageAttachment} from '../../../database/types/MessageTypes';
-import {contentModerationService, type ModerationContext} from '../../../infrastructure/ContentModerationService';
-import type {
-	IMediaService,
-	MediaProxyMetadataResponse,
-	MediaProxyNsfwMode,
-} from '../../../infrastructure/IMediaService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {IStorageService, ProcessedStorageObjectMetadata} from '../../../infrastructure/IStorageService';
-import {hashFileSha256} from '../../../infrastructure/StorageObjectHelpers';
-import {Logger} from '../../../Logger';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import {mapWithConcurrency} from '../../../utils/ConcurrencyUtils';
-import type {AttachmentToProcess} from '../../AttachmentDTOs';
-import type {AttachmentUploadTraceRepository} from '../../repositories/message/AttachmentUploadTraceRepository';
-import {getContentType, isMediaFile, makeAttachmentCdnKey, validateAttachmentIds} from './MessageHelpers';
 
 const ATTACHMENT_PROCESSING_CONCURRENCY = 2;
 const METADATA_PROBE_DEGRADED_CONTEXT = 'message_attachment';

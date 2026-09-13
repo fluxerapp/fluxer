@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 import {
 	createAdminApiKey,
 	createAdminApiKeyWithDefaultACLs,
 	listAdminApiKeys,
 	revokeAdminApiKey,
-} from './AdminTestUtils';
+} from '@app/api/admin/tests/AdminTestUtils';
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface ValidationErrorResponse {
 	errors: Array<{

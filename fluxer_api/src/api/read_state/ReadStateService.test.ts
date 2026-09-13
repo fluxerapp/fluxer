@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
-import {describe, expect, it, vi} from 'vitest';
 import {
 	type ChannelID,
 	createChannelID,
@@ -9,11 +7,13 @@ import {
 	createUserID,
 	type MessageID,
 	type UserID,
-} from '../BrandedTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import {ReadState} from '../models/ReadState';
-import type {IReadStateRepository} from './IReadStateRepository';
-import {ReadStateService} from './ReadStateService';
+} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {ReadState} from '@app/api/models/ReadState';
+import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
+import {ReadStateService} from '@app/api/read_state/ReadStateService';
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {describe, expect, it, vi} from 'vitest';
 
 describe('ReadStateService.bulkIncrementMentionCounts', () => {
 	it('invalidates badge counts for touched users in a single bulk call', async () => {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-
 import {msg} from '@lingui/core/macro';
+
+export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 
 export const COPY_DEVICE_ID_DESCRIPTOR = msg({
 	message: 'Copy device ID',

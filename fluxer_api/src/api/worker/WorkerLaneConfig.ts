@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
+import type {APIWorkerLaneName, APIWorkerMode} from '@app/api/config/APIConfig';
 
 interface LaneSettings {
 	readonly consumerName: string;

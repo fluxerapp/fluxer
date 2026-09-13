@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {pruneExpiredPostgresKvRows} from '@app/api/database/PostgresKvQueryExecutor';
 import {getDefaultPostgresClient} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {Config} from '../../Config';
-import {pruneExpiredPostgresKvRows} from '../../database/PostgresKvQueryExecutor';
 
 const PRUNE_BATCH_SIZE = 5000;
 const MAX_PRUNE_BATCHES_PER_RUN = 20;

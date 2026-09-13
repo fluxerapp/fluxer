@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, type UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {GlobalSearchService} from '@app/api/search/GlobalSearchService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {GlobalSearchMessagesRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {MessageResponse, MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {createChannelID, createGuildID, type UserID} from '../BrandedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildService} from '../guild/services/GuildService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
-import {GlobalSearchService} from './GlobalSearchService';
 
 function omitReferencedMessages(result: MessageSearchResponse): MessageSearchResponse {
 	if (!('messages' in result)) {

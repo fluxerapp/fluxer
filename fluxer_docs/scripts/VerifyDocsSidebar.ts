@@ -3,7 +3,6 @@
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-
 import {DOCS_ROOT, listMarkdownFiles, slugifyHeading} from './DocsSource.ts';
 
 const ASTRO_CONFIG = fileURLToPath(new URL('../astro.config.ts', import.meta.url));

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Config from '@app/features/app/config/Config';
+import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import {formatAssetUploadExtensions, formatKnownAnimatedAssetExtensions} from '@fluxer/constants/src/AssetFormatPolicy';
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from './ProductConstants';
 
 export {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME};
 export const PRODUCT_API_NAME = `${PRODUCT_NAME} API`;

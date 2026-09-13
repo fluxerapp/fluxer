@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getBadgeCount,
 	getPushNotificationClientState,
@@ -10,7 +9,8 @@ import {
 	resolvePushChannelId,
 	resolvePushNotificationTag,
 	shouldSilenceNonMobilePushNotification,
-} from './WorkerPushPayload';
+} from '@app/features/platform/service_worker/WorkerPushPayload';
+import {describe, expect, it} from 'vitest';
 
 describe('WorkerPushPayload', () => {
 	it('normalizes encrypted Web Push payloads without losing navigation data', () => {

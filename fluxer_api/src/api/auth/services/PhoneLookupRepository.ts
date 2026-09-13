@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {executeQuery, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {PhoneLookupCacheRow, PhoneVerificationAttemptRow} from '@app/api/database/types/RiskTypes';
+import {PhoneLookupCache, PhoneVerificationAttempts} from '@app/api/Tables';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import type {PhoneLookupResult} from '@pkgs/sms/src/PhoneLookupTypes';
-import {executeQuery, fetchOne} from '../../database/CassandraQueryExecution';
-import type {PhoneLookupCacheRow, PhoneVerificationAttemptRow} from '../../database/types/RiskTypes';
-import {PhoneLookupCache, PhoneVerificationAttempts} from '../../Tables';
 
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
 const ATTEMPT_TTL_SECONDS = 90 * 24 * 60 * 60;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {hasVisibleContent, parseString} from '@app/api/utils/StringUtils';
 import {describe, expect, it} from 'vitest';
-import {hasVisibleContent, parseString} from '../StringUtils';
 
 describe('parseString', () => {
 	it.each([

@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ChannelItem} from '@app/features/app/components/layout/ChannelItem';
 import channelItemStyles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
@@ -70,7 +71,6 @@ import {observer} from 'mobx-react-lite';
 import type {MotionValue} from 'motion';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useDragLayer} from 'react-dnd';
-import {GenericErrorModal} from '../alerts/GenericErrorModal';
 
 const CATEGORY_FULL_DESCRIPTOR = msg({
 	message: 'Category full',

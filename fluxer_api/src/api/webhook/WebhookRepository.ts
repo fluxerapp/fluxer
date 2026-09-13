@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, UserID, WebhookID, WebhookToken} from '../BrandedTypes';
+import type {ChannelID, GuildID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
 	fetchMany,
 	fetchManyInChunks,
 	fetchOne,
-} from '../database/CassandraQueryExecution';
-import {buildPatchFromData, executeVersionedUpdate} from '../database/CassandraVersionedUpdate';
-import type {WebhookRow} from '../database/types/ChannelTypes';
-import {WEBHOOK_COLUMNS} from '../database/types/ChannelTypes';
-import {Webhook} from '../models/Webhook';
-import {Webhooks, WebhooksByChannel, WebhooksByGuild} from '../Tables';
-import {IWebhookRepository} from './IWebhookRepository';
+} from '@app/api/database/CassandraQueryExecution';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {WebhookRow} from '@app/api/database/types/ChannelTypes';
+import {WEBHOOK_COLUMNS} from '@app/api/database/types/ChannelTypes';
+import {Webhook} from '@app/api/models/Webhook';
+import {Webhooks, WebhooksByChannel, WebhooksByGuild} from '@app/api/Tables';
+import {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 
 const FETCH_WEBHOOK_BY_ID_CQL = Webhooks.selectCql({
 	where: Webhooks.where.eq('webhook_id'),

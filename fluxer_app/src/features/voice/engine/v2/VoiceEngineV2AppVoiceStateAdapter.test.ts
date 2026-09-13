@@ -3,9 +3,9 @@
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {VoiceEngineV2AppVoiceStateAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import {autorun} from 'mobx';
 import {describe, expect, it, vi} from 'vitest';
-import {VoiceEngineV2AppVoiceStateAdapter} from './VoiceEngineV2AppVoiceStateAdapter';
 
 function voiceState(overrides: Partial<VoiceState> = {}): VoiceState {
 	return {

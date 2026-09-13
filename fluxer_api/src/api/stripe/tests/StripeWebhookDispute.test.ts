@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {
-	createMockWebhookPayload,
-	createStripeApiHandlers,
-	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import {UserRepository} from '../../user/repositories/UserRepository';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {
 	mockStripeWebhookSecret,
 	restoreStripeWebhookSecret,
 	setupSyncStripeWebhookWorker,
-} from './StripeWebhookTestUtils';
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {
+	createMockWebhookPayload,
+	createStripeApiHandlers,
+	type StripeWebhookEventData,
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface UserDataExistsResponse {
 	user_exists: boolean;

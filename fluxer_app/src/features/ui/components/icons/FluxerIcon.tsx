@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {getDataFlx, getImageSizingProps} from '@app/features/ui/components/icons/BrandImageUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {getDataFlx, getImageSizingProps} from './BrandImageUtils';
 
 const APPLICATION_ICON_DESCRIPTOR = msg({
 	message: '{productName} application icon',

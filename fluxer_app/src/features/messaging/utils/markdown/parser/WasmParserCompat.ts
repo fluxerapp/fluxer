@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {parseMarkdownAstWithWasm} from './MarkdownParserWasm';
-import type {Node} from './Nodes';
+import {parseMarkdownAstWithWasm} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasm';
+import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 
 export class Parser {
 	private readonly input: string;

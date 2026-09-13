@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {verifyCaptchaToken} from '@app/api/middleware/CaptchaMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {Context, MiddlewareHandler, Next} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoEnv} from '../types/HonoEnv';
-import {verifyCaptchaToken} from './CaptchaMiddleware';
-import {RateLimitMiddleware} from './RateLimitMiddleware';
 
 const groupDmCreateRateLimit = RateLimitMiddleware(RateLimitConfigs.USER_GROUP_DM_CREATE);
 const groupDmRecipientAddRateLimit = RateLimitMiddleware(RateLimitConfigs.USER_GROUP_DM_RECIPIENT_ADD);

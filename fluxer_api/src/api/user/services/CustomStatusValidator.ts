@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiID, type EmojiID, type UserID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {CustomStatusPayload} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {createEmojiID, type EmojiID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
 
 interface ValidatedCustomStatus {
 	text: string | null;

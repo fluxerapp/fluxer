@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
+import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import {Logger} from '@app/api/Logger';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {
 	ClearGuildFieldsRequest,
@@ -7,14 +15,6 @@ import type {
 	UpdateGuildNameRequest,
 	UpdateGuildSettingsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
-import {createGuildID, createUserID, type GuildID, type UserID} from '../../../BrandedTypes';
-import type {GuildRow} from '../../../database/types/GuildTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {EntityAssetService, PreparedAssetUpload} from '../../../infrastructure/EntityAssetService';
-import {Logger} from '../../../Logger';
-import {mapGuildToAdminResponse} from '../../models/GuildTypes';
-import type {AdminAuditService} from '../AdminAuditService';
-import type {AdminGuildUpdatePropagator} from './AdminGuildUpdatePropagator';
 
 interface AdminGuildUpdateServiceDeps {
 	guildRepository: IGuildRepositoryAggregate;

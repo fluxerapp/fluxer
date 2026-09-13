@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapCassandraDriverError} from '@app/api/database/CassandraQueryExecution';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
-import {mapCassandraDriverError} from './CassandraQueryExecution';
 
 function busyConnectionError(): cassandra.errors.BusyConnectionError {
 	return new cassandra.errors.BusyConnectionError('127.0.0.1:9042', 2048, 4);

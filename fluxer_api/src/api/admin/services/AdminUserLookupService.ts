@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import {Logger} from '@app/api/Logger';
 import type {LookupUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID} from '../../BrandedTypes';
-import {isSyntheticUserId} from '../../constants/Core';
-import {Logger} from '../../Logger';
-import {mapUserToAdminResponse} from '../models/UserTypes';
 
 interface AdminUserLookupServiceDeps {
 	apiContext: ApiContext;

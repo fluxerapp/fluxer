@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../../BrandedTypes';
-import {Logger} from '../../../Logger';
-import type {GuildMember} from '../../../models/GuildMember';
-import type {User} from '../../../models/User';
-import {getGuildMemberSearchService} from '../../../SearchFactory';
-import type {IGuildMemberSearchService} from '../../../search/IGuildMemberSearchService';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {Logger} from '@app/api/Logger';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import {getGuildMemberSearchService} from '@app/api/SearchFactory';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
 
 interface GuildMemberSearchIndexOptions {
 	includeDefault?: boolean;

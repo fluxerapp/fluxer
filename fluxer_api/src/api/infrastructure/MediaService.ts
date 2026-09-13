@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ExplicitContentCannotBeSentError} from '@fluxer/errors/src/domains/moderation/ExplicitContentCannotBeSentError';
-import * as MediaProxyUtils from '@pkgs/media_proxy_utils/src/MediaProxyUtils';
-import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import * as FetchUtils from '../utils/FetchUtils';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
+import {Config} from '@app/api/Config';
 import {
 	IMediaService,
 	MEDIA_PROXY_METADATA_REQUEST_VERSION,
@@ -15,7 +9,13 @@ import {
 	type MediaProxyMetadataRequest,
 	type MediaProxyMetadataResponse,
 	type MediaProxyNsfwMode,
-} from './IMediaService';
+} from '@app/api/infrastructure/IMediaService';
+import {Logger} from '@app/api/Logger';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {ExplicitContentCannotBeSentError} from '@fluxer/errors/src/domains/moderation/ExplicitContentCannotBeSentError';
+import * as MediaProxyUtils from '@pkgs/media_proxy_utils/src/MediaProxyUtils';
+import {ms} from 'itty-time';
 
 type MediaProxyRequestBody =
 	| MediaProxyMetadataRequest

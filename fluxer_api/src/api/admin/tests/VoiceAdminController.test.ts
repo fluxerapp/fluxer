@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
@@ -14,11 +19,6 @@ import type {
 	UpdateVoiceServerResponse,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {VoiceRepository} from '../../voice/VoiceRepository';
 
 interface VoiceFixture {
 	regionId: string;

@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {parseDeletionQueueMember, parseDeletionQueueUserId} from '@app/api/infrastructure/DeletionQueueMember';
+import {Logger} from '@app/api/Logger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {
+	isPendingDeletionBlocked,
+	resolvePendingDeletionReasonCode,
+} from '@app/api/user/services/PendingDeletionCoordinator';
+import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
 import {Int32Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {generateLockToken} from '@pkgs/cache/src/CacheLockValidation';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {ms, seconds} from 'itty-time';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {UserRepository} from '../user/repositories/UserRepository';
-import {isPendingDeletionBlocked, resolvePendingDeletionReasonCode} from '../user/services/PendingDeletionCoordinator';
-import {getValidTimestamp, parseStoredTimestamp} from '../utils/TimestampUtils';
-import {parseDeletionQueueMember, parseDeletionQueueUserId} from './DeletionQueueMember';
 
 interface QueuedDeletion {
 	userId: bigint;

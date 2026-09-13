@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import {
 	DISCOVERY_DEFAULT_LANGUAGE,
 	DISCOVERY_MAX_TAGS,
@@ -18,16 +28,6 @@ import {DiscoveryInsufficientMembersError} from '@fluxer/errors/src/domains/disc
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes.jsx';
 import type {DiscoveryApplicationPatchRequest} from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import type {IGuildSearchService} from '../../search/IGuildSearchService';
-import {mapGuildToGuildResponse} from '../GuildModel';
-import type {IGuildDiscoveryRepository} from '../repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
 
 function sanitizeTags(tags: ReadonlyArray<string> | null | undefined): Array<string> {
 	if (!tags || tags.length === 0) return [];

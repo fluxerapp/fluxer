@@ -33,3 +33,29 @@ describe('static route expressions', () => {
 		expect(resolveExpression(`paths[${JSON.stringify(index)}]`)).toBe(UNRESOLVED);
 	});
 });
+
+describe('imported route constants', () => {
+	function resolveImportedPath(specifier: string) {
+		const project = new Project({useInMemoryFileSystem: true});
+		project
+			.getFileSystem()
+			.writeFileSync('/api/tsconfig.json', JSON.stringify({compilerOptions: {paths: {'@app/*': ['./src/*']}}}));
+		project.createSourceFile('/api/src/constants/Routes.ts', "export const USERS_ROUTE = '/users';");
+		const controller = project.createSourceFile(
+			'/api/src/users/UserController.ts',
+			`import {USERS_ROUTE} from '${specifier}'; const path = USERS_ROUTE;`,
+		);
+		return new StaticPathResolver(project).resolve(
+			controller.getVariableDeclarationOrThrow('path').getInitializerOrThrow(),
+			EMPTY_SCOPE,
+		);
+	}
+
+	it.each(['../constants/Routes', '@app/constants/Routes'])('follows %s to the exported constant', (specifier) => {
+		expect(resolveImportedPath(specifier)).toBe('/users');
+	});
+
+	it('does not follow a bare package import', () => {
+		expect(resolveImportedPath('@fluxer/constants/src/Routes')).toBe(UNRESOLVED);
+	});
+});

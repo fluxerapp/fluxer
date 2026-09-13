@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	type ChannelID,
 	createChannelID,
@@ -9,14 +7,16 @@ import {
 	createUserID,
 	type MessageID,
 	type UserID,
-} from '../../../BrandedTypes';
-import type {ChannelRow} from '../../../database/types/ChannelTypes';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import {Channel} from '../../../models/Channel';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {MessageProcessingService} from './MessageProcessingService';
+} from '@app/api/BrandedTypes';
+import {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Channel} from '@app/api/models/Channel';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {describe, expect, it} from 'vitest';
 
 const CHANNEL_ID = createChannelID(1532860318772891648n);
 const AUTHOR_ID = createUserID(1471426754353995881n);

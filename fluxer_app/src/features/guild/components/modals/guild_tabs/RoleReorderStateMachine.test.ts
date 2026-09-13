@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	canRoleDropOnTarget,
 	createRoleReorderSnapshot,
@@ -12,7 +11,8 @@ import {
 	resolveRoleReorderHover,
 	selectRoleReorderIntent,
 	transitionRoleReorderSnapshot,
-} from './RoleReorderStateMachine';
+} from '@app/features/guild/components/modals/guild_tabs/RoleReorderStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const rect: RoleReorderRect = {
 	top: 20,

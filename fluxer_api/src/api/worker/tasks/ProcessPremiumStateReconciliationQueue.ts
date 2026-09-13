@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import {canProvisionPremiumFromSubscriptionStatus} from '../../stripe/StripeSubscriptionAccessPolicy';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getPrimarySubscriptionItem,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
-} from '../../stripe/StripeSubscriptionPeriod';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import type Stripe from 'stripe';
 
 interface ReconcileResult {
 	status: 'patched' | 'no_change' | 'skipped' | 'no_active_subscription' | 'stripped_no_subscription' | 'missing_user';

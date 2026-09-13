@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {Logger} from '@app/api/Logger';
 import type {
 	DeleteAllUserMessagesRequest,
 	DeleteAllUserMessagesResponse,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import {Logger} from '../../Logger';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminMessageShredService} from './AdminMessageShredService';
 
 interface AdminMessageDeletionServiceDeps {
 	channelRepository: IChannelRepository;

@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, createTotpSecret, generateTotpCode} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {
+	createOAuth2Application,
+	createUniqueApplicationName,
+	getOAuth2Application,
+} from '@app/api/oauth/tests/OAuth2TestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import type {ApplicationPublicResponse} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, createTotpSecret, generateTotpCode} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {createOAuth2Application, createUniqueApplicationName, getOAuth2Application} from './OAuth2TestUtils';
 
 describe('OAuth2 Application Get', () => {
 	let harness: ApiTestHarness;

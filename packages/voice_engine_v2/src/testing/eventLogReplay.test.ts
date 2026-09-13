@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import appVoiceSessionFixtureJson from '../../fixtures/event_logs/app_voice_session.json';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import {createVoiceEngineV2MemoryEventLogSpillSink} from '../runtime/eventLogRing';
-import {coalesceVoiceEngineV2EventSequence} from '../runtime/frameCoalescing';
-import {VoiceEngineV2Runtime} from '../runtime/VoiceEngineV2Runtime';
+import appVoiceSessionFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/app_voice_session.json';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {coalesceVoiceEngineV2EventSequence} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
+import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 import {
 	replayVoiceEngineV2EventLogFixture,
 	VOICE_ENGINE_V2_EVENT_LOG_FIXTURE_VERSION,
 	type VoiceEngineV2EventLogFixture,
-} from './eventLogReplay';
-import {FakeVoiceEngineV2Driver} from './FakeVoiceEngineV2Driver';
-import {VoiceEngineV2TestImplementation} from './VoiceEngineV2TestImplementation';
+} from '@fluxer/voice_engine_v2/src/testing/eventLogReplay';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
+import {describe, expect, it} from 'vitest';
 
 const appVoiceSessionFixture = appVoiceSessionFixtureJson as unknown as VoiceEngineV2EventLogFixture;
 

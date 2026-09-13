@@ -2,6 +2,9 @@
 
 import {spawnSync} from 'node:child_process';
 import {createServer} from 'node:net';
+import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from '@app/api/database/CassandraTypes';
+import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {startDockerContainer} from '@app/api/test/DockerTestContainer';
 import {
 	getDefaultPostgresClient,
 	type IPostgresClient,
@@ -9,9 +12,6 @@ import {
 	shutdownPostgres,
 } from '@pkgs/postgres/src/Client';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import {startDockerContainer} from '../test/DockerTestContainer';
-import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from './CassandraTypes';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 

@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
-import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
-import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
 import type {
 	ChannelID,
 	EmojiID,
@@ -12,7 +9,10 @@ import type {
 	StickerID,
 	UserID,
 	VanityURLCode,
-} from '../../BrandedTypes';
+} from '@app/api/BrandedTypes';
+import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
+import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
 
 type Nullish<T> = T | null;
 

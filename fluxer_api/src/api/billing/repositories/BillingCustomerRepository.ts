@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapStripeCustomerToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
+import {
+	buildPatchFromRow,
+	executeBillingVersionedUpdate,
+	isExistingNewer,
+	rowsEquivalent,
+} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {BillingCustomerRow} from '@app/api/database/types/BillingTypes';
+import {BILLING_CUSTOMER_COLUMNS} from '@app/api/database/types/BillingTypes';
+import {BillingCustomers, BillingCustomersByUserId} from '@app/api/Tables';
 import type Stripe from 'stripe';
-import {fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {BillingCustomerRow} from '../../database/types/BillingTypes';
-import {BILLING_CUSTOMER_COLUMNS} from '../../database/types/BillingTypes';
-import {BillingCustomers, BillingCustomersByUserId} from '../../Tables';
-import {mapStripeCustomerToRow} from '../mappers/StripeToBillingMapper';
-import {buildPatchFromRow, executeBillingVersionedUpdate, isExistingNewer, rowsEquivalent} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingCustomers.selectCql({
 	where: BillingCustomers.where.eq('provider_id'),

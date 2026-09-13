@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	DisableTotpRequest,
@@ -25,15 +34,6 @@ import {
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {CredentialIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {EmptyBodyRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function UserAuthController(app: HonoApp) {
 	app.post(

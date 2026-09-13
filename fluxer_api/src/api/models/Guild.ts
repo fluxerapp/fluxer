@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID, VanityURLCode} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {
 	type GuildExplicitContentFilterType,
 	type GuildMFALevelValue,
@@ -10,8 +12,6 @@ import {
 	normalizeLegacyNsfwLevel,
 } from '@fluxer/constants/src/GuildConstants';
 import type {GuildDefaultMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import type {ChannelID, GuildID, UserID, VanityURLCode} from '../BrandedTypes';
-import type {GuildRow} from '../database/types/GuildTypes';
 
 export class Guild {
 	readonly id: GuildID;

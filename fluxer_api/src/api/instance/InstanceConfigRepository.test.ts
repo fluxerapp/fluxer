@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {PreparedQuery} from '@app/api/database/CassandraTypes';
+import {
+	INSTANCE_CONFIG_REFRESH_CHANNEL,
+	InstanceConfigRepository,
+	type InstanceRegistrationConfig,
+} from '@app/api/instance/InstanceConfigRepository';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {
 	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
 	type VoiceNoiseSuppressionConfig,
@@ -9,15 +18,6 @@ import {
 	type ExperimentDeliveryConfig,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {setCassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
-import type {PreparedQuery} from '../database/CassandraTypes';
-import {InMemoryCassandraQueryExecutor} from '../test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '../test/mocks/MockKVProvider';
-import {
-	INSTANCE_CONFIG_REFRESH_CHANNEL,
-	InstanceConfigRepository,
-	type InstanceRegistrationConfig,
-} from './InstanceConfigRepository';
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';

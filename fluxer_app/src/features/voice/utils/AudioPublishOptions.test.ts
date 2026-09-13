@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	buildMicrophonePublishOptions,
 	normaliseAudioBitrateBps,
 	OPUS_MAX_AUDIO_BITRATE_BPS,
 	SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS,
-} from './AudioPublishOptions';
+} from '@app/features/voice/utils/AudioPublishOptions';
+import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('normaliseAudioBitrateBps', () => {
 	it('keeps stored channel bitrates in bits per second', () => {

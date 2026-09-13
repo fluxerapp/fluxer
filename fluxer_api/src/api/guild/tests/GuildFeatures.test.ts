@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	addMemberRole,
 	createGuild,
@@ -16,7 +9,14 @@ import {
 	updateGuild,
 	updateMember,
 	updateRolePositions,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface AuditLogEntry {
 	id: string;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {CronScheduler} from '@app/api/worker/CronScheduler';
+import type {WorkerService} from '@app/api/worker/WorkerService';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {CronScheduler} from '../CronScheduler';
-import type {WorkerService} from '../WorkerService';
 
 function createLogger(): LoggerInterface {
 	const logger = {

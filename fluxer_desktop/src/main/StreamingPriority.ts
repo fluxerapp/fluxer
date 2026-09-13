@@ -2,9 +2,9 @@
 
 import {createRequire} from 'node:module';
 import os from 'node:os';
+import {retainWindowsScreenCaptureGuard, stopWindowsScreenCaptureGuard} from '@electron/main/WindowsScreenCaptureGuard';
 import {app, powerSaveBlocker} from 'electron';
 import log from 'electron-log';
-import {retainWindowsScreenCaptureGuard, stopWindowsScreenCaptureGuard} from './WindowsScreenCaptureGuard';
 
 const STREAMING_PRIORITY = os.constants?.priority?.PRIORITY_ABOVE_NORMAL ?? -7;
 const CAN_ELEVATE_PROCESS_PRIORITY = process.platform === 'win32';

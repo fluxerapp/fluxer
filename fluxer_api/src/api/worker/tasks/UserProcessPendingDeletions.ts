@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {createUserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
 import {
 	isPendingDeletionBlocked,
 	resolvePendingDeletionReasonCode,
-} from '../../user/services/PendingDeletionCoordinator';
-import {getValidTimestamp} from '../../utils/TimestampUtils';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/user/services/PendingDeletionCoordinator';
+import {getValidTimestamp} from '@app/api/utils/TimestampUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
 const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.debug('Processing userProcessPendingDeletions task');

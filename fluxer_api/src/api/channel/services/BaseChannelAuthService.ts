@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
+import {
+	ensurePersonalNotesChannelExists,
+	isPersonalNotesChannelId,
+} from '@app/api/channel/services/PersonalNotesChannelRepair';
+import {
+	type ContentWarningChannelLike,
+	channelResponseToContentWarningView,
+	channelToContentWarningView,
+	computeEffectiveChannelNsfw,
+	guildResponseToContentWarningView,
+} from '@app/api/channel/utils/EffectiveContentWarning';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import type {GuildChannelAuthContext, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {Channel} from '@app/api/models/Channel';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
@@ -9,27 +33,6 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {ChannelID, GuildID, UserID} from '../../BrandedTypes';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {createGuildMfaEnforcer} from '../../guild/services/GuildMfaEnforcement';
-import type {GuildChannelAuthContext, IGatewayService} from '../../infrastructure/IGatewayService';
-import type {Channel} from '../../models/Channel';
-import type {GuildMember} from '../../models/GuildMember';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {canUserAccessNsfwContent} from '../../utils/AgeUtils';
-import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
-import {
-	type ContentWarningChannelLike,
-	channelResponseToContentWarningView,
-	channelToContentWarningView,
-	computeEffectiveChannelNsfw,
-	guildResponseToContentWarningView,
-} from '../utils/EffectiveContentWarning';
-import type {AuthenticatedChannel} from './AuthenticatedChannel';
-import {DMPermissionValidator} from './DMPermissionValidator';
-import {ensurePersonalNotesChannelExists, isPersonalNotesChannelId} from './PersonalNotesChannelRepair';
 
 export interface ChannelAuthOptions {
 	errorOnMissingGuild: 'unknown_channel' | 'missing_permissions';

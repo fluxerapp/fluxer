@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GatewayErrorCodes} from '@fluxer/constants/src/GatewayConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	createMediaEngineFacadeSnapshot,
 	getMediaEngineFacadeStateValue,
@@ -12,7 +10,9 @@ import {
 	shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval,
 	shouldRunMediaEngineDeferredDisconnect,
 	transitionMediaEngineFacadeSnapshot,
-} from './MediaEngineFacadeStateMachine';
+} from '@app/features/voice/engine/MediaEngineFacadeStateMachine';
+import {GatewayErrorCodes} from '@fluxer/constants/src/GatewayConstants';
+import {describe, expect, it} from 'vitest';
 
 function connected(guildId: string | null = 'guild-1', channelId = 'channel-1') {
 	return transitionMediaEngineFacadeSnapshot(createMediaEngineFacadeSnapshot(), {

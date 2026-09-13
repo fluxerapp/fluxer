@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {createSnowflake} from '@fluxer/snowflake/src/Snowflake';
 import {vi} from 'vitest';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
 
 interface MockSnowflakeServiceConfig {
 	initialCounter?: bigint;

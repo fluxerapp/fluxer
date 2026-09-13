@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {NatsUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../BrandedTypes';
-import {NatsUsersServiceClient} from './UsersServiceClient';
 
 interface FakeRequest {
 	subject: string;

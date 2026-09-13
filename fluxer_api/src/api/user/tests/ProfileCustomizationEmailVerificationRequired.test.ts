@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createAuthHarness, createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createAuthHarness, createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {acceptInvite, createChannelInvite, createGuild, getChannel} from '../../channel/tests/ChannelTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface ErrorResponse {
 	code: string;

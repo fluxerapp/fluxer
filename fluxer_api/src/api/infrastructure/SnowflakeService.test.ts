@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {SnowflakeService} from '@app/api/infrastructure/SnowflakeService';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type NatsConnection, StringCodec} from 'nats';
 import {afterEach, describe, expect, it} from 'vitest';
-import {SnowflakeService} from './SnowflakeService';
 
 interface FakeRequest {
 	subject: string;

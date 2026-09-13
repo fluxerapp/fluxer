@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	clampVoiceChannelBitrate,
 	GuildFeatures,
 	getMaxVoiceChannelBitrate,
 	resolveVoiceChannelBitrate,
-} from './GuildConstants';
+} from '@fluxer/constants/src/GuildConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('getMaxVoiceChannelBitrate', () => {
 	it('caps a guild holding no audio bitrate feature at 96 kbps', () => {

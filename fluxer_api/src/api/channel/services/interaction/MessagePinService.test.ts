@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {MessagePinService} from '@app/api/channel/services/interaction/MessagePinService';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Message} from '@app/api/models/Message';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {describe, expect, it} from 'vitest';
-import type {ChannelID, MessageID} from '../../../BrandedTypes';
-import {createChannelID, createGuildID, createMessageID, createUserID} from '../../../BrandedTypes';
-import type {GuildAuditLogService} from '../../../guild/GuildAuditLogService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import {Message} from '../../../models/Message';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import type {MessagePersistenceService} from '../message/MessagePersistenceService';
-import {MessagePinService} from './MessagePinService';
 
 const CHANNEL_ID = createChannelID(10n);
 const GUILD_ID = createGuildID(20n);

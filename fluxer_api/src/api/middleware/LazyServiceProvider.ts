@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import type {Context} from 'hono';
-import type {HonoEnv} from '../types/HonoEnv';
 
 type RequestVariables = HonoEnv['Variables'];
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {describe, expect, it, vi} from 'vitest';
-import * as FetchUtils from '../FetchUtils';
 
 function createStream(chunks: Array<string>): ReadableStream<Uint8Array> {
 	const encoder = new TextEncoder();

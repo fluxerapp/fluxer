@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createRoleIDSet, createUserID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
 import {
 	GuildFeatures,
 	GuildVerificationLevel,
@@ -13,10 +17,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
-import {createRoleIDSet, createUserID, type RoleID, type UserID} from '../BrandedTypes';
-import type {Guild} from '../models/Guild';
-import type {GuildMember} from '../models/GuildMember';
-import type {User} from '../models/User';
 
 interface VerificationParams {
 	user: User;

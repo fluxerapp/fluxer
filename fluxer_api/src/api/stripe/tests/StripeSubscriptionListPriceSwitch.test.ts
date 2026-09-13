@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createPwnedPasswordsRangeHandler} from '@app/api/test/msw/handlers/PwnedPasswordsHandlers';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
 	ListPriceSwitchIneligibilityReason,
@@ -9,16 +19,6 @@ import type {
 import {HttpResponse, http} from 'msw';
 import Stripe from 'stripe';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createPwnedPasswordsRangeHandler} from '../../test/msw/handlers/PwnedPasswordsHandlers';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {STRIPE_API_VERSION} from '../StripeApiVersion';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_list_monthly_usd',

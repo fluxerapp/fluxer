@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {buildGifPickerLoadingSkeletonLayout} from '@app/features/channel/components/pickers/gif/GifPickerLoadingSkeletonGridLayout';
 import {bench, describe} from 'vitest';
-import {buildGifPickerLoadingSkeletonLayout} from './GifPickerLoadingSkeletonGridLayout';
 
 const VIEWPORTS = [
 	{viewportWidth: 360, viewportHeight: 480},

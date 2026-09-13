@@ -4,31 +4,31 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {z} from 'zod';
-import {ArchiveAttemptSupersededError} from '../../archive/ArchiveAttemptSupersededError';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
 import {
 	type ArchiveTaskHandler,
 	ArchiveTerminalFailureError,
 	createArchiveTask,
 	throwIfArchiveTerminallyFailed,
-} from '../../archive/ArchiveTask';
-import {type AttachmentID, type ChannelID, createGuildID, type MessageID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../../channel/services/message/MessageHelpers';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {writeZipArchive} from '../utils/ArchiveFile';
-import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
+} from '@app/api/archive/ArchiveTask';
+import {type AttachmentID, type ChannelID, createGuildID, type MessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
+import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
 import {
 	buildHashedAssetKey,
 	buildSimpleAssetKey,
 	getAnimatedAssetExtension,
 	getEmojiExtension,
-} from '../utils/AssetArchiveHelpers';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {z} from 'zod';
 
 const CHANNEL_CONCURRENCY = 4;
 const ASSET_CONCURRENCY = 8;

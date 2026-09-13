@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildMemberAuditService} from '@app/api/guild/services/member/GuildMemberAuditService';
+import {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
+import {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
+import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
+import {GuildMemberRoleService} from '@app/api/guild/services/member/GuildMemberRoleService';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
@@ -7,25 +26,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {GuildID, InviteCode, RoleID, UserID} from '../../BrandedTypes';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import type {EntityAssetService} from '../../infrastructure/EntityAssetService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-import {GuildMemberAuditService} from './member/GuildMemberAuditService';
-import {GuildMemberAuthService} from './member/GuildMemberAuthService';
-import {GuildMemberEventService} from './member/GuildMemberEventService';
-import {GuildMemberOperationsService} from './member/GuildMemberOperationsService';
-import {GuildMemberRoleService} from './member/GuildMemberRoleService';
-import {GuildMemberSearchIndexService} from './member/GuildMemberSearchIndexService';
-import {GuildMemberValidationService} from './member/GuildMemberValidationService';
 
 export class GuildMemberService {
 	private readonly authService: GuildMemberAuthService;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {transformIssue, transformIssueComment} from '@app/api/webhook/transformers/GitHubIssueTransformer';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import {describe, expect, it} from 'vitest';
-import {transformIssue, transformIssueComment} from '../transformers/GitHubIssueTransformer';
 
 function createBaseSender() {
 	return {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {isJsonRecord} from '../utils/JsonBoundaryUtils';
 
 const OVERLOADED = 'overloaded';
 

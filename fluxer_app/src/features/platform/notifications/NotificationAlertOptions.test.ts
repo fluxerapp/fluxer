@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getNotificationAlertOptions,
 	isIOSMobileOrTabletUserAgent,
 	isMobileOrTabletUserAgent,
 	NOTIFICATION_VIBRATION_PATTERN,
-} from './NotificationAlertOptions';
+} from '@app/features/platform/notifications/NotificationAlertOptions';
+import {describe, expect, it} from 'vitest';
 
 describe('NotificationAlertOptions', () => {
 	it('uses vibration instead of silent notifications on mobile devices', () => {

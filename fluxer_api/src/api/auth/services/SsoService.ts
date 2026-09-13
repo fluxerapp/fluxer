@@ -1,6 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomBytes} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
+import {
+	parseTokenEndpointResponse,
+	sanitizeSsoRedirectTo,
+	tryDiscoverOidcProviderMetadata,
+} from '@app/api/auth/services/SsoUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {ILogger} from '@app/api/ILogger';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {
+	type InstanceConfigRepository,
+	type InstanceSsoConfig,
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+} from '@app/api/instance/InstanceConfigRepository';
+import {
+	deriveSsoRedirectUri,
+	getSsoRequestUrlPolicy,
+	isTestSsoProvider,
+	validateSsoPublicOutboundUrl,
+} from '@app/api/instance/SsoConfigValidation';
+import {Logger} from '@app/api/Logger';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {User} from '@app/api/models/User';
+import {UserSettings} from '@app/api/models/UserSettings';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
+import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/RegistrationClosedError';
@@ -23,34 +55,6 @@ import {
 	type JWTPayload,
 	jwtVerify,
 } from 'jose';
-import type {ApiContext} from '../../ApiContext';
-import type {UserID} from '../../BrandedTypes';
-import type {ILogger} from '../../ILogger';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {KVActivityTracker} from '../../infrastructure/KVActivityTracker';
-import {
-	type InstanceConfigRepository,
-	type InstanceSsoConfig,
-	REGISTRATION_PENDING_APPROVAL_TRAIT,
-} from '../../instance/InstanceConfigRepository';
-import {
-	deriveSsoRedirectUri,
-	getSsoRequestUrlPolicy,
-	isTestSsoProvider,
-	validateSsoPublicOutboundUrl,
-} from '../../instance/SsoConfigValidation';
-import {Logger} from '../../Logger';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import type {User} from '../../models/User';
-import {UserSettings} from '../../models/UserSettings';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../../utils/JsonBoundaryUtils';
-import {generateRandomUsername} from '../../utils/UsernameGenerator';
-import {deriveUsernameFromDisplayName} from '../../utils/UsernameSuggestionUtils';
-import * as AuthSession from '../AuthSession';
-import {SsoIdentityRepository} from './SsoIdentityRepository';
-import {parseTokenEndpointResponse, sanitizeSsoRedirectTo, tryDiscoverOidcProviderMetadata} from './SsoUtils';
 
 interface SsoStatePayload {
 	codeVerifier: string;

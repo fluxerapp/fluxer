@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {User} from '@app/api/models/User';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import userProcessPendingDeletions from '@app/api/worker/tasks/UserProcessPendingDeletions';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, test} from 'vitest';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
-import {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import {User} from '../../models/User';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import userProcessPendingDeletions from '../tasks/UserProcessPendingDeletions';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
 
 function createFakeUser(
 	userId: UserID,

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2/runtime';
-import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2AppDiagnosticsLogger} from './VoiceEngineV2AppDiagnosticsAdapter';
+import type {VoiceEngineV2AppDiagnosticsLogger} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
 import {
 	createVoiceEngineV2AppLifecycleAdapter,
 	LIFECYCLE_OPERATION_CAP,
 	TEARDOWN_PER_DISPOSABLE_TIMEOUT_MS,
 	type VoiceEngineV2AppLifecycleAdapter,
 	type VoiceEngineV2AppLifecycleDisposable,
-} from './VoiceEngineV2AppLifecycleAdapter';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppLifecycleAdapter';
+import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2/runtime';
+import {describe, expect, it} from 'vitest';
 
 interface LoggerCall {
 	readonly level: 'trace' | 'debug' | 'info' | 'warn' | 'error';

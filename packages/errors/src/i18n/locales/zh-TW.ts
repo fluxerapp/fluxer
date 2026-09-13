@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
+import {defineErrorI18nLocaleMessages} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
 
 const ERROR_I18N_ZH_TW_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.communication_disabled": "通訊功能已停用。",

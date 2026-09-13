@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import {User} from '@app/api/models/User';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import processPendingBulkMessageDeletions from '@app/api/worker/tasks/ProcessPendingBulkMessageDeletions';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, test} from 'vitest';
-import {createUserID, type UserID} from '../BrandedTypes';
-import {EMPTY_USER_ROW} from '../database/types/UserTypes';
-import {User} from '../models/User';
-import {NoopLogger} from '../test/mocks/NoopLogger';
-import type {UserRepository} from '../user/repositories/UserRepository';
-import processPendingBulkMessageDeletions from '../worker/tasks/ProcessPendingBulkMessageDeletions';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../worker/WorkerContext';
-import type {WorkerDependencies} from '../worker/WorkerDependencies';
-import {KVBulkMessageDeletionQueueService} from './KVBulkMessageDeletionQueueService';
 
 class FakeKVProvider {
 	readonly strings = new Map<string, string>();

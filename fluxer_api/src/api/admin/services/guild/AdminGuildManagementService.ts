@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createGuildID, type GuildID, type UserID} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../../../guild/services/GuildService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {AdminAuditService} from '../AdminAuditService';
 
 interface AdminGuildManagementServiceDeps {
 	guildRepository: IGuildRepositoryAggregate;

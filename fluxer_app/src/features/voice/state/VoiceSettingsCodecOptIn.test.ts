@@ -50,7 +50,7 @@ async function loadVoiceSettings() {
 	const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
 	try {
 		const [{default: VoiceSettings}, {default: MediaPermission}] = await Promise.all([
-			import('./VoiceSettings'),
+			import('@app/features/voice/state/VoiceSettings'),
 			import('@app/features/permissions/system/state/MediaPermission'),
 		]);
 		await Promise.all([
@@ -74,7 +74,7 @@ async function loadVoiceSettings() {
 }
 
 const VoiceSettings = await loadVoiceSettings();
-const {applyManualAudioSourcesOptOutResetMigrationV1} = await import('./VoiceSettings');
+const {applyManualAudioSourcesOptOutResetMigrationV1} = await import('@app/features/voice/state/VoiceSettings');
 
 describe('AV1/HEVC screen-share opt-in', () => {
 	it('rewrites a stored AV1 screen-share preference back to automatic on first launch', () => {

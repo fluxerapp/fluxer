@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolvesToVideo} from '@app/features/channel/components/pickers/gif/GifPickerMediaKind';
 import {describe, expect, it} from 'vitest';
-import {resolvesToVideo} from './GifPickerMediaKind';
 
 const OPAQUE_PROXY_SRC =
 	'https://media.test/external/sig/v2/aHR0cHM6Ly9zdGF0aWMua2xpcHkuY29tL2lpLzhjLzZhL2E4LzVsU2U1SFBCLndlYm0';

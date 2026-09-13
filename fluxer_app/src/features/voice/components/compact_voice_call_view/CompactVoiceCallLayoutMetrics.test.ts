@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getCompactAudioAvatarLayoutStyle,
 	resolveCompactAudioAvatarLayoutMetrics,
 	resolveCompactControlGap,
 	resolveCompactEdgeGradientExtension,
-} from './CompactVoiceCallLayoutMetrics';
+} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallLayoutMetrics';
+import {describe, expect, it} from 'vitest';
 
 describe('CompactVoiceCallLayoutMetrics', () => {
 	it('keeps the avatar row out of the compact footer gradient when controls are visible', () => {

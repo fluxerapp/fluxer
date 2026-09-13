@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {ProductType} from '@app/api/stripe/ProductRegistry';
+import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createMockWebhookPayload,
 	createStripeApiHandlers,
@@ -16,13 +14,15 @@ import {
 	createSubscriptionUpdatedEvent,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {ProductType} from '../ProductRegistry';
-import {setupSyncStripeWebhookWorker} from './StripeWebhookTestUtils';
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {HttpResponse, http} from 'msw';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -498,7 +498,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(afterUser?.premiumUntil?.getTime()).toBe(endedAt * 1000);
 			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(endedAt * 1000);
 			expect(afterUser?.stripeSubscriptionId).toBeNull();
-			const {checkHasActivePaidPremium} = await import('../../user/UserHelpers');
+			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
 		});
 		test('grants standard grace when the subscription is cancelled at the end of its paid period', async () => {
@@ -525,13 +525,13 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(afterUser?.premiumUntil?.getTime()).toBe(premiumUntil.getTime());
 			expect(afterUser?.premiumGraceEndsAt).not.toBeNull();
 			expect(afterUser!.premiumGraceEndsAt!.getTime()).toBe(endedAt * 1000 + 3 * 24 * 60 * 60 * 1000);
-			const {checkHasActivePaidPremium} = await import('../../user/UserHelpers');
+			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(true);
 		});
 		test('processes donation subscription deletion', async () => {
 			const subscriptionId = 'sub_donor_delete_test';
 			const donorEmail = 'donor-delete@example.com';
-			const {DonationRepository} = await import('../../donation/DonationRepository');
+			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			const donationRepository = new DonationRepository();
 			await donationRepository.createDonor({
 				email: donorEmail,

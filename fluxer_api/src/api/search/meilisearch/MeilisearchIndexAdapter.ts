@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
+import type {MeilisearchFilter} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import {joinMeiliFilters} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import type {MeilisearchIndexDefinition} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
 import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
-import type {MeilisearchClient, MeilisearchTask} from './MeilisearchClient';
-import type {MeilisearchFilter} from './MeilisearchFilterUtils';
-import {joinMeiliFilters} from './MeilisearchFilterUtils';
-import type {MeilisearchIndexDefinition} from './MeilisearchIndexDefinitions';
 
 const MAX_SEARCH_LIMIT = 1000;
 const MAX_TOTAL_HITS = 10000;

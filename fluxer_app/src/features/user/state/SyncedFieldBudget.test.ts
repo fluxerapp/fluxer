@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {decideOversizePush} from '@app/features/user/state/SyncedFieldBudget';
 import {describe, expect, it} from 'vitest';
-import {decideOversizePush} from './SyncedFieldBudget';
 
 const MAX = 1000;
 

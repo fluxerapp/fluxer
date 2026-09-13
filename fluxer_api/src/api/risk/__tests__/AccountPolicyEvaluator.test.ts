@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
-import {describe, expect, it} from 'vitest';
-import {
-	createCurrentBehaviorTestAccountPolicyEvaluator,
-	TEST_POLICY_CONTACT_DOMAIN,
-	TEST_POLICY_CONTACT_SUBDOMAIN,
-	TEST_POLICY_REPUTATION_EXEMPT_DOMAIN,
-} from '../../test/AccountPolicyTestEvaluator';
 import {
 	type AccountPolicyContext,
 	createAccountPolicyContactContext,
 	createAccountPolicyContactDomainContext,
 	createAccountPolicyEvaluatorFromConfig,
 	normalizePolicyContactDomain,
-} from '../AccountPolicyEvaluator';
-import {RecommendedAction, type RiskAssessment, RiskConfidence, RiskDecisionMethod, RiskLevel} from '../RiskTypes';
+} from '@app/api/risk/AccountPolicyEvaluator';
+import {
+	RecommendedAction,
+	type RiskAssessment,
+	RiskConfidence,
+	RiskDecisionMethod,
+	RiskLevel,
+} from '@app/api/risk/RiskTypes';
+import {
+	createCurrentBehaviorTestAccountPolicyEvaluator,
+	TEST_POLICY_CONTACT_DOMAIN,
+	TEST_POLICY_CONTACT_SUBDOMAIN,
+	TEST_POLICY_REPUTATION_EXEMPT_DOMAIN,
+} from '@app/api/test/AccountPolicyTestEvaluator';
+import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
+import {describe, expect, it} from 'vitest';
 
 function createAssessment(params: {level?: RiskLevel; action?: RecommendedAction; score?: number}): RiskAssessment {
 	const level = params.level ?? RiskLevel.Low;

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {setInjectedIpInfoService} from '@app/api/middleware/ServiceMiddleware';
+import {CassandraSuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {setInjectedIpInfoService} from '../../middleware/ServiceMiddleware';
-import {CassandraSuspiciousIpRepository} from '../../risk/SuspiciousIpRepository';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
 
 function createUniqueTestIp(): string {
 	return `198.51.${randomInt(0, 256)}.${randomInt(1, 255)}`;

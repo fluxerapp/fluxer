@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import {getGuildSearchService} from '@app/api/SearchFactory';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {GuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
-import {getGuildSearchService} from '../../SearchFactory';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const BATCH_SIZE = 200;
 const UPDATE_CONCURRENCY = 25;

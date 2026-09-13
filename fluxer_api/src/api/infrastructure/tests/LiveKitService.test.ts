@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {
+	computeLiveKitPublishSources,
+	LiveKitService,
+	VOICE_TOKEN_TTL_SECONDS,
+} from '@app/api/infrastructure/LiveKitService';
 import {AccessToken, TrackSource} from 'livekit-server-sdk';
 import {describe, expect, it} from 'vitest';
-import {createChannelID, createGuildID} from '../../BrandedTypes';
-import {computeLiveKitPublishSources, LiveKitService, VOICE_TOKEN_TTL_SECONDS} from '../LiveKitService';
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
 	const [, payload] = token.split('.');

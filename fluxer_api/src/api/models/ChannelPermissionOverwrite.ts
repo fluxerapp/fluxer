@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {PermissionOverwrite} from '../database/types/ChannelTypes';
+import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
 
 export class ChannelPermissionOverwrite {
 	readonly type: number;

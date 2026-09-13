@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, unclaimAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannelID, createUserID} from '../../BrandedTypes';
-import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
+import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createUserID} from '@app/api/BrandedTypes';
+import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {
 	acceptInvite,
 	blockUser,
@@ -19,13 +15,17 @@ import {
 	getChannel,
 	type MinimalChannelResponse,
 	sendChannelMessage,
-} from '../../channel/tests/ChannelTestUtils';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface PrivateChannelsResponse extends Array<MinimalChannelResponse> {}
 

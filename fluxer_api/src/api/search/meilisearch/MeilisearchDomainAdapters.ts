@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MeilisearchClient} from '@app/api/search/meilisearch/MeilisearchClient';
+import {
+	compactMeiliFilters,
+	type MeilisearchFilter,
+	meiliAndTerms,
+	meiliExcludeAny,
+	meiliExistsFilter,
+	meiliNotExistsFilter,
+	meiliRangeFilter,
+	meiliTermFilter,
+	meiliTermsFilter,
+} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import {MeilisearchIndexAdapter} from '@app/api/search/meilisearch/MeilisearchIndexAdapter';
+import {MEILISEARCH_INDEX_DEFINITIONS} from '@app/api/search/meilisearch/MeilisearchIndexDefinitions';
 import type {
 	AuditLogSearchFilters,
 	GuildMemberSearchFilters,
@@ -15,20 +29,6 @@ import type {
 	UserSearchFilters,
 } from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {MeilisearchClient} from './MeilisearchClient';
-import {
-	compactMeiliFilters,
-	type MeilisearchFilter,
-	meiliAndTerms,
-	meiliExcludeAny,
-	meiliExistsFilter,
-	meiliNotExistsFilter,
-	meiliRangeFilter,
-	meiliTermFilter,
-	meiliTermsFilter,
-} from './MeilisearchFilterUtils';
-import {MeilisearchIndexAdapter} from './MeilisearchIndexAdapter';
-import {MEILISEARCH_INDEX_DEFINITIONS} from './MeilisearchIndexDefinitions';
 
 const HAS_FIELD_MAP: Record<string, string> = {
 	image: 'hasImage',

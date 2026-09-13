@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {JobLedgerEntrySchema, ListJobsQuery, ListJobsRequest} from '@fluxer/schema/src/domains/admin/JobsSchemas';
 import {describe, expect, test} from 'vitest';
-import {JobLedgerEntrySchema, ListJobsQuery, ListJobsRequest} from '../admin/JobsSchemas';
 
 describe('jobs schemas', () => {
 	test('the job status enum rejects failed, which the ledger never writes', () => {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, type MessageID} from '../../../BrandedTypes';
-import type {IChannelRepository} from '../../../channel/IChannelRepository';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
+import {type ChannelID, createChannelID, type MessageID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 
 interface BulkDeleteDispatcherDeps {
 	channelRepository: IChannelRepository;

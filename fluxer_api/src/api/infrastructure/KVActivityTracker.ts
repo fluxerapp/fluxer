@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {runSlotBatches, splitIntoSlotBatches} from '@pkgs/kv_client/src/KVHashSlots';
 import {seconds} from 'itty-time';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import {UserRepository} from '../user/repositories/UserRepository';
-import {getValidTimestamp, parseStoredTimestamp} from '../utils/TimestampUtils';
 
 const TTL_SECONDS = seconds('90 days');
 const STATE_VERSION_KEY = 'activity_tracker:state_version';

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {composeService, serviceEnvironment, serviceList} from '@fluxer/config/src/__tests__/SelfHostingCompose';
 import {describe, expect, test} from 'vitest';
-import {composeService, serviceEnvironment, serviceList} from './SelfHostingCompose';
 
 describe('the shipped object store checks the credentials the stack sends', () => {
 	const entrypoint = serviceList('seaweedfs-init', 'entrypoint');

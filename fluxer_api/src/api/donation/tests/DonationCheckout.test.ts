@@ -1,11 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {getDonationAmountConstraints} from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
 import {
 	createDonationCheckoutBuilder,
 	createValidCheckoutBody,
@@ -13,7 +7,13 @@ import {
 	DONATION_CURRENCY_VALUES,
 	DONATION_INTERVALS,
 	TEST_DONOR_EMAIL,
-} from './DonationTestUtils';
+} from '@app/api/donation/tests/DonationTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {getDonationAmountConstraints} from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('POST /donations/checkout', () => {
 	let harness: ApiTestHarness;

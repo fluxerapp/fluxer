@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineTable} from '../database/CassandraTableDsl';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
 	DONOR_BY_STRIPE_CUSTOMER_ID_COLUMNS,
 	DONOR_BY_STRIPE_SUBSCRIPTION_ID_COLUMNS,
@@ -12,7 +12,7 @@ import {
 	type DonorMagicLinkTokenByEmailRow,
 	type DonorMagicLinkTokenRow,
 	type DonorRow,
-} from '../database/types/DonationTypes';
+} from '@app/api/database/types/DonationTypes';
 
 export const Donors = defineTable<DonorRow, 'email'>({
 	name: 'donors',

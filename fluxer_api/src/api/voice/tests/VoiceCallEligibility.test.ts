@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {IncomingCallFlags} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount, unclaimAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
@@ -10,12 +8,14 @@ import {
 	createFriendship,
 	createGuild,
 	getChannel,
-} from '../../channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {updateUserSettings} from '../../user/tests/UserTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
+import {IncomingCallFlags} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Voice Call Eligibility', () => {
 	let harness: ApiTestHarness;

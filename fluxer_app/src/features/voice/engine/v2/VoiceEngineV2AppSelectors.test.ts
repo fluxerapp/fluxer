@@ -1,16 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	availableVoiceEngineV2Capabilities,
-	createVoiceEngineV2InitialSnapshot,
-	transitionVoiceEngineV2,
-	type VoiceEngineV2Event,
-	type VoiceEngineV2Snapshot,
-} from '@fluxer/voice_engine_v2';
-import {replayVoiceEngineV2EventLogFixture, type VoiceEngineV2EventLogFixture} from '@fluxer/voice_engine_v2/testing';
-import {describe, expect, it} from 'vitest';
-import appVoiceSessionFixtureJson from '../../../../../../packages/voice_engine_v2/fixtures/event_logs/app_voice_session.json';
-import {
 	isVoiceEngineV2AppParticipantSpeaking,
 	selectVoiceEngineV2AppConnection,
 	selectVoiceEngineV2AppConnectionWithFallback,
@@ -32,7 +22,17 @@ import {
 	selectVoiceEngineV2AppView,
 	selectVoiceEngineV2AppWatchedStream,
 	selectVoiceEngineV2AppWatchedStreams,
-} from './VoiceEngineV2AppSelectors';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
+import {
+	availableVoiceEngineV2Capabilities,
+	createVoiceEngineV2InitialSnapshot,
+	transitionVoiceEngineV2,
+	type VoiceEngineV2Event,
+	type VoiceEngineV2Snapshot,
+} from '@fluxer/voice_engine_v2';
+import appVoiceSessionFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/app_voice_session.json';
+import {replayVoiceEngineV2EventLogFixture, type VoiceEngineV2EventLogFixture} from '@fluxer/voice_engine_v2/testing';
+import {describe, expect, it} from 'vitest';
 
 function replayEvents(events: Array<VoiceEngineV2Event>): VoiceEngineV2Snapshot {
 	let snapshot = createVoiceEngineV2InitialSnapshot(availableVoiceEngineV2Capabilities());

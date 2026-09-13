@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface AclListResponse {
 	acls: Array<string>;

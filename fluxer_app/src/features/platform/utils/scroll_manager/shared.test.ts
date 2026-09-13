@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {JumpTypes} from '@fluxer/constants/src/JumpConstants';
-import {NEW_MESSAGES_BAR_BUFFER} from '@fluxer/constants/src/LimitConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	CENTRE_ALIGNMENT_LIFT,
 	InitialScrollIntent,
@@ -12,7 +8,11 @@ import {
 	resolveInitialScrollIntent,
 	type ScrollerState,
 	shouldAnimateMessageJump,
-} from './shared';
+} from '@app/features/platform/utils/scroll_manager/shared';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {JumpTypes} from '@fluxer/constants/src/JumpConstants';
+import {NEW_MESSAGES_BAR_BUFFER} from '@fluxer/constants/src/LimitConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('the scroll geometry constants', () => {
 	it('lifts a centred node by exactly eight pixels', () => {

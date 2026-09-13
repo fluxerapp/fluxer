@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isEmbeddableImageFile} from '@app/features/messaging/utils/EmbeddableImageTypes';
 import {describe, expect, it} from 'vitest';
-import {isEmbeddableImageFile} from './EmbeddableImageTypes';
 
 describe('isEmbeddableImageFile', () => {
 	it('embeds common raster image mime types', () => {

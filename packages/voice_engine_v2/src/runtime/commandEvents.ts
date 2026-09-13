@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2CommandResult} from '../implementations';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2Error} from '../protocol/types';
+import type {VoiceEngineV2CommandResult} from '@fluxer/voice_engine_v2/src/implementations';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {VoiceEngineV2Error} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2CommandOfType<Type extends VoiceEngineV2Command['type']> = Extract<
 	VoiceEngineV2Command,

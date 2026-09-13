@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildRole} from '@app/features/guild/models/GuildRole';
-import {describe, expect, it} from 'vitest';
-import {createRoleMovePreview} from './RoleMoveOperation';
+import {createRoleMovePreview} from '@app/features/guild/components/modals/guild_tabs/RoleMoveOperation';
 import {
 	type RoleReorderAccess,
 	type RoleReorderDragItem,
 	type RoleReorderRect,
 	type RoleReorderTarget,
 	selectRoleReorderResolution,
-} from './RoleReorderStateMachine';
+} from '@app/features/guild/components/modals/guild_tabs/RoleReorderStateMachine';
+import type {GuildRole} from '@app/features/guild/models/GuildRole';
+import {describe, expect, it} from 'vitest';
 
 const guildId = 'guild-1';
 const rect: RoleReorderRect = {

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, describe, expect, it, vi} from 'vitest';
 import {
 	createVoiceEngineV2SeededRandomPort,
 	createVoiceEngineV2SystemClockPort,
 	createVoiceEngineV2SystemRandomPort,
-} from './platformPort';
+} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 
 afterEach(() => {
 	vi.restoreAllMocks();

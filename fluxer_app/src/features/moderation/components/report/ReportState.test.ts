@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createReportSnapshot,
+	selectReportState,
+	transitionReportSnapshot,
+} from '@app/features/moderation/components/report/ReportState';
 import {describe, expect, it} from 'vitest';
-import {createReportSnapshot, selectReportState, transitionReportSnapshot} from './ReportState';
 
 describe('ReportState machine', () => {
 	it('moves through the public report flow while preserving context', () => {

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {deriveSudoMethods, userHasMfa} from '@app/api/auth/services/SudoMethods';
+import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MfaNotDisabledError} from '@fluxer/errors/src/domains/auth/MfaNotDisabledError';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthMfa from '../../auth/AuthMfa';
-import * as AuthUtility from '../../auth/AuthUtility';
-import {deriveSudoMethods, userHasMfa} from '../../auth/services/SudoMethods';
-import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {User} from '../../models/User';
-import {mapUserToPrivateResponse} from '../UserMappers';
 
 const LEGACY_PHONE_AUTHENTICATOR_TYPE = 1;
 

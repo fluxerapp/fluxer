@@ -1,5 +1,5 @@
+import {chunkArray} from '@app/api/utils/ArrayUtils';
 import {describe, expect, it} from 'vitest';
-import {chunkArray} from '../ArrayUtils';
 
 describe('chunkArray', () => {
 	it.each([

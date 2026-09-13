@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {normalizeRequestPath} from '@app/api/utils/RequestPathUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {createMiddleware} from 'hono/factory';
-import type {HonoEnv} from '../types/HonoEnv';
-import {normalizeRequestPath} from '../utils/RequestPathUtils';
 
 const PROBE_PATHS = new Set(['/_health', '/_healthz', '/_metrics']);
 const OVERLOAD_RETRY_AFTER_SECONDS = 1;

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import {Guild} from '@app/api/models/Guild';
+import {convertToSearchableGuild} from '@app/api/search/guild/GuildSearchSerializer';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
-import {createChannelID, createGuildID, createUserID} from '../../../BrandedTypes';
-import type {GuildRow} from '../../../database/types/GuildTypes';
-import {Guild} from '../../../models/Guild';
-import {convertToSearchableGuild} from '../GuildSearchSerializer';
 
 function guildRow(features: Set<string>): GuildRow {
 	return {

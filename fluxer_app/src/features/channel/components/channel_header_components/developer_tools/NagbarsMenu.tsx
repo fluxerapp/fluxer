@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	getNagbarActionItems,
+	NAGBAR_OVERRIDES_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/NagbarControls';
 import {getNagbarControls, type NagbarControlDefinition} from '@app/features/devtools/components/NagbarControls';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -10,7 +14,6 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {TrashIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {getNagbarActionItems, NAGBAR_OVERRIDES_DESCRIPTOR} from './NagbarControls';
 
 const NagbarOverrideSubmenu: React.FC<{control: NagbarControlDefinition}> = observer(({control}) => {
 	const {i18n} = useLingui();

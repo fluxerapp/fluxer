@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setCachedDateOfBirthCollection} from '@app/api/instance/DateOfBirthCollectionCache';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {afterEach, describe, expect, it} from 'vitest';
-import {setCachedDateOfBirthCollection} from '../instance/DateOfBirthCollectionCache';
-import {canUserAccessNsfwContent} from './AgeUtils';
 
 const ADULT_DATE_OF_BIRTH = '1990-01-01';
 const MINOR_DATE_OF_BIRTH = '2020-01-01';

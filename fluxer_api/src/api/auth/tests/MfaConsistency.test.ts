@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {createTestAccount, createTotpSecret, generateTotpCode, type TestAccount} from './AuthTestUtils';
+import {
+	createTestAccount,
+	createTotpSecret,
+	generateTotpCode,
+	type TestAccount,
+} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createAuthenticationResponse,
 	createRegistrationResponse,
@@ -14,7 +13,13 @@ import {
 	type WebAuthnAuthenticationOptions,
 	type WebAuthnDevice,
 	type WebAuthnRegistrationOptions,
-} from './WebAuthnTestUtils';
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{

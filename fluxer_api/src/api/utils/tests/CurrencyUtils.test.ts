@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getCurrency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
 import {describe, expect, it} from 'vitest';
-import {getCurrency, getCurrencyPreferences, getGiftCurrencyPreferences} from '../CurrencyUtils';
 
 describe('getCurrency', () => {
 	describe('returns USD for non-EEA countries', () => {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {Donor} from './models/Donor';
-import type {DonorMagicLinkToken} from './models/DonorMagicLinkToken';
+import type {Donor} from '@app/api/donation/models/Donor';
+import type {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
 
 export abstract class IDonationRepository {
 	abstract findDonorByEmail(email: string): Promise<Donor | null>;

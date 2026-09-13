@@ -11,6 +11,8 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import styles from '@app/features/theme_studio/sections/ThemeStudioSettingsSection.module.css';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -30,8 +32,6 @@ import {ArrowCounterClockwiseIcon, ShareNetworkIcon, TrashIcon} from '@phosphor-
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import {StudioButton} from '../ui/StudioButton';
 
 const SYNC_CUSTOM_CSS_DESCRIPTOR = msg({
 	message: 'Sync custom CSS?',

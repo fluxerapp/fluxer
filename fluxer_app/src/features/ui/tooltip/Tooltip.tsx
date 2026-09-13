@@ -10,6 +10,12 @@ import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import styles from '@app/features/ui/tooltip/Tooltip.module.css';
+import {useExclusiveTooltip} from '@app/features/ui/tooltip/TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from '@app/features/ui/tooltip/TooltipHandoff';
+import {
+	getTooltipScrollSuppressRemainingMs,
+	subscribeTooltipScrollHide,
+} from '@app/features/ui/tooltip/TooltipScrollCoordinator';
 import {
 	createTooltipSnapshot,
 	getTooltipStateValue,
@@ -33,9 +39,6 @@ import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {useExclusiveTooltip} from './TooltipExclusivity';
-import {isTooltipHandoffWarm, markTooltipOpen} from './TooltipHandoff';
-import {getTooltipScrollSuppressRemainingMs, subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 const logger = new Logger('Tooltip');
 

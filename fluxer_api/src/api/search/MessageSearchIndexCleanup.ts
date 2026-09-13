@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createMessageID, type MessageID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import {getMessageSearchService} from '../SearchFactory';
-import type {IMessageSearchService} from './IMessageSearchService';
+import {type ChannelID, createMessageID, type MessageID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
 
 const MESSAGE_DELETE_BATCH_SIZE = 1000;
 

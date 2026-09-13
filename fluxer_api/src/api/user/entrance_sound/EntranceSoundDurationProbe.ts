@@ -3,10 +3,10 @@
 import {execFile} from 'node:child_process';
 import fs from 'node:fs/promises';
 import {promisify} from 'node:util';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {EntranceSoundExtension} from '@fluxer/constants/src/EntranceSoundConstants';
 import {temporaryFile} from 'tempy';
-import {Logger} from '../../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../../utils/JsonBoundaryUtils';
 
 const execFilePromise = promisify(execFile);
 const FFPROBE_TIMEOUT_MS = 5_000;

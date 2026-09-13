@@ -5,7 +5,16 @@ import {CANCEL_DESCRIPTOR, DESCRIPTION_DESCRIPTOR} from '@app/features/i18n/util
 import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {upsertThemeCssHeader} from '@app/features/theme/utils/ThemeCssUtils';
+import styles from '@app/features/theme_studio/sections/LibrarySection.module.css';
+import type {QuickCssEditorProps} from '@app/features/theme_studio/sections/QuickCssEditor';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
+import {StudioEmptyState} from '@app/features/theme_studio/ui/StudioEmptyState';
+import {StudioSearchInput} from '@app/features/theme_studio/ui/StudioSearchInput';
+import {StudioSplit} from '@app/features/theme_studio/ui/StudioSplit';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
+import type {ThemeStudioBaseTheme} from '@app/features/theme_studio/utils/ThemeStudioPinnedVariables';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -34,15 +43,6 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import ThemeStudioState from '../state/ThemeStudioState';
-import {StudioButton} from '../ui/StudioButton';
-import {StudioEmptyState} from '../ui/StudioEmptyState';
-import {StudioSearchInput} from '../ui/StudioSearchInput';
-import {StudioSplit} from '../ui/StudioSplit';
-import type {ThemeStudioBaseTheme} from '../utils/ThemeStudioPinnedVariables';
-import styles from './LibrarySection.module.css';
-import type {QuickCssEditorProps} from './QuickCssEditor';
 
 const THEME_SAVED_DESCRIPTOR = msg({
 	message: 'Theme saved.',
@@ -148,7 +148,7 @@ function LibraryCssEditorLoading() {
 const LibraryCssEditor = createDefaultLoadableComponent<QuickCssEditorProps>({
 	displayName: 'LibraryCssEditor',
 	LoadingComponent: LibraryCssEditorLoading,
-	load: () => import('./QuickCssEditor'),
+	load: () => import('@app/features/theme_studio/sections/QuickCssEditor'),
 });
 
 interface LibrarySectionProps {

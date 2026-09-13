@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, timingSafeEqual} from 'node:crypto';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import {type ConnectionType, ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
 
 interface ConnectionInitiationTokenPayload {
 	userId: string;

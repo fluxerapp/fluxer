@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import type {ChannelRow, PrivateChannelRow} from '@app/api/database/types/ChannelTypes';
 import {type ChannelType, ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {UserID} from '../BrandedTypes';
-import {Db, type DbOp} from '../database/CassandraTypes';
-import type {ChannelRow, PrivateChannelRow} from '../database/types/ChannelTypes';
 
 type SnapshotPatch = Partial<{
 	is_gdm: DbOp<boolean>;

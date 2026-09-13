@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildIDSet, createUserIDSet} from '../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {defineTable} from '../database/CassandraTableDsl';
+import {createGuildIDSet, createUserIDSet} from '@app/api/BrandedTypes';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
 	VOICE_REGION_COLUMNS,
 	VOICE_SERVER_COLUMNS,
 	type VoiceRegionRow,
 	type VoiceServerRow,
-} from '../database/types/VoiceTypes';
-import type {IVoiceRepository} from './IVoiceRepository';
-import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from './VoiceModel';
+} from '@app/api/database/types/VoiceTypes';
+import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
+import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 function toIterable<T>(value: unknown): Array<T> {
 	if (value === null || value === undefined) return [];

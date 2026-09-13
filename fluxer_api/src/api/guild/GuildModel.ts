@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
+import {
+	stripGuildBannerForFeatures,
+	stripGuildIconForFeatures,
+	stripGuildSplashForFeatures,
+} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildBan} from '@app/api/models/GuildBan';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {GuildRole} from '@app/api/models/GuildRole';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
+import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -10,21 +25,6 @@ import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/dom
 import type {GuildPartialResponse, GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {
-	stripGuildBannerForFeatures,
-	stripGuildIconForFeatures,
-	stripGuildSplashForFeatures,
-} from '../infrastructure/AssetEntitlementUtils';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Guild} from '../models/Guild';
-import type {GuildBan} from '../models/GuildBan';
-import type {GuildEmoji} from '../models/GuildEmoji';
-import type {GuildMember} from '../models/GuildMember';
-import type {GuildRole} from '../models/GuildRole';
-import type {GuildSticker} from '../models/GuildSticker';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../user/UserCacheHelpers';
-import {mapGuildFeatures} from './GuildFeatureUtils';
 
 export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 	const guildId = guild.id.toString();

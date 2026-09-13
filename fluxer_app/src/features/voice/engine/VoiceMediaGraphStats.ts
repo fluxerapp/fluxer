@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsKind,
@@ -10,8 +9,9 @@ import {
 	type VoiceMediaGraphStatsTrackTarget,
 	voiceMediaGraphStatsObservationMatchesTarget,
 	voiceMediaGraphStatsTrackKey,
-} from './VoiceMediaGraphStatsObservations';
-import type {VoiceTrackSource} from './VoiceTrackSource';
+} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
+import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import type {VoiceEngineV2PerTrackStats} from '@fluxer/voice_engine_v2';
 
 const VOICE_MEDIA_GRAPH_STATS_TRACK_LIMIT = 1024;
 

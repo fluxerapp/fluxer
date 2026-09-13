@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {UnclaimedAccountCannotSendMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendMessagesError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import type {
 	BulkMessageFetchResponse,
 	MessageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {User} from '../../../models/User';
-import {mapWithConcurrency} from '../../../utils/ConcurrencyUtils';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {ChannelService} from '../ChannelService';
-import {isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageResponseDataService} from './MessageResponseDataService';
 
 export class MessageRequestService {
 	constructor(

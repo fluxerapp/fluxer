@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {generateKeyPairSync} from 'node:crypto';
+import {ApnsPushServiceTestHooks, ensureApnsSigningKey} from '@app/api/push/ApnsPushService';
 import {describe, expect, it} from 'vitest';
-import {ApnsPushServiceTestHooks, ensureApnsSigningKey} from '../ApnsPushService';
 
 function pkcs8Pem(der: Buffer): string {
 	const base64 = der.toString('base64');

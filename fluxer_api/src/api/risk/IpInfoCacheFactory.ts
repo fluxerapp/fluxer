@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
 import {getDefaultCassandraClient} from '@pkgs/cassandra/src/Client';
 import {createCassandraIpInfoCache} from '@pkgs/geoip/src/CassandraIpInfoCache';
 import {createCassandraIpInfoRequestAuditLogger} from '@pkgs/geoip/src/CassandraIpInfoRequestAudit';
@@ -7,8 +9,6 @@ import {type IpInfoCache, type IpInfoRequestAuditLogger, isCachedIpInfoFailure} 
 import {createPostgresIpInfoCache, createPostgresIpInfoRequestAuditLogger} from '@pkgs/geoip/src/PostgresIpInfoKv';
 import {createTieredIpInfoCache} from '@pkgs/geoip/src/TieredIpInfoCache';
 import {getDefaultPostgresClient} from '@pkgs/postgres/src/Client';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
 
 interface BuildIpInfoCacheOptions {
 	hot: IpInfoCache;

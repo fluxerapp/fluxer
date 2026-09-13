@@ -1,10 +1,10 @@
+import type {SelfMessageFilter} from '@app/api/channel/services/message/SelfMessageFilter';
 import {
 	type BulkDeleteSelfMessagesFilter,
 	BulkDeleteSelfMessagesGuildFilterMode,
 	BulkDeleteSelfMessagesScope,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {z} from 'zod';
-import type {SelfMessageFilter} from '../../channel/services/message/SelfMessageFilter';
 
 export const SelfMessageFilterPayload = z.object({
 	scope: BulkDeleteSelfMessagesScope,

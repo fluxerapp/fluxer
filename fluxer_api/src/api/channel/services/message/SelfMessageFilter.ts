@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {Channel} from '@app/api/models/Channel';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	BulkDeleteSelfMessagesGuildFilterMode,
 	BulkDeleteSelfMessagesScope,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import type {UserID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
 
 export interface SelfMessageFilter {
 	scope: BulkDeleteSelfMessagesScope;

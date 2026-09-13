@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2BearerToken, requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
 	ApplicationAuthorizationIdParam,
@@ -23,15 +32,6 @@ import {
 	RevokeRequestForm,
 	TokenRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
-import {Config} from '../Config';
-import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '../middleware/AuthMiddleware';
-import {requireOAuth2BearerToken, requireOAuth2Scope} from '../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function OAuth2Controller(app: HonoApp) {
 	app.get(

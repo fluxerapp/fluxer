@@ -7,7 +7,7 @@ const KEEP_ATTACHMENTS_ON_EMPTY_MESSAGE_EDIT_STORAGE_KEY = 'AdvancedSettings:kee
 
 AppStorage.setItem(KEEP_ATTACHMENTS_ON_EMPTY_MESSAGE_EDIT_STORAGE_KEY, JSON.stringify(true));
 
-const {default: AdvancedSettings} = await import('./AdvancedSettings');
+const {default: AdvancedSettings} = await import('@app/features/user/state/AdvancedSettings');
 
 describe('Advanced settings', () => {
 	it('rehydrates the stored attachment edit preference', () => {

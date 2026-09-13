@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, createTotpSecret, generateTotpCode, setUserACLs} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount, createTotpSecret, generateTotpCode, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createRegistrationResponse,
 	createWebAuthnDevice,
 	type WebAuthnCredentialMetadata,
 	type WebAuthnRegistrationOptions,
-} from '../../auth/tests/WebAuthnTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface AdminLookupResponse {
 	users: Array<{

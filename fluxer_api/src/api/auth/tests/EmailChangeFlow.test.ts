@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {setInjectedRegistrationRiskEvaluator} from '../../middleware/ServiceMiddleware';
-import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '../../risk/RiskTypes';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -15,7 +10,12 @@ import {
 	listTestEmails,
 	loginUser,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {setInjectedRegistrationRiskEvaluator} from '@app/api/middleware/ServiceMiddleware';
+import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '@app/api/risk/RiskTypes';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;

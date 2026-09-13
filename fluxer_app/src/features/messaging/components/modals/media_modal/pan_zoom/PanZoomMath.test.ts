@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	clampPanForScale,
 	clampScale,
@@ -12,7 +11,8 @@ import {
 	MIN_ZOOM_SCALE,
 	type PanZoomMetrics,
 	TAP_MOVE_THRESHOLD,
-} from './PanZoomMath';
+} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomMath';
+import {describe, expect, it} from 'vitest';
 
 const METRICS: PanZoomMetrics = {
 	viewportWidth: 800,

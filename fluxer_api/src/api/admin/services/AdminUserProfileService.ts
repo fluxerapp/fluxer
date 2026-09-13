@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -15,18 +27,6 @@ import type {
 	VerifyUserEmailRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {types} from 'cassandra-driver';
-import type {ApiContext} from '../../ApiContext';
-import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '../../auth/AuthEmail';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {GuildMemberSearchIndexService} from '../../guild/services/member/GuildMemberSearchIndexService';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {EntityAssetService, PreparedAssetUpload} from '../../infrastructure/EntityAssetService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
 
 interface AdminUserProfileServiceDeps {
 	apiContext: ApiContext;

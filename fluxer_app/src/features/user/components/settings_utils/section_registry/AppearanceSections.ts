@@ -7,8 +7,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {shouldShowHdrSettings} from '@app/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab';
 import {shouldShowAppZoomLevel} from '@app/features/user/components/settings_utils/AppZoomLevelUtils';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	CHANNEL_LIST_DESCRIPTOR,
 	CHAT_INPUT_DESCRIPTOR,
@@ -29,7 +28,8 @@ import {
 	TYPING_DESCRIPTOR,
 	UNREAD_DESCRIPTOR,
 	VOICE_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const CHOOSE_A_BASE_APPEARANCE_MANAGE_QUICK_CSS_ORGANIZE_DESCRIPTOR = msg({
 	message: 'Choose a base appearance, manage quick CSS, organize saved theme files, and tune theme tokens.',

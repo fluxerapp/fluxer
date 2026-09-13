@@ -2,8 +2,8 @@
 
 import {randomInt} from 'node:crypto';
 import {readFileSync} from 'node:fs';
+import {resolveAssetPath} from '@app/api/utils/AssetPaths';
 import {UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
-import {resolveAssetPath} from './AssetPaths';
 
 const scales = readFileSync(resolveAssetPath('words', 'scales.txt'), 'utf-8').trim().split('\n').filter(Boolean);
 const tails = readFileSync(resolveAssetPath('words', 'tails.txt'), 'utf-8').trim().split('\n').filter(Boolean);

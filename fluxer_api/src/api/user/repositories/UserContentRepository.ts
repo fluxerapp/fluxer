@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '../../database/types/PaymentTypes';
-import type {PushSubscriptionRow, RecentMentionRow} from '../../database/types/UserTypes';
-import type {GiftCode} from '../../models/GiftCode';
-import type {Payment} from '../../models/Payment';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {RecentMention} from '../../models/RecentMention';
-import type {SavedMessage} from '../../models/SavedMessage';
-import type {VisionarySlot} from '../../models/VisionarySlot';
-import {GiftCodeRepository} from './GiftCodeRepository';
-import type {IUserContentRepository} from './IUserContentRepository';
-import {PaymentRepository} from './PaymentRepository';
-import {PushSubscriptionRepository} from './PushSubscriptionRepository';
-import {RecentMentionRepository} from './RecentMentionRepository';
-import {SavedMessageRepository} from './SavedMessageRepository';
-import {VisionarySlotRepository} from './VisionarySlotRepository';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '@app/api/database/types/PaymentTypes';
+import type {PushSubscriptionRow, RecentMentionRow} from '@app/api/database/types/UserTypes';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {Payment} from '@app/api/models/Payment';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {RecentMention} from '@app/api/models/RecentMention';
+import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {VisionarySlot} from '@app/api/models/VisionarySlot';
+import {GiftCodeRepository} from '@app/api/user/repositories/GiftCodeRepository';
+import type {IUserContentRepository} from '@app/api/user/repositories/IUserContentRepository';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {PushSubscriptionRepository} from '@app/api/user/repositories/PushSubscriptionRepository';
+import {RecentMentionRepository} from '@app/api/user/repositories/RecentMentionRepository';
+import {SavedMessageRepository} from '@app/api/user/repositories/SavedMessageRepository';
+import {VisionarySlotRepository} from '@app/api/user/repositories/VisionarySlotRepository';
 
 export class UserContentRepository implements IUserContentRepository {
 	private giftCodeRepository: GiftCodeRepository;

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {CustomKeybindEntry, KeybindConfig, KeyCombo} from './InputKeybind';
+import type {CustomKeybindEntry, KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
 
 export const keyComboHasTriggerInput = (combo: KeyCombo): boolean =>
 	(combo.key ?? '') !== '' || (combo.code ?? '') !== '' || combo.mouseButton != null || combo.gamepadButton != null;

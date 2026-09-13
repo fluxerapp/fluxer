@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserID} from './BrandedTypes';
-import {defineTable} from './database/CassandraTableDsl';
+import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserID} from '@app/api/BrandedTypes';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
 	ADMIN_ARCHIVE_COLUMNS,
 	ADMIN_ARCHIVE_INDEX_COLUMNS,
@@ -31,19 +31,19 @@ import {
 	type DisposableEmailDomainRow,
 	SUSPICIOUS_EMAIL_DOMAIN_COLUMNS,
 	type SuspiciousEmailDomainRow,
-} from './database/types/AdminArchiveTypes';
+} from '@app/api/database/types/AdminArchiveTypes';
 import {
 	ADMIN_API_KEY_BY_CREATOR_COLUMNS,
 	ADMIN_API_KEY_COLUMNS,
 	type AdminApiKeyByCreatorRow,
 	type AdminApiKeyRow,
-} from './database/types/AdminAuthTypes';
+} from '@app/api/database/types/AdminAuthTypes';
 import {
 	ATTACHMENT_UPLOAD_TRACE_BY_ATTACHMENT_COLUMNS,
 	ATTACHMENT_UPLOAD_TRACE_BY_KEY_COLUMNS,
 	type AttachmentUploadTraceByAttachmentRow,
 	type AttachmentUploadTraceByKeyRow,
-} from './database/types/AttachmentUploadTypes';
+} from '@app/api/database/types/AttachmentUploadTypes';
 import {
 	AUTH_SESSION_COLUMNS,
 	AUTH_SESSION_TOMBSTONE_COLUMNS,
@@ -77,7 +77,7 @@ import {
 	type UserSsoIdentityRow,
 	WEBAUTHN_CREDENTIAL_COLUMNS,
 	type WebAuthnCredentialRow,
-} from './database/types/AuthTypes';
+} from '@app/api/database/types/AuthTypes';
 import {
 	BILLING_ACTION_INTENT_COLUMNS,
 	BILLING_CHARGE_BY_CUSTOMER_COLUMNS,
@@ -133,7 +133,7 @@ import {
 	type BillingSubscriptionByCustomerRow,
 	type BillingSubscriptionByUserRow,
 	type BillingSubscriptionRow,
-} from './database/types/BillingTypes';
+} from '@app/api/database/types/BillingTypes';
 import {
 	CHANNEL_COLUMNS,
 	CHANNELS_BY_GUILD_COLUMNS,
@@ -147,20 +147,20 @@ import {
 	type PrivateChannelRow,
 	WEBHOOK_COLUMNS,
 	type WebhookRow,
-} from './database/types/ChannelTypes';
-import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from './database/types/ConnectionTypes';
+} from '@app/api/database/types/ChannelTypes';
+import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {
 	NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
 	NCMEC_USER_WORKFLOW_COLUMNS,
 	type NcmecAttachmentSubmissionRow,
 	type NcmecUserWorkflowRow,
-} from './database/types/CsamTypes';
+} from '@app/api/database/types/CsamTypes';
 import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
 	type GuildDiscoveryByStatusRow,
 	type GuildDiscoveryRow,
-} from './database/types/GuildDiscoveryTypes';
+} from '@app/api/database/types/GuildDiscoveryTypes';
 import {
 	GUILD_AUDIT_LOG_COLUMNS,
 	GUILD_BAN_BY_EMAIL_COLUMNS,
@@ -186,8 +186,11 @@ import {
 	type GuildRoleRow,
 	type GuildRow,
 	type GuildStickerRow,
-} from './database/types/GuildTypes';
-import {INSTANCE_CONFIGURATION_COLUMNS, type InstanceConfigurationRow} from './database/types/InstanceConfigTypes';
+} from '@app/api/database/types/GuildTypes';
+import {
+	INSTANCE_CONFIGURATION_COLUMNS,
+	type InstanceConfigurationRow,
+} from '@app/api/database/types/InstanceConfigTypes';
 import {
 	JOB_ACTIVE_COLUMNS,
 	JOB_BY_DAY_BUCKET_COLUMNS,
@@ -195,7 +198,7 @@ import {
 	type JobActiveRow,
 	type JobByDayBucketRow,
 	type JobByIdRow,
-} from './database/types/JobLedgerTypes';
+} from '@app/api/database/types/JobLedgerTypes';
 import {
 	ATTACHMENT_LOOKUP_COLUMNS,
 	type AttachmentLookupRow,
@@ -213,7 +216,7 @@ import {
 	type MessageByAuthorRow,
 	type MessageReactionRow,
 	type MessageRow,
-} from './database/types/MessageTypes';
+} from '@app/api/database/types/MessageTypes';
 import {
 	APPLICATION_COLUMNS,
 	type ApplicationByOwnerRow,
@@ -226,7 +229,7 @@ import {
 	type OAuth2AuthorizationCodeRow,
 	type OAuth2RefreshTokenByUserRow,
 	type OAuth2RefreshTokenRow,
-} from './database/types/OAuth2Types';
+} from '@app/api/database/types/OAuth2Types';
 import {
 	GIFT_CODE_BY_CREATOR_COLUMNS,
 	GIFT_CODE_BY_PAYMENT_INTENT_COLUMNS,
@@ -246,7 +249,7 @@ import {
 	type PaymentRow,
 	VISIONARY_SLOT_COLUMNS,
 	type VisionarySlotRow,
-} from './database/types/PaymentTypes';
+} from '@app/api/database/types/PaymentTypes';
 import {
 	DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	DSA_REPORT_TICKET_COLUMNS,
@@ -256,7 +259,7 @@ import {
 	type IARSubmissionRow,
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
-} from './database/types/ReportTypes';
+} from '@app/api/database/types/ReportTypes';
 import {
 	INBOUND_SMS_CHALLENGE_BY_USER_COLUMNS,
 	INBOUND_SMS_CHALLENGE_COLUMNS,
@@ -290,7 +293,7 @@ import {
 	type RiskOutcomeBySubnetRow,
 	SUSPICIOUS_IP_COLUMNS,
 	type SuspiciousIpRow,
-} from './database/types/RiskTypes';
+} from '@app/api/database/types/RiskTypes';
 import {
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
@@ -336,8 +339,8 @@ import {
 	type UserRow,
 	type UserSettingsRow,
 	type UsersPendingDeletionRow,
-} from './database/types/UserTypes';
-import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from './types/AttachmentDecayTypes';
+} from '@app/api/database/types/UserTypes';
+import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
 
 export const Users = defineTable<UserRow, 'user_id'>({
 	name: 'users',

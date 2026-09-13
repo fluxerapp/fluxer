@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ILogger} from '@app/api/ILogger';
+import {ClientErrorAbuseSignalMiddleware} from '@app/api/middleware/AbusiveIpAutoBanner';
+import {AuditLogMiddleware} from '@app/api/middleware/AuditLogMiddleware';
+import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
+import ContentFilterMiddleware from '@app/api/middleware/ContentFilterMiddleware';
+import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailabilityMiddleware';
+import {IpBanMiddleware} from '@app/api/middleware/IpBanMiddleware';
+import {LocaleMiddleware} from '@app/api/middleware/LocaleMiddleware';
+import {RequestCacheMiddleware} from '@app/api/middleware/RequestCacheMiddleware';
+import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
+import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
+import {TorExitMiddleware} from '@app/api/middleware/TorExitMiddleware';
+import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
+import {UserMiddleware} from '@app/api/middleware/UserMiddleware';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {InvalidApiOriginError} from '@fluxer/errors/src/domains/core/InvalidApiOriginError';
 import {cors} from '@fluxer/hono/src/middleware/Cors';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import {createInfoRequestLogger, requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
-import type {ILogger} from '../ILogger';
-import {ClientErrorAbuseSignalMiddleware} from '../middleware/AbusiveIpAutoBanner';
-import {AuditLogMiddleware} from '../middleware/AuditLogMiddleware';
-import {ConcurrencyLimitMiddleware} from '../middleware/ConcurrencyLimitMiddleware';
-import ContentFilterMiddleware from '../middleware/ContentFilterMiddleware';
-import {GuildAvailabilityMiddleware} from '../middleware/GuildAvailabilityMiddleware';
-import {IpBanMiddleware} from '../middleware/IpBanMiddleware';
-import {LocaleMiddleware} from '../middleware/LocaleMiddleware';
-import {RequestCacheMiddleware} from '../middleware/RequestCacheMiddleware';
-import {RequireClientIpMiddleware} from '../middleware/RequireClientIpMiddleware';
-import {ServiceMiddleware} from '../middleware/ServiceMiddleware';
-import {TorExitMiddleware} from '../middleware/TorExitMiddleware';
-import {TrustedClientIpHeaderMiddleware} from '../middleware/TrustedClientIpHeaderMiddleware';
-import {UserMiddleware} from '../middleware/UserMiddleware';
-import type {HonoApp} from '../types/HonoEnv';
 
 interface MiddlewarePipelineOptions {
 	logger: ILogger;

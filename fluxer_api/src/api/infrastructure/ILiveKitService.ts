@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface CreateTokenParams {
 	userId: UserID;

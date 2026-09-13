@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {DesktopArch, DesktopChannel, DesktopPlatform} from '@fluxer/schema/src/domains/download/DownloadSchemas';
-import {isJsonRecord} from '../utils/JsonBoundaryUtils';
 
 const DESKTOP_BUCKET_PREFIX = 'desktop';
 const MIN_RELEASE_ROUTE_COUNT = 28;

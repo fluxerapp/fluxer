@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getUnreadDividerBeforeMessageId} from '@app/features/channel/components/ChannelMessageStreamUtils';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {ChannelStreamItem} from '@app/features/messaging/utils/MessageGroupingUtils';
 import {bench, describe} from 'vitest';
-import {getUnreadDividerBeforeMessageId} from './ChannelMessageStreamUtils';
 
 const GROUP_ITEMS = Array.from(
 	{length: 100},

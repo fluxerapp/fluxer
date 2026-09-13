@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
-import {afterEach, describe, expect, it} from 'vitest';
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
 	isAttachmentOnlyMessage,
-} from './MessageEditContentUtils';
+} from '@app/features/messaging/utils/MessageEditContentUtils';
+import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
+import {afterEach, describe, expect, it} from 'vitest';
 
 describe('Message edit content utils', () => {
 	afterEach(() => {

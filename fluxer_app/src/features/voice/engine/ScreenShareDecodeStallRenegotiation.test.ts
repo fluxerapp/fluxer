@@ -76,7 +76,7 @@ const {
 	default: ScreenShareCodecNegotiation,
 	buildLocalCodecAdvertisements,
 	computeNegotiatedVideoCodec,
-} = await import('./ScreenShareCodecNegotiation');
+} = await import('@app/features/voice/engine/ScreenShareCodecNegotiation');
 const {findStalledVideoDecoder, scheduleScreenShareDecoderVerification} = await import(
 	'@app/features/voice/utils/ScreenShareCodecDiagnostics'
 );

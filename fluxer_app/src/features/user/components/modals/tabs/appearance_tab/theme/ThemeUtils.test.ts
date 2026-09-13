@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	cssColorStringToHex,
+	cssColorStringToNumber,
+	numberToHex,
+	updateCssForVariable,
+} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {describe, expect, it} from 'vitest';
-import {cssColorStringToHex, cssColorStringToNumber, numberToHex, updateCssForVariable} from './ThemeUtils';
 
 describe('updateCssForVariable', () => {
 	it('adds a token override when the CSS is empty', () => {

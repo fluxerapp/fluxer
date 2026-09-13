@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannel,
@@ -10,8 +8,10 @@ import {
 	createGuild,
 	createPermissionOverwrite,
 	getGuild,
-} from '../../channel/tests/ChannelTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('GET /guilds/:guild_id full payload', () => {
 	let harness: ApiTestHarness;

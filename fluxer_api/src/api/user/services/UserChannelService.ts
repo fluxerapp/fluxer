@@ -1,5 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {
+	createMessageResponseDataService,
+	messageResponseAccessForGuild,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GROUP_DM_RECIPIENTS, MAX_GROUP_DMS_PER_USER} from '@fluxer/constants/src/LimitConstants';
@@ -17,34 +45,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ApiContext} from '../../ApiContext';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
-import {mapChannelToResponse} from '../../channel/ChannelMappers';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import {dispatchMessageCreateBroadcast} from '../../channel/services/message/MessageGatewayDispatch';
-import {
-	createMessageResponseDataService,
-	messageResponseAccessForGuild,
-} from '../../channel/services/message/MessageResponseDataService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../models/Channel';
-import type {Message} from '../../models/Message';
-import type {User} from '../../models/User';
-import type {UserPermissionUtils} from '../../utils/UserPermissionUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserChannelRepository} from '../repositories/IUserChannelRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {DirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
-import {createDirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
 
 interface UserChannelRepository extends IUserAccountRepository, IUserChannelRepository, IUserRelationshipRepository {}
 

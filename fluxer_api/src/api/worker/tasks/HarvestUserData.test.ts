@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
+import {harvestMessages} from '@app/api/worker/tasks/HarvestUserData';
 import {describe, expect, it} from 'vitest';
-import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '../../BrandedTypes';
-import {harvestMessages} from './HarvestUserData';
 
 const AUTHOR = createUserID(1000000000000000000n);
 

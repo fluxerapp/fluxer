@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {createDmChannel, createFriendship, createGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {createDmChannel, createFriendship, createGuild} from '../../channel/tests/ChannelTestUtils';
-import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: string): Promise<void> {
 	await createBuilder(harness, `${token}`)

@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	getLocalSpeakingThresholdRms,
-	LOCAL_MAX_RMS,
-	LOCAL_MIN_RMS,
-	SPEAKING_LOCAL_RELEASE_MS,
-} from '@app/features/voice/engine/VoiceSpeakingThreshold';
-import {describe, expect, it} from 'vitest';
-import {
 	type LocalSpeakingOverrideInput,
 	resolveLocalSpeakingOverrideState,
 	resolveVoiceActivityGateState,
@@ -15,7 +8,14 @@ import {
 	updateVoiceActivityNoiseFloorRms,
 	type VoiceActivityGateInput,
 	type VoiceActivityGateState,
-} from './VoiceLocalSpeakingGate';
+} from '@app/features/voice/engine/VoiceLocalSpeakingGate';
+import {
+	getLocalSpeakingThresholdRms,
+	LOCAL_MAX_RMS,
+	LOCAL_MIN_RMS,
+	SPEAKING_LOCAL_RELEASE_MS,
+} from '@app/features/voice/engine/VoiceSpeakingThreshold';
+import {describe, expect, it} from 'vitest';
 
 const UNMUTED_OPEN_MIC: LocalSpeakingOverrideInput = {
 	pushToTalkActive: false,

@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {ProductType} from '@app/api/stripe/ProductRegistry';
+import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {
 	createInvoiceFinalizationFailedEvent,
 	createInvoicePaidEvent,
@@ -22,11 +20,13 @@ import {
 	createStripeApiHandlers,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {ProductType} from '../ProductRegistry';
-import {setupSyncStripeWebhookWorker} from './StripeWebhookTestUtils';
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {HttpResponse, http} from 'msw';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -119,7 +119,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 	}): Promise<string> {
 		const {userId, subscriptionId, priceId, productType} = params;
 		const checkoutSessionId = `cs_test_${crypto.randomUUID()}`;
-		const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
+		const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
 		const paymentRepo = new PaymentRepository();
 		await paymentRepo.createPayment({
 			checkout_session_id: checkoutSessionId,
@@ -148,7 +148,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 		premiumUntil: Date;
 		premiumWillCancel?: boolean;
 	}): Promise<void> {
-		const {UserRepository} = await import('../../user/repositories/UserRepository');
+		const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 		const userRepository = new UserRepository();
 		const userId = createUserID(BigInt(params.accountUserId));
 		await userRepository.patchUpsert(
@@ -550,7 +550,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				priceId: MOCK_PRICES.monthlyUsd,
 				productType: ProductType.MONTHLY_SUBSCRIPTION,
 			});
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(account.userId));
 			await userRepository.patchUpsert(
@@ -609,7 +609,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				priceId: MOCK_PRICES.monthlyUsd,
 				productType: ProductType.MONTHLY_SUBSCRIPTION,
 			});
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(account.userId));
 			await userRepository.patchUpsert(
@@ -923,7 +923,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 			expect(new Date(me.premium_until!).toISOString()).toBe(
 				new Date((currentPeriodStart + 30 * 24 * 60 * 60) * 1000).toISOString(),
 			);
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
 			const payment = await new PaymentRepository().getPaymentByCheckoutSession(checkoutSessionId);
 			expect(payment?.invoiceId).toBe(invoiceId);
 		});
@@ -1077,7 +1077,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				priceId: MOCK_PRICES.monthlyUsd,
 				productType: ProductType.MONTHLY_SUBSCRIPTION,
 			});
-			const {DonationRepository} = await import('../../donation/DonationRepository');
+			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			await new DonationRepository().createDonor({
 				email: 'donor-invoice-guard@example.com',
 				stripeCustomerId: 'cus_donation_recurring',
@@ -1118,7 +1118,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 				priceId: MOCK_PRICES.monthlyUsd,
 				productType: ProductType.MONTHLY_SUBSCRIPTION,
 			});
-			const {DonationRepository} = await import('../../donation/DonationRepository');
+			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			await new DonationRepository().createDonor({
 				email: 'donor-and-subscriber@example.com',
 				stripeCustomerId: sharedCustomerId,

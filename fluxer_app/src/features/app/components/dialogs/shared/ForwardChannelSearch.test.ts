@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type ForwardChannelSearchValues,
+	matchesForwardChannelSearch,
+} from '@app/features/app/components/dialogs/shared/ForwardChannelSearchMatch';
 import {describe, expect, it} from 'vitest';
-import {type ForwardChannelSearchValues, matchesForwardChannelSearch} from './ForwardChannelSearchMatch';
 
 const PERSONAL_NOTES = 'personal notes';
 

@@ -1,13 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {AdminApiKeyByCreatorRow, AdminApiKeyRow} from '../../database/types/AdminAuthTypes';
-import {AdminApiKey} from '../../models/AdminApiKey';
-import {AdminApiKeys, AdminApiKeysByCreator} from '../../Tables';
-import {hashPassword} from '../../utils/PasswordUtils';
-import type {CreateAdminApiKeyData, IAdminApiKeyRepository, UpdateAdminApiKeyData} from './IAdminApiKeyRepository';
+import type {
+	CreateAdminApiKeyData,
+	IAdminApiKeyRepository,
+	UpdateAdminApiKeyData,
+} from '@app/api/admin/repositories/IAdminApiKeyRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import {
+	BatchBuilder,
+	fetchMany,
+	fetchManyInChunks,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {AdminApiKeyByCreatorRow, AdminApiKeyRow} from '@app/api/database/types/AdminAuthTypes';
+import {AdminApiKey} from '@app/api/models/AdminApiKey';
+import {AdminApiKeys, AdminApiKeysByCreator} from '@app/api/Tables';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
 
 function computeTtlSeconds(expiresAt: Date): number {
 	const diffSeconds = Math.floor((expiresAt.getTime() - Date.now()) / 1000);

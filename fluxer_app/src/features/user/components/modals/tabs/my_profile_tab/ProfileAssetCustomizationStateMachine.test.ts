@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	assignProfileAssetUploadPatch,
 	createGlobalProfileAssetRemoteState,
@@ -13,7 +12,8 @@ import {
 	type ProfileAssetRemoteState,
 	selectProfileAssetCustomizationState,
 	transitionProfileAssetCustomizationSnapshot,
-} from './ProfileAssetCustomizationStateMachine';
+} from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileAssetCustomizationStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const IDENTITY = 'user-1:guild-1';
 const OTHER_IDENTITY = 'user-1:guild-2';

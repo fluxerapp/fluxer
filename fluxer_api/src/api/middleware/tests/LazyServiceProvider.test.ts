@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {installLazyServices, type LazyServiceProvider} from '@app/api/middleware/LazyServiceProvider';
+import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Hono} from 'hono';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createApiTestHarness} from '../../test/ApiTestHarness';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {installLazyServices, type LazyServiceProvider} from '../LazyServiceProvider';
-import {ServiceMiddleware} from '../ServiceMiddleware';
 
 const NO_CONTENT = 204;
 

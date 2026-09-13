@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
+import {canUseProfileTimezone} from '@app/api/user/UserHelpers';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	PremiumFlags,
@@ -13,20 +27,6 @@ import {
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {IConnectionRepository} from '../../connection/IConnectionRepository';
-import type {UserConnectionRow} from '../../database/types/ConnectionTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../../guild/services/GuildService';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {GuildMember} from '../../models/GuildMember';
-import type {User} from '../../models/User';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserChannelRepository} from '../repositories/IUserChannelRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '../repositories/IUserSettingsRepository';
-import {canUseProfileTimezone} from '../UserHelpers';
 
 interface ProfileFieldPrivacyContext {
 	isOwner: boolean;

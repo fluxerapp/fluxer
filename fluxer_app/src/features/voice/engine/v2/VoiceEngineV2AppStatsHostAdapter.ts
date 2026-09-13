@@ -17,6 +17,7 @@ import {
 	type VoiceStatsSnapshot,
 } from '@app/features/voice/engine/VoiceStatsStateMachine';
 import {asVoiceConnectionQuality, VoiceConnectionQuality} from '@app/features/voice/engine/VoiceTrackSource';
+import {assertFiniteNumber, assertNonNullObject} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import {
 	classifyVideoDecoderAcceleration,
 	classifyVideoEncoderAcceleration,
@@ -30,7 +31,6 @@ import type {
 	VoiceEngineV2TrackKind,
 } from '@fluxer/voice_engine_v2';
 import type {Room} from 'livekit-client';
-import {assertFiniteNumber, assertNonNullObject} from './VoiceEngineV2AppAdapterAssertions';
 
 const logger = new Logger('VoiceEngineV2AppStatsHostAdapter');
 

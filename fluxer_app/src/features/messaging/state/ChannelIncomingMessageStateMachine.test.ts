@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type ChannelIncomingMessageInput,
 	createChannelIncomingMessageSnapshot,
 	resolveChannelIncomingMessageDecision,
 	selectChannelIncomingMessageDecision,
 	transitionChannelIncomingMessageSnapshot,
-} from './ChannelIncomingMessageStateMachine';
+} from '@app/features/messaging/state/ChannelIncomingMessageStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<ChannelIncomingMessageInput> = {}): ChannelIncomingMessageInput {
 	return {

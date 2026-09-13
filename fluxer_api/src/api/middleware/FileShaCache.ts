@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import {Logger} from '@app/api/Logger';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '../constants/ContentModeration';
-import {Logger} from '../Logger';
-import {RefreshSubscription} from '../utils/RefreshSubscription';
 
 class FileShaCache {
 	private banned: Set<string> = new Set();

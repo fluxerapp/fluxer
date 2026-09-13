@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {applicationIdToUserId} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ApplicationRow} from '@app/api/database/types/OAuth2Types';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {Application} from '@app/api/models/Application';
+import type {User} from '@app/api/models/User';
+import {remapAuthorMessagesToDeletedUser} from '@app/api/oauth/ApplicationMessageAuthorAnonymization';
+import type {BotAuthService} from '@app/api/oauth/BotAuthService';
+import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import {enforceFluxerTagChangeRateLimit} from '@app/api/user/FluxerTagChangeRateLimit';
+import {hasPartialUserFieldsChanged, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {runAllInOrder} from '@app/api/utils/ConcurrencyUtils';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
+import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
+import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
 	DELETED_USER_GLOBAL_NAME,
@@ -16,30 +40,6 @@ import {BotUserNotFoundError} from '@fluxer/errors/src/domains/oauth/BotUserNotF
 import {UnclaimedAccountCannotCreateApplicationsError} from '@fluxer/errors/src/domains/oauth/UnclaimedAccountCannotCreateApplicationsError';
 import {UnknownApplicationError} from '@fluxer/errors/src/domains/oauth/UnknownApplicationError';
 import type {BotProfileUpdateRequest} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
-import type {ApiContext} from '../ApiContext';
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import {applicationIdToUserId} from '../BrandedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {ApplicationRow} from '../database/types/OAuth2Types';
-import type {UserRow} from '../database/types/UserTypes';
-import {contentModerationService} from '../infrastructure/ContentModerationService';
-import type {DiscriminatorService} from '../infrastructure/DiscriminatorService';
-import type {EntityAssetService, PreparedAssetUpload} from '../infrastructure/EntityAssetService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import {Logger} from '../Logger';
-import {profileSubstringBlocklistCache} from '../middleware/ProfileSubstringBlocklistCache';
-import type {Application} from '../models/Application';
-import type {User} from '../models/User';
-import {enforceFluxerTagChangeRateLimit} from '../user/FluxerTagChangeRateLimit';
-import {hasPartialUserFieldsChanged, mapUserToPrivateResponse} from '../user/UserMappers';
-import {runAllInOrder} from '../utils/ConcurrencyUtils';
-import {hashPassword} from '../utils/PasswordUtils';
-import {generateRandomUsername} from '../utils/UsernameGenerator';
-import {deriveUsernameFromDisplayName} from '../utils/UsernameSuggestionUtils';
-import {remapAuthorMessagesToDeletedUser} from './ApplicationMessageAuthorAnonymization';
-import type {BotAuthService} from './BotAuthService';
-import {generateOAuthTokenSecret} from './OAuthTokenSecret';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
 
 interface ApplicationServiceDeps {
 	discriminatorService: DiscriminatorService;

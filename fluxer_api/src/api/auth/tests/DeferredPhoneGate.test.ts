@@ -1,31 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
-	SuspiciousActivityFlags,
-} from '@fluxer/constants/src/UserConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-import {setInjectedRegistrationRiskEvaluator} from '../../middleware/ServiceMiddleware';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import {
-	authorizeOAuth2,
-	createOAuth2Application,
-	exchangeOAuth2AuthorizationCode,
-} from '../../oauth/tests/OAuthTestUtils';
-import {PHONE_GATE_ESCAPE_MAX_GUILDS} from '../../risk/DeferredPhoneGate';
-import {
-	RecommendedAction,
-	RiskConfidence,
-	RiskDecisionMethod,
-	RiskLevel,
-	type RiskLevel as RiskLevelType,
-} from '../../risk/RiskTypes';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {NoopGatewayService} from '../../test/NoopGatewayService';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import type {IRegistrationRiskEvaluator} from '../services/IRegistrationRiskEvaluator';
+import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
 import {
 	createAuthHarness,
 	createTestAccount,
@@ -33,7 +8,32 @@ import {
 	createUniqueUsername,
 	loginAccount,
 	registerUser,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {setInjectedRegistrationRiskEvaluator} from '@app/api/middleware/ServiceMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {
+	authorizeOAuth2,
+	createOAuth2Application,
+	exchangeOAuth2AuthorizationCode,
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {PHONE_GATE_ESCAPE_MAX_GUILDS} from '@app/api/risk/DeferredPhoneGate';
+import {
+	RecommendedAction,
+	RiskConfidence,
+	RiskDecisionMethod,
+	RiskLevel,
+	type RiskLevel as RiskLevelType,
+} from '@app/api/risk/RiskTypes';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {
+	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
+	SuspiciousActivityFlags,
+} from '@fluxer/constants/src/UserConstants';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 function phoneRiskEvaluator(level: RiskLevelType, riskScore: number): IRegistrationRiskEvaluator {
 	return {
@@ -79,15 +79,15 @@ async function createGuildWithInvite(harness: ApiTestHarness): Promise<{guildId:
 }
 
 async function readFlags(userId: string): Promise<number> {
-	const {UserRepository} = await import('../../user/repositories/UserRepository');
-	const {createUserID} = await import('../../BrandedTypes');
+	const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
+	const {createUserID} = await import('@app/api/BrandedTypes');
 	const user = await new UserRepository().findUnique(createUserID(BigInt(userId)));
 	return user?.suspiciousActivityFlags ?? 0;
 }
 
 async function readGuildIds(userId: string): Promise<Array<string>> {
-	const {GuildRepository} = await import('../../guild/repositories/GuildRepository');
-	const {createUserID} = await import('../../BrandedTypes');
+	const {GuildRepository} = await import('@app/api/guild/repositories/GuildRepository');
+	const {createUserID} = await import('@app/api/BrandedTypes');
 	const guilds = await new GuildRepository().listUserGuilds(createUserID(BigInt(userId)));
 	return guilds.map((guild) => guild.id.toString());
 }

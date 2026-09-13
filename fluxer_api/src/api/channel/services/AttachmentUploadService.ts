@@ -1,5 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UploadedAttachment} from '@app/api/channel/AttachmentDTOs';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {
+	AttachmentUploadMode,
+	AttachmentUploadTraceRepository,
+} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import type {MessageInteractionService} from '@app/api/channel/services/MessageInteractionService';
+import type {MessageService} from '@app/api/channel/services/MessageService';
+import {
+	assertAttachmentFileSizesWithinLimit,
+	getContentType,
+	isMessageEmpty,
+	isOperationDisabled,
+	makeAttachmentCdnKey,
+	makeAttachmentCdnUrl,
+	purgeMessageAttachments as purgeMessageAttachmentsHelper,
+} from '@app/api/channel/services/message/MessageHelpers';
+import {applyUploadRelayDecision, resolveUploadRelayDecision} from '@app/api/channel/services/UploadRelay';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions, TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {
@@ -26,40 +60,6 @@ import type {
 	PresignedAttachmentUploadRequestItem,
 	PresignedAttachmentUploadResponseItem,
 } from '@fluxer/schema/src/domains/message/AttachmentUploadSchemas';
-import type {AttachmentID, ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Attachment} from '../../models/Attachment';
-import type {Channel} from '../../models/Channel';
-import type {Message} from '../../models/Message';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {assertGuildMemberCanCommunicate} from '../../utils/GuildCommunicationUtils';
-import type {UploadedAttachment} from '../AttachmentDTOs';
-import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
-import type {
-	AttachmentUploadMode,
-	AttachmentUploadTraceRepository,
-} from '../repositories/message/AttachmentUploadTraceRepository';
-import type {MessageInteractionService} from './MessageInteractionService';
-import type {MessageService} from './MessageService';
-import {
-	assertAttachmentFileSizesWithinLimit,
-	getContentType,
-	isMessageEmpty,
-	isOperationDisabled,
-	makeAttachmentCdnKey,
-	makeAttachmentCdnUrl,
-	purgeMessageAttachments as purgeMessageAttachmentsHelper,
-} from './message/MessageHelpers';
-import {applyUploadRelayDecision, resolveUploadRelayDecision} from './UploadRelay';
 
 interface DeleteAttachmentParams {
 	userId: UserID;

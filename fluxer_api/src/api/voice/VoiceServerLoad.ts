@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import {Logger} from '../Logger';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
 
 const DEFAULT_REFRESH_INTERVAL_MS = 15000;
 const STALE_REFRESH_INTERVALS = 4;

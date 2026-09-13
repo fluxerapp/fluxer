@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {compareMessageIds} from '@app/features/read_state/state/read_states/shared';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
-import {compareMessageIds} from './shared';
 
 export interface ReadStateIncomingMessageInput {
 	isCurrentUserAuthor: boolean;

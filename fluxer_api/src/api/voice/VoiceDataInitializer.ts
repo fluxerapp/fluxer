@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {VoiceRepository} from './VoiceRepository';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 
 export function resolveLivekitEndpoint(configuredUrl: string | undefined, apiPublicUrl: string): string {
 	if (configuredUrl) {

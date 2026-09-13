@@ -1,5 +1,53 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {
+	createAttachmentID,
+	createChannelID,
+	createGuildID,
+	createMessageID,
+	createStickerID,
+	createUserID,
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {AttachmentRequestData, AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import type {DmNsfwContext} from '@app/api/channel/services/message/MessageContentService';
+import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
+import {
+	createMessageSnapshotsForForward,
+	type ForwardMediaSelection,
+	isOperationDisabled,
+	isPersonalNotesChannel,
+} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
+import type {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {MessageAttachment, MessageReference} from '@app/api/database/types/MessageTypes';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {User} from '@app/api/models/User';
+import type {Webhook} from '@app/api/models/Webhook';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {
 	ChannelTypes,
 	MessageFlags,
@@ -28,54 +76,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {AttachmentID, ChannelID, GuildID, MessageID, RoleID, UserID} from '../../../BrandedTypes';
-import {
-	createAttachmentID,
-	createChannelID,
-	createGuildID,
-	createMessageID,
-	createStickerID,
-	createUserID,
-} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import {SYSTEM_USER_ID} from '../../../constants/Core';
-import type {MessageAttachment, MessageReference} from '../../../database/types/MessageTypes';
-import type {IFavoriteMemeRepository} from '../../../favorite_meme/IFavoriteMemeRepository';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {MessageSnapshot} from '../../../models/MessageSnapshot';
-import type {User} from '../../../models/User';
-import type {Webhook} from '../../../models/Webhook';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {DirectMessageSpamMitigationService} from '../../../user/services/DirectMessageSpamMitigationService';
-import {assertGuildMemberCanCommunicate} from '../../../utils/GuildCommunicationUtils';
-import type {AttachmentRequestData, AttachmentToProcess} from '../../AttachmentDTOs';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AttachmentUploadTraceRepository} from '../../repositories/message/AttachmentUploadTraceRepository';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import type {DmNsfwContext} from './MessageContentService';
-import type {MessageDispatchService} from './MessageDispatchService';
-import type {MessageEmbedAttachmentResolver} from './MessageEmbedAttachmentResolver';
-import {
-	createMessageSnapshotsForForward,
-	type ForwardMediaSelection,
-	isOperationDisabled,
-	isPersonalNotesChannel,
-} from './MessageHelpers';
-import type {MessageMentionService} from './MessageMentionService';
-import type {MessageOperationsHelpers} from './MessageOperationsHelpers';
-import type {MessagePersistenceService} from './MessagePersistenceService';
-import type {MessageProcessingService} from './MessageProcessingService';
-import type {MessageSearchService} from './MessageSearchService';
-import type {MessageValidationService} from './MessageValidationService';
 
 interface MessageSendServiceDeps {
 	channelRepository: IChannelRepositoryAggregate;

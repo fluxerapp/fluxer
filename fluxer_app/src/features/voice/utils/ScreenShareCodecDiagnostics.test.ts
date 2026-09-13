@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	confirmDecodeStall,
 	findSoftwareVideoDecoder,
 	findStalledVideoDecoder,
 	isSoftwareVideoImplementation,
 	type StalledVideoDecoderInfo,
-} from './ScreenShareCodecDiagnostics';
+} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
+import {describe, expect, it} from 'vitest';
 
 function createStatsReport(entries: Array<Record<string, unknown>>): RTCStatsReport {
 	return new Map(entries.map((entry) => [entry.id as string, entry])) as unknown as RTCStatsReport;

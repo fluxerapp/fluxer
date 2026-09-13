@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
 import type {IpInfoLookupBudget, IpInfoLookupPriority} from '@pkgs/geoip/src/IpInfoService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../Logger';
 
 const BURST_KEY_PREFIX = 'ipinfo:budget:burst:';
 const MONTH_KEY_PREFIX = 'ipinfo:budget:month:';

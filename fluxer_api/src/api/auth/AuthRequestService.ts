@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthEmail from '@app/api/auth/AuthEmail';
+import * as AuthEmailRevert from '@app/api/auth/AuthEmailRevert';
+import * as AuthLogin from '@app/api/auth/AuthLogin';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthRegistration from '@app/api/auth/AuthRegistration';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
+import type {SsoService} from '@app/api/auth/services/SsoService';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
+import {generateUsernameSuggestions} from '@app/api/utils/UsernameSuggestionUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
@@ -30,25 +49,6 @@ import type {
 	WebAuthnMfaRequest,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {ApiContext} from '../ApiContext';
-import {createUserID, type UserID} from '../BrandedTypes';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import {lookupGeoip} from '../utils/IpUtils';
-import {parseJsonRecord} from '../utils/JsonBoundaryUtils';
-import {resolveSessionClientInfo} from '../utils/SessionClientIdentity';
-import {generateUsernameSuggestions} from '../utils/UsernameSuggestionUtils';
-import * as AuthEmail from './AuthEmail';
-import * as AuthEmailRevert from './AuthEmailRevert';
-import * as AuthLogin from './AuthLogin';
-import * as AuthMfa from './AuthMfa';
-import * as AuthPassword from './AuthPassword';
-import * as AuthRegistration from './AuthRegistration';
-import * as AuthSession from './AuthSession';
-import type {DesktopHandoffService} from './services/DesktopHandoffService';
-import type {SsoService} from './services/SsoService';
 
 interface AuthRegisterRequest {
 	data: RegisterRequest;

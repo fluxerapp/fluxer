@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {initializeFluxerErrorMap} from '@app/api/ZodErrorMap';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {beforeAll, describe, expect, it} from 'vitest';
 import {z} from 'zod';
-import {initializeFluxerErrorMap} from './ZodErrorMap';
 
 function firstIssueMessage(schema: z.ZodType, value: unknown): string | undefined {
 	const result = schema.safeParse(value);

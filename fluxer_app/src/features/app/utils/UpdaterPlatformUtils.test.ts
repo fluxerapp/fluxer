@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	shouldShowNativeDesktopUpdateDownloadProgress,
 	shouldShowNativeDesktopUpdateInApp,
-} from './UpdaterPlatformUtils';
+} from '@app/features/app/utils/UpdaterPlatformUtils';
+import {describe, expect, it} from 'vitest';
 
 describe('UpdaterPlatformUtils', () => {
 	it('surfaces native desktop update availability in-app on Linux, macOS, and Windows', () => {

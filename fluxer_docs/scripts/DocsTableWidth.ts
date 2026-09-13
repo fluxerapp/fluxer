@@ -12,7 +12,7 @@ import {
 	TABLE_MAX_COLUMNS,
 	TABLE_MAX_IDENT_CHARS,
 	TABLE_WIDE_TIER_PX,
-} from '../src/table/DocsTableMetrics.ts';
+} from '@/table/DocsTableMetrics.ts';
 import {splitTableRow} from './DocsSource.ts';
 
 export {

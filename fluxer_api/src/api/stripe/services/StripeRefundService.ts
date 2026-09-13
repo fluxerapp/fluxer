@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {REFUND_ALLOWANCE_CLAIM_PREFIX} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
+import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -14,16 +24,6 @@ import type {
 	SelfServeRefundResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {extractId} from '../StripeUtils';
-import {REFUND_ALLOWANCE_CLAIM_PREFIX} from './StripeDisputeWebhookHandler';
-import type {StripeSubscriptionService} from './StripeSubscriptionService';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 export const SELF_SERVE_REFUND_WINDOW_DAYS = 3;

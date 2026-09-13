@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {errorForPhoneRejectReason, sendPhoneVerificationCode, verifyPhoneCode} from '@app/api/auth/AuthPhone';
+import {phonePrefixBanCache} from '@app/api/auth/PhonePrefixBanCache';
+import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
+import type {UserID} from '@app/api/BrandedTypes';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {PhoneLineType, PhoneLookupResult} from '@pkgs/sms/src/PhoneLookupTypes';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import type {ApiContext} from '../../ApiContext';
-import type {UserID} from '../../BrandedTypes';
-import {errorForPhoneRejectReason, sendPhoneVerificationCode, verifyPhoneCode} from '../AuthPhone';
-import {phonePrefixBanCache} from '../PhonePrefixBanCache';
-import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '../services/PhoneLookupRepository';
 
 const USER_ID = 1n as UserID;
 const MOBILE_US = '+15125550123';

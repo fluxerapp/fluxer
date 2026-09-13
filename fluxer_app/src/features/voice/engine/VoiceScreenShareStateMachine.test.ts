@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceScreenShareSnapshot,
 	getVoiceScreenShareStateValue,
 	transitionVoiceScreenShareSnapshot,
 	type VoiceScreenShareSnapshot,
-} from './VoiceScreenShareStateMachine';
+} from '@app/features/voice/engine/VoiceScreenShareStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const STREAM_KEY = 'guild-a:channel-a:connection-a';
 

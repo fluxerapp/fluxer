@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
+import {UserEmailOwnershipRepository} from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
+import {UserAccountRepository as UserAccountCrudRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {UserDeletionRepository} from '@app/api/user/repositories/account/UserDeletionRepository';
+import {UserGuildRepository} from '@app/api/user/repositories/account/UserGuildRepository';
+import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
+import {TokenRepository} from '@app/api/user/repositories/auth/TokenRepository';
+import type {
+	IUserAccountRepository,
+	UserDeletionScheduleUpdate,
+} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
-import {UserEmailOwnershipRepository} from './account/crud/UserEmailOwnershipRepository';
-import {UserAccountRepository as UserAccountCrudRepository} from './account/UserAccountRepository';
-import {UserDeletionRepository} from './account/UserDeletionRepository';
-import {UserGuildRepository} from './account/UserGuildRepository';
-import {UserLookupRepository} from './account/UserLookupRepository';
-import {TokenRepository} from './auth/TokenRepository';
-import type {IUserAccountRepository, UserDeletionScheduleUpdate} from './IUserAccountRepository';
 
 export class UserAccountRepository implements IUserAccountRepository {
 	private accountRepo: UserAccountCrudRepository;

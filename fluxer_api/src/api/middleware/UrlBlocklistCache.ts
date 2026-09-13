@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import {RISK_S3_KEYS, readLinesFromS3} from '@app/api/risk/RiskBlocklistS3';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
+import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '../constants/ContentModeration';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import {Logger} from '../Logger';
-import {RISK_S3_KEYS, readLinesFromS3} from '../risk/RiskBlocklistS3';
-import {RefreshSubscription} from '../utils/RefreshSubscription';
-import {canonicalizeUrl} from '../utils/UrlNormalizer';
 
 class UrlBlocklistCache {
 	private exactUrls: Set<string> = new Set();

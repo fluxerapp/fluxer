@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import type {MessageRow} from '../../database/types/MessageTypes';
-import type {Message} from '../../models/Message';
+import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import type {Message} from '@app/api/models/Message';
 
 export interface ListMessagesOptions {
 	restrictToBeforeBucket?: boolean;

@@ -17,7 +17,9 @@ vi.mock('@app/features/app/config/Config', () => ({
 	},
 }));
 
-const {buildPhoneGateEscapeConfirmCopy, buildPhoneGateEscapeHint} = await import('./RequiredActionEscapeCopy');
+const {buildPhoneGateEscapeConfirmCopy, buildPhoneGateEscapeHint} = await import(
+	'@app/features/auth/components/modals/required_action/RequiredActionEscapeCopy'
+);
 
 const i18n = setupI18n({locale: 'en', messages: {en: {}}});
 

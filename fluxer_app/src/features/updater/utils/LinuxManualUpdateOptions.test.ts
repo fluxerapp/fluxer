@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron';
+import {buildLinuxManualUpdateOptions} from '@app/features/updater/utils/LinuxManualUpdateOptions';
 import {describe, expect, it, vi} from 'vitest';
-import {buildLinuxManualUpdateOptions} from './LinuxManualUpdateOptions';
 
 vi.mock('@app/features/app/config/Config', () => ({
 	default: {

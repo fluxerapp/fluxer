@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BlueskyCallbackResult} from '@app/api/bluesky/IBlueskyOAuthService';
+import {mapConnectionToResponse} from '@app/api/connection/ConnectionMappers';
+import {createDomainConnectionId} from '@app/api/connection/DomainConnectionId';
+import {BlueskyOAuthNotEnabledError} from '@app/api/connection/errors/BlueskyOAuthNotEnabledError';
+import {ConnectionAlreadyExistsError} from '@app/api/connection/errors/ConnectionAlreadyExistsError';
+import {ConnectionInvalidTypeError} from '@app/api/connection/errors/ConnectionInvalidTypeError';
+import {ConnectionLimitReachedError} from '@app/api/connection/errors/ConnectionLimitReachedError';
+import {ConnectionNotFoundError} from '@app/api/connection/errors/ConnectionNotFoundError';
+import {ConnectionVerificationFailedError} from '@app/api/connection/errors/ConnectionVerificationFailedError';
+import type {
+	ConnectionSortOrderUpdate,
+	CreateConnectionParams,
+	IConnectionRepository,
+	UpdateConnectionParams,
+} from '@app/api/connection/IConnectionRepository';
+import {IConnectionService, type InitiateConnectionResult} from '@app/api/connection/IConnectionService';
+import {DomainConnectionVerifier} from '@app/api/connection/verification/DomainConnectionVerifier';
+import type {RevisionedUserConnectionRow, UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
 	type ConnectionType,
@@ -9,26 +29,6 @@ import {
 	MAX_CONNECTIONS_PER_USER,
 } from '@fluxer/constants/src/ConnectionConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
-import type {UserID} from '../BrandedTypes';
-import type {BlueskyCallbackResult} from '../bluesky/IBlueskyOAuthService';
-import type {RevisionedUserConnectionRow, UserConnectionRow} from '../database/types/ConnectionTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import {mapConnectionToResponse} from './ConnectionMappers';
-import {createDomainConnectionId} from './DomainConnectionId';
-import {BlueskyOAuthNotEnabledError} from './errors/BlueskyOAuthNotEnabledError';
-import {ConnectionAlreadyExistsError} from './errors/ConnectionAlreadyExistsError';
-import {ConnectionInvalidTypeError} from './errors/ConnectionInvalidTypeError';
-import {ConnectionLimitReachedError} from './errors/ConnectionLimitReachedError';
-import {ConnectionNotFoundError} from './errors/ConnectionNotFoundError';
-import {ConnectionVerificationFailedError} from './errors/ConnectionVerificationFailedError';
-import type {
-	ConnectionSortOrderUpdate,
-	CreateConnectionParams,
-	IConnectionRepository,
-	UpdateConnectionParams,
-} from './IConnectionRepository';
-import {IConnectionService, type InitiateConnectionResult} from './IConnectionService';
-import {DomainConnectionVerifier} from './verification/DomainConnectionVerifier';
 
 export class ConnectionService extends IConnectionService {
 	constructor(

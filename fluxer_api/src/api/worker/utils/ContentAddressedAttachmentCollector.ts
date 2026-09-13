@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import type {AttachmentID, ChannelID} from '../../BrandedTypes';
-import {makeAttachmentCdnKey} from '../../channel/services/message/MessageHelpers';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import type {ArchiveEntryWriter} from './ArchiveFile';
-import {streamCdnAssetIfExists} from './AssetArchiveHelpers';
+import type {AttachmentID, ChannelID} from '@app/api/BrandedTypes';
+import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {ArchiveEntryWriter} from '@app/api/worker/utils/ArchiveFile';
+import {streamCdnAssetIfExists} from '@app/api/worker/utils/AssetArchiveHelpers';
 
 interface CollectedAttachment {
 	archivePath: string;

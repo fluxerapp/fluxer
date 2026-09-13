@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
+import {GatewayService} from '@app/api/infrastructure/GatewayService';
+import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {afterEach, describe, expect, it} from 'vitest';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {GatewayRpcClient} from '../GatewayRpcClient';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '../GatewayRpcError';
-import {GatewayService} from '../GatewayService';
-import type {IGatewayRpcTransport} from '../IGatewayRpcTransport';
 
 function failingTransport(code: string): IGatewayRpcTransport {
 	return {

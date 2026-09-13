@@ -1,5 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {
+	type AttachmentRequestData,
+	mergeUploadWithClientData,
+	type UploadedAttachment,
+} from '@app/api/channel/AttachmentDTOs';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
+import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
 import {MAX_ATTACHMENTS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -11,20 +29,6 @@ import type {
 } from '@fluxer/schema/src/domains/message/AttachmentSchemas';
 import type {Context} from 'hono';
 import type {z} from 'zod';
-import type {ChannelID} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import type {GuildService} from '../../../guild/services/GuildService';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {User} from '../../../models/User';
-import type {HonoEnv} from '../../../types/HonoEnv';
-import {parseJsonPreservingLargeIntegers} from '../../../utils/LosslessJsonParser';
-import {inputValidationErrorFromZodIssues} from '../../../Validator';
-import {type AttachmentRequestData, mergeUploadWithClientData, type UploadedAttachment} from '../../AttachmentDTOs';
-import type {IChannelRepository} from '../../IChannelRepository';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import {normalizeMessageRequestPayload} from './MessageRequestCompatibility';
 
 const FIELD_NAME_PATTERN = /^files\[(\d+)\]$/;
 const LEGACY_FILE_FIELD_NAME_PATTERN = /^file(\d+)?$/;

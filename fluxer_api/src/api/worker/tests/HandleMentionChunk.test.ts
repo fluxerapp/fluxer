@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {afterEach, describe, expect, test} from 'vitest';
 import {
 	type ChannelID,
 	createChannelID,
@@ -11,14 +9,16 @@ import {
 	type GuildID,
 	type MessageID,
 	type UserID,
-} from '../../BrandedTypes';
-import type {RecentMentionRow} from '../../database/types/UserTypes';
-import {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {ReadStateService} from '../../read_state/ReadStateService';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import handleMentionChunk from '../tasks/HandleMentionChunk';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
+} from '@app/api/BrandedTypes';
+import type {RecentMentionRow} from '@app/api/database/types/UserTypes';
+import {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import handleMentionChunk from '@app/api/worker/tasks/HandleMentionChunk';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {afterEach, describe, expect, test} from 'vitest';
 
 const CHANNEL_ID = '2000';
 const MESSAGE_ID = '3000';

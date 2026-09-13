@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
+import {useExclusiveTooltip} from '@app/features/ui/tooltip/TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from '@app/features/ui/tooltip/TooltipHandoff';
+import {subscribeTooltipScrollHide} from '@app/features/ui/tooltip/TooltipScrollCoordinator';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import type {Placement, ReferenceType} from '@floating-ui/react';
 import {
@@ -16,9 +19,6 @@ import {
 } from '@floating-ui/react';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {useExclusiveTooltip} from './TooltipExclusivity';
-import {isTooltipHandoffWarm, markTooltipOpen} from './TooltipHandoff';
-import {subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 export interface HoverFloatingTooltipState {
 	x: number;

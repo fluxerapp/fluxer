@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
+import {readRequestJsonBody} from '@app/api/utils/RequestJsonBody';
+import {extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {createMiddleware} from 'hono/factory';
-import {Logger} from '../Logger';
-import {readRequestJsonBody} from '../utils/RequestJsonBody';
-import {extractUrlCandidates} from '../utils/UrlNormalizer';
-import {phraseBlocklistCache} from './PhraseBlocklistCache';
-import {urlBlocklistCache} from './UrlBlocklistCache';
 
 const SKIP_FIELDS = new Set([
 	'acls',

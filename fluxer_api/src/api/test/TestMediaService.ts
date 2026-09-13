@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {Config} from '../Config';
+import {Config} from '@app/api/Config';
 import {
 	IMediaService,
 	type MediaProxyFrameRequest,
 	type MediaProxyFrameResponse,
 	type MediaProxyMetadataRequest,
 	type MediaProxyMetadataResponse,
-} from '../infrastructure/IMediaService';
-import type {IStorageService} from '../infrastructure/IStorageService';
+} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 
 export class TestMediaService extends IMediaService {
 	constructor(private readonly storageService: IStorageService) {

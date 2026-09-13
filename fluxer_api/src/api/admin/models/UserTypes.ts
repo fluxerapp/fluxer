@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {User} from '@app/api/models/User';
+import {getIpAddressReverse, lookupGeoip} from '@app/api/utils/IpUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DEFERRED_PHONE_ON_COMMUNITY_JOIN} from '@fluxer/constants/src/UserConstants';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
-import type {User} from '../../models/User';
-import {getIpAddressReverse, lookupGeoip} from '../../utils/IpUtils';
 
 function hasAcl(acls: ReadonlySet<string>, acl: string): boolean {
 	return acls.has(acl) || acls.has(AdminACLs.WILDCARD);

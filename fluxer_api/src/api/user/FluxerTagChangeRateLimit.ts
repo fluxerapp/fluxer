@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {getRetryAfterSeconds} from '@app/api/utils/RateLimitUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
-import type {UserID} from '../BrandedTypes';
-import {getRetryAfterSeconds} from '../utils/RateLimitUtils';
 
 const FLUXER_TAG_CHANGE_MAX_ATTEMPTS = 5;
 const FLUXER_TAG_CHANGE_WINDOW_MS = ms('3 hours');

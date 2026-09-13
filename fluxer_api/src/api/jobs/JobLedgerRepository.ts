@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {Db} from '../database/CassandraTypes';
-import type {JobActiveRow, JobByDayBucketRow, JobByIdRow, JobStatus} from '../database/types/JobLedgerTypes';
-import {JobsActive, JobsByDayBucket, JobsById} from '../Tables';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {JobActiveRow, JobByDayBucketRow, JobByIdRow, JobStatus} from '@app/api/database/types/JobLedgerTypes';
 import {
 	type CreateJobInput,
 	IJobLedgerRepository,
 	type ListJobsCursor,
 	type ListJobsFilters,
 	type ListJobsResult,
-} from './IJobLedgerRepository';
+} from '@app/api/jobs/IJobLedgerRepository';
+import {JobsActive, JobsByDayBucket, JobsById} from '@app/api/Tables';
 
 const FETCH_JOB_BY_ID_QUERY = JobsById.select({
 	where: JobsById.where.eq('job_id'),

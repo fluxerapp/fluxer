@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -22,16 +18,20 @@ import {
 	sendChannelMessage,
 	updateChannel,
 	updateRole,
-} from '../../channel/tests/ChannelTestUtils';
-import {getRoles, updateGuild} from '../../guild/tests/GuildTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {getRoles, updateGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	markChannelAsIndexed,
 	markGuildChannelsAsIndexed,
 	markUserDmChannelsAsIndexed,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface MessageSearchResult {
 	channels: Array<{

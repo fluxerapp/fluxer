@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {STICKERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	ACCESSIBILITY_DESCRIPTOR,
 	CALL_DESCRIPTOR,
@@ -26,7 +24,9 @@ import {
 	STRIKETHROUGH_DESCRIPTOR,
 	TEXT_TO_SPEECH_3_DESCRIPTOR,
 	TTS_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const CONTRAST_DESCRIPTOR = msg({
 	message: 'Contrast',

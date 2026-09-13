@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isMajorEmailProvider} from '@app/api/risk/MajorEmailProviders';
+import type {DomainAgeResult} from '@app/api/risk/RiskTypes';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {isJsonRecord, parseJsonRecord} from '../../utils/JsonBoundaryUtils';
-import {isMajorEmailProvider} from '../MajorEmailProviders';
-import type {DomainAgeResult} from '../RiskTypes';
 
 const RDAP_TIMEOUT_MS = 4000;
 const CACHE_KEY_PREFIX = 'risk:domain_age:';

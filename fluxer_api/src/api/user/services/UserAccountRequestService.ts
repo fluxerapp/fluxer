@@ -1,5 +1,47 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AuthEmailRevert from '@app/api/auth/AuthEmailRevert';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
+import {requireSudoMode, type SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
+import {createChannelID, createGuildID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {AuthSession} from '@app/api/models/AuthSession';
+import type {User} from '@app/api/models/User';
+import {createAccountPolicyContactContext, type IAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyEvaluator';
+import type {IRegistrationEventsRepository} from '@app/api/risk/adapters/VelocityAdapter';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import {derivePlusAddressBase} from '@app/api/risk/PlusAddressUtils';
+import type {IRiskAssessmentRepository} from '@app/api/risk/RiskAssessmentRepository';
+import {deriveLatestRiskContext} from '@app/api/risk/RiskHistoryContext';
+import {
+	RecommendedAction,
+	type RiskAssessment,
+	RiskConfidence,
+	RiskDecisionMethod,
+	RiskLevel,
+} from '@app/api/risk/RiskTypes';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {EmailChangeService} from '@app/api/user/services/EmailChangeService';
+import type {UserAccountService} from '@app/api/user/services/UserAccountService';
+import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {mapUserToPartialResponseWithCache} from '@app/api/user/UserCacheHelpers';
+import {
+	canUseProfileTimezone,
+	createPremiumClearPatch,
+	getEffectiveSuspiciousFlags,
+	shouldStripExpiredPremium,
+} from '@app/api/user/UserHelpers';
+import {
+	mapGuildMemberToProfileResponse,
+	mapUserToPrivateResponse,
+	mapUserToProfileResponse,
+} from '@app/api/user/UserMappers';
 import {DEFERRED_PHONE_ON_COMMUNITY_JOIN, imposePhoneRequirements} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {getCurrentTimeZoneOffsetMinutes} from '@fluxer/date_utils/src/TimeZoneUtils';
@@ -14,44 +56,6 @@ import type {
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {UserPrivateResponse, UserProfileFullResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {Context} from 'hono';
-import * as AuthEmailRevert from '../../auth/AuthEmailRevert';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {IRegistrationRiskEvaluator} from '../../auth/services/IRegistrationRiskEvaluator';
-import {requireSudoMode, type SudoVerificationResult} from '../../auth/services/SudoVerificationService';
-import {createChannelID, createGuildID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {UserConnectionRow} from '../../database/types/ConnectionTypes';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {AuthSession} from '../../models/AuthSession';
-import type {User} from '../../models/User';
-import {createAccountPolicyContactContext, type IAccountPolicyEvaluator} from '../../risk/AccountPolicyEvaluator';
-import type {IRegistrationEventsRepository} from '../../risk/adapters/VelocityAdapter';
-import type {IRiskHistoryRepository} from '../../risk/HistoricalOutcomeRepository';
-import {derivePlusAddressBase} from '../../risk/PlusAddressUtils';
-import type {IRiskAssessmentRepository} from '../../risk/RiskAssessmentRepository';
-import {deriveLatestRiskContext} from '../../risk/RiskHistoryContext';
-import {
-	RecommendedAction,
-	type RiskAssessment,
-	RiskConfidence,
-	RiskDecisionMethod,
-	RiskLevel,
-} from '../../risk/RiskTypes';
-import type {HonoEnv} from '../../types/HonoEnv';
-import type {IUserRepository} from '../IUserRepository';
-import {mapUserToPartialResponseWithCache} from '../UserCacheHelpers';
-import {
-	canUseProfileTimezone,
-	createPremiumClearPatch,
-	getEffectiveSuspiciousFlags,
-	shouldStripExpiredPremium,
-} from '../UserHelpers';
-import {mapGuildMemberToProfileResponse, mapUserToPrivateResponse, mapUserToProfileResponse} from '../UserMappers';
-import type {EmailChangeService} from './EmailChangeService';
-import type {UserAccountService} from './UserAccountService';
-import type {UserChannelService} from './UserChannelService';
 
 type UserUpdatePayload = Omit<
 	UserUpdateWithVerificationRequest,

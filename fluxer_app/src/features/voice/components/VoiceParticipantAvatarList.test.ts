@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import {resolveVoiceParticipantAvatarEntryVoiceState} from '@app/features/voice/components/VoiceParticipantDisplayState';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {VoiceConnectionQuality} from '@app/features/voice/engine/VoiceTrackSource';
 import {describe, expect, it} from 'vitest';
-import {resolveVoiceParticipantAvatarEntryVoiceState} from './VoiceParticipantDisplayState';
 
 function createParticipantSnapshot(overrides: Partial<LivekitParticipantSnapshot> = {}): LivekitParticipantSnapshot {
 	return {

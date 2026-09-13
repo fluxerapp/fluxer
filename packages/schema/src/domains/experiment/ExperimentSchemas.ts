@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {z} from 'zod';
 import {
 	INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 	VoiceNoiseSuppressionAssignmentResponse,
-} from '../admin/VoiceNoiseSuppressionSchemas';
+} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
 export const EXPERIMENT_MAX_POLL_INTERVAL_SECONDS = 86400;

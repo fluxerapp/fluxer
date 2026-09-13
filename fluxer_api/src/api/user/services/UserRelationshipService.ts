@@ -1,5 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {User} from '@app/api/models/User';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
+import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
+import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_RELATIONSHIPS} from '@fluxer/constants/src/LimitConstants';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -21,26 +41,6 @@ import type {
 	FriendRequestByTagRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import type {ApiContext} from '../../ApiContext';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import type {Relationship} from '../../models/Relationship';
-import type {User} from '../../models/User';
-import type {UserPermissionUtils} from '../../utils/UserPermissionUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '../repositories/IUserSettingsRepository';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapRelationshipToResponse} from '../UserMappers';
-import type {DirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
-import {createDirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
 
 interface UserRelationshipRepository
 	extends IUserAccountRepository,

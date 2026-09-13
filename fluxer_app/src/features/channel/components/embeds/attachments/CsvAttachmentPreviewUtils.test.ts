@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	buildCsvTableNode,
+	isCsvAttachment,
+	parseCsvRows,
+} from '@app/features/channel/components/embeds/attachments/CsvAttachmentPreviewUtils';
 import {TableAlignment} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {describe, expect, it} from 'vitest';
-import {buildCsvTableNode, isCsvAttachment, parseCsvRows} from './CsvAttachmentPreviewUtils';
 
 function attachmentFixture(fields: Partial<MessageAttachment>): MessageAttachment {
 	return fields as MessageAttachment;

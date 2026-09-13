@@ -13,13 +13,20 @@ import {
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 	USE_DEFAULT_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {formatDurationMs} from '@app/features/channel/components/channel_header_components/developer_tools/FormatHelpers';
+import {
+	getPremiumTypeLabel,
+	LIFETIME_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
+import {
+	DEVELOPER_OPTION_KEYS,
+	isDeveloperOptionAtDefault,
+	resetDeveloperOption,
+} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {formatDurationMs} from './FormatHelpers';
-import {getPremiumTypeLabel, LIFETIME_DESCRIPTOR} from './OptionPresets';
-import {DEVELOPER_OPTION_KEYS, isDeveloperOptionAtDefault, resetDeveloperOption} from './ResetOptions';
 
 const ACTIVE_DEVELOPER_OPTION_KEYS = DEVELOPER_OPTION_KEYS.filter((key) => key !== 'premiumScenarioOverride');
 export const ATTACHMENT_MOCKS_DESCRIPTOR = msg({

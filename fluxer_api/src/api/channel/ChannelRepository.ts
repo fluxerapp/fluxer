@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '../BrandedTypes';
-import type {ChannelRow} from '../database/types/ChannelTypes';
-import type {MessageRow} from '../database/types/MessageTypes';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import type {Message} from '../models/Message';
-import type {MessageReaction} from '../models/MessageReaction';
-import {IChannelRepository} from './IChannelRepository';
-import {ChannelRepository as NewChannelRepository} from './repositories/ChannelRepository';
+import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {ChannelRepository as NewChannelRepository} from '@app/api/channel/repositories/ChannelRepository';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {MessageReaction} from '@app/api/models/MessageReaction';
 
 export class ChannelRepository extends IChannelRepository {
 	private repository: NewChannelRepository;

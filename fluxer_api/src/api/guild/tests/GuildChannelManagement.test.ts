@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	addMemberRole,
 	createChannel,
@@ -12,11 +8,15 @@ import {
 	getChannel,
 	setupTestGuildWithMembers,
 	updateChannel,
-} from '../../channel/tests/ChannelTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createGuild, getGuildChannels} from './GuildTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {createGuild, getGuildChannels} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Guild Channel Management', () => {
 	let harness: ApiTestHarness;

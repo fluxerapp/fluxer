@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {createEmailRevertToken} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import type {ApiContext} from '../ApiContext';
-import {createEmailRevertToken} from '../BrandedTypes';
-import type {User} from '../models/User';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
 
 interface IssueEmailRevertTokenParams {
 	user: User;

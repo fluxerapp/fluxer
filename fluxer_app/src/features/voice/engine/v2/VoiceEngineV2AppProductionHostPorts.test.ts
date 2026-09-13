@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createVoiceEngineV2AppTestControllerHost} from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHostTestUtils';
+import {createVoiceEngineV2AppIngestionPort} from '@app/features/voice/engine/v2/VoiceEngineV2AppHostPorts';
+import {createVoiceEngineV2AppLifecycleAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppLifecycleAdapter';
+import {createVoiceEngineV2AppProductionHostPorts} from '@app/features/voice/engine/v2/VoiceEngineV2AppProductionHostPorts';
+import type {VoiceEngineV2AppTimerScheduler} from '@app/features/voice/engine/v2/VoiceEngineV2AppTimerAdapter';
+import {
+	createVoiceEngineV2ShadowHostPorts,
+	type VoiceEngineV2ShadowHostPortCall,
+} from '@app/features/voice/engine/v2/VoiceEngineV2ShadowHostPorts';
 import {
 	availableVoiceEngineV2Capabilities,
 	type NativeMediaPort,
@@ -14,12 +23,6 @@ import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2
 import {waitForRuntime} from '@fluxer/voice_engine_v2/testing';
 import type {Room} from 'livekit-client';
 import {describe, expect, it} from 'vitest';
-import {createVoiceEngineV2AppTestControllerHost} from './VoiceEngineV2AppControllerHostTestUtils';
-import {createVoiceEngineV2AppIngestionPort} from './VoiceEngineV2AppHostPorts';
-import {createVoiceEngineV2AppLifecycleAdapter} from './VoiceEngineV2AppLifecycleAdapter';
-import {createVoiceEngineV2AppProductionHostPorts} from './VoiceEngineV2AppProductionHostPorts';
-import type {VoiceEngineV2AppTimerScheduler} from './VoiceEngineV2AppTimerAdapter';
-import {createVoiceEngineV2ShadowHostPorts, type VoiceEngineV2ShadowHostPortCall} from './VoiceEngineV2ShadowHostPorts';
 
 type ProductionCall =
 	| {type: 'connect'; guildId: string | null; channelId: string}

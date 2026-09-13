@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import * as path from 'node:path';
-import {type BinaryExpression, type Identifier, Node, type Project, type SourceFile, SyntaxKind} from 'ts-morph';
+import {type BinaryExpression, type Identifier, Node, type Project, type SourceFile, SyntaxKind, ts} from 'ts-morph';
 
 export const UNRESOLVED = Symbol('unresolved');
+
+const APP_ALIAS_PREFIX = '@app/';
 
 type StaticPrimitive = string | number | boolean | null;
 
@@ -51,6 +53,7 @@ export function getIdentifierDeclarations(node: Identifier): ReadonlyArray<Node>
 
 export class StaticPathResolver {
 	private readonly inFlight = new Set<Node>();
+	private readonly appSourceRoots = new Map<string, string | null>();
 
 	constructor(private readonly project: Project) {}
 
@@ -338,11 +341,44 @@ export class StaticPathResolver {
 		return null;
 	}
 
-	private resolveModule(from: SourceFile, specifier: string): SourceFile | null {
-		if (!specifier.startsWith('.')) {
+	private resolveSpecifierBase(fromPath: string, specifier: string): string | null {
+		if (specifier.startsWith('.')) {
+			return path.resolve(path.dirname(fromPath), specifier);
+		}
+		if (!specifier.startsWith(APP_ALIAS_PREFIX)) {
 			return null;
 		}
-		const base = path.resolve(path.dirname(from.getFilePath()), specifier);
+		const sourceRoot = this.findAppSourceRoot(path.dirname(fromPath));
+		return sourceRoot == null ? null : path.join(sourceRoot, specifier.slice(APP_ALIAS_PREFIX.length));
+	}
+
+	private findAppSourceRoot(directory: string): string | null {
+		const cached = this.appSourceRoots.get(directory);
+		if (cached !== undefined) {
+			return cached;
+		}
+		const fileSystem = this.project.getFileSystem();
+		const tsconfigPath = path.join(directory, 'tsconfig.json');
+		const parent = path.dirname(directory);
+		let sourceRoot: string | null = null;
+		if (fileSystem.fileExistsSync(tsconfigPath)) {
+			const {config} = ts.readConfigFile(tsconfigPath, (filePath) => fileSystem.readFileSync(filePath));
+			const target = config?.compilerOptions?.paths?.[`${APP_ALIAS_PREFIX}*`]?.[0];
+			if (typeof target === 'string' && target.endsWith('/*')) {
+				sourceRoot = path.resolve(directory, target.slice(0, -2));
+			}
+		} else if (parent !== directory) {
+			sourceRoot = this.findAppSourceRoot(parent);
+		}
+		this.appSourceRoots.set(directory, sourceRoot);
+		return sourceRoot;
+	}
+
+	private resolveModule(from: SourceFile, specifier: string): SourceFile | null {
+		const base = this.resolveSpecifierBase(from.getFilePath(), specifier);
+		if (base == null) {
+			return null;
+		}
 		for (const candidate of [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`, base]) {
 			const existing = this.project.getSourceFile(candidate);
 			if (existing != null) {

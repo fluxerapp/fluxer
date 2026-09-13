@@ -4,7 +4,7 @@ import {
 	classifyAccountPolicyReverseDnsHostname,
 	isAccountPolicyEducationOrganizationName,
 	isAccountPolicyTrustedCommercialPrivacyProvider,
-} from './AccountPolicyService';
+} from '@app/api/risk/AccountPolicyService';
 
 const ASN_ENTRY_REGEX = /^\d+$/u;
 

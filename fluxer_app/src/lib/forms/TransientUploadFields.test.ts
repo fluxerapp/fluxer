@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	assignTransientUploadFieldMutation,
 	getTransientUploadFieldMutation,
 	omitTransientUploadFields,
-} from './TransientUploadFields';
+} from '@app/lib/forms/TransientUploadFields';
+import {describe, expect, it} from 'vitest';
 
 describe('getTransientUploadFieldMutation', () => {
 	it('preserves the existing remote asset when there is no explicit upload or clear', () => {

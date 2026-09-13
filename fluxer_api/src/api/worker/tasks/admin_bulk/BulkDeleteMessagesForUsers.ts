@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createUserID} from '@app/api/BrandedTypes';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {createUserID} from '../../../BrandedTypes';
-import {UserMessageDeletionService} from '../../../channel/services/message/UserMessageDeletionService';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	user_ids: Array<string>;

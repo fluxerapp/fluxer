@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {selectGuildActivationTarget} from '@app/features/gateway/transport/GuildActivationTarget';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {describe, expect, it} from 'vitest';
-import {selectGuildActivationTarget} from './GuildActivationTarget';
 
 describe('selectGuildActivationTarget', () => {
 	it('returns the selected guild on a guild route', () => {

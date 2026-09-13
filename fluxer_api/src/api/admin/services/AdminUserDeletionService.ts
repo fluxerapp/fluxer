@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {BulkCancelledError, type BulkProgressHelpers} from '@app/api/admin/services/BulkProgressHelpers';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {createReportID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {ReportStatus} from '@app/api/report/IReportRepository';
+import type {ReportService} from '@app/api/report/ReportService';
+import {getReportSearchService} from '@app/api/SearchFactory';
+import {clearPendingDeletion, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
@@ -9,22 +25,6 @@ import type {
 	ScheduleAccountDeletionRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type Stripe from 'stripe';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthSession from '../../auth/AuthSession';
-import {createReportID, createUserID, type UserID} from '../../BrandedTypes';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import {ReportStatus} from '../../report/IReportRepository';
-import type {ReportService} from '../../report/ReportService';
-import {getReportSearchService} from '../../SearchFactory';
-import {clearPendingDeletion, reschedulePendingDeletion} from '../../user/services/PendingDeletionCoordinator';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminBanManagementService} from './AdminBanManagementService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
-import {BulkCancelledError, type BulkProgressHelpers} from './BulkProgressHelpers';
 
 interface AdminUserDeletionServiceDeps {
 	apiContext: ApiContext;

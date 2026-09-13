@@ -10,8 +10,7 @@ import {fileURLToPath} from 'node:url';
 import {parseArgs} from 'node:util';
 import {extractRoutesFromControllers} from '@fluxer/openapi/src/extractors/RouteExtractor';
 import type {OpenAPIDocument} from '@fluxer/openapi/src/OpenAPITypes';
-import {installerChecksumLine} from '../src/installer/InstallerDigest.ts';
-
+import {installerChecksumLine} from '@/installer/InstallerDigest.ts';
 import {type DocsRouteHeader, readRouteHeaders} from './DocsRouteHeaders.ts';
 import {DOCS_ROOT, HTTP_METHODS, type MarkdownPage, readMarkdownPages, routeShape} from './DocsSource.ts';
 
@@ -1321,7 +1320,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	const digestBearing: Array<[string, string]> = [];
 	for (const endpoint of INSTALLER_ENDPOINTS) {
 		const source = await readFile(fileURLToPath(new URL(`../src/pages/${endpoint}`, import.meta.url)), 'utf8');
-		if (!source.includes("from '../installer/Installer'")) {
+		if (!source.includes("from '@/installer/Installer'")) {
 			problems.push(`src/pages/${endpoint} no longer serves the script through src/installer/Installer`);
 		}
 		digestBearing.push([`src/pages/${endpoint}`, source]);

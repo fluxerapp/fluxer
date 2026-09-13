@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {JobStatus} from '@app/api/database/types/JobLedgerTypes';
+import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {setCassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
-import type {JobStatus} from '../database/types/JobLedgerTypes';
-import {InMemoryCassandraQueryExecutor} from '../test/InMemoryCassandraQueryExecutor';
-import {JobLedgerRepository} from './JobLedgerRepository';
 
 let executor: InMemoryCassandraQueryExecutor;
 

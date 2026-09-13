@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import type {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../channel/tests/ChannelTestUtils';
-import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 interface UserSearchResponse {
 	users: Array<UserAdminResponse>;

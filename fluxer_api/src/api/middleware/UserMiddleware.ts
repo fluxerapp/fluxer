@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {Logger} from '@app/api/Logger';
+import {hashAuthToken, recordAbuseSignal} from '@app/api/middleware/AbusiveIpAutoBanner';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {requireRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import * as AuthSession from '../auth/AuthSession';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import type {HonoEnv} from '../types/HonoEnv';
-import {requireRequestClientIp} from '../utils/RequestClientIp';
-import {stripApiPrefix} from '../utils/RequestPathUtils';
-import {hashAuthToken, recordAbuseSignal} from './AbusiveIpAutoBanner';
 
 type TokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key';
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {filterViewableChannels, pickDefaultGuildChannelId} from '@app/features/messaging/utils/ChannelShared';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {describe, expect, it} from 'vitest';
-import {filterViewableChannels, pickDefaultGuildChannelId} from './ChannelShared';
 
 describe('filterViewableChannels', () => {
 	it('excludes link channels from default navigation fallbacks', () => {

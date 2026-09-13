@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isSettingsItemNew} from '@app/features/user/components/settings_utils/SettingsMetadata';
 import {describe, expect, it} from 'vitest';
-import {isSettingsItemNew} from './SettingsMetadata';
 
 const NOW = new Date('2026-06-04T12:00:00.000Z');
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {calculateDistance, parseCoordinate} from '../utils/GeoUtils';
-import type {VoiceRegionAvailability, VoiceServerRecord} from './VoiceModel';
+import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
+import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface VoiceRegionPreference {
 	regionId: string | null;

@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
+import type {ModerationContext} from '@app/api/infrastructure/ContentModerationService';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {EmbedService} from '@app/api/infrastructure/EmbedService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import {Message} from '@app/api/models/Message';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import * as UnfurlerUtils from '@app/api/utils/UnfurlerUtils';
+import {ChannelEventDispatcher} from '@app/api/worker/services/ChannelEventDispatcher';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_EMBEDS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import type {ChannelID, GuildID, MessageID} from '../../BrandedTypes';
-import {createChannelID, createGuildID, createMessageID, createUserID} from '../../BrandedTypes';
-import type {ChannelRepository} from '../../channel/ChannelRepository';
-import {buildBroadcastMessageData} from '../../channel/services/message/MessageGatewayDispatch';
-import type {MessageEmbed, MessageEmbedChild} from '../../database/types/MessageTypes';
-import type {ModerationContext} from '../../infrastructure/ContentModerationService';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {EmbedService} from '../../infrastructure/EmbedService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {MediaProxyNsfwMode} from '../../infrastructure/IMediaService';
-import {Logger} from '../../Logger';
-import type {Channel} from '../../models/Channel';
-import {Message} from '../../models/Message';
-import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
-import * as UnfurlerUtils from '../../utils/UnfurlerUtils';
-import {ChannelEventDispatcher} from '../services/ChannelEventDispatcher';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	channelId: z.string(),

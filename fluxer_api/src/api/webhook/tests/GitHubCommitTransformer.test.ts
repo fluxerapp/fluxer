@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	transformCommitComment,
+	transformCreate,
+	transformDelete,
+} from '@app/api/webhook/transformers/GitHubCommitTransformer';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import {describe, expect, it} from 'vitest';
-import {transformCommitComment, transformCreate, transformDelete} from '../transformers/GitHubCommitTransformer';
 
 function createBaseSender() {
 	return {

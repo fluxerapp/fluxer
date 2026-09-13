@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createRoleMovePreview} from '@app/features/guild/components/modals/guild_tabs/RoleMoveOperation';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {describe, expect, it} from 'vitest';
-import {createRoleMovePreview} from './RoleMoveOperation';
 
 const guildId = 'guild-1';
 

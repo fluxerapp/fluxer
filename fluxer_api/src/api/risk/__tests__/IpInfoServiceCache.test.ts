@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {server} from '@app/api/test/msw/server';
 import type {
 	CachedIpInfoFailure,
 	IpInfoCache,
@@ -11,7 +12,6 @@ import type {
 import {createIpInfoService, resolveIpInfoLookupPriority} from '@pkgs/geoip/src/IpInfoService';
 import {delay, HttpResponse, http} from 'msw';
 import {describe, expect, it} from 'vitest';
-import {server} from '../../test/msw/server';
 
 interface RecordedSet {
 	key: string;

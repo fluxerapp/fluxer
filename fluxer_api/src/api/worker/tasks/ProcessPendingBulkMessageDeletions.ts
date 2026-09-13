@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {getValidTimestamp} from '@app/api/utils/TimestampUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {createUserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {getValidTimestamp} from '../../utils/TimestampUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const processPendingBulkMessageDeletions: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.debug('Processing pending bulk message deletions');

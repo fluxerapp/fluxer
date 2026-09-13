@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isDeepStrictEqual} from 'node:util';
-import {registerKvMeta, registerTableSpec} from './CassandraMetaRegistry';
+import {registerKvMeta, registerTableSpec} from '@app/api/database/CassandraMetaRegistry';
 import type {
 	CassandraParam,
 	CassandraParams,
@@ -18,8 +18,8 @@ import type {
 	RowValue,
 	Table,
 	WhereExpr,
-} from './CassandraTypes';
-import {prepared, validateTtlSeconds} from './CassandraTypes';
+} from '@app/api/database/CassandraTypes';
+import {prepared, validateTtlSeconds} from '@app/api/database/CassandraTypes';
 
 const DEFAULT_TTL_PARAM_NAME = 'ttl_seconds_bind';
 const DEFAULT_LIMIT_PARAM_NAME = 'limit_bind';

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {classifyAccountPolicyReverseDnsHostname} from '@app/api/risk/AccountPolicyService';
+import type {ReverseDnsResult} from '@app/api/risk/RiskTypes';
+import {getIpAddressReverse} from '@app/api/utils/IpUtils';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {getIpAddressReverse} from '../../utils/IpUtils';
-import {classifyAccountPolicyReverseDnsHostname} from '../AccountPolicyService';
-import type {ReverseDnsResult} from '../RiskTypes';
 
 interface ReverseDnsAdapterContext {
 	cacheService?: ICacheService;

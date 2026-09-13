@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {VoiceAccessContext} from '@app/api/voice/VoiceAvailabilityService';
+import {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {VoiceAccessContext} from '../VoiceAvailabilityService';
-import {VoiceAvailabilityService} from '../VoiceAvailabilityService';
-import type {VoiceRegionRecord, VoiceServerRecord} from '../VoiceModel';
-import type {VoiceTopology} from '../VoiceTopology';
 
 function createMockRegion(overrides: Partial<VoiceRegionRecord> = {}): VoiceRegionRecord {
 	return {

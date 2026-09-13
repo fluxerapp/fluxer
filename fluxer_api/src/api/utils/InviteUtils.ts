@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import * as RegexUtils from './RegexUtils';
+import {Config} from '@app/api/Config';
+import * as RegexUtils from '@app/api/utils/RegexUtils';
 
 let _invitePattern: RegExp | null = null;
 

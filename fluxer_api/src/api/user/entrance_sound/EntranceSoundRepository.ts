@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EntranceSoundID, UserID} from '../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import type {UserEntranceSoundRow, UserEntranceSoundSelectionRow} from '../../database/types/UserTypes';
-import {EntranceSound, EntranceSoundSelection} from '../../models/EntranceSound';
-import {UserEntranceSoundSelections, UserEntranceSounds} from '../../Tables';
+import type {EntranceSoundID, UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {UserEntranceSoundRow, UserEntranceSoundSelectionRow} from '@app/api/database/types/UserTypes';
+import {EntranceSound, EntranceSoundSelection} from '@app/api/models/EntranceSound';
+import {UserEntranceSoundSelections, UserEntranceSounds} from '@app/api/Tables';
 
 const LIST_SOUNDS_CQL = UserEntranceSounds.select({
 	where: UserEntranceSounds.where.eq('user_id'),

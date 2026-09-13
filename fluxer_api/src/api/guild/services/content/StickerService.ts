@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createStickerID, type GuildID, type StickerID, type UserID} from '@app/api/BrandedTypes';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import {mapGuildStickersWithUsersToResponse, mapGuildStickerToResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ContentHelpers} from '@app/api/guild/services/content/ContentHelpers';
+import type {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
+import type {User} from '@app/api/models/User';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -15,23 +32,6 @@ import type {
 	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {createStickerID, type GuildID, type StickerID, type UserID} from '../../../BrandedTypes';
-import {getContentMessage} from '../../../content_i18n/ContentI18n';
-import type {AvatarService} from '../../../infrastructure/AvatarService';
-import {contentModerationService} from '../../../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {GuildSticker} from '../../../models/GuildSticker';
-import type {User} from '../../../models/User';
-import {getCachedUserPartialResponse} from '../../../user/UserCacheHelpers';
-import {mapGuildStickersWithUsersToResponse, mapGuildStickerToResponse} from '../../GuildModel';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {ContentHelpers} from './ContentHelpers';
-import type {ExpressionAssetPurger} from './ExpressionAssetPurger';
 
 export class StickerService {
 	constructor(

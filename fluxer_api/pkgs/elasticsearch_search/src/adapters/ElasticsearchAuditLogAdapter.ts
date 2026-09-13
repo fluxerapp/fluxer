@@ -3,11 +3,11 @@
 import type {Client} from '@elastic/elasticsearch';
 import type {SortCombinations} from '@elastic/elasticsearch/lib/api/types';
 import type {AuditLogSearchFilters, SearchableAuditLog} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {ElasticsearchFilter} from '../ElasticsearchFilterUtils';
-import {compactFilters, esTermFilter} from '../ElasticsearchFilterUtils';
-import {ELASTICSEARCH_INDEX_DEFINITIONS} from '../ElasticsearchIndexDefinitions';
-import type {ElasticsearchDistributedLock} from './ElasticsearchIndexAdapter';
-import {ElasticsearchIndexAdapter} from './ElasticsearchIndexAdapter';
+import type {ElasticsearchDistributedLock} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import {ElasticsearchIndexAdapter} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import type {ElasticsearchFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {compactFilters, esTermFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {ELASTICSEARCH_INDEX_DEFINITIONS} from '@pkgs/elasticsearch_search/src/ElasticsearchIndexDefinitions';
 
 function buildAuditLogFilters(filters: AuditLogSearchFilters): Array<ElasticsearchFilter | undefined> {
 	const clauses: Array<ElasticsearchFilter | undefined> = [];

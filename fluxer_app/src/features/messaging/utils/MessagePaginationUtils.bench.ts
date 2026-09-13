@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	calculateAroundPaginationState,
+	getAroundWindowCounts,
+} from '@app/features/messaging/utils/MessagePaginationUtils';
 import {bench, describe} from 'vitest';
-import {calculateAroundPaginationState, getAroundWindowCounts} from './MessagePaginationUtils';
 
 const PAGINATION_INPUTS = Array.from({length: 100_000}, (_value, index) => ({
 	limit: 50 + (index % 25),

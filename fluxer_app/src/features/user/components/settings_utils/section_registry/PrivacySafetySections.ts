@@ -6,8 +6,7 @@ import {
 	FRIENDS_OF_FRIENDS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ADD_FRIEND_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	DELETE_DESCRIPTOR,
 	DIRECT_MESSAGE_DESCRIPTOR,
@@ -15,7 +14,8 @@ import {
 	FRIENDS_DESCRIPTOR,
 	REMOVE_DESCRIPTOR,
 	VOICE_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const FRIEND_REQUESTS_DESCRIPTOR = msg({
 	message: 'Friend requests',

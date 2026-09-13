@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import {deriveSudoMethods, userHasMfa} from '@app/api/auth/services/SudoMethods';
+import {getSudoModeService} from '@app/api/auth/services/SudoModeService';
+import {SUDO_MODE_HEADER} from '@app/api/middleware/SudoModeMiddleware';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import type {Context} from 'hono';
-import * as AuthMfa from '../../auth/AuthMfa';
-import * as AuthPassword from '../../auth/AuthPassword';
-import {SUDO_MODE_HEADER} from '../../middleware/SudoModeMiddleware';
-import type {User} from '../../models/User';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {deriveSudoMethods, userHasMfa} from './SudoMethods';
-import {getSudoModeService} from './SudoModeService';
 
 export interface SudoVerificationBody {
 	password?: string;

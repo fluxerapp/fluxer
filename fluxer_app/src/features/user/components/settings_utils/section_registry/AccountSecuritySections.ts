@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {EMAIL_DESCRIPTOR, PASSWORD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {shouldShowClaimedAccountSections} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryHelpers';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
+import {
+	DELETE_DESCRIPTOR,
+	REMOVE_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
-import {shouldShowClaimedAccountSections} from './SectionRegistryHelpers';
-import type {SectionDefinition} from './SectionRegistryTypes';
-import {DELETE_DESCRIPTOR, REMOVE_DESCRIPTOR} from './SharedDescriptors';
 
 const MAIL_DESCRIPTOR = msg({
 	message: 'Mail',

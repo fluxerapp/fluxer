@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	OAuth2AccessTokenByUserRow,
 	OAuth2AccessTokenRow,
 	OAuth2AuthorizationCodeRow,
 	OAuth2RefreshTokenByUserRow,
 	OAuth2RefreshTokenRow,
-} from '../../database/types/OAuth2Types';
-import {OAuth2AccessToken} from '../../models/OAuth2AccessToken';
-import {OAuth2AuthorizationCode} from '../../models/OAuth2AuthorizationCode';
-import {OAuth2RefreshToken} from '../../models/OAuth2RefreshToken';
+} from '@app/api/database/types/OAuth2Types';
+import {OAuth2AccessToken} from '@app/api/models/OAuth2AccessToken';
+import {OAuth2AuthorizationCode} from '@app/api/models/OAuth2AuthorizationCode';
+import {OAuth2RefreshToken} from '@app/api/models/OAuth2RefreshToken';
+import {ACCESS_TOKEN_TTL_SECONDS, AUTHORIZATION_CODE_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
+import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
 import {
 	OAuth2AccessTokens,
 	OAuth2AccessTokensByUser,
 	OAuth2AuthorizationCodes,
 	OAuth2RefreshTokens,
 	OAuth2RefreshTokensByUser,
-} from '../../Tables';
-import {ACCESS_TOKEN_TTL_SECONDS, AUTHORIZATION_CODE_TTL_SECONDS} from '../OAuth2TokenConstants';
-import type {IOAuth2TokenRepository} from './IOAuth2TokenRepository';
+} from '@app/api/Tables';
 
 function isAccessTokenExpired(createdAt: Date): boolean {
 	return Date.now() - createdAt.getTime() > ACCESS_TOKEN_TTL_SECONDS * 1000;

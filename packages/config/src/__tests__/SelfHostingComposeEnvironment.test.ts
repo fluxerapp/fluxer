@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {serviceEnvironment, serviceNames, sharedEnvironment} from '@fluxer/config/src/__tests__/SelfHostingCompose';
 import {describe, expect, test} from 'vitest';
-import {serviceEnvironment, serviceNames, sharedEnvironment} from './SelfHostingCompose';
 
 describe('the shipped compose stack wires every service it starts', () => {
 	test('no service sizes a pool for a connection it cannot make', () => {

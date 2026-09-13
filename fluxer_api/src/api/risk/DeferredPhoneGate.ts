@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import {resolveDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {
 	DEFERRABLE_PHONE_FLAGS,
@@ -9,11 +14,6 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
-import {Logger} from '../Logger';
-import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
-import type {Guild} from '../models/Guild';
-import type {User} from '../models/User';
-import {resolveDeferredPhoneGateEnabled} from './DeferredPhoneGateCache';
 
 export interface DeferredPhoneGateConfig {
 	enabled: boolean;

@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapAuthSessionsToResponse} from '@app/api/auth/AuthModel';
+import {revokeAllAuthSessions, revokeAuthSessions} from '@app/api/auth/AuthSessionRevocation';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import type {UserID} from '@app/api/BrandedTypes';
+import {
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+	REGISTRATION_REJECTED_TRAIT,
+} from '@app/api/instance/InstanceConfigRepository';
+import {Logger} from '@app/api/Logger';
+import type {AuthSession} from '@app/api/models/AuthSession';
+import type {User} from '@app/api/models/User';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {isFluxerNativeUserAgent, parseReportedClientOs} from '@app/api/utils/SessionClientIdentity';
 import {BotUserAuthSessionCreationDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthSessionCreationDeniedError';
 import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
 import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
@@ -8,17 +22,6 @@ import {InvalidTokenError} from '@fluxer/errors/src/domains/core/InvalidTokenErr
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import {REGISTRATION_PENDING_APPROVAL_TRAIT, REGISTRATION_REJECTED_TRAIT} from '../instance/InstanceConfigRepository';
-import {Logger} from '../Logger';
-import type {AuthSession} from '../models/AuthSession';
-import type {User} from '../models/User';
-import {lookupGeoip} from '../utils/IpUtils';
-import {isFluxerNativeUserAgent, parseReportedClientOs} from '../utils/SessionClientIdentity';
-import {mapAuthSessionsToResponse} from './AuthModel';
-import {revokeAllAuthSessions, revokeAuthSessions} from './AuthSessionRevocation';
-import * as AuthUtility from './AuthUtility';
 
 export interface SessionOrigin {
 	ip: string;

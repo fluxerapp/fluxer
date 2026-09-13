@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
-import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
-import {ensureGeoipDatabaseOnStartup} from '@pkgs/geoip/src/GeoipStartup';
-import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
-import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
-import type {APIConfig} from '../config/APIConfig';
-import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '../database/CassandraQueryExecution';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '../database/PostgresKvQueryExecutor';
-import {GuildDataRepository} from '../guild/repositories/GuildDataRepository';
-import type {ILogger} from '../ILogger';
-import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
-import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '../middleware/AbusiveIpAutoBanner';
-import {ipBanCache} from '../middleware/IpBanMiddleware';
-import {initializeServiceSingletons, shutdownReportService} from '../middleware/ServiceMiddleware';
+import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
+import type {APIConfig} from '@app/api/config/APIConfig';
+import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
+import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
+import type {ILogger} from '@app/api/ILogger';
+import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '@app/api/middleware/AbusiveIpAutoBanner';
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {initializeServiceSingletons, shutdownReportService} from '@app/api/middleware/ServiceMiddleware';
 import {
 	closeOwnedKVClient,
 	ensureVoiceResourcesInitialized,
@@ -21,7 +18,7 @@ import {
 	getSnowflakeService,
 	setInjectedWorkerService,
 	shutdownVoiceResources,
-} from '../middleware/ServiceRegistry';
+} from '@app/api/middleware/ServiceRegistry';
 import {
 	getCacheService,
 	getInstanceConfigRepository,
@@ -30,16 +27,19 @@ import {
 	getUserRepository,
 	shutdownInstanceConfigRepository,
 	shutdownServiceSingletons,
-} from '../middleware/ServiceSingletons';
-import {torExitListCache} from '../middleware/TorExitListCache';
-import {ensureApnsSigningKey} from '../push/ApnsPushService';
-import {initializeSearch, shutdownSearch} from '../SearchFactory';
-import {warmupAdminSearchIndexes} from '../search/SearchWarmup';
-import {VisionarySlotInitializer} from '../stripe/VisionarySlotInitializer';
-import {VoiceDataInitializer} from '../voice/VoiceDataInitializer';
-import {JetStreamWorkerQueue} from '../worker/JetStreamWorkerQueue';
-import {WorkerService} from '../worker/WorkerService';
-import {ensureDeletionQueueState} from './DeletionQueueStartup';
+} from '@app/api/middleware/ServiceSingletons';
+import {torExitListCache} from '@app/api/middleware/TorExitListCache';
+import {ensureApnsSigningKey} from '@app/api/push/ApnsPushService';
+import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
+import {warmupAdminSearchIndexes} from '@app/api/search/SearchWarmup';
+import {VisionarySlotInitializer} from '@app/api/stripe/VisionarySlotInitializer';
+import {VoiceDataInitializer} from '@app/api/voice/VoiceDataInitializer';
+import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
+import {WorkerService} from '@app/api/worker/WorkerService';
+import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
+import {ensureGeoipDatabaseOnStartup} from '@pkgs/geoip/src/GeoipStartup';
+import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
+import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 
 let jsConnectionManager: JetStreamConnectionManager | null = null;
 
@@ -139,21 +139,21 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			torExitListCache.setKvClient(kvClient);
 			await torExitListCache.initialize();
 			logger.info('Tor exit list cache initialized');
-			const {urlBlocklistCache} = await import('../middleware/UrlBlocklistCache');
+			const {urlBlocklistCache} = await import('@app/api/middleware/UrlBlocklistCache');
 			urlBlocklistCache.setRefreshSubscriber(kvClient);
-			const {getStorageService} = await import('../middleware/ServiceSingletons');
+			const {getStorageService} = await import('@app/api/middleware/ServiceSingletons');
 			urlBlocklistCache.setStorageService(getStorageService());
 			await initializeRefreshCache(urlBlocklistCache, 'URL blocklist cache', logger);
-			const {fileShaCache} = await import('../middleware/FileShaCache');
+			const {fileShaCache} = await import('@app/api/middleware/FileShaCache');
 			fileShaCache.setRefreshSubscriber(kvClient);
 			await initializeRefreshCache(fileShaCache, 'File SHA blocklist cache', logger);
-			const {phraseBlocklistCache} = await import('../middleware/PhraseBlocklistCache');
+			const {phraseBlocklistCache} = await import('@app/api/middleware/PhraseBlocklistCache');
 			phraseBlocklistCache.setRefreshSubscriber(kvClient);
 			await initializeRefreshCache(phraseBlocklistCache, 'Phrase blocklist cache', logger);
-			const {bannedAvatarHashCache} = await import('../middleware/BannedAvatarHashCache');
+			const {bannedAvatarHashCache} = await import('@app/api/middleware/BannedAvatarHashCache');
 			bannedAvatarHashCache.setRefreshSubscriber(kvClient);
 			await initializeRefreshCache(bannedAvatarHashCache, 'Banned avatar hash cache', logger);
-			const {profileSubstringBlocklistCache} = await import('../middleware/ProfileSubstringBlocklistCache');
+			const {profileSubstringBlocklistCache} = await import('@app/api/middleware/ProfileSubstringBlocklistCache');
 			profileSubstringBlocklistCache.setRefreshSubscriber(kvClient);
 			await initializeRefreshCache(profileSubstringBlocklistCache, 'Profile substring blocklist cache', logger);
 			await initializeServiceSingletons();

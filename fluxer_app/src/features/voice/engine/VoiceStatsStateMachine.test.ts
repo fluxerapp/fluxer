@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2PerTrackStats, VoiceEngineV2TransportInfo} from '@fluxer/voice_engine_v2';
-import {describe, expect, it} from 'vitest';
 import {
 	createInitialVoiceStats,
 	createVoiceStatsSnapshot,
@@ -11,7 +9,9 @@ import {
 	selectVoiceStatsCollectionDecision,
 	transitionVoiceStatsSnapshot,
 	type VoiceStatsSnapshot,
-} from './VoiceStatsStateMachine';
+} from '@app/features/voice/engine/VoiceStatsStateMachine';
+import type {VoiceEngineV2PerTrackStats, VoiceEngineV2TransportInfo} from '@fluxer/voice_engine_v2';
+import {describe, expect, it} from 'vitest';
 
 const roomA = {id: 'room-a'};
 const roomB = {id: 'room-b'};

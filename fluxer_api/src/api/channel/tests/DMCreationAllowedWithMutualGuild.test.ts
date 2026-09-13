@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	acceptInvite,
+	createChannelInvite,
+	createDmChannel,
+	createGuild,
+	getChannel,
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {acceptInvite, createChannelInvite, createDmChannel, createGuild, getChannel} from './ChannelTestUtils';
 
 describe('DM creation allowed with mutual guild', () => {
 	let harness: ApiTestHarness;

@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getKvMeta, getTableMetadata} from '@app/api/database/CassandraMetaRegistry';
+import type {
+	CassandraParams,
+	ColumnName,
+	KvQueryMeta,
+	PreparedQuery,
+	WhereExpr,
+} from '@app/api/database/CassandraTypes';
+import {matchesWhere} from '@app/api/database/PostgresKvQueryExecutor';
 import {type IPostgresClient, type PostgresQueryable, quoteIdentifier} from '@pkgs/postgres/src/Client';
 import cassandra from 'cassandra-driver';
-import {getKvMeta, getTableMetadata} from '../CassandraMetaRegistry';
-import type {CassandraParams, ColumnName, KvQueryMeta, PreparedQuery, WhereExpr} from '../CassandraTypes';
-import {matchesWhere} from '../PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 type EqWhereExpr = Extract<WhereExpr<Row>, {kind: 'eq'}>;

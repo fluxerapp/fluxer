@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GlobalKeyEvent} from '@app/features/platform/types/Electron';
-import {describe, expect, it} from 'vitest';
 import {
 	beginGlobalKeyCapture,
 	type GlobalKeyCaptureApi,
 	globalKeyEventToCombo,
 	isGlobalKeyEventModifierKey,
-} from './KeybindRecorderCapture';
+} from '@app/features/input/components/KeybindRecorderCapture';
+import type {GlobalKeyEvent} from '@app/features/platform/types/Electron';
+import {describe, expect, it} from 'vitest';
 
 const keyEvent = (event: Partial<GlobalKeyEvent>): GlobalKeyEvent => ({
 	type: 'keydown',

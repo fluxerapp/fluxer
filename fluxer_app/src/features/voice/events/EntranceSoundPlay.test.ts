@@ -4,8 +4,8 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import EntranceSoundPlaybackEngine from '@app/features/voice/engine/EntranceSoundPlaybackEngine';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {waitForVoiceJoinChimeSequence} from '@app/features/voice/engine/VoiceSelfJoinChime';
+import {handleEntranceSoundPlay} from '@app/features/voice/events/EntranceSoundPlay';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {handleEntranceSoundPlay} from './EntranceSoundPlay';
 
 vi.mock('@app/features/voice/engine/EntranceSoundPlaybackEngine', () => ({
 	default: {play: vi.fn(() => Promise.resolve())},

@@ -10,6 +10,7 @@ import {
 	readBoundedResponseArrayBuffer,
 	runWithResponseDeadline,
 } from '@app/features/voice/utils/camera-effects/BoundedResponse';
+import modelAssetUrl from '@app/features/voice/utils/camera-effects/models/selfie_segmentation_256x256.onnx';
 import {
 	shapeWebCameraEffectMaskAlpha,
 	WEB_CAMERA_EFFECT_MASK_CORE_GROW_MIN,
@@ -23,7 +24,6 @@ import {
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectMask';
 import ortWasmUrl from 'onnxruntime-web/ort-wasm-simd-threaded.asyncify.wasm';
 import type * as OrtNamespace from 'onnxruntime-web/webgpu';
-import modelAssetUrl from './models/selfie_segmentation_256x256.onnx';
 
 export class MissingSegmentationAlphasOutputError extends Error {
 	constructor() {

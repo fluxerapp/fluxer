@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Resolver} from 'node:dns/promises';
+import type {
+	ConnectionVerificationParams,
+	IConnectionVerifier,
+} from '@app/api/connection/verification/IConnectionVerifier';
+import {Logger} from '@app/api/Logger';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {isFqdnHostname} from '@fluxer/schema/src/primitives/UrlValidators';
-import {Logger} from '../../Logger';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import type {ConnectionVerificationParams, IConnectionVerifier} from './IConnectionVerifier';
 
 const VERIFICATION_TIMEOUT_MS = 5000;
 const DNS_VERIFICATION_TIMEOUT_MS = 2000;

@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {Application} from '@app/api/models/Application';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {type UserAuthenticatorType, UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import type {
 	ApplicationBotResponse,
@@ -7,10 +11,6 @@ import type {
 	BotProfileResponse,
 	BotTokenResetResponse,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
-import {stripBannerForUser} from '../infrastructure/AssetEntitlementUtils';
-import type {Application} from '../models/Application';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse} from '../user/UserMappers';
 
 function getActiveAuthenticatorTypes(user: User): Array<UserAuthenticatorType> {
 	return Array.from(user.authenticatorTypes ?? []).filter(

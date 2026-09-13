@@ -1,34 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {BillingSubscriptionRow} from '@app/api/database/types/BillingTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {Payment} from '@app/api/models/Payment';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {
+	getFirstInvoicePaymentIntentId,
+	getPrimarySubscriptionItem,
+	getSubscriptionItemPeriodEnd,
+	getSubscriptionPremiumPeriodEnd,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {EU_WITHDRAWAL_WAIVER_TEXT_VERSION} from '@app/api/stripe/services/StripeCheckoutService';
+import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {BillingSubscriptionRow} from '../../database/types/BillingTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IDonationRepository} from '../../donation/IDonationRepository';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {Payment} from '../../models/Payment';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
-import {
-	getFirstInvoicePaymentIntentId,
-	getPrimarySubscriptionItem,
-	getSubscriptionItemPeriodEnd,
-	getSubscriptionPremiumPeriodEnd,
-} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
-import {EU_WITHDRAWAL_WAIVER_TEXT_VERSION} from './StripeCheckoutService';
-import type {StripeGiftService} from './StripeGiftService';
-import type {StripePremiumService} from './StripePremiumService';
 
 interface DonationCustomerDetails {
 	businessName: string | null;

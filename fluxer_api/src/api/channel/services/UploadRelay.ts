@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac} from 'node:crypto';
+import {Config} from '@app/api/Config';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {Logger} from '@fluxer/logger/src/Logger';
-import {Config} from '../../Config';
-import {lookupGeoip} from '../../utils/IpUtils';
 
 const logger = new Logger('UploadRelay');
 const RELAY_PATH_PREFIX = '/v1/relay';

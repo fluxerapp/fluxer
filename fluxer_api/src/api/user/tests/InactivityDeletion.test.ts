@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {expectDataExists} from '@app/api/user/tests/UserTestUtils';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import type {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../repositories/UserRepository';
-import {expectDataExists} from './UserTestUtils';
 
 interface InactivityCheckResult {
 	warnings_sent: number;

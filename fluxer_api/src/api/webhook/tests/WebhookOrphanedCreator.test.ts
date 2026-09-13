@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID, createWebhookID} from '@app/api/BrandedTypes';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {
+	createWebhook,
+	executeWebhook,
+	executeWebhookWithAttachments,
+	getChannelWebhooks,
+} from '@app/api/webhook/tests/WebhookTestUtils';
+import {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import {DELETED_USER_ID, DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID, createWebhookID} from '../../BrandedTypes';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {WebhookRepository} from '../WebhookRepository';
-import {createWebhook, executeWebhook, executeWebhookWithAttachments, getChannelWebhooks} from './WebhookTestUtils';
 
 const VANISHED_CREATOR_ID = createUserID(999999999999999997n);
 

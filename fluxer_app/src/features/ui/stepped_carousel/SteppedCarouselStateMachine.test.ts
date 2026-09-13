@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createSteppedCarouselSnapshot,
 	getSteppedCarouselStateValue,
@@ -9,7 +8,8 @@ import {
 	type SteppedCarouselSnapshot,
 	selectSteppedCarouselModel,
 	transitionSteppedCarouselSnapshot,
-} from './SteppedCarouselStateMachine';
+} from '@app/features/ui/stepped_carousel/SteppedCarouselStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const STEPS = ['account', 'credentials', 'mfa'] as const;
 

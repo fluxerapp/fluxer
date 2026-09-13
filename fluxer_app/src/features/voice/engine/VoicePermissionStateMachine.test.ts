@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
-import {describe, expect, it} from 'vitest';
 import {
 	createVoicePermissionSnapshot,
 	getVoicePermissionWatchStateValue,
@@ -9,7 +7,9 @@ import {
 	type VoicePermissionCommand,
 	type VoicePermissionEvent,
 	type VoicePermissionSnapshot,
-} from './VoicePermissionStateMachine';
+} from '@app/features/voice/engine/VoicePermissionStateMachine';
+import type {VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
+import {describe, expect, it} from 'vitest';
 
 const DEFAULT_PERMISSIONS: VoiceChannelPermissions = {
 	canSpeak: true,

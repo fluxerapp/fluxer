@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {Currency} from '../utils/CurrencyUtils';
 
 export enum ProductType {
 	MONTHLY_SUBSCRIPTION = 'monthly_subscription',

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
 import {createHttpClient} from '@pkgs/http_client/src/HttpClient';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {DEFAULT_MAX_REDIRECTS, normalizeMaxRedirects} from '@pkgs/http_client/src/HttpClientRequestInternals';
@@ -11,7 +12,6 @@ import type {
 	StreamResponse,
 } from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
-import {Logger} from '../Logger';
 
 const requestUrlPolicy = createPublicInternetRequestUrlPolicy();
 const client: HttpClient = createHttpClient({

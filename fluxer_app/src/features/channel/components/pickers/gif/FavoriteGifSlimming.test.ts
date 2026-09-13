@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type FavoriteGifEntry,
+	slimFavoriteGifEntry,
+} from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
 import {describe, expect, it} from 'vitest';
-import {type FavoriteGifEntry, slimFavoriteGifEntry} from './FavoriteGifTypes';
 
 function format(src: string, width: number) {
 	return {src, proxy_src: `https://media.test/external/sig/${src}`, width, height: Math.round(width * 0.84)};

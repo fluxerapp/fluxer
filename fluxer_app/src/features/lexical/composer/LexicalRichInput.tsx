@@ -12,7 +12,6 @@ import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegment
 import {resolveTypedEmojiToken} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import {flxElementClassName} from '@app/lib/react';
 import type {I18n} from '@lingui/core';
-
 import type React from 'react';
 import {useCallback, useId, useImperativeHandle, useRef, useState} from 'react';
 

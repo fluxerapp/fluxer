@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {
+	createInviteCode,
+	createIpAuthorizationTicket,
+	createIpAuthorizationToken,
+	createMfaTicket,
+	createUserID,
+} from '@app/api/BrandedTypes';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+	REGISTRATION_REJECTED_TRAIT,
+} from '@app/api/instance/InstanceConfigRepository';
+import type {InviteService} from '@app/api/invite/InviteService';
+import {Logger} from '@app/api/Logger';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {IpAuthorizationRequiredError} from '@fluxer/errors/src/domains/auth/IpAuthorizationRequiredError';
@@ -15,27 +39,6 @@ import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {formatGeoipLocation, UNKNOWN_LOCATION} from '@pkgs/geoip/src/GeoipLookup';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {
-	createInviteCode,
-	createIpAuthorizationTicket,
-	createIpAuthorizationToken,
-	createMfaTicket,
-	createUserID,
-} from '../BrandedTypes';
-import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
-import {REGISTRATION_PENDING_APPROVAL_TRAIT, REGISTRATION_REJECTED_TRAIT} from '../instance/InstanceConfigRepository';
-import type {InviteService} from '../invite/InviteService';
-import {Logger} from '../Logger';
-import {createRequestCache} from '../middleware/RequestCacheMiddleware';
-import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
-import type {User} from '../models/User';
-import {lookupGeoip} from '../utils/IpUtils';
-import {createRateLimitError} from '../utils/RateLimitUtils';
-import * as AuthMfa from './AuthMfa';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
 
 const DUMMY_ARGON2_HASH =
 	'$argon2id$v=19$m=65536,t=3,p=4$fT6tGpAyxFiz+n1RbkRqWQ$v05UT17QGeqhsgRjcVjIWcGw6gUDYeCcAA8FiZ63MtA';

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createVoiceEngineV2AppTestControllerHost} from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHostTestUtils';
+import {
+	createVoiceEngineV2ShadowHostPorts,
+	type VoiceEngineV2ShadowHostPortCall,
+} from '@app/features/voice/engine/v2/VoiceEngineV2ShadowHostPorts';
 import {waitForRuntime} from '@fluxer/voice_engine_v2/testing';
 import {describe, expect, it} from 'vitest';
-import {createVoiceEngineV2AppTestControllerHost} from './VoiceEngineV2AppControllerHostTestUtils';
-import {createVoiceEngineV2ShadowHostPorts, type VoiceEngineV2ShadowHostPortCall} from './VoiceEngineV2ShadowHostPorts';
 
 describe('VoiceEngineV2ShadowHostPorts', () => {
 	it('records v2 command intent while returning deterministic host results', async () => {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserHarvestRow} from '@app/api/database/types/UserTypes';
 import type {HarvestStatus, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
-import type {UserID} from '../BrandedTypes';
-import type {UserHarvestRow} from '../database/types/UserTypes';
 
 export class UserHarvest {
 	userId: UserID;

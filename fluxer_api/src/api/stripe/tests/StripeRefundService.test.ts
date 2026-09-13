@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {
+	createMockWebhookPayload,
+	createStripeApiHandlers,
+	type StripeWebhookEventData,
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import type {
@@ -9,19 +22,6 @@ import type {
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import {HttpResponse, http} from 'msw';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {
-	createMockWebhookPayload,
-	createStripeApiHandlers,
-	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {setupSyncStripeWebhookWorker} from './StripeWebhookTestUtils';
 
 const MOCK_CUSTOMER_ID = 'cus_self_serve_refund';
 const MOCK_SUBSCRIPTION_ID = 'sub_self_serve_refund';
@@ -350,7 +350,7 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.status).toBe('pending');
 			expect(response.refunded_amount_cents).toBe(0);
 			expect(response.subscription_id).toBeNull();
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const updatedUser = await new UserRepository().findUnique(createUserID(BigInt(account.userId)));
 			expect(updatedUser!.firstRefundAt).toBeNull();
 		});
@@ -371,7 +371,7 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(response.status).toBe('failed');
 			expect(response.refunded_amount_cents).toBe(0);
 			expect(response.subscription_id).toBeNull();
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const updatedUser = await new UserRepository().findUnique(createUserID(BigInt(account.userId)));
 			expect(updatedUser!.firstRefundAt).toBeNull();
 		});

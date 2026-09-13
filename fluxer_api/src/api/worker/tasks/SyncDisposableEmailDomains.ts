@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {isAccountPolicyContactDomainReputationExempt} from '@app/api/risk/AccountPolicyService';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {JobCancelledError, type WorkerTaskHandler, type WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {isAccountPolicyContactDomainReputationExempt} from '../../risk/AccountPolicyService';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const SOURCES = [
 	'https://raw.githubusercontent.com/doodad-labs/disposable-email-domains/main/data/domains.txt',

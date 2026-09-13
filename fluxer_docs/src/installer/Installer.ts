@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {installerChecksumLine, installerDigest} from './InstallerDigest';
-import powershellInstallerSource from './install.ps1?raw';
-import shellInstallerSource from './install.sh?raw';
+import {installerChecksumLine, installerDigest} from '@/installer/InstallerDigest';
+import powershellInstallerSource from '@/installer/install.ps1?raw';
+import shellInstallerSource from '@/installer/install.sh?raw';
 
 const CONTENT_TYPE = 'text/plain; charset=utf-8';
 const CACHE_CONTROL = 'no-store';

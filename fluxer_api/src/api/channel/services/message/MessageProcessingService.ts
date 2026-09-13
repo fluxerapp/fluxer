@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import {incrementDmMentionCounts} from '@app/api/channel/services/message/ReadStateHelpers';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {CannotEditOtherUserMessageError} from '@fluxer/errors/src/domains/channel/CannotEditOtherUserMessageError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '../../../BrandedTypes';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import {Logger} from '../../../Logger';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {User} from '../../../models/User';
-import type {ReadStateService} from '../../../read_state/ReadStateService';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapChannelToResponse} from '../../ChannelMappers';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {MessageDispatchService} from './MessageDispatchService';
-import {isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageMentionService} from './MessageMentionService';
-import type {MessagePersistenceService} from './MessagePersistenceService';
-import {incrementDmMentionCounts} from './ReadStateHelpers';
 
 interface RecipientOpenState {
 	recipientId: UserID;

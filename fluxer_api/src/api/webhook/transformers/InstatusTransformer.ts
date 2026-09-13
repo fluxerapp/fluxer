@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {parseString, safeUrl} from '@app/api/utils/StringUtils';
 import {
 	RICH_EMBED_DESCRIPTION_MAX_LENGTH,
 	RICH_EMBED_FIELD_VALUE_MAX_LENGTH,
@@ -8,7 +9,6 @@ import {
 	type RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
-import {parseString, safeUrl} from '../../utils/StringUtils';
 
 type EmbedField = NonNullable<RichEmbedRequest['fields']>[number];
 type UpdateLike = {

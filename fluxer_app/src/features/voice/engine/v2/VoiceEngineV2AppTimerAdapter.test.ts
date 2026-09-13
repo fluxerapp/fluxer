@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2/runtime';
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceEngineV2AppTimerAdapter,
 	VOICE_ENGINE_V2_TIMER_REGISTRY_CAP,
@@ -9,7 +7,9 @@ import {
 	type VoiceEngineV2AppTimerHandle,
 	VoiceEngineV2AppTimerRegistryFullError,
 	type VoiceEngineV2AppTimerScheduler,
-} from './VoiceEngineV2AppTimerAdapter';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppTimerAdapter';
+import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2/runtime';
+import {describe, expect, it} from 'vitest';
 
 interface FakeTimer {
 	id: number;

@@ -1,3 +1,4 @@
+import {Validator} from '@app/api/Validator';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {
 	WebAuthnAuthenticateRequest,
@@ -11,7 +12,6 @@ import {
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
 import type {ZodType} from 'zod';
-import {Validator} from '../../Validator';
 
 const credential = {
 	id: 'credential-id',

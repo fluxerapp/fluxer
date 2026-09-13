@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {deriveSudoMethods, userHasMfa} from '@app/api/auth/services/SudoMethods';
+import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {AuthSession as AuthSessionModel} from '@app/api/models/AuthSession';
+import type {User} from '@app/api/models/User';
+import {enforceFluxerTagChangeRateLimit} from '@app/api/user/FluxerTagChangeRateLimit';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
@@ -7,23 +24,6 @@ import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlo
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {UserUpdateRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthPassword from '../../auth/AuthPassword';
-import * as AuthSession from '../../auth/AuthSession';
-import {deriveSudoMethods, userHasMfa} from '../../auth/services/SudoMethods';
-import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
-import {Config} from '../../Config';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import type {AuthSession as AuthSessionModel} from '../../models/AuthSession';
-import type {User} from '../../models/User';
-import {enforceFluxerTagChangeRateLimit} from '../FluxerTagChangeRateLimit';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import {isProfileSubstringExempt} from '../UserHelpers';
 
 interface UserUpdateMetadata {
 	invalidateAuthSessions?: boolean;

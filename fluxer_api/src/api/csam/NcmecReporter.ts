@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {EXTERNAL_RESPONSE_LIMITS} from '../utils/ExternalResponseLimits';
-import * as FetchUtils from '../utils/FetchUtils';
 
 const NCMEC_REQUEST_TIMEOUT_MS = ms('2 minutes');
 

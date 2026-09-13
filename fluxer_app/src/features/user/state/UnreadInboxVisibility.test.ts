@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	resolveUnreadInboxVisibility,
+	type UnreadInboxVisibilityInput,
+} from '@app/features/user/state/UnreadInboxVisibility';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {describe, expect, it} from 'vitest';
-import {resolveUnreadInboxVisibility, type UnreadInboxVisibilityInput} from './UnreadInboxVisibility';
 
 function input(overrides: Partial<UnreadInboxVisibilityInput> = {}): UnreadInboxVisibilityInput {
 	return {

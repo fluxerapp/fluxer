@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createTestAccount,
+	createUniqueEmail,
+	createUniqueUsername,
+	setUserACLs,
+} from '@app/api/auth/tests/AuthTestUtils';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount, createUniqueEmail, createUniqueUsername, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 interface PendingRegistrationResponse {
 	user_id: string;

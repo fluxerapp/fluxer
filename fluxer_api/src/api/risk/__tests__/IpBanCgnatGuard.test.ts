@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
-import {describe, expect, it} from 'vitest';
 import {
 	isHighCgnatBlastRadiusRisk,
 	isHighSharedAccessBlastRadiusRisk,
 	isSingleIpBanCandidate,
-} from '../IpBanCgnatGuard';
+} from '@app/api/risk/IpBanCgnatGuard';
+import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
+import {describe, expect, it} from 'vitest';
 
 function ipInfoResult(overrides: Partial<IpInfoLookupResult> = {}): IpInfoLookupResult {
 	return {

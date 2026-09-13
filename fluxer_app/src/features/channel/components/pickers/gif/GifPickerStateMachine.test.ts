@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createGifPickerRequestId,
 	createGifPickerSnapshot,
 	selectGifPickerModel,
 	transitionGifPickerSnapshot,
-} from './GifPickerStateMachine';
+} from '@app/features/channel/components/pickers/gif/GifPickerStateMachine';
+import {describe, expect, it} from 'vitest';
 
 describe('GifPickerStateMachine', () => {
 	it('starts on the featured surface without showing a loading state', () => {

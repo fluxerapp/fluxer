@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type Stripe from 'stripe';
-import {fetchMany, fetchOne, fetchPage, type PagedQueryResult, upsertOne} from '../../database/CassandraQueryExecution';
-import type {BillingPaymentIntentRow} from '../../database/types/BillingTypes';
+import {mapStripePaymentIntentToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
+import {isExistingNewer} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {
+	fetchMany,
+	fetchOne,
+	fetchPage,
+	type PagedQueryResult,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
+import type {BillingPaymentIntentRow} from '@app/api/database/types/BillingTypes';
 import {
 	BillingPaymentIntents,
 	BillingPaymentIntentsByCustomer,
 	BillingPayments,
 	BillingPaymentsByInvoice,
-} from '../../Tables';
-import {mapStripePaymentIntentToRow} from '../mappers/StripeToBillingMapper';
-import {isExistingNewer} from './BillingRepoHelpers';
+} from '@app/api/Tables';
+import type Stripe from 'stripe';
 
 const FETCH_BY_ID = BillingPaymentIntents.selectCql({
 	where: BillingPaymentIntents.where.eq('provider_id'),

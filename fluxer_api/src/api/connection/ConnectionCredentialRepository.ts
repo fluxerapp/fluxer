@@ -1,12 +1,6 @@
 import {randomUUID} from 'node:crypto';
-import {isAtprotoDid} from '@bluesky-social/oauth-client-node';
-import {z} from 'zod';
-import type {UserID} from '../BrandedTypes';
-import type {BlueskyOAuthGrantOwner} from '../bluesky/IBlueskyOAuthService';
-import {executeConditional, fetchMany} from '../database/CassandraQueryExecution';
-import {type ConditionalWriteEntry, Db, validateTtlSeconds} from '../database/CassandraTypes';
-import {USER_CONNECTION_CREDENTIAL_TYPE, type UserConnectionStorageRow} from '../database/types/ConnectionTypes';
-import {UserConnections} from '../Tables';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BlueskyOAuthGrantOwner} from '@app/api/bluesky/IBlueskyOAuthService';
 import {
 	CONNECTION_WRITE_ATTEMPTS,
 	ConnectionOwnerClosedError,
@@ -14,7 +8,13 @@ import {
 	connectionMembershipPatch,
 	createPrivateConnectionRow,
 	loadConnectionMembership,
-} from './ConnectionMembership';
+} from '@app/api/connection/ConnectionMembership';
+import {executeConditional, fetchMany} from '@app/api/database/CassandraQueryExecution';
+import {type ConditionalWriteEntry, Db, validateTtlSeconds} from '@app/api/database/CassandraTypes';
+import {USER_CONNECTION_CREDENTIAL_TYPE, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
+import {UserConnections} from '@app/api/Tables';
+import {isAtprotoDid} from '@bluesky-social/oauth-client-node';
+import {z} from 'zod';
 
 type CredentialWrite = ConditionalWriteEntry<UserConnectionStorageRow, 'user_id' | 'connection_type' | 'connection_id'>;
 

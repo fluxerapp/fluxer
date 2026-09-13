@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
-import type {UserID} from '../../../../BrandedTypes';
-import {BatchBuilder} from '../../../../database/CassandraQueryExecution';
-import type {UserRow} from '../../../../database/types/UserTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
+import type {UserRow} from '@app/api/database/types/UserTypes';
 import {
 	UserByEmail,
 	UserByLastActiveIp,
@@ -11,7 +10,8 @@ import {
 	UserByStripeCustomerId,
 	UserByStripeSubscriptionId,
 	UserByUsername,
-} from '../../../../Tables';
+} from '@app/api/Tables';
+import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 
 export class UserIndexRepository {
 	async syncIndices(data: UserRow, oldData?: UserRow | null): Promise<void> {

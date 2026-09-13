@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VirtmicNode} from '@app/types/electron.d';
-import {describe, expect, it} from 'vitest';
 import {
 	filterRoutableLinuxAudioSources,
 	getLinuxAudioSourceDisplayName,
@@ -13,7 +11,9 @@ import {
 	toNativeLinuxAudioPattern,
 	toNativeLinuxAudioPatterns,
 	uniqueLinuxAudioSourceItems,
-} from './LinuxAudioSourceRules';
+} from '@app/features/voice/utils/LinuxAudioSourceRules';
+import type {VirtmicNode} from '@app/types/electron.d';
+import {describe, expect, it} from 'vitest';
 
 function node(overrides: VirtmicNode): VirtmicNode {
 	return overrides;

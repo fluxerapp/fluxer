@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {DesktopSource, NativeScreenCaptureSource} from '@app/types/electron.d';
-import {describe, expect, test} from 'vitest';
 import {
 	findNativeCaptureSourceForDesktopSource,
 	getDesktopSourceThumbnailStateKey,
 	hasDesktopSourcesMissingThumbnails,
 	isDisplaySource,
 	mergeDesktopSources,
-} from './shared';
+} from '@app/features/voice/components/modals/screen_share_picker_modal/shared';
+import type {DesktopSource, NativeScreenCaptureSource} from '@app/types/electron.d';
+import {describe, expect, test} from 'vitest';
 
 const USABLE_IMAGE_DATA_URL = 'data:image/png;base64,aW1hZ2U=';
 

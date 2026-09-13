@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GeoIpAsnResult, GeoIpCityResult} from '@app/api/risk/RiskTypes';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {GeoipAsnResult, GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import type {GeoIpAsnResult, GeoIpCityResult} from '../RiskTypes';
 
 interface GeoIpCityContext {
 	ipInfoService: IpInfoService;

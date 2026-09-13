@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {upsertOne} from '../../database/CassandraQueryExecution';
-import type {ColumnName, DbOp, PatchObject, RowValue, Table} from '../../database/CassandraTypes';
-import {Db} from '../../database/CassandraTypes';
-import {buildPatchFromData} from '../../database/CassandraVersionedUpdate';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {ColumnName, DbOp, PatchObject, RowValue, Table} from '@app/api/database/CassandraTypes';
+import {Db} from '@app/api/database/CassandraTypes';
+import {buildPatchFromData} from '@app/api/database/CassandraVersionedUpdate';
 
 function deepEqual(a: unknown, b: unknown): boolean {
 	if (a === b) return true;

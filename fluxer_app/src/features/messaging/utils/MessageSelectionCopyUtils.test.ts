@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {buildMessageSelectionCopyTextForRange} from '@app/features/messaging/utils/MessageSelectionCopyUtils';
 import {afterEach, describe, expect, it} from 'vitest';
-import {buildMessageSelectionCopyTextForRange} from './MessageSelectionCopyUtils';
 
 describe('Message selection copy utils', () => {
 	afterEach(() => {

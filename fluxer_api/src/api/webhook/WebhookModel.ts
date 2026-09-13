@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Webhook} from '@app/api/models/Webhook';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
-import {createUserID} from '../BrandedTypes';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Webhook} from '../models/Webhook';
-import {getCachedUserPartialResponse} from '../user/UserCacheHelpers';
 
 export function mapWebhookToTokenResponse(webhook: Webhook): WebhookTokenResponse {
 	return {

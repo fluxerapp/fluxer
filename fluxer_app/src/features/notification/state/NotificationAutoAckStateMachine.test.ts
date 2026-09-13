@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type AutoAckWindowConditions,
 	createAutoAckWindowSnapshot,
 	selectAutoAckWindowCommands,
 	transitionAutoAckWindowSnapshot,
-} from './NotificationAutoAckStateMachine';
+} from '@app/features/notification/state/NotificationAutoAckStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function conditions(overrides: Partial<AutoAckWindowConditions> = {}): AutoAckWindowConditions {
 	return {

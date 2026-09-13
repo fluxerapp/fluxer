@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {UserRepository} from '../repositories/UserRepository';
 
 const SYNTHETIC_USER_IDS: Array<[string, UserID]> = [
 	['0', createUserID(0n)],

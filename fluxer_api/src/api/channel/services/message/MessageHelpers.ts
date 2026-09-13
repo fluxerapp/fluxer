@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, ChannelID, UserID} from '@app/api/BrandedTypes';
+import {createAttachmentID, userIdToChannelId} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {
+	MessageSnapshot as CassandraMessageSnapshot,
+	MessageAttachment,
+} from '@app/api/database/types/MessageTypes';
+import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {Attachment} from '@app/api/models/Attachment';
+import type {Embed} from '@app/api/models/Embed';
+import type {Message} from '@app/api/models/Message';
+import {MessageSnapshot as MessageSnapshotModel} from '@app/api/models/MessageSnapshot';
+import type {User} from '@app/api/models/User';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {ATTACHMENT_MAX_SIZE_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
@@ -10,25 +29,6 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {getContentTypeFromFilename, isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
-import type {AttachmentID, ChannelID, UserID} from '../../../BrandedTypes';
-import {createAttachmentID, userIdToChannelId} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import type {
-	MessageSnapshot as CassandraMessageSnapshot,
-	MessageAttachment,
-} from '../../../database/types/MessageTypes';
-import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import {Attachment} from '../../../models/Attachment';
-import type {Embed} from '../../../models/Embed';
-import type {Message} from '../../../models/Message';
-import {MessageSnapshot as MessageSnapshotModel} from '../../../models/MessageSnapshot';
-import type {User} from '../../../models/User';
 
 export const MESSAGE_NONCE_TTL = seconds('5 minutes');
 

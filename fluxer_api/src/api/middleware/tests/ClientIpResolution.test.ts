@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {IpBanMiddleware, ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {torExitListCache} from '@app/api/middleware/TorExitListCache';
+import {TorExitMiddleware} from '@app/api/middleware/TorExitMiddleware';
+import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {Hono} from 'hono';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import type {HonoEnv} from '../../types/HonoEnv';
-import type {ClientIpResolution} from '../../utils/RequestClientIp';
-import {IpBanMiddleware, ipBanCache} from '../IpBanMiddleware';
-import {torExitListCache} from '../TorExitListCache';
-import {TorExitMiddleware} from '../TorExitMiddleware';
-import {TrustedClientIpHeaderMiddleware} from '../TrustedClientIpHeaderMiddleware';
 
 interface Pipeline {
 	request: (headers: Record<string, string>) => Promise<Response>;

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildAuditLogRow, GuildBanRow} from '@app/api/database/types/GuildTypes';
+import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
+import type {GuildBan} from '@app/api/models/GuildBan';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {GuildAuditLogRow, GuildBanRow} from '../../database/types/GuildTypes';
-import type {GuildAuditLog} from '../../models/GuildAuditLog';
-import type {GuildBan} from '../../models/GuildBan';
 
 export abstract class IGuildModerationRepository {
 	abstract getBan(guildId: GuildID, userId: UserID): Promise<GuildBan | null>;

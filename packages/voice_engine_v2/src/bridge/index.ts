@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2HardwareEncoderCapabilities} from '../protocol';
-import {assertAudioFrameInvariants, assertVideoFrameInvariants} from './ffi_assertions';
+import {
+	assertAudioFrameInvariants,
+	assertVideoFrameInvariants,
+} from '@fluxer/voice_engine_v2/src/bridge/ffi_assertions';
+import type {VoiceEngineV2HardwareEncoderCapabilities} from '@fluxer/voice_engine_v2/src/protocol';
 
 export const VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL = 'voice-engine-v2:get-hardware-encoder-capabilities';
 

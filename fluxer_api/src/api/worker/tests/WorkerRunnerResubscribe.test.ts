@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import type {ConsumerMessages, JsMsg} from 'nats';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
-import type {IJobLedgerRepository} from '../../jobs/IJobLedgerRepository';
-import {setInjectedWorkerService} from '../../middleware/ServiceRegistry';
-import {NoopWorkerService} from '../../test/NoopWorkerService';
-import {WorkerRunner} from '../WorkerRunner';
 
 const TASK_TYPE = 'processInactivityDeletions';
 const RESUBSCRIBE_WINDOW_MS = 30000;

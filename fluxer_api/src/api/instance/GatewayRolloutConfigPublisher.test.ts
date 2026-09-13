@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT,
+	GatewayRolloutConfigPublisher,
+} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import type {GatewayRolloutConfig} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT, GatewayRolloutConfigPublisher} from './GatewayRolloutConfigPublisher';
 
 interface FakePublish {
 	subject: string;

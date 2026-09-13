@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
-import {bench, describe} from 'vitest';
 import {
 	createReactionMachineSnapshot,
 	emptyMap,
 	mapToReactions,
 	transitionReactionSnapshot,
-} from './ReactionStateMachine';
+} from '@app/features/messaging/state/ReactionStateMachine';
+import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
+import {bench, describe} from 'vitest';
 
 const EMOJIS: Array<ReactionEmoji> = Array.from({length: 32}, (_value, index) => ({
 	id: index % 3 === 0 ? `emoji-${index}` : undefined,

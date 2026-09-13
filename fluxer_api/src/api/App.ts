@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createInitializer, createShutdown} from '@app/api/app/APILifecycle';
+import {registerControllers} from '@app/api/app/ControllerRegistry';
+import {configureMiddleware} from '@app/api/app/MiddlewarePipeline';
+import type {APIConfig} from '@app/api/config/APIConfig';
+import type {ILogger} from '@app/api/ILogger';
+import {recordHttpClientError} from '@app/api/middleware/AbusiveIpAutoBanner';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler, AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {resolveErrorStatus} from '@fluxer/errors/src/error_handling/ErrorIntrospection';
@@ -8,13 +15,6 @@ import {LOCKED_DOWN_PERMISSIONS_POLICY, securityHeaders} from '@fluxer/hono/src/
 import {setIsDevelopment} from '@fluxer/schema/src/primitives/UrlValidators';
 import type {Context} from 'hono';
 import {Hono} from 'hono';
-import {createInitializer, createShutdown} from './app/APILifecycle';
-import {registerControllers} from './app/ControllerRegistry';
-import {configureMiddleware} from './app/MiddlewarePipeline';
-import type {APIConfig} from './config/APIConfig';
-import type {ILogger} from './ILogger';
-import {recordHttpClientError} from './middleware/AbusiveIpAutoBanner';
-import type {HonoApp, HonoEnv} from './types/HonoEnv';
 
 interface CreateAPIAppOptions {
 	config: APIConfig;

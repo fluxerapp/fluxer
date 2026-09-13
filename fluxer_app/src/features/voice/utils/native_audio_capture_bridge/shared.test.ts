@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	GENERATOR_AUDIO_CHUNK_DURATION_US,
 	mixToStereoInterleaved,
 	NativeAudioFrameChunker,
 	resampleInterleavedStereo,
 	shouldMixSelfWindowAudioIntoSystemCapture,
-} from './shared';
+} from '@app/features/voice/utils/native_audio_capture_bridge/shared';
+import {describe, expect, it} from 'vitest';
 
 function expectSamples(actual: Float32Array, expected: ReadonlyArray<number>): void {
 	expect(Array.from(actual)).toEqual(expected);

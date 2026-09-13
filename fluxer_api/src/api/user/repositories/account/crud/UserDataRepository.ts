@@ -1,30 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import {executeConditional, fetchMany, fetchOne, fetchPage, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp, nextVersion} from '@app/api/database/CassandraTypes';
+import {applyPatchToRow, buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {EMPTY_USER_ROW, USER_COLUMNS} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
+import {Users} from '@app/api/Tables';
+import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
-import {createUserID, type UserID} from '../../../../BrandedTypes';
-import {isSyntheticUserId} from '../../../../constants/Core';
-import {
-	executeConditional,
-	fetchMany,
-	fetchOne,
-	fetchPage,
-	upsertOne,
-} from '../../../../database/CassandraQueryExecution';
-import {Db, type DbOp, nextVersion} from '../../../../database/CassandraTypes';
-import {
-	applyPatchToRow,
-	buildPatchFromData,
-	executeVersionedUpdate,
-} from '../../../../database/CassandraVersionedUpdate';
-import type {UserRow} from '../../../../database/types/UserTypes';
-import {EMPTY_USER_ROW, USER_COLUMNS} from '../../../../database/types/UserTypes';
-import {User} from '../../../../models/User';
-import {Users} from '../../../../Tables';
-import {isPendingDeletionBlocked} from '../../../services/PendingDeletionCoordinator';
 
 const FLUXER_BOT_USER_ID = 0n;
 const FETCH_USERS_BY_IDS_CQL = Users.selectCql({

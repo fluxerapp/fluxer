@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
 import {describe, expect, it} from 'vitest';
-import {shouldAutoAck} from './AutoAckPredicate';
 
 function conditions(overrides: Partial<Parameters<typeof shouldAutoAck>[0]> = {}): Parameters<typeof shouldAutoAck>[0] {
 	return {

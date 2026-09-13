@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isForwardableChannelType} from '@app/features/app/components/dialogs/shared/ForwardChannelEligibility';
+import {matchesForwardChannelSearch} from '@app/features/app/components/dialogs/shared/ForwardChannelSearchMatch';
 import {formatSlowmodeTime} from '@app/features/channel/components/SlowmodeIndicator';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -8,8 +10,6 @@ import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionU
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {isForwardableChannelType} from './ForwardChannelEligibility';
-import {matchesForwardChannelSearch} from './ForwardChannelSearchMatch';
 
 const GUILD_MESSAGES_DISABLED_DESCRIPTOR = msg({
 	message: 'Sending messages is disabled in this community',

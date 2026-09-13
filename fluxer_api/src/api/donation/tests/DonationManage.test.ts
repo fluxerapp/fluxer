@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createPwnedPasswordsRangeHandler} from '../../test/msw/handlers/PwnedPasswordsHandlers';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {DonationRepository} from '../DonationRepository';
-import {DonorMagicLinkToken} from '../models/DonorMagicLinkToken';
+import {Config} from '@app/api/Config';
+import {DonationRepository} from '@app/api/donation/DonationRepository';
+import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
 import {
 	createDonationManageBuilder,
 	TEST_DONOR_EMAIL,
 	TEST_INVALID_TOKEN,
 	TEST_MAGIC_LINK_TOKEN,
-} from './DonationTestUtils';
+} from '@app/api/donation/tests/DonationTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createPwnedPasswordsRangeHandler} from '@app/api/test/msw/handlers/PwnedPasswordsHandlers';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('GET /donations/manage', () => {
 	let harness: ApiTestHarness;

@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
-} from '../core/state';
-import type {VoiceEngineV2Participant, VoiceEngineV2Track, VoiceEngineV2TrackSource} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {
+	VoiceEngineV2Participant,
+	VoiceEngineV2Track,
+	VoiceEngineV2TrackSource,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {bench, describe} from 'vitest';
 
 const PARTICIPANT_COUNT = 8;
 const TRACKS_PER_PARTICIPANT = 4;

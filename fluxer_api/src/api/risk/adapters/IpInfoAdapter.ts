@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isAccountPolicyEducationOrganizationName} from '@app/api/risk/AccountPolicyService';
+import type {IpInfoPrescreenVerdict} from '@app/api/risk/RegistrationIpPrescreen';
+import type {IpConnectionType, IpInfoAnonymousResult} from '@app/api/risk/RiskTypes';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import {isAccountPolicyEducationOrganizationName} from '../AccountPolicyService';
-import type {IpInfoPrescreenVerdict} from '../RegistrationIpPrescreen';
-import type {IpConnectionType, IpInfoAnonymousResult} from '../RiskTypes';
 
 interface IpInfoCheckerContext {
 	ipInfoService: IpInfoService;

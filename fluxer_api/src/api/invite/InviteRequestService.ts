@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToPartialResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {
+	mapInviteToGroupDmInviteMetadataResponse,
+	mapInviteToGroupDmInviteResponse,
+	mapInviteToGuildInviteMetadataResponse,
+	mapInviteToGuildInviteResponse,
+} from '@app/api/invite/InviteModel';
+import type {InviteService} from '@app/api/invite/InviteService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Invite} from '@app/api/models/Invite';
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildPartialResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -8,22 +24,6 @@ import type {
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import {mapChannelToPartialResponse} from '../channel/ChannelMappers';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildService} from '../guild/services/GuildService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import type {Invite} from '../models/Invite';
-import {
-	mapInviteToGroupDmInviteMetadataResponse,
-	mapInviteToGroupDmInviteResponse,
-	mapInviteToGuildInviteMetadataResponse,
-	mapInviteToGuildInviteResponse,
-} from './InviteModel';
-import type {InviteService} from './InviteService';
 
 interface MappingHelpers {
 	userCacheService: UserCacheService;

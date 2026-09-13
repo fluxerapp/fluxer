@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {getSameIpDecisionKey, normalizeIpString, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
-import {createIpAuthorizationToken, type UserID} from '../../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
+import {createIpAuthorizationToken, type UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	AuthorizedIpRow,
 	AuthorizedIpTrustKeyRow,
 	IpAuthorizationTokenRow,
-} from '../../../database/types/AuthTypes';
-import {AuthorizedIps, AuthorizedIpTrustKeys, IpAuthorizationTokens} from '../../../Tables';
-import type {IUserAccountRepository} from '../IUserAccountRepository';
+} from '@app/api/database/types/AuthTypes';
+import {AuthorizedIps, AuthorizedIpTrustKeys, IpAuthorizationTokens} from '@app/api/Tables';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {getSameIpDecisionKey, normalizeIpString, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 
 const AUTHORIZE_IP_BY_TOKEN_CQL = IpAuthorizationTokens.selectCql({
 	where: IpAuthorizationTokens.where.eq('token_'),

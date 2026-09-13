@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {Context, MiddlewareHandler} from 'hono';
 import type {ZodType} from 'zod';
-import {Config} from '../Config';
-import type {HonoEnv} from '../types/HonoEnv';
 
 const responseValidationLogger = createLogger('response_validation');
 

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {vi} from 'vitest';
-import type {UserID} from '../../BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {
 	BlueskyAuthorizeResult,
 	BlueskyCallbackResult,
 	IBlueskyOAuthService,
-} from '../../bluesky/IBlueskyOAuthService';
+} from '@app/api/bluesky/IBlueskyOAuthService';
+import {vi} from 'vitest';
 
 interface MockBlueskyOAuthServiceOptions {
 	authorizeResult?: BlueskyAuthorizeResult;

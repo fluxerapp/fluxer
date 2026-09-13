@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/AdminBlocklistSchemas';
-import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID, type UserID} from '../../BrandedTypes';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {
 	BANNED_AVATAR_HASHES_REFRESH_CHANNEL,
 	BANNED_FILE_SHAS_REFRESH_CHANNEL,
@@ -19,28 +13,34 @@ import {
 	BANNED_URLS_REFRESH_CHANNEL,
 	ContentBlocklistCategory,
 	ContentBlocklistSeverity,
-} from '../../constants/ContentModeration';
-import {IP_BAN_REFRESH_CHANNEL} from '../../constants/IpBan';
-import type {BannedProfileSubstringScope} from '../../database/types/AdminArchiveTypes';
-import {Logger} from '../../Logger';
-import {bannedAvatarHashCache} from '../../middleware/BannedAvatarHashCache';
-import {fileShaCache} from '../../middleware/FileShaCache';
-import {ipBanCache} from '../../middleware/IpBanMiddleware';
-import {phraseBlocklistCache} from '../../middleware/PhraseBlocklistCache';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import {urlBlocklistCache} from '../../middleware/UrlBlocklistCache';
+} from '@app/api/constants/ContentModeration';
+import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
+import type {BannedProfileSubstringScope} from '@app/api/database/types/AdminArchiveTypes';
+import {Logger} from '@app/api/Logger';
+import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
+import {fileShaCache} from '@app/api/middleware/FileShaCache';
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {
 	getIpBanBlastRadiusVerdict,
 	getSuspiciousIpSkipReason,
 	isSingleIpBanCandidate,
-} from '../../risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '../../risk/IpBanExemptions';
-import type {ISuspiciousIpRepository} from '../../risk/SuspiciousIpRepository';
-import {tryParseSingleIp} from '../../utils/IpRangeUtils';
-import {canonicalizeStoredPhrase} from '../../utils/PhraseBlocklistNormalization';
-import {canonicalizeUrl} from '../../utils/UrlNormalizer';
-import type {IAdminRepository} from '../IAdminRepository';
-import type {AdminAuditService} from './AdminAuditService';
+} from '@app/api/risk/IpBanCgnatGuard';
+import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
+import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
+import {tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
+import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/AdminBlocklistSchemas';
+import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 
 interface AdminBanManagementServiceDeps {
 	apiContext: ApiContext;

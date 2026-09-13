@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {toIdString, toSortedIdArray} from '@app/api/utils/IdUtils';
 import {describe, expect, it} from 'vitest';
-import {toIdString, toSortedIdArray} from '../IdUtils';
 
 describe('toIdString', () => {
 	it.each([

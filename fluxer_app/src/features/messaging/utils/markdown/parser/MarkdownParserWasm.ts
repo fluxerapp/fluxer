@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {flattenAST} from './AstUtils';
-import {getEmojiParserConfig} from './EmojiParsers';
-import {MARKDOWN_PARSER_WASM_BASE64} from './MarkdownParserWasmBytes';
-import type {Node} from './Nodes';
-import * as StringUtils from './StringUtils';
-import * as URLUtils from './UrlUtils';
+import {flattenAST} from '@app/features/messaging/utils/markdown/parser/AstUtils';
+import {getEmojiParserConfig} from '@app/features/messaging/utils/markdown/parser/EmojiParsers';
+import {MARKDOWN_PARSER_WASM_BASE64} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes';
+import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
+import * as StringUtils from '@app/features/messaging/utils/markdown/parser/StringUtils';
+import * as URLUtils from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 
 interface WasmExports {
 	memory: {buffer: ArrayBuffer};

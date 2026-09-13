@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createCurrentBehaviorTestAccountPolicyEvaluator} from '../../test/AccountPolicyTestEvaluator';
-import {setInjectedAccountPolicyEvaluator} from '../AccountPolicyService';
+import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
 import {
 	type IpInfoPrescreenOptions,
 	ipInfoPrescreenOptionsFromEnv,
 	type LocalIpIntel,
 	prescreenIpInfoLookup,
-} from '../RegistrationIpPrescreen';
+} from '@app/api/risk/RegistrationIpPrescreen';
+import {createCurrentBehaviorTestAccountPolicyEvaluator} from '@app/api/test/AccountPolicyTestEvaluator';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 const CLEAN_LOCAL: LocalIpIntel = {countryIso: 'SE', asn: 64500, asnOrg: 'Example Broadband ISP'};
 

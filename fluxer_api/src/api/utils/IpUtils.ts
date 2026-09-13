@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import dns from 'node:dns';
+import {Config} from '@app/api/Config';
 import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import {formatGeoipLocation, lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
 import {seconds} from 'itty-time';
-import {Config} from '../Config';
 
 const REVERSE_DNS_CACHE_TTL_SECONDS = seconds('1 day');
 const REVERSE_DNS_CACHE_PREFIX = 'reverse-dns:';

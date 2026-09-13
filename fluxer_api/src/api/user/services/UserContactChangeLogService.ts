@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import type {UserContactChangeLogRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
-import {awaitAll} from '../../utils/ConcurrencyUtils';
-import type {UserContactChangeLogRepository} from '../repositories/UserContactChangeLogRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserContactChangeLogRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
+import type {UserContactChangeLogRepository} from '@app/api/user/repositories/UserContactChangeLogRepository';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 
 type ContactChangeReason = 'user_requested' | 'admin_action';
 

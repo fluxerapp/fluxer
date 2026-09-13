@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
+import {Config} from '@app/api/Config';
 
 function normalizeCountryCode(countryCode: string | null | undefined): string | null {
 	const trimmed = countryCode?.trim();

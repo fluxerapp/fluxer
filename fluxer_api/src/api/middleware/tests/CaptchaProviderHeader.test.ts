@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {
+	InstanceCaptchaEffectiveConfig,
+	InstanceConfigRepository,
+} from '@app/api/instance/InstanceConfigRepository';
+import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {Hono} from 'hono';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {Config} from '../../Config';
-import type {InstanceCaptchaEffectiveConfig, InstanceConfigRepository} from '../../instance/InstanceConfigRepository';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {CaptchaMiddleware} from '../CaptchaMiddleware';
 
 const HCAPTCHA_ONLY: InstanceCaptchaEffectiveConfig = {
 	enabled: true,

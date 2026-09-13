@@ -1,40 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
-import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import {nextVersion} from '../../database/CassandraTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IDonationRepository} from '../../donation/IDonationRepository';
-import {Donor} from '../../donation/models/Donor';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {PremiumStateReconciliationQueueService} from '../../infrastructure/PremiumStateReconciliationQueueService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import {PREMIUM_GRACE_PERIOD_MS} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import type {ProductInfo} from '../ProductRegistry';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {nextVersion} from '@app/api/database/CassandraTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import {Donor} from '@app/api/donation/models/Donor';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import {
 	canProvisionPremiumFromSubscriptionStatus,
 	getPremiumWillCancelFromSubscription,
 	shouldTreatInvoiceCollectionIssueAsAccessChange,
 	shouldTreatInvoicePaymentFailureAsAccessChange,
 	shouldTreatInvoiceUpdatedAsCollectionIssue,
-} from '../StripeSubscriptionAccessPolicy';
+} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
 	getInvoiceLatestLinePeriodEnd,
 	getPrimarySubscriptionItem,
 	getSubscriptionItemPeriodEnd,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
-} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
-import type {StripePremiumService} from './StripePremiumService';
-import type {StripeSubscriptionReconciler} from './StripeSubscriptionReconciler';
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
+import type Stripe from 'stripe';
 
 export class StripeSubscriptionWebhookHandler {
 	private readonly paymentRepository = new PaymentRepository();

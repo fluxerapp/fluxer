@@ -63,7 +63,7 @@ const {
 	PCI_VENDOR_NVIDIA,
 	probeWebRtcEncodeEfficiency,
 	reconcileHardwareEncodeReport,
-} = await import('./GpuEncoderCapabilities');
+} = await import('@app/features/voice/utils/GpuEncoderCapabilities');
 
 const AMD_RDNA3_REPORT: HardwareEncodeReport = {...AMD_RDNA3_PLUS.caps, gpuFamily: AMD_RDNA3_PLUS.family};
 const NVIDIA_REPORT: HardwareEncodeReport = {...NVIDIA_PRE_ADA.caps, gpuFamily: NVIDIA_PRE_ADA.family};

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import type {BlueskyOAuthGrantOwner} from '@app/api/bluesky/IBlueskyOAuthService';
+import type {ConnectionCredentialRepository} from '@app/api/connection/ConnectionCredentialRepository';
 import {
 	type AtprotoDid,
 	type AtprotoOAuthScope,
@@ -15,9 +18,6 @@ import {
 import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {z} from 'zod';
-import {createUserID} from '../BrandedTypes';
-import type {ConnectionCredentialRepository} from '../connection/ConnectionCredentialRepository';
-import type {BlueskyOAuthGrantOwner} from './IBlueskyOAuthService';
 
 const STATE_LOCATOR_PREFIX = 'bsky:oauth:state_locator:';
 

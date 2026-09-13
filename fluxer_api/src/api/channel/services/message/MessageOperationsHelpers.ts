@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {createAttachmentID, createChannelID, createMemeID, createMessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {ChannelID, UserID} from '../../../BrandedTypes';
-import {createAttachmentID, createChannelID, createMemeID, createMessageID} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import type {MessageAttachment} from '../../../database/types/MessageTypes';
-import type {IFavoriteMemeRepository} from '../../../favorite_meme/IFavoriteMemeRepository';
-import type {IMediaService} from '../../../infrastructure/IMediaService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import {Logger} from '../../../Logger';
-import type {FavoriteMeme} from '../../../models/FavoriteMeme';
-import type {Message} from '../../../models/Message';
-import type {User} from '../../../models/User';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import {makeAttachmentCdnKey} from './MessageHelpers';
 
 interface MessageOperationsHelpersDeps {
 	channelRepository: IChannelRepositoryAggregate;

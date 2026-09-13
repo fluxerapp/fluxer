@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {serviceEnvironment, serviceList, serviceNames} from '@fluxer/config/src/__tests__/SelfHostingCompose';
 import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import {normalizePublicEndpoint} from '@fluxer/config/src/EndpointDerivation';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
-
-import {serviceEnvironment, serviceList, serviceNames} from './SelfHostingCompose';
 
 const DOMAIN = 'chat.example.com';
 const PUBLIC_PORT = '19080';

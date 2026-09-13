@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceLocalAudioReconcileCoalescerSnapshot,
 	createVoiceMicrophoneFailureLatchSnapshot,
@@ -20,7 +19,8 @@ import {
 	type VoiceLocalAudioReconcileCoalescerSnapshot,
 	type VoiceMicrophoneFailureLatchEvent,
 	type VoiceMicrophoneFailureLatchSnapshot,
-} from './VoiceLocalAudioReconcilePolicy';
+} from '@app/features/voice/engine/VoiceLocalAudioReconcilePolicy';
+import {describe, expect, it} from 'vitest';
 
 const RUNAWAY_RUN_LIMIT = 512;
 

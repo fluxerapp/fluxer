@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DownloadService} from '@app/api/download/DownloadService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {describe, expect, it} from 'vitest';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {DownloadService} from '../DownloadService';
 
 const OBJECT_METADATA = {
 	contentLength: 285_567_850,

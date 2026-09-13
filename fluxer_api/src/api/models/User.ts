@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {getGlobalLimitConfigSnapshot} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {checkIsPremium, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
 	type MentionReplyPreference,
@@ -8,12 +14,6 @@ import {
 	type UserPremiumType,
 } from '@fluxer/constants/src/UserConstants';
 import {types} from 'cassandra-driver';
-import type {UserID} from '../BrandedTypes';
-import type {UserRow} from '../database/types/UserTypes';
-import {getGlobalLimitConfigSnapshot} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import {checkIsPremium, getEffectivePremiumUntil} from '../user/UserHelpers';
 
 export class User {
 	readonly id: UserID;

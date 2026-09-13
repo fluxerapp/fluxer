@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isTrustedCommercialPrivacyProvider} from '@app/api/risk/TrustedPrivacyProviders';
+import {parseIpBanEntry} from '@app/api/utils/IpRangeUtils';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import {parseIpBanEntry} from '../utils/IpRangeUtils';
-import {isTrustedCommercialPrivacyProvider} from './TrustedPrivacyProviders';
 
 const VERDICT_CACHE_TTL_MS = 60 * 60 * 1000;
 

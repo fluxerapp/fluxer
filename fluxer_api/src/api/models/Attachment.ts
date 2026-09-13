@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID} from '../BrandedTypes';
-import type {MessageAttachment} from '../database/types/MessageTypes';
+import type {AttachmentID} from '@app/api/BrandedTypes';
+import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 
 export class Attachment {
 	readonly id: AttachmentID;

@@ -1,6 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomBytes, randomInt} from 'node:crypto';
+import type {ChannelID, GuildID, InviteCode, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import {
+	createChannelID,
+	createGuildID,
+	createInviteCode,
+	createMessageID,
+	createReportID,
+	createUserID,
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import * as MessageHelpers from '@app/api/channel/services/message/MessageHelpers';
+import type {ContentWarningChannelLike} from '@app/api/channel/utils/EffectiveContentWarning';
+import {
+	channelToContentWarningView,
+	computeEffectiveChannelNsfw,
+	computeEffectiveContentWarning,
+	guildToContentWarningView,
+} from '@app/api/channel/utils/EffectiveContentWarning';
+import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import type {DSAReportTicketRow} from '@app/api/database/types/ReportTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import {Logger} from '@app/api/Logger';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {Channel} from '@app/api/models/Channel';
+import type {Guild} from '@app/api/models/Guild';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {
+	IARMessageContextRow,
+	IARSubmission,
+	IARSubmissionRow,
+	IReportRepository,
+} from '@app/api/report/IReportRepository';
+import {ReportStatus, ReportType} from '@app/api/report/IReportRepository';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -30,45 +74,6 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
-import type {ChannelID, GuildID, InviteCode, MessageID, ReportID, UserID} from '../BrandedTypes';
-import {
-	createChannelID,
-	createGuildID,
-	createInviteCode,
-	createMessageID,
-	createReportID,
-	createUserID,
-} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {AuthenticatedChannel} from '../channel/services/AuthenticatedChannel';
-import {MessageChannelAuthService} from '../channel/services/message/MessageChannelAuthService';
-import * as MessageHelpers from '../channel/services/message/MessageHelpers';
-import type {ContentWarningChannelLike} from '../channel/utils/EffectiveContentWarning';
-import {
-	channelToContentWarningView,
-	computeEffectiveChannelNsfw,
-	computeEffectiveContentWarning,
-	guildToContentWarningView,
-} from '../channel/utils/EffectiveContentWarning';
-import type {MessageAttachment} from '../database/types/MessageTypes';
-import type {DSAReportTicketRow} from '../database/types/ReportTypes';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {IEmailDnsValidationService} from '../infrastructure/IEmailDnsValidationService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {IInviteRepository} from '../invite/IInviteRepository';
-import {Logger} from '../Logger';
-import type {Attachment} from '../models/Attachment';
-import type {Channel} from '../models/Channel';
-import type {Guild} from '../models/Guild';
-import type {Message} from '../models/Message';
-import type {User} from '../models/User';
-import type {IReportSearchService} from '../search/IReportSearchService';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {IARMessageContextRow, IARSubmission, IARSubmissionRow, IReportRepository} from './IReportRepository';
-import {ReportStatus, ReportType} from './IReportRepository';
 
 interface ReporterMetadata {
 	id: UserID | null;

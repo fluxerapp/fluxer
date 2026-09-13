@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {NatsUnfurlerService} from '@app/api/infrastructure/NatsUnfurlerService';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {NatsUnfurlerService} from './NatsUnfurlerService';
 
 interface FakeRequest {
 	subject: string;

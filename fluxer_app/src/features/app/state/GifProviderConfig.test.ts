@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {normalizeGifProviderInfo} from '@app/features/app/state/GifProviderConfig';
 import {describe, expect, it} from 'vitest';
-
-import {normalizeGifProviderInfo} from './GifProviderConfig';
 
 describe('normalizeGifProviderInfo', () => {
 	it('uses Klipy as the default GIF provider display name', () => {

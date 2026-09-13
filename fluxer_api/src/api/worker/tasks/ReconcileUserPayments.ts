@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import type {Payment} from '@app/api/models/Payment';
+import type {User} from '@app/api/models/User';
+import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {Logger} from '../../Logger';
-import {mapGiftDurationMonthsToFields} from '../../models/GiftCode';
-import type {Payment} from '../../models/Payment';
-import type {User} from '../../models/User';
-import {ProductRegistry} from '../../stripe/ProductRegistry';
-import {extractId} from '../../stripe/StripeUtils';
-import type {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import * as RandomUtils from '../../utils/RandomUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const STALE_PENDING_THRESHOLD_MS = 10 * 60 * 1000;
 

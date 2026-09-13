@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
+import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {

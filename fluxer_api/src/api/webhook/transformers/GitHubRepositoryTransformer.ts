@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {parseString} from '@app/api/utils/StringUtils';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
-import {parseString} from '../../utils/StringUtils';
 
 export async function transformFork(body: GitHubWebhook): Promise<RichEmbedRequest | null> {
 	if (!(body.repository && body.forkee && body.sender)) {

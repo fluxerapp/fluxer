@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Resolver} from 'node:dns/promises';
+import {Config} from '@app/api/Config';
+import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import {Logger} from '@app/api/Logger';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {IEmailDnsValidationService} from './IEmailDnsValidationService';
 
 interface DomainValidationCacheEntry {
 	valid: boolean;
@@ -42,7 +42,7 @@ const DNS_LOOKUP_TRIES = 1;
 const MAX_CACHED_DOMAINS = 10000;
 
 async function isInstanceEmailEnabled(): Promise<boolean> {
-	const {getInstanceConfigRepository} = await import('../middleware/ServiceSingletons');
+	const {getInstanceConfigRepository} = await import('@app/api/middleware/ServiceSingletons');
 	return getInstanceConfigRepository().isEmailEnabled();
 }
 

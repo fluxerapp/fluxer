@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomUUID} from 'node:crypto';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {UserByEmailRow, UserEmailOwnerRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {UserByEmail, UserEmailOwners} from '@app/api/Tables';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {createUserID, type UserID} from '../../../../BrandedTypes';
-import {fetchMany, fetchOne, upsertOne} from '../../../../database/CassandraQueryExecution';
-import {Db} from '../../../../database/CassandraTypes';
-import type {UserByEmailRow, UserEmailOwnerRow} from '../../../../database/types/UserTypes';
-import {Logger} from '../../../../Logger';
-import type {User} from '../../../../models/User';
-import {UserByEmail, UserEmailOwners} from '../../../../Tables';
-import {isJsonRecord, parseJsonWithGuard} from '../../../../utils/JsonBoundaryUtils';
 
 type EmailOwnerLookupRow = Pick<UserEmailOwnerRow, 'user_id' | 'claimed' | 'claimed_at'>;
 type ValkeyEmailOwnerStatus = 'pending' | 'claimed';

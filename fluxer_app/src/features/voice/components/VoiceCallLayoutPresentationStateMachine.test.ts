@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceCallLayoutPresentationSnapshot,
 	getVoiceCallLayoutPresentationStateValue,
@@ -9,7 +8,8 @@ import {
 	transitionVoiceCallLayoutPresentationSnapshot,
 	type VoiceCallLayoutPresentationInput,
 	type VoiceCallLayoutPresentationMachineSnapshot,
-} from './VoiceCallLayoutPresentationStateMachine';
+} from '@app/features/voice/components/VoiceCallLayoutPresentationStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<VoiceCallLayoutPresentationInput> = {}): VoiceCallLayoutPresentationInput {
 	return {

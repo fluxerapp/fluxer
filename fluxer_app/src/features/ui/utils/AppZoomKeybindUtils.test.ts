@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeybindCommand, KeyCombo} from '@app/features/input/state/InputKeybind';
+import {isWebReservedZoomShortcut} from '@app/features/ui/utils/AppZoomKeybindUtils';
 import {describe, expect, it} from 'vitest';
-import {isWebReservedZoomShortcut} from './AppZoomKeybindUtils';
 
 const zoomShortcut = (action: KeybindCommand, combo: KeyCombo, isDesktop = false): boolean =>
 	isWebReservedZoomShortcut(action, combo, {isDesktop});

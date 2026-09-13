@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {UNCATEGORIZED_FOLDER_ID} from '@fluxer/constants/src/UserConstants';
 import type {UserSettingsResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {acceptInvite, createChannelInvite, createGuild, getChannel} from './GuildTestUtils';
 
 describe('Guild Folder Operations', () => {
 	let harness: ApiTestHarness;

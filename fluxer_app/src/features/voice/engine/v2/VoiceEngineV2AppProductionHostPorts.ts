@@ -1,5 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createVoiceEngineV2AppDevicesAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppDevicesAdapter';
+import {createVoiceEngineV2AppDiagnosticsAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
+import {
+	createVoiceEngineV2AppHostPorts,
+	createVoiceEngineV2AppIngestionPort,
+	type VoiceEngineV2AppIngestionPort,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppHostPorts';
+import {
+	createVoiceEngineV2AppLifecycleAdapter,
+	type VoiceEngineV2AppLifecycleAdapter,
+	type VoiceEngineV2AppLifecycleDisposable,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppLifecycleAdapter';
+import {
+	type VoiceEngineV2AppLiveKitAudioOutputStore,
+	type VoiceEngineV2AppLiveKitConnectionDelegate,
+	VoiceEngineV2AppLiveKitExecutionAdapter,
+	type VoiceEngineV2AppLiveKitMediaDelegate,
+	type VoiceEngineV2AppLiveKitScreenShareDelegate,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppLiveKitExecutionAdapter';
+import {
+	createVoiceEngineV2AppTimerAdapter,
+	type VoiceEngineV2AppTimerScheduler,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppTimerAdapter';
 import type {
 	DevicePort,
 	GatewayPort,
@@ -10,26 +33,6 @@ import type {
 } from '@fluxer/voice_engine_v2';
 import {createVoiceEngineV2SystemClockPort, type VoiceEngineV2ClockPort} from '@fluxer/voice_engine_v2/runtime';
 import type {Room} from 'livekit-client';
-import {createVoiceEngineV2AppDevicesAdapter} from './VoiceEngineV2AppDevicesAdapter';
-import {createVoiceEngineV2AppDiagnosticsAdapter} from './VoiceEngineV2AppDiagnosticsAdapter';
-import {
-	createVoiceEngineV2AppHostPorts,
-	createVoiceEngineV2AppIngestionPort,
-	type VoiceEngineV2AppIngestionPort,
-} from './VoiceEngineV2AppHostPorts';
-import {
-	createVoiceEngineV2AppLifecycleAdapter,
-	type VoiceEngineV2AppLifecycleAdapter,
-	type VoiceEngineV2AppLifecycleDisposable,
-} from './VoiceEngineV2AppLifecycleAdapter';
-import {
-	type VoiceEngineV2AppLiveKitAudioOutputStore,
-	type VoiceEngineV2AppLiveKitConnectionDelegate,
-	VoiceEngineV2AppLiveKitExecutionAdapter,
-	type VoiceEngineV2AppLiveKitMediaDelegate,
-	type VoiceEngineV2AppLiveKitScreenShareDelegate,
-} from './VoiceEngineV2AppLiveKitExecutionAdapter';
-import {createVoiceEngineV2AppTimerAdapter, type VoiceEngineV2AppTimerScheduler} from './VoiceEngineV2AppTimerAdapter';
 
 export interface VoiceEngineV2AppProductionHostPortsLogger {
 	trace(...args: Array<unknown>): void;

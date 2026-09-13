@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {tryExtractGifProviderSlug} from '@app/api/gif/GifProviderUtils';
+import type {GifService} from '@app/api/gif/GifService';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {Logger} from '@fluxer/logger/src/Logger';
 import type {ResolvedGifEntrySchema} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 import type {GifMediaFormat, GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {EmbedMediaResponse, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
-import {tryExtractGifProviderSlug} from '../gif/GifProviderUtils';
-import type {GifService} from '../gif/GifService';
-import type {IGifProvider} from '../gif/IGifProvider';
-import type {IMediaService, MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
-import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
 
 const logger = new Logger('FavoriteGifResolver');
 

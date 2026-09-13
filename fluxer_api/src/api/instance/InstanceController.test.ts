@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {SsoService} from '@app/api/auth/services/SsoService';
+import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {InstanceController} from '@app/api/instance/InstanceController';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Hono} from 'hono';
 import {afterEach, describe, expect, it} from 'vitest';
-import type {SsoService} from '../auth/services/SsoService';
-import {setCassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {InMemoryCassandraQueryExecutor} from '../test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '../test/mocks/MockKVProvider';
-import type {HonoEnv} from '../types/HonoEnv';
-import {InstanceConfigRepository} from './InstanceConfigRepository';
-import {InstanceController} from './InstanceController';
 
 interface DiscoveryCaptcha {
 	provider: string;

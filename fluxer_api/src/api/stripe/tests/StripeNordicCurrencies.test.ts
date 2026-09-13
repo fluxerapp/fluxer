@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
 	CurrentSubscriptionPriceResponse,
@@ -7,20 +14,13 @@ import type {
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import {afterAll, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 const {lookupGeoipMock} = vi.hoisted(() => ({
 	lookupGeoipMock: vi.fn(),
 }));
 
-vi.mock('../../utils/IpUtils', async (importOriginal) => ({
-	...(await importOriginal<typeof import('../../utils/IpUtils')>()),
+vi.mock('@app/api/utils/IpUtils', async (importOriginal) => ({
+	...(await importOriginal<typeof import('@app/api/utils/IpUtils')>()),
 	lookupGeoip: lookupGeoipMock,
 }));
 

@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {getGifDataUrl, getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {
+	grantPremium,
+	type UserProfileUpdateResult,
+	updateAvatar,
+	updateBanner,
+} from '@app/api/user/tests/UserTestUtils';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {getGifDataUrl, getPngDataUrl} from '../../emoji/tests/EmojiTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {grantPremium, type UserProfileUpdateResult, updateAvatar, updateBanner} from './UserTestUtils';
 
 const PREMIUM_TYPE_SUBSCRIPTION = 2;
 const AVATAR_MAX_SIZE = 10 * 1024 * 1024;

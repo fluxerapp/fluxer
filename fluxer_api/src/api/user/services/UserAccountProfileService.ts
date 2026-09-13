@@ -1,5 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {User} from '@app/api/models/User';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import {canUseProfileTimezone, isProfileSubstringExempt} from '@app/api/user/UserHelpers';
+import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
+import * as EmojiUtils from '@app/api/utils/EmojiUtils';
 import {MAX_BIO_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {PremiumFlags, ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -10,19 +23,6 @@ import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessE
 import type {UserUpdateRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {EntityAssetService, PreparedAssetUpload} from '../../infrastructure/EntityAssetService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import type {User} from '../../models/User';
-import {deriveDominantAvatarColor} from '../../utils/AvatarColorUtils';
-import * as EmojiUtils from '../../utils/EmojiUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import {canUseProfileTimezone, isProfileSubstringExempt} from '../UserHelpers';
 
 type UserFieldUpdates = Partial<UserRow>;
 

@@ -28,7 +28,7 @@ export type {
 	VoiceEngineV2StatsPresentationProjection,
 	VoiceEngineV2StatsProjection,
 	VoiceEngineV2Transition,
-} from './core';
+} from '@fluxer/voice_engine_v2/src/core';
 export {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
@@ -50,7 +50,7 @@ export {
 	shouldApplyGatewayVoiceStateEcho,
 	transitionVoiceEngineV2,
 	unavailableVoiceEngineV2Capabilities,
-} from './core';
+} from '@fluxer/voice_engine_v2/src/core';
 export type {
 	VoiceEngineV2CommandFailure,
 	VoiceEngineV2CommandResult,
@@ -58,13 +58,13 @@ export type {
 	VoiceEngineV2Driver,
 	VoiceEngineV2ExternalEventListener,
 	VoiceEngineV2Implementation,
-} from './implementations';
+} from '@fluxer/voice_engine_v2/src/implementations';
 export {
 	errorToVoiceEngineV2Error,
 	VoiceEngineV2HostPortDriver,
 	VoiceEngineV2HostPortImplementation,
 	VoiceEngineV2ImplementationBase,
-} from './implementations';
+} from '@fluxer/voice_engine_v2/src/implementations';
 export type {
 	VoiceEngineV2CameraEncodingPlan,
 	VoiceEngineV2CameraEncodingPlanAction,
@@ -92,7 +92,7 @@ export type {
 	VoiceStatsTrackRoleCandidate,
 	VoiceStatsTrackRoleSelection,
 	VoiceStatsTrackSummary,
-} from './policies';
+} from '@fluxer/voice_engine_v2/src/policies';
 export {
 	applyVoiceEngineV2CameraEncodingOptions,
 	applyVoiceEngineV2ScreenEncodingOptions,
@@ -110,7 +110,7 @@ export {
 	summarizeVoiceEngineV2Stats,
 	unavailableVoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2StatsTrackSource,
-} from './policies';
+} from '@fluxer/voice_engine_v2/src/policies';
 export type {
 	CapabilitiesPort,
 	DevicePort,
@@ -128,8 +128,8 @@ export type {
 	VoiceEngineV2HostEventListener,
 	VoiceEngineV2HostPorts,
 	VoiceStateIngestionPort,
-} from './ports';
-export {unsupportedPortError} from './ports';
+} from '@fluxer/voice_engine_v2/src/ports';
+export {unsupportedPortError} from '@fluxer/voice_engine_v2/src/ports';
 export type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2AudioControlsPatch,
@@ -216,11 +216,11 @@ export type {
 	VoiceEngineV2VoiceStats,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from './protocol';
+} from '@fluxer/voice_engine_v2/src/protocol';
 export {
 	getVoiceEngineV2CommandResourceKey,
 	getVoiceEngineV2CommandTypeResourceKey,
-} from './protocol';
+} from '@fluxer/voice_engine_v2/src/protocol';
 export type {
 	VoiceEngineV2EventLogEntry,
 	VoiceEngineV2EventLogSpillSink,
@@ -229,13 +229,13 @@ export type {
 	VoiceEngineV2RuntimeListener,
 	VoiceEngineV2RuntimeListenerPayload,
 	VoiceEngineV2RuntimeOptions,
-} from './runtime';
+} from '@fluxer/voice_engine_v2/src/runtime';
 export {
 	commandResultToEvent,
 	createVoiceEngineV2MemoryEventLogSpillSink,
 	VoiceEngineV2Controller,
 	VoiceEngineV2Runtime,
-} from './runtime';
+} from '@fluxer/voice_engine_v2/src/runtime';
 export type {
 	SourceFault,
 	SourceLifecycleAction,
@@ -245,7 +245,7 @@ export type {
 	SourceLifecycleSnapshotEntry,
 	SourceLifecycleState,
 	SourceLifecycleTransitionResult,
-} from './source_isolation';
+} from '@fluxer/voice_engine_v2/src/source_isolation';
 export {
 	computeReconnectBackoffMs,
 	createInitialActiveState,
@@ -256,4 +256,4 @@ export {
 	SourceLifecycleError,
 	SourceLifecycleRegistry,
 	transitionSourceLifecycle,
-} from './source_isolation';
+} from '@fluxer/voice_engine_v2/src/source_isolation';

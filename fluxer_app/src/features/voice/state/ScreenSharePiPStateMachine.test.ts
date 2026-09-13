@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createScreenSharePiPSnapshot,
 	type ScreenSharePiPConditions,
@@ -9,7 +8,8 @@ import {
 	selectScreenSharePiPCommands,
 	selectScreenSharePiPMode,
 	transitionScreenSharePiPSnapshot,
-} from './ScreenSharePiPStateMachine';
+} from '@app/features/voice/state/ScreenSharePiPStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function makeShare(overrides: Partial<ScreenSharePiPScreenShare> = {}): ScreenSharePiPScreenShare {
 	return {

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, ReportID} from '../BrandedTypes';
-import type {IGuildDataRepository} from '../guild/repositories/IGuildDataRepository';
-import type {ILogger} from '../ILogger';
-import type {IReportRepository} from '../report/IReportRepository';
+import type {GuildID, ReportID} from '@app/api/BrandedTypes';
+import type {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
+import type {ILogger} from '@app/api/ILogger';
+import type {IReportRepository} from '@app/api/report/IReportRepository';
 import {
 	getAuditLogSearchService,
 	getGuildSearchService,
 	getReportSearchService,
 	getUserSearchService,
-} from '../SearchFactory';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {IGuildSearchService} from './IGuildSearchService';
-import type {IReportSearchService} from './IReportSearchService';
-import type {IUserSearchService} from './IUserSearchService';
+} from '@app/api/SearchFactory';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 
 const BATCH_SIZE = 100;
 

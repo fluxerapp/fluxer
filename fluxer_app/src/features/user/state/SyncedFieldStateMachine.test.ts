@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createSyncedFieldMachineSnapshot,
 	type SyncedFieldMachineEvent,
 	type SyncedFieldMachineSnapshot,
 	selectSyncedFieldMachineModel,
 	transitionSyncedFieldMachineSnapshot,
-} from './SyncedFieldStateMachine';
+} from '@app/features/user/state/SyncedFieldStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const REMOTE_SNAPSHOT = Object.freeze({source: 'remote'});
 const LOCAL_CANDIDATE = Object.freeze({source: 'local'});

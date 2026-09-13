@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {createGuild, getGuild, updateGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {
@@ -10,12 +16,6 @@ import type {
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {getPngDataUrl} from '../../emoji/tests/EmojiTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createGuild, getGuild, updateGuild} from './GuildTestUtils';
 
 interface CloneSource {
 	owner: TestAccount;

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import {hashPassword, verifyPassword} from '../utils/PasswordUtils';
-import {generateOAuthTokenSecret} from './OAuthTokenSecret';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import {hashPassword, verifyPassword} from '@app/api/utils/PasswordUtils';
 
 export class BotAuthService {
 	constructor(private readonly applicationRepository: IApplicationRepository) {}

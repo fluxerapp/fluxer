@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, upsertOne} from '../../database/CassandraQueryExecution';
-import type {PushSubscriptionRow} from '../../database/types/UserTypes';
-import {PushSubscription} from '../../models/PushSubscription';
-import {PushSubscriptions} from '../../Tables';
-import {awaitAll} from '../../utils/ConcurrencyUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
+import {PushSubscription} from '@app/api/models/PushSubscription';
+import {PushSubscriptions} from '@app/api/Tables';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 
 const FETCH_PUSH_SUBSCRIPTIONS_CQL = PushSubscriptions.selectCql({
 	where: PushSubscriptions.where.eq('user_id'),

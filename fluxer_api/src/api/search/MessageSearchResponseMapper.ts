@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {createChannelID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {MessageSearchResultsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {UserID} from '../BrandedTypes';
-import {createChannelID} from '../BrandedTypes';
-import {mapChannelToResponse} from '../channel/ChannelMappers';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import type {Message} from '../models/Message';
-import {mapWithConcurrency} from '../utils/ConcurrencyUtils';
 
 const CHANNEL_LOOKUP_CONCURRENCY = 16;
 

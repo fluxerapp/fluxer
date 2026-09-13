@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {ms} from 'itty-time';
-import {Logger} from '../../Logger';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {parseJsonRecord} from '../../utils/JsonBoundaryUtils';
 
 interface DiscoveredOidcProviderMetadata {
 	issuer: string;

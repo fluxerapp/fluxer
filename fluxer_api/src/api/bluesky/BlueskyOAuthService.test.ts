@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {generateKeyPairSync} from 'node:crypto';
+import {BlueskyOAuthService} from '@app/api/bluesky/BlueskyOAuthService';
+import type {BlueskyOAuthConfig} from '@app/api/config/APIConfig';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {describe, expect, it} from 'vitest';
-import type {BlueskyOAuthConfig} from '../config/APIConfig';
-import {MockKVProvider} from '../test/mocks/MockKVProvider';
-import {BlueskyOAuthService} from './BlueskyOAuthService';
 
 const API_PUBLIC_ENDPOINT = 'https://chat.example.com';
 

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildDataService} from '@app/api/guild/services/GuildDataService';
+import type {GuildMemberService} from '@app/api/guild/services/GuildMemberService';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {createGuildID, type GuildID, type UserID} from '../BrandedTypes';
-import type {GuildDataService} from '../guild/services/GuildDataService';
-import type {GuildMemberService} from '../guild/services/GuildMemberService';
-import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {User} from '../models/User';
-import type {InstanceConfigRepository} from './InstanceConfigRepository';
 
 export class SingleCommunityService {
 	constructor(

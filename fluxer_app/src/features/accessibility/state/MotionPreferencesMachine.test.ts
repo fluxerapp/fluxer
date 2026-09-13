@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	createMotionPreferencesContext,
 	createMotionPreferencesSnapshot,
@@ -22,7 +20,9 @@ import {
 	selectReducedMotionSource,
 	selectSmoothScrollingEnabled,
 	transitionMotionPreferencesSnapshot,
-} from './MotionPreferencesMachine';
+} from '@app/features/accessibility/state/MotionPreferencesMachine';
+import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
+import {describe, expect, it} from 'vitest';
 
 const {ALWAYS_ANIMATE, ANIMATE_ON_INTERACTION, NEVER_ANIMATE} = StickerAnimationOptions;
 

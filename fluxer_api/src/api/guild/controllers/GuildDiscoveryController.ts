@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
@@ -16,15 +25,6 @@ import {
 	DiscoverySearchQuery,
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import {createGuildID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 function ensureDiscoveryEnabled(): void {
 	if (!Config.discovery.enabled) {

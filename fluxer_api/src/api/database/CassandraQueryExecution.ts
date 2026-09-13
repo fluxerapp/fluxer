@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {getClient} from '@pkgs/cassandra/src/Client';
-import cassandra from 'cassandra-driver';
-import {Logger} from '../Logger';
-import {chunkArray} from '../utils/ArrayUtils';
-import {logBatch, logQuery} from './CassandraDevLogger';
-import {getIsDev} from './CassandraMetaRegistry';
-import type {CassandraParams, KvQueryMeta, PreparedQuery, QueryTemplate} from './CassandraTypes';
+import {logBatch, logQuery} from '@app/api/database/CassandraDevLogger';
+import {getIsDev} from '@app/api/database/CassandraMetaRegistry';
+import type {CassandraParams, KvQueryMeta, PreparedQuery, QueryTemplate} from '@app/api/database/CassandraTypes';
 import {
 	assertNoUndefinedParams,
 	getStatementMeta,
 	isConditionalQuery,
 	normalizeExecuteArgs,
 	normalizeInParams,
-} from './CassandraTypes';
+} from '@app/api/database/CassandraTypes';
+import {Logger} from '@app/api/Logger';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {getClient} from '@pkgs/cassandra/src/Client';
+import cassandra from 'cassandra-driver';
 
 const DEFAULT_MAX_PARTITION_KEYS_PER_QUERY = 100;
 

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {BunnyPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import {Logger} from '@app/api/Logger';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
-import {Config} from '../../Config';
-import type {BunnyPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import {Logger} from '../../Logger';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const EXACT_BATCH_SIZE = 120;
 const PREFIX_BATCH_SIZE = 20;

@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import type {GuildID} from '@app/api/BrandedTypes';
+import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {createGuild, getUserGuilds} from '@app/api/guild/tests/GuildTestUtils';
+import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
+import {getGuildRepository} from '@app/api/middleware/ServiceSingletons';
+import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DiscoveryCategories, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
@@ -10,20 +24,6 @@ import type {
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import type {GuildID} from '../../BrandedTypes';
-import {createTestBotAccount} from '../../bot/tests/BotTestUtils';
-import {setInjectedGatewayService} from '../../middleware/ServiceRegistry';
-import {getGuildRepository} from '../../middleware/ServiceSingletons';
-import {banUser} from '../../moderation/tests/ModerationTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import {NoopGatewayService} from '../../test/NoopGatewayService';
-import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import syncDiscoveryIndex from '../../worker/tasks/SyncDiscoveryIndex';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../../worker/WorkerContext';
-import {createGuild, getUserGuilds} from './GuildTestUtils';
 
 async function setGuildMemberCount(harness: ApiTestHarness, guildId: string, memberCount: number): Promise<void> {
 	await createBuilder(harness, '')

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ASSET_FORMAT_POLICY} from '@fluxer/constants/src/AssetFormatPolicy';
+
 export const MAX_GUILDS_PREMIUM = 200;
 export const MAX_GUILD_CHANNELS = 500;
 export const MAX_CHANNELS_PER_CATEGORY = 50;
@@ -52,8 +54,6 @@ export const MAX_KATEX_RENDER_SOURCE_LENGTH = 1024;
 export const MAX_KATEX_RENDER_CONTROL_SEQUENCE_COUNT = 64;
 export const MAX_CODE_HIGHLIGHT_SOURCE_LENGTH = 50_000;
 export const MAX_CODE_HIGHLIGHT_OUTPUT_LENGTH = 200_000;
-
-import {ASSET_FORMAT_POLICY} from '@fluxer/constants/src/AssetFormatPolicy';
 
 export const MAX_BIO_LENGTH = 320;
 export const AVATAR_MAX_SIZE = ASSET_FORMAT_POLICY.avatar.maxBytes;

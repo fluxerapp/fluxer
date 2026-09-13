@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {createDmChannel, createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
+import {getCacheService} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {STREAM_PREVIEW_CONTENT_TYPE_JPEG, STREAM_PREVIEW_MAX_BYTES} from '@fluxer/constants/src/StreamConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {getCacheService} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createDmChannel, createFriendship} from './ChannelTestUtils';
 
 const CONNECTION_ID = 'conn-oversized';
 

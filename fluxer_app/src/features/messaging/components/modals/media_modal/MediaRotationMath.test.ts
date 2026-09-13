@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getNearestDefaultRotationDegrees,
 	isDefaultRotationDegrees,
@@ -8,7 +7,8 @@ import {
 	normalizeRotationDegrees,
 	rotateAnticlockwiseDegrees,
 	rotateClockwiseDegrees,
-} from './MediaRotationMath';
+} from '@app/features/messaging/components/modals/media_modal/MediaRotationMath';
+import {describe, expect, it} from 'vitest';
 
 describe('MediaRotationMath', () => {
 	it('keeps clockwise animation continuous through a full turn', () => {

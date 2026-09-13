@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, unclaimAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createGuild,
 	getChannel,
 	sendChannelMessage,
-} from '../../channel/tests/ChannelTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {fetchUserNote, setUserNote} from './UserTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {fetchUserNote, setUserNote} from '@app/api/user/tests/UserTestUtils';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('Unclaimed Account Restrictions', () => {
 	let harness: ApiTestHarness;

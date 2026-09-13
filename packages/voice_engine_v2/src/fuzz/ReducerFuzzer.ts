@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Snapshot} from '../core/state';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2DisconnectReason, VoiceEngineV2LifecycleReason} from '../protocol/types';
-import {createVoiceEngineV2MemoryEventLogSpillSink} from '../runtime/eventLogRing';
-import {createVoiceEngineV2DeterministicClockPort} from '../runtime/platformPort';
-import {assertEventLogInvariants, VoiceEngineV2Runtime} from '../runtime/VoiceEngineV2Runtime';
-import {hashSnapshot} from '../simulation/Simulator';
-import {type SimulatorDriverFaultPolicy, VoiceEngineV2SimulatorDriver} from '../simulation/SimulatorPorts';
-import {VoiceEngineV2TestImplementation} from '../testing/VoiceEngineV2TestImplementation';
-import {FuzzPrng} from './FuzzPrng';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import {FuzzPrng} from '@fluxer/voice_engine_v2/src/fuzz/FuzzPrng';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2DisconnectReason,
+	VoiceEngineV2LifecycleReason,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {createVoiceEngineV2DeterministicClockPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
+import {assertEventLogInvariants, VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
+import {hashSnapshot} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
+import {
+	type SimulatorDriverFaultPolicy,
+	VoiceEngineV2SimulatorDriver,
+} from '@fluxer/voice_engine_v2/src/simulation/SimulatorPorts';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 
 const FUZZ_ITERATIONS_MAX = 1024;
 

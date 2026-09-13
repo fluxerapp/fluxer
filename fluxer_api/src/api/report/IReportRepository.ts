@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '../BrandedTypes';
-import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '../database/types/MessageTypes';
+import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '@app/api/database/types/MessageTypes';
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
 	IARSubmissionRow,
 	MessageReportSubmissionByReporterRow,
-} from '../database/types/ReportTypes';
+} from '@app/api/database/types/ReportTypes';
 
-export type {IARMessageContextRow, IARSubmissionRow} from '../database/types/ReportTypes';
+export type {IARMessageContextRow, IARSubmissionRow} from '@app/api/database/types/ReportTypes';
 
 export enum ReportStatus {
 	PENDING = 0,

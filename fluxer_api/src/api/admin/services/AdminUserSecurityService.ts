@@ -1,5 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {BulkCancelledError, type BulkProgressHelpers} from '@app/api/admin/services/BulkProgressHelpers';
+import * as AuthEmail from '@app/api/auth/AuthEmail';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {HistoricalOutcomeCode} from '@app/api/risk/RiskHistoryTypes';
+import {resolveAssignedTraits} from '@app/api/user/UserTraits';
+import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
@@ -34,24 +52,6 @@ import type {
 	UpdateSuspiciousActivityFlagsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthEmail from '../../auth/AuthEmail';
-import * as AuthMfa from '../../auth/AuthMfa';
-import * as AuthSession from '../../auth/AuthSession';
-import * as AuthUtility from '../../auth/AuthUtility';
-import {createPasswordResetToken, createUserID, type UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import type {IRiskHistoryRepository} from '../../risk/HistoricalOutcomeRepository';
-import type {HistoricalOutcomeCode} from '../../risk/RiskHistoryTypes';
-import {resolveAssignedTraits} from '../../user/UserTraits';
-import {getIpAddressReverse, getLocationLabelFromIp} from '../../utils/IpUtils';
-import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
-import {BulkCancelledError, type BulkProgressHelpers} from './BulkProgressHelpers';
 
 interface AdminUserSecurityServiceDeps {
 	apiContext: ApiContext;

@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
-import type {SearchReportsRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
-import {seconds} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {
 	type ChannelID,
 	createReportID,
@@ -14,33 +9,38 @@ import {
 	type GuildID,
 	type ReportID,
 	type UserID,
-} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import {makeAttachmentCdnKey} from '../../channel/services/message/MessageHelpers';
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	createMessageResponseDataService,
 	type MessageResponseAccessContext,
 	messageResponseAccessForChannel,
 	messageResponseAccessForGuild,
-} from '../../channel/services/message/MessageResponseDataService';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '../../csam/NcmecSubmissionService';
-import type {MessageAttachment} from '../../database/types/MessageTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import type {IARMessageContext, IARSubmission} from '../../report/IReportRepository';
-import type {ReportService} from '../../report/ReportService';
-import {getReportSearchService} from '../../SearchFactory';
-import type {UserChannelService} from '../../user/services/UserChannelService';
-import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
-import type {AdminAuditService} from './AdminAuditService';
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
+import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import type {IARMessageContext, IARSubmission} from '@app/api/report/IReportRepository';
+import type {ReportService} from '@app/api/report/ReportService';
+import {getReportSearchService} from '@app/api/SearchFactory';
+import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
+import type {SearchReportsRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
+import {seconds} from 'itty-time';
 
 interface AdminReportServiceDeps {
 	apiContext: ApiContext;

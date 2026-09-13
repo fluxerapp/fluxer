@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildMFALevel, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import type {GuildMemberSearchResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSearchSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, type TestAccount, totpCodeNow} from '../../auth/tests/AuthTestUtils';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {GuildRepository} from '../../guild/repositories/GuildRepository';
+import {createTestAccount, type TestAccount, totpCodeNow} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {
 	acceptInvite,
 	createChannel,
@@ -15,10 +11,14 @@ import {
 	createRole,
 	setupTestGuildWithMembers,
 	updateMember,
-} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, wait} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, wait} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildMFALevel, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
+import type {GuildMemberSearchResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSearchSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const TOTP_SECRET = 'JBSWY3DPEHPK3PXP';
 

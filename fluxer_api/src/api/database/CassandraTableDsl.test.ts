@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {defineTable} from '@app/api/database/CassandraTableDsl';
+import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
 import {describe, expect, it} from 'vitest';
-import {defineTable} from './CassandraTableDsl';
-import {Db, type PreparedQuery} from './CassandraTypes';
 
 interface TtlHelperTestRow {
 	id: string;

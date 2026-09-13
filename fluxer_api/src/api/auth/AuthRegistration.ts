@@ -1,5 +1,43 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
+import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {APIConfig} from '@app/api/config/APIConfig';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {
+	type InstanceConfigRepository,
+	type InstanceRegistrationUrl,
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+} from '@app/api/instance/InstanceConfigRepository';
+import type {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
+import type {InviteService} from '@app/api/invite/InviteService';
+import {Logger} from '@app/api/Logger';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import {UserSettings} from '@app/api/models/UserSettings';
+import {countryRequiresInboundPhoneVerification} from '@app/api/risk/AbusePolicy';
+import {
+	type IAccountPolicyEvaluator,
+	isAssessmentThresholdAuditEvent,
+	normalizePolicyContactDomain,
+} from '@app/api/risk/AccountPolicyEvaluator';
+import type {IRegistrationEventsRepository} from '@app/api/risk/adapters/VelocityAdapter';
+import {deferPhoneFlagsUntilCommunityJoin} from '@app/api/risk/DeferredPhoneGate';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {IRiskAssessmentRepository} from '@app/api/risk/RiskAssessmentRepository';
+import {deriveLatestRiskContext} from '@app/api/risk/RiskHistoryContext';
+import * as AgeUtils from '@app/api/utils/AgeUtils';
+import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
+import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -13,44 +51,6 @@ import type {RegisterRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas'
 import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
 import {types} from 'cassandra-driver';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '../BrandedTypes';
-import type {APIConfig} from '../config/APIConfig';
-import type {IDiscriminatorService} from '../infrastructure/DiscriminatorService';
-import type {KVActivityTracker} from '../infrastructure/KVActivityTracker';
-import {
-	type InstanceConfigRepository,
-	type InstanceRegistrationUrl,
-	REGISTRATION_PENDING_APPROVAL_TRAIT,
-} from '../instance/InstanceConfigRepository';
-import type {SingleCommunityService} from '../instance/SingleCommunityService';
-import type {InviteService} from '../invite/InviteService';
-import {Logger} from '../Logger';
-import {profileSubstringBlocklistCache} from '../middleware/ProfileSubstringBlocklistCache';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {User} from '../models/User';
-import {UserSettings} from '../models/UserSettings';
-import {countryRequiresInboundPhoneVerification} from '../risk/AbusePolicy';
-import {
-	type IAccountPolicyEvaluator,
-	isAssessmentThresholdAuditEvent,
-	normalizePolicyContactDomain,
-} from '../risk/AccountPolicyEvaluator';
-import type {IRegistrationEventsRepository} from '../risk/adapters/VelocityAdapter';
-import {deferPhoneFlagsUntilCommunityJoin} from '../risk/DeferredPhoneGate';
-import type {IRiskHistoryRepository} from '../risk/HistoricalOutcomeRepository';
-import type {IRiskAssessmentRepository} from '../risk/RiskAssessmentRepository';
-import {deriveLatestRiskContext} from '../risk/RiskHistoryContext';
-import * as AgeUtils from '../utils/AgeUtils';
-import {extractEmailDomain} from '../utils/EmailDomainUtils';
-import {lookupGeoip} from '../utils/IpUtils';
-import {createRateLimitError} from '../utils/RateLimitUtils';
-import {generateRandomUsername} from '../utils/UsernameGenerator';
-import {deriveUsernameFromDisplayName} from '../utils/UsernameSuggestionUtils';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
-import type {IRegistrationRiskEvaluator} from './services/IRegistrationRiskEvaluator';
 
 const DEFAULT_MINIMUM_AGE = 13;
 

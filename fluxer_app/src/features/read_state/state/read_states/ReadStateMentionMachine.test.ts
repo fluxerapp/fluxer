@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createReadStateMentionSnapshot,
 	type ReadStateMentionInput,
@@ -8,7 +7,8 @@ import {
 	resolveReadStateMention,
 	selectReadStateMentionModel,
 	transitionReadStateMentionSnapshot,
-} from './ReadStateMentionMachine';
+} from '@app/features/read_state/state/read_states/ReadStateMentionMachine';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<ReadStateMentionInput> = {}): ReadStateMentionInput {
 	return {

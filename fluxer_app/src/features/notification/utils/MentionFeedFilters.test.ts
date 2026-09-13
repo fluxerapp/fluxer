@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type MentionFilters,
+	messageMatchesMentionTypeFilters,
+} from '@app/features/notification/utils/MentionFeedFilters';
 import {describe, expect, it} from 'vitest';
-import {type MentionFilters, messageMatchesMentionTypeFilters} from './MentionFeedFilters';
 
 const DIRECT_ONLY = {mention_everyone: false, mention_roles: []};
 const EVERYONE_ONLY = {mention_everyone: true, mention_roles: []};

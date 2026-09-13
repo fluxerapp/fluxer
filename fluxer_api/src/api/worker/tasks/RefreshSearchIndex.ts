@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {seconds} from 'itty-time';
-import {z} from 'zod';
-import type {GuildID, ReportID, UserID} from '../../BrandedTypes';
-import {createGuildID} from '../../BrandedTypes';
-import {GuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
+import type {GuildID, ReportID, UserID} from '@app/api/BrandedTypes';
+import {createGuildID} from '@app/api/BrandedTypes';
+import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
 import {
 	getAuditLogSearchService,
 	getGuildMemberSearchService,
@@ -18,11 +12,17 @@ import {
 	getMessageSearchService,
 	getReportSearchService,
 	getUserSearchService,
-} from '../../SearchFactory';
-import type {IGuildMemberSearchService} from '../../search/IGuildMemberSearchService';
-import type {IMessageSearchService} from '../../search/IMessageSearchService';
-import {deleteChannelMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/SearchFactory';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {seconds} from 'itty-time';
+import {z} from 'zod';
 
 const INDEX_TYPES = [
 	'guilds',

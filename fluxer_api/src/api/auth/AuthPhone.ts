@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {phonePrefixBanCache} from '@app/api/auth/PhonePrefixBanCache';
+import {requiresInboundPhoneVerification} from '@app/api/auth/PhoneVerificationPrefixPolicy';
+import {PhoneVerificationReuseStore} from '@app/api/auth/PhoneVerificationReuseStore';
+import type {IssuedChallenge} from '@app/api/auth/services/InboundSmsChallengeService';
+import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {PHONE_ADD_CLEARABLE_FLAGS, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
@@ -29,16 +39,6 @@ import {
 } from '@pkgs/sms/src/PhoneLookupTypes';
 import {SmsVerificationStartError, TwilioVerificationRateLimitError} from '@pkgs/sms/src/providers/TwilioSmsProvider';
 import type {SmsVerificationStartOptions} from '@pkgs/sms/src/SmsVerificationTypes';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse, mapUserToPrivateResponse} from '../user/UserMappers';
-import {phonePrefixBanCache} from './PhonePrefixBanCache';
-import {requiresInboundPhoneVerification} from './PhoneVerificationPrefixPolicy';
-import {PhoneVerificationReuseStore} from './PhoneVerificationReuseStore';
-import type {IssuedChallenge} from './services/InboundSmsChallengeService';
-import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from './services/PhoneLookupRepository';
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;

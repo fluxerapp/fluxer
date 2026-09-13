@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import type {ExactRow} from '../../database/types/DatabaseRowTypes';
-import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '../../database/types/PaymentTypes';
-import type {PushSubscriptionRow, RecentMentionRow} from '../../database/types/UserTypes';
-import type {GiftCode} from '../../models/GiftCode';
-import type {Payment} from '../../models/Payment';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {RecentMention} from '../../models/RecentMention';
-import type {SavedMessage} from '../../models/SavedMessage';
-import type {VisionarySlot} from '../../models/VisionarySlot';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ExactRow} from '@app/api/database/types/DatabaseRowTypes';
+import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '@app/api/database/types/PaymentTypes';
+import type {PushSubscriptionRow, RecentMentionRow} from '@app/api/database/types/UserTypes';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {Payment} from '@app/api/models/Payment';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {RecentMention} from '@app/api/models/RecentMention';
+import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {VisionarySlot} from '@app/api/models/VisionarySlot';
 
 export interface IUserContentRepository {
 	getRecentMention(userId: UserID, messageId: MessageID): Promise<RecentMention | null>;

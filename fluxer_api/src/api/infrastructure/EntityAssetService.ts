@@ -2,6 +2,15 @@
 
 import crypto from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
+import {Config} from '@app/api/Config';
+import type {IAssetDeletionQueue, QueuedAssetReference} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {stripNonJpegImageMetadata} from '@app/api/infrastructure/StorageObjectHelpers';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 import {
 	type AssetKind,
 	formatAssetUploadExtensions,
@@ -14,15 +23,6 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import {ms} from 'itty-time';
 import sharp from 'sharp';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import {awaitAll} from '../utils/ConcurrencyUtils';
-import type {IAssetDeletionQueue, QueuedAssetReference} from './IAssetDeletionQueue';
-import type {IMediaService, MediaProxyMetadataResponse} from './IMediaService';
-import type {IStorageService} from './IStorageService';
-import {stripNonJpegImageMetadata} from './StorageObjectHelpers';
 
 type AssetType = 'avatar' | 'banner' | 'icon' | 'splash' | 'embed_splash' | 'branding';
 type EntityType = 'user' | 'guild' | 'guild_member' | 'instance';

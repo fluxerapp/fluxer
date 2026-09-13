@@ -1,31 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {existsSync} from 'node:fs';
-import {loadConfig} from '@fluxer/config/src/ConfigLoader';
-import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {afterAll, afterEach, beforeAll} from 'vitest';
-import type {UserID} from '../BrandedTypes';
-import {buildAPIConfigFromMaster, initializeConfig} from '../Config';
-import {setInjectedMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
+import type {UserID} from '@app/api/BrandedTypes';
+import {buildAPIConfigFromMaster, initializeConfig} from '@app/api/Config';
+import {setInjectedMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {
 	resetCassandraQueryExecutorForTesting,
 	setCassandraQueryExecutorForTesting,
 	shutdownCassandraQueryExecutorForTesting,
-} from '../database/CassandraQueryExecution';
-import type {IUsersServiceClient} from '../infrastructure/UsersServiceClient';
-import {setInjectedUsersServiceClient} from '../infrastructure/UsersServiceClient';
-import {initializeLogger} from '../Logger';
-import {setInjectedKVProvider, setInjectedSnowflakeService} from '../middleware/ServiceRegistry';
-import {getInstanceConfigRepository, getUserRepository} from '../middleware/ServiceSingletons';
-import {drainSearchTasks, enableSearchTaskTracking} from '../search/SearchTaskTracker';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import {InMemoryCassandraQueryExecutor} from './InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from './mocks/MockKVProvider';
-import {MockSnowflakeService} from './mocks/MockSnowflakeService';
-import {NoopLogger} from './mocks/NoopLogger';
-import {RepositoryBackedMessageResponseDataService} from './mocks/RepositoryBackedMessageResponseDataService';
-import {fakeNcmecServer} from './msw/handlers/NcmecHandlers';
-import {server} from './msw/server';
+} from '@app/api/database/CassandraQueryExecution';
+import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {setInjectedUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {initializeLogger} from '@app/api/Logger';
+import {setInjectedKVProvider, setInjectedSnowflakeService} from '@app/api/middleware/ServiceRegistry';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {drainSearchTasks, enableSearchTaskTracking} from '@app/api/search/SearchTaskTracker';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {MockSnowflakeService} from '@app/api/test/mocks/MockSnowflakeService';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {RepositoryBackedMessageResponseDataService} from '@app/api/test/mocks/RepositoryBackedMessageResponseDataService';
+import {fakeNcmecServer} from '@app/api/test/msw/handlers/NcmecHandlers';
+import {server} from '@app/api/test/msw/server';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {loadConfig} from '@fluxer/config/src/ConfigLoader';
+import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {afterAll, afterEach, beforeAll} from 'vitest';
 
 function defaultNatsUrl(): string {
 	return `nats://${existsSync('/.dockerenv') ? 'nats' : '127.0.0.1'}:4222`;

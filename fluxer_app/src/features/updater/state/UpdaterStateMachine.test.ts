@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron';
-import {describe, expect, it} from 'vitest';
 import {
 	createUpdaterMachineSnapshot,
 	getUpdaterDisplayVersion,
@@ -11,7 +10,8 @@ import {
 	transitionUpdaterMachineSnapshot,
 	type UpdaterMachineEvent,
 	type UpdaterMachineSnapshot,
-} from './UpdaterStateMachine';
+} from '@app/features/updater/state/UpdaterStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const NOW = 1_700_000_000_000;
 

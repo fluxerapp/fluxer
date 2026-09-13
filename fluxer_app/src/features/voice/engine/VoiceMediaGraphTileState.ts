@@ -7,9 +7,9 @@ import {
 	type VoiceMediaGraphFailure,
 	type VoiceMediaGraphSnapshot,
 	type VoiceMediaGraphSubscriptionEntry,
-} from './VoiceMediaGraph';
-import {VOICE_MEDIA_GRAPH_FIRST_FRAME_TIMEOUT_FAILURE} from './VoiceMediaGraphDeadlines';
-import type {VoiceTrackSource} from './VoiceTrackSource';
+} from '@app/features/voice/engine/VoiceMediaGraph';
+import {VOICE_MEDIA_GRAPH_FIRST_FRAME_TIMEOUT_FAILURE} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
+import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 
 export const VOICE_MEDIA_GRAPH_FIRST_FRAME_RECOVERY_VISIBLE_MS = 30_000;
 

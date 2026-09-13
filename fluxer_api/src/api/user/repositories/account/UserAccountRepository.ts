@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
+import {
+	UserDataRepository,
+	type UserDeletionTransition,
+} from '@app/api/user/repositories/account/crud/UserDataRepository';
+import {
+	type EmailClaimReservation,
+	UserEmailOwnershipRepository,
+} from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
+import {UserIndexRepository} from '@app/api/user/repositories/account/crud/UserIndexRepository';
+import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
+import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
+import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
 	LEGACY_DEAD_USER_FLAGS_MASK,
 	LEGACY_PREMIUM_FLAGS_MASK,
 } from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {UserID} from '../../../BrandedTypes';
-import {Db, type DbOp} from '../../../database/CassandraTypes';
-import type {UserRow} from '../../../database/types/UserTypes';
-import {User} from '../../../models/User';
-import type {UserDeletionScheduleUpdate} from '../IUserAccountRepository';
-import {UserDataRepository, type UserDeletionTransition} from './crud/UserDataRepository';
-import {type EmailClaimReservation, UserEmailOwnershipRepository} from './crud/UserEmailOwnershipRepository';
-import {UserIndexRepository} from './crud/UserIndexRepository';
-import {UserSearchRepository} from './crud/UserSearchRepository';
-import {UserLookupRepository} from './UserLookupRepository';
 
 export class UserAccountRepository {
 	private dataRepo: UserDataRepository;

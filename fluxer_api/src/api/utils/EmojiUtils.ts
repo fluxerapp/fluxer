@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {EmojiID, GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import {createEmojiID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {EmojiID, GuildID, UserID, WebhookID} from '../BrandedTypes';
-import {createEmojiID} from '../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {GuildEmoji} from '../models/GuildEmoji';
-import type {IUserAccountRepository} from '../user/repositories/IUserAccountRepository';
 
 type EmojiGuildRepository = Pick<IGuildRepositoryAggregate, 'getEmoji' | 'getEmojiById'>;
 type EmojiUserRepository = Pick<IUserAccountRepository, 'findUnique'>;

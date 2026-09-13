@@ -1,5 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
+import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
+import type {IGuildMemberRepository} from '@app/api/guild/repositories/IGuildMemberRepository';
+import type {IGuildRoleRepository} from '@app/api/guild/repositories/IGuildRoleRepository';
+import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {GuildRole} from '@app/api/models/GuildRole';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {applyProtectedRolePermissions} from '@app/api/utils/featureUtils';
+import {computePermissionsDiff} from '@app/api/utils/PermissionUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -17,24 +35,6 @@ import type {
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {GuildID, RoleID, UserID} from '../../BrandedTypes';
-import {createRoleID, guildIdToRoleId} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import {Logger} from '../../Logger';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import {GuildRole} from '../../models/GuildRole';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {applyProtectedRolePermissions} from '../../utils/featureUtils';
-import {computePermissionsDiff} from '../../utils/PermissionUtils';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../GuildAuditLogTypes';
-import {mapGuildRoleToResponse} from '../GuildModel';
-import type {IGuildMemberRepository} from '../repositories/IGuildMemberRepository';
-import type {IGuildRoleRepository} from '../repositories/IGuildRoleRepository';
-import {createGuildMfaEnforcer} from './GuildMfaEnforcement';
 
 interface GuildRoleRepository extends IGuildRoleRepository, IGuildMemberRepository {}
 

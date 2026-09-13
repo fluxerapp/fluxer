@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {LocaleCode} from '@fluxer/constants/src/Locales';
-import type {GuildFolderIcon, MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
-import type {types} from 'cassandra-driver';
 import type {
 	AttachmentID,
 	ChannelID,
@@ -12,7 +9,10 @@ import type {
 	MemeID,
 	MessageID,
 	UserID,
-} from '../../BrandedTypes';
+} from '@app/api/BrandedTypes';
+import type {LocaleCode} from '@fluxer/constants/src/Locales';
+import type {GuildFolderIcon, MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
+import type {types} from 'cassandra-driver';
 
 type Nullish<T> = T | null;
 export type PushSubscriptionPlatform = 'web_push' | 'android_fcm' | 'ios_apns' | 'android_unified_push';

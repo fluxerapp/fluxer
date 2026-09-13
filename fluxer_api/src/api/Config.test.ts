@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {buildAPIConfigFromMaster, buildAPIServerOptions} from '@app/api/Config';
 import {loadConfig, resetConfig} from '@fluxer/config/src/ConfigLoader';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {createServer} from '@fluxer/hono/src/Server';
 import {Hono} from 'hono';
 import {afterAll, afterEach, beforeAll, describe, expect, it, test, vi} from 'vitest';
-import {buildAPIConfigFromMaster, buildAPIServerOptions} from './Config';
 
 interface ListeningServer {
 	close: (callback: () => void) => void;

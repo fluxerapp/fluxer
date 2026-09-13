@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {GuildMemberRow, GuildMembershipMetadataRow} from '../../database/types/GuildTypes';
-import type {GuildMember} from '../../models/GuildMember';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildMemberRow, GuildMembershipMetadataRow} from '@app/api/database/types/GuildTypes';
+import type {GuildMember} from '@app/api/models/GuildMember';
 
 export abstract class IGuildMemberRepository {
 	abstract getMember(guildId: GuildID, userId: UserID): Promise<GuildMember | null>;

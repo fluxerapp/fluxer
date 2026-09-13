@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type CompactVoiceCallPresentationInput,
 	type CompactVoiceCallPresentationMachineSnapshot,
@@ -9,7 +8,8 @@ import {
 	resolveCompactVoiceCallPresentationModel,
 	selectCompactVoiceCallPresentationModel,
 	transitionCompactVoiceCallPresentationSnapshot,
-} from './CompactVoiceCallPresentationStateMachine';
+} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallPresentationStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function update(
 	snapshot: CompactVoiceCallPresentationMachineSnapshot,

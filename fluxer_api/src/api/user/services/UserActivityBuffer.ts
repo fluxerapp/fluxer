@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {Logger} from '@app/api/Logger';
+import {AuthSessions} from '@app/api/Tables';
+import {UserAccountRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {seconds} from 'itty-time';
-import type {UserID} from '../../BrandedTypes';
-import {upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import {Logger} from '../../Logger';
-import {AuthSessions} from '../../Tables';
-import {isJsonRecord, parseJsonRecord} from '../../utils/JsonBoundaryUtils';
-import {UserAccountRepository} from '../repositories/account/UserAccountRepository';
 
 const PENDING_HASH_KEY = 'user_activity:pending';
 const PENDING_AUTH_SESSION_HASH_KEY = 'auth_session_activity:pending';

@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import type {UserDeletionEligibilityService} from '@app/api/user/services/UserDeletionEligibilityService';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
@@ -7,17 +18,6 @@ import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {KVActivityTracker} from '../../infrastructure/KVActivityTracker';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import {reschedulePendingDeletion} from '../../user/services/PendingDeletionCoordinator';
-import type {UserDeletionEligibilityService} from '../../user/services/UserDeletionEligibilityService';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const BATCH_SIZE = 100;
 const USER_PROCESSING_CONCURRENCY = 8;

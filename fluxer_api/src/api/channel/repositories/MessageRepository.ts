@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import type {MessageRow} from '../../database/types/MessageTypes';
-import type {Message} from '../../models/Message';
-import type {ChannelDataRepository} from './ChannelDataRepository';
-import {IMessageRepository, type ListMessagesOptions} from './IMessageRepository';
-import {MessageAttachmentRepository} from './message/MessageAttachmentRepository';
-import {MessageAuthorRepository} from './message/MessageAuthorRepository';
-import {MessageDataRepository} from './message/MessageDataRepository';
-import {MessageDeletionRepository} from './message/MessageDeletionRepository';
+import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import {IMessageRepository, type ListMessagesOptions} from '@app/api/channel/repositories/IMessageRepository';
+import {MessageAttachmentRepository} from '@app/api/channel/repositories/message/MessageAttachmentRepository';
+import {MessageAuthorRepository} from '@app/api/channel/repositories/message/MessageAuthorRepository';
+import {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
+import {MessageDeletionRepository} from '@app/api/channel/repositories/message/MessageDeletionRepository';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import type {Message} from '@app/api/models/Message';
 
 export class MessageRepository extends IMessageRepository {
 	private dataRepo: MessageDataRepository;

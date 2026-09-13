@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {RefreshSubscription, RefreshSubscriptionUnavailableError} from '@app/api/utils/RefreshSubscription';
+import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
+import {VOICE_CONFIGURATION_CHANNEL} from '@app/api/voice/VoiceConstants';
+import type {VoiceRegionMetadata, VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../Logger';
-import {RefreshSubscription, RefreshSubscriptionUnavailableError} from '../utils/RefreshSubscription';
-import type {IVoiceRepository} from './IVoiceRepository';
-import {VOICE_CONFIGURATION_CHANNEL} from './VoiceConstants';
-import type {VoiceRegionMetadata, VoiceRegionRecord, VoiceServerRecord} from './VoiceModel';
 
 type Subscriber = () => void;
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {EmailDnsValidationService} from '@app/api/infrastructure/EmailDnsValidationService';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {ms} from 'itty-time';
 import {describe, expect, it} from 'vitest';
-import {Config} from '../../Config';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import {EmailDnsValidationService} from '../EmailDnsValidationService';
 
 interface MxRecord {
 	exchange: string;

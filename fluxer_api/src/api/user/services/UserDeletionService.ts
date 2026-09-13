@@ -1,6 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
+import {createMessageID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
+import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	DELETED_USER_DISCRIMINATOR,
@@ -13,27 +34,6 @@ import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 import type Stripe from 'stripe';
-import {createMessageID, createUserID, type MessageID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {mapChannelToResponse} from '../../channel/ChannelMappers';
-import type {ChannelRepository} from '../../channel/ChannelRepository';
-import type {IConnectionRepository} from '../../connection/IConnectionRepository';
-import type {FavoriteMemeRepository} from '../../favorite_meme/FavoriteMemeRepository';
-import type {GuildRepository} from '../../guild/repositories/GuildRepository';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {DiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {ApplicationRepository} from '../../oauth/repositories/ApplicationRepository';
-import type {OAuth2TokenRepository} from '../../oauth/repositories/OAuth2TokenRepository';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {UserRepository} from '../repositories/UserRepository';
-import {isPendingDeletionBlocked} from './PendingDeletionCoordinator';
 
 const CHUNK_SIZE = 100;
 

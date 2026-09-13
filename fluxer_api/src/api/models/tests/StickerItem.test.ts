@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createStickerID} from '@app/api/BrandedTypes';
+import {StickerItem} from '@app/api/models/StickerItem';
 import {describe, expect, it} from 'vitest';
-import {createStickerID} from '../../BrandedTypes';
-import {StickerItem} from '../StickerItem';
 
 describe('StickerItem', () => {
 	it('defaults animated to false when it is omitted', () => {

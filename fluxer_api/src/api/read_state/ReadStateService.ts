@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '../BrandedTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import {Logger} from '../Logger';
-import type {ReadState} from '../models/ReadState';
-import type {IReadStateRepository} from './IReadStateRepository';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {ReadState} from '@app/api/models/ReadState';
+import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
 
 export class ReadStateService {
 	constructor(

@@ -3,6 +3,17 @@
 import {spawnSync} from 'node:child_process';
 import {createServer} from 'node:net';
 import {
+	LegacyPostgresKvQueryExecutor,
+	legacyEnsurePostgresKvSchema,
+} from '@app/api/database/__testref__/LegacyPostgresKvQueryExecutor';
+import {
+	ensurePostgresKvSchema,
+	POSTGRES_KV_MIGRATION_TABLE,
+	PostgresKvQueryExecutor,
+} from '@app/api/database/PostgresKvQueryExecutor';
+import {GuildMembers, ReadStates, Users} from '@app/api/Tables';
+import {startDockerContainer} from '@app/api/test/DockerTestContainer';
+import {
 	getDefaultPostgresClient,
 	type IPostgresClient,
 	initPostgres,
@@ -10,10 +21,6 @@ import {
 	shutdownPostgres,
 } from '@pkgs/postgres/src/Client';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
-import {GuildMembers, ReadStates, Users} from '../Tables';
-import {startDockerContainer} from '../test/DockerTestContainer';
-import {LegacyPostgresKvQueryExecutor, legacyEnsurePostgresKvSchema} from './__testref__/LegacyPostgresKvQueryExecutor';
-import {ensurePostgresKvSchema, POSTGRES_KV_MIGRATION_TABLE, PostgresKvQueryExecutor} from './PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 
@@ -497,9 +504,9 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 		}, 300_000);
 
 		it('emits a multi-range plan that is not slower than the tier-3 scan it replaces', async () => {
-			const {PushSubscriptions} = await import('../Tables');
-			const {buildCandidatePlan, planFragmentGroups} = await import('./PostgresKvQueryExecutor');
-			const {getKvMeta} = await import('./CassandraMetaRegistry');
+			const {PushSubscriptions} = await import('@app/api/Tables');
+			const {buildCandidatePlan, planFragmentGroups} = await import('@app/api/database/PostgresKvQueryExecutor');
+			const {getKvMeta} = await import('@app/api/database/CassandraMetaRegistry');
 			const db = getDefaultPostgresClient();
 			const explain = async (sql: string, params: Array<unknown>) => {
 				const r = await db.query<Record<string, string>>(`EXPLAIN (ANALYZE, BUFFERS) ${sql}`, params);
@@ -552,9 +559,9 @@ FROM generate_series($1::bigint, $1::bigint + 19999) u, generate_series(1, 3) s`
 
 describe('candidate plan shapes reached by real queries', () => {
 	it('classifies the push fan-out and webhook lookups', async () => {
-		const {PushSubscriptions, Webhooks} = await import('../Tables');
-		const {buildCandidatePlan} = await import('./PostgresKvQueryExecutor');
-		const {getKvMeta} = await import('./CassandraMetaRegistry');
+		const {PushSubscriptions, Webhooks} = await import('@app/api/Tables');
+		const {buildCandidatePlan} = await import('@app/api/database/PostgresKvQueryExecutor');
+		const {getKvMeta} = await import('@app/api/database/CassandraMetaRegistry');
 		const cases = [
 			{
 				name: 'push_subscriptions IN(user_id) x100',

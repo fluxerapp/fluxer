@@ -10,7 +10,7 @@ import type {
 	StickerID,
 	UserID,
 	WebhookID,
-} from '../../BrandedTypes';
+} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 

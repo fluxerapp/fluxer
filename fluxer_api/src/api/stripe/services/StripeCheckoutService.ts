@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {
+	canProvisionPremiumFromSubscriptionStatus,
+	getPremiumWillCancelFromSubscription,
+} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
+import {
+	getPrimarySubscriptionItem,
+	getSubscriptionPremiumPeriodEnd,
+	getSubscriptionStartDate,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
 import {isEuEeaCountryCode} from '@fluxer/constants/src/EuropeanEconomicArea';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {PurchaseEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
@@ -16,26 +36,6 @@ import type {CheckoutPaymentMethod} from '@fluxer/schema/src/domains/premium/Gif
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {getContentMessage} from '../../content_i18n/ContentI18n';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '../../utils/CurrencyUtils';
-import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
-import {
-	canProvisionPremiumFromSubscriptionStatus,
-	getPremiumWillCancelFromSubscription,
-} from '../StripeSubscriptionAccessPolicy';
-import {
-	getPrimarySubscriptionItem,
-	getSubscriptionPremiumPeriodEnd,
-	getSubscriptionStartDate,
-} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
 
 const PRODUCT_NAME = 'Fluxer';
 const PREMIUM_TIER_NAME = 'Plutonium';

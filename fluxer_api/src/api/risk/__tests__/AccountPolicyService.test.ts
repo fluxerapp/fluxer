@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {APIConfig} from '@app/api/config/APIConfig';
 import {describe, expect, it, vi} from 'vitest';
-import type {APIConfig} from '../../config/APIConfig';
 
 function createRuntimePolicyConfig(params: {
 	nodeEnv: 'development' | 'production';
@@ -26,9 +26,9 @@ function createRuntimePolicyConfig(params: {
 
 async function loadIsolatedAccountPolicyService(config: APIConfig) {
 	vi.resetModules();
-	const {initializeConfig} = await import('../../Config');
+	const {initializeConfig} = await import('@app/api/Config');
 	initializeConfig(config);
-	return import('../AccountPolicyService');
+	return import('@app/api/risk/AccountPolicyService');
 }
 
 describe('AccountPolicyService runtime config', () => {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {lookupGeoip} from '../utils/IpUtils';
-import {parseDesktopArtifactScope} from './DesktopReleaseContract';
-import type {DownloadService, GitHubDesktopReleaseResolution} from './DownloadService';
+import {Config} from '@app/api/Config';
+import {parseDesktopArtifactScope} from '@app/api/download/DesktopReleaseContract';
+import type {DownloadService, GitHubDesktopReleaseResolution} from '@app/api/download/DownloadService';
+import {Logger} from '@app/api/Logger';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 
 const COUNTRY_DEPENDENT_CACHE_CONTROL = 'private, no-store';
 

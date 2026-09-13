@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {EmbedField} from '@app/api/models/EmbedField';
 import {describe, expect, it} from 'vitest';
-import {EmbedField} from '../EmbedField';
 
 describe('EmbedField serialization', () => {
 	it('normalizes null names and values to empty strings for response-safe storage', () => {

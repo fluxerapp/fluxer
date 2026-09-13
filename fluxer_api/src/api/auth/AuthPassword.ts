@@ -1,6 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {createMfaTicket, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '@app/api/utils/PasswordUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {FLUXER_USER_AGENT} from '@fluxer/constants/src/Core';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -9,16 +19,6 @@ import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {ForgotPasswordRequest, ResetPasswordRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createMfaTicket, createPasswordResetToken} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {EXTERNAL_RESPONSE_LIMITS} from '../utils/ExternalResponseLimits';
-import * as FetchUtils from '../utils/FetchUtils';
-import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '../utils/PasswordUtils';
-import {createRateLimitError} from '../utils/RateLimitUtils';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
 
 const PWNED_PASSWORDS_TIMEOUT_MS = ms('5 seconds');
 const PWNED_PASSWORD_CACHE_MAX_PREFIXES = 128;

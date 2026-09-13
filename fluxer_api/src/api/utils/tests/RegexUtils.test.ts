@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {escapeRegex} from '@app/api/utils/RegexUtils';
 import {describe, expect, it} from 'vitest';
-import {escapeRegex} from '../RegexUtils';
 
 describe('escapeRegex', () => {
 	it('escapes hyphen', () => {

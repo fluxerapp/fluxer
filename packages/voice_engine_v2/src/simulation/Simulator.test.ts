@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import {createVoiceEngineV2EmptyFaultPlan, createVoiceEngineV2FaultPlan} from './FaultInjector';
-import {STABLE_STRINGIFY_DEPTH_MAX, stableStringify, VoiceEngineV2Simulator} from './Simulator';
+import {
+	createVoiceEngineV2EmptyFaultPlan,
+	createVoiceEngineV2FaultPlan,
+} from '@fluxer/voice_engine_v2/src/simulation/FaultInjector';
+import {
+	STABLE_STRINGIFY_DEPTH_MAX,
+	stableStringify,
+	VoiceEngineV2Simulator,
+} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
 import {
 	createVoiceEngineV2FiveParticipantConferenceWorkload,
 	createVoiceEngineV2OneOnOneCallWorkload,
 	createVoiceEngineV2ScreenShareWorkload,
 	VoiceEngineV2WorkloadBuilder,
-} from './Workload';
+} from '@fluxer/voice_engine_v2/src/simulation/Workload';
+import {describe, expect, it} from 'vitest';
 
 describe('VoiceEngineV2Simulator determinism', () => {
 	it('produces identical snapshot hashes for identical inputs', async () => {

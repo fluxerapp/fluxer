@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type EntranceSoundID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {EntranceSound} from '@app/api/models/EntranceSound';
+import type {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
+import {EntranceSoundService} from '@app/api/user/entrance_sound/EntranceSoundService';
 import {describe, expect, it, vi} from 'vitest';
-import {createUserID, type EntranceSoundID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IMediaService} from '../../infrastructure/IMediaService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {EntranceSound} from '../../models/EntranceSound';
-import type {EntranceSoundRepository} from './EntranceSoundRepository';
-import {EntranceSoundService} from './EntranceSoundService';
 
 const USER_ID = createUserID(1234567890123456n);
 

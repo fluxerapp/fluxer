@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getPreviousVisualLineCaretPositionFromPoints,
 	getPreviousWordBoundaryAcrossLineStart,
-} from './TextareaKeyboardNavigationUtils';
+} from '@app/features/messaging/utils/TextareaKeyboardNavigationUtils';
+import {describe, expect, it} from 'vitest';
 
 describe('TextareaKeyboardNavigationUtils', () => {
 	it('moves a stuck Shift+ArrowUp focus edge to the previous visual row', () => {

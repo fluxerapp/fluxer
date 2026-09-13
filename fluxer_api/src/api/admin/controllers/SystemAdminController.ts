@@ -4,13 +4,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {Readable} from 'node:stream';
 import * as v8 from 'node:v8';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {HeapSnapshotResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
 
 export function SystemAdminController(app: HonoApp) {
 	app.post(

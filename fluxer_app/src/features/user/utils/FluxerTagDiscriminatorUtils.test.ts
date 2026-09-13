@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isVisionaryDiscriminator0000Blocked} from '@app/features/user/utils/FluxerTagDiscriminatorUtils';
 import {describe, expect, it} from 'vitest';
-import {isVisionaryDiscriminator0000Blocked} from './FluxerTagDiscriminatorUtils';
 
 describe('isVisionaryDiscriminator0000Blocked', () => {
 	it('allows #0000 on self-hosted instances', () => {

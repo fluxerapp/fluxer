@@ -1,15 +1,15 @@
 import {randomUUID} from 'node:crypto';
+import type {UserID} from '@app/api/BrandedTypes';
+import {executeConditional, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {type ConditionalWriteEntry, Db} from '@app/api/database/CassandraTypes';
+import {USER_CONNECTION_CREDENTIAL_TYPE, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
+import {UserConnections} from '@app/api/Tables';
 import {
 	type ConnectionType,
 	ConnectionTypes,
 	MAX_CONNECTIONS_PER_USER,
 } from '@fluxer/constants/src/ConnectionConstants';
 import {z} from 'zod';
-import type {UserID} from '../BrandedTypes';
-import {executeConditional, fetchMany, fetchOne} from '../database/CassandraQueryExecution';
-import {type ConditionalWriteEntry, Db} from '../database/CassandraTypes';
-import {USER_CONNECTION_CREDENTIAL_TYPE, type UserConnectionStorageRow} from '../database/types/ConnectionTypes';
-import {UserConnections} from '../Tables';
 
 const MEMBERSHIP_TYPE = '_membership';
 const MEMBERSHIP_ID = '_membership';

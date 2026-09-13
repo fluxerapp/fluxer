@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {
+	createChannel,
+	createChannelInvite,
+	createRole,
+	setupTestGuildWithMembers,
+	updateRole,
+} from '@app/api/guild/tests/GuildTestUtils';
+import {deleteMessage, sendMessage} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
-import {deleteMessage, sendMessage} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createWebhook} from '../../webhook/tests/WebhookTestUtils';
-import {createChannel, createChannelInvite, createRole, setupTestGuildWithMembers, updateRole} from './GuildTestUtils';
 
 interface AuditLogChange {
 	key: string;

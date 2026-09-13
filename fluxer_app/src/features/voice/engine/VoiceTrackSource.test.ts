@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	asVoiceTrackSource,
+	isScreenShareAudioPublicationLike,
+	VoiceTrackSource,
+} from '@app/features/voice/engine/VoiceTrackSource';
 import {describe, expect, it} from 'vitest';
-import {asVoiceTrackSource, isScreenShareAudioPublicationLike, VoiceTrackSource} from './VoiceTrackSource';
 
 describe('VoiceTrackSource', () => {
 	it('normalizes native screen-share audio source aliases', () => {

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {RemoteTrackPublication} from 'livekit-client';
-import {runInAction} from 'mobx';
 import {
 	selectVoiceMediaGraphAttempt,
 	selectVoiceMediaGraphFailure,
@@ -10,9 +8,11 @@ import {
 	VOICE_MEDIA_GRAPH_SCREEN_SHARE_SOURCE,
 	type VoiceMediaGraphEvent,
 	type VoiceMediaGraphSnapshot,
-} from '../engine/VoiceMediaGraph';
-import {voiceMediaGraphStore} from '../engine/VoiceMediaGraphStore';
-import type {ScreenSharePublicationOperation} from '../utils/ScreenShareSubscriptionPolicy';
+} from '@app/features/voice/engine/VoiceMediaGraph';
+import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
+import type {ScreenSharePublicationOperation} from '@app/features/voice/utils/ScreenShareSubscriptionPolicy';
+import type {RemoteTrackPublication} from 'livekit-client';
+import {runInAction} from 'mobx';
 
 export type {ScreenSharePublicationOperation};
 

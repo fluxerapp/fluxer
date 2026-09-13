@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {ConnectionRateLimitConfigs} from '@app/api/rate_limit_configs/ConnectionRateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	ConnectionListResponse,
 	ConnectionResponse,
@@ -10,13 +17,6 @@ import {
 	UpdateConnectionRequest,
 	VerifyAndCreateConnectionRequest,
 } from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {ConnectionRateLimitConfigs} from '../rate_limit_configs/ConnectionRateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function ConnectionController(app: HonoApp) {
 	app.get(

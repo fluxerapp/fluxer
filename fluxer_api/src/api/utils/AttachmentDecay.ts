@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {getValidTimestamp} from '@app/api/utils/TimestampUtils';
 import {ms} from 'itty-time';
-import {requireIntegerInRange} from './IntegerOptions';
-import {getValidTimestamp} from './TimestampUtils';
 
 export interface AttachmentDecayRules {
 	minMb: number;

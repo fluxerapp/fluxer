@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
+import {createDisposableDomainChecker} from '@app/api/risk/adapters/DisposableDomainChecker';
+import {createDnsMxChecker, type MxResolver, NodeDnsMxResolver} from '@app/api/risk/adapters/DnsMxChecker';
+import {createDomainAgeChecker} from '@app/api/risk/adapters/DomainAgeChecker';
+import {analyzeEmailSyntax} from '@app/api/risk/adapters/EmailSyntaxAnalyzer';
+import {createGeoIpAsnAdapter, createGeoIpCityAdapter} from '@app/api/risk/adapters/GeoIpAdapters';
+import {createHistoricalOutcomeAdapter} from '@app/api/risk/adapters/HistoricalOutcomeAdapter';
+import {unavailableIpInfoAnonymousResult} from '@app/api/risk/adapters/IpInfoAdapter';
+import {checkGeoVsLocale} from '@app/api/risk/adapters/LocaleGeoMatcher';
+import {analyzeRegistrationTiming} from '@app/api/risk/adapters/RegistrationTimingAnalyzer';
+import {analyzeUserAgent} from '@app/api/risk/adapters/UserAgentAnalyzer';
+import {createVelocityAdapter, type IRegistrationEventsRepository} from '@app/api/risk/adapters/VelocityAdapter';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {RiskToolbox} from '@app/api/risk/RiskToolbox';
+import type {IpInfoAnonymousResult, ReverseDnsResult} from '@app/api/risk/RiskTypes';
+import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {GeoipAsnResult, GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import type {IAdminRepository} from '../admin/IAdminRepository';
-import {createDisposableDomainChecker} from './adapters/DisposableDomainChecker';
-import {createDnsMxChecker, type MxResolver, NodeDnsMxResolver} from './adapters/DnsMxChecker';
-import {createDomainAgeChecker} from './adapters/DomainAgeChecker';
-import {analyzeEmailSyntax} from './adapters/EmailSyntaxAnalyzer';
-import {createGeoIpAsnAdapter, createGeoIpCityAdapter} from './adapters/GeoIpAdapters';
-import {createHistoricalOutcomeAdapter} from './adapters/HistoricalOutcomeAdapter';
-import {unavailableIpInfoAnonymousResult} from './adapters/IpInfoAdapter';
-import {checkGeoVsLocale} from './adapters/LocaleGeoMatcher';
-import {analyzeRegistrationTiming} from './adapters/RegistrationTimingAnalyzer';
-import {analyzeUserAgent} from './adapters/UserAgentAnalyzer';
-import {createVelocityAdapter, type IRegistrationEventsRepository} from './adapters/VelocityAdapter';
-import type {IRiskHistoryRepository} from './HistoricalOutcomeRepository';
-import type {RiskToolbox} from './RiskToolbox';
-import type {IpInfoAnonymousResult, ReverseDnsResult} from './RiskTypes';
-import type {ISuspiciousIpRepository} from './SuspiciousIpRepository';
 
 interface RiskToolboxFactoryOptions {
 	adminRepository: Pick<IAdminRepository, 'isEmailDomainSuspicious' | 'isEmailDomainDisposable'>;

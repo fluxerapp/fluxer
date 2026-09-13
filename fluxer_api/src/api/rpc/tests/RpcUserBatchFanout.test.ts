@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {blockUser} from '@app/api/user/tests/RelationshipTestUtils';
 import {UserNotificationSettings} from '@fluxer/constants/src/UserConstants';
 import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {blockUser} from '../../user/tests/RelationshipTestUtils';
 
 interface RpcUserGuildSettingsResponse {
 	type: 'get_user_guild_settings';

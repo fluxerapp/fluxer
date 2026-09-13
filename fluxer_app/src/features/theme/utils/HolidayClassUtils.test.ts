@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getActiveHolidaySlugs, millisecondsUntilNextLocalMidnight} from '@app/features/theme/utils/HolidayClassUtils';
 import {describe, expect, it} from 'vitest';
-import {getActiveHolidaySlugs, millisecondsUntilNextLocalMidnight} from './HolidayClassUtils';
 
 describe('getActiveHolidaySlugs', () => {
 	it('fires christmas + christmastide on Dec 25', () => {

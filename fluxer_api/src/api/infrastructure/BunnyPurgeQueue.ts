@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
 import type {IKVProvider, KVPurgeBatchResult} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../Logger';
 
 export interface IPurgeQueue {
 	addUrls(urls: Array<string>): Promise<void>;

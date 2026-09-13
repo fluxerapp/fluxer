@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {GifProviderMeta, IGifProvider} from '@app/api/gif/IGifProvider';
+import {Logger} from '@app/api/Logger';
+import {readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {isJsonRecord, parseJsonUnknown} from '@app/api/utils/JsonBoundaryUtils';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {
@@ -11,11 +16,6 @@ import {
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {StringCodec} from 'nats';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {readOptionalIntegerEnv, requireIntegerInRange} from '../utils/IntegerOptions';
-import {isJsonRecord, parseJsonUnknown} from '../utils/JsonBoundaryUtils';
-import type {GifProviderMeta, IGifProvider} from './IGifProvider';
 
 const GIF_SERVICE_SUBJECT = process.env.FLUXER_GIF_SERVICE_SUBJECT || 'svc.gifs';
 const DEFAULT_GIF_SERVICE_TIMEOUT_MS = 12_000;

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {createEmailVerificationToken} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import type {VerifyEmailRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createEmailVerificationToken} from '../BrandedTypes';
-import type {User} from '../models/User';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import * as RandomUtils from '../utils/RandomUtils';
 
 export const EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS =
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL |

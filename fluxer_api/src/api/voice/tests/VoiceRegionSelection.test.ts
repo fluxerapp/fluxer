@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import type {VoiceRegionAvailability, VoiceServerRecord} from '../VoiceModel';
+import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import {
 	preferServersUnderSoftLimit,
 	resolveVoiceRegionPreference,
 	selectClosestPseudoRegionServer,
 	selectVoiceRegionId,
-} from '../VoiceRegionSelection';
+} from '@app/api/voice/VoiceRegionSelection';
+import {describe, expect, it} from 'vitest';
 
 function createRegionAvailability({
 	id,

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Logger} from '../../../../Logger';
-import type {User} from '../../../../models/User';
-import {getUserSearchService} from '../../../../SearchFactory';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {getUserSearchService} from '@app/api/SearchFactory';
 
 export class UserSearchRepository {
 	async indexUser(user: User): Promise<void> {

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import {Logger} from '@app/api/Logger';
+import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '@app/api/worker/utils/SelfMessageFilterPayload';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {createUserID} from '../../BrandedTypes';
-import {UserMessageDeletionService} from '../../channel/services/message/UserMessageDeletionService';
-import {getContentMessage} from '../../content_i18n/ContentI18n';
-import {Logger} from '../../Logger';
-import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '../utils/SelfMessageFilterPayload';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	userId: z.string(),

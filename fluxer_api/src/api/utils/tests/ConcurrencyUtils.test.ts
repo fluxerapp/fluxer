@@ -1,5 +1,5 @@
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {describe, expect, it} from 'vitest';
-import {mapWithConcurrency} from '../ConcurrencyUtils';
 
 describe('mapWithConcurrency', () => {
 	it('limits in-flight work and preserves input order when later items finish first', async () => {

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type ChannelMessagesLoadInput,
 	type ChannelMessagesWindowInput,
@@ -17,7 +16,8 @@ import {
 	selectChannelMessagesWindowStatus,
 	transitionChannelMessagesLoadSnapshot,
 	transitionChannelMessagesWindowSnapshot,
-} from './ChannelMessagesLoadStateMachine';
+} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<ChannelMessagesLoadInput> = {}): ChannelMessagesLoadInput {
 	return {

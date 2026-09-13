@@ -86,7 +86,7 @@ const {
 	computeNegotiatedVideoCodec,
 	getScreenShareCodecPreferenceOrder,
 	SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC,
-} = await import('./ScreenShareCodecNegotiation');
+} = await import('@app/features/voice/engine/ScreenShareCodecNegotiation');
 const {resetCachedCodecCapabilities} = await import('@app/features/voice/utils/CodecCapabilityDetector');
 const {RoomEvent} = await import('livekit-client');
 

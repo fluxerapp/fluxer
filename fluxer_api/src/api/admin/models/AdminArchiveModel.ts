@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminArchiveRow} from '@app/api/database/types/AdminArchiveTypes';
 import type {AdminArchiveResponse, ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
-import type {AdminArchiveRow} from '../../database/types/AdminArchiveTypes';
 
 export class AdminArchive {
 	subjectType: ArchiveSubjectType;

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getKvMeta} from '../database/CassandraMetaRegistry';
-import type {CassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
+import {getKvMeta} from '@app/api/database/CassandraMetaRegistry';
+import type {CassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
 import type {
 	CassandraParams,
 	KvQueryCondition,
 	KvQueryMeta,
 	PreparedQuery,
 	WhereExpr,
-} from '../database/CassandraTypes';
-import {isConditionalQuery} from '../database/CassandraTypes';
+} from '@app/api/database/CassandraTypes';
+import {isConditionalQuery} from '@app/api/database/CassandraTypes';
 
 type Row = Record<string, unknown>;
 

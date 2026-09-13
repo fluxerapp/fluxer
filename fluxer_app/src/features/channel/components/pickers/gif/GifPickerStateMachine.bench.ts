@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
 import {
 	createGifPickerRequestId,
 	createGifPickerSnapshot,
 	selectGifPickerModel,
 	transitionGifPickerSnapshot,
-} from './GifPickerStateMachine';
+} from '@app/features/channel/components/pickers/gif/GifPickerStateMachine';
+import {bench, describe} from 'vitest';
 
 const SEARCH_TERMS = Array.from({length: 1_000}, (_, index) => `query-${index}`);
 

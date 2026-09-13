@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import {Store} from '@app/features/voice/engine/Store';
+import type {VoiceEngineV2AppControllerHost} from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHost';
 import type {VoiceEngineV2Model, VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2';
 import {isVoiceEngineV2FrameReceivedEvent} from '@fluxer/voice_engine_v2/runtime';
-import {Store} from '../Store';
-import type {VoiceEngineV2AppControllerHost} from './VoiceEngineV2AppControllerHost';
 
 export const FRAME_NOTIFY_FLUSH_INTERVAL_MS = 1000;
 

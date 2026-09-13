@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import {createChannelID, createGuildID, createInviteCode, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import {type ReportStatus, reportStatusToString} from '@app/api/report/IReportRepository';
+import type {ReportService} from '@app/api/report/ReportService';
 import {UnclaimedAccountCannotSubmitReportsError} from '@fluxer/errors/src/domains/moderation/UnclaimedAccountCannotSubmitReportsError';
 import type {
 	DsaReportEmailSendRequest,
@@ -11,11 +16,6 @@ import type {
 	ReportUserRequest,
 	TicketResponse,
 } from '@fluxer/schema/src/domains/report/ReportSchemas';
-import {requireEmailVerified} from '../auth/EmailVerificationUtils';
-import {createChannelID, createGuildID, createInviteCode, createMessageID, createUserID} from '../BrandedTypes';
-import type {User} from '../models/User';
-import {type ReportStatus, reportStatusToString} from './IReportRepository';
-import type {ReportService} from './ReportService';
 
 interface ReportUserRequestContext<T> {
 	user: User;

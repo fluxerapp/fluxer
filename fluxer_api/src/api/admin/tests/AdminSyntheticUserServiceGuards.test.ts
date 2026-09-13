@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
+import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {DELETED_USER_ID} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {describe, expect, test} from 'vitest';
-import {createGuildID, createUserID, type UserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import {UserMessageDeletionService} from '../../channel/services/message/UserMessageDeletionService';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {GuildMemberOperationsService} from '../../guild/services/member/GuildMemberOperationsService';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
 
 const SYNTHETIC_USER_IDS: Array<[string, UserID]> = [
 	['0', createUserID(0n)],

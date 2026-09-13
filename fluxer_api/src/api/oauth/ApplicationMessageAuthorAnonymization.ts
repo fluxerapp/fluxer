@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {MessageAnonymizationService} from '@app/api/channel/services/message/MessageAnonymizationService';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {
 	DELETED_USER_DISCRIMINATOR,
 	DELETED_USER_GLOBAL_NAME,
 	DELETED_USER_USERNAME,
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
-import {createUserID, type UserID} from '../BrandedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import {MessageAnonymizationService} from '../channel/services/message/MessageAnonymizationService';
-import {EMPTY_USER_ROW} from '../database/types/UserTypes';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import {Logger} from '../Logger';
-import type {IUserRepository} from '../user/IUserRepository';
 
 interface RemapAuthorMessagesToDeletedUserParams {
 	originalAuthorId: UserID;

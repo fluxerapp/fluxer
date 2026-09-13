@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	classifyVideoDecoderAcceleration,
 	classifyVideoEncoderAcceleration,
 	isHardwareVideoImplementation,
 	isSoftwareVideoImplementation,
-} from './VideoAccelerationClassification';
+} from '@app/features/voice/utils/VideoAccelerationClassification';
+import {describe, expect, it} from 'vitest';
 
 describe('video acceleration implementation classification', () => {
 	it('detects common software implementations', () => {

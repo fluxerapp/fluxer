@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import {Logger} from '@app/api/Logger';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {StringCodec} from 'nats';
-import type {UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {awaitAll} from '../utils/ConcurrencyUtils';
-import {readOptionalIntegerEnv, requireIntegerInRange} from '../utils/IntegerOptions';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
-import {throwForSvcErrorReply} from './SvcErrorReply';
 
 const USERS_SERVICE_SUBJECT = process.env.FLUXER_USERS_SERVICE_SUBJECT || 'svc.users';
 const DEFAULT_USERS_SERVICE_TIMEOUT_MS = 6000;

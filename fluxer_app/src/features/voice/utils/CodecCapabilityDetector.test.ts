@@ -72,7 +72,7 @@ const {
 	resolveScreenShareEncoderVerificationAction,
 	resolveVideoPublishCodecPolicy,
 	selectAutomaticScreenShareCodec,
-} = await import('./CodecCapabilityDetector');
+} = await import('@app/features/voice/utils/CodecCapabilityDetector');
 
 const ALL_SOFTWARE: HardwareEncodeReport = {
 	av1: 'software',

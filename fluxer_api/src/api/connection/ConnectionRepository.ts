@@ -1,22 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
-import {
-	type ConnectionType,
-	ConnectionTypes,
-	MAX_CONNECTIONS_PER_USER,
-} from '@fluxer/constants/src/ConnectionConstants';
-import type {UserID} from '../BrandedTypes';
-import {BatchBuilder, executeConditional, fetchMany, fetchOne} from '../database/CassandraQueryExecution';
-import {type ConditionalWriteEntry, Db, type DbOp} from '../database/CassandraTypes';
-import {
-	type RevisionedUserConnectionRow,
-	USER_CONNECTION_COLUMNS,
-	type UserConnectionRow,
-	type UserConnectionStorageRow,
-} from '../database/types/ConnectionTypes';
-import {UserConnections} from '../Tables';
-import {connectionCredentialKey, readConnectionCredential} from './ConnectionCredentialRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import {connectionCredentialKey, readConnectionCredential} from '@app/api/connection/ConnectionCredentialRepository';
 import {
 	CONNECTION_WRITE_ATTEMPTS,
 	ConnectionOwnerClosedError,
@@ -24,14 +10,28 @@ import {
 	isConnectionMembershipRow,
 	loadConnectionMembership,
 	sealConnectionMembership,
-} from './ConnectionMembership';
+} from '@app/api/connection/ConnectionMembership';
 import {
 	type ConnectionCreationResult,
 	type ConnectionSortOrderUpdate,
 	type CreateConnectionParams,
 	IConnectionRepository,
 	type UpdateConnectionParams,
-} from './IConnectionRepository';
+} from '@app/api/connection/IConnectionRepository';
+import {BatchBuilder, executeConditional, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {type ConditionalWriteEntry, Db, type DbOp} from '@app/api/database/CassandraTypes';
+import {
+	type RevisionedUserConnectionRow,
+	USER_CONNECTION_COLUMNS,
+	type UserConnectionRow,
+	type UserConnectionStorageRow,
+} from '@app/api/database/types/ConnectionTypes';
+import {UserConnections} from '@app/api/Tables';
+import {
+	type ConnectionType,
+	ConnectionTypes,
+	MAX_CONNECTIONS_PER_USER,
+} from '@fluxer/constants/src/ConnectionConstants';
 
 const FETCH_CONNECTIONS_BY_USER_CQL = UserConnections.selectCql({
 	columns: USER_CONNECTION_COLUMNS,

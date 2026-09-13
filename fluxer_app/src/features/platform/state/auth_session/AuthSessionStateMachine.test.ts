@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type Account,
 	createAuthSessionSnapshot,
@@ -9,7 +8,8 @@ import {
 	selectAuthSessionAccounts,
 	selectAuthSessionCanSwitch,
 	transitionAuthSessionSnapshot,
-} from './AuthSessionStateMachine';
+} from '@app/features/platform/state/auth_session/AuthSessionStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function account(userId: string, lastActive = 1): Account {
 	return {

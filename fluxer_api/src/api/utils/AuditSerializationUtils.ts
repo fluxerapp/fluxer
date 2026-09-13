@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {Channel} from '../models/Channel';
-import type {Guild} from '../models/Guild';
-import type {GuildEmoji} from '../models/GuildEmoji';
-import type {GuildSticker} from '../models/GuildSticker';
-import {toIdString, toSortedIdArray} from './IdUtils';
+import type {Channel} from '@app/api/models/Channel';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
+import {toIdString, toSortedIdArray} from '@app/api/utils/IdUtils';
 
 export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
 	return {

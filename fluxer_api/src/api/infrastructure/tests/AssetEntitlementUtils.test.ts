@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
-import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {getConfig} from '../../Config';
-import {EMPTY_USER_ROW} from '../../database/types/UserTypes';
-import {InstanceConfigRepository} from '../../instance/InstanceConfigRepository';
-import {LimitConfigService} from '../../limits/LimitConfigService';
-import {User} from '../../models/User';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {getConfig} from '@app/api/Config';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {
 	stripAnimationPrefixIfNoEntitlement,
 	stripAvatarForUser,
@@ -18,7 +11,14 @@ import {
 	stripGuildIconForFeatures,
 	stripGuildSplashForFeatures,
 	userHasAnimatedAvatarEntitlement,
-} from '../AssetEntitlementUtils';
+} from '@app/api/infrastructure/AssetEntitlementUtils';
+import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {User} from '@app/api/models/User';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
+import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 let originalSelfHosted = true;
 

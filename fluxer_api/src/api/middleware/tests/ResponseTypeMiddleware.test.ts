@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {OpenAPI, ResponseType} from '@app/api/middleware/ResponseTypeMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {Hono} from 'hono';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 import {z} from 'zod';
-import {Config} from '../../Config';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {OpenAPI, ResponseType} from '../ResponseTypeMiddleware';
 
 const SnowflakeResponse = z.object({id: SnowflakeType});
 

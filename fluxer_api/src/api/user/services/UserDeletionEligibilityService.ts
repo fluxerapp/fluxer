@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {User} from '@app/api/models/User';
+import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {ms, seconds} from 'itty-time';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {User} from '../../models/User';
-import {getValidTimestamp, parseStoredTimestamp} from '../../utils/TimestampUtils';
 
 const INACTIVITY_WARNING_TTL_DAYS = 30;
 const INACTIVITY_WARNING_PREFIX = 'inactivity_warning_sent';

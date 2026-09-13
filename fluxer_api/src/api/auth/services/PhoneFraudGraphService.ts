@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {UserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import type {IUserRepository} from '../../user/IUserRepository';
 
 const COHORT_KEY_PREFIX = 'auth:ip24-cohort:';
 const COHORT_TTL_SECONDS = 7 * 24 * 60 * 60;

@@ -1,31 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import type {AttachmentID, ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {getDmChannelIdsForScope} from '@app/api/channel/services/message/DmScopeUtils';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import {collectMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import {
+	createMessageResponseDataService,
+	type MessageResponseAccessContext,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
+import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
+import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
-import type {AttachmentID, ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import {getMessageSearchService} from '../../../SearchFactory';
-import {buildMessageSearchFilters} from '../../../search/BuildMessageSearchFilters';
-import {channelNeedsReindexing} from '../../../search/ChannelIndexingUtils';
-import {searchExistingMessages} from '../../../search/MessageSearchResultReconciler';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapChannelToResponse} from '../../ChannelMappers';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import {getDmChannelIdsForScope} from './DmScopeUtils';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import {collectMessageAttachments} from './MessageHelpers';
-import type {MessageProcessingService} from './MessageProcessingService';
-import {createMessageResponseDataService, type MessageResponseAccessContext} from './MessageResponseDataService';
-import type {MessageSearchService} from './MessageSearchService';
 
 export class MessageRetrievalService {
 	constructor(

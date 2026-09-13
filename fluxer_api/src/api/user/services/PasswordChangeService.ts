@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import type {User} from '@app/api/models/User';
+import type {PasswordChangeRepository} from '@app/api/user/repositories/auth/PasswordChangeRepository';
 import {
 	assertChangeCooldown,
 	checkChangeRateLimit,
@@ -10,10 +14,6 @@ import {
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthPassword from '../../auth/AuthPassword';
-import type {User} from '../../models/User';
-import type {PasswordChangeRepository} from '../repositories/auth/PasswordChangeRepository';
 
 interface StartPasswordChangeResult {
 	ticket: string;

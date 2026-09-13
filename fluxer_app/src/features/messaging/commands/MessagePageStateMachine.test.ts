@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createMessagePageStateSnapshot,
 	type MessagePageStateInput,
 	resolveMessagePageState,
 	selectMessagePageState,
 	transitionMessagePageStateSnapshot,
-} from './MessagePageStateMachine';
+} from '@app/features/messaging/commands/MessagePageStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<MessagePageStateInput> = {}): MessagePageStateInput {
 	return {

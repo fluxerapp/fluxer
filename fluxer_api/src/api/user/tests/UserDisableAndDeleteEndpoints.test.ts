@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {deleteAccount, disableAccount} from '@app/api/user/tests/UserTestUtils';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, loginAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {deleteAccount, disableAccount} from './UserTestUtils';
 
 describe('User Disable And Delete Endpoints', () => {
 	let harness: ApiTestHarness;

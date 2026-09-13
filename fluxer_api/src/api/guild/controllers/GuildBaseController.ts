@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createGuildID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {SingleCommunityCannotCreateGuildsError} from '@fluxer/errors/src/domains/guild/SingleCommunityCannotCreateGuildsError';
 import {SingleCommunityCannotDeleteError} from '@fluxer/errors/src/domains/guild/SingleCommunityCannotDeleteError';
 import {SingleCommunityCannotLeaveError} from '@fluxer/errors/src/domains/guild/SingleCommunityCannotLeaveError';
@@ -19,18 +30,6 @@ import {
 	GuildResponse,
 	GuildVanityURLResponse,
 } from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createGuildID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function GuildBaseController(app: HonoApp) {
 	app.post(

@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import type {JsMsg} from 'nats';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import type {IJobLedgerRepository} from '../../jobs/IJobLedgerRepository';
-import {setInjectedWorkerService} from '../../middleware/ServiceRegistry';
-import {NoopWorkerService} from '../../test/NoopWorkerService';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import {sendSystemDm} from '../tasks/SendSystemDm';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
-import {WorkerRunner} from '../WorkerRunner';
 
 const TASK_TYPE = 'sendSystemDm';
 const LEDGER_JOB_ID = 88n;

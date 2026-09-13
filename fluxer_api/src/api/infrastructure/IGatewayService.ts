@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
 
 interface VoiceState {
 	user_id: string;

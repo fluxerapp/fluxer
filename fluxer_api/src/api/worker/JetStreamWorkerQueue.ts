@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import {Logger} from '@app/api/Logger';
+import type {WorkerLaneDefinition} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import {
@@ -17,9 +20,6 @@ import {
 	StorageType,
 	type StreamConfig,
 } from 'nats';
-import {Logger} from '../Logger';
-import type {WorkerLaneDefinition} from './WorkerLaneConfig';
-import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
 
 const STREAM_NAME = 'JOBS';
 const SUBJECT_PREFIX = 'jobs.';

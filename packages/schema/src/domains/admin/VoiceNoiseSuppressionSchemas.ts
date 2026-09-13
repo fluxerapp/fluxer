@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {EXPERIMENT_BUCKET_RESOLUTION, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {z} from 'zod';
-import {EXPERIMENT_BUCKET_RESOLUTION, experimentBucket} from '../experiment/ExperimentBucket';
 
 export const VOICE_NOISE_SUPPRESSION_BACKENDS = [
 	'none',

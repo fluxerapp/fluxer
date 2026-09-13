@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getConfig} from '@app/api/Config';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import processExpiredPremiumSweep from '@app/api/worker/tasks/ProcessExpiredPremiumSweep';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, test} from 'vitest';
-import {getConfig} from '../../Config';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import processExpiredPremiumSweep from '../tasks/ProcessExpiredPremiumSweep';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
 
 function createHarness() {
 	const scanLimits: Array<number> = [];

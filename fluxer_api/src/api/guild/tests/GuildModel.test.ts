@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
+import {Guild} from '@app/api/models/Guild';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, test} from 'vitest';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import type {GuildRow} from '../../database/types/GuildTypes';
-import {Guild} from '../../models/Guild';
-import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '../GuildModel';
 
 function createGuild(overrides: Partial<GuildRow> = {}): Guild {
 	return new Guild({

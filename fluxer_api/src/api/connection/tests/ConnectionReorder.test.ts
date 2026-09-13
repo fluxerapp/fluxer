@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConnectionTypes, ConnectionVisibilityFlags} from '@fluxer/constants/src/ConnectionConstants';
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createUserID, type UserID} from '../../BrandedTypes';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {ConnectionRepository} from '@app/api/connection/ConnectionRepository';
+import {ConnectionService} from '@app/api/connection/ConnectionService';
 import {
 	type CassandraQueryExecutorForTesting,
 	setCassandraQueryExecutorForTesting,
-} from '../../database/CassandraQueryExecution';
-import type {CassandraParams, KvQueryMeta, PreparedQuery} from '../../database/CassandraTypes';
-import type {UserConnectionRow} from '../../database/types/ConnectionTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {InMemoryCassandraQueryExecutor} from '../../test/InMemoryCassandraQueryExecutor';
-import {ConnectionRepository} from '../ConnectionRepository';
-import {ConnectionService} from '../ConnectionService';
+} from '@app/api/database/CassandraQueryExecution';
+import type {CassandraParams, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {ConnectionTypes, ConnectionVisibilityFlags} from '@fluxer/constants/src/ConnectionConstants';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 class ConditionalBatchFaultExecutor implements CassandraQueryExecutorForTesting {
 	failNextBatch = false;

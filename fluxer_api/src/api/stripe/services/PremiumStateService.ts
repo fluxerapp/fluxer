@@ -1,5 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {Config} from '@app/api/Config';
+import type {
+	BillingInvoiceRow,
+	BillingPaymentMethodRow,
+	BillingRefundRow,
+	BillingSubscriptionRow,
+} from '@app/api/database/types/BillingTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getPrimarySubscriptionItem} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {
+	SELF_SERVE_REFUND_COOLDOWN_DAYS,
+	SELF_SERVE_REFUND_WINDOW_DAYS,
+} from '@app/api/stripe/services/StripeRefundService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {checkHasActivePaidPremium} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -17,26 +40,6 @@ import type {
 	SelfServeRefundIneligibilityReason,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import {Config} from '../../Config';
-import type {
-	BillingInvoiceRow,
-	BillingPaymentMethodRow,
-	BillingRefundRow,
-	BillingSubscriptionRow,
-} from '../../database/types/BillingTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {checkHasActivePaidPremium} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '../../utils/CurrencyUtils';
-import type {RecurringBillingCycle} from '../ProductRegistry';
-import {ProductRegistry} from '../ProductRegistry';
-import {getPrimarySubscriptionItem} from '../StripeSubscriptionPeriod';
-import {SELF_SERVE_REFUND_COOLDOWN_DAYS, SELF_SERVE_REFUND_WINDOW_DAYS} from './StripeRefundService';
 
 const INVOICE_LIMIT = 12;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	asVoiceEngineConnectionState,
 	createVoiceConnectionSnapshot,
@@ -10,7 +9,8 @@ import {
 	transitionVoiceConnectionSnapshot,
 	type VoiceConnectionSnapshot,
 	VoiceEngineConnectionState,
-} from './VoiceConnectionStateMachine';
+} from '@app/features/voice/engine/VoiceConnectionStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const roomA = {id: 'room-a'};
 const roomB = {id: 'room-b'};

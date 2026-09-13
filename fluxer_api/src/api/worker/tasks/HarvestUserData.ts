@@ -4,21 +4,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {
-	decodeSyncedPreferencesLenient,
-	syncedPreferencesToJson,
-} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {ms} from 'itty-time';
-import {z} from 'zod';
-import {ArchiveAttemptSupersededError} from '../../archive/ArchiveAttemptSupersededError';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
 import {
 	type ArchiveTaskHandler,
 	ArchiveTerminalFailureError,
 	createArchiveTask,
 	throwIfArchiveTerminallyFailed,
-} from '../../archive/ArchiveTask';
+} from '@app/api/archive/ArchiveTask';
 import {
 	type ChannelID,
 	createAttachmentID,
@@ -27,45 +19,57 @@ import {
 	type GuildID,
 	type MessageID,
 	type UserID,
-} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {makeAttachmentCdnUrl} from '../../channel/services/message/MessageHelpers';
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
 	type SelfMessageEligibilityContext,
 	type SelfMessageFilter,
-} from '../../channel/services/message/SelfMessageFilter';
-import type {UserConnectionRow} from '../../database/types/ConnectionTypes';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import type {Application} from '../../models/Application';
-import type {Attachment} from '../../models/Attachment';
-import type {AuthSession} from '../../models/AuthSession';
-import type {Channel} from '../../models/Channel';
-import type {FavoriteMeme} from '../../models/FavoriteMeme';
-import type {GiftCode} from '../../models/GiftCode';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {Payment} from '../../models/Payment';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {Relationship} from '../../models/Relationship';
-import type {SavedMessage} from '../../models/SavedMessage';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
-import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
-import {buildHarvestDownloadUrl} from '../../user/services/HarvestDownloadUrl';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
-import {writeZipArchive} from '../utils/ArchiveFile';
-import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
-import {appendAssetToArchive, buildHashedAssetKey, getAnimatedAssetExtension} from '../utils/AssetArchiveHelpers';
-import {ContentAddressedAttachmentCollector} from '../utils/ContentAddressedAttachmentCollector';
-import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '../utils/SelfMessageFilterPayload';
-import {getWorkerDependencies} from '../WorkerContext';
-import type {WorkerDependencies} from '../WorkerDependencies';
+} from '@app/api/channel/services/message/SelfMessageFilter';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {Application} from '@app/api/models/Application';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {AuthSession} from '@app/api/models/AuthSession';
+import type {Channel} from '@app/api/models/Channel';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {Payment} from '@app/api/models/Payment';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
+import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
+import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
+import {
+	appendAssetToArchive,
+	buildHashedAssetKey,
+	getAnimatedAssetExtension,
+} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {ContentAddressedAttachmentCollector} from '@app/api/worker/utils/ContentAddressedAttachmentCollector';
+import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '@app/api/worker/utils/SelfMessageFilterPayload';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {
+	decodeSyncedPreferencesLenient,
+	syncedPreferencesToJson,
+} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {ms} from 'itty-time';
+import {z} from 'zod';
 
 const PayloadSchema = z.object({
 	userId: z.string(),

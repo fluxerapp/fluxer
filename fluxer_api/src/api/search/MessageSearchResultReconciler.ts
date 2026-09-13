@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createMessageID, type MessageID} from '@app/api/BrandedTypes';
+import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRepository';
+import {Logger} from '@app/api/Logger';
+import type {Message} from '@app/api/models/Message';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import type {SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {MessageSearchFilters, SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import {type ChannelID, createChannelID, createMessageID, type MessageID} from '../BrandedTypes';
-import type {IMessageRepository} from '../channel/repositories/IMessageRepository';
-import {Logger} from '../Logger';
-import type {Message} from '../models/Message';
-import {mapWithConcurrency} from '../utils/ConcurrencyUtils';
-import type {IMessageSearchService} from './IMessageSearchService';
-import {deleteMessageSearchDocuments} from './MessageSearchIndexCleanup';
 
 const RECONCILE_BATCH_SIZE = 250;
 const MAX_RECONCILE_PAGES = 40;

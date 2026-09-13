@@ -1,42 +1,52 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {isVoiceEngineV2CommandCompletionStale, transitionVoiceEngineV2} from '../core/reducer';
+import {isVoiceEngineV2CommandCompletionStale, transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
 	type VoiceEngineV2Transition,
-} from '../core/state';
+} from '@fluxer/voice_engine_v2/src/core/state';
 import {
 	errorToVoiceEngineV2Error,
 	type VoiceEngineV2CommandResult,
 	type VoiceEngineV2Implementation,
-} from '../implementations';
-import {getVoiceEngineV2CommandResourceKey, type VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2Capabilities, VoiceEngineV2Error, VoiceEngineV2ResourceKey} from '../protocol/types';
-import {commandResultToEvent} from './commandEvents';
+} from '@fluxer/voice_engine_v2/src/implementations';
+import {
+	getVoiceEngineV2CommandResourceKey,
+	type VoiceEngineV2Command,
+} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2Capabilities,
+	VoiceEngineV2Error,
+	VoiceEngineV2ResourceKey,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {commandResultToEvent} from '@fluxer/voice_engine_v2/src/runtime/commandEvents';
 import {
 	assertEventLogRingInvariants,
 	VOICE_ENGINE_V2_EVENT_LOG_CAP,
 	type VoiceEngineV2EventLogEntry,
 	VoiceEngineV2EventLogRing,
 	type VoiceEngineV2EventLogSpillSink,
-} from './eventLogRing';
+} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {
 	canCoalesceVoiceEngineV2Events,
 	isVoiceEngineV2FrameReceivedEvent,
 	VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
-} from './frameCoalescing';
+} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 import {
 	createVoiceEngineV2SystemClockPort,
 	createVoiceEngineV2SystemRandomPort,
 	type VoiceEngineV2ClockPort,
 	type VoiceEngineV2RandomPort,
-} from './platformPort';
+} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
-export type {VoiceEngineV2EventLogEntry, VoiceEngineV2EventLogSpillSink} from './eventLogRing';
+export type {
+	VoiceEngineV2EventLogEntry,
+	VoiceEngineV2EventLogSpillSink,
+} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 
 export const VOICE_ENGINE_V2_QUEUED_COMMANDS_CAP = 4096;
 export const VOICE_ENGINE_V2_RESOURCE_QUEUES_CAP = 256;
@@ -566,4 +576,4 @@ export function assertEventLogInvariants(runtime: VoiceEngineV2Runtime): void {
 	runtime.verifyEventLogInvariants();
 }
 
-export {commandResultToEvent} from './commandEvents';
+export {commandResultToEvent} from '@fluxer/voice_engine_v2/src/runtime/commandEvents';

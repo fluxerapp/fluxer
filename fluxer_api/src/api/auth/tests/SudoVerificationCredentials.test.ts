@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {userHasMfa} from '@app/api/auth/services/SudoMethods';
+import {hasNoVerifiableCredential} from '@app/api/auth/services/SudoVerificationService';
+import {createUserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
-import {User} from '../../models/User';
-import {userHasMfa} from '../services/SudoMethods';
-import {hasNoVerifiableCredential} from '../services/SudoVerificationService';
 
 function createUser(overrides: Partial<UserRow> = {}): User {
 	return new User({

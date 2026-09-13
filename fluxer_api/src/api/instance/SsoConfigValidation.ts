@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {Config} from '@app/api/Config';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {RequestUrlPolicy} from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
-import {Config} from '../Config';
 
 interface SsoConfigValidationInput {
 	enabled: boolean;

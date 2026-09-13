@@ -2,9 +2,8 @@
 
 import type {DiscoveryGuild, DiscoverySearchResponse} from '@app/features/discovery/commands/DiscoveryCommands';
 import * as DiscoveryCommands from '@app/features/discovery/commands/DiscoveryCommands';
+import Discovery from '@app/features/discovery/state/Discovery';
 import {beforeEach, describe, expect, test, vi} from 'vitest';
-
-import Discovery from './Discovery';
 
 vi.mock('@app/features/discovery/commands/DiscoveryCommands', () => ({
 	searchGuilds: vi.fn(),

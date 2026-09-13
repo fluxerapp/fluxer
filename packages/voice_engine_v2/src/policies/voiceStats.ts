@@ -6,7 +6,7 @@ import type {
 	VoiceEngineV2SendStats,
 	VoiceEngineV2Stats,
 	VoiceEngineV2TrackKind,
-} from '../protocol';
+} from '@fluxer/voice_engine_v2/src/protocol';
 
 export const VoiceEngineV2StatsTrackSource = Object.freeze({
 	Microphone: 'microphone',

@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildRepository} from '../../guild/repositories/GuildRepository';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {IPurgeQueue} from '@app/api/infrastructure/BunnyPurgeQueue';
 import type {
 	IAssetDeletionQueue,
 	QueuedAssetDeletion,
 	QueuedAssetEntityType,
 	QueuedAssetReference,
 	QueuedAssetType,
-} from '../../infrastructure/IAssetDeletionQueue';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 
 const BATCH_SIZE = 50;
 const MAX_ITEMS_PER_RUN = 500;

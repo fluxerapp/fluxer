@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomUUID} from 'node:crypto';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {JobCancelledError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import type {ConsumerMessages, FetchOptions, JsMsg} from 'nats';
-import {ArchiveAttemptSupersededError} from '../archive/ArchiveAttemptSupersededError';
-import {ArchiveTaskDeferredError, ArchiveTerminalFailureError, isArchiveTask} from '../archive/ArchiveTask';
-import type {IJobLedgerRepository} from '../jobs/IJobLedgerRepository';
-import {Logger} from '../Logger';
-import {getWorkerService} from '../middleware/ServiceRegistry';
-import {isJsonRecord, parseJsonRecord} from '../utils/JsonBoundaryUtils';
-import type {WorkerDeadLetterMetadata} from './JetStreamWorkerQueue';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
+import {ArchiveTaskDeferredError, ArchiveTerminalFailureError, isArchiveTask} from '@app/api/archive/ArchiveTask';
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {Logger} from '@app/api/Logger';
+import {getWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import type {WorkerDeadLetterMetadata} from '@app/api/worker/JetStreamWorkerQueue';
 import {
 	WORKER_LANE_HEARTBEAT_INTERVAL_MS,
 	WORKER_LANE_STALE_AFTER_MS,
 	type WorkerHeartbeat,
 	type WorkerHeartbeatSignal,
-} from './WorkerHeartbeat';
+} from '@app/api/worker/WorkerHeartbeat';
+import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
+import {JobCancelledError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import type {ConsumerMessages, FetchOptions, JsMsg} from 'nats';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const DLQ_RETRY_DELAY_MS = 250;

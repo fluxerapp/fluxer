@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig, {DEFAULT_APP_PUBLIC_CONFIG} from '@app/features/app/state/RuntimeConfig';
+import {type BrandSvgProps, getDataFlx, getImageSizingProps} from '@app/features/ui/components/icons/BrandImageUtils';
 import FluxerWordmarkMonochromeAsset from '@app/media/images/fluxer-logo-wordmark-monochrome.svg?react';
 import FluxerWordmarkAsset from '@app/media/images/fluxer-wordmark.svg?react';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {type BrandSvgProps, getDataFlx, getImageSizingProps} from './BrandImageUtils';
 
 const APPLICATION_WORDMARK_DESCRIPTOR = msg({
 	message: '{productName} wordmark',

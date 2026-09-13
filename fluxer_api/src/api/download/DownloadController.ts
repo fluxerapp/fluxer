@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import {resolveArtifactRoute} from '@app/api/download/DownloadRouting';
+import type {DesktopChecksumFile, DownloadService, DownloadStreamResult} from '@app/api/download/DownloadService';
+import {
+	DESKTOP_REDIRECT_PREFIX,
+	DOWNLOAD_PREFIX,
+	downloadCacheControlForKey,
+	UnsatisfiableRangeError,
+} from '@app/api/download/DownloadService';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	DesktopChecksumRedirectParam,
 	DesktopRedirectParam,
@@ -15,18 +27,6 @@ import {
 	VersionInfoResponse,
 } from '@fluxer/schema/src/domains/download/DownloadSchemas';
 import type {Context, Hono} from 'hono';
-import {Config} from '../Config';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import type {HonoEnv} from '../types/HonoEnv';
-import {Validator} from '../Validator';
-import {resolveArtifactRoute} from './DownloadRouting';
-import type {DesktopChecksumFile, DownloadService, DownloadStreamResult} from './DownloadService';
-import {
-	DESKTOP_REDIRECT_PREFIX,
-	DOWNLOAD_PREFIX,
-	downloadCacheControlForKey,
-	UnsatisfiableRangeError,
-} from './DownloadService';
 
 function artifactFilename(key: string, filenameOverride?: string): string {
 	return filenameOverride ?? key.split('/').pop() ?? 'download';

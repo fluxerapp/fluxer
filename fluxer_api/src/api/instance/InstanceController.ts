@@ -1,19 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {GifService} from '@app/api/gif/GifService';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import {
+	type DiscoveryValidators,
+	isDiscoveryNotModified,
+	nextDiscoveryValidators,
+} from '@app/api/instance/DiscoveryValidators';
+import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import {buildDiscoveryResponse, type DiscoveryStaticInput} from '@fluxer/instance_bootstrap/src/BuildDiscovery';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
 import {WellKnownFluxerResponse} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {Hono} from 'hono';
-import {Config} from '../Config';
-import type {GifService} from '../gif/GifService';
-import type {IGifProvider} from '../gif/IGifProvider';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoEnv} from '../types/HonoEnv';
-import {type DiscoveryValidators, isDiscoveryNotModified, nextDiscoveryValidators} from './DiscoveryValidators';
-import type {InstanceCaptchaEffectiveConfig} from './InstanceConfigRepository';
 
 let discoveryValidators: DiscoveryValidators | null = null;
 

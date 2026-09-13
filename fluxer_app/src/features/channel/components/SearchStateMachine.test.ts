@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createSearchMachineSnapshot,
 	selectSearchMachineState,
 	transitionSearchMachineSnapshot,
-} from './SearchStateMachine';
+} from '@app/features/channel/components/SearchStateMachine';
+import {describe, expect, it} from 'vitest';
 
 describe('SearchStateMachine', () => {
 	it('starts idle and transitions through loading to success', () => {

@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
+import type {User} from '@app/api/models/User';
+import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
+import {getCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
 import {
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -9,12 +15,6 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import type {UserRow} from '../database/types/UserTypes';
-import {getCachedInstancePremiumMode} from '../limits/InstancePremiumModeCache';
-import type {User} from '../models/User';
-import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
-import {getCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
 
 type ClauseAction = Exclude<RequiredAction, 'REQUIRE_INBOUND_PHONE_VERIFICATION'>;
 type VerificationChannel = 'email' | 'phone';

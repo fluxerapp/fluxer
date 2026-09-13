@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {JobByIdRow, JobStatus} from '../database/types/JobLedgerTypes';
+import type {JobByIdRow, JobStatus} from '@app/api/database/types/JobLedgerTypes';
 
 export interface CreateJobInput {
 	jobId: bigint;

@@ -3,6 +3,19 @@
 import {createHash} from 'node:crypto';
 import {posix} from 'node:path';
 import {Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import {
+	parseDesktopArtifactScope,
+	parseDesktopReleaseDescriptor,
+	parseDesktopReleaseReadiness,
+} from '@app/api/download/DesktopReleaseContract';
+import {
+	type IStorageService,
+	StorageObjectListingOverflowError,
+	StorageObjectRangeNotSatisfiableError,
+} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import type {
 	DesktopArch,
@@ -10,19 +23,6 @@ import type {
 	DesktopFormat,
 	DesktopPlatform,
 } from '@fluxer/schema/src/domains/download/DownloadSchemas';
-import {Config} from '../Config';
-import {
-	type IStorageService,
-	StorageObjectListingOverflowError,
-	StorageObjectRangeNotSatisfiableError,
-} from '../infrastructure/IStorageService';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonRecord} from '../utils/JsonBoundaryUtils';
-import {
-	parseDesktopArtifactScope,
-	parseDesktopReleaseDescriptor,
-	parseDesktopReleaseReadiness,
-} from './DesktopReleaseContract';
 
 export const DOWNLOAD_PREFIX = '/dl';
 export const DESKTOP_REDIRECT_PREFIX = `${DOWNLOAD_PREFIX}/desktop`;

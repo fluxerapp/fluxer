@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	GatewayRolloutConfigSchema,
+	GatewayRolloutConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {describe, expect, test} from 'vitest';
-import {GatewayRolloutConfigSchema, GatewayRolloutConfigUpdateRequest} from '../admin/GatewayRolloutSchemas';
 
 describe('gateway rollout schemas', () => {
 	test('full config applies defaults for omitted values', () => {

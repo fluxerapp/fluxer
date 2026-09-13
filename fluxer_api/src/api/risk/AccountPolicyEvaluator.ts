@@ -8,7 +8,7 @@ import {
 	RiskConfidence,
 	RiskDecisionMethod,
 	RiskLevel,
-} from './RiskTypes';
+} from '@app/api/risk/RiskTypes';
 
 type JsonScalar = string | number | boolean | null;
 type JsonRecord = Record<string, unknown>;

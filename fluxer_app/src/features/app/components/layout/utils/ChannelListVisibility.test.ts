@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	shouldShowCategoryWhenHidingMutedChannels,
 	shouldShowChannelInCollapsedCategory,
 	shouldShowChannelWhenHidingMutedChannels,
-} from './ChannelListVisibility';
+} from '@app/features/app/components/layout/utils/ChannelListVisibility';
+import {describe, expect, it} from 'vitest';
 
 describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('keeps muted channels with visible unread state so mentions are findable', () => {

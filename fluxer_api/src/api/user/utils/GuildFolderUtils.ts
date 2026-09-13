@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildFolder} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
 import {type GuildFolderIcon, UNCATEGORIZED_FOLDER_ID} from '@fluxer/constants/src/UserConstants';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {GuildFolder} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {IUserRepository} from '../IUserRepository';
-import {mapUserSettingsToResponse} from '../UserMappers';
 
 export function dedupeGuildFolders(folders: ReadonlyArray<GuildFolder>): {
 	folders: Array<GuildFolder>;

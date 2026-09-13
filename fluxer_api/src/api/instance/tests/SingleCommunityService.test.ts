@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {InstancePolicyConfig} from '@app/api/instance/InstanceConfigRepository';
+import {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
+import type {User} from '@app/api/models/User';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {describe, expect, it} from 'vitest';
-import type {User} from '../../models/User';
-import type {InstancePolicyConfig} from '../InstanceConfigRepository';
-import {SingleCommunityService} from '../SingleCommunityService';
 
 const EXISTING_GUILD_ID = '1234567890123456789';
 const OWNER = {id: 42n} as unknown as User;

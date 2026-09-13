@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {ChannelHelpers, type ChannelReorderOperation} from '@app/api/guild/services/channel/ChannelHelpers';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel, GuildFeatures, resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
@@ -24,25 +43,6 @@ import {
 } from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 import {ChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createRoleID, createUserID} from '../../../BrandedTypes';
-import {mapChannelToResponse} from '../../../channel/ChannelMappers';
-import type {IChannelRepository} from '../../../channel/IChannelRepository';
-import type {PermissionOverwrite} from '../../../database/types/ChannelTypes';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import {ChannelPermissionOverwrite} from '../../../models/ChannelPermissionOverwrite';
-import type {GuildAuditLogService} from '../../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../../GuildAuditLogTypes';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import {ChannelHelpers, type ChannelReorderOperation} from './ChannelHelpers';
 
 export class ChannelOperationsService {
 	constructor(

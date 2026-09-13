@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
+import {DownloadService} from '@app/api/download/DownloadService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {describe, expect, it} from 'vitest';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {DownloadService} from '../DownloadService';
 
 const PREFIX = 'desktop/canary/linux/x64';
 const BASE_URL = 'https://api.example.test';

@@ -1,5 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {nextVersion} from '@app/api/database/CassandraTypes';
+import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
+import {
+	type IMediaService,
+	type MediaProxyMetadataResponse,
+	type MediaProxyNsfwMode,
+	mediaProxyMetadataPolicy,
+} from '@app/api/infrastructure/IMediaService';
+import type {IUnfurlerService, UnfurlOptions} from '@app/api/infrastructure/IUnfurlerService';
+import {Logger} from '@app/api/Logger';
+import {Embed} from '@app/api/models/Embed';
+import {EmbedAuthor} from '@app/api/models/EmbedAuthor';
+import {EmbedField} from '@app/api/models/EmbedField';
+import {EmbedFooter} from '@app/api/models/EmbedFooter';
+import {EmbedMedia} from '@app/api/models/EmbedMedia';
+import * as UnfurlerUtils from '@app/api/utils/UnfurlerUtils';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import {EmbedMediaFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_EMBEDS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -12,27 +33,6 @@ import type {
 	RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {ChannelID, MessageID} from '../BrandedTypes';
-import type {RichEmbedMediaWithMetadata} from '../channel/EmbedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import {nextVersion} from '../database/CassandraTypes';
-import type {MessageEmbed, MessageEmbedChild} from '../database/types/MessageTypes';
-import {Logger} from '../Logger';
-import {Embed} from '../models/Embed';
-import {EmbedAuthor} from '../models/EmbedAuthor';
-import {EmbedField} from '../models/EmbedField';
-import {EmbedFooter} from '../models/EmbedFooter';
-import {EmbedMedia} from '../models/EmbedMedia';
-import * as UnfurlerUtils from '../utils/UnfurlerUtils';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
-import {WorkerQueueOverflowError} from '../worker/WorkerQueueOverflowError';
-import {
-	type IMediaService,
-	type MediaProxyMetadataResponse,
-	type MediaProxyNsfwMode,
-	mediaProxyMetadataPolicy,
-} from './IMediaService';
-import type {IUnfurlerService, UnfurlOptions} from './IUnfurlerService';
 
 interface CreateEmbedsParams {
 	channelId: ChannelID;

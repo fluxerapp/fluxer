@@ -1,45 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {setupGracefulShutdown} from '@fluxer/hono/src/Server';
-import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
-import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
-import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {setDatabaseQueryExecutor} from '../database/CassandraQueryExecution';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '../database/PostgresKvQueryExecutor';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import type {InstanceConfigRepository} from '../instance/InstanceConfigRepository';
-import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
+import {Config} from '@app/api/Config';
+import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
+import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {
 	closeOwnedKVClient,
 	createSnowflakeService,
 	setInjectedSnowflakeService,
 	setInjectedWorkerService,
 	shutdownVoiceResources,
-} from '../middleware/ServiceRegistry';
-import {getCacheService, getInstanceConfigRepository, getLimitConfigService} from '../middleware/ServiceSingletons';
-import {initializeSearch, shutdownSearch} from '../SearchFactory';
-import {awaitAll} from '../utils/ConcurrencyUtils';
-import {CronScheduler} from './CronScheduler';
-import {JetStreamWorkerQueue} from './JetStreamWorkerQueue';
-import {clearWorkerDependencies, setWorkerDependencies} from './WorkerContext';
-import {initializeWorkerDependencies, type WorkerDependencies} from './WorkerDependencies';
-import {WorkerHeartbeat} from './WorkerHeartbeat';
+} from '@app/api/middleware/ServiceRegistry';
+import {
+	getCacheService,
+	getInstanceConfigRepository,
+	getLimitConfigService,
+} from '@app/api/middleware/ServiceSingletons';
+import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {CronScheduler} from '@app/api/worker/CronScheduler';
+import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
+import {clearWorkerDependencies, setWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {initializeWorkerDependencies, type WorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {WorkerHeartbeat} from '@app/api/worker/WorkerHeartbeat';
 import {
 	resolveCronSchedulerEnabled,
 	resolveWorkerLanes,
 	validateLaneCompleteness,
 	type WorkerLaneDefinition,
-} from './WorkerLaneConfig';
-import {createWorkerProcessErrorHandler} from './WorkerProcessErrorHandler';
-import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
-import {WorkerRunner} from './WorkerRunner';
-import {WorkerService} from './WorkerService';
-import {workerTasks} from './WorkerTaskRegistry';
+} from '@app/api/worker/WorkerLaneConfig';
+import {createWorkerProcessErrorHandler} from '@app/api/worker/WorkerProcessErrorHandler';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import {WorkerService} from '@app/api/worker/WorkerService';
+import {workerTasks} from '@app/api/worker/WorkerTaskRegistry';
+import {setupGracefulShutdown} from '@fluxer/hono/src/Server';
+import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
+import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
+import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
+import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {ms} from 'itty-time';
 
 const SEARCH_REQUIRED_TASKS = new Set<string>([
 	'indexChannelMessages',

@@ -16,7 +16,7 @@ const {
 	NO_AUDIO_DESCRIPTOR,
 	resolveScreenShareAudioSummary,
 	SHARED_WINDOW_DESCRIPTOR,
-} = await import('./ScreenShareAudioSummary');
+} = await import('@app/features/voice/utils/ScreenShareAudioSummary');
 type ScreenShareAudioSummaryInput = Parameters<typeof resolveScreenShareAudioSummary>[0];
 
 function summary(overrides: Partial<ScreenShareAudioSummaryInput> = {}) {

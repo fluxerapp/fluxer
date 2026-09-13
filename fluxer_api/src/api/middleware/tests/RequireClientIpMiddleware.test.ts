@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {Hono} from 'hono';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {Config} from '../../Config';
-import type {HonoEnv} from '../../types/HonoEnv';
-import type {ClientIpResolution} from '../../utils/RequestClientIp';
-import {RequireClientIpMiddleware} from '../RequireClientIpMiddleware';
 
 interface Harness {
 	request: (headers: Record<string, string>) => Promise<Response>;

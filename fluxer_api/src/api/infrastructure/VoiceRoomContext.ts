@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {z} from 'zod';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import {createChannelID, createGuildID, createUserID} from '../BrandedTypes';
 
 interface DMRoomContext {
 	readonly type: 'dm';

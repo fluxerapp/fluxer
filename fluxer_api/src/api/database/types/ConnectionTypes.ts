@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
-import type {UserID} from '../../BrandedTypes';
 
 export interface UserConnectionStorageRow {
 	user_id: UserID;

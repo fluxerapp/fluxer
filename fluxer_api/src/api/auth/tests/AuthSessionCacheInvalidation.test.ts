@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createFakeAuthToken,
@@ -12,7 +8,11 @@ import {
 	loginAccount,
 	setUserACLs,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 function authSessionCacheKey(token: string): string {
 	return `auth:session:${createHash('sha256').update(token).digest('base64url')}`;

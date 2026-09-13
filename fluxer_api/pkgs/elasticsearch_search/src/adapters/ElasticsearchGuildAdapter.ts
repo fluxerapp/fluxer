@@ -3,11 +3,11 @@
 import type {Client} from '@elastic/elasticsearch';
 import type {SortCombinations} from '@elastic/elasticsearch/lib/api/types';
 import type {GuildSearchFilters, SearchableGuild} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {ElasticsearchFilter} from '../ElasticsearchFilterUtils';
-import {compactFilters, esAndTerms, esTermFilter} from '../ElasticsearchFilterUtils';
-import {ELASTICSEARCH_INDEX_DEFINITIONS} from '../ElasticsearchIndexDefinitions';
-import type {ElasticsearchDistributedLock} from './ElasticsearchIndexAdapter';
-import {ElasticsearchIndexAdapter} from './ElasticsearchIndexAdapter';
+import type {ElasticsearchDistributedLock} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import {ElasticsearchIndexAdapter} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import type {ElasticsearchFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {compactFilters, esAndTerms, esTermFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {ELASTICSEARCH_INDEX_DEFINITIONS} from '@pkgs/elasticsearch_search/src/ElasticsearchIndexDefinitions';
 
 function buildGuildFilters(filters: GuildSearchFilters): Array<ElasticsearchFilter | undefined> {
 	const clauses: Array<ElasticsearchFilter | undefined> = [];

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {deleteAccount, expectDataExists} from '@app/api/user/tests/UserTestUtils';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, loginAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {deleteAccount, expectDataExists} from './UserTestUtils';
 
 describe('Account Delete Auto Cancel on Login', () => {
 	let harness: ApiTestHarness;

@@ -3,7 +3,7 @@
 import {AGE_BLOCKED_GEOS, AGE_RESTRICTED_GEOS} from '@fluxer/instance_bootstrap/src/AgeGeos';
 import type {GeolocationResponse} from '@fluxer/instance_bootstrap/src/Types';
 import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import {lookupGeoipByIp} from './GeoipLookup';
+import {lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
 
 interface ResolveClientGeoipOptions {
 	maxmindDbPath: string | undefined;

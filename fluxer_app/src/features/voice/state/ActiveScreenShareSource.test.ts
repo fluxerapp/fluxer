@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {afterEach, describe, expect, it} from 'vitest';
-import ActiveScreenShareSource from './ActiveScreenShareSource';
 
 describe('ActiveScreenShareSource', () => {
 	afterEach(() => {

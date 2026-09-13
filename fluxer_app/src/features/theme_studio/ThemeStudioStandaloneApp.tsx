@@ -7,6 +7,14 @@ import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Theme from '@app/features/theme/state/Theme';
+import {THEME_STUDIO_DESCRIPTOR, ThemeStudio} from '@app/features/theme_studio/ThemeStudio';
+import styles from '@app/features/theme_studio/ThemeStudio.module.css';
+import {
+	getThemeStudioBaseTheme,
+	getThemeStudioFallbackDefaultVariables,
+	pinThemeStudioDefaultVariables,
+	readThemeStudioComputedDefaultVariables,
+} from '@app/features/theme_studio/utils/ThemeStudioPinnedVariables';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Toasts} from '@app/features/ui/toast/Toasts';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -19,14 +27,6 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
-import {THEME_STUDIO_DESCRIPTOR, ThemeStudio} from './ThemeStudio';
-import styles from './ThemeStudio.module.css';
-import {
-	getThemeStudioBaseTheme,
-	getThemeStudioFallbackDefaultVariables,
-	pinThemeStudioDefaultVariables,
-	readThemeStudioComputedDefaultVariables,
-} from './utils/ThemeStudioPinnedVariables';
 
 const logger = new Logger('ThemeStudioStandaloneApp');
 const THEME_STUDIO_POPOUT_KEY = 'fluxer_theme_studio';

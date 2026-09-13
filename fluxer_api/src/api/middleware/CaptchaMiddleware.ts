@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
+import type {User} from '@app/api/models/User';
+import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Headers} from '@fluxer/constants/src/Headers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CaptchaRequiredError, InvalidCaptchaError} from '@fluxer/errors/src/CaptchaErrors';
@@ -9,11 +14,6 @@ import {createCaptchaProvider} from '@pkgs/captcha/src/CaptchaProviderFactory';
 import type {ICaptchaProvider} from '@pkgs/captcha/src/ICaptchaProvider';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {Config} from '../Config';
-import type {InstanceCaptchaEffectiveConfig} from '../instance/InstanceConfigRepository';
-import type {User} from '../models/User';
-import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
-import type {HonoEnv} from '../types/HonoEnv';
 
 function resolveProviderSecret(
 	config: InstanceCaptchaEffectiveConfig,

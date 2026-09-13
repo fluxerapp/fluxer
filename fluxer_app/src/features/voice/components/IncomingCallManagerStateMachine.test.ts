@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createIncomingCallManagerSnapshot,
 	type IncomingCallManagerSignals,
@@ -9,7 +8,8 @@ import {
 	selectIncomingCallManagerModel,
 	shouldPlayIncomingRing,
 	transitionIncomingCallManagerSnapshot,
-} from './IncomingCallManagerStateMachine';
+} from '@app/features/voice/components/IncomingCallManagerStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function signals(overrides: Partial<IncomingCallManagerSignals> = {}): IncomingCallManagerSignals {
 	return {

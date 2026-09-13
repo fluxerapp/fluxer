@@ -1,6 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {Config} from '@app/api/Config';
+import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {InstanceConfigurationRow} from '@app/api/database/types/InstanceConfigTypes';
+import {
+	getDefaultDateOfBirthCollection,
+	setCachedDateOfBirthCollection,
+} from '@app/api/instance/DateOfBirthCollectionCache';
+import {InstanceConfigCache} from '@app/api/instance/InstanceConfigCache';
+import {normalizeSsoAllowedEmailDomains} from '@app/api/instance/SsoConfigValidation';
+import {Logger} from '@app/api/Logger';
+import {isLimitConfigSnapshot} from '@app/api/limits/LimitConfigValidation';
+import {resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
+import {InstanceConfiguration} from '@app/api/Tables';
+import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '@app/api/utils/AttachmentDecay';
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {
 	InstanceConfigResponse,
@@ -35,19 +51,6 @@ import {
 import {normalizeString, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {z} from 'zod';
-import {Config} from '../Config';
-import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '../config/APIConfig';
-import {fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import type {InstanceConfigurationRow} from '../database/types/InstanceConfigTypes';
-import {Logger} from '../Logger';
-import {isLimitConfigSnapshot} from '../limits/LimitConfigValidation';
-import {resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
-import {InstanceConfiguration} from '../Tables';
-import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '../utils/AttachmentDecay';
-import {isJsonRecord} from '../utils/JsonBoundaryUtils';
-import {getDefaultDateOfBirthCollection, setCachedDateOfBirthCollection} from './DateOfBirthCollectionCache';
-import {InstanceConfigCache} from './InstanceConfigCache';
-import {normalizeSsoAllowedEmailDomains} from './SsoConfigValidation';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';

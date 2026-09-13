@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it, vi} from 'vitest';
 import {
 	endBridgeStats,
 	getBridgeStats,
 	getEndedBridgeCaptures,
 	recordBridgeFrame,
 	startBridgeStats,
-} from './bridgeStats';
+} from '@app/features/voice/utils/native_audio_capture_bridge/bridgeStats';
+import {describe, expect, it, vi} from 'vitest';
 
 function recordFrames(captureId: string, count: number, peak: number, rms: number): void {
 	for (let index = 0; index < count; index++) {

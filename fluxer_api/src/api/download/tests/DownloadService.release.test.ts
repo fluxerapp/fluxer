@@ -2,11 +2,11 @@
 
 import {createHash} from 'node:crypto';
 import {Readable} from 'node:stream';
+import {getConfig} from '@app/api/Config';
+import {DownloadService} from '@app/api/download/DownloadService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import {describe, expect, it} from 'vitest';
-import {getConfig} from '../../Config';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {DownloadService} from '../DownloadService';
 
 const PREFIX = 'desktop/canary/linux/x64';
 const TEST_PREFIX = 'desktop-test/canary/linux/x64';

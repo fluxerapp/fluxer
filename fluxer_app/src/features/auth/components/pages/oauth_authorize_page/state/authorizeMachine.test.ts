@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createAuthorizeSnapshot,
 	getAuthorizeStateValue,
 	selectAuthorizePhase,
 	transitionAuthorizeSnapshot,
-} from './authorizeMachine';
+} from '@app/features/auth/components/pages/oauth_authorize_page/state/authorizeMachine';
+import {describe, expect, it} from 'vitest';
 
 describe('authorizeMachine', () => {
 	it('moves from loading into review and through bot invite success', () => {

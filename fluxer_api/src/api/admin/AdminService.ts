@@ -1,49 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {SendSystemDmResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import type Stripe from 'stripe';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../guild/services/GuildService';
-import type {IDiscriminatorService} from '../infrastructure/DiscriminatorService';
-import type {EntityAssetService} from '../infrastructure/EntityAssetService';
-import type {IAssetDeletionQueue} from '../infrastructure/IAssetDeletionQueue';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {KVBulkMessageDeletionQueueService} from '../infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {InviteRepository} from '../invite/InviteRepository';
-import type {IJobLedgerRepository} from '../jobs/IJobLedgerRepository';
-import {JobAdminService} from '../jobs/JobAdminService';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
+import {AdminApplicationService} from '@app/api/admin/services/AdminApplicationService';
+import {AdminAssetPurgeService} from '@app/api/admin/services/AdminAssetPurgeService';
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
+import {AdminCodeGenerationService} from '@app/api/admin/services/AdminCodeGenerationService';
+import {AdminGuildService} from '@app/api/admin/services/AdminGuildService';
+import {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
+import {AdminMessageService} from '@app/api/admin/services/AdminMessageService';
+import {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
+import {AdminReportService} from '@app/api/admin/services/AdminReportService';
+import {AdminSearchService} from '@app/api/admin/services/AdminSearchService';
+import {AdminUserRelationshipService} from '@app/api/admin/services/AdminUserRelationshipService';
+import {AdminUserService} from '@app/api/admin/services/AdminUserService';
+import {AdminVoiceService} from '@app/api/admin/services/AdminVoiceService';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {JobAdminService} from '@app/api/jobs/JobAdminService';
 import {
 	getGuildDiscoveryRepository,
 	getKVAccountDeletionQueue,
 	getNcmecSubmissionService,
-} from '../middleware/ServiceSingletons';
-import type {IApplicationRepository} from '../oauth/repositories/IApplicationRepository';
-import type {ReportService} from '../report/ReportService';
-import type {IRiskHistoryRepository} from '../risk/HistoricalOutcomeRepository';
-import type {ISuspiciousIpRepository} from '../risk/SuspiciousIpRepository';
-import type {UserService} from '../user/services/UserService';
-import type {VoiceRepository} from '../voice/VoiceRepository';
-import type {IAdminRepository} from './IAdminRepository';
-import {AdminApplicationService} from './services/AdminApplicationService';
-import {AdminAssetPurgeService} from './services/AdminAssetPurgeService';
-import {AdminAuditService} from './services/AdminAuditService';
-import {AdminBanManagementService} from './services/AdminBanManagementService';
-import {AdminCodeGenerationService} from './services/AdminCodeGenerationService';
-import {AdminGuildService} from './services/AdminGuildService';
-import {AdminMessageDeletionService} from './services/AdminMessageDeletionService';
-import {AdminMessageService} from './services/AdminMessageService';
-import {AdminMessageShredService} from './services/AdminMessageShredService';
-import {AdminReportService} from './services/AdminReportService';
-import {AdminSearchService} from './services/AdminSearchService';
-import {AdminUserRelationshipService} from './services/AdminUserRelationshipService';
-import {AdminUserService} from './services/AdminUserService';
-import {AdminVoiceService} from './services/AdminVoiceService';
+} from '@app/api/middleware/ServiceSingletons';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {ReportService} from '@app/api/report/ReportService';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
+import type {UserService} from '@app/api/user/services/UserService';
+import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
+import type {SendSystemDmResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
+import type Stripe from 'stripe';
 
 export class AdminService {
 	readonly auditService: AdminAuditService;

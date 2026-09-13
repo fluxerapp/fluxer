@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createAuthHarness, createTestAccount} from './AuthTestUtils';
+import {createAuthHarness, createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createAuthenticationResponse,
 	createRegistrationResponse,
@@ -13,7 +10,10 @@ import {
 	type WebAuthnAuthenticationOptions,
 	type WebAuthnCredentialMetadata,
 	type WebAuthnRegistrationOptions,
-} from './WebAuthnTestUtils';
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('WebAuthn credential delete', () => {
 	let harness: ApiTestHarness;

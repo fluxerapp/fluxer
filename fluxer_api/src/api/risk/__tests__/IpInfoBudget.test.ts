@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createKvIpInfoLookupBudget} from '@app/api/risk/IpInfoBudget';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {createKvIpInfoLookupBudget} from '../IpInfoBudget';
 
 const BUDGET_ENV_KEYS = [
 	'FLUXER_IPINFO_BUDGET_ENABLED',

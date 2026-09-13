@@ -10,21 +10,21 @@ import type {
 	VirtmicRoutingGraphResult,
 	VirtmicUnavailableReason,
 } from '@electron/common/Types';
+import {buildFluxerAudioExcludePatterns, isFluxerAudioNode} from '@electron/main/FluxerAudioIdentity';
 import {getLinuxPortalsMode, getNativeAudioMode} from '@electron/main/LaunchOptions';
-import {app, ipcMain} from 'electron';
-import {buildFluxerAudioExcludePatterns, isFluxerAudioNode} from './FluxerAudioIdentity';
 import {
 	isDBusObjectPathSegment,
 	isWaylandSessionEnv,
 	isX11SessionEnv,
 	isX11WindowToken,
 	parseWindowSourceToken,
-} from './LinuxAudioCaptureHelpers';
+} from '@electron/main/LinuxAudioCaptureHelpers';
 import {
 	isValidVirtmicLinkOptions,
 	isValidVirtmicNodeList,
 	isValidVirtmicSystemLinkOptions,
-} from './NativeAudioValidation';
+} from '@electron/main/NativeAudioValidation';
+import {app, ipcMain} from 'electron';
 
 const logger = createChildLogger('LinuxAudioCapture');
 const requireModule = createRequire(import.meta.url);

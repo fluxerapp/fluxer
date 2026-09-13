@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GifProviderHeaderMiddleware} from '@app/api/gif/GifProviderHeaderMiddleware';
+import {resolveGifRequestCountry} from '@app/api/gif/GifRequestCountry';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	GifFeaturedResponse,
 	GifListResponse,
@@ -10,15 +18,6 @@ import {
 } from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {Context, MiddlewareHandler} from 'hono';
 import {createMiddleware} from 'hono/factory';
-
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp, HonoEnv} from '../types/HonoEnv';
-import {Validator} from '../Validator';
-import {GifProviderHeaderMiddleware} from './GifProviderHeaderMiddleware';
-import {resolveGifRequestCountry} from './GifRequestCountry';
 
 const TAGS = ['GIFs'];
 

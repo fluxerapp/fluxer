@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {loadFixture, sendMessageWithAttachments} from '../../channel/tests/AttachmentTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	acceptInvite,
 	createChannel,
 	createChannelInvite,
 	createGuild,
 	getChannel,
-} from '../../guild/tests/GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	markChannelAsIndexed,
 	markGuildChannelsAsIndexed,
 	pinMessage,
 	sendMessage,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface MessageSearchResult {
 	messages: Array<{

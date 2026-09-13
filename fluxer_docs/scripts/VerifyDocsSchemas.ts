@@ -8,7 +8,6 @@ import type {
 	OpenAPISchema as SchemaNode,
 	OpenAPIDocument as Spec,
 } from '@fluxer/openapi/src/OpenAPITypes';
-
 import {readRouteHeaders} from './DocsRouteHeaders.ts';
 import {DOCS_ROOT, HTTP_METHODS, readMarkdownPages, routeShape, slugifyHeading, splitTableRow} from './DocsSource.ts';
 

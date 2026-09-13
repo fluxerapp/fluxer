@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import {LiveKitWebhookService} from '@app/api/infrastructure/LiveKitWebhookService';
+import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
+import {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import type {WebhookEvent} from 'livekit-server-sdk';
 import {describe, expect, it, vi} from 'vitest';
-import {createChannelID, createGuildID} from '../../BrandedTypes';
-import type {IVoiceRepository} from '../../voice/IVoiceRepository';
-import {VoiceTopology} from '../../voice/VoiceTopology';
-import type {IGatewayService} from '../IGatewayService';
-import type {ILiveKitService} from '../ILiveKitService';
-import type {IVoiceRoomStore} from '../IVoiceRoomStore';
-import {LiveKitWebhookService} from '../LiveKitWebhookService';
 
 const GUILD_ID = createGuildID(1n);
 const CHANNEL_ID = createChannelID(2n);

@@ -1,5 +1,5 @@
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
-import {isJsonRecord} from '../utils/JsonBoundaryUtils';
 
 function isStringArray(value: unknown): value is Array<string> {
 	return Array.isArray(value) && value.every((entry) => typeof entry === 'string');

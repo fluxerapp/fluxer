@@ -3,10 +3,10 @@
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {type ClientHttp2Session, connect, constants} from 'node:http2';
+import {Config} from '@app/api/Config';
+import type {PushProviderEnvironment} from '@app/api/config/APIConfig';
+import {Logger} from '@app/api/Logger';
 import {type CryptoKey, importPKCS8, SignJWT} from 'jose';
-import {Config} from '../Config';
-import type {PushProviderEnvironment} from '../config/APIConfig';
-import {Logger} from '../Logger';
 
 const APNS_PROVIDER_TOKEN_TTL_SECONDS = 50 * 60;
 const APNS_REQUEST_TIMEOUT_MS = 5000;

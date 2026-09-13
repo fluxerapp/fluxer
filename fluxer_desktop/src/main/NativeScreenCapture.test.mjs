@@ -141,16 +141,16 @@ function loadNativeScreenCapture({platform = 'linux', addon, tccStatus = 'not-de
 				},
 			};
 		}
-		if (specifier === './MacTcc') {
+		if (specifier === '@electron/main/MacTcc') {
 			return {getTccStatus: () => tccStatus};
 		}
-		if (specifier === './NativeScreenCaptureValidation') {
+		if (specifier === '@electron/main/NativeScreenCaptureValidation') {
 			return {
 				isValidStartOptions: () => true,
 				normalizeScreenCaptureDimension: (value) => value,
 			};
 		}
-		if (specifier === './PrivilegedRendererDocuments') {
+		if (specifier === '@electron/main/PrivilegedRendererDocuments') {
 			return {requirePrivilegedRendererDocumentSender: () => {}};
 		}
 		throw new Error(`Unexpected import: ${specifier}`);

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createMockWebhookPayload, type StripeWebhookEventData} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createMockWebhookPayload, type StripeWebhookEventData} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {setupSyncStripeWebhookWorker} from './StripeWebhookTestUtils';
 
 describe('Stripe Webhook Refund', () => {
 	let harness: ApiTestHarness;
@@ -67,8 +67,8 @@ describe('Stripe Webhook Refund', () => {
 		test('revokes premium and records first refund', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_first_123';
@@ -108,7 +108,7 @@ describe('Stripe Webhook Refund', () => {
 		test('applies permanent purchase block on second refund', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const userRepository = new UserRepository();
 			const firstRefundDate = new Date('2024-01-01');
 			await userRepository.patchUpsert(
@@ -118,7 +118,7 @@ describe('Stripe Webhook Refund', () => {
 				},
 				(await userRepository.findUnique(userId))!.toRow(),
 			);
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
 			const paymentRepository = new PaymentRepository();
 			const paymentIntentId = 'pi_test_refund_second_456';
 			const checkoutSessionId = 'cs_test_refund_second_456';
@@ -158,8 +158,8 @@ describe('Stripe Webhook Refund', () => {
 		test('counts a refund once when the same charge.refunded event is redelivered', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_retry_123';
@@ -211,8 +211,8 @@ describe('Stripe Webhook Refund', () => {
 		test('counts a refund once when charge.refunded lands before the refund record exists', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_late_record';
@@ -273,8 +273,8 @@ describe('Stripe Webhook Refund', () => {
 		test('does not count a refund Fluxer issued itself against the refund allowance', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_system_123';
@@ -324,8 +324,8 @@ describe('Stripe Webhook Refund', () => {
 		test('does not count a refund Fluxer issued for a localized card country mismatch', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_card_mismatch';
@@ -377,8 +377,8 @@ describe('Stripe Webhook Refund', () => {
 		test('counts only the customer refund when Fluxer issued a later system refund on the same charge', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_mixed';
@@ -450,8 +450,8 @@ describe('Stripe Webhook Refund', () => {
 		test('counts a second, distinct refund against the allowance after the first one was already counted', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			const paymentIntentId = 'pi_test_refund_ladder';
@@ -518,7 +518,7 @@ describe('Stripe Webhook Refund', () => {
 		test('falls back to customer ID when payment intent is not indexed (subscription mode)', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const userRepository = new UserRepository();
 			const stripeCustomerId = 'cus_test_subscription_fallback';
 			await userRepository.patchUpsert(
@@ -544,7 +544,7 @@ describe('Stripe Webhook Refund', () => {
 		});
 		test('skips premium action for donation customer refund', async () => {
 			const donationCustomerId = 'cus_test_donation_refund';
-			const {DonationRepository} = await import('../../donation/DonationRepository');
+			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			const donationRepository = new DonationRepository();
 			await donationRepository.createDonor({
 				email: 'donor-refund-test@example.com',

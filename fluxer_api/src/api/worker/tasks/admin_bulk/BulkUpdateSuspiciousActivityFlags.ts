@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {createUserID} from '@app/api/BrandedTypes';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {imposePhoneRequirements, SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {AdminUserUpdatePropagator} from '../../../admin/services/AdminUserUpdatePropagator';
-import {createUserID} from '../../../BrandedTypes';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	user_ids: Array<string>;

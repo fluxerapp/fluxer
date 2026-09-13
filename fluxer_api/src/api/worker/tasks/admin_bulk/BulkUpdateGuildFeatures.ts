@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {getGuildDiscoveryRepository} from '@app/api/middleware/ServiceSingletons';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {AdminGuildUpdatePropagator} from '../../../admin/services/guild/AdminGuildUpdatePropagator';
-import {createGuildID, createUserID} from '../../../BrandedTypes';
-import {getGuildDiscoveryRepository} from '../../../middleware/ServiceSingletons';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	guild_ids: Array<string>;

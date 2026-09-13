@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
+import {WORKER_LANES} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {DiscardPolicy, NatsError, RetentionPolicy, StorageType, type StreamConfig} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {JetStreamWorkerQueue} from '../JetStreamWorkerQueue';
-import {WORKER_LANES} from '../WorkerLaneConfig';
-import {WorkerQueueOverflowError} from '../WorkerQueueOverflowError';
 
 const GIB = 1024 * 1024 * 1024;
 const MIB = 1024 * 1024;

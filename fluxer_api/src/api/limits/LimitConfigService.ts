@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {computeWireFormat} from '@fluxer/limits/src/LimitDiffer';
-import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
-import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {Config} from '../Config';
+import {Config} from '@app/api/Config';
 import {
 	createDefaultLimitConfig,
 	getLegacyLimitConfigKvKey,
 	LIMIT_CONFIG_REFRESH_CHANNEL,
 	mergeWithCurrentDefaults,
 	sanitizeLimitConfigForInstance,
-} from '../constants/LimitConfig';
+} from '@app/api/constants/LimitConfig';
 import {
 	INSTANCE_CONFIG_REFRESH_CHANNEL,
 	type InstanceConfigRepository,
 	type InstancePolicyConfig,
 	type InstancePremiumMode,
-} from '../instance/InstanceConfigRepository';
-import {Logger} from '../Logger';
-import {awaitAll} from '../utils/ConcurrencyUtils';
-import {RefreshSubscription} from '../utils/RefreshSubscription';
-import {setCachedInstancePremiumMode} from './InstancePremiumModeCache';
+} from '@app/api/instance/InstanceConfigRepository';
+import {Logger} from '@app/api/Logger';
+import {setCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {computeWireFormat} from '@fluxer/limits/src/LimitDiffer';
+import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 const MAX_PENDING_OPERATIONS = 32;
 

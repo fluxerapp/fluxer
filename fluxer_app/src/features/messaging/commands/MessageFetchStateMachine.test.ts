@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createMessageFetchExecutionSnapshot,
 	createMessageFetchPreflightSnapshot,
@@ -13,7 +12,8 @@ import {
 	selectMessageFetchPreflightDecision,
 	transitionMessageFetchExecutionSnapshot,
 	transitionMessageFetchPreflightSnapshot,
-} from './MessageFetchStateMachine';
+} from '@app/features/messaging/commands/MessageFetchStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function preflight(overrides: Partial<MessageFetchPreflightInput> = {}): MessageFetchPreflightInput {
 	return {

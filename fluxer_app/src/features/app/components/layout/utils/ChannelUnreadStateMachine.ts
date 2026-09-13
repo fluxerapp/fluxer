@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	ChannelUnreadState,
+	ChannelUnreadStateInput,
+} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
-import type {ChannelUnreadState, ChannelUnreadStateInput} from './ChannelUnreadState';
 
 interface ChannelUnreadMachineContext extends ChannelUnreadStateInput {}
 

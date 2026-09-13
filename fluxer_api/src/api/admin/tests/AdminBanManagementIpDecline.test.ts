@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
+import {createUserID} from '@app/api/BrandedTypes';
+import {getConfig} from '@app/api/Config';
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {resetIpBanExemptionsForTesting} from '@app/api/risk/IpBanExemptions';
+import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID} from '../../BrandedTypes';
-import {getConfig} from '../../Config';
-import {ipBanCache} from '../../middleware/IpBanMiddleware';
-import {resetIpBanExemptionsForTesting} from '../../risk/IpBanExemptions';
-import type {ISuspiciousIpRepository} from '../../risk/SuspiciousIpRepository';
-import type {IAdminRepository} from '../IAdminRepository';
-import type {AdminAuditService} from '../services/AdminAuditService';
-import {AdminBanManagementService} from '../services/AdminBanManagementService';
 
 const ADMIN_ID = createUserID(42n);
 const EXEMPT_IP = '10.0.0.1';

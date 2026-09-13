@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import type {BannedProfileSubstringScope} from '@app/api/database/types/AdminArchiveTypes';
+import {Logger} from '@app/api/Logger';
+import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL} from '../constants/ContentModeration';
-import type {BannedProfileSubstringScope} from '../database/types/AdminArchiveTypes';
-import {Logger} from '../Logger';
-import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '../utils/PhraseBlocklistNormalization';
-import {RefreshSubscription} from '../utils/RefreshSubscription';
 
 type ProfileScope = BannedProfileSubstringScope;
 

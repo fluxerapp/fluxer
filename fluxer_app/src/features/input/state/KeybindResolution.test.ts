@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {CustomKeybindEntry, KeybindCommand, KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
+import {
+	getActiveCombosForResolvedAction,
+	getDisplayKeybindForResolvedAction,
+} from '@app/features/input/state/KeybindResolution';
 import {describe, expect, it} from 'vitest';
-import type {CustomKeybindEntry, KeybindCommand, KeybindConfig, KeyCombo} from './InputKeybind';
-import {getActiveCombosForResolvedAction, getDisplayKeybindForResolvedAction} from './KeybindResolution';
 
 const action: KeybindCommand = 'voice_toggle_deafen';
 const keybind = (combo: KeyCombo, overrides: Partial<KeybindConfig> = {}): KeybindConfig => ({

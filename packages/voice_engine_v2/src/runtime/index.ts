@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type {VoiceEngineV2MemoryEventLogSpillSink} from './eventLogRing';
+export type {VoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 export {
 	assertEventLogRingInvariants,
 	createVoiceEngineV2MemoryEventLogSpillSink,
 	VOICE_ENGINE_V2_EVENT_LOG_CAP,
 	VOICE_ENGINE_V2_MEMORY_EVENT_LOG_SPILL_SINK_CAP,
 	VoiceEngineV2EventLogRing,
-} from './eventLogRing';
-export type {VoiceEngineV2FrameReceivedEvent} from './frameCoalescing';
+} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+export type {VoiceEngineV2FrameReceivedEvent} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 export {
 	canCoalesceVoiceEngineV2Events,
 	coalesceVoiceEngineV2EventSequence,
 	isVoiceEngineV2FrameReceivedEvent,
 	VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
-} from './frameCoalescing';
+} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
 export type {
 	VoiceEngineV2ClockPort,
 	VoiceEngineV2EntropySource,
@@ -23,7 +23,7 @@ export type {
 	VoiceEngineV2SystemClockPort,
 	VoiceEngineV2SystemRandomPort,
 	VoiceEngineV2WallClockSource,
-} from './platformPort';
+} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 export {
 	createVoiceEngineV2DeterministicClockPort,
 	createVoiceEngineV2DeterministicPlatformPort,
@@ -31,8 +31,8 @@ export {
 	createVoiceEngineV2SystemClockPort,
 	createVoiceEngineV2SystemPlatformPort,
 	createVoiceEngineV2SystemRandomPort,
-} from './platformPort';
-export {VoiceEngineV2Controller} from './VoiceEngineV2Controller';
+} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
+export {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
 export type {
 	VoiceEngineV2EventLogEntry,
 	VoiceEngineV2EventLogSpillSink,
@@ -43,7 +43,7 @@ export type {
 	VoiceEngineV2RuntimeListenerPayload,
 	VoiceEngineV2RuntimeOptions,
 	VoiceEngineV2RuntimeQueueKind,
-} from './VoiceEngineV2Runtime';
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 export {
 	assertEventLogInvariants,
 	commandResultToEvent,
@@ -54,4 +54,4 @@ export {
 	VOICE_ENGINE_V2_QUEUED_COMMANDS_CAP,
 	VOICE_ENGINE_V2_RESOURCE_QUEUES_CAP,
 	VoiceEngineV2Runtime,
-} from './VoiceEngineV2Runtime';
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';

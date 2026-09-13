@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../../protocol/events';
-import type {VoiceEngineV2Participant, VoiceEngineV2Track} from '../../protocol/types';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {removeInboundVideoTrack} from './inboundVideo';
-import {clearWatchedStreamTrack, syncWatchedStreamTrack} from './remoteTrackSubscription';
+import {removeInboundVideoTrack} from '@fluxer/voice_engine_v2/src/core/reducers/inboundVideo';
+import {
+	clearWatchedStreamTrack,
+	syncWatchedStreamTrack,
+} from '@fluxer/voice_engine_v2/src/core/reducers/remoteTrackSubscription';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {VoiceEngineV2Participant, VoiceEngineV2Track} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2RoomEvent = Extract<VoiceEngineV2Event, {type: `room.${string}`}>;
 

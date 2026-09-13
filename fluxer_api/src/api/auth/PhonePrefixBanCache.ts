@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {PHONE_PREFIX_BAN_REFRESH_CHANNEL} from '@app/api/constants/PhonePrefixBan';
+import {Logger} from '@app/api/Logger';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {PHONE_PREFIX_BAN_REFRESH_CHANNEL} from '../constants/PhonePrefixBan';
-import {Logger} from '../Logger';
-import {RefreshSubscription} from '../utils/RefreshSubscription';
 
 const BUILT_IN_BANNED_PHONE_PREFIXES: ReadonlyArray<string> = [
 	'+93',

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
+import {createIpInfoChecker, unavailableIpInfoAnonymousResult} from '@app/api/risk/adapters/IpInfoAdapter';
+import {createCurrentBehaviorTestAccountPolicyEvaluator} from '@app/api/test/AccountPolicyTestEvaluator';
 import type {IpInfoLookupContext, IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createCurrentBehaviorTestAccountPolicyEvaluator} from '../../test/AccountPolicyTestEvaluator';
-import {setInjectedAccountPolicyEvaluator} from '../AccountPolicyService';
-import {createIpInfoChecker, unavailableIpInfoAnonymousResult} from '../adapters/IpInfoAdapter';
 
 function ipInfoResult(overrides: Partial<IpInfoLookupResult> = {}): IpInfoLookupResult {
 	return {

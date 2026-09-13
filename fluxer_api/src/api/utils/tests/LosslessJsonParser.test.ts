@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {coerceUnsafeIntegersToStrings, parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
 import {describe, expect, it} from 'vitest';
-import {coerceUnsafeIntegersToStrings, parseJsonPreservingLargeIntegers} from '../LosslessJsonParser';
 
 describe('parseJsonPreservingLargeIntegers', () => {
 	it('keeps safe integers as numbers', () => {

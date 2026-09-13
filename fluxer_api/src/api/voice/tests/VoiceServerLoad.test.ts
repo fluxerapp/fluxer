@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GatewayVoiceStateCounts, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {VoiceServerLoadTracker} from '@app/api/voice/VoiceServerLoad';
 import {describe, expect, it} from 'vitest';
-import type {GatewayVoiceStateCounts, IGatewayService} from '../../infrastructure/IGatewayService';
-import {VoiceServerLoadTracker} from '../VoiceServerLoad';
 
 function createGatewayService(respond: () => Promise<GatewayVoiceStateCounts>): {
 	gatewayService: IGatewayService;

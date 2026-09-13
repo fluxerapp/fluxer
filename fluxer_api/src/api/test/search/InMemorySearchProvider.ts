@@ -1,5 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {IARSubmission} from '@app/api/report/IReportRepository';
+import {convertToSearchableAuditLog} from '@app/api/search/auditlog/AuditLogSearchSerializer';
+import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
+import {convertToSearchableGuild} from '@app/api/search/guild/GuildSearchSerializer';
+import {convertToSearchableGuildMember} from '@app/api/search/guild_member/GuildMemberSearchSerializer';
+import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import {convertToSearchableMessage} from '@app/api/search/message/MessageSearchSerializer';
+import {convertToSearchableReport} from '@app/api/search/report/ReportSearchSerializer';
+import {convertToSearchableUser} from '@app/api/search/user/UserSearchSerializer';
 import type {SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {
 	AuditLogSearchFilters,
@@ -15,27 +36,6 @@ import type {
 	SearchableUser,
 	UserSearchFilters,
 } from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {AdminAuditLog} from '../../admin/IAdminRepository';
-import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '../../BrandedTypes';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {Message} from '../../models/Message';
-import type {User} from '../../models/User';
-import type {IARSubmission} from '../../report/IReportRepository';
-import {convertToSearchableAuditLog} from '../../search/auditlog/AuditLogSearchSerializer';
-import type {GuildDiscoveryContext} from '../../search/guild/GuildSearchSerializer';
-import {convertToSearchableGuild} from '../../search/guild/GuildSearchSerializer';
-import {convertToSearchableGuildMember} from '../../search/guild_member/GuildMemberSearchSerializer';
-import type {IAuditLogSearchService} from '../../search/IAuditLogSearchService';
-import type {IGuildMemberSearchService} from '../../search/IGuildMemberSearchService';
-import type {IGuildSearchService} from '../../search/IGuildSearchService';
-import type {IMessageSearchService} from '../../search/IMessageSearchService';
-import type {IReportSearchService} from '../../search/IReportSearchService';
-import type {ISearchProvider} from '../../search/ISearchProvider';
-import type {IUserSearchService} from '../../search/IUserSearchService';
-import {convertToSearchableMessage} from '../../search/message/MessageSearchSerializer';
-import {convertToSearchableReport} from '../../search/report/ReportSearchSerializer';
-import {convertToSearchableUser} from '../../search/user/UserSearchSerializer';
 
 interface SearchableDocument {
 	id: string;

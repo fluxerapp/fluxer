@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Locales} from '@fluxer/constants/src/Locales';
 import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
 import {createMiddleware} from 'hono/factory';
-import type {HonoEnv} from '../types/HonoEnv';
 
 export const LocaleMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	const acceptLanguage = ctx.req.header('accept-language');

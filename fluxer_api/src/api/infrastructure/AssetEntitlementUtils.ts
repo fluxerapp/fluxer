@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getGlobalLimitConfigSnapshot} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {User} from '@app/api/models/User';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import {getGlobalLimitConfigSnapshot} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {User} from '../models/User';
 
 const ANIMATED_PREFIX = 'a_';
 

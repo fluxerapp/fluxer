@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createAttachmentID, createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
+import {parseMultipartMessageData} from '@app/api/channel/services/message/MessageRequestParser';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
+import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
@@ -29,21 +43,6 @@ import {
 	MessagePurgeResponse,
 	MessageResponseSchema,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createAttachmentID, createChannelID, createMessageID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {parseJsonPreservingLargeIntegers} from '../../utils/LosslessJsonParser';
-import {Validator} from '../../Validator';
-import type {MessageRequest, MessageUpdateRequest} from '../MessageTypes';
-import {normalizeMessageRequestPayload} from '../services/message/MessageRequestCompatibility';
-import {parseMultipartMessageData} from '../services/message/MessageRequestParser';
 
 export function MessageController(app: HonoApp) {
 	app.get(

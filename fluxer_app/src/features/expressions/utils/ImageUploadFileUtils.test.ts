@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	getImageUploadMimeType,
+	isSvgFile,
+	isSvgMimeType,
+	normalizeImageMimeType,
+} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {describe, expect, it} from 'vitest';
-import {getImageUploadMimeType, isSvgFile, isSvgMimeType, normalizeImageMimeType} from './ImageUploadFileUtils';
 
 describe('ImageUploadFileUtils', () => {
 	it('normalizes image MIME type parameters', () => {

@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {ChannelID, GuildID, MessageID, PhoneVerificationToken, UserID} from '../../BrandedTypes';
+import type {ChannelID, GuildID, MessageID, PhoneVerificationToken, UserID} from '@app/api/BrandedTypes';
 import type {
 	AuthSessionRow,
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
 	PhoneTokenRow,
-} from '../../database/types/AuthTypes';
-import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '../../database/types/PaymentTypes';
+} from '@app/api/database/types/AuthTypes';
+import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '@app/api/database/types/PaymentTypes';
 import type {
 	PushSubscriptionRow,
 	RecentMentionRow,
@@ -17,41 +16,42 @@ import type {
 	UserGuildSettingsRow,
 	UserRow,
 	UserSettingsRow,
-} from '../../database/types/UserTypes';
-import {getKVClient} from '../../middleware/ServiceRegistry';
-import type {AuthSession, AuthSessionTombstone} from '../../models/AuthSession';
-import type {Channel} from '../../models/Channel';
-import type {EmailRevertToken} from '../../models/EmailRevertToken';
-import type {EmailVerificationToken} from '../../models/EmailVerificationToken';
-import type {GiftCode} from '../../models/GiftCode';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {PasswordResetToken} from '../../models/PasswordResetToken';
-import type {Payment} from '../../models/Payment';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {ReadState} from '../../models/ReadState';
-import type {RecentMention} from '../../models/RecentMention';
-import type {Relationship} from '../../models/Relationship';
-import type {SavedMessage} from '../../models/SavedMessage';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserNote} from '../../models/UserNote';
-import type {UserSettings} from '../../models/UserSettings';
-import type {VisionarySlot} from '../../models/VisionarySlot';
-import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
-import {ReadStateRepository} from '../../read_state/ReadStateRepository';
-import type {UserDeletionScheduleUpdate} from './IUserAccountRepository';
+} from '@app/api/database/types/UserTypes';
+import {getKVClient} from '@app/api/middleware/ServiceRegistry';
+import type {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
+import type {Channel} from '@app/api/models/Channel';
+import type {EmailRevertToken} from '@app/api/models/EmailRevertToken';
+import type {EmailVerificationToken} from '@app/api/models/EmailVerificationToken';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {PasswordResetToken} from '@app/api/models/PasswordResetToken';
+import type {Payment} from '@app/api/models/Payment';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {ReadState} from '@app/api/models/ReadState';
+import type {RecentMention} from '@app/api/models/RecentMention';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserNote} from '@app/api/models/UserNote';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {VisionarySlot} from '@app/api/models/VisionarySlot';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
 import type {
 	HistoricalDmChannelSummary,
 	ListHistoricalDmChannelOptions,
 	PrivateChannelSummary,
-} from './IUserChannelRepository';
-import type {IUserRepositoryAggregate} from './IUserRepositoryAggregate';
-import {UserAccountRepository} from './UserAccountRepository';
-import {UserAuthRepository} from './UserAuthRepository';
-import {UserChannelRepository} from './UserChannelRepository';
-import {UserContentRepository} from './UserContentRepository';
-import {UserRelationshipRepository} from './UserRelationshipRepository';
-import {UserSettingsRepository} from './UserSettingsRepository';
+} from '@app/api/user/repositories/IUserChannelRepository';
+import type {IUserRepositoryAggregate} from '@app/api/user/repositories/IUserRepositoryAggregate';
+import {UserAccountRepository} from '@app/api/user/repositories/UserAccountRepository';
+import {UserAuthRepository} from '@app/api/user/repositories/UserAuthRepository';
+import {UserChannelRepository} from '@app/api/user/repositories/UserChannelRepository';
+import {UserContentRepository} from '@app/api/user/repositories/UserContentRepository';
+import {UserRelationshipRepository} from '@app/api/user/repositories/UserRelationshipRepository';
+import {UserSettingsRepository} from '@app/api/user/repositories/UserSettingsRepository';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export class UserRepository implements IUserRepositoryAggregate {
 	private accountRepo: UserAccountRepository;

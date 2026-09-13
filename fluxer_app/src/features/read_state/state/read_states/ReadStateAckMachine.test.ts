@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {describe, expect, it} from 'vitest';
 import {
 	createReadStateAckSnapshot,
 	type ReadStateAckInput,
 	resolveReadStateAckDecision,
 	selectReadStateAckDecision,
 	transitionReadStateAckSnapshot,
-} from './ReadStateAckMachine';
+} from '@app/features/read_state/state/read_states/ReadStateAckMachine';
+import {fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
+import {describe, expect, it} from 'vitest';
 
 const BASE_TIMESTAMP = Date.UTC(2024, 0, 1);
 const OLDER_ID = fromTimestamp(BASE_TIMESTAMP + 1000);

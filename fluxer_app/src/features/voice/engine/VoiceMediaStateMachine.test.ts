@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	computeVoiceMediaEffectiveAudioState,
 	createVoiceMediaSnapshot,
 	transitionVoiceMediaSnapshot,
 	type VoiceMediaAudioControls,
 	type VoiceMediaSnapshot,
-} from './VoiceMediaStateMachine';
+} from '@app/features/voice/engine/VoiceMediaStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const releasedPtt: VoiceMediaAudioControls = {
 	pushToTalkActive: true,

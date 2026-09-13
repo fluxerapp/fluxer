@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {trackSearchTask} from '@app/api/search/SearchTaskTracker';
 import type {ISearchAdapter, SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
-import {trackSearchTask} from './SearchTaskTracker';
 
 export abstract class SearchAdapterServiceBase<
 	TFilters,

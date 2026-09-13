@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
+import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
+import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
+import {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
+import {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
+import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
+import {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import {StripeWebhookService} from '@app/api/stripe/services/StripeWebhookService';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {revokeAllAuthSessions} from '../../auth/AuthSessionRevocation';
-import type {ISessionTerminator} from '../../auth/ISessionTerminator';
-import {ProductRegistry} from '../../stripe/ProductRegistry';
-import {AgeVerificationService} from '../../stripe/services/AgeVerificationService';
-import {StripeCheckoutService} from '../../stripe/services/StripeCheckoutService';
-import {StripeGiftService} from '../../stripe/services/StripeGiftService';
-import {StripePremiumService} from '../../stripe/services/StripePremiumService';
-import {StripeRefundService} from '../../stripe/services/StripeRefundService';
-import {StripeSubscriptionService} from '../../stripe/services/StripeSubscriptionService';
-import {StripeWebhookService} from '../../stripe/services/StripeWebhookService';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	body: z.string(),

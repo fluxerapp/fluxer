@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
+import {defineErrorI18nLocaleMessages} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
 
 const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.communication_disabled": "메시지 보내기가 비활성화되었어요.",
