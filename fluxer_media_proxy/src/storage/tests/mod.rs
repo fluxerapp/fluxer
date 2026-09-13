@@ -21,7 +21,16 @@ use axum::response::Response;
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};
 use parking_lot::Mutex;
-use std::{collections::HashMap, path::Path, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    path::Path,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
+use tokio::io::AsyncReadExt as _;
 
 pub(crate) type CapturedRequest = (Method, http::Uri, HeaderMap, Bytes);
 
@@ -286,4 +295,31 @@ fn fake_s3_response(
         );
     }
     response
+}
+
+pub(crate) async fn connection_dropping_front(
+    origin: &str,
+    dropped: usize,
+) -> (String, Arc<AtomicUsize>) {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let endpoint = format!("http://{}", listener.local_addr().unwrap());
+    let origin = origin.trim_start_matches("http://").to_owned();
+    let accepted = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&accepted);
+    tokio::spawn(async move {
+        while let Ok((mut client, _)) = listener.accept().await {
+            let index = counter.fetch_add(1, Ordering::SeqCst);
+            let origin = origin.clone();
+            tokio::spawn(async move {
+                if index < dropped {
+                    let mut request = [0u8; 4096];
+                    let _ = client.read(&mut request).await;
+                    return;
+                }
+                let mut upstream = tokio::net::TcpStream::connect(origin).await.unwrap();
+                let _ = tokio::io::copy_bidirectional(&mut client, &mut upstream).await;
+            });
+        }
+    });
+    (endpoint, accepted)
 }

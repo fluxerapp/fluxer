@@ -53,6 +53,22 @@ pub fn release_buffer_budget(amount: u64) {
     BUFFERED_RETRY_IN_FLIGHT.fetch_sub(amount, Ordering::AcqRel);
 }
 
+pub struct BufferReservation {
+    bytes: u64,
+}
+
+impl BufferReservation {
+    pub fn try_new(bytes: u64, ceiling: u64) -> Option<Self> {
+        try_reserve_buffer_budget(bytes, ceiling).then(|| Self { bytes })
+    }
+}
+
+impl Drop for BufferReservation {
+    fn drop(&mut self) {
+        release_buffer_budget(self.bytes);
+    }
+}
+
 pub fn try_reserve_spool_budget(needed: u64, ceiling: u64) -> bool {
     try_reserve(&SPOOL_IN_FLIGHT_BYTES, needed, ceiling)
 }

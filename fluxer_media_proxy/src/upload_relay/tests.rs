@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::upload_relay::{
-    RelayError, release_buffer_budget,
+    RelayError,
     target::{RelayRequest, query_part_number, valid_content_type, validate_relay_request},
     token::{TokenError, TokenMethod, TokenPayload, decode_token, encode_token, token_from_query},
-    try_reserve_buffer_budget,
+    try_reserve,
 };
 use http::Method;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 const BASE64_URL_ALPHABET: &[u8] =
     b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -124,11 +125,12 @@ fn validates_relay_mismatches() {
 
 #[test]
 fn buffer_budget_is_bounded() {
-    assert!(try_reserve_buffer_budget(4, 8));
-    assert!(!try_reserve_buffer_budget(5, 8));
-    release_buffer_budget(4);
-    assert!(try_reserve_buffer_budget(8, 8));
-    release_buffer_budget(8);
+    let in_flight = AtomicU64::new(0);
+    assert!(try_reserve(&in_flight, 4, 8));
+    assert!(!try_reserve(&in_flight, 5, 8));
+    in_flight.fetch_sub(4, Ordering::AcqRel);
+    assert!(try_reserve(&in_flight, 8, 8));
+    assert!(!try_reserve(&AtomicU64::new(0), 1, 0));
 }
 
 #[test]

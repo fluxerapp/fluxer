@@ -2,18 +2,18 @@
 
 use crate::{
     config::DeploymentMode,
-    external_path, http_headers,
+    external_path, http_client, http_headers,
     server::{
         relay::body::{
-            RelayBodyProgress, RelayBodyStream, RelayBodyStreamRequest, relay_body_chunks,
-            relay_etag, validate_completed_relay_body,
+            RelayBodyProgress, RelayBodyStream, RelayBodyStreamRequest, buffer_relay_body,
+            relay_body_chunks, relay_etag, validate_completed_relay_body,
         },
         response::error::text,
         state::AppState,
     },
     spool::{SpoolError, spool_to_temp},
     storage::{RelayBody, RelayPutOptions},
-    upload_relay::{RelayError, target, token},
+    upload_relay::{BufferReservation, RelayError, target, token},
 };
 use axum::{
     body::Body,
@@ -91,7 +91,7 @@ pub(in crate::server) async fn relay_put(
         return relay_error(err);
     }
     let timeout_ms = relay_upstream_timeout_ms(&app, content_length);
-    let (body, body_length, streamed) = match content_length {
+    let (body, body_length, streamed, _buffer_reservation) = match content_length {
         Some(declared) => {
             let Some(deadline) =
                 tokio::time::Instant::now().checked_add(Duration::from_millis(timeout_ms))
@@ -106,11 +106,34 @@ pub(in crate::server) async fn relay_put(
                 failure: Arc::clone(&failure),
             });
             let progress = stream.progress();
-            (
-                RelayBody::Streamed(relay_body_chunks(stream)),
-                declared,
-                Some(StreamedRelayBody { failure, progress }),
-            )
+            match buffer_reservation(&app, declared) {
+                Some(reservation) => {
+                    let Ok(buffered) = buffer_relay_body(relay_body_chunks(stream), declared).await
+                    else {
+                        return relay_error(
+                            failure
+                                .get()
+                                .copied()
+                                .unwrap_or(RelayError::ClientUploadFailed),
+                        );
+                    };
+                    if let Err(err) = validate_completed_relay_body(&failure, &progress, declared) {
+                        return relay_error(err);
+                    }
+                    (
+                        RelayBody::Buffered(buffered),
+                        declared,
+                        None,
+                        Some(reservation),
+                    )
+                }
+                None => (
+                    RelayBody::Streamed(relay_body_chunks(stream)),
+                    declared,
+                    Some(StreamedRelayBody { failure, progress }),
+                    None,
+                ),
+            }
         }
         None => {
             let body_length_limit = token.mb.min(app.cfg.upload_relay.max_body_bytes);
@@ -140,7 +163,7 @@ pub(in crate::server) async fn relay_put(
                 }
             };
             let (file, spooled_length) = spooled.into_parts();
-            (RelayBody::Spooled(file), spooled_length, None)
+            (RelayBody::Spooled(file), spooled_length, None, None)
         }
     };
     let content_type = resolve_relay_content_type(
@@ -149,19 +172,32 @@ pub(in crate::server) async fn relay_put(
             .get(header::CONTENT_TYPE)
             .and_then(|v| v.to_str().ok()),
     );
-    let options = RelayPutOptions {
+    let upload_id = params.get("uploadId").cloned();
+    let relay_options = |body| RelayPutOptions {
         body,
         content_length: body_length,
-        content_type,
-        upload_id: params.get("uploadId").cloned(),
+        content_type: content_type.clone(),
+        upload_id: upload_id.clone(),
         part_number,
         timeout_ms,
     };
-    match app
+    let (body, replay) = with_replay(body).await;
+    let mut outcome = app
         .store
-        .relay_put_object(&app.cfg.storage.bucket_uploads, &key, options)
-        .await
-    {
+        .relay_put_object(&app.cfg.storage.bucket_uploads, &key, relay_options(body))
+        .await;
+    let retry_body = match &outcome {
+        Err(err) if http_client::is_dropped_connection(err) => replay,
+        _ => None,
+    };
+    if let Some(body) = retry_body {
+        app.metrics.relay().record_retry();
+        outcome = app
+            .store
+            .relay_put_object(&app.cfg.storage.bucket_uploads, &key, relay_options(body))
+            .await;
+    }
+    match outcome {
         Ok(etag) => match relay_success_etag(etag, streamed.as_ref(), body_length) {
             Ok(etag) => {
                 app.metrics.relay().record_success();
@@ -180,6 +216,30 @@ pub(in crate::server) async fn relay_put(
             app.metrics.relay().record_hard_failure();
             relay_error(RelayError::UpstreamS3Error)
         }
+    }
+}
+
+fn buffer_reservation(app: &AppState, declared_length: u64) -> Option<BufferReservation> {
+    if declared_length > app.cfg.upload_relay.buffered_retry_max_bytes {
+        return None;
+    }
+    BufferReservation::try_new(
+        declared_length,
+        app.cfg.upload_relay.buffered_retry_total_bytes,
+    )
+}
+
+async fn with_replay(body: RelayBody) -> (RelayBody, Option<RelayBody>) {
+    match body {
+        RelayBody::Buffered(bytes) => (
+            RelayBody::Buffered(bytes.clone()),
+            Some(RelayBody::Buffered(bytes)),
+        ),
+        RelayBody::Spooled(file) => {
+            let replay = file.try_clone().await.ok().map(RelayBody::Spooled);
+            (RelayBody::Spooled(file), replay)
+        }
+        RelayBody::Streamed(chunks) => (RelayBody::Streamed(chunks), None),
     }
 }
 

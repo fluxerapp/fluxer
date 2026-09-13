@@ -24,7 +24,7 @@ use base64::engine::general_purpose::STANDARD;
 use bytes::Bytes;
 use std::{
     collections::HashMap,
-    sync::{Arc, OnceLock},
+    sync::{Arc, OnceLock, atomic::Ordering},
     time::Duration,
 };
 
@@ -590,6 +590,118 @@ fn relay_etag_degrades_an_unrepresentable_upstream_value_to_an_empty_header() {
     assert_eq!("", relay_etag("\"broken\ntag\"").to_str().unwrap());
     assert_eq!("W/\"weak\"", relay_etag("W/\"weak\"").to_str().unwrap());
     assert_eq!("\"etag-123\"", relay_etag("\"etag-123\"").to_str().unwrap());
+}
+
+struct DroppedConnectionRelay {
+    status: StatusCode,
+    accepted: usize,
+    stored_puts: Vec<Bytes>,
+    metrics: String,
+}
+
+async fn relay_put_through_a_dropped_connection(
+    body: Bytes,
+    declared_length: Option<u64>,
+    buffered_retry_max_bytes: u64,
+) -> DroppedConnectionRelay {
+    let fake = crate::storage::tests::fake_s3().await;
+    let (endpoint, accepted) =
+        crate::storage::tests::connection_dropping_front(fake.endpoint(), 1).await;
+    let tmp = tempfile::tempdir().unwrap();
+    let relay_secret = [7u8; 32];
+    let mut cfg = fake.config(tmp.path());
+    cfg.storage.s3_endpoint = endpoint;
+    cfg.mode = crate::config::DeploymentMode::Upload;
+    cfg.socket_io_timeout_ms = 30_000;
+    cfg.upload_relay.secret = SecretBytes::new(relay_secret.to_vec());
+    cfg.upload_relay.max_body_bytes = 4096;
+    cfg.upload_relay.buffered_retry_max_bytes = buffered_retry_max_bytes;
+    cfg.upload_relay.buffered_retry_total_bytes = 1 << 20;
+    let key = "guild/dropped.bin";
+    let token = relay_test_token(key, &relay_secret);
+    let app = test_app_state(cfg);
+
+    let response = relay_put(
+        State(Arc::clone(&app)),
+        Path(key.to_owned()),
+        Query(HashMap::from([("t".to_owned(), token)])),
+        declared_length
+            .map(content_length_headers)
+            .unwrap_or_default(),
+        Request::builder()
+            .method(Method::PUT)
+            .body(Body::from(body))
+            .unwrap(),
+    )
+    .await;
+
+    DroppedConnectionRelay {
+        status: response.status(),
+        accepted: accepted.load(Ordering::SeqCst),
+        stored_puts: fake
+            .requests()
+            .into_iter()
+            .filter(|(method, ..)| *method == Method::PUT)
+            .map(|(.., sent)| sent)
+            .collect(),
+        metrics: app.metrics.render(),
+    }
+}
+
+#[tokio::test]
+async fn relay_put_retries_a_buffered_body_after_a_dropped_connection() {
+    let body = Bytes::from_static(b"buffered upload bytes");
+
+    let relay =
+        relay_put_through_a_dropped_connection(body.clone(), Some(body.len() as u64), 4096).await;
+
+    assert_eq!(StatusCode::OK, relay.status);
+    assert_eq!(2, relay.accepted);
+    assert_eq!(vec![body], relay.stored_puts);
+    assert!(
+        relay
+            .metrics
+            .contains("fluxer_media_proxy_relay_upstream_retries_total 1"),
+        "{}",
+        relay.metrics
+    );
+}
+
+#[tokio::test]
+async fn relay_put_retries_a_spooled_body_after_a_dropped_connection() {
+    let body = Bytes::from_static(b"spooled upload bytes");
+
+    let relay = relay_put_through_a_dropped_connection(body.clone(), None, 4096).await;
+
+    assert_eq!(StatusCode::OK, relay.status);
+    assert_eq!(2, relay.accepted);
+    assert_eq!(vec![body], relay.stored_puts);
+    assert!(
+        relay
+            .metrics
+            .contains("fluxer_media_proxy_relay_upstream_retries_total 1"),
+        "{}",
+        relay.metrics
+    );
+}
+
+#[tokio::test]
+async fn relay_put_does_not_retry_a_body_too_large_to_buffer() {
+    let body = Bytes::from_static(b"streamed upload bytes");
+
+    let relay =
+        relay_put_through_a_dropped_connection(body.clone(), Some(body.len() as u64), 4).await;
+
+    assert_eq!(StatusCode::BAD_GATEWAY, relay.status);
+    assert_eq!(1, relay.accepted);
+    assert!(relay.stored_puts.is_empty());
+    assert!(
+        relay
+            .metrics
+            .contains("fluxer_media_proxy_relay_upstream_retries_total 0"),
+        "{}",
+        relay.metrics
+    );
 }
 
 #[tokio::test]

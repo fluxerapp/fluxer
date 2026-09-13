@@ -104,7 +104,7 @@ fn retryable_error(error: &MiddlewareError) -> Option<Retryable> {
     }
 }
 
-fn is_dropped_connection(error: &(dyn std::error::Error + 'static)) -> bool {
+pub(crate) fn is_dropped_connection(error: &(dyn std::error::Error + 'static)) -> bool {
     let mut current = Some(error);
     while let Some(error) = current {
         if error

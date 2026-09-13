@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{FakeObject, FakeS3, fake_s3, store};
+use super::{FakeObject, FakeS3, connection_dropping_front, fake_s3, store};
 use crate::{
     byte_budget::ByteBudget,
     range::ByteRange,
@@ -8,14 +8,7 @@ use crate::{
     storage::{ObjectReadRequest, ObjectStreamRequest, StorageError},
 };
 use http::{Method, StatusCode, header};
-use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicUsize, Ordering},
-    },
-    time::Duration,
-};
-use tokio::io::AsyncReadExt as _;
+use std::{sync::atomic::Ordering, time::Duration};
 
 const LAST_MODIFIED: &str = "Wed, 21 Oct 2015 07:28:00 GMT";
 
@@ -391,30 +384,6 @@ async fn a_read_that_keeps_losing_its_connection_reports_the_cause() {
     );
     assert_eq!(3, accepted.load(Ordering::SeqCst));
     assert!(fake.requests().is_empty());
-}
-
-async fn connection_dropping_front(origin: &str, dropped: usize) -> (String, Arc<AtomicUsize>) {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let endpoint = format!("http://{}", listener.local_addr().unwrap());
-    let origin = origin.trim_start_matches("http://").to_owned();
-    let accepted = Arc::new(AtomicUsize::new(0));
-    let counter = Arc::clone(&accepted);
-    tokio::spawn(async move {
-        while let Ok((mut client, _)) = listener.accept().await {
-            let index = counter.fetch_add(1, Ordering::SeqCst);
-            let origin = origin.clone();
-            tokio::spawn(async move {
-                if index < dropped {
-                    let mut request = [0u8; 4096];
-                    let _ = client.read(&mut request).await;
-                    return;
-                }
-                let mut upstream = tokio::net::TcpStream::connect(origin).await.unwrap();
-                let _ = tokio::io::copy_bidirectional(&mut client, &mut upstream).await;
-            });
-        }
-    });
-    (endpoint, accepted)
 }
 
 fn fake_gets(fake: &FakeS3, path: &str) -> usize {
