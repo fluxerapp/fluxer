@@ -133,11 +133,11 @@ const FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR = msg({
 	comment: 'Developer option label for always showing the voice connection status bar.',
 });
 const SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR = msg({
-	message: 'Show profile timezone settings',
+	message: 'Show profile time zone settings',
 	comment: 'Developer option label for exposing the staff-only profile timezone section in profile settings.',
 });
 const SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR = msg({
-	message: 'Expose the staff-only timezone section in profile settings.',
+	message: 'Expose the staff-only time zone section in profile settings.',
 	comment:
 		'Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.',
 });

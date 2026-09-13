@@ -21,7 +21,7 @@ export class DonationMagicLinkService {
 		private emailDnsValidationService: IEmailDnsValidationService,
 	) {}
 
-	async sendMagicLink(email: string): Promise<void> {
+	async sendMagicLink(email: string, locale: string | null = null): Promise<void> {
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(email);
 		if (!hasValidDns) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
@@ -42,7 +42,7 @@ export class DonationMagicLinkService {
 		});
 		await this.donationRepository.createMagicLinkToken(tokenModel);
 		const manageUrl = `${Config.endpoints.apiPublic}/donations/manage?token=${token}`;
-		await this.emailService.sendDonationMagicLink(email, token, manageUrl, expiresAt, null);
+		await this.emailService.sendDonationMagicLink(email, token, manageUrl, expiresAt, locale);
 		Logger.debug({email}, 'Donation magic link sent');
 	}
 

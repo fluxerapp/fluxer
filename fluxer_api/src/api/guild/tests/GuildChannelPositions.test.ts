@@ -197,7 +197,7 @@ describe('Guild Channel Positions', () => {
 		const channels = await getGuildChannels(harness, account.token, guild.id);
 		const general = channels.find((channel) => channel.type === ChannelTypes.GUILD_TEXT && channel.name === 'general');
 		const voiceCategory = channels.find(
-			(channel) => channel.type === ChannelTypes.GUILD_CATEGORY && channel.name === 'Voice Channels',
+			(channel) => channel.type === ChannelTypes.GUILD_CATEGORY && channel.name === 'Voice channels',
 		);
 		const generalVoice = channels.find(
 			(channel) => channel.type === ChannelTypes.GUILD_VOICE && channel.name === 'General',

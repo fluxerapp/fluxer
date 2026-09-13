@@ -120,7 +120,7 @@ export const FeatureComparisonTable = observer(() => {
 				: Limits.getRestrictedValue(perk.limitKey, value)
 			: value;
 		if (perk.unit === 'bytes') {
-			return formatFileSize(resolvedValue);
+			return formatFileSize(i18n.locale, resolvedValue);
 		}
 		return formatNumber(resolvedValue, locale);
 	};

@@ -42,6 +42,8 @@ let trayActionBridgeWebContentsId: number | null = null;
 let trayForcedExitTimer: NodeJS.Timeout | null = null;
 let pendingTrayActions: Array<TrayActionPayload> = [];
 
+const BIDI_FIRST_STRONG_ISOLATE = '\u2068';
+const BIDI_POP_DIRECTIONAL_ISOLATE = '\u2069';
 const MAX_PENDING_TRAY_ACTIONS = 16;
 const LINUX_TRAY_MENU_ACTION_DELAY_MS = 25;
 const TRAY_FORCED_EXIT_DELAY_MS = 5000;
@@ -296,6 +298,10 @@ function runTrayMenuAction(action: () => void): void {
 	timeout.unref?.();
 }
 
+function isolateUserText(value: string): string {
+	return `${BIDI_FIRST_STRONG_ISOLATE}${value}${BIDI_POP_DIRECTIONAL_ISOLATE}`;
+}
+
 function buildTrayMenu(): Menu {
 	const mainWindow = controller?.getMainWindow() ?? null;
 	const visible = Boolean(
@@ -368,7 +374,7 @@ function buildTrayMenu(): Menu {
 		});
 		menuTemplate.push({
 			label: trayState.voiceChannelLabel
-				? t('desktop.tray.disconnectFrom', {channel: trayState.voiceChannelLabel})
+				? t('desktop.tray.disconnectFrom', {channel: isolateUserText(trayState.voiceChannelLabel)})
 				: t('desktop.tray.disconnectVoice'),
 			click: () => runTrayMenuAction(() => dispatchTrayAction({action: 'disconnect-voice'})),
 		});

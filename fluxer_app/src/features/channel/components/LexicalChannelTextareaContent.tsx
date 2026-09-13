@@ -18,8 +18,9 @@ import {ReplyBar} from '@app/features/channel/components/ChannelReplyBar';
 import {ChannelStickersArea} from '@app/features/channel/components/ChannelStickersArea';
 import {
 	CHANNEL_DESCRIPTOR,
-	MESSAGE_2_DESCRIPTOR,
-	MESSAGE_DESCRIPTOR,
+	MESSAGE_CHANNEL_DESCRIPTOR,
+	MESSAGE_GROUP_DESCRIPTOR,
+	MESSAGE_USER_DESCRIPTOR,
 	OPEN_MENU_DESCRIPTOR,
 	YOU_DO_NOT_HAVE_PERMISSION_TO_SEND_MESSAGES_DESCRIPTOR,
 } from '@app/features/channel/components/channel_textarea/shared';
@@ -113,7 +114,6 @@ import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import * as PlaceholderUtils from '@app/features/ui/utils/PlaceholderUtils';
 import Users from '@app/features/user/state/Users';
 import {openVoiceMessageComposerModal} from '@app/features/voice/components/VoiceMessageComposerModal';
 import {flxElementClassName} from '@app/lib/react';
@@ -419,7 +419,7 @@ export const LexicalChannelTextareaContent = observer(
 			}
 			if (mobileLayout.enabled) {
 				const index = pendingMentionConfirmation.mentionType;
-				const title = getMentionTitle(index, pendingMentionConfirmation.roleName);
+				const title = getMentionTitle(i18n, index, pendingMentionConfirmation.roleName);
 				const description = getMentionDescription(
 					index,
 					pendingMentionConfirmation.memberCount,
@@ -916,21 +916,13 @@ export const LexicalChannelTextareaContent = observer(
 			isFocused,
 			handleArrowUpEmpty,
 		});
-		const messageLabel = i18n._(MESSAGE_DESCRIPTOR);
-		const messagePrefix = `${messageLabel} `;
 		const placeholderText = disabled
 			? i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_SEND_MESSAGES_DESCRIPTOR)
 			: channel.guildId != null
-				? PlaceholderUtils.getChannelPlaceholder(
-						`#${channel.name || i18n._(CHANNEL_DESCRIPTOR)}`,
-						messagePrefix,
-						Number.MAX_SAFE_INTEGER,
-					)
-				: PlaceholderUtils.getDMPlaceholder(
-						ChannelDisplayUtils.getDMDisplayName(channel),
-						channel.isDM() ? i18n._(MESSAGE_2_DESCRIPTOR) : messagePrefix,
-						Number.MAX_SAFE_INTEGER,
-					);
+				? i18n._(MESSAGE_CHANNEL_DESCRIPTOR, {channelName: channel.name || i18n._(CHANNEL_DESCRIPTOR)})
+				: channel.isDM()
+					? i18n._(MESSAGE_USER_DESCRIPTOR, {userName: ChannelDisplayUtils.getDMDisplayName(channel)})
+					: i18n._(MESSAGE_GROUP_DESCRIPTOR, {groupName: ChannelDisplayUtils.getDMDisplayName(channel)});
 		useEffect(() => {
 			const unsubscribe = ComponentBus.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
 				const payloadValue = payload === null || payload === undefined ? {} : payload;

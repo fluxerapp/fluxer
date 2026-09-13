@@ -61,6 +61,7 @@ import {describe, expect, it, vi} from 'vitest';
 vi.mock('@app/features/lexical/composer/nodes/ComposerMentionPill', () => ({ComposerMentionPill: () => null}));
 vi.mock('@app/features/lexical/composer/nodes/ComposerCustomEmoji', () => ({ComposerCustomEmoji: () => null}));
 vi.mock('@app/features/lexical/composer/nodes/ComposerStandardEmoji', () => ({ComposerStandardEmoji: () => null}));
+vi.mock('@lingui/core/macro', () => ({msg: (descriptor: unknown) => descriptor}));
 
 const ALICE: MentionSegment = {type: 'user', id: '1', displayText: '@Alice', actualText: '<@1>', start: 0, end: 6};
 

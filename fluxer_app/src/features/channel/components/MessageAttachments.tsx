@@ -194,6 +194,20 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 		sourceChannel.type === ChannelTypes.GROUP_DM ||
 		sourceChannel.type === ChannelTypes.DM_PERSONAL_NOTES
 	) {
+		const sourceInfo = (
+			<span
+				className={styles.forwardedSourceInfo}
+				data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info"
+			>
+				{renderChannelIcon()}
+				<span
+					className={styles.forwardedSourceName}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name"
+				>
+					{displayName}
+				</span>
+			</span>
+		);
 		return (
 			<FocusRing data-flx="channel.message-attachments.forwarded-from-source.focus-ring">
 				<button
@@ -202,29 +216,54 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 					className={styles.forwardedSourceButton}
 					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-button.jump-to-original"
 				>
-					<span
-						className={styles.forwardedSourceLabel}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label"
-					>
-						<Trans>Forwarded from</Trans>
-					</span>
-					<span
-						className={styles.forwardedSourceInfo}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info"
-					>
-						{renderChannelIcon()}
+					<Trans comment="Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.">
 						<span
-							className={styles.forwardedSourceName}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name"
+							className={styles.forwardedSourceLabel}
+							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label"
 						>
-							{displayName}
+							Forwarded from
 						</span>
-					</span>
+						{sourceInfo}
+					</Trans>
 				</button>
 			</FocusRing>
 		);
 	}
 	if (sourceGuild) {
+		const sourceInfo = (
+			<span
+				className={styles.forwardedSourceInfo}
+				data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info--2"
+			>
+				<GuildIcon
+					id={sourceGuild.id}
+					name={sourceGuild.name}
+					icon={sourceGuild.icon}
+					className={styles.forwardedSourceGuildIcon}
+					sizePx={16}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-guild-icon"
+				/>
+				<span
+					className={styles.forwardedSourceName}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--2"
+				>
+					{sourceGuild.name}
+				</span>
+				<CaretRightIcon
+					className={styles.forwardedSourceChevron}
+					weight="bold"
+					size={12}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-chevron"
+				/>
+				{renderChannelIcon()}
+				<span
+					className={styles.forwardedSourceName}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--3"
+				>
+					{displayName}
+				</span>
+			</span>
+		);
 		return (
 			<FocusRing data-flx="channel.message-attachments.forwarded-from-source.focus-ring--2">
 				<button
@@ -233,44 +272,15 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 					className={styles.forwardedSourceButton}
 					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-button.jump-to-original--2"
 				>
-					<span
-						className={styles.forwardedSourceLabel}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label--2"
-					>
-						<Trans>Forwarded from</Trans>
-					</span>
-					<span
-						className={styles.forwardedSourceInfo}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info--2"
-					>
-						<GuildIcon
-							id={sourceGuild.id}
-							name={sourceGuild.name}
-							icon={sourceGuild.icon}
-							className={styles.forwardedSourceGuildIcon}
-							sizePx={16}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-guild-icon"
-						/>
+					<Trans comment="Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.">
 						<span
-							className={styles.forwardedSourceName}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--2"
+							className={styles.forwardedSourceLabel}
+							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label--2"
 						>
-							{sourceGuild.name}
+							Forwarded from
 						</span>
-						<CaretRightIcon
-							className={styles.forwardedSourceChevron}
-							weight="bold"
-							size={12}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-chevron"
-						/>
-						{renderChannelIcon()}
-						<span
-							className={styles.forwardedSourceName}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--3"
-						>
-							{displayName}
-						</span>
-					</span>
+						{sourceInfo}
+					</Trans>
 				</button>
 			</FocusRing>
 		);

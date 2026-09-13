@@ -111,6 +111,6 @@ export interface EmailTemplateVariables {
 	};
 	unban_notification: {
 		username: string;
-		reason: string;
+		reason: string | null;
 	};
 }

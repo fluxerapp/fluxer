@@ -42,7 +42,7 @@ const SEARCH_FOR_CHANNELS_PEOPLE_OR_COMMUNITIES_DESCRIPTOR = msg({
 	comment: 'Placeholder text in the mobile quick switcher search input.',
 });
 const SEARCHING_PEOPLE_DESCRIPTOR = msg({
-	message: 'Searching people...',
+	message: 'Searching for people...',
 	comment: 'Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.',
 });
 const NO_MATCHES_FOUND_DESCRIPTOR = msg({
@@ -54,7 +54,7 @@ const MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Screen-reader live region announcement when exactly one quick switcher result is available.',
 });
 const RESULTS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{resultCount} results available',
+	message: '{resultCount, plural, one {# result available} other {# results available}}',
 	comment: 'Screen-reader live region announcement listing the quick switcher result count.',
 });
 const NO_AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({

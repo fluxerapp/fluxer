@@ -7,6 +7,7 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {
 	DEFAULT_EXPANDED_GROUP_IDS,
+	getTokenGroupLabelDescriptor,
 	getTokenVariableDefinition,
 	humanizeVariableName,
 	TOKEN_GROUPS,
@@ -210,10 +211,11 @@ export const TokensSection: React.FC<TokensSectionProps> = observer(({defaultVar
 				) : (
 					groups.map(({group, vars}) => {
 						const isOpen = searchQuery.length > 0 || ThemeStudioState.isGroupExpanded(group.id);
+						const groupLabelDescriptor = getTokenGroupLabelDescriptor(group.id);
 						return (
 							<StudioSection
 								key={group.id}
-								title={group.fallbackLabel}
+								title={groupLabelDescriptor == null ? group.fallbackLabel : i18n._(groupLabelDescriptor)}
 								count={vars.length}
 								open={isOpen}
 								onToggle={(next) => {

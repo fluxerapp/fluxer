@@ -240,7 +240,7 @@ export const MemeGridItem = observer(
 							<div className={styles.audioMeta} data-flx="channel.pickers.memes.meme-grid-item.audio-meta">
 								{meme.duration && (
 									<div className={styles.audioDuration} data-flx="channel.pickers.memes.meme-grid-item.audio-duration">
-										{formatDuration(meme.duration)}
+										{formatDuration(meme.duration, i18n.locale)}
 									</div>
 								)}
 								<Tooltip text={meme.filename} data-flx="channel.pickers.memes.meme-grid-item.tooltip">

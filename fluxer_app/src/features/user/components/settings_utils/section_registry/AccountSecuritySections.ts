@@ -42,7 +42,7 @@ const MESSAGE_2FA_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TWO_FACTOR_DESCRIPTOR = msg({
-	message: 'Two factor',
+	message: 'Two-factor',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MFA_DESCRIPTOR = msg({

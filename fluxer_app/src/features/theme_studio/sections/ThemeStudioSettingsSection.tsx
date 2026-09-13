@@ -274,7 +274,7 @@ export const SettingsSection: React.FC = observer(() => {
 								<ul className={styles.noticeList} data-flx="theme-studio.settings-section.notice-list--linux">
 									<li data-flx="theme-studio.theme-studio-settings-section.settings-section.li">
 										<Trans>
-											Resize, maximize, and window snapping depend on the compositor. Wayland without client-side
+											Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side
 											decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck.
 										</Trans>
 									</li>

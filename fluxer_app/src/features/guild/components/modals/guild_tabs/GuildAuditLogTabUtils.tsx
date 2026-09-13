@@ -17,6 +17,7 @@ import {
 	shouldHideChangeKey,
 	toChangeShape,
 } from '@app/features/guild/utils/guild_tabs/GuildAuditLogTabUtils';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import type {User} from '@app/features/user/models/User';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
@@ -144,7 +145,7 @@ export const renderValueInline = (value: unknown, guildId: string | undefined, i
 	if (isEmptyString(value)) return renderBoldValue(i18n._(NOTHING_DESCRIPTOR));
 	const scalar = safeScalarString(value, i18n);
 	if (scalar !== null) {
-		if (typeof value === 'number') return renderBoldValue(scalar);
+		if (typeof value === 'number') return renderBoldValue(getCachedNumberFormat(i18n.locale).format(value));
 		if (typeof value === 'boolean') return renderBoldValue(scalar);
 		if (typeof value === 'string' && looksLikeSnowflake(value)) {
 			if (guildId) {

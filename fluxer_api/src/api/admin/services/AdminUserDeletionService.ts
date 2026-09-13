@@ -202,12 +202,7 @@ export class AdminUserDeletionService {
 		});
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		if (user.email) {
-			await emailService.sendUnbanNotification(
-				user.email,
-				user.username,
-				auditLogReason || 'deletion canceled',
-				user.locale,
-			);
+			await emailService.sendUnbanNotification(user.email, user.username, auditLogReason || null, user.locale);
 		}
 		await auditService.createAuditLog({
 			adminUserId,

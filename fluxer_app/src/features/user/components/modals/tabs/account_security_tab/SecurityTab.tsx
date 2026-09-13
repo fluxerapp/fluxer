@@ -67,7 +67,7 @@ const LINKED_DEVICES_DESCRIPTOR = msg({
 	comment: 'Security settings row label for signed-in devices linked to the account.',
 });
 const REVIEW_SIGNED_IN_DEVICES_DESCRIPTOR = msg({
-	message: "Review signed-in devices and sign out sessions you don't recognize.",
+	message: "Review signed-in devices and sign out of sessions you don't recognize.",
 	comment: 'Security settings row description for linked devices.',
 });
 const logger = new Logger('SecurityTab');

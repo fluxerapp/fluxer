@@ -28,7 +28,7 @@ const CANCEL_FAILED_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the generic fallback error modal shown when cancelling a Plutonium subscription fails.',
 });
 const CANCEL_FAILED_MESSAGE_DESCRIPTOR = msg({
-	message: 'Something went wrong while cancelling your subscription. Please try again in a moment.',
+	message: 'Something went wrong while canceling your subscription. Please try again in a moment.',
 	comment: 'Body of the generic fallback error modal shown when cancelling a Plutonium subscription fails.',
 });
 const YOUR_GRACE_PERIOD_HAS_ENDED_DESCRIPTOR = msg({

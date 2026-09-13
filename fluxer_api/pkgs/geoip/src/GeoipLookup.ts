@@ -4,8 +4,6 @@ import {getRegionDisplayName} from '@fluxer/geo_utils/src/RegionFormatting';
 import {getSameIpDecisionKey, isValidIp, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
 import maxmind, {type AsnResponse, type CityResponse, type Reader} from 'maxmind';
 
-export const UNKNOWN_LOCATION = 'Unknown Location';
-
 export interface GeoipResult {
 	countryCode: string | null;
 	normalizedIp: string | null;
@@ -280,11 +278,13 @@ export function resetGeoipReadersForTesting(): void {
 	asnCache.clear();
 }
 
-export function formatGeoipLocation(result: GeoipResult): string | null {
+export function formatGeoipLocation(result: GeoipResult, locale?: string | null): string | null {
 	const parts: Array<string> = [];
 	if (result.city) parts.push(result.city);
 	if (result.region) parts.push(result.region);
-	const countryLabel = result.countryName ?? result.countryCode;
+	const localizedCountry = locale && result.countryCode ? countryDisplayName(result.countryCode, locale) : null;
+	const countryLabel = localizedCountry ?? result.countryName ?? result.countryCode;
 	if (countryLabel) parts.push(countryLabel);
-	return parts.length > 0 ? parts.join(', ') : null;
+	if (parts.length === 0) return null;
+	return new Intl.ListFormat(locale ?? 'en', {style: 'narrow', type: 'unit'}).format(parts);
 }

@@ -17,6 +17,7 @@ import {describe, expect, it, vi} from 'vitest';
 vi.mock('@app/features/lexical/composer/nodes/ComposerMentionPill', () => ({ComposerMentionPill: () => null}));
 vi.mock('@app/features/lexical/composer/nodes/ComposerCustomEmoji', () => ({ComposerCustomEmoji: () => null}));
 vi.mock('@app/features/lexical/composer/nodes/ComposerStandardEmoji', () => ({ComposerStandardEmoji: () => null}));
+vi.mock('@lingui/core/macro', () => ({msg: (descriptor: unknown) => descriptor}));
 
 interface EnterOptions {
 	modifiers?: Partial<Pick<KeyboardEvent, 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'>>;

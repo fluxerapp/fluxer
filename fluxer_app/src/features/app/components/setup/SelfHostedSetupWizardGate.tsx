@@ -741,7 +741,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				password: integrationDraft.smtpPassword,
 				secure: integrationDraft.smtpSecure,
 			});
-			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'SMTP validation failed.'));
+			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'failed'));
 		} catch (error) {
 			logger.error('Failed to validate SMTP configuration', error);
 			setSmtpTestResult(FormUtils.extractErrorMessage(i18n, error));

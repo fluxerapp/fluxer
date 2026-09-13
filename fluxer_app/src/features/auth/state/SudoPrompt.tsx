@@ -6,7 +6,6 @@ import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTyp
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {HttpMethod} from '@app/features/platform/types/TransportTypes';
-import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -96,7 +95,7 @@ function deriveMethodsFromCurrentUser(): AvailableMethods {
 class SudoPrompt {
 	isOpen = false;
 	isVerifying = false;
-	verificationError: string | null = null;
+	verificationFailed = false;
 	rawError: HttpError | null = null;
 	currentRequest: SudoRequestContext | null = null;
 	availableMethods: AvailableMethods = {...EMPTY_METHODS};
@@ -174,7 +173,7 @@ class SudoPrompt {
 
 	private resetPromptState(): void {
 		this.availableMethods = {...EMPTY_METHODS};
-		this.verificationError = null;
+		this.verificationFailed = false;
 		this.rawError = null;
 	}
 
@@ -225,7 +224,7 @@ class SudoPrompt {
 		const resolver = this.resolver;
 		if (resolver) {
 			this.isVerifying = true;
-			this.verificationError = null;
+			this.verificationFailed = false;
 			this.rawError = null;
 			this.resolver = null;
 			this.rejecter = null;
@@ -257,14 +256,14 @@ class SudoPrompt {
 			const responseErr = error instanceof HttpError ? error : null;
 			this.rawError = responseErr;
 			this.mergeFromError(error);
-			this.verificationError = failureMessage(error) ?? 'Verification failed';
+			this.verificationFailed = true;
 		});
 	};
 
 	private cleanup(): void {
 		this.isOpen = false;
 		this.isVerifying = false;
-		this.verificationError = null;
+		this.verificationFailed = false;
 		this.rawError = null;
 		this.currentRequest = null;
 		this.resolver = null;

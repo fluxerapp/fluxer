@@ -24,7 +24,7 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const YOU_CAN_T_ADD_NEW_REACTIONS_WHILE_YOU_DESCRIPTOR = msg({
-	message: "You can't add new reactions while you're on timeout.",
+	message: "You can't add new reactions while you're timed out.",
 	comment: 'Error message in the messaging commands.',
 });
 const logger = new Logger('MessageReactions');

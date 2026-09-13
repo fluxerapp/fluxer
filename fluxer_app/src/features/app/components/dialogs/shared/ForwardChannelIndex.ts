@@ -16,7 +16,7 @@ const GUILD_MESSAGES_DISABLED_DESCRIPTOR = msg({
 	comment: 'Short label in the settings dialog forward channel selection.',
 });
 const MEMBER_TIMED_OUT_DESCRIPTOR = msg({
-	message: "You're on timeout in this community",
+	message: "You're timed out in this community",
 	comment: 'Short label in the settings dialog forward channel selection. Keep the tone plain and specific.',
 });
 const SEND_MESSAGES_PERMISSION_REQUIRED_DESCRIPTOR = msg({

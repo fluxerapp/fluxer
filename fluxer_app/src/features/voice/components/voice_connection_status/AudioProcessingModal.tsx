@@ -7,6 +7,7 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
 import {canResetSliderValue, SliderResetIconButton} from '@app/features/ui/components/slider/SliderResetIconButton';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import styles from '@app/features/voice/components/VoiceConnectionStatus.module.css';
@@ -201,7 +202,7 @@ export const AudioProcessingModal = observer(() => {
 											VoiceSettingsCommands.update({deepFilterNoiseSuppressionLevel: value});
 										}}
 										ariaLabel={i18n._(DEEP_FILTER_STRENGTH_DESCRIPTOR)}
-										ariaValueText={`${Math.round(deepFilterNoiseReductionLevel)}%`}
+										ariaValueText={formatRoundedPercentage(i18n.locale, deepFilterNoiseReductionLevel)}
 										data-flx="voice.voice-connection-status.audio-processing-modal.deep-filter-strength-slider"
 									/>
 								</div>

@@ -145,6 +145,7 @@ const APP_WINDOW_DESCRIPTOR = msg({
 });
 const DISPLAY_DESCRIPTOR = msg({
 	message: 'Display',
+	context: 'display-screen',
 	comment:
 		'Fallback label for a display / monitor card in the screen-share picker when the OS does not give us a display name.',
 });
@@ -230,7 +231,7 @@ const GAMING_DESCRIPTOR = msg({
 	comment: 'Footer summary label for the gaming screen-share quality preset.',
 });
 const SCREENSHARE_DESCRIPTOR = msg({
-	message: 'Screenshare',
+	message: 'Screen share',
 	comment: 'Footer summary label for the text-focused screen-share quality preset.',
 });
 const CUSTOM_DESCRIPTOR = msg({
@@ -248,6 +249,11 @@ const CLEARER_TEXT_DESCRIPTOR = msg({
 const SOURCE_DESCRIPTOR = msg({
 	message: 'Source',
 	comment: 'Footer summary resolution label for native source resolution.',
+});
+const FPS_DESCRIPTOR = msg({
+	message: '{fps} FPS',
+	comment:
+		'Footer summary frame-rate label in the screen share picker. {fps} is the integer frame rate. FPS is a technical token.',
 });
 const DEVICE_AUDIO_MUTED_DESCRIPTOR = msg({
 	message: 'Audio muted',
@@ -1501,7 +1507,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 			activeTab === 'devices' ? deviceSelectionError : null,
 			streamSummaryDescription,
 			getStreamSummaryResolutionLabel(streamSummary.resolution, i18n._(SOURCE_DESCRIPTOR)),
-			`${streamSummary.frameRate}fps`,
+			i18n._(FPS_DESCRIPTOR, {fps: i18n.number(streamSummary.frameRate)}),
 			audioSummary,
 		].filter((detail): detail is string => detail != null);
 		return (

@@ -2,7 +2,7 @@
 
 import {
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
@@ -23,6 +23,7 @@ import {
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -128,7 +129,7 @@ export const EditGroupBottomSheet: React.FC<EditGroupBottomSheetProps> = observe
 					showChannelErrorModal({
 						title: i18n._(ICON_FILE_IS_TOO_LARGE_TITLE_DESCRIPTOR),
 						message: i18n._(ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 						}),
 						dataFlx: 'channel.edit-group-bottom-sheet.icon-file-too-large.generic-error-modal',
 					});
@@ -206,7 +207,7 @@ export const EditGroupBottomSheet: React.FC<EditGroupBottomSheetProps> = observe
 			title: i18n._(CHANGE_ICON_DESCRIPTOR),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: IMAGE_MAX_SIZE_LABEL,
+				maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUploadClick,

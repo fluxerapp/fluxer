@@ -52,8 +52,8 @@
 		"body": "Hello {username},\n\nWe haven't seen any activity on your {product_name} account since {lastActiveDate, date, full}.\n\nIf you don't log in by {deletionDate, date, full} at {deletionDate, time, short}, your account will be permanently deleted due to inactivity.\n\nLog in here:\n{loginUrl}\n\nIf you've used {product_name} recently, please contact our support team right away.\n\n– {product_name} Team"
 	},
 	"ip_authorization": {
-		"subject": "Authorize login from a new IP address",
-		"body": "Hello {username},\n\nWe detected a login attempt to your {product_name} account from a new IP address:\n\nIP address: {ipAddress}\nLocation: {location}\n\nIf this was you, please authorize this IP address by clicking the link below:\n\n{authUrl}\n\nIf you didn't attempt to log in, please change your password right away.\n\nThis link is valid for 30 minutes.\n\n– {product_name} Team"
+		"subject": "Authorise login from a new IP address",
+		"body": "Hello {username},\n\nWe detected a login attempt to your {product_name} account from a new IP address:\n\nIP address: {ipAddress}\nLocation: {location}\n\nIf this was you, please authorise this IP address by clicking the link below:\n\n{authUrl}\n\nIf you didn't attempt to log in, please change your password right away.\n\nThis link is valid for 30 minutes.\n\n– {product_name} Team"
 	},
 	"mfa_backup_codes_view": {
 		"subject": "Confirm access to your {product_name} backup codes",
@@ -61,7 +61,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Confirm your {product_name} password change",
-		"body": "Hello {username},\n\nWe received a request to change the password on your {product_name} account.\n\nTo confirm this change, enter this code in the app:\n\n{code}\n\nThis code expires at {expiresAt}.\n\nIf you didn't request this, someone may have access to your account. Change your password immediately and enable two-factor authentication.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nWe received a request to change the password on your {product_name} account.\n\nTo confirm this change, enter this code in the app:\n\n{code}\n\nThis code expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you didn't request this, someone may have access to your account. Change your password immediately and enable two-factor authentication.\n\n– {product_name} Team"
 	},
 	"password_reset": {
 		"subject": "Reset your {product_name} password",

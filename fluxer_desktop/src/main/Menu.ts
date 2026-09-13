@@ -66,30 +66,40 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 						},
 					},
 					{type: 'separator'},
-					{role: 'quit'},
+					{
+						role: 'quit',
+						label: t('desktop.appMenu.exit'),
+					},
 				],
 	});
 	template.push({
 		label: t('desktop.appMenu.edit'),
 		submenu: [
-			{role: 'undo'},
-			{role: 'redo'},
+			{role: 'undo', label: t('desktop.appMenu.undo')},
+			{role: 'redo', label: t('desktop.appMenu.redo')},
 			{type: 'separator'},
-			{role: 'cut'},
-			{role: 'copy'},
-			{role: 'paste'},
+			{role: 'cut', label: t('desktop.appMenu.cut')},
+			{role: 'copy', label: t('desktop.appMenu.copy')},
+			{role: 'paste', label: t('desktop.appMenu.paste')},
 			...(isMac
 				? [
-						{role: 'pasteAndMatchStyle' as const},
-						{role: 'delete' as const},
-						{role: 'selectAll' as const},
+						{role: 'pasteAndMatchStyle' as const, label: t('desktop.appMenu.pasteAndMatchStyle')},
+						{role: 'delete' as const, label: t('desktop.appMenu.delete')},
+						{role: 'selectAll' as const, label: t('desktop.appMenu.selectAll')},
 						{type: 'separator' as const},
 						{
 							label: t('desktop.appMenu.speech'),
-							submenu: [{role: 'startSpeaking' as const}, {role: 'stopSpeaking' as const}],
+							submenu: [
+								{role: 'startSpeaking' as const, label: t('desktop.appMenu.startSpeaking')},
+								{role: 'stopSpeaking' as const, label: t('desktop.appMenu.stopSpeaking')},
+							],
 						},
 					]
-				: [{role: 'delete' as const}, {type: 'separator' as const}, {role: 'selectAll' as const}]),
+				: [
+						{role: 'delete' as const, label: t('desktop.appMenu.delete')},
+						{type: 'separator' as const},
+						{role: 'selectAll' as const, label: t('desktop.appMenu.selectAll')},
+					]),
 		],
 	});
 	const zoomInHandler = () => {
@@ -101,8 +111,8 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 	template.push({
 		label: t('desktop.appMenu.view'),
 		submenu: [
-			{role: 'reload'},
-			{role: 'forceReload'},
+			{role: 'reload', label: t('desktop.appMenu.reload')},
+			{role: 'forceReload', label: t('desktop.appMenu.forceReload')},
 			{
 				label: t('desktop.appMenu.toggleDeveloperTools'),
 				accelerator: isMac ? 'Alt+Command+I' : 'Ctrl+Shift+I',
@@ -146,12 +156,13 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 				},
 			},
 			{type: 'separator'},
-			{role: 'togglefullscreen'},
+			{role: 'togglefullscreen', label: t('desktop.appMenu.toggleFullScreen')},
 			...(isMac
 				? []
 				: [
 						{
 							role: 'togglefullscreen' as const,
+							label: t('desktop.appMenu.toggleFullScreen'),
 							accelerator: 'Alt+Enter',
 							visible: false,
 						},
@@ -161,8 +172,8 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 	template.push({
 		label: t('desktop.appMenu.window'),
 		submenu: [
-			{role: 'minimize'},
-			{role: 'zoom'},
+			{role: 'minimize', label: t('desktop.appMenu.minimize')},
+			{role: 'zoom', label: t('desktop.appMenu.zoomWindow')},
 			...(isMac
 				? [
 						{type: 'separator' as const},

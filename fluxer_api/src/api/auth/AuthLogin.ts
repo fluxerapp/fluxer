@@ -12,6 +12,7 @@ import {
 	createMfaTicket,
 	createUserID,
 } from '@app/api/BrandedTypes';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
@@ -36,7 +37,7 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {formatGeoipLocation, UNKNOWN_LOCATION} from '@pkgs/geoip/src/GeoipLookup';
+import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import {ms, seconds} from 'itty-time';
 
@@ -88,6 +89,7 @@ export interface IpAuthorizationTicketCache {
 	origin: AuthSession.SessionOrigin;
 	authToken: string;
 	clientLocation: string;
+	locale?: string | null;
 	inviteCode?: string | null;
 	resendUsed?: boolean;
 	createdAt: number;
@@ -128,7 +130,7 @@ export async function resendIpAuthorization(
 		payload.authToken,
 		payload.origin.ip,
 		payload.clientLocation,
-		null,
+		payload.locale ?? null,
 	);
 	const ttl = await cache.ttl(cacheKey);
 	await cache.set(
@@ -283,7 +285,9 @@ export async function login(
 				const ticket = createIpAuthorizationTicket(await AuthUtility.generateSecureToken(ctx));
 				const authToken = createIpAuthorizationToken(await AuthUtility.generateSecureToken(ctx));
 				const geoipResult = await lookupGeoip(clientIp);
-				const clientLocation = formatGeoipLocation(geoipResult) ?? UNKNOWN_LOCATION;
+				const clientLocation =
+					formatGeoipLocation(geoipResult, currentUser.locale) ??
+					getContentMessage('auth.unknown_location', currentUser.locale);
 				const cachePayload: IpAuthorizationTicketCache = {
 					userId: currentUser.id.toString(),
 					email: currentUser.email!,
@@ -291,6 +295,7 @@ export async function login(
 					origin: AuthSession.resolveSessionOrigin(ctx, request),
 					authToken,
 					clientLocation,
+					locale: currentUser.locale,
 					inviteCode: data.invite_code ?? null,
 					resendUsed: false,
 					createdAt: Date.now(),

@@ -15,7 +15,10 @@ import type {
 } from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {i18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 
+const TOO_MANY_REQUESTS_DESCRIPTOR = msg({message: 'Too many requests. Try again later.'});
 const log = new Logger('RestClient');
 const RETRY_BACKOFF_BASE_MS = 1000;
 const RETRY_BACKOFF_CAP_MS = 30_000;
@@ -527,7 +530,7 @@ function synthesizePacingReply<T>(_plan: Plan, hit: {until: number; note?: strin
 		'content-type': 'application/json',
 	};
 	const payload = {
-		message: hit.note ?? 'You are being rate limited.',
+		message: hit.note ?? i18n._(TOO_MANY_REQUESTS_DESCRIPTOR),
 		retry_after: remaining / 1000,
 		global: false,
 	};

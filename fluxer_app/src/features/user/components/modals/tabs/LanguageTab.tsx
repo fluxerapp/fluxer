@@ -33,6 +33,8 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useMemo, useState} from 'react';
 
+const LANGUAGE_FLAG_DESCRIPTOR = msg({message: '{languageName} flag'});
+
 const SYSTEM_LOCALE_DESCRIPTOR = msg({
 	message: 'System locale: {format}',
 	comment: 'Label in the language tab. Preserve {format}.',
@@ -192,74 +194,81 @@ export const LanguageSelector = observer(function LanguageSelector({
 			})),
 		[availableLocales],
 	);
-	const renderLanguageContent = useCallback((option: LanguageSelectOption, selected: boolean, compact = false) => {
-		const isEnGB = option.code === 'en-GB';
-		const flagUrl = EmojiUtils.getEmojiURL(option.flag);
-		const flagImg = flagUrl ? (
-			<img
-				src={flagUrl}
-				alt={`${option.name} flag`}
-				aria-hidden={true}
-				className={styles.flagImage}
-				draggable={false}
-				data-flx="user.language-selector.render-language-content.flag-image"
-			/>
-		) : (
-			<span
-				className={styles.flagImageText}
-				role="img"
-				aria-label={`${option.name} flag`}
-				data-flx="user.language-selector.render-language-content.flag-image-text"
-			>
-				{option.flag}
-			</span>
-		);
-		return (
-			<div
-				className={clsx(
-					styles.languageOption,
-					selected && styles.languageOptionSelected,
-					!compact && styles.languageOptionMenu,
-					compact && styles.languageOptionCompact,
-				)}
-				data-flx="user.language-selector.render-language-content.language-option"
-			>
-				<span className={styles.languageName} data-flx="user.language-selector.render-language-content.language-name">
-					{option.nativeName}
-				</span>
-				<div
-					className={styles.languageDetails}
-					data-flx="user.language-selector.render-language-content.language-details"
+	const renderLanguageContent = useCallback(
+		(option: LanguageSelectOption, selected: boolean, compact = false) => {
+			const isEnGB = option.code === 'en-GB';
+			const flagUrl = EmojiUtils.getEmojiURL(option.flag);
+			const flagLabel = i18n._(LANGUAGE_FLAG_DESCRIPTOR, {languageName: option.name});
+			const flagImg = flagUrl ? (
+				<img
+					src={flagUrl}
+					alt={flagLabel}
+					aria-hidden={true}
+					className={styles.flagImage}
+					draggable={false}
+					data-flx="user.language-selector.render-language-content.flag-image"
+				/>
+			) : (
+				<span
+					className={styles.flagImageText}
+					role="img"
+					aria-label={flagLabel}
+					data-flx="user.language-selector.render-language-content.flag-image-text"
 				>
-					<span className={styles.languageCode} data-flx="user.language-selector.render-language-content.language-code">
-						{option.name}
-					</span>
-					{isEnGB ? (
-						<Tooltip
-							text={() => (
-								<span
-									className={styles.tooltipContent}
-									data-flx="user.language-selector.render-language-content.tooltip-content"
-								>
-									<span
-										className={styles.tooltipText}
-										data-flx="user.language-selector.render-language-content.tooltip-text"
-									>
-										<Trans>For british eyes only...</Trans>
-									</span>
-								</span>
-							)}
-							data-flx="user.language-selector.render-language-content.tooltip"
-						>
-							{flagImg}
-						</Tooltip>
-					) : (
-						flagImg
+					{option.flag}
+				</span>
+			);
+			return (
+				<div
+					className={clsx(
+						styles.languageOption,
+						selected && styles.languageOptionSelected,
+						!compact && styles.languageOptionMenu,
+						compact && styles.languageOptionCompact,
 					)}
+					data-flx="user.language-selector.render-language-content.language-option"
+				>
+					<span className={styles.languageName} data-flx="user.language-selector.render-language-content.language-name">
+						{option.nativeName}
+					</span>
+					<div
+						className={styles.languageDetails}
+						data-flx="user.language-selector.render-language-content.language-details"
+					>
+						<span
+							className={styles.languageCode}
+							data-flx="user.language-selector.render-language-content.language-code"
+						>
+							{option.name}
+						</span>
+						{isEnGB ? (
+							<Tooltip
+								text={() => (
+									<span
+										className={styles.tooltipContent}
+										data-flx="user.language-selector.render-language-content.tooltip-content"
+									>
+										<span
+											className={styles.tooltipText}
+											data-flx="user.language-selector.render-language-content.tooltip-text"
+										>
+											<Trans>For British eyes only...</Trans>
+										</span>
+									</span>
+								)}
+								data-flx="user.language-selector.render-language-content.tooltip"
+							>
+								{flagImg}
+							</Tooltip>
+						) : (
+							flagImg
+						)}
+					</div>
 				</div>
-			</div>
-		);
-	}, []);
+			);
+		},
+		[i18n],
+	);
 	const filterLanguageOption = useCallback((option: ComboboxFilterOption<LanguageSelectOption>, inputValue: string) => {
 		const query = normalizeLanguageSearchText(inputValue.trim());
 		return query.length === 0 || option.data.searchText.includes(query);
@@ -460,8 +469,8 @@ const SpellcheckSettingsSection = observer(() => {
 							data-flx="user.language-tab.spellcheck-settings-section.spellcheck-restart-banner"
 						>
 							<Trans>
-								Reload {PRODUCT_NAME} to fully apply the engine change. (switching between in-app and system spellcheck
-								requires a renderer reload because Electron can't swap providers in-flight.)
+								Reload {PRODUCT_NAME} to fully apply the engine change. Switching between in-app and system spellcheck
+								requires a renderer reload because Electron can't swap providers while running.
 							</Trans>{' '}
 							<Button
 								small

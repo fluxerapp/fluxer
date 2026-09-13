@@ -288,7 +288,7 @@ const EmojiRenamePopoutContent: React.FC<EmojiRenamePopoutContentProps> = ({init
 					data-flx="emoji.emojis.emoji-list-item.emoji-rename-popout-content.rename-popout-hint"
 				>
 					<Trans comment="Help text for custom emoji names. Emoji names may use letters, numbers, and underscores only.">
-						2-32 characters, letters, numbers, underscores.
+						2–32 characters: letters, numbers, and underscores.
 					</Trans>
 				</span>
 			</div>

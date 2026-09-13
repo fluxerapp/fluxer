@@ -24,6 +24,7 @@ interface ReportUserRequestContext<T> {
 
 interface ReportDsaRequestContext<T> {
 	data: T;
+	locale?: string | null;
 }
 
 interface ReportRecord {
@@ -68,8 +69,11 @@ export class ReportRequestService {
 		return this.toReportResponse(report);
 	}
 
-	async sendDsaReportVerificationEmail({data}: ReportDsaRequestContext<DsaReportEmailSendRequest>): Promise<void> {
-		await this.reportService.sendDsaReportVerificationCode(data.email);
+	async sendDsaReportVerificationEmail({
+		data,
+		locale,
+	}: ReportDsaRequestContext<DsaReportEmailSendRequest>): Promise<void> {
+		await this.reportService.sendDsaReportVerificationCode(data.email, locale ?? null);
 	}
 
 	async verifyDsaReportEmail({data}: ReportDsaRequestContext<DsaReportEmailVerifyRequest>): Promise<TicketResponse> {

@@ -11,12 +11,23 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {type ChannelStreamItem, ChannelStreamType} from '@app/features/messaging/utils/MessageGroupingUtils';
 import type {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
-import {plural} from '@lingui/core/macro';
+import {msg} from '@lingui/core/macro';
+import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import React, {useCallback, useEffect, useMemo, useRef} from 'react';
 
 const MESSAGE_SCROLLER_SELECTOR = '[data-fluxer-scroll-container="true"]';
 const SCROLLER_BOTTOM_EPSILON = 1;
+const POTENTIAL_SPAMMER_MESSAGES_DESCRIPTOR = msg({
+	message: '{count, plural, one {# potential spammer message} other {# potential spammer messages}}',
+	comment:
+		'Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.',
+});
+const BLOCKED_MESSAGES_DESCRIPTOR = msg({
+	message: '{count, plural, one {# blocked message} other {# blocked messages}}',
+	comment:
+		'Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.',
+});
 
 interface BlockedMessageGroupsProps {
 	channel: Channel;
@@ -86,6 +97,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		renderMessageWrapper,
 		suppressUnreadIndicator,
 	} = props;
+	const {i18n} = useLingui();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const scrollToBottomFrameRef = useRef<number | null>(null);
 	const messageSummary = useMemo(() => {
@@ -241,20 +253,8 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 				data-flx="channel.blocked-message-groups.toggle.click.button"
 			>
 				{variant === 'spammer'
-					? plural(
-							{count: messageSummary.totalMessageCount},
-							{
-								one: '# potential spammer message',
-								other: '# potential spammer messages',
-							},
-						)
-					: plural(
-							{count: messageSummary.totalMessageCount},
-							{
-								one: '# blocked message',
-								other: '# blocked messages',
-							},
-						)}
+					? i18n._(POTENTIAL_SPAMMER_MESSAGES_DESCRIPTOR, {count: messageSummary.totalMessageCount})
+					: i18n._(BLOCKED_MESSAGES_DESCRIPTOR, {count: messageSummary.totalMessageCount})}
 			</button>
 			{revealed && (
 				<div className={styles.content} data-blocked-messages data-flx="channel.blocked-message-groups.content">

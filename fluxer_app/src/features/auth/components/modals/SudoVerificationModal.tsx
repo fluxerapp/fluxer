@@ -54,6 +54,7 @@ const MESSAGE_6_DIGIT_CODE_DESCRIPTOR = msg({
 	message: '6-digit code',
 	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
 });
+const VERIFICATION_FAILED_DESCRIPTOR = msg({message: 'Verification failed'});
 const logger = new Logger('SudoVerificationModal');
 
 interface FormInputs {
@@ -67,7 +68,7 @@ const isMacAppIdentifierError = (error: unknown): boolean => {
 };
 const SudoVerificationModal: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const {availableMethods, isVerifying, verificationError, rawError, lastUsedMfaMethod} = SudoPrompt;
+	const {availableMethods, isVerifying, verificationFailed, rawError, lastUsedMfaMethod} = SudoPrompt;
 	const form = useForm<FormInputs>({defaultValues: {password: '', totp: ''}});
 	const [webAuthnInFlight, setWebAuthnInFlight] = useState(false);
 	const [webAuthnError, setWebAuthnError] = useState<string | null>(null);
@@ -83,15 +84,15 @@ const SudoVerificationModal: React.FC = observer(() => {
 		autoTriggeredRef.current = false;
 	}, [form]);
 	useEffect(() => {
-		if (!verificationError && !rawError) return;
+		if (!verificationFailed && !rawError) return;
 		const fallback: keyof FormInputs = showTotp ? 'totp' : showPassword ? 'password' : 'password';
 		if (rawError) {
 			FormUtils.handleError(i18n, form, rawError, fallback);
-		} else if (verificationError) {
-			form.setError(fallback, {type: 'server', message: verificationError});
+		} else if (verificationFailed) {
+			form.setError(fallback, {type: 'server', message: i18n._(VERIFICATION_FAILED_DESCRIPTOR)});
 		}
 		setWebAuthnInFlight(false);
-	}, [form, verificationError, rawError, i18n, showPassword, showTotp]);
+	}, [form, verificationFailed, rawError, i18n, i18n.locale, showPassword, showTotp]);
 	const handleWebAuthn = async () => {
 		if (webAuthnInFlight || isVerifying) return;
 		setWebAuthnError(null);

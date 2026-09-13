@@ -10,6 +10,7 @@ import {
 	MUTE_COMMUNITY_DESCRIPTOR,
 	UNMUTE_COMMUNITY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {useMuteSheet} from '@app/features/notification/hooks/useMuteSheet';
 import {useGuildMenuData} from '@app/features/ui/action_menu/items/GuildMenuData';
 import {
@@ -80,6 +81,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 	const guildCounts = GuildCount.getCounts(guild.id);
 	const presenceCount = guildCounts?.onlineCount ?? 0;
 	const memberCount = guildCounts?.memberCount ?? 0;
+	const formattedPresenceCount = getCachedNumberFormat(i18n.locale).format(presenceCount);
 	const headerContent = (
 		<div className={headerStyles.header} data-flx="guild.guild-header-bottom-sheet.div">
 			<div className={headerStyles.avatarWrapper} data-flx="guild.guild-header-bottom-sheet.div--2">
@@ -104,7 +106,7 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 								data-flx="guild.guild-header-bottom-sheet.div--6"
 							/>
 							<span className={headerStyles.statText} data-flx="guild.guild-header-bottom-sheet.span--2">
-								{i18n._(ONLINE_DESCRIPTOR, {presenceCount})}
+								{i18n._(ONLINE_DESCRIPTOR, {presenceCount: formattedPresenceCount})}
 							</span>
 						</div>
 						<div className={headerStyles.stat} data-flx="guild.guild-header-bottom-sheet.div--7">

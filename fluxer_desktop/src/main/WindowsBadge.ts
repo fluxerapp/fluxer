@@ -2,6 +2,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import {getNativeLocale, t} from '@electron/main/MainI18n';
 import type {BrowserWindow, NativeImage} from 'electron';
 import {nativeImage} from 'electron';
 
@@ -9,6 +10,7 @@ const badgeIcons: Array<NativeImage | null> = [];
 
 let hasInit = false;
 let lastIndex: number | null = null;
+let lastDescription: string | null = null;
 let lastCount: number | null = null;
 
 function isSupported(): boolean {
@@ -32,6 +34,14 @@ function ensureInitialized(): void {
 	}
 }
 
+function formatBadgeCount(count: number): string {
+	try {
+		return count.toLocaleString(getNativeLocale());
+	} catch {
+		return String(count);
+	}
+}
+
 function getOverlayIconData(count: number): {
 	index: number | null;
 	description: string;
@@ -39,7 +49,7 @@ function getOverlayIconData(count: number): {
 	if (count === -1) {
 		return {
 			index: 10,
-			description: 'Unread messages',
+			description: t('desktop.badge.unreadMessages'),
 		};
 	}
 	if (count === 0) {
@@ -51,7 +61,7 @@ function getOverlayIconData(count: number): {
 	const index = Math.max(1, Math.min(count, 10)) - 1;
 	return {
 		index,
-		description: `${index} notifications`,
+		description: t('desktop.badge.unreadMessagesCount', {count: formatBadgeCount(count)}),
 	};
 }
 
@@ -63,7 +73,7 @@ function applyOverlay(win: BrowserWindow | null, count: number, force: boolean):
 		return;
 	}
 	const {index, description} = getOverlayIconData(count);
-	if (force || lastIndex !== index) {
+	if (force || lastIndex !== index || lastDescription !== description) {
 		if (index == null) {
 			win.setOverlayIcon(null, description);
 		} else {
@@ -71,6 +81,7 @@ function applyOverlay(win: BrowserWindow | null, count: number, force: boolean):
 			win.setOverlayIcon(icon ?? null, description);
 		}
 		lastIndex = index;
+		lastDescription = description;
 	}
 	lastCount = count;
 }

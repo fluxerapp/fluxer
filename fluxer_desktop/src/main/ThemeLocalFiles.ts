@@ -9,6 +9,7 @@ import {
 } from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {ThemeDirectoryCssFile, ThemeLocalFileReadResult, ThemeLocalFileReference} from '@electron/common/Types';
+import {t} from '@electron/main/MainI18n';
 import {BrowserWindow, dialog, ipcMain} from 'electron';
 
 const logger = createChildLogger('ThemeLocalFiles');
@@ -97,7 +98,7 @@ export function registerThemeLocalFileHandlers(getMainWindow: () => BrowserWindo
 	ipcMain.handle('theme-local-files-pick', async (event): Promise<Array<ThemeLocalFileReference>> => {
 		const parent = BrowserWindow.fromWebContents(event.sender) ?? getMainWindow();
 		const result = await showThemeOpenDialog(parent, {
-			title: 'Add theme files',
+			title: t('desktop.themes.addLocalFiles'),
 			properties: ['openFile', 'multiSelections'],
 		});
 		if (result.canceled) {
@@ -159,7 +160,7 @@ export function registerThemeLocalFileHandlers(getMainWindow: () => BrowserWindo
 	ipcMain.handle('theme-directory-import', async (event): Promise<Array<ThemeDirectoryCssFile>> => {
 		const parent = BrowserWindow.fromWebContents(event.sender) ?? getMainWindow();
 		const result = await showThemeOpenDialog(parent, {
-			title: 'Import theme directory',
+			title: t('desktop.themes.importFolder'),
 			properties: ['openDirectory'],
 		});
 		if (result.canceled || result.filePaths.length === 0) {

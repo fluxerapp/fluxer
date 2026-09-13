@@ -2,6 +2,7 @@
 
 import styles from '@app/features/app/components/shared/FriendSelector.module.css';
 import {SEARCH_FRIENDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedCollator} from '@app/features/i18n/utils/IntlCache';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import {Avatar} from '@app/features/ui/components/Avatar';
@@ -75,18 +76,21 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 		};
 		const relationships = Relationships.getRelationships();
 		const friendUsers = useMemo(() => {
+			const collator = getCachedCollator(i18n.locale || undefined);
 			const friends = relationships.filter(
 				(relationship) => relationship.type === RelationshipTypes.FRIEND && !excludeUserIds.includes(relationship.id),
 			);
 			return friends
 				.map((relationship) => Users.getUser(relationship.id))
 				.filter((user): user is User => Boolean(user))
-				.sort((a, b) => NicknameUtils.getNickname(a, null).localeCompare(NicknameUtils.getNickname(b, null)));
-		}, [relationships, excludeUserIds]);
+				.sort((a, b) => collator.compare(NicknameUtils.getNickname(a, null), NicknameUtils.getNickname(b, null)));
+		}, [relationships, excludeUserIds, i18n.locale]);
 		const activeStickyUserIds = useMemo(() => {
 			return stickyUserIds.filter((id) => selectedUserIds.includes(id));
 		}, [stickyUserIds, selectedUserIds]);
 		const groupedFriends = useMemo(() => {
+			const locale = i18n.locale || undefined;
+			const collator = getCachedCollator(locale);
 			const filtered = friendUsers.filter((user) => {
 				if (!searchQuery) return true;
 				return NicknameUtils.getNickname(user, null).toLowerCase().includes(searchQuery.toLowerCase());
@@ -95,20 +99,20 @@ export const FriendSelector: React.FC<FriendSelectorProps> = observer(
 			const groups: Record<string, Array<User>> = {};
 			filtered.forEach((user) => {
 				if (stickySet.has(user.id)) return;
-				const firstLetter = NicknameUtils.getNickname(user, null)[0].toUpperCase();
+				const firstLetter = NicknameUtils.getNickname(user, null)[0].toLocaleUpperCase(locale);
 				if (!groups[firstLetter]) {
 					groups[firstLetter] = [];
 				}
 				groups[firstLetter].push(user);
 			});
 			const groupArray: Array<FriendGroup> = Object.keys(groups)
-				.sort()
+				.sort((a, b) => collator.compare(a, b))
 				.map((letter) => ({
 					letter,
 					friendIds: groups[letter].map((user) => user.id),
 				}));
 			return groupArray;
-		}, [friendUsers, searchQuery, activeStickyUserIds]);
+		}, [friendUsers, searchQuery, activeStickyUserIds, i18n.locale]);
 		const handleRemovePill = (userId: string) => {
 			onToggle(userId);
 			if (inputRef.current) {

@@ -120,7 +120,7 @@ const TITLE_BAR_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TITLEBAR_DESCRIPTOR = msg({
-	message: 'Titlebar',
+	message: 'Title bar',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const NATIVE_TITLE_BAR_DESCRIPTOR = msg({
@@ -188,7 +188,7 @@ const MINIMIZE_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MINIMISE_DESCRIPTOR = msg({
-	message: 'Minimise',
+	message: 'Minimize',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const HIDE_WINDOW_DESCRIPTOR = msg({

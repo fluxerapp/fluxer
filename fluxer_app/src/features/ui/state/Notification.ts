@@ -54,6 +54,10 @@ const IS_NOW_YOUR_FRIEND_DESCRIPTOR = msg({
 	message: '{displayName} is now your friend!',
 	comment: 'Toast title announcing a newly accepted friend request.',
 });
+const GROUP_DM_DESCRIPTOR = msg({
+	message: 'Group DM',
+	comment: 'Fallback name shown in a desktop notification for a group DM that has no custom name.',
+});
 const logger = new Logger('Notification');
 const shouldManagePushSubscriptions = (): boolean => isInstalledPwa();
 
@@ -335,13 +339,15 @@ class NotificationState {
 					}
 				}
 				break;
-			case ChannelTypes.GROUP_DM:
+			case ChannelTypes.GROUP_DM: {
+				const groupDmName = channel.name || i18n._(GROUP_DM_DESCRIPTOR);
 				if (useMacOSNotificationPresentation) {
-					subtitle = channel.name || 'Group DM';
+					subtitle = groupDmName;
 				} else {
-					title = `${title} (${channel.name || 'Group DM'})`;
+					title = `${title} (${groupDmName})`;
 				}
 				break;
+			}
 		}
 		const body = buildMessageNotificationBody(data.messageRecord, i18n);
 		const notificationUrl =

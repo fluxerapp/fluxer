@@ -278,7 +278,7 @@ const GIFT_REDEEMED_DESCRIPTOR = msg({
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const TITLEBAR_PLATFORM_DESCRIPTOR = msg({
-	message: 'Titlebar platform',
+	message: 'Title bar platform',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const DEVELOPER_OPTION_DESCRIPTOR = msg({

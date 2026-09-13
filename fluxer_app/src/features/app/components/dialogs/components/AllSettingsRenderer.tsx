@@ -265,7 +265,8 @@ export const AllSettingsRenderer: React.FC<AllSettingsRendererProps> = observer(
 			>
 				<div className={styles.resultsHeader} data-flx="app.all-settings-renderer.results-header">
 					<Trans>
-						Found {resultCount} results in {categoryCount} categories
+						Found <Plural value={resultCount} one="# result" other="# results" /> in{' '}
+						<Plural value={categoryCount} one="# category" other="# categories" />
 					</Trans>
 				</div>
 				{searchResults.map((result) => (

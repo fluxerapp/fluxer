@@ -69,7 +69,7 @@ describe('buildPhoneGateEscapeConfirmCopy', () => {
 	it('names every community that will be left', () => {
 		const copy = confirmCopy({guildNames: ['Cat Fans', 'Dog Fans', 'Bird Fans']});
 		expect(copy.title).toBe('Leave 3 communities and set this check aside?');
-		expect(copy.bodyLines[1]).toContain('You will leave Cat Fans, Dog Fans, Bird Fans.');
+		expect(copy.bodyLines[1]).toContain('You will leave Cat Fans, Dog Fans, and Bird Fans.');
 	});
 
 	it('explains kept communities without claiming anything is left', () => {
@@ -82,7 +82,9 @@ describe('buildPhoneGateEscapeConfirmCopy', () => {
 	it('states the leave line before the ownership line', () => {
 		const copy = confirmCopy({guildNames: ['Cat Fans'], ownedGuildNames: ['My Server', 'My Other Server']});
 		expect(copy.bodyLines[1]).toContain('You will leave Cat Fans.');
-		expect(copy.bodyLines[2]).toBe('You stay in My Server, My Other Server. Owners cannot leave their own community.');
+		expect(copy.bodyLines[2]).toBe(
+			'You stay in My Server and My Other Server. Owners cannot leave their own community.',
+		);
 	});
 
 	it('warns about the remaining email step before the support line, which is always last', () => {

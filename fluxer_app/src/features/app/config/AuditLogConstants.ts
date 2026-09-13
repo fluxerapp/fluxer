@@ -179,6 +179,7 @@ const STICKER_DESCRIPTOR = msg({
 });
 const INVITE_DESCRIPTOR = msg({
 	message: 'Invite',
+	context: 'invite-noun',
 	comment: 'Audit log target-type filter label. Filters entries that target an invite link.',
 });
 const WEBHOOK_DESCRIPTOR = msg({

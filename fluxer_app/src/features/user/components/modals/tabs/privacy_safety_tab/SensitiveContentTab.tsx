@@ -18,16 +18,21 @@ import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
 
 const SHOW_DESCRIPTOR = msg({
 	message: 'Show',
-	comment: 'Short label in the sensitive content tab. Keep it concise.',
+	context: 'sensitive-media-filter-level',
+	comment:
+		'Sensitive media filter option meaning the media is shown as-is. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.',
 });
 const BLUR_DESCRIPTOR = msg({
 	message: 'Blur',
-	comment: 'Short label in the sensitive content tab. Keep it concise.',
+	context: 'sensitive-media-filter-level',
+	comment:
+		'Sensitive media filter option meaning the media is blurred until the viewer reveals it. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.',
 });
 const BLOCK_DESCRIPTOR = msg({
 	message: 'Block',
+	context: 'sensitive-media-filter-level',
 	comment:
-		'Button or menu action label in the sensitive content tab. Keep it concise. Keep the tone plain and specific.',
+		'Sensitive media filter option meaning the media is hidden entirely. One of three mutually exclusive values (Show, Blur, Block); keep all three in the same grammatical form.',
 });
 const DIRECT_MESSAGES_FROM_FRIENDS_DESCRIPTOR = msg({
 	message: 'Direct messages from friends',

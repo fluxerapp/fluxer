@@ -4,6 +4,7 @@ import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
 import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
 import type {GuildRow} from '@app/api/database/types/GuildTypes';
@@ -69,11 +70,6 @@ import type {
 	TemplateSerializedGuild,
 } from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-
-const DEFAULT_TEXT_CATEGORY_NAME = 'Text Channels';
-const DEFAULT_VOICE_CATEGORY_NAME = 'Voice Channels';
-const DEFAULT_TEXT_CHANNEL_NAME = 'general';
-const DEFAULT_VOICE_CHANNEL_NAME = 'General';
 
 const GUILD_IMAGE_FIELDS = [
 	{field: 'icon', hash: 'icon_hash', dimensions: null, gate: null},
@@ -266,7 +262,7 @@ export class GuildOperationsService {
 		},
 		_auditLogReason?: string | null,
 	): Promise<GuildResponse> {
-		const {user, data} = params;
+		const {user, data, locale = null} = params;
 		if (user.isBot) {
 			throw new BotsCannotCreateGuildsError();
 		}
@@ -309,11 +305,11 @@ export class GuildOperationsService {
 		let systemChannelId: ChannelID;
 		if (data.template) {
 			const templateBatch = new BatchBuilder();
-			const templateResult = await this.buildTemplateEntities(guildId, data.template, templateBatch);
+			const templateResult = await this.buildTemplateEntities(guildId, data.template, templateBatch, locale);
 			systemChannelId = templateResult.systemChannelId;
 			await templateBatch.executeChunked(50);
 		} else {
-			const defaultResult = await this.buildDefaultEntities(guildId, batch);
+			const defaultResult = await this.buildDefaultEntities(guildId, batch, locale);
 			systemChannelId = defaultResult.systemChannelId;
 		}
 		const guildData: GuildRow = {
@@ -776,6 +772,7 @@ export class GuildOperationsService {
 	private async buildDefaultEntities(
 		guildId: GuildID,
 		batch: BatchBuilder,
+		locale: string | null,
 	): Promise<{
 		systemChannelId: ChannelID;
 	}> {
@@ -828,13 +825,31 @@ export class GuildOperationsService {
 				}),
 			);
 		};
-		addChannel(textCategoryId, ChannelTypes.GUILD_CATEGORY, DEFAULT_TEXT_CATEGORY_NAME, null, 0);
-		addChannel(voiceCategoryId, ChannelTypes.GUILD_CATEGORY, DEFAULT_VOICE_CATEGORY_NAME, null, 1);
-		addChannel(generalChannelId, ChannelTypes.GUILD_TEXT, DEFAULT_TEXT_CHANNEL_NAME, textCategoryId, 0);
+		addChannel(
+			textCategoryId,
+			ChannelTypes.GUILD_CATEGORY,
+			getContentMessage('guild.default_category_text', locale),
+			null,
+			0,
+		);
+		addChannel(
+			voiceCategoryId,
+			ChannelTypes.GUILD_CATEGORY,
+			getContentMessage('guild.default_category_voice', locale),
+			null,
+			1,
+		);
+		addChannel(
+			generalChannelId,
+			ChannelTypes.GUILD_TEXT,
+			getContentMessage('guild.default_channel_text', locale),
+			textCategoryId,
+			0,
+		);
 		addChannel(
 			generalVoiceId,
 			ChannelTypes.GUILD_VOICE,
-			DEFAULT_VOICE_CHANNEL_NAME,
+			getContentMessage('guild.default_channel_voice', locale),
 			voiceCategoryId,
 			0,
 			VOICE_CHANNEL_BITRATE_DEFAULT,
@@ -862,6 +877,7 @@ export class GuildOperationsService {
 		guildId: GuildID,
 		template: TemplateSerializedGuild,
 		batch: BatchBuilder,
+		locale: string | null,
 	): Promise<{
 		systemChannelId: ChannelID;
 	}> {
@@ -1049,7 +1065,7 @@ export class GuildOperationsService {
 					channel_id: systemChannelId,
 					guild_id: guildId,
 					type: ChannelTypes.GUILD_TEXT,
-					name: DEFAULT_TEXT_CHANNEL_NAME,
+					name: getContentMessage('guild.default_channel_text', locale),
 					topic: null,
 					icon_hash: null,
 					url: null,

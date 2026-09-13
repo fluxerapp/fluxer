@@ -106,7 +106,10 @@ export function ReportController(app: HonoApp) {
 		}),
 		Validator('json', DsaReportEmailSendRequest),
 		async (ctx) => {
-			await ctx.get('reportRequestService').sendDsaReportVerificationEmail({data: ctx.req.valid('json')});
+			await ctx.get('reportRequestService').sendDsaReportVerificationEmail({
+				data: ctx.req.valid('json'),
+				locale: ctx.get('requestLocale') ?? null,
+			});
 			return ctx.json({ok: true});
 		},
 	);

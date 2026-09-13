@@ -380,7 +380,7 @@ const JOIN_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const DOUBLE_CLICK_DESCRIPTOR = msg({
-	message: 'Double click',
+	message: 'Double-click',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const DOUBLE_CLICK_2_DESCRIPTOR = msg({
@@ -432,7 +432,7 @@ const ACTIVE_NOW_DESCRIPTOR = msg({
 	comment: 'Settings section label. Also used as a search synonym in the settings search bar.',
 });
 const CONTROL_HOW_ACTIVE_NOW_SURFACES_ACROSS_THE_APP_DESCRIPTOR = msg({
-	message: 'Control how active now surfaces across the app.',
+	message: 'Control how active now appears across the app.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
 const ACTIVITY_DESCRIPTOR = msg({

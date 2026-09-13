@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import type {TextareaAutosizeProps} from '@app/features/platform/utils/AutoResizingTextarea';
 import {TextareaAutosize} from '@app/features/platform/utils/AutoResizingTextarea';
@@ -372,7 +373,9 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 		},
 		forwardedRef,
 	) => {
+		const {i18n} = useLingui();
 		const disableAutofocus = shouldDisableAutofocusOnMobile();
+		const numberFormat = getCachedNumberFormat(i18n.locale);
 		const currentValue = useMemo(() => value || '', [value]);
 		const currentLength = useMemo(() => String(currentValue).length, [currentValue]);
 		const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -437,7 +440,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 							aria-hidden="true"
 							data-flx="ui.form.input.character-counter.character-count"
 						>
-							{currentLength}/{maxLength}
+							{numberFormat.format(currentLength)}/{numberFormat.format(maxLength)}
 						</span>
 						<CharacterCountAnnouncer
 							currentLength={currentLength}
@@ -446,7 +449,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 						/>
 					</>
 				),
-			[showCharacterCount, maxLength, currentLength],
+			[showCharacterCount, maxLength, currentLength, numberFormat],
 		);
 		const labelRight = useMemo(
 			() => (
@@ -487,7 +490,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 												aria-hidden="true"
 												data-flx="ui.form.input.textarea-with-actions.character-count"
 											>
-												{currentLength}/{maxLength}
+												{numberFormat.format(currentLength)}/{numberFormat.format(maxLength)}
 											</span>
 											<CharacterCountAnnouncer
 												currentLength={currentLength}
@@ -511,6 +514,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 				maxLength,
 				characterCountTooltip,
 				currentLength,
+				numberFormat,
 			],
 		);
 		const simpleTextarea = useMemo(

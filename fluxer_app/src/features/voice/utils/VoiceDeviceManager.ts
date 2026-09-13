@@ -142,7 +142,7 @@ function cleanAudioDeviceLabel(rawLabel: string): string {
 	return rawLabel.replace(USB_HARDWARE_ID_SUFFIX, '').trim();
 }
 
-function stripDefaultRouteLabelWrapper(label: string): string {
+function extractDefaultRouteEndpointLabel(label: string): string | null {
 	const windowsMatch = label.match(WINDOWS_DEFAULT_DEVICE_PREFIX);
 	if (windowsMatch?.[1]) {
 		return cleanAudioDeviceLabel(windowsMatch[1]);
@@ -154,7 +154,27 @@ function stripDefaultRouteLabelWrapper(label: string): string {
 	if (label.toLowerCase() === 'default') {
 		return '';
 	}
-	return cleanAudioDeviceLabel(label);
+	return null;
+}
+
+function buildEndpointLabelsByGroupId(devices: ReadonlyArray<AudioDeviceShapeInput>): Map<string, string> {
+	const endpointLabelsByGroupId = new Map<string, string>();
+	for (const device of devices) {
+		const deviceId = device.deviceId.trim();
+		if (deviceId.length === 0 || deviceId === 'default' || deviceId === 'communications') {
+			continue;
+		}
+		if (device.role === 'default' || device.role === 'communications' || device.isDefaultRoute === true) {
+			continue;
+		}
+		const groupId = device.groupId.trim();
+		const label = cleanAudioDeviceLabel(device.label);
+		if (groupId.length === 0 || label.length === 0 || endpointLabelsByGroupId.has(groupId)) {
+			continue;
+		}
+		endpointLabelsByGroupId.set(groupId, label);
+	}
+	return endpointLabelsByGroupId;
 }
 
 function cleanVideoDeviceLabel(rawLabel: string, deviceId: string): string {
@@ -178,12 +198,18 @@ function cleanVideoDeviceLabel(rawLabel: string, deviceId: string): string {
 	return label;
 }
 
-function normalizeAudioDeviceLabel(device: AudioDeviceShapeInput): NormalizedAudioDeviceLabel {
+function normalizeAudioDeviceLabel(
+	device: AudioDeviceShapeInput,
+	endpointLabelsByGroupId?: ReadonlyMap<string, string>,
+): NormalizedAudioDeviceLabel {
 	const deviceId = device.deviceId.trim();
 	const baseLabel = cleanAudioDeviceLabel(device.label);
 	const metadataEndpointLabel = device.endpointLabel ? cleanAudioDeviceLabel(device.endpointLabel) : '';
+	const siblingEndpointLabel = endpointLabelsByGroupId?.get(device.groupId.trim()) ?? '';
 	if (device.role === 'default' || device.isDefaultRoute === true || deviceId === 'default') {
-		const endpointLabel = stripDefaultRouteLabelWrapper(metadataEndpointLabel || baseLabel);
+		const wrappedLabel = metadataEndpointLabel || baseLabel;
+		const endpointLabel =
+			extractDefaultRouteEndpointLabel(wrappedLabel) ?? (siblingEndpointLabel || cleanAudioDeviceLabel(wrappedLabel));
 		return {
 			role: 'default',
 			endpointLabel,
@@ -193,7 +219,8 @@ function normalizeAudioDeviceLabel(device: AudioDeviceShapeInput): NormalizedAud
 	}
 	if (device.role === 'communications' || deviceId === 'communications') {
 		const communicationsMatch = baseLabel.match(WINDOWS_COMMUNICATIONS_DEVICE_PREFIX);
-		const endpointLabel = metadataEndpointLabel || communicationsMatch?.[1]?.trim() || baseLabel;
+		const endpointLabel =
+			metadataEndpointLabel || communicationsMatch?.[1]?.trim() || siblingEndpointLabel || baseLabel;
 		return {
 			role: 'communications',
 			endpointLabel: cleanAudioDeviceLabel(endpointLabel),
@@ -307,13 +334,14 @@ function shapeAudioDevices(
 	devices: ReadonlyArray<AudioDeviceShapeInput>,
 	options: ShapeAudioDevicesOptions = {},
 ): Array<MediaDeviceInfo> {
+	const endpointLabelsByGroupId = buildEndpointLabelsByGroupId(devices);
 	let normalizedDevices = devices
 		.filter(
 			(device) => device.deviceId.trim().length > 0 || device.isDefaultRoute === true || device.role === 'default',
 		)
 		.map((device) => ({
 			device,
-			label: normalizeAudioDeviceLabel(device),
+			label: normalizeAudioDeviceLabel(device, endpointLabelsByGroupId),
 		}));
 	if (
 		options.synthesizeDefaultRoute === true &&
@@ -336,7 +364,10 @@ function shapeAudioDevices(
 				isDefaultRoute: true,
 			};
 			normalizedDevices = [
-				{device: syntheticDefaultDevice, label: normalizeAudioDeviceLabel(syntheticDefaultDevice)},
+				{
+					device: syntheticDefaultDevice,
+					label: normalizeAudioDeviceLabel(syntheticDefaultDevice, endpointLabelsByGroupId),
+				},
 				...normalizedDevices,
 			];
 		}

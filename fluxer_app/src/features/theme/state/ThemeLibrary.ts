@@ -24,9 +24,16 @@ import {
 	setEnabledThemeIds,
 } from '@app/features/theme/utils/ThemeLibraryDb';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {i18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const logger = new Logger('ThemeLibrary');
+const DUPLICATE_THEME_NAME_DESCRIPTOR = msg({
+	message: '{themeName} Copy',
+	comment:
+		'Name given to the copy created by the Duplicate button in the Theme Studio theme library. {themeName} is the name of the theme being duplicated.',
+});
 
 export type ThemeLibraryThemeSource = 'quick_css' | 'css_file' | 'desktop_directory' | 'shared_theme' | 'import';
 
@@ -311,7 +318,7 @@ class ThemeLibrary {
 		const duplicate: ThemeLibraryTheme = {
 			...existing,
 			id: createThemeLibraryId('theme'),
-			name: `${existing.name} Copy`,
+			name: i18n._(DUPLICATE_THEME_NAME_DESCRIPTOR, {themeName: existing.name}),
 			fileName: sanitizeFileName(existing.fileName.replace(/\.css$/i, '-copy.css')),
 			source: 'import',
 			createdAt: now(),

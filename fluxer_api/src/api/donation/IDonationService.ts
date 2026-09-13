@@ -3,7 +3,7 @@
 import type {DonationCurrency} from '@fluxer/schema/src/domains/donation/DonationSchemas';
 
 export interface IDonationService {
-	requestMagicLink(email: string): Promise<void>;
+	requestMagicLink(email: string, locale?: string | null): Promise<void>;
 	validateMagicLinkToken(token: string): Promise<{
 		email: string;
 		stripeCustomerId: string | null;
@@ -14,6 +14,7 @@ export interface IDonationService {
 		currency: DonationCurrency;
 		interval: 'month' | 'year' | null;
 		isBusiness?: boolean;
+		locale?: string | null;
 	}): Promise<string>;
 	createDonorPortalSession(stripeCustomerId: string): Promise<string>;
 }

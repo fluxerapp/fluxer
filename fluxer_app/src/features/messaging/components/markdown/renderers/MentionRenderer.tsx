@@ -40,6 +40,7 @@ const CHANNEL_LINK_DESCRIPTOR = msg({
 	message: 'channel link',
 	comment: 'Short label in the messaging mention renderer. Keep it concise.',
 });
+const UNKNOWN_MENTION_DESCRIPTOR = msg({message: 'unknown-mention'});
 
 interface InteractiveChannelMentionProps {
 	channel: Channel;
@@ -366,7 +367,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 		default:
 			return (
 				<span key={id} data-flx="messaging.markdown.renderers.mention-renderer.span--13">
-					{'<unknown-mention>'}
+					{`<${i18n._(UNKNOWN_MENTION_DESCRIPTOR)}>`}
 				</span>
 			);
 	}

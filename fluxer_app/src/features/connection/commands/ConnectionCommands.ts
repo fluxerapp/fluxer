@@ -28,7 +28,7 @@ const FAILED_TO_INITIATE_CONNECTION_DESCRIPTOR = msg({
 	comment: 'Toast error shown when creating a new account connection fails.',
 });
 const FAILED_TO_START_AUTHORISATION_DESCRIPTOR = msg({
-	message: "Couldn't start {blueskyProviderName} authorisation",
+	message: "Couldn't start {blueskyProviderName} authorization",
 	comment:
 		'Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.',
 });

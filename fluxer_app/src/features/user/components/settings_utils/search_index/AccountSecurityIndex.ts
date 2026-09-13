@@ -48,11 +48,11 @@ const CHANGE_YOUR_PASSWORD_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const TWO_FACTOR_DESCRIPTOR = msg({
-	message: 'Two factor',
+	message: 'Two-factor',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MULTI_FACTOR_DESCRIPTOR = msg({
-	message: 'Multi factor',
+	message: 'Multi-factor',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const AUTHENTICATION_DESCRIPTOR = msg({
@@ -64,7 +64,7 @@ const AUTHENTICATOR_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const ONE_TIME_PASSWORD_DESCRIPTOR = msg({
-	message: 'One time password',
+	message: 'One-time password',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const ENABLE_TWO_FACTOR_AUTHENTICATION_DESCRIPTOR = msg({
@@ -80,7 +80,7 @@ const RECOVERY_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TWO_FACTOR_BACKUP_DESCRIPTOR = msg({
-	message: 'Two factor backup',
+	message: 'Two-factor backup',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const VIEW_OR_REGENERATE_BACKUP_CODES_DESCRIPTOR = msg({

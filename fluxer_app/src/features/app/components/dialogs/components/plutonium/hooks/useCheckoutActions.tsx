@@ -36,7 +36,7 @@ const CUSTOMER_PORTAL_OPEN_FAILED_BODY_DESCRIPTOR = msg({
 });
 const PIX_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		"Pay with {pixPaymentMethod} automático to authorize recurring charges directly from your Brazilian bank. Or choose use card to enter a credit card on {paymentProviderName}'s next screen.",
+		'Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose "Use card" to enter a credit card on {paymentProviderName}\'s next screen.',
 	comment:
 		'Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.',
 });
@@ -46,7 +46,7 @@ const USE_PIX_BUTTON_DESCRIPTOR = msg({
 });
 const UPI_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		"Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose use card to enter a credit card on {paymentProviderName}'s next screen.",
+		'Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose "Use card" to enter a credit card on {paymentProviderName}\'s next screen.',
 	comment:
 		'Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.',
 });
@@ -180,7 +180,7 @@ const COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR = msg({
 });
 const VERIFY_CARD_MODAL_BODY_DESCRIPTOR = msg({
 	message:
-		"{paymentProviderName} will first verify that your card is eligible for localized pricing, then continue you to payment. Return to {productName} once you've completed it.",
+		"{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it.",
 	comment: 'Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.',
 });
 const COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR = msg({

@@ -67,7 +67,7 @@ describe('reaction tooltip catalog', () => {
 		expect(render('nl', 'test', 1)).toBe('test reageerde met :100:');
 		expect(render('nl', 'test en alex', 2)).toBe('test en alex reageerden met :100:');
 		expect(render('pt-BR', 'test', 1)).toBe('test reagiu com :100:');
-		expect(render('de', 'test', 1)).toBe(':100: Reaktion von test');
+		expect(render('de', 'test', 1)).toBe('test hat mit :100: reagiert');
 	});
 
 	it('leaves English as the emoji-first phrasing the design intends', () => {

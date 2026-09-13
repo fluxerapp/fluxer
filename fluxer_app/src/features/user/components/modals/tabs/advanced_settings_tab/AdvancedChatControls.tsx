@@ -50,7 +50,7 @@ const SHOW_MESSAGE_ACTION_BAR_DESCRIPTOR = msg({
 	comment: 'Short label for an advanced message action bar preference.',
 });
 const SHOW_ONLY_MORE_BUTTON_DESCRIPTOR = msg({
-	message: 'Show only more button',
+	message: 'Show only the more button',
 	comment: 'Short label for an advanced message action bar preference.',
 });
 const SHOW_QUICK_REACTIONS_DESCRIPTOR = msg({
@@ -66,7 +66,7 @@ const SHOW_GIF_INDICATOR_DESCRIPTOR = msg({
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_ATTACHMENT_EXPIRY_INDICATOR_DESCRIPTOR = msg({
-	message: 'Show attachment expiry indicator',
+	message: 'Show attachment expiration indicator',
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_DELETE_BUTTON_DESCRIPTOR = msg({

@@ -206,7 +206,7 @@ const UserAreaInner = observer(
 		}, [hasVoiceConnection]);
 		const wrapperClassName = styles.userAreaInnerWrapper;
 		const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-		const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
+		const pushToTalkHint = formatKeyCombo(i18n, pushToTalkCombo);
 		const isPushToTalkEffective = Keybind.isPushToTalkEffective();
 		const microphoneState = selectUserAreaMicrophoneState({
 			effectiveAudioMuted: isMuted,

@@ -19,6 +19,7 @@ import {useEffect, useState} from 'react';
 
 const MUTED_VOICE_BADGE_LABEL = msg({
 	message: 'Muted',
+	context: 'microphone-state',
 	comment: 'Accessible label for the muted voice badge shown on an avatar.',
 });
 const DEAFENED_VOICE_BADGE_LABEL = msg({

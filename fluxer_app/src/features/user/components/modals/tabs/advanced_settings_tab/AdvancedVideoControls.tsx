@@ -78,11 +78,11 @@ const SOFTWARE_QUALITY_DESCRIPTOR = msg({
 	comment: 'Label for an advanced screen-share select. Refers to software video encoder quality bias.',
 });
 const SOFTWARE_QUALITY_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Higher quality can cost more CPU and latency.',
+	message: 'Higher quality can increase CPU usage and latency.',
 	comment: 'Description for a software encoder quality select. Keep AV1 and CPU literal.',
 });
 const SOFTWARE_QUALITY_REALTIME_DESCRIPTOR = msg({
-	message: 'Realtime',
+	message: 'Real-time',
 	comment: 'Option label for a software encoder quality select. Means fastest/lower-latency.',
 });
 const SOFTWARE_QUALITY_BALANCED_DESCRIPTOR = msg({
@@ -122,7 +122,7 @@ const BACKUP_CODEC_DESCRIPTOR = msg({
 	comment: 'Label for an advanced screen-share select. H.264 is a codec name and should stay literal.',
 });
 const BACKUP_CODEC_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Adds H.264 for mixed clients. Uses more encode work.',
+	message: 'Adds H.264 for mixed clients. Requires more encoding.',
 	comment: 'Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.',
 });
 const BACKUP_CODEC_OFF_DESCRIPTOR = msg({

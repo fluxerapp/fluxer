@@ -12,7 +12,7 @@ import {
 import type {VoiceParticipantMenuScreenShareSource} from '@app/features/ui/action_menu/items/VoiceParticipantMenuTypes';
 import {
 	CHANGE_STREAM_DESCRIPTOR,
-	MUTE_DESCRIPTOR,
+	MUTE_PLAYBACK_DESCRIPTOR,
 	PAUSE_OWN_STREAM_PREVIEW_DESCRIPTOR,
 	POP_OUT_STREAM_DESCRIPTOR,
 	SCREEN_SHARE_PRIVACY_DESCRIPTOR,
@@ -30,6 +30,7 @@ import type {
 	MenuSliderType,
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {copyVoiceDiagnostics} from '@app/features/voice/commands/VoiceDiagnosticsCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {changeActiveScreenShare, stopActiveScreenShare} from '@app/features/voice/components/ActiveScreenShareMenu';
@@ -150,7 +151,7 @@ function buildStreamAudioActions(
 					data-flx="ui.action-menu.items.voice-participant-stream-menu-builder.build-stream-audio-actions.local-mute-icon"
 				/>
 			),
-			label: i18n._(MUTE_DESCRIPTOR),
+			label: i18n._(MUTE_PLAYBACK_DESCRIPTOR),
 			checked: isStreamMuted,
 			onChange: (checked: boolean) => {
 				StreamAudioPrefs.setMuted(source.streamKey, checked);
@@ -166,7 +167,7 @@ function buildStreamAudioActions(
 				StreamAudioPrefs.setVolume(source.streamKey, value);
 				MediaEngine.applyLocalAudioPreferencesForUser(userId);
 			},
-			onFormat: (value: number) => `${Math.round(value)}%`,
+			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 			factoryDefaultValue: 100,
 		},
 	];

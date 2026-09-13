@@ -146,6 +146,7 @@ const ALERT_SOUND_DESCRIPTOR = msg({
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MESSAGE_SOUND_DESCRIPTOR = msg({
@@ -229,7 +230,7 @@ const OUTPUT_VOLUME_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PER_SOUND_VOLUME_DESCRIPTOR = msg({
-	message: 'Per sound volume',
+	message: 'Per-sound volume',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const STREAM_DESCRIPTOR = msg({

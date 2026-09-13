@@ -153,6 +153,7 @@ const REGISTRATION_BODY_DESCRIPTOR = msg({
 });
 const REGISTRATION_OPEN_NAME_DESCRIPTOR = msg({
 	message: 'Open',
+	context: 'registration-policy',
 	comment: 'Registration mode option allowing anyone to register.',
 });
 const REGISTRATION_OPEN_DESC_DESCRIPTOR = msg({
@@ -214,7 +215,7 @@ const DISABLE_DM_DESC_DESCRIPTOR = msg({
 });
 
 const MEDIA_EXPIRY_TITLE_DESCRIPTOR = msg({
-	message: 'Attachment expiry',
+	message: 'Attachment expiration',
 	comment: 'Setup wizard media expiry step title.',
 });
 const MEDIA_EXPIRY_BODY_DESCRIPTOR = msg({
@@ -222,11 +223,11 @@ const MEDIA_EXPIRY_BODY_DESCRIPTOR = msg({
 	comment: 'Setup wizard media expiry step body.',
 });
 const MEDIA_EXPIRY_ENABLE_LABEL_DESCRIPTOR = msg({
-	message: 'Enable attachment expiry',
+	message: 'Enable attachment expiration',
 	comment: 'Label for enabling attachment expiry during setup.',
 });
 const MEDIA_EXPIRY_ENABLE_DESC_DESCRIPTOR = msg({
-	message: 'Disabled attachments remain available until manually removed.',
+	message: 'When attachment expiration is disabled, attachments remain available until manually removed.',
 	comment: 'Description for the attachment expiry setup switch.',
 });
 const MEDIA_MIN_SIZE_LABEL_DESCRIPTOR = msg({
@@ -250,7 +251,7 @@ const MEDIA_MAX_LIFETIME_LABEL_DESCRIPTOR = msg({
 	comment: 'Label for attachment decay maximum lifetime.',
 });
 const MEDIA_CURVE_LABEL_DESCRIPTOR = msg({
-	message: 'Expiry curve',
+	message: 'Expiration curve',
 	comment: 'Label for attachment decay curve.',
 });
 const MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR = msg({
@@ -312,7 +313,7 @@ const PREMIUM_MIRROR_NAME_DESCRIPTOR = msg({
 	comment: 'Premium model option that mirrors free and premium tiers.',
 });
 const PREMIUM_MIRROR_DESC_DESCRIPTOR = msg({
-	message: 'Keep Free and Premium tiers. You can customize the tiers later.',
+	message: 'Keep free and premium tiers. You can customize the tiers later.',
 	comment: 'Description for the mirror premium model.',
 });
 const PREMIUM_EVERYONE_NAME_DESCRIPTOR = msg({
@@ -349,7 +350,7 @@ const SUMMARY_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	comment: 'Summary row label for the direct messages choice in the setup wizard.',
 });
 const SUMMARY_ATTACHMENT_EXPIRY_DESCRIPTOR = msg({
-	message: 'Attachment expiry',
+	message: 'Attachment expiration',
 	comment: 'Summary row label for the attachment expiry choice in the setup wizard.',
 });
 const SUMMARY_PREMIUM_DESCRIPTOR = msg({
@@ -1006,6 +1007,10 @@ const SMTP_TEST_OK_DESCRIPTOR = msg({
 	message: 'SMTP connection verified.',
 	comment: 'Success message after validating SMTP credentials.',
 });
+const SMTP_TEST_FAILED_DESCRIPTOR = msg({
+	message: 'SMTP validation failed.',
+	comment: 'Failure message after validating SMTP credentials when the server returns no error detail.',
+});
 const BLUESKY_ENABLED_LABEL_DESCRIPTOR = msg({
 	message: 'Enable Bluesky OAuth',
 	comment: 'Label for enabling Bluesky OAuth in setup.',
@@ -1443,7 +1448,11 @@ export const IntegrationStep = observer(
 											role="status"
 											data-flx="app.setup.setup-wizard-steps.integration-step.integration-status"
 										>
-											{smtpTestResult === 'ok' ? i18n._(SMTP_TEST_OK_DESCRIPTOR) : smtpTestResult}
+											{smtpTestResult === 'ok'
+												? i18n._(SMTP_TEST_OK_DESCRIPTOR)
+												: smtpTestResult === 'failed'
+													? i18n._(SMTP_TEST_FAILED_DESCRIPTOR)
+													: smtpTestResult}
 										</span>
 									)}
 								</div>

@@ -275,7 +275,7 @@ const MALWARE_GUILD_LABEL_DESCRIPTOR = msg({
 	comment: 'IAR modal: rule label.',
 });
 const MALWARE_GUILD_DESC_DESCRIPTOR = msg({
-	message: 'Distributes malware, credential theft, or harmful files.',
+	message: 'Distributes malware, credential-stealing tools, or other harmful files.',
 	comment: 'IAR modal: rule description.',
 });
 const PRIVACY_LABEL_DESCRIPTOR = msg({
@@ -363,7 +363,7 @@ const OTHER_DESC_DESCRIPTOR = msg({
 	comment: 'IAR modal: rule description.',
 });
 const CSAM_SAFETY_NOTE_DESCRIPTOR = msg({
-	message: "If this involves CSAM or exploitation of a minor, send it now and don't reshare the material.",
+	message: "If this involves CSAM or exploitation of a minor, send the report now and don't reshare the material.",
 	comment: 'IAR modal: inline safety note shown for child-safety reports.',
 });
 const SELF_HARM_SAFETY_NOTE_DESCRIPTOR = msg({

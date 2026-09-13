@@ -131,7 +131,7 @@ const SCREEN_SHARE_PREVIEW_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PICTURE_IN_PICTURE_DESCRIPTOR = msg({
-	message: 'Picture in picture',
+	message: 'Picture-in-picture',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PIP_DESCRIPTOR = msg({

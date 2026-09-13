@@ -11,7 +11,6 @@ import type {VideoCodec} from 'livekit-client';
 const logger = new Logger('ScreenShareCodecDiagnostics');
 const DECODER_VERIFICATION_DELAY_MS = 5000;
 const UNKNOWN_DECODER_IMPLEMENTATION = 'software decoder';
-const UNKNOWN_CODEC_LABEL = 'video';
 
 export {isSoftwareVideoImplementation};
 
@@ -35,7 +34,7 @@ interface InboundVideoStatsEntry {
 }
 
 export interface SoftwareVideoDecoderInfo {
-	codec: string;
+	codec: string | null;
 	implementation: string;
 	powerEfficientDecoder: boolean | null;
 }
@@ -53,8 +52,8 @@ function isSoftwareVideoStats(implementation: string | null, powerEfficient: boo
 	return classifyVideoDecoderAcceleration(implementation, powerEfficient) === 'software';
 }
 
-function getCodecLabel(mimeType: string | undefined): string {
-	if (!mimeType) return UNKNOWN_CODEC_LABEL;
+function getCodecLabel(mimeType: string | undefined): string | null {
+	if (!mimeType) return null;
 	return mimeType.replace(/^video\//i, '').toUpperCase();
 }
 

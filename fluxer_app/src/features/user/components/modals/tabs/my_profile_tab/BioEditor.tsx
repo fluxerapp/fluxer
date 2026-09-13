@@ -285,7 +285,7 @@ export const BioEditor = observer(
 					</div>
 				</fieldset>
 				<div id={descriptionId} className={styles.description} data-flx="user.my-profile-tab.bio-editor.description">
-					<Trans>You can use links, emoji, and markdown.</Trans>
+					<Trans>You can use links, emoji, and Markdown.</Trans>
 				</div>
 			</div>
 		);

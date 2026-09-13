@@ -7,6 +7,7 @@ import {
 	PAUSE_DESCRIPTOR,
 	PLAY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {PanZoomSurface} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
@@ -38,10 +39,12 @@ const TOGGLE_CONTROLS_DESCRIPTOR = msg({
 });
 const UNMUTE_DESCRIPTOR = msg({
 	message: 'Unmute',
+	context: 'playback-control-action',
 	comment: 'Mute toggle button label in the mobile video viewer (currently muted).',
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Mute toggle button label in the mobile video viewer (currently unmuted).',
 });
 const VIDEO_PROGRESS_DESCRIPTOR = msg({
@@ -64,11 +67,13 @@ interface MobileVideoViewerProps {
 	onMenuOpen?: () => void;
 }
 
-function formatTime(time: number): string {
-	if (!Number.isFinite(time)) return '0:00';
+function formatTime(locale: string, time: number): string {
+	const minuteFormat = getCachedNumberFormat(locale, {useGrouping: false});
+	const secondFormat = getCachedNumberFormat(locale, {minimumIntegerDigits: 2, useGrouping: false});
+	if (!Number.isFinite(time)) return `${minuteFormat.format(0)}:${secondFormat.format(0)}`;
 	const minutes = Math.floor(time / 60);
 	const seconds = Math.floor(time % 60);
-	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+	return `${minuteFormat.format(minutes)}:${secondFormat.format(seconds)}`;
 }
 
 export const MobileVideoViewer = observer(function MobileVideoViewer({
@@ -423,7 +428,13 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 						aria-hidden="true"
 						data-flx="voice.mobile-video-viewer.seek-feedback"
 					>
-						{`${seekFeedback.direction === 'backward' ? '-' : '+'}${seekFeedback.seconds}s`}
+						{getCachedNumberFormat(i18n.locale, {
+							style: 'unit',
+							unit: 'second',
+							unitDisplay: 'narrow',
+							maximumFractionDigits: 0,
+							signDisplay: 'always',
+						}).format(seekFeedback.direction === 'backward' ? -seekFeedback.seconds : seekFeedback.seconds)}
 					</motion.div>
 				)}
 			</AnimatePresence>
@@ -511,7 +522,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									aria-valuenow={Math.round(displayProgress * 100)}
 									aria-valuemin={0}
 									aria-valuemax={100}
-									aria-valuetext={formatTime(displayCurrentTime)}
+									aria-valuetext={formatTime(i18n.locale, displayCurrentTime)}
 									aria-label={i18n._(VIDEO_PROGRESS_DESCRIPTOR)}
 									data-flx="voice.mobile-video-viewer.progress-bar-wrapper.progress-seek"
 								>
@@ -534,7 +545,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									</div>
 								</div>
 								<span className={styles.timeDisplay} data-flx="voice.mobile-video-viewer.time-display">
-									{formatTime(displayCurrentTime)} / {formatTime(duration)}
+									{formatTime(i18n.locale, displayCurrentTime)} / {formatTime(i18n.locale, duration)}
 								</span>
 							</div>
 						</div>

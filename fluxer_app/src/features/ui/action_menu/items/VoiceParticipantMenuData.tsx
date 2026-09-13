@@ -105,8 +105,9 @@ import {
 	FOCUS_THIS_PERSON_DESCRIPTOR,
 	MENTION_DESCRIPTOR,
 	MESSAGE_DESCRIPTOR,
-	MUTE_DESCRIPTOR,
 	MUTE_DEVICE_DESCRIPTOR,
+	MUTE_MICROPHONE_DESCRIPTOR,
+	MUTE_PLAYBACK_DESCRIPTOR,
 	POP_OUT_CAMERA_DESCRIPTOR,
 	POP_OUT_USER_DESCRIPTOR,
 	PREVIEW_CAMERA_DESCRIPTOR,
@@ -128,6 +129,7 @@ import type {
 	MenuSliderType,
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNicknameModal';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
@@ -411,7 +413,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					MediaEngine.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
-			onFormat: (value: number) => `${Math.round(value)}%`,
+			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 			factoryDefaultValue: 100,
 		});
 		const buildConnectionVolumeSlider = (targetConnectionId: string): MenuSliderType => ({
@@ -425,7 +427,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					MediaEngine.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
-			onFormat: (value: number) => `${Math.round(value)}%`,
+			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 			factoryDefaultValue: 100,
 		});
 		const buildVolumeControls = (targetConnectionId?: string): Array<MenuSliderType> => {
@@ -449,7 +451,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					minValue: 0,
 					maxValue: 200,
 					onChange: (value: number) => EntranceSoundListenerPrefs.setVolume(user.id, value),
-					onFormat: (value: number) => `${Math.round(value)}%`,
+					onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 					factoryDefaultValue: 100,
 				},
 			],
@@ -771,7 +773,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 							data-flx="ui.action-menu.items.voice-participant-menu-data.groups.self-mute-icon--2"
 						/>
 					),
-					label: i18n._(MUTE_DESCRIPTOR),
+					label: i18n._(MUTE_MICROPHONE_DESCRIPTOR),
 					checked: isSelfMuted,
 					onChange: () => {
 						VoiceStateCommands.toggleSelfMute(null);
@@ -889,7 +891,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 							data-flx="ui.action-menu.items.voice-participant-menu-data.menu-assembly.local-mute-icon"
 						/>
 					),
-					label: i18n._(MUTE_DESCRIPTOR),
+					label: i18n._(MUTE_PLAYBACK_DESCRIPTOR),
 					checked: isParticipantLocallyMuted,
 					onChange: (checked: boolean) => {
 						ParticipantVolume.setLocalMute(user.id, checked);

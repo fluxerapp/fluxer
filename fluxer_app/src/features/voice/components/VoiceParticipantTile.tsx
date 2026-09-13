@@ -1287,7 +1287,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 											>
 												-
 											</span>
-											{groupDeviceConnectionCount}
+											{i18n.number(groupDeviceConnectionCount)}
 										</div>
 									</FocusRing>
 								</Tooltip>
@@ -1321,7 +1321,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 											>
 												+
 											</span>
-											{groupHiddenCount}
+											{i18n.number(groupHiddenCount)}
 										</div>
 									</FocusRing>
 								</Tooltip>
@@ -1366,7 +1366,7 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 											data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-icon"
 										/>
 										<span data-flx="voice.voice-participant-tile.voice-participant-tile-inner.viewer-count-text">
-											{viewerUsers.length}
+											{i18n.number(viewerUsers.length)}
 										</span>
 									</div>
 								</StreamSpectatorsPopout>

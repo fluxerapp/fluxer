@@ -81,11 +81,11 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 		};
 		for (const entry of defaults) {
 			if (entry.hideFromDefaults) continue;
-			if (!entryMatchesQuery(entry, normalized)) continue;
+			if (!entryMatchesQuery(i18n, entry, normalized)) continue;
 			map[entry.section].push(entry);
 		}
 		return map;
-	}, [defaults, normalized]);
+	}, [defaults, normalized, i18n, i18n.locale]);
 	const hasAny = DEFAULT_KEYBIND_SECTIONS.some((sectionId) => sections[sectionId].length > 0);
 	if (!hasAny && normalized) {
 		return (

@@ -43,7 +43,12 @@ export interface IEmailService {
 		deletionDate: Date,
 		locale?: string | null,
 	): Promise<boolean>;
-	sendUnbanNotification(email: string, username: string, reason: string, locale?: string | null): Promise<boolean>;
+	sendUnbanNotification(
+		email: string,
+		username: string,
+		reason: string | null,
+		locale?: string | null,
+	): Promise<boolean>;
 	sendScheduledDeletionNotification(
 		email: string,
 		username: string,

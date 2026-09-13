@@ -27,7 +27,7 @@ const OFF_DESCRIPTOR = msg({
 		'Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).',
 });
 const SLOWMODE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Wait between messages. "{bypassSlowmodePermissionLabel}" can bypass it.',
+	message: 'Wait between messages. Members with "{bypassSlowmodePermissionLabel}" can bypass this.',
 	comment:
 		'Description under the slowmode slider in channel settings. bypassSlowmodePermissionLabel is the localized Bypass Slowmode permission name.',
 });

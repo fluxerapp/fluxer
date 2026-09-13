@@ -26,8 +26,8 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo, useState} from 'react';
 
-const FAILED_TO_LOAD_DESCRIPTOR = msg({
-	message: '(failed to load)',
+const EMOJI_FAILED_TO_LOAD_DESCRIPTOR = msg({
+	message: '{emojiName} (failed to load)',
 	comment: 'Error message in the messaging emoji renderer.',
 });
 
@@ -216,7 +216,7 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 			<img
 				draggable={false}
 				className={className}
-				alt={hasFailed ? `${emojiData.name} ${i18n._(FAILED_TO_LOAD_DESCRIPTOR)}` : emojiData.name}
+				alt={hasFailed ? i18n._(EMOJI_FAILED_TO_LOAD_DESCRIPTOR, {emojiName: emojiData.name}) : emojiData.name}
 				src={emojiUrl}
 				style={hasFailed ? FAILED_EMOJI_STYLE : undefined}
 				data-message-id={messageId}

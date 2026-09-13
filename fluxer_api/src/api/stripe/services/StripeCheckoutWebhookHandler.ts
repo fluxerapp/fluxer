@@ -897,6 +897,7 @@ export class StripeCheckoutWebhookHandler {
 			Logger.error({sessionId: session.id}, 'Donation checkout missing customer');
 			throw new StripeError('Donation checkout missing customer id');
 		}
+		const donationLocale = session.metadata?.donation_locale ?? null;
 		const isRecurring = session.mode === 'subscription';
 		const subscriptionId = extractId(session.subscription);
 		if (isRecurring && !subscriptionId) {
@@ -952,7 +953,7 @@ export class StripeCheckoutWebhookHandler {
 				recurringCurrency,
 				recurringInterval,
 				manageUrl,
-				null,
+				donationLocale,
 			);
 		} else {
 			const oneTimeAmountCents = session.amount_total;
@@ -970,7 +971,7 @@ export class StripeCheckoutWebhookHandler {
 				oneTimeCurrency,
 				'once',
 				manageUrl,
-				null,
+				donationLocale,
 			);
 		}
 		Logger.info(

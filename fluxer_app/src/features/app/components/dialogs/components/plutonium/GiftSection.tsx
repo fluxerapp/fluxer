@@ -22,7 +22,7 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 const MESSAGE_1_YEAR_GIFT_DESCRIPTOR = msg({
-	message: '1 year gift',
+	message: '1-year gift',
 	comment: 'Short label in the Plutonium gift section. Keep the tone plain and specific.',
 });
 const SAVE_17_DESCRIPTOR = msg({
@@ -30,7 +30,7 @@ const SAVE_17_DESCRIPTOR = msg({
 	comment: 'Short label in the Plutonium gift section. Keep the tone plain and specific.',
 });
 const MESSAGE_1_MONTH_GIFT_DESCRIPTOR = msg({
-	message: '1 month gift',
+	message: '1-month gift',
 	comment: 'Short label in the Plutonium gift section. Keep the tone plain and specific.',
 });
 

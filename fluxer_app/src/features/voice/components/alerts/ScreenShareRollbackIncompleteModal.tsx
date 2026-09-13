@@ -11,7 +11,7 @@ const TITLE_DESCRIPTOR = msg({
 });
 const BODY_DESCRIPTOR = msg({
 	message:
-		'Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Use Stop Sharing or disconnect from the call before continuing.',
+		'Screen sharing failed, but Fluxer could not confirm that every capture path stopped. Stop sharing or disconnect from the call before continuing.',
 	comment: 'Body shown when a failed screen share could not be fully stopped.',
 });
 

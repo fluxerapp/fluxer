@@ -85,7 +85,7 @@ const SCREENSHARE_DESCRIPTOR = msg({
 	comment: 'Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.',
 });
 const RAZOR_SHARP_TEXT_AT_NATIVE_SOURCE_15_FPS_DESCRIPTOR = msg({
-	message: 'Razor-sharp text at native source, 15 FPS',
+	message: 'Razor-sharp text at native source resolution, 15 FPS',
 	comment:
 		'Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.',
 });

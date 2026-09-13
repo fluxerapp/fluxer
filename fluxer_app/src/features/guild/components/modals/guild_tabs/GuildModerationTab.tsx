@@ -68,7 +68,7 @@ const VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR = msg({
 		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
 });
 const VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR = msg({
-	message: "Requires a verified email address, and an account that's at least 5 minutes old.",
+	message: "Requires a verified email address and an account that's at least 5 minutes old.",
 	comment: 'Helper text for the "Medium" member verification level option in the community moderation settings tab.',
 });
 const VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR = msg({
@@ -313,7 +313,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 							{isDiscoverable && (
 								<p data-flx="guild.guild-tabs.guild-moderation-tab.p--3">
 									<Trans>
-										Communities listed in Discovery require at least verified email. None cannot be selected while
+										Communities listed in Discovery require at least email verification. None cannot be selected while
 										Discovery is enabled.
 									</Trans>
 								</p>
@@ -354,8 +354,8 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--2"
 							>
 								<Trans>
-									Communities listed in Discovery are required to scan all members. This setting cannot be changed while
-									Discovery is enabled.
+									Communities listed in Discovery are required to scan messages from all members. This setting cannot be
+									changed while Discovery is enabled.
 								</Trans>
 							</p>
 						)}
@@ -464,7 +464,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--4"
 							>
 								<Trans>
-									Require two-factor authentication for moderators before they can ban, kick, timeout, or remove
+									Require two-factor authentication for moderators before they can ban, kick, time out, or remove
 									messages.
 								</Trans>
 							</p>

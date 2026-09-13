@@ -9,10 +9,10 @@ import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {useMemo} from 'react';
 
-const FPS_DESCRIPTOR = msg({
-	message: '{fps} FPS',
+const RESOLUTION_WITH_FPS_DESCRIPTOR = msg({
+	message: '{resolution} {fps} FPS',
 	comment:
-		'Compact frame-rate badge on the stream info pill. {fps} is the integer frame rate; FPS is a technical token.',
+		'Compact stream info pill label. {resolution} is a technical token such as 1080p or 4K. {fps} is the frame rate. FPS is a technical token.',
 });
 
 type ResolutionHeight = 240 | 480 | 720 | 1080 | 1440 | 2160;
@@ -69,14 +69,10 @@ export function StreamInfoPill({
 				return '720p';
 		}
 	}, [info.height]);
-	const fpsText = useMemo(
-		() => (Number.isFinite(info.fps) && info.fps > 0 ? i18n._(FPS_DESCRIPTOR, {fps: info.fps}) : ''),
-		[info.fps, i18n.locale],
-	);
-	const labelText = useMemo(
-		() => (fpsText ? `${resolutionText} ${fpsText}` : resolutionText),
-		[fpsText, resolutionText],
-	);
+	const labelText = useMemo(() => {
+		if (!Number.isFinite(info.fps) || info.fps <= 0) return resolutionText;
+		return i18n._(RESOLUTION_WITH_FPS_DESCRIPTOR, {resolution: resolutionText, fps: i18n.number(info.fps)});
+	}, [info.fps, i18n.locale, resolutionText]);
 	return (
 		<div
 			className={clsx(styles.container, tone === 'voice_tile' && styles.containerOnTile, className)}

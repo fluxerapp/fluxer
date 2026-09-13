@@ -38,7 +38,7 @@ const UPDATE_TIMEOUT_DESCRIPTOR = msg({
 	comment: 'Short label in the timeout member sheet. Keep it concise.',
 });
 const TIMEOUT_2_DESCRIPTOR = msg({
-	message: 'Timeout {tag}',
+	message: 'Time out {tag}',
 	comment: 'Short label in the timeout member sheet. Keep it concise. Preserve {tag}; it is inserted by code.',
 });
 const logger = new Logger('TimeoutMemberSheet');

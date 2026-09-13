@@ -6,6 +6,8 @@ import {
 	type SlashSlotPlaceholderNode,
 } from '@app/features/lexical/composer/nodes/SlashSlotPlaceholderNode';
 import type {SlashSlotType, SlashSlotValidationError} from '@app/features/lexical/composer/slashSlotValidation';
+import {i18n, type MessageDescriptor} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import {
 	$applyNodeReplacement,
 	$isTextNode,
@@ -16,6 +18,95 @@ import {
 	type SerializedElementNode,
 	type Spread,
 } from 'lexical';
+
+const OPTION_TYPE_LABEL_DESCRIPTORS: Record<SlashSlotType, MessageDescriptor> = {
+	string: msg({
+		message: 'Text',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes free text.',
+	}),
+	user: msg({
+		message: 'User',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes a user.',
+	}),
+	channel: msg({
+		message: 'Channel',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes a channel.',
+	}),
+	role: msg({
+		message: 'Role',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes a role.',
+	}),
+	integer: msg({
+		message: 'Integer',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes a whole number.',
+	}),
+	number: msg({
+		message: 'Number',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes a number.',
+	}),
+	boolean: msg({
+		message: 'True or false',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument that takes true or false.',
+	}),
+	choice: msg({
+		message: 'Choice',
+		comment: 'Slash-command argument type name, spoken by screen readers for an argument picked from a fixed list.',
+	}),
+};
+const VALIDATION_ERROR_DESCRIPTORS: Record<SlashSlotValidationError, MessageDescriptor> = {
+	required: msg({
+		message: 'Required value missing',
+		comment: 'Reason spoken by screen readers when a required slash-command argument in the message box is empty.',
+	}),
+	'unknown-user': msg({
+		message: 'Unknown user',
+		comment: 'Reason spoken by screen readers when a slash-command argument does not match any user.',
+	}),
+	'unknown-role': msg({
+		message: 'Unknown role',
+		comment: 'Reason spoken by screen readers when a slash-command argument does not match any role.',
+	}),
+	'unknown-channel': msg({
+		message: 'Unknown channel',
+		comment: 'Reason spoken by screen readers when a slash-command argument does not match any channel.',
+	}),
+	'not-an-integer': msg({
+		message: 'Not a whole number',
+		comment: 'Reason spoken by screen readers when a slash-command argument is not a whole number.',
+	}),
+	'not-a-number': msg({
+		message: 'Not a number',
+		comment: 'Reason spoken by screen readers when a slash-command argument is not a number.',
+	}),
+	'not-a-boolean': msg({
+		message: 'Not true or false',
+		comment: 'Reason spoken by screen readers when a slash-command argument is not true or false.',
+	}),
+	'invalid-choice': msg({
+		message: 'Not one of the choices',
+		comment: 'Reason spoken by screen readers when a slash-command argument is not one of the listed choices.',
+	}),
+};
+const REQUIRED_OPTION_LABEL_DESCRIPTOR = msg({
+	message: '{optionName}, required {optionType} option',
+	comment:
+		'Screen-reader label for a required slash-command argument slot in the message box. {optionName} is the argument name defined by the command, {optionType} is the translated argument type name such as Text or User.',
+});
+const OPTIONAL_OPTION_LABEL_DESCRIPTOR = msg({
+	message: '{optionName}, optional {optionType} option',
+	comment:
+		'Screen-reader label for an optional slash-command argument slot in the message box. {optionName} is the argument name defined by the command, {optionType} is the translated argument type name such as Text or User.',
+});
+const CHOICES_DESCRIPTOR = msg({
+	message: 'Choices: {choiceList}',
+	comment:
+		'Screen-reader description listing the values a slash-command argument accepts. {choiceList} is a comma-separated list of choice names defined by the command.',
+});
+const INVALID_DESCRIPTOR = msg({
+	message: 'Invalid: {reason}',
+	comment:
+		'Screen-reader description appended when a slash-command argument in the message box fails validation. {reason} is the translated reason, such as Unknown user.',
+});
 
 export type SlashSlotValidity = 'neutral' | 'valid' | 'invalid';
 
@@ -242,7 +333,10 @@ export class SlashSlotNode extends ElementNode {
 
 	getAccessibleLabel(): string {
 		const latest = this.getLatest();
-		return `${latest.__optionName}, ${latest.__required ? 'required' : 'optional'} ${latest.__optionType} option`;
+		return i18n._(latest.__required ? REQUIRED_OPTION_LABEL_DESCRIPTOR : OPTIONAL_OPTION_LABEL_DESCRIPTOR, {
+			optionName: latest.__optionName,
+			optionType: i18n._(OPTION_TYPE_LABEL_DESCRIPTORS[latest.__optionType]),
+		});
 	}
 
 	getAccessibleDescription(): string {
@@ -252,10 +346,10 @@ export class SlashSlotNode extends ElementNode {
 			parts.push(latest.__description);
 		}
 		if (latest.__choices.length > 0) {
-			parts.push(`Choices: ${latest.__choices.map((choice) => choice.name).join(', ')}`);
+			parts.push(i18n._(CHOICES_DESCRIPTOR, {choiceList: latest.__choices.map((choice) => choice.name).join(', ')}));
 		}
 		if (latest.__validity === 'invalid' && latest.__validationError != null) {
-			parts.push(`Invalid: ${latest.__validationError}`);
+			parts.push(i18n._(INVALID_DESCRIPTOR, {reason: i18n._(VALIDATION_ERROR_DESCRIPTORS[latest.__validationError])}));
 		}
 		return parts.join('. ');
 	}

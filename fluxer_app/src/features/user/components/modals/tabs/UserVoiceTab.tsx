@@ -10,6 +10,7 @@ import {
 	MACOS_SYSTEM_SETTINGS_NAME,
 	PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
 import Keybind, {getDefaultKeybind} from '@app/features/input/state/InputKeybind';
 import {openMacPermissionsModal} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
@@ -69,7 +70,7 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useMemo} from 'react';
+import {useCallback, useEffect, useMemo} from 'react';
 
 const RELEASE_DELAY_DESCRIPTOR = msg({
 	message: 'Release delay',
@@ -89,7 +90,8 @@ const DIRECT_INPUT_DESCRIPTION_DESCRIPTOR = msg({
 });
 const CUSTOM_DESCRIPTOR = msg({
 	message: 'Custom',
-	comment: 'Short label in the voice tab. Keep it concise.',
+	context: 'voice-processing-profile',
+	comment: 'Voice input processing profile where the user configures processing manually.',
 });
 const CUSTOM_PROFILE_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Adjust each setting yourself: noise suppression, echo cancellation, and gain.',
@@ -197,6 +199,10 @@ interface VoiceTabProps {
 
 export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoRequestPermission = false}) => {
 	const {i18n} = useLingui();
+	const formatPercentage = useCallback(
+		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		[i18n, i18n.locale],
+	);
 	const {
 		inputDeviceId,
 		outputDeviceId,
@@ -229,10 +235,15 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	const pttCombo = pttPrimary?.combo ?? {key: '', enabled: true, global: true};
 	const pttReleaseDelay = Keybind.pushToTalkReleaseDelay;
 	const selectedPttReleaseDelay = getNearestPushToTalkReleaseDelay(pttReleaseDelay);
-	const pttReleaseDelayOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() => PUSH_TO_TALK_RELEASE_DELAY_OPTIONS.map((value) => ({value, label: `${value}ms`})),
-		[],
-	);
+	const pttReleaseDelayOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(() => {
+		const formatter = getCachedNumberFormat(i18n.locale, {
+			style: 'unit',
+			unit: 'millisecond',
+			unitDisplay: 'narrow',
+			maximumFractionDigits: 0,
+		});
+		return PUSH_TO_TALK_RELEASE_DELAY_OPTIONS.map((value) => ({value, label: formatter.format(value)}));
+	}, [i18n.locale]);
 	const isPttLimited = !isNativeDesktop || (isNativeMac && !inputMonitoringGranted);
 	const defaultPttCombo = getDefaultKeybind('voice_push_to_talk', i18n);
 	const inputHasLabels = hasDeviceLabels(inputDevices);
@@ -468,7 +479,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						minValue={0}
 						maxValue={100}
 						step={1}
-						onValueRender={formatRoundedPercentage}
+						onValueRender={formatPercentage}
 						asValueChanges={(value) => VoiceSettingsCommands.update({vadThreshold: value})}
 						onValueChange={(value) => VoiceSettingsCommands.update({vadThreshold: value})}
 						data-flx="user.voice-tab.render-custom-profile.slider"
@@ -593,8 +604,8 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						step={1}
 						markers={[0, 50, 100, 150, 200]}
 						stickToMarkers={false}
-						onMarkerRender={formatRoundedPercentage}
-						onValueRender={formatRoundedPercentage}
+						onMarkerRender={formatPercentage}
+						onValueRender={formatPercentage}
 						onValueChange={(value) => VoiceSettingsCommands.update({inputVolume: value})}
 						data-flx="user.voice-tab.slider"
 					/>
@@ -621,8 +632,8 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						step={1}
 						markers={[0, 50, 100, 150, 200]}
 						stickToMarkers={false}
-						onMarkerRender={formatRoundedPercentage}
-						onValueRender={formatRoundedPercentage}
+						onMarkerRender={formatPercentage}
+						onValueRender={formatPercentage}
 						onValueChange={(value) => VoiceSettingsCommands.update({outputVolume: value})}
 						data-flx="user.voice-tab.slider--2"
 					/>

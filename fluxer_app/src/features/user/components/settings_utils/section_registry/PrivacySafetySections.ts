@@ -82,7 +82,7 @@ const BLOCK_CALLS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const FRIENDS_ONLY_CALLS_DESCRIPTOR = msg({
-	message: 'Friends only calls',
+	message: 'Friends-only calls',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const CALL_PRIVACY_DESCRIPTOR = msg({
@@ -291,7 +291,7 @@ const ACTIVE_NOW_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const CHOOSE_WHAT_FRIENDS_SEE_ON_THEIR_ACTIVE_NOW_PANEL_DESCRIPTOR = msg({
-	message: 'Choose what friends see on their active now panel',
+	message: 'Choose what friends see in their active now panel',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
 const VOICE_ACTIVITY_DESCRIPTOR = msg({

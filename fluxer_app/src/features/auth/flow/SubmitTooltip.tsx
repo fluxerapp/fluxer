@@ -5,6 +5,7 @@ import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import type {ReactNode} from 'react';
 
 const YOU_MUST_AGREE_TO_THE_TERMS_OF_SERVICE_DESCRIPTOR = msg({
@@ -53,12 +54,16 @@ function getTooltipContentDescriptor(
 	consent: boolean,
 	missingFields: Array<MissingField>,
 	legalConsentRequirement: LegalConsentRequirement,
+	locale: string,
 ): MessageDescriptor | null {
 	if (!consent) {
 		return getConsentRequiredDescriptor(legalConsentRequirement);
 	}
 	if (missingFields.length > 0) {
-		const fieldList = missingFields.map((f) => f.label).join(', ');
+		const fieldList = formatListWithConfig(
+			missingFields.map((f) => f.label),
+			{locale, style: 'long', type: 'conjunction'},
+		);
 		return getMissingFieldsDescriptor(fieldList);
 	}
 	return null;
@@ -75,7 +80,12 @@ export function SubmitTooltip({
 	missingFields = [],
 }: SubmitTooltipProps) {
 	const {i18n} = useLingui();
-	const tooltipContentDescriptor = getTooltipContentDescriptor(consent, missingFields, legalConsentRequirement);
+	const tooltipContentDescriptor = getTooltipContentDescriptor(
+		consent,
+		missingFields,
+		legalConsentRequirement,
+		i18n.locale,
+	);
 	const tooltipContent = tooltipContentDescriptor ? i18n._(tooltipContentDescriptor) : null;
 	if (!tooltipContent) {
 		return <>{children}</>;

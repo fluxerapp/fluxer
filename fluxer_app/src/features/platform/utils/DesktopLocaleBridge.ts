@@ -35,6 +35,11 @@ const QUIT_DESCRIPTOR = msg({
 	message: 'Quit {appName}',
 	comment: 'macOS / tray menu item that fully quits the desktop app.',
 });
+const EXIT_DESCRIPTOR = msg({
+	message: 'Exit',
+	comment:
+		'Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.',
+});
 const FILE_DESCRIPTOR = msg({
 	message: 'File',
 	comment: 'Top-level native menu bar title (File menu).',
@@ -43,13 +48,58 @@ const EDIT_DESCRIPTOR = msg({
 	message: 'Edit',
 	comment: 'Top-level native menu bar title (Edit menu, holds cut/copy/paste).',
 });
+const UNDO_DESCRIPTOR = msg({
+	message: 'Undo',
+	comment: 'Native Edit menu item that undoes the last edit. Imperative verb.',
+});
+const REDO_DESCRIPTOR = msg({
+	message: 'Redo',
+	comment: 'Native Edit menu item that redoes the last undone edit. Imperative verb.',
+});
+const CUT_DESCRIPTOR = msg({
+	message: 'Cut',
+	comment: 'Native Edit menu item that cuts the selection to the clipboard. Imperative verb, not the noun.',
+});
+const COPY_DESCRIPTOR = msg({
+	message: 'Copy',
+	comment: 'Native Edit menu item that copies the selection to the clipboard. Imperative verb, not the noun.',
+});
+const PASTE_DESCRIPTOR = msg({
+	message: 'Paste',
+	comment: 'Native Edit menu item that pastes the clipboard contents. Imperative verb, not the noun.',
+});
+const PASTE_AND_MATCH_STYLE_DESCRIPTOR = msg({
+	message: 'Paste and match style',
+	comment:
+		'Native macOS Edit menu item that pastes the clipboard contents using the formatting of the surrounding text. Imperative verb.',
+});
+const DELETE_DESCRIPTOR = msg({
+	message: 'Delete',
+	comment: 'Native Edit menu item that deletes the current selection. Imperative verb.',
+});
+const SELECT_ALL_DESCRIPTOR = msg({
+	message: 'Select all',
+	comment: 'Native Edit menu item that selects everything in the focused field. Imperative verb.',
+});
 const SPEECH_DESCRIPTOR = msg({
 	message: 'Speech',
 	comment: 'Native macOS Edit submenu title for text-to-speech actions.',
 });
+const START_SPEAKING_DESCRIPTOR = msg({
+	message: 'Start speaking',
+	comment: 'Native macOS Edit > Speech submenu item that starts reading the selected text aloud. Imperative verb.',
+});
+const STOP_SPEAKING_DESCRIPTOR = msg({
+	message: 'Stop speaking',
+	comment: 'Native macOS Edit > Speech submenu item that stops reading text aloud. Imperative verb.',
+});
 const VIEW_DESCRIPTOR = msg({
 	message: 'View',
 	comment: 'Top-level native menu bar title (View menu, holds zoom and reload).',
+});
+const FORCE_RELOAD_DESCRIPTOR = msg({
+	message: 'Force reload',
+	comment: 'Native View menu item that reloads the window and ignores the cache. Imperative verb.',
 });
 const TOGGLE_DEVELOPER_TOOLS_DESCRIPTOR = msg({
 	message: 'Toggle developer tools',
@@ -67,9 +117,23 @@ const ZOOM_OUT_DESCRIPTOR = msg({
 	message: 'Zoom out',
 	comment: 'Native View menu item that decreases UI zoom level.',
 });
+const TOGGLE_FULL_SCREEN_DESCRIPTOR = msg({
+	message: 'Toggle full screen',
+	comment: 'Native View menu item that enters or leaves full screen. Imperative verb.',
+});
 const WINDOW_DESCRIPTOR = msg({
 	message: 'Window',
 	comment: 'Top-level native menu bar title (Window menu).',
+});
+const MINIMIZE_DESCRIPTOR = msg({
+	message: 'Minimize',
+	comment: 'Native Window menu item that minimizes the focused desktop window. Imperative verb.',
+});
+const ZOOM_WINDOW_DESCRIPTOR = msg({
+	message: 'Zoom',
+	context: 'window-menu',
+	comment:
+		'Native Window menu item that zooms the focused window, meaning maximize or restore it. Not image zoom and not UI zoom level.',
 });
 const CLOSE_DESCRIPTOR = msg({
 	message: 'Close',
@@ -194,6 +258,44 @@ const RECENT_DESCRIPTOR = msg({
 	message: 'Recent',
 	comment: 'Windows jump-list category title. Groups recently opened DMs / communities.',
 });
+const OPEN_NOTIFICATION_DESCRIPTOR = msg({
+	message: 'Open',
+	comment:
+		'Action button on a Linux desktop notification. Imperative verb: opens the message the notification is about.',
+});
+const ADD_LOCAL_FILES_DESCRIPTOR = msg({
+	message: 'Add local files',
+	comment: 'Title of the native file picker that selects local theme files to add.',
+});
+const IMPORT_FOLDER_DESCRIPTOR = msg({
+	message: 'Import folder',
+	comment: 'Title of the native folder picker that imports a directory of theme files.',
+});
+const UNREAD_MESSAGES_DESCRIPTOR = msg({
+	message: 'Unread messages',
+	comment:
+		'Accessibility description of the Windows taskbar overlay badge, read by screen readers, when there are unread messages but no exact count to show.',
+});
+const UNREAD_MESSAGES_COUNT_DESCRIPTOR = msg({
+	message: 'Unread messages: {count}',
+	comment:
+		'Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.',
+});
+const FAILED_TO_START_DESCRIPTOR = msg({
+	message: '{appName} failed to start',
+	comment:
+		'Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).',
+});
+const LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR = msg({
+	message: 'Instant Messenger',
+	comment:
+		'GenericName of the Linux .desktop entry. The category of app shown next to the name in GNOME Activities, KDE Kickoff and software centres. Use the generic term for a chat app in your language.',
+});
+const LINUX_ENTRY_COMMENT_DESCRIPTOR = msg({
+	message: 'Instant messaging and VoIP',
+	comment:
+		'Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.',
+});
 const logger = new Logger('DesktopLocaleBridge');
 type NativeMessage = MessageDescriptor | string;
 
@@ -203,15 +305,31 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.appMenu.preferencesPlain': PREFERENCES_2_DESCRIPTOR,
 	'desktop.appMenu.hide': HIDE_DESCRIPTOR,
 	'desktop.appMenu.quit': QUIT_DESCRIPTOR,
+	'desktop.appMenu.exit': EXIT_DESCRIPTOR,
 	'desktop.appMenu.file': FILE_DESCRIPTOR,
 	'desktop.appMenu.edit': EDIT_DESCRIPTOR,
+	'desktop.appMenu.undo': UNDO_DESCRIPTOR,
+	'desktop.appMenu.redo': REDO_DESCRIPTOR,
+	'desktop.appMenu.cut': CUT_DESCRIPTOR,
+	'desktop.appMenu.copy': COPY_DESCRIPTOR,
+	'desktop.appMenu.paste': PASTE_DESCRIPTOR,
+	'desktop.appMenu.pasteAndMatchStyle': PASTE_AND_MATCH_STYLE_DESCRIPTOR,
+	'desktop.appMenu.delete': DELETE_DESCRIPTOR,
+	'desktop.appMenu.selectAll': SELECT_ALL_DESCRIPTOR,
 	'desktop.appMenu.speech': SPEECH_DESCRIPTOR,
+	'desktop.appMenu.startSpeaking': START_SPEAKING_DESCRIPTOR,
+	'desktop.appMenu.stopSpeaking': STOP_SPEAKING_DESCRIPTOR,
 	'desktop.appMenu.view': VIEW_DESCRIPTOR,
+	'desktop.appMenu.reload': RELOAD_DESCRIPTOR,
+	'desktop.appMenu.forceReload': FORCE_RELOAD_DESCRIPTOR,
 	'desktop.appMenu.toggleDeveloperTools': TOGGLE_DEVELOPER_TOOLS_DESCRIPTOR,
 	'desktop.appMenu.actualSize': ACTUAL_SIZE_DESCRIPTOR,
 	'desktop.appMenu.zoomIn': ZOOM_IN_DESCRIPTOR,
 	'desktop.appMenu.zoomOut': ZOOM_OUT_DESCRIPTOR,
+	'desktop.appMenu.toggleFullScreen': TOGGLE_FULL_SCREEN_DESCRIPTOR,
 	'desktop.appMenu.window': WINDOW_DESCRIPTOR,
+	'desktop.appMenu.minimize': MINIMIZE_DESCRIPTOR,
+	'desktop.appMenu.zoomWindow': ZOOM_WINDOW_DESCRIPTOR,
 	'desktop.appMenu.close': CLOSE_DESCRIPTOR,
 	'desktop.appMenu.help': HELP_DESCRIPTOR,
 	'desktop.appMenu.website': WEBSITE_DESCRIPTOR,
@@ -252,6 +370,14 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.jumpList.newDirectMessage': NEW_DIRECT_MESSAGE_DESCRIPTOR,
 	'desktop.jumpList.newDirectMessageDescription': COMPOSE_A_NEW_DIRECT_MESSAGE_DESCRIPTOR,
 	'desktop.jumpList.recent': RECENT_DESCRIPTOR,
+	'desktop.notifications.open': OPEN_NOTIFICATION_DESCRIPTOR,
+	'desktop.themes.addLocalFiles': ADD_LOCAL_FILES_DESCRIPTOR,
+	'desktop.themes.importFolder': IMPORT_FOLDER_DESCRIPTOR,
+	'desktop.badge.unreadMessages': UNREAD_MESSAGES_DESCRIPTOR,
+	'desktop.badge.unreadMessagesCount': UNREAD_MESSAGES_COUNT_DESCRIPTOR,
+	'desktop.startup.failedTitle': FAILED_TO_START_DESCRIPTOR,
+	'desktop.linuxEntry.genericName': LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR,
+	'desktop.linuxEntry.comment': LINUX_ENTRY_COMMENT_DESCRIPTOR,
 };
 const PLACEHOLDER_PATTERN = /\{(\w+)\}/g;
 

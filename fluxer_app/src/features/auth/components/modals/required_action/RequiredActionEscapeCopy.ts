@@ -15,6 +15,7 @@ import {
 	ESCAPE_HINT_WITH_GUILDS_DESCRIPTOR,
 } from '@app/features/auth/components/modals/required_action/RequiredActionDescriptors';
 import type {I18n} from '@lingui/core';
+import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 
 export interface PhoneGateEscapePlan {
 	guildNames: ReadonlyArray<string>;
@@ -39,10 +40,22 @@ export function buildPhoneGateEscapeConfirmCopy(i18n: I18n, plan: PhoneGateEscap
 	const leaving = plan.guildNames.length > 0;
 	const bodyLines: Array<string> = [i18n._(ESCAPE_CONFIRM_OUTCOME_DESCRIPTOR)];
 	if (leaving) {
-		bodyLines.push(i18n._(ESCAPE_CONFIRM_LEAVE_DESCRIPTOR, {guildNames: plan.guildNames.join(', ')}));
+		bodyLines.push(
+			i18n._(ESCAPE_CONFIRM_LEAVE_DESCRIPTOR, {
+				guildNames: formatListWithConfig(plan.guildNames, {locale: i18n.locale, style: 'long', type: 'conjunction'}),
+			}),
+		);
 	}
 	if (plan.ownedGuildNames.length > 0) {
-		bodyLines.push(i18n._(ESCAPE_CONFIRM_OWNED_DESCRIPTOR, {ownedNames: plan.ownedGuildNames.join(', ')}));
+		bodyLines.push(
+			i18n._(ESCAPE_CONFIRM_OWNED_DESCRIPTOR, {
+				ownedNames: formatListWithConfig(plan.ownedGuildNames, {
+					locale: i18n.locale,
+					style: 'long',
+					type: 'conjunction',
+				}),
+			}),
+		);
 	}
 	if (plan.emailStepRemains) {
 		bodyLines.push(i18n._(ESCAPE_CONFIRM_EMAIL_REMAINS_DESCRIPTOR));

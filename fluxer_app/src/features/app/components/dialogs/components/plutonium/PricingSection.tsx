@@ -56,7 +56,7 @@ const UPGRADE_NOW_DESCRIPTOR = msg({
 	comment: 'Checkout button for starting a paid subscription.',
 });
 const MESSAGE_1_YEAR_GIFT_DESCRIPTOR = msg({
-	message: '1 year gift',
+	message: '1-year gift',
 	comment: 'Billing plan title for a one-year gift subscription.',
 });
 const SAVE_17_2_DESCRIPTOR = msg({
@@ -64,7 +64,7 @@ const SAVE_17_2_DESCRIPTOR = msg({
 	comment: 'Price badge comparing a one-year gift to monthly gifts.',
 });
 const MESSAGE_1_MONTH_GIFT_DESCRIPTOR = msg({
-	message: '1 month gift',
+	message: '1-month gift',
 	comment: 'Billing plan title for a one-month gift subscription.',
 });
 

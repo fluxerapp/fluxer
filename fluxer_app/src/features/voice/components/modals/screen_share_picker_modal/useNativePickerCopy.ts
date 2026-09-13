@@ -14,7 +14,7 @@ const CHOOSE_THE_TAB_OR_WINDOW_IN_YOUR_BROWSER_DESCRIPTOR = msg({
 });
 const BROWSERS_DO_NOT_LET_LIST_APP_WINDOWS_AHEAD_DESCRIPTOR = msg({
 	message:
-		'Browsers do not let {productName} list app windows ahead of time. Press open browser picker, then choose the tab or window there.',
+		'Browsers do not let {productName} list app windows ahead of time. Press "Open browser picker", then choose the tab or window there.',
 	comment: 'Empty-state explanation in the screen-share picker apps tab on web. {productName} is Fluxer.',
 });
 const CHOOSE_THE_SCREEN_IN_YOUR_BROWSER_DESCRIPTOR = msg({
@@ -23,7 +23,7 @@ const CHOOSE_THE_SCREEN_IN_YOUR_BROWSER_DESCRIPTOR = msg({
 });
 const BROWSERS_DO_NOT_LET_LIST_DISPLAYS_AHEAD_OF_DESCRIPTOR = msg({
 	message:
-		'Browsers do not let {productName} list displays ahead of time. Press open browser picker, then choose the screen there.',
+		'Browsers do not let {productName} list displays ahead of time. Press "Open browser picker", then choose the screen there.',
 	comment: 'Empty-state explanation in the screen-share picker displays tab on web. {productName} is Fluxer.',
 });
 const CHOOSE_A_WINDOW_IN_YOUR_SYSTEM_PICKER_DESCRIPTOR = msg({
@@ -32,7 +32,7 @@ const CHOOSE_A_WINDOW_IN_YOUR_SYSTEM_PICKER_DESCRIPTOR = msg({
 });
 const WAYLAND_S_XDG_DESKTOP_PORTAL_OWNS_THE_PICKER_DESCRIPTOR = msg({
 	message:
-		"Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press open system picker, then choose a window there to get per-app audio.",
+		'Wayland\'s xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press "Open system picker", then choose a window there to get per-app audio.',
 	comment:
 		"Empty-state explanation in the screen-share picker apps tab on Linux/Wayland. Technical surface; keep 'xdg-desktop-portal' as a literal proper noun.",
 });
@@ -42,7 +42,7 @@ const CHOOSE_A_DISPLAY_IN_YOUR_SYSTEM_PICKER_DESCRIPTOR = msg({
 });
 const WAYLAND_S_XDG_DESKTOP_PORTAL_OWNS_THE_PICKER_2_DESCRIPTOR = msg({
 	message:
-		"Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to displays only. Press open system picker, then choose a display there to capture desktop audio.",
+		'Wayland\'s xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to displays only. Press "Open system picker", then choose a display there to capture desktop audio.',
 	comment:
 		"Empty-state explanation in the screen-share picker displays tab on Linux/Wayland. Technical surface; keep 'xdg-desktop-portal' as a literal proper noun.",
 });

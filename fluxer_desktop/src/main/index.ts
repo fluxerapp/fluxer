@@ -57,7 +57,7 @@ import {cleanupIpcHandlers, registerIpcHandlers} from '@electron/main/IpcHandler
 import {initializeJumpList} from '@electron/main/JumpList';
 import {describeLaunchDiagnosticOptions, shouldStartHiddenAtLogin} from '@electron/main/LaunchOptions';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
-import {initializeMainI18n} from '@electron/main/MainI18n';
+import {initializeMainI18n, t} from '@electron/main/MainI18n';
 import {createApplicationMenu} from '@electron/main/Menu';
 import {cleanupNativeAudio, registerNativeAudioHandlers} from '@electron/main/NativeAudio';
 import {
@@ -238,13 +238,18 @@ if (launchConfigurationError) {
 		app.exit(0);
 	}
 	try {
+		runStartupPhase('main-i18n', initializeMainI18n);
+	} catch (error) {
+		log.error('[Init] Failed to initialize native i18n:', error);
+	}
+	try {
 		runStartupPhase('native-module-preflight', runNativeModulePreflight);
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		log.error('[NativeModulePreflight] Fatal native module preflight failure:', error);
 		console.error(message);
 		try {
-			dialog.showErrorBox('Fluxer failed to start', message);
+			dialog.showErrorBox(t('desktop.startup.failedTitle'), message);
 		} catch {}
 		app.exit(1);
 		process.exit(1);
@@ -316,11 +321,6 @@ if (launchConfigurationError) {
 					});
 				} catch (error) {
 					log.error('[DebugInfo] Failed to collect desktop debug info:', error);
-				}
-				try {
-					runStartupPhase('main-i18n', initializeMainI18n);
-				} catch (error) {
-					log.error('[Init] Failed to initialize native i18n:', error);
 				}
 				try {
 					runStartupPhase('deep-links', initializeDeepLinks);

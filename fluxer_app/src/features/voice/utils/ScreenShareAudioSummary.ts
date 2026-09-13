@@ -23,10 +23,11 @@ export const NO_AUDIO_DESCRIPTOR = msg({
 });
 export const CUSTOM_SOURCES_DESCRIPTOR = msg({
 	message: 'Custom',
+	context: 'screen-share-audio-source',
 	comment: 'Screen-share audio summary shown when one audio source is selected but it has no readable name.',
 });
 export const APP_COUNT_DESCRIPTOR = msg({
-	message: '{length} apps',
+	message: '{length, plural, one {# app} other {# apps}}',
 	comment: 'Screen-share audio summary listing how many apps are captured. {length} is the integer app count.',
 });
 export const ENTIRE_SYSTEM_DESCRIPTOR = msg({

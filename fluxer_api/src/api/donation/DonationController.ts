@@ -29,7 +29,7 @@ export function DonationController(app: HonoApp) {
 		Validator('json', DonationRequestLinkRequest),
 		async (ctx) => {
 			const {email} = ctx.req.valid('json');
-			await ctx.get('donationService').requestMagicLink(email);
+			await ctx.get('donationService').requestMagicLink(email, ctx.get('requestLocale') ?? null);
 			return ctx.body(null, 204);
 		},
 	);
@@ -77,6 +77,7 @@ export function DonationController(app: HonoApp) {
 				currency: body.currency,
 				interval: body.interval,
 				isBusiness: body.is_business,
+				locale: ctx.get('requestLocale') ?? null,
 			});
 			return ctx.json({url});
 		},

@@ -127,7 +127,7 @@ export class EmailService implements IEmailService {
 	async sendUnbanNotification(
 		email: string,
 		username: string,
-		reason: string,
+		reason: string | null,
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'unban_notification', locale, {username, reason});

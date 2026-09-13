@@ -344,7 +344,7 @@ export class ReportService {
 		throw new CannotReportGuildError();
 	}
 
-	async sendDsaReportVerificationCode(email: string): Promise<void> {
+	async sendDsaReportVerificationCode(email: string, locale: string | null = null): Promise<void> {
 		const normalizedEmail = this.normalizeEmail(email);
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(normalizedEmail);
 		if (!hasValidDns) {
@@ -358,7 +358,7 @@ export class ReportService {
 			expires_at: expiresAt,
 			last_sent_at: new Date(),
 		});
-		await this.emailService.sendDsaReportVerificationCode(normalizedEmail, verificationCode, expiresAt);
+		await this.emailService.sendDsaReportVerificationCode(normalizedEmail, verificationCode, expiresAt, locale);
 	}
 
 	async verifyDsaReportEmail(email: string, code: string): Promise<string> {

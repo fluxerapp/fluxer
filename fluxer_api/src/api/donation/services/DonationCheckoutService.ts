@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import {Logger} from '@app/api/Logger';
@@ -18,6 +19,27 @@ type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
 type CheckoutSessionMode = CheckoutSessionCreateParams['mode'];
 type CheckoutSessionLineItem = NonNullable<CheckoutSessionCreateParams['line_items']>[number];
 
+const PRODUCT_NAME = 'Fluxer';
+
+function getDonationProductData(interval: 'month' | 'year' | null, locale: string | null) {
+	if (interval === 'month') {
+		return {
+			name: getContentMessage('billing.donation_name_recurring', locale, {product_name: PRODUCT_NAME}),
+			description: getContentMessage('billing.donation_description_monthly', locale, {product_name: PRODUCT_NAME}),
+		};
+	}
+	if (interval === 'year') {
+		return {
+			name: getContentMessage('billing.donation_name_recurring', locale, {product_name: PRODUCT_NAME}),
+			description: getContentMessage('billing.donation_description_yearly', locale, {product_name: PRODUCT_NAME}),
+		};
+	}
+	return {
+		name: getContentMessage('billing.donation_name_one_time', locale, {product_name: PRODUCT_NAME}),
+		description: getContentMessage('billing.donation_description_one_time', locale, {product_name: PRODUCT_NAME}),
+	};
+}
+
 export class DonationCheckoutService {
 	constructor(
 		private stripe: Stripe | null,
@@ -31,6 +53,7 @@ export class DonationCheckoutService {
 		currency: DonationCurrency;
 		interval: 'month' | 'year' | null;
 		isBusiness?: boolean;
+		locale?: string | null;
 	}): Promise<string> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
@@ -48,16 +71,15 @@ export class DonationCheckoutService {
 			const encodedEmail = encodeURIComponent(params.email);
 			return `${Config.endpoints.marketing}/donate/manage?email=${encodedEmail}&alert=active_subscription`;
 		}
+		const locale = params.locale ?? null;
+		const donationProductData = getDonationProductData(params.interval, locale);
 		try {
 			const mode: CheckoutSessionMode = isRecurring ? 'subscription' : 'payment';
 			const lineItem: CheckoutSessionLineItem = isRecurring
 				? {
 						price_data: {
 							currency: params.currency,
-							product_data: {
-								name: 'Fluxer Recurring Donation',
-								description: `${params.interval === 'month' ? 'Monthly' : 'Yearly'} donation to support Fluxer`,
-							},
+							product_data: donationProductData,
 							unit_amount: params.amountCents,
 							recurring: {
 								interval: params.interval as 'month' | 'year',
@@ -68,10 +90,7 @@ export class DonationCheckoutService {
 				: {
 						price_data: {
 							currency: params.currency,
-							product_data: {
-								name: 'Fluxer Donation',
-								description: 'One-time donation to support Fluxer',
-							},
+							product_data: donationProductData,
 							unit_amount: params.amountCents,
 						},
 						quantity: 1,
@@ -85,6 +104,7 @@ export class DonationCheckoutService {
 					donation_email: params.email,
 					donation_type: isRecurring ? 'recurring' : 'one_time',
 					is_business: isBusiness ? 'true' : 'false',
+					...(locale ? {donation_locale: locale} : {}),
 				},
 				success_url: `${Config.endpoints.marketing}/donate/success`,
 				cancel_url: `${Config.endpoints.marketing}/donate`,

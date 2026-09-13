@@ -70,6 +70,8 @@ import {HashIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
+const UNNAMED_CHANNEL_DESCRIPTOR = msg({message: 'Unnamed channel'});
+
 const NEWEST_DESCRIPTOR = msg({
 	message: 'Newest',
 	comment: 'Sort mode label in the mobile channel search bottom sheet. Sorts results newest first.',
@@ -87,7 +89,7 @@ const MESSAGE_1_USER_DESCRIPTOR = msg({
 	comment: 'Summary chip text in the mobile channel search sheet when exactly one user is selected as a filter.',
 });
 const USERS_DESCRIPTOR = msg({
-	message: '{length} users',
+	message: '{length, plural, one {# user} other {# users}}',
 	comment:
 		'Summary chip text in the mobile channel search sheet when more than one user is selected. length is the count.',
 });
@@ -120,7 +122,7 @@ const STICKER_DESCRIPTOR = msg({
 	comment: 'Label for the has:sticker filter option in the mobile channel search sheet.',
 });
 const TYPES_DESCRIPTOR = msg({
-	message: '{length} types',
+	message: '{length, plural, one {# type} other {# types}}',
 	comment:
 		'Summary chip text in the mobile channel search sheet when multiple content types are selected. length is the count.',
 });
@@ -129,7 +131,7 @@ const SEARCH_DESCRIPTOR = msg({
 	comment: 'Title of the mobile channel search bottom sheet.',
 });
 const SEARCH_RESULTS_COUNT_DESCRIPTOR = msg({
-	message: '{resultCount} results',
+	message: '{resultCount, plural, one {# result} other {# results}}',
 	comment: 'Subtitle in the mobile channel search bottom sheet showing the total number of search results.',
 });
 const SEARCH_MESSAGES_DESCRIPTOR = msg({
@@ -169,7 +171,7 @@ const MESSAGE_1_CHANNEL_DESCRIPTOR = msg({
 	comment: 'Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.',
 });
 const CHANNELS_DESCRIPTOR = msg({
-	message: '{length} channels',
+	message: '{length, plural, one {# channel} other {# channels}}',
 	comment:
 		'Summary chip text in the mobile channel search sheet when more than one channel is selected. length is the count.',
 });
@@ -665,7 +667,7 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 																className={styles.channelName}
 																data-flx="channel.channel-search-bottom-sheet.render-content.channel-name"
 															>
-																{messageChannel.name || 'Unnamed Channel'}
+																{messageChannel.name || i18n._(UNNAMED_CHANNEL_DESCRIPTOR)}
 															</span>
 														</div>
 													)}

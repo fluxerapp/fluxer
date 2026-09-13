@@ -30,6 +30,7 @@ import {
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -218,8 +219,7 @@ export function useGuildImageAssetField({
 			if (!canManage) return;
 			const requestId = ++requestIdRef.current;
 			if (file.size > maxBytes) {
-				const maxMB = Math.round(maxBytes / (1024 * 1024));
-				const maxSizeLabel = `${maxMB}MB`;
+				const maxSizeLabel = formatFileSize(i18n.locale, maxBytes);
 				showErrorModal(i18n._(FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_FILE_DESCRIPTOR, {label, maxSizeLabel}));
 				return;
 			}
@@ -300,8 +300,7 @@ export function useGuildImageAssetField({
 							setIsProcessing(true);
 							try {
 								if (croppedBlob.size > maxBytes) {
-									const maxMB = Math.round(maxBytes / (1024 * 1024));
-									const maxSizeLabel = `${maxMB}MB`;
+									const maxSizeLabel = formatFileSize(i18n.locale, maxBytes);
 									showErrorModal(i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {maxSizeLabel}));
 									return;
 								}

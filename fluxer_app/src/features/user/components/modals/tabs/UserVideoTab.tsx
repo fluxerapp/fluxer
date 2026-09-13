@@ -39,6 +39,10 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo} from 'react';
 
+const FPS_15_DESCRIPTOR = msg({message: '15 FPS'});
+const FPS_30_DESCRIPTOR = msg({message: '30 FPS'});
+const FPS_60_DESCRIPTOR = msg({message: '60 FPS'});
+
 const LOW_480P_LABEL = '480p';
 const MEDIUM_720P_LABEL = '720p';
 const HIGH_1080P_LABEL = '1080p';
@@ -55,7 +59,7 @@ const HIGH_FRAME_RATE_REQUIRES_PREMIUM_DESCRIPTOR = msg({
 	comment: 'Video settings note shown when higher frame rates require premium.',
 });
 const SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR = msg({
-	message: 'This instance currently allows screen share up to 720p at 30 FPS.',
+	message: 'This instance currently allows screen sharing up to 720p at 30 FPS.',
 	comment: 'Neutral video settings note shown when higher screen share quality is disabled by instance limits.',
 });
 const STANDARD_720P_LABEL = '720p';
@@ -156,13 +160,13 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 		];
 		const frameRateOptions: ReadonlyArray<ComboboxOption<SupportedScreenShareFrameRate>> = hasHigherQuality
 			? [
-					{value: 15, label: '15 FPS'},
-					{value: 30, label: '30 FPS'},
-					{value: 60, label: '60 FPS'},
+					{value: 15, label: i18n._(FPS_15_DESCRIPTOR)},
+					{value: 30, label: i18n._(FPS_30_DESCRIPTOR)},
+					{value: 60, label: i18n._(FPS_60_DESCRIPTOR)},
 				]
 			: [
-					{value: 15, label: '15 FPS'},
-					{value: 30, label: '30 FPS'},
+					{value: 15, label: i18n._(FPS_15_DESCRIPTOR)},
+					{value: 30, label: i18n._(FPS_30_DESCRIPTOR)},
 				];
 		const resolvedVideoFrameRate = resolveScreenShareFrameRate(videoFrameRate);
 		const effectiveVideoFrameRate: SupportedScreenShareFrameRate =

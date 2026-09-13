@@ -8,6 +8,7 @@ import {
 	CONTINUE_DESCRIPTOR,
 	GO_BACK_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedDateTimeFormat} from '@app/features/i18n/utils/IntlCache';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -345,8 +346,8 @@ function getVariantConfig(variant: DataRequestVariant): VariantConfig {
 	};
 }
 
-function formatDateForSummary(date: Date): string {
-	return date.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'});
+function formatDateForSummary(date: Date, locale: string): string {
+	return getCachedDateTimeFormat(locale, {year: 'numeric', month: 'short', day: 'numeric'}).format(date);
 }
 
 interface DataRequestModalProps {
@@ -730,13 +731,13 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 			timeRangeValue = i18n._(SUMMARY_ALL_TIME_DESCRIPTOR);
 		} else if (startDate && endDate) {
 			timeRangeValue = i18n._(SUMMARY_BETWEEN_DESCRIPTOR, {
-				start: formatDateForSummary(startDate),
-				end: formatDateForSummary(endDate),
+				start: formatDateForSummary(startDate, i18n.locale),
+				end: formatDateForSummary(endDate, i18n.locale),
 			});
 		} else if (startDate) {
-			timeRangeValue = i18n._(SUMMARY_FROM_DESCRIPTOR, {start: formatDateForSummary(startDate)});
+			timeRangeValue = i18n._(SUMMARY_FROM_DESCRIPTOR, {start: formatDateForSummary(startDate, i18n.locale)});
 		} else if (endDate) {
-			timeRangeValue = i18n._(SUMMARY_UNTIL_DESCRIPTOR, {end: formatDateForSummary(endDate)});
+			timeRangeValue = i18n._(SUMMARY_UNTIL_DESCRIPTOR, {end: formatDateForSummary(endDate, i18n.locale)});
 		} else {
 			timeRangeValue = i18n._(SUMMARY_ALL_TIME_DESCRIPTOR);
 		}

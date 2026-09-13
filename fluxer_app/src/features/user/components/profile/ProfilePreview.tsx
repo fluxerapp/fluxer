@@ -318,7 +318,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 											disabled={true}
 											data-flx="user.profile.profile-preview.button"
 										>
-											<Trans>Message</Trans>
+											<Trans context="message-action">Message</Trans>
 										</Button>
 									</div>
 								</Tooltip>

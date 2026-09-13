@@ -219,9 +219,6 @@ export function setLocale(localeCode: string): void {
 	}
 	const normalized = normalizeLocale(locale.code);
 	const previousLocale = normalizeLocale(getCurrentLocale());
-	if (normalized === previousLocale) {
-		return;
-	}
 	const sequence = ++localeChangeSequence;
 	void (async () => {
 		try {
@@ -230,7 +227,7 @@ export function setLocale(localeCode: string): void {
 			logger.error(`Failed to load locale ${localeCode}:`, error);
 			return;
 		}
-		if (sequence !== localeChangeSequence) {
+		if (sequence !== localeChangeSequence || normalized === previousLocale) {
 			return;
 		}
 		try {

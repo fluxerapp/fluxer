@@ -42,6 +42,7 @@ import LayerManager from '@app/features/ui/state/LayerManager';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {MobileVideoViewer} from '@app/features/voice/components/modals/MobileVideoViewer';
 import {useLingui} from '@lingui/react/macro';
 import {CaretLeftIcon, CaretRightIcon} from '@phosphor-icons/react';
@@ -663,7 +664,7 @@ export const MediaModal: FC<MediaModalProps> = observer(
 									onPointerLeave={handleHudPointerLeave}
 									data-flx="messaging.media-modal.bottom-info-bar"
 								>
-									{[fileName, dimensions, fileSize, `${panZoomInfo.zoomPercent}%`]
+									{[fileName, dimensions, fileSize, formatRoundedPercentage(i18n.locale, panZoomInfo.zoomPercent)]
 										.filter(Boolean)
 										.map((part, index) => (
 											<span

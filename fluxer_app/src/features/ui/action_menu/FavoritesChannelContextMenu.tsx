@@ -48,11 +48,11 @@ import type React from 'react';
 
 const OPEN_IN_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Open in community',
-	comment: 'Action that opens the selected user profile inside the current community.',
+	comment: 'Favorites menu action that opens the favorited channel in the community it belongs to.',
 });
 const MOVE_TO_DESCRIPTOR = msg({
 	message: 'Move to',
-	comment: 'Submenu label that moves the selected message to another channel.',
+	comment: 'Favorites menu submenu label that moves the favorited channel into another favorites category.',
 });
 
 interface FavoritesChannelContextMenuProps {

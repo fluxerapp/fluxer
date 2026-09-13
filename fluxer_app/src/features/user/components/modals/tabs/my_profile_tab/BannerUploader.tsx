@@ -5,7 +5,7 @@ import {
 	ANIMATED_IMAGE_FORMATS,
 	BANNER_ASPECT_RATIO_LABEL,
 	BANNER_MINIMUM_SIZE_LABEL,
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	PREMIUM_PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
@@ -24,6 +24,7 @@ import {
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
@@ -183,7 +184,7 @@ export const BannerUploader = observer(
 					showUserErrorModal(
 						i18n._(COULDN_T_UPLOAD_BANNER_DESCRIPTOR),
 						i18n._(BANNER_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 						}),
 					);
 					return;
@@ -251,7 +252,7 @@ export const BannerUploader = observer(
 				title: i18n._(CHANGE_BANNER_DESCRIPTOR),
 				uploadHint: formatImageUploadMinimumHint(i18n, {
 					formats: ANIMATED_IMAGE_FORMATS,
-					maxSize: IMAGE_MAX_SIZE_LABEL,
+					maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 					minimumSize: BANNER_MINIMUM_SIZE_LABEL,
 					aspectRatio: BANNER_ASPECT_RATIO_LABEL,
 				}),

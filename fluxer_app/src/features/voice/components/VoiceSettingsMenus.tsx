@@ -13,6 +13,7 @@ import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {AudioLevelMeter} from '@app/features/user/components/modals/tabs/components/AudioLevelMeter';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import Users from '@app/features/user/state/Users';
@@ -85,6 +86,7 @@ const SPEAKER_2_DESCRIPTOR = msg({
 });
 const DEFAULT_3_DESCRIPTOR = msg({
 	message: 'Default',
+	context: 'device-option',
 	comment:
 		'Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).',
 });
@@ -306,7 +308,7 @@ const VoiceInputVolumeItems: React.FC = observer(() => {
 				minValue={0}
 				maxValue={VOICE_VOLUME_MAX_PERCENT}
 				onChange={(value) => VoiceSettingsCommands.update({inputVolume: value})}
-				onFormat={(value) => `${Math.round(value)}%`}
+				onFormat={(value) => formatRoundedPercentage(i18n.locale, value)}
 				data-flx="voice.voice-settings-menus.input-volume"
 			/>
 			<VoiceInputLevelItem data-flx="voice.voice-settings-menus.voice-input-volume-items.voice-input-level-item" />
@@ -323,7 +325,7 @@ const VoiceOutputVolumeItem: React.FC = observer(() => {
 			minValue={0}
 			maxValue={VOICE_VOLUME_MAX_PERCENT}
 			onChange={(value) => VoiceSettingsCommands.update({outputVolume: value})}
-			onFormat={(value) => `${Math.round(value)}%`}
+			onFormat={(value) => formatRoundedPercentage(i18n.locale, value)}
 			data-flx="voice.voice-settings-menus.output-volume"
 		/>
 	);

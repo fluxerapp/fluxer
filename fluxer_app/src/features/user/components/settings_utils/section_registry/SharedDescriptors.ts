@@ -99,7 +99,7 @@ export const DIM_STRIKETHROUGH_TEXT_DESCRIPTOR = msg({
 	comment: 'Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.',
 });
 export const SHOW_STRIKETHROUGH_MARKDOWN_TEXT_IN_A_SLIGHTLY_MUTED_COLOR_DESCRIPTOR = msg({
-	message: 'Show strikethrough markdown text in a slightly muted color.',
+	message: 'Show strikethrough Markdown text in a slightly muted color.',
 	comment:
 		'Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.',
 });
@@ -136,7 +136,7 @@ export const TTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 export const TEXT_TO_SPEECH_3_DESCRIPTOR = msg({
-	message: 'Text to speech',
+	message: 'Text-to-speech',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 export const SPEECH_DESCRIPTOR = msg({

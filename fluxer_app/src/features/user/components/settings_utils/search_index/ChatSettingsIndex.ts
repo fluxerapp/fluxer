@@ -285,7 +285,7 @@ const IMAGE_LOOKUP_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const GOOGLE_LENS_DESCRIPTOR = msg({
-	message: 'Google lens',
+	message: 'Google Lens',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const IMAGE_SEARCH_PROVIDER_DESCRIPTOR = msg({
@@ -413,7 +413,7 @@ const KEEP_ATTACHMENTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const CLEARING_THE_TEXT_OF_A_MESSAGE_WITH_ATTACHMENTS_ASKS_TO_DELETE_IT_DESCRIPTOR = msg({
-	message: 'Clearing the text of a message with attachments asks to delete the message unless this is on',
+	message: 'When this is off, clearing the text of a message with attachments asks you to delete the message',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const MESSAGE_INPUT_BUTTONS_DESCRIPTOR = msg({
