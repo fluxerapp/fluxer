@@ -12,6 +12,7 @@ const messageCss = readSource('../../theme/styles/Message.module.css');
 const actionBarCss = readSource('./MessageActionBar.module.css');
 const focusRingCss = readSource('../../ui/focus_ring/FocusRing.module.css');
 const channelMessageSource = readSource('./ChannelMessage.tsx');
+const channelMessagesSource = readSource('./ChannelMessages.tsx');
 const messageFocusRing = channelMessageSource.match(/<FocusRing\b[^>]*>/)?.[0] ?? '';
 
 interface CssRule {
@@ -46,7 +47,18 @@ describe('message focus ring contract', () => {
 
 	it('only enables the ring in keyboard navigation mode in the experiment arm', () => {
 		expect(messageFocusRing).toMatch(/enabled=\{keyboardNavigationEnabled \? keyboardModeEnabled : undefined\}/);
-		expect(messageFocusRing).toMatch(/within=\{keyboardNavigationEnabled\}/);
+	});
+
+	it('leaves focused descendants their own rings instead of drawing the row ring over them', () => {
+		expect(messageFocusRing).not.toMatch(/\bwithin\b/);
+	});
+
+	it('scopes message list rings inside the scroll content in the experiment arm', () => {
+		const scopedList = channelMessagesSource.match(
+			/\{keyboardNavigationEnabled \? \(\s*<FocusRingScope containerRef=\{scrollerInnerRef\}[^>]*>\s*\{messageListContent\}\s*<\/FocusRingScope>\s*\) : \(\s*messageListContent\s*\)\}/,
+		);
+		expect(scopedList).not.toBeNull();
+		expect(channelMessagesSource).toMatch(/const keyboardNavigationEnabled = MessageKeyboardFocusRollout\.enabled;/);
 	});
 
 	it('insets the ring inside the row in the experiment arm and keeps the default geometry in control', () => {

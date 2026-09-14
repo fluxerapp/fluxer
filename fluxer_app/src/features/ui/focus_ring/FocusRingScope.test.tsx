@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import FocusRingContext, {type FocusRingContextManager} from '@app/features/ui/focus_ring/FocusRingContext';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
@@ -308,5 +309,74 @@ describe('FocusRingScope', () => {
 		const width = Number.parseFloat(inset.style.width);
 		expect(left).toBeGreaterThan(0);
 		expect(left + width).toBeLessThan(500);
+	});
+});
+
+function NestedRings({outerWithin}: {outerWithin: boolean}) {
+	const containerRef = useRef<HTMLDivElement>(null);
+	return (
+		<div ref={containerRef} data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.div">
+			<FocusRingScope containerRef={containerRef} data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.scope">
+				<Capture data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.capture" />
+				<FocusRing within={outerWithin} data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.row-ring">
+					<div tabIndex={-1} data-row="true" data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.row">
+						<div
+							style={{position: 'absolute', zIndex: 10}}
+							data-bar="true"
+							data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.bar"
+						>
+							<FocusRing data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.button-ring">
+								<button type="button" data-flx="ui.focus-ring.focus-ring-scope-test.nested-rings.button">
+									react
+								</button>
+							</FocusRing>
+						</div>
+					</div>
+				</FocusRing>
+			</FocusRingScope>
+		</div>
+	);
+}
+
+function requireElement(selector: string): HTMLElement {
+	const element = container.querySelector<HTMLElement>(selector);
+	if (element == null) throw new Error(`Missing ${selector}`);
+	return element;
+}
+
+describe('FocusRing nested inside another ring', () => {
+	test('a focus-within ring replaces the ring of a descendant that draws its own', () => {
+		act(() => {
+			root.render(<NestedRings outerWithin={true} />);
+		});
+		act(() => {
+			requireElement('button').focus();
+		});
+		expect(requireRingContext().targetElement).toBe(requireElement('[data-row]'));
+	});
+
+	test('a ring without focus-within leaves the descendant its own ring', () => {
+		act(() => {
+			root.render(<NestedRings outerWithin={false} />);
+		});
+		act(() => {
+			requireElement('button').focus();
+		});
+		expect(requireRingContext().targetElement).toBe(requireElement('button'));
+	});
+
+	test('stacks a descendant ring above an elevated bar and the row ring beneath it', () => {
+		act(() => {
+			root.render(<NestedRings outerWithin={false} />);
+		});
+		act(() => {
+			requireElement('button').focus();
+		});
+		expect(requireRing().style.zIndex).toBe('11');
+		act(() => {
+			requireElement('[data-row]').focus();
+		});
+		expect(requireRingContext().targetElement).toBe(requireElement('[data-row]'));
+		expect(requireRing().style.zIndex).toBe('');
 	});
 });

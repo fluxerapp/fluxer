@@ -18,6 +18,7 @@ interface MessageListKeyboardNavigationOptions {
 	hasMoreAfter?: boolean;
 	isLoadingMore?: boolean;
 	onEscape?: () => void;
+	onNavigatePastNewest?: () => void;
 	allowWhenInactive?: boolean;
 }
 
@@ -67,6 +68,7 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		hasMoreAfter = false,
 		isLoadingMore = false,
 		onEscape,
+		onNavigatePastNewest,
 		allowWhenInactive = false,
 	} = options;
 	const keyboardModeEnabled = KeyboardMode.keyboardModeEnabled;
@@ -168,6 +170,8 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 			if (nextIdx >= nodes.length) {
 				if (hasMoreAfter && onLoadMoreAfter && !isLoadingMore) {
 					onLoadMoreAfter();
+				} else if (keyboardNavigationEnabled && !hasMoreAfter && onNavigatePastNewest) {
+					onNavigatePastNewest();
 				}
 				return;
 			}
@@ -241,6 +245,7 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		hasMoreAfter,
 		isLoadingMore,
 		onEscape,
+		onNavigatePastNewest,
 		allowWhenInactive,
 	]);
 }

@@ -47,10 +47,22 @@ function focusedRowId(): string | null {
 	return active instanceof HTMLElement ? (active.dataset.messageId ?? null) : null;
 }
 
-function render(onFocusMessage?: (messageId: string) => void): void {
+interface EdgeOptions {
+	onNavigatePastNewest?: () => void;
+	onLoadMoreAfter?: () => void;
+	hasMoreAfter?: boolean;
+}
+
+function render(onFocusMessage?: (messageId: string) => void, edge: EdgeOptions = {}): void {
 	const containerRef: RefObject<HTMLElement | null> = {current: viewport};
 	function Harness(): null {
-		useMessageListKeyboardNavigation({containerRef, channelId: CHANNEL_ID, onFocusMessage, allowWhenInactive: true});
+		useMessageListKeyboardNavigation({
+			containerRef,
+			channelId: CHANNEL_ID,
+			onFocusMessage,
+			allowWhenInactive: true,
+			...edge,
+		});
 		return null;
 	}
 	act(() => {
@@ -216,6 +228,52 @@ describe('useMessageListKeyboardNavigation', () => {
 		expect(focusedRowId()).toBe('4');
 		pressArrow('ArrowUp');
 		expect(focusedRowId()).toBe('1');
+	});
+});
+
+describe('useMessageListKeyboardNavigation past the newest message', () => {
+	const focusRow = (messageId: string) => {
+		findMessageElement(document, viewport, CHANNEL_ID, messageId)?.focus({preventScroll: true});
+	};
+
+	it('hands focus to the composer when stepping down past the newest message', () => {
+		mountRows([
+			{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX},
+			{messageId: '2', idPrefix: CHANNEL_MESSAGE_ID_PREFIX},
+		]);
+		const onNavigatePastNewest = vi.fn();
+		render(focusRow, {onNavigatePastNewest});
+
+		pressArrow('ArrowDown');
+		pressArrow('ArrowDown');
+		expect(focusedRowId()).toBe('2');
+		expect(onNavigatePastNewest).not.toHaveBeenCalled();
+
+		pressArrow('ArrowDown');
+		expect(onNavigatePastNewest).toHaveBeenCalledTimes(1);
+	});
+
+	it('loads newer messages instead of leaving the list while more exist after it', () => {
+		mountRows([{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX}]);
+		const onNavigatePastNewest = vi.fn();
+		const onLoadMoreAfter = vi.fn();
+		render(focusRow, {onNavigatePastNewest, onLoadMoreAfter, hasMoreAfter: true});
+
+		pressArrow('ArrowDown');
+		pressArrow('ArrowDown');
+		expect(onLoadMoreAfter).toHaveBeenCalledTimes(1);
+		expect(onNavigatePastNewest).not.toHaveBeenCalled();
+	});
+
+	it('stays on the newest message in the control arm', () => {
+		rolloutMock.enabled = false;
+		mountRows([{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX}]);
+		const onNavigatePastNewest = vi.fn();
+		render(focusRow, {onNavigatePastNewest});
+
+		pressArrow('ArrowDown');
+		pressArrow('ArrowDown');
+		expect(onNavigatePastNewest).not.toHaveBeenCalled();
 	});
 });
 
