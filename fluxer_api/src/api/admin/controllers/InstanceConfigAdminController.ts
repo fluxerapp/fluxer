@@ -33,6 +33,7 @@ import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admi
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
@@ -60,6 +61,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		voiceNoiseSuppression,
 		experimentDelivery,
 		messageHoverTracking,
+		messageKeyboardFocus,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -69,6 +71,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getMessageHoverTrackingConfig(),
+		instanceConfigRepository.getMessageKeyboardFocusConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -101,6 +104,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		voice_noise_suppression: voiceNoiseSuppression,
 		experiment_delivery: experimentDelivery,
 		message_hover_tracking: messageHoverTracking,
+		message_keyboard_focus: messageKeyboardFocus,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -254,6 +258,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentMessageHoverTracking.config_version + 1,
 					});
 					await instanceConfigRepository.setMessageHoverTrackingConfig(validated);
+				}
+			}
+			if (data.message_keyboard_focus) {
+				const patch = omitUndefinedFields(data.message_keyboard_focus);
+				if (Object.keys(patch).length > 0) {
+					const currentMessageKeyboardFocus = await instanceConfigRepository.getMessageKeyboardFocusConfig();
+					const validated = MessageKeyboardFocusConfigSchema.parse({
+						...currentMessageKeyboardFocus,
+						...patch,
+						config_version: currentMessageKeyboardFocus.config_version + 1,
+					});
+					await instanceConfigRepository.setMessageKeyboardFocusConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

@@ -11,6 +11,7 @@ import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 
 export function ExperimentController(app: HonoApp) {
 	app.get(
@@ -29,10 +30,11 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig, messageHoverTrackingConfig] = await Promise.all([
+			const [delivery, voiceConfig, messageHoverTrackingConfig, messageKeyboardFocusConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 				instanceConfigRepository.getMessageHoverTrackingConfig(),
+				instanceConfigRepository.getMessageKeyboardFocusConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -41,6 +43,7 @@ export function ExperimentController(app: HonoApp) {
 				assignments: {
 					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
 					message_hover_tracking: resolveMessageHoverTrackingAssignment(messageHoverTrackingConfig, userId),
+					message_keyboard_focus: resolveMessageKeyboardFocusAssignment(messageKeyboardFocusConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

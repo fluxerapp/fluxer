@@ -17,8 +17,9 @@ use crate::{
             InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
             InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
             InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, MessageHoverTrackingConfigUpdateRequest, NoiseSuppressionBackend,
-            PremiumMode, RegistrationMode, SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES,
+            LimitRuleFilters, MessageHoverTrackingConfigUpdateRequest,
+            MessageKeyboardFocusConfigUpdateRequest, NoiseSuppressionBackend, PremiumMode,
+            RegistrationMode, SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES,
             VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
             VoiceNoiseSuppressionGuildOverride,
         },
@@ -208,6 +209,10 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_message_hover_tracking" => match build_message_hover_tracking_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_message_keyboard_focus" => match build_message_keyboard_focus_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -655,6 +660,38 @@ fn build_message_hover_tracking_update(
             )?),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("message_hover_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_message_keyboard_focus_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        message_keyboard_focus: Some(MessageKeyboardFocusConfigUpdateRequest {
+            enabled: Some(form.bool_value("message_keyboard_focus_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "message_keyboard_focus_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_experiment_rollout_salt(
+                form,
+                "message_keyboard_focus_rollout_salt",
+            )?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("message_keyboard_focus_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("message_keyboard_focus_excluded_user_ids")
                     .unwrap_or_default(),
                 "Excluded user IDs",
             )?),

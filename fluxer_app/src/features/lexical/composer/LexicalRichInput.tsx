@@ -58,7 +58,7 @@ export interface LexicalRichInputProps {
 	i18n: I18n;
 }
 
-const NOOP = (): void => {};
+const ARROW_UP_UNHANDLED = (): boolean => false;
 const SAFE_CHANNEL_TRIGGERS: Array<TriggerType> = ['emoji', 'mention', 'channel'];
 const SAFE_CONTEXT_FREE_TRIGGERS: Array<TriggerType> = ['emoji'];
 
@@ -245,7 +245,7 @@ export const LexicalRichInput = ({
 				onChange={emitChange}
 				onCursorMove={onCursorMove}
 				onEnter={onSubmit == null ? undefined : handleEnter}
-				onArrowUp={NOOP}
+				onArrowUp={ARROW_UP_UNHANDLED}
 				onKeyDown={onKeyDown}
 				onFocus={onFocus}
 				onBlur={onBlur}

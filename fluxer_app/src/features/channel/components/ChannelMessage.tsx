@@ -15,6 +15,7 @@ import {MarkdownContext} from '@app/features/messaging/components/markdown/rende
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
+import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import {getMessageComponent} from '@app/features/messaging/utils/MessageComponentUtils';
 import {renderAstToPlaintext} from '@app/features/messaging/utils/markdown/Plaintext';
@@ -483,6 +484,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		handlePopoutToggle,
 		trackingEnabled: hoverTrackingEnabled,
 	} = useMessageHoverState({messageRef, mobileLayoutEnabled, keyboardModeEnabled, contextMenuOpen});
+	const keyboardNavigationEnabled = MessageKeyboardFocusRollout.enabled;
 	const handleFocusWithin = useCallback(() => {
 		if (!keyboardModeEnabled) {
 			return;
@@ -512,6 +514,17 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			MessageFocus.clearFocusedMessageIfMatches(channel.id, message.id);
 		}
 	}, [channel, contextMenuOpen, isFocusedWithin, keyboardModeEnabled, message, message.id]);
+	const isFocusedWithinRef = useRef(isFocusedWithin);
+	isFocusedWithinRef.current = isFocusedWithin;
+	const keyboardNavigationEnabledRef = useRef(keyboardNavigationEnabled);
+	keyboardNavigationEnabledRef.current = keyboardNavigationEnabled;
+	useEffect(() => {
+		return () => {
+			if (keyboardNavigationEnabledRef.current && isFocusedWithinRef.current) {
+				MessageFocus.clearFocusedMessageIfMatches(channel.id, message.id);
+			}
+		};
+	}, [channel.id, message.id]);
 	useEffect(() => {
 		const wasEditing = wasEditingInPreviousUpdateRef.current;
 		const justStartedEditing = !wasEditing && isEditing;
@@ -689,7 +702,12 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	);
 	return (
 		<>
-			<FocusRing data-flx="channel.message.focus-ring">
+			<FocusRing
+				enabled={keyboardNavigationEnabled ? keyboardModeEnabled : undefined}
+				within={keyboardNavigationEnabled}
+				offset={keyboardNavigationEnabled ? -2 : undefined}
+				data-flx="channel.message.focus-ring"
+			>
 				<div
 					role="article"
 					aria-label={messageAriaLabel}

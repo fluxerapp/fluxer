@@ -21,10 +21,15 @@ import {
 	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
 	type MessageHoverTrackingConfig,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {
+	DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
+	type MessageKeyboardFocusConfig,
+} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
+const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
@@ -360,6 +365,51 @@ describe('InstanceConfigRepository', () => {
 		await repository.setMessageHoverTrackingConfig(config);
 
 		await expect(repository.getMessageHoverTrackingConfig()).resolves.toEqual(config);
+	});
+
+	it('returns the default message keyboard focus config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getMessageKeyboardFocusConfig()).resolves.toEqual(DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
+		{name: 'a target that is not a snowflake', stored: '{"included_user_ids":["nope"]}'},
+	])('falls back to the default message keyboard focus config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY, stored);
+
+		await expect(repository.getMessageKeyboardFocusConfig()).resolves.toEqual(DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG);
+	});
+
+	it('round-trips a stored message keyboard focus config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: MessageKeyboardFocusConfig = {
+			...DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
+			enabled: true,
+			config_version: 5,
+			rollout_basis_points: 2500,
+			rollout_salt: 'message-keyboard-focus-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+		};
+		await repository.setMessageKeyboardFocusConfig(config);
+
+		await expect(repository.getMessageKeyboardFocusConfig()).resolves.toEqual(config);
 	});
 
 	it('fills newly added voice noise suppression fields from the schema defaults', async () => {

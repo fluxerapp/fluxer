@@ -4,7 +4,9 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
+import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import Messages from '@app/features/messaging/state/MessagingMessages';
+import {CHANNEL_MESSAGE_ID_PREFIX, findMessageElement} from '@app/features/messaging/utils/MessageNodeSelectors';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {evaluateScrollPinning, type ScrollPinResult} from '@app/features/platform/utils/ScrollPosition';
@@ -210,10 +212,12 @@ export class ScrollManager {
 
 	layoutGetElementFromMessageId(messageId: string): HTMLElement | null {
 		const doc = this.scrollGetDocument();
-		const {channel} = this.props;
 		if (!doc) return null;
-		const elementId = `chat-messages-${channel.id}-${messageId}`;
-		return doc.getElementById(elementId) as HTMLElement | null;
+		const {channel} = this.props;
+		if (!MessageKeyboardFocusRollout.enabled) {
+			return doc.getElementById(`${CHANNEL_MESSAGE_ID_PREFIX}-${channel.id}-${messageId}`) as HTMLElement | null;
+		}
+		return findMessageElement(doc, this.ref.current?.getViewportElement(), channel.id, messageId);
 	}
 
 	private layoutGetContainerLayout(container: HTMLElement): ContainerLayout {

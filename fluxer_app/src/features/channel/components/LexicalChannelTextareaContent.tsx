@@ -87,6 +87,7 @@ import {
 } from '@app/features/messaging/state/MentionConfirmationStateMachine';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageEditMobile from '@app/features/messaging/state/MessageEditMobile';
+import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
@@ -885,15 +886,17 @@ export const LexicalChannelTextareaContent = observer(
 			onSubmit();
 		}, [canSubmit, channel, hasAttachments, onSubmit]);
 		const handleArrowUpEmpty = useCallback(() => {
+			const claimsArrowUp = MessageKeyboardFocusRollout.enabled;
 			if (KeyboardMode.keyboardModeEnabled) {
 				ComponentBus.dispatch('FOCUS_BOTTOMMOST_MESSAGE', {channelId: channel.id});
-				return;
+				return claimsArrowUp;
 			}
 			const message = Messages.getLastEditableMessage(channel.id);
 			if (!message) {
-				return;
+				return false;
 			}
 			MessageCommands.startEdit(channel.id, message.id, message.content);
+			return claimsArrowUp;
 		}, [channel.id]);
 		useTextareaDraftAndTyping({
 			channelId: channel.id,

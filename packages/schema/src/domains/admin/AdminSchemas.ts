@@ -27,6 +27,10 @@ import {
 	MessageHoverTrackingConfigResponse,
 	MessageHoverTrackingConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {
+	MessageKeyboardFocusConfigResponse,
+	MessageKeyboardFocusConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {
 	InstanceCaptchaProviderSchema,
@@ -635,6 +639,7 @@ export const InstanceConfigResponse = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	message_hover_tracking: MessageHoverTrackingConfigResponse,
+	message_keyboard_focus: MessageKeyboardFocusConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -672,6 +677,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	message_hover_tracking: MessageHoverTrackingConfigUpdateRequest.nullish(),
+	message_keyboard_focus: MessageKeyboardFocusConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

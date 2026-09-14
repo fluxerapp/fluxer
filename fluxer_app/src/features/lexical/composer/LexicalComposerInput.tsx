@@ -160,7 +160,7 @@ export interface LexicalComposerInputProps {
 	onChange: (display: string, segments: Array<MentionSegment>, wire: string) => void;
 	onCursorMove: () => void;
 	onEnter?: () => void;
-	onArrowUp: () => void;
+	onArrowUp: () => boolean;
 	onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 	onFocus?: () => void;
 	onBlur?: () => void;
@@ -608,8 +608,9 @@ const ComposerInner = ({
 						return false;
 					}
 					if (event != null && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-						if ($isComposerEmpty()) {
-							cb.current.onArrowUp();
+						if ($isComposerEmpty() && cb.current.onArrowUp()) {
+							event.preventDefault();
+							return true;
 						}
 					}
 					return false;

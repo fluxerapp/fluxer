@@ -41,6 +41,10 @@ import {
 	MessageHoverTrackingConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {
+	type MessageKeyboardFocusConfig,
+	MessageKeyboardFocusConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {
 	type InstanceAppPublic,
 	InstanceAppPublicSchema,
 	type InstanceBranding,
@@ -60,6 +64,7 @@ const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
+const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -344,6 +349,7 @@ type StoredConfigSection =
 	| 'voice noise suppression'
 	| 'experiment delivery'
 	| 'message hover tracking'
+	| 'message keyboard focus'
 	| 'instance policy'
 	| 'integrations'
 	| 'media'
@@ -487,6 +493,10 @@ function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeli
 
 function parseStoredMessageHoverTrackingConfig(raw: string | null): MessageHoverTrackingConfig {
 	return parseStoredConfigOrDefault(MessageHoverTrackingConfigSchema, raw, 'message hover tracking');
+}
+
+function parseStoredMessageKeyboardFocusConfig(raw: string | null): MessageKeyboardFocusConfig {
+	return parseStoredConfigOrDefault(MessageKeyboardFocusConfigSchema, raw, 'message keyboard focus');
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -1009,6 +1019,7 @@ export class InstanceConfigRepository {
 		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredMessageHoverTrackingConfig(snapshot.get(MESSAGE_HOVER_TRACKING_CONFIG_KEY) ?? null);
+		parseStoredMessageKeyboardFocusConfig(snapshot.get(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
 			parseStoredRegistrationConfig(snapshot.get(REGISTRATION_CONFIG_KEY) ?? null),
@@ -1102,6 +1113,16 @@ export class InstanceConfigRepository {
 	async setMessageHoverTrackingConfig(config: MessageHoverTrackingConfig): Promise<void> {
 		const validated = validateStoredConfig(MessageHoverTrackingConfigSchema, config, 'message hover tracking');
 		await this.setConfig(MESSAGE_HOVER_TRACKING_CONFIG_KEY, JSON.stringify(validated));
+	}
+
+	async getMessageKeyboardFocusConfig(): Promise<MessageKeyboardFocusConfig> {
+		const raw = await this.getConfig(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY);
+		return parseStoredMessageKeyboardFocusConfig(raw);
+	}
+
+	async setMessageKeyboardFocusConfig(config: MessageKeyboardFocusConfig): Promise<void> {
+		const validated = validateStoredConfig(MessageKeyboardFocusConfigSchema, config, 'message keyboard focus');
+		await this.setConfig(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async setExperimentDeliveryConfig(config: ExperimentDeliveryConfig): Promise<void> {

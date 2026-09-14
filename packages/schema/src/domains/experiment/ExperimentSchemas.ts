@@ -8,6 +8,10 @@ import {
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 	MessageHoverTrackingAssignmentResponse,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {
+	INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
+	MessageKeyboardFocusAssignmentResponse,
+} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -47,6 +51,7 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 const ExperimentAssignmentsSchema = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionAssignmentResponse.optional(),
 	message_hover_tracking: MessageHoverTrackingAssignmentResponse.optional(),
+	message_keyboard_focus: MessageKeyboardFocusAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -73,4 +78,10 @@ export function readMessageHoverTrackingAssignment(
 	response: ExperimentAssignmentsResponse,
 ): MessageHoverTrackingAssignmentResponse {
 	return response.assignments.message_hover_tracking ?? INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT;
+}
+
+export function readMessageKeyboardFocusAssignment(
+	response: ExperimentAssignmentsResponse,
+): MessageKeyboardFocusAssignmentResponse {
+	return response.assignments.message_keyboard_focus ?? INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT;
 }

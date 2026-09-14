@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, and `message_hover_tracking`, which selects one of two client implementations of the message hover state.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `message_hover_tracking`, which selects one of two client implementations of the message hover state, and `message_keyboard_focus`, which selects one of two client implementations of keyboard navigation in the message list.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -34,10 +34,11 @@ One entry per experiment. The envelope reports this object even when it is empty
 | --- | --- | --- |
 | voice_noise_suppression? | [noise suppression assignment](#noise-suppression-assignment-object) object | The caller's noise suppression assignment |
 | message_hover_tracking? | [message hover tracking assignment](#message-hover-tracking-assignment-object) object | The caller's message hover tracking assignment |
+| message_keyboard_focus? | [message keyboard focus assignment](#message-keyboard-focus-assignment-object) object | The caller's message keyboard focus assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
-This server version writes `voice_noise_suppression` and `message_hover_tracking` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
+This server version writes `voice_noise_suppression`, `message_hover_tracking`, and `message_keyboard_focus` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
 
 ## Noise suppression backends
 
@@ -119,6 +120,33 @@ The rollout selects which implementation of the message hover state a client run
 | source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
 
 ### Hover tracking resolution outcomes
+
+The outcomes below set `user_targeted` to false, and they differ in what else they report.
+
+1. The rollout is off. `enabled` is false and `source` is null.
+2. The operator has excluded the caller. `enabled` is true and `source` is null.
+3. The caller was not drawn. `enabled` is true and `source` is null.
+
+A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. The blocklist is read before the allowlist, so an account named in both is not drawn.
+
+`config_version` reports the stored revision in all outcomes, the rollout being off included. A client branches on `user_targeted` alone.
+
+## Message keyboard focus assignment object
+
+One resolution of the instance message keyboard focus rollout against one account. Every field is present whenever the key is written.
+
+The rollout selects which implementation of keyboard navigation a client runs in the message list. A drawn client reaches the message list from the composer with one Tab, walks messages with the arrow keys through revealed blocked groups, and draws the focus ring inside each row. A client that is not drawn keeps the implementation it ships with. Neither arm changes what the API returns, and no route reports which arm a client ran.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout is running on this instance |
+| config_version | integer | The revision of the instance configuration this assignment was resolved from |
+| user_targeted | boolean | Whether the caller is inside the rollout |
+| source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
+
+### Keyboard navigation resolution outcomes
 
 The outcomes below set `user_targeted` to false, and they differ in what else they report.
 

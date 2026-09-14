@@ -16,12 +16,17 @@ import {
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
 	readMessageHoverTrackingAssignment,
+	readMessageKeyboardFocusAssignment,
 	readVoiceNoiseSuppressionAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
 	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {
+	DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
+	INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const NOT_MODIFIED = 304;
@@ -57,6 +62,7 @@ describe('GET /experiments', () => {
 			assignments: {
 				voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 				message_hover_tracking: INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
+				message_keyboard_focus: INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
 			},
 		});
 	});
@@ -134,10 +140,61 @@ describe('GET /experiments', () => {
 		});
 	});
 
-	it('resolves the two experiments independently', async () => {
+	it('populates the message keyboard focus key even when the rollout is disabled', async () => {
+		const account = await createTestAccount(harness);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(Object.hasOwn(body.assignments, 'message_keyboard_focus')).toBe(true);
+		expect(readMessageKeyboardFocusAssignment(body)).toEqual(INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT);
+	});
+
+	it('targets an allowlisted account for message keyboard focus', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setMessageKeyboardFocusConfig({
+			...DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
+			enabled: true,
+			config_version: 4,
+			included_user_ids: [account.userId],
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readMessageKeyboardFocusAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 4,
+			user_targeted: true,
+			source: 'user_rule',
+		});
+	});
+
+	it('leaves an account outside a zero-width message keyboard focus rollout', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setMessageKeyboardFocusConfig({
+			...DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
+			enabled: true,
+			config_version: 2,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readMessageKeyboardFocusAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 2,
+			user_targeted: false,
+			source: null,
+		});
+	});
+
+	it('resolves all three experiments independently', async () => {
 		const account = await createTestAccount(harness);
 		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
 			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
+		await getInstanceConfigRepository().setMessageKeyboardFocusConfig({
+			...DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
 			enabled: true,
 			rollout_basis_points: 10000,
 		});
@@ -145,6 +202,7 @@ describe('GET /experiments', () => {
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
 		expect(readMessageHoverTrackingAssignment(body).user_targeted).toBe(true);
+		expect(readMessageKeyboardFocusAssignment(body).user_targeted).toBe(true);
 		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
 	});
 

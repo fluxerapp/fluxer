@@ -33,12 +33,14 @@ import {
 } from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
+import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import MessagesState from '@app/features/messaging/state/MessagingMessages';
 import {
 	type ChannelStreamItem,
 	createChannelStream,
 	getCollapsedMessageGroupKey,
 } from '@app/features/messaging/utils/MessageGroupingUtils';
+import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
@@ -398,7 +400,9 @@ export const Messages = observer(function Messages({
 			const scroller = scrollManager.ref.current?.getViewportElement();
 			const innerElement = scrollerInnerRef.current;
 			if (!scroller || !innerElement) return;
-			const messageElements = innerElement.querySelectorAll<HTMLElement>('[data-message-id]');
+			const messageElements = innerElement.querySelectorAll<HTMLElement>(
+				MessageKeyboardFocusRollout.enabled ? getMessageSelector(channel.id) : '[data-message-id]',
+			);
 			if (!messageElements.length) return;
 			const scrollerRect = scroller.getBoundingClientRect();
 			const candidates: Array<MessageFocusCandidate> = [];
