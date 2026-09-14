@@ -103,7 +103,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 			if (!MessageCommands.reserveSend(channel.id, nonce)) return false;
 			const messageReference = MessageSubmitUtils.prepareMessageReference(channel.id, referencedMessage);
-			TypingUtils.clear(channel.id);
+			TypingUtils.handleOwnMessageSent(channel.id);
 			DraftCommands.deleteDraft(channel.id);
 			MessageCommands.stopReply(channel.id);
 			const uploadingAttachments = MessageSubmitUtils.createUploadingAttachments(
@@ -182,7 +182,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			if (isBlockedBySlowmode(channel)) return;
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 			if (!MessageCommands.reserveSend(channel.id, nonce)) return;
-			TypingUtils.clear(channel.id);
+			TypingUtils.handleOwnMessageSent(channel.id);
 			MessageCommands.stopReply(channel.id);
 			const message = new Message({
 				id: nonce,

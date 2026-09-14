@@ -41,6 +41,10 @@ import {
 	DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
 	type MessageKeyboardFocusConfig,
 } from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {
+	DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+	type TypingIndicatorReworkConfig,
+} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
@@ -50,6 +54,7 @@ const BLOCKED_MESSAGE_GROUPS_CONFIG_KEY = 'blocked_message_groups_config';
 const GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG_KEY = 'guild_activity_log_presentation_config';
 const EXPRESSION_INFO_CARD_CONFIG_KEY = 'expression_info_card_config';
 const GUILD_HEADER_COLLAPSE_CONFIG_KEY = 'guild_header_collapse_config';
+const TYPING_INDICATOR_REWORK_CONFIG_KEY = 'typing_indicator_rework_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
@@ -629,6 +634,70 @@ describe('InstanceConfigRepository', () => {
 
 		await expect(repository.getGuildHeaderCollapseConfig()).resolves.toEqual({
 			...DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 1000,
+		});
+	});
+
+	it('returns the default typing indicator rework config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getTypingIndicatorReworkConfig()).resolves.toEqual(DEFAULT_TYPING_INDICATOR_REWORK_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
+		{name: 'a target that is not a snowflake', stored: '{"included_user_ids":["nope"]}'},
+	])('falls back to the default typing indicator rework config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(TYPING_INDICATOR_REWORK_CONFIG_KEY, stored);
+
+		await expect(repository.getTypingIndicatorReworkConfig()).resolves.toEqual(DEFAULT_TYPING_INDICATOR_REWORK_CONFIG);
+	});
+
+	it('round-trips a stored typing indicator rework config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: TypingIndicatorReworkConfig = {
+			...DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+			enabled: true,
+			config_version: 5,
+			rollout_basis_points: 1500,
+			rollout_salt: 'typing-indicator-rework-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+		};
+		await repository.setTypingIndicatorReworkConfig(config);
+
+		await expect(repository.getTypingIndicatorReworkConfig()).resolves.toEqual(config);
+	});
+
+	it('fills newly added typing indicator rework fields from the schema defaults', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			TYPING_INDICATOR_REWORK_CONFIG_KEY,
+			JSON.stringify({enabled: true, config_version: 2, rollout_basis_points: 1000}),
+		);
+
+		await expect(repository.getTypingIndicatorReworkConfig()).resolves.toEqual({
+			...DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
 			enabled: true,
 			config_version: 2,
 			rollout_basis_points: 1000,

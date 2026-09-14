@@ -433,6 +433,7 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
                 "/instance-config?action=update_sso",
                 "/instance-config?action=update_voice_noise_suppression",
                 "/instance-config?action=update_guild_header_collapse",
+                "/instance-config?action=update_typing_indicator_rework",
                 "/instance-config?action=update_experiment_delivery",
             ][..],
         ),
@@ -1103,6 +1104,14 @@ fn instance_config() -> Value {
             "config_version": 0,
             "rollout_basis_points": 0,
             "rollout_salt": "guild-header-collapse-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
+        },
+        "typing_indicator_rework": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "typing-indicator-rework-v1",
             "included_user_ids": [],
             "excluded_user_ids": []
         },

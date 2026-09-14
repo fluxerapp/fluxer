@@ -44,15 +44,24 @@ msgstr "(tú)"
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# miembro} other {# miembros}}"
 
-#: src/features/channel/components/TypingUsers.tsx:66
+#. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
+#: src/features/channel/components/LegacyTypingUsers.tsx:41
+#: src/features/typing/rolling/RollingTypingText.tsx:19
+#: src/features/typing/rolling/RollingTypingText.tsx:54
 msgid "{a} and {b} are typing..."
 msgstr "{a} y {b} están escribiendo..."
 
-#: src/features/channel/components/TypingUsers.tsx:62
+#. Screen reader announcement in the composer when one person is typing. {a} is their display name.
+#: src/features/channel/components/LegacyTypingUsers.tsx:37
+#: src/features/typing/rolling/RollingTypingText.tsx:15
+#: src/features/typing/rolling/RollingTypingText.tsx:50
 msgid "{a} is typing..."
 msgstr "{a} está escribiendo..."
 
-#: src/features/channel/components/TypingUsers.tsx:73
+#. Screen reader announcement in the composer when three people are typing. {a}, {b} and {c} are their display names.
+#: src/features/channel/components/LegacyTypingUsers.tsx:48
+#: src/features/typing/rolling/RollingTypingText.tsx:24
+#: src/features/typing/rolling/RollingTypingText.tsx:60
 msgid "{a}, {b} and {c} are typing..."
 msgstr "{a}, {b} y {c} están escribiendo..."
 
@@ -1531,7 +1540,7 @@ msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/ChannelListContent.tsx:87
+#: src/features/app/components/layout/ChannelListContent.tsx:88
 msgid "{guildName} channels"
 msgstr "Canales de {guildName}"
 
@@ -2681,11 +2690,6 @@ msgstr "una extensión de archivo, p. ej., png"
 msgid "a forwarded message"
 msgstr "un mensaje reenviado"
 
-#. Description text in the channel and chat typing users.
-#: src/features/channel/components/TypingUsers.tsx:25
-msgid "A handful of keyboard warriors are assembling..."
-msgstr "Unos cuantos guerreros del teclado se están reuniendo..."
-
 #. Description text in the bot profile section.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:60
 msgid "A helpful bot that does amazing things!"
@@ -2752,11 +2756,6 @@ msgstr "Se hizo una solicitud de inicio de sesión desde el siguiente dispositiv
 #: src/features/search/utils/SearchUtils.ts:49
 msgid "a sticker"
 msgstr "un sticker"
-
-#. Description text in the channel and chat typing users.
-#: src/features/channel/components/TypingUsers.tsx:29
-msgid "A symphony of clacking keys is underway..."
-msgstr "Una sinfonía de teclas repiqueteando está en marcha..."
 
 #. Description for has:link. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:25
@@ -6894,7 +6893,7 @@ msgid "Category deleted"
 msgstr "Categoría eliminada"
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:78
+#: src/features/app/components/layout/ChannelListContent.tsx:79
 msgid "Category full"
 msgstr "Categoría llena"
 
@@ -19091,11 +19090,6 @@ msgstr "Es posible que se haya eliminado. El nombre volvió a ser el que tenía 
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Es posible que haya dejado de aparecer en Descubrir o haya desactivado la admisión de nuevos miembros. Actualiza la página y no volverás a verla."
 
-#. Label in the channel and chat typing users.
-#: src/features/channel/components/TypingUsers.tsx:33
-msgid "It's a full-blown typing fiesta in here"
-msgstr "Esto es una fiesta de escritura"
-
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:17
 msgid "It's quiet for now..."
@@ -21127,7 +21121,7 @@ msgid "Members without the {readMessageHistoryPermissionLabel} permission can vi
 msgstr "Los miembros sin el permiso {readMessageHistoryPermissionLabel} pueden ver los mensajes enviados después de esta fecha."
 
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:91
+#: src/features/app/components/layout/ChannelListContent.tsx:92
 msgid "Members, selected"
 msgstr "Miembros, seleccionados"
 
@@ -22124,6 +22118,11 @@ msgstr "Varios factores"
 msgid "Multi-line"
 msgstr "Varias líneas"
 
+#. Label in the composer typing row when the names of the people typing do not fit.
+#: src/features/typing/rolling/RollingTypingText.tsx:29
+msgid "Multiple people are typing..."
+msgstr "Varias personas están escribiendo..."
+
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
 msgid "Music"
@@ -22790,7 +22789,7 @@ msgstr "Mensaje nuevo"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
-#: src/features/app/components/layout/ChannelListContent.tsx:95
+#: src/features/app/components/layout/ChannelListContent.tsx:96
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "Mensajes nuevos"
@@ -24250,7 +24249,7 @@ msgid "Open community"
 msgstr "Abrir comunidad"
 
 #. Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/GuildHeader.tsx:38
+#: src/features/app/components/layout/GuildHeader.tsx:33
 msgid "Open community menu for {guildName}"
 msgstr "Abrir menú de la comunidad para {guildName}"
 
@@ -30718,7 +30717,7 @@ msgid "Setup key"
 msgstr "Clave de configuración"
 
 #. Label in the channel and chat typing users.
-#: src/features/channel/components/TypingUsers.tsx:21
+#: src/features/typing/utils/TypingTierText.ts:6
 msgid "Several people are typing..."
 msgstr "Varias personas están escribiendo..."
 
@@ -31685,7 +31684,7 @@ msgid "Skip this step"
 msgstr "Omitir este paso"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:75
+#: src/app/App.tsx:76
 msgid "Skip to content"
 msgstr "Saltar al contenido"
 
@@ -34454,7 +34453,7 @@ msgid "This card does not match your billing country, so it cannot be used for t
 msgstr "Esta tarjeta no se emitió en tu país de facturación, por lo que no puedes usarla para pagar en esta moneda local. Usa una tarjeta local o vuelve a {productName} y elige otro método de pago."
 
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
-#: src/features/app/components/layout/ChannelListContent.tsx:82
+#: src/features/app/components/layout/ChannelListContent.tsx:83
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
 msgstr "Esta categoría ya contiene el máximo de {maxChannelsPerCategory} canales."
 
@@ -39700,11 +39699,6 @@ msgstr "Quién puede ver tu perfil completo"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:358
 msgid "Who is typing"
 msgstr "Quién está escribiendo"
-
-#. Label in the channel and chat typing users.
-#: src/features/channel/components/TypingUsers.tsx:37
-msgid "Whoa, it's a typing apocalypse"
-msgstr "Uy, es un apocalipsis de escritura"
 
 #. Label in the too many attachments modal.
 #. Label in the too many reactions modal.

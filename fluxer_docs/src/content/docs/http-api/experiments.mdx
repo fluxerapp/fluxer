@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `message_hover_tracking`, which selects one of two client implementations of the message hover state, `message_keyboard_focus`, which selects one of two client implementations of keyboard navigation in the message list, `blocked_message_groups`, which selects how a client renders a revealed block of blocked messages, `guild_activity_log_presentation`, which selects one of two client renderings of the community activity log, `expression_info_card`, which selects what a client shows for an emoji or a sticker in a message, and `guild_header_collapse`, which selects how a client draws the guild banner above the channel list.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `message_hover_tracking`, which selects one of two client implementations of the message hover state, `message_keyboard_focus`, which selects one of two client implementations of keyboard navigation in the message list, `blocked_message_groups`, which selects how a client renders a revealed block of blocked messages, `guild_activity_log_presentation`, which selects one of two client renderings of the community activity log, `expression_info_card`, which selects what a client shows for an emoji or a sticker in a message, `guild_header_collapse`, which selects how a client draws the guild banner above the channel list, and `typing_indicator_rework`, which selects how a client sends and shows typing indicators.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -39,10 +39,11 @@ One entry per experiment. The envelope reports this object even when it is empty
 | guild_activity_log_presentation? | [guild activity log presentation assignment](#guild-activity-log-presentation-assignment-object) object | The caller's guild activity log presentation assignment |
 | expression_info_card? | [expression info card assignment](#expression-info-card-assignment-object) object | The caller's expression info card assignment |
 | guild_header_collapse? | [guild header collapse assignment](#guild-header-collapse-assignment-object) object | The caller's guild header collapse assignment |
+| typing_indicator_rework? | [typing indicator rework assignment](#typing-indicator-rework-assignment-object) object | The caller's typing indicator rework assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
-This server version writes `voice_noise_suppression`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `guild_activity_log_presentation`, `expression_info_card`, and `guild_header_collapse` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
+This server version writes `voice_noise_suppression`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `guild_activity_log_presentation`, `expression_info_card`, `guild_header_collapse`, and `typing_indicator_rework` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
 
 ## Noise suppression backends
 
@@ -259,6 +260,33 @@ The rollout selects how a client draws the guild banner above the channel list. 
 | source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
 
 ### Guild header collapse resolution outcomes
+
+The outcomes below set `user_targeted` to false, and they differ in what else they report.
+
+1. The rollout is off. `enabled` is false and `source` is null.
+2. The operator has excluded the caller. `enabled` is true and `source` is null.
+3. The caller was not drawn. `enabled` is true and `source` is null.
+
+A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. The blocklist is read before the allowlist, so an account named in both is not drawn.
+
+`config_version` reports the stored revision in all outcomes, the rollout being off included. A client branches on `user_targeted` alone.
+
+## Typing indicator rework assignment object
+
+One resolution of the instance typing indicator rework rollout against one account. Every field is present whenever the key is written.
+
+The rollout selects how a client sends and shows typing indicators. A drawn client sends one typing signal 1.5 seconds after a person starts typing, or at once when they resume 16 seconds or more after it scheduled the previous one, and then at most once every 8 seconds while they keep typing. Only a keystroke starts a signal, so none is sent more than 1.5 seconds after they stop. It treats a signal it receives as valid for 10 seconds from the moment it arrives, unless a further signal refreshes it, and it drops a person from the list once their message arrives. It names up to three people and collapses a larger group into one line, and it announces up to three names to screen readers even where the visible row has no room for them. A client that is not drawn keeps the typing indicators it ships with. Neither arm changes what the API returns, and no route reports which arm a client ran.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout is running on this instance |
+| config_version | integer | The revision of the instance configuration this assignment was resolved from |
+| user_targeted | boolean | Whether the caller is inside the rollout |
+| source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
+
+### Typing indicator rework resolution outcomes
 
 The outcomes below set `user_targeted` to false, and they differ in what else they report.
 

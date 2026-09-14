@@ -47,6 +47,10 @@ import {
 	MessageKeyboardFocusConfigResponse,
 	MessageKeyboardFocusConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {
+	TypingIndicatorReworkConfigResponse,
+	TypingIndicatorReworkConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {
 	InstanceCaptchaProviderSchema,
@@ -660,6 +664,7 @@ export const InstanceConfigResponse = z.object({
 	blocked_message_groups: BlockedMessageGroupsConfigResponse,
 	expression_info_card: ExpressionInfoCardConfigResponse,
 	guild_header_collapse: GuildHeaderCollapseConfigResponse,
+	typing_indicator_rework: TypingIndicatorReworkConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -702,6 +707,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	blocked_message_groups: BlockedMessageGroupsConfigUpdateRequest.nullish(),
 	expression_info_card: ExpressionInfoCardConfigUpdateRequest.nullish(),
 	guild_header_collapse: GuildHeaderCollapseConfigUpdateRequest.nullish(),
+	typing_indicator_rework: TypingIndicatorReworkConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

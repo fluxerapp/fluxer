@@ -28320,7 +28320,8 @@
 								"$ref": "#/components/schemas/GuildActivityLogPresentationAssignmentResponse"
 							},
 							"expression_info_card": {"$ref": "#/components/schemas/ExpressionInfoCardAssignmentResponse"},
-							"guild_header_collapse": {"$ref": "#/components/schemas/GuildHeaderCollapseAssignmentResponse"}
+							"guild_header_collapse": {"$ref": "#/components/schemas/GuildHeaderCollapseAssignmentResponse"},
+							"typing_indicator_rework": {"$ref": "#/components/schemas/TypingIndicatorReworkAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -32074,6 +32075,17 @@
 				"required": ["id", "name", "icon", "features"],
 				"additionalProperties": false,
 				"description": "Public presentation of the source guild of an expression"
+			},
+			"TypingIndicatorReworkAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+					"user_targeted": {"type": "boolean"},
+					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
+				},
+				"required": ["enabled", "config_version", "user_targeted", "source"],
+				"additionalProperties": false
 			},
 			"GuildHeaderCollapseAssignmentResponse": {
 				"type": "object",

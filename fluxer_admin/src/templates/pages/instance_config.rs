@@ -9,8 +9,9 @@ use crate::{
         InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
         LimitConfigResponse, MessageHoverTrackingConfigResponse,
         MessageKeyboardFocusConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
-        RegistrationUrlResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
-        VOICE_NS_MAX_TARGETED_USERS, VoiceNoiseSuppressionConfigResponse,
+        RegistrationUrlResponse, SsoConfigResponse, TypingIndicatorReworkConfigResponse,
+        VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
+        VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -157,6 +158,7 @@ pub fn instance_config_page(
                         (guild_activity_log_presentation_section(base, csrf_token, &instance_config.guild_activity_log_presentation))
                         (expression_info_card_section(base, csrf_token, &instance_config.expression_info_card))
                         (guild_header_collapse_section(base, csrf_token, &instance_config.guild_header_collapse))
+                        (typing_indicator_rework_section(base, csrf_token, &instance_config.typing_indicator_rework))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1807,6 +1809,110 @@ fn guild_header_collapse_section(
     )
 }
 
+fn typing_indicator_rework_section(
+    base: &str,
+    csrf_token: &str,
+    typing_indicator_rework: &TypingIndicatorReworkConfigResponse,
+) -> Markup {
+    let status = if typing_indicator_rework.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = typing_indicator_rework.included_user_ids.join("\n");
+    let excluded_user_ids = typing_indicator_rework.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Typing Indicator Rework",
+        "Picks how a targeted client sends and shows typing indicators. A targeted client sends a \
+         typing signal 1.5 seconds after someone starts typing and then at most once every 8 \
+         seconds, names up to three typists, and announces those names to screen readers even \
+         where the visible row collapses them. While the master switch below is off every client \
+         keeps the typing behaviour it ships with, whatever the rest of these fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_typing_indicator_rework"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (typing_indicator_rework.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "typing_indicator_rework_enabled",
+                        "true",
+                        "Serve typing indicator rework assignments to clients",
+                        typing_indicator_rework.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         rollout is inert and keeps its current typing behaviour, so the rollout \
+                         and targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "typing_indicator_rework_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &typing_indicator_rework.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "typing_indicator_rework_rollout_salt",
+                            "Rollout Salt",
+                            &typing_indicator_rework.rollout_salt,
+                            "typing-indicator-rework-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "typing_indicator_rework_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "typing_indicator_rework_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Typing Indicator Rework Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
 fn experiment_delivery_section(
     base: &str,
     csrf_token: &str,
@@ -2480,6 +2586,26 @@ mod tests {
         assert!(markup.contains("guild_header_collapse_rollout_salt"));
         assert!(markup.contains("guild_header_collapse_included_user_ids"));
         assert!(markup.contains("guild_header_collapse_excluded_user_ids"));
+        assert!(!markup.contains("expression_card_"));
+    }
+
+    #[test]
+    fn typing_indicator_rework_section_posts_its_own_action_and_fields() {
+        let typing_indicator_rework = TypingIndicatorReworkConfigResponse {
+            included_user_ids: vec!["1500000000000000001".to_owned()],
+            excluded_user_ids: vec!["1500000000000000002".to_owned()],
+            ..TypingIndicatorReworkConfigResponse::default()
+        };
+        let markup = typing_indicator_rework_section("/admin", "csrf", &typing_indicator_rework)
+            .into_string();
+        assert!(markup.contains("/instance-config?action=update_typing_indicator_rework"));
+        assert!(markup.contains("Typing Indicator Rework"));
+        assert!(markup.contains("typing-indicator-rework-v1"));
+        assert!(markup.contains("typing_indicator_rework_enabled"));
+        assert!(markup.contains("typing_indicator_rework_rollout_basis_points"));
+        assert!(markup.contains("typing_indicator_rework_rollout_salt"));
+        assert!(markup.contains("typing_indicator_rework_included_user_ids"));
+        assert!(markup.contains("typing_indicator_rework_excluded_user_ids"));
         assert!(!markup.contains("expression_card_"));
     }
 }

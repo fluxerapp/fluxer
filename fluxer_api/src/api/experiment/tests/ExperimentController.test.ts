@@ -25,6 +25,7 @@ import {
 	readGuildHeaderCollapseAssignment,
 	readMessageHoverTrackingAssignment,
 	readMessageKeyboardFocusAssignment,
+	readTypingIndicatorReworkAssignment,
 	readVoiceNoiseSuppressionAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
@@ -47,6 +48,10 @@ import {
 	DEFAULT_MESSAGE_KEYBOARD_FOCUS_CONFIG,
 	INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {
+	DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+	INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const NOT_MODIFIED = 304;
@@ -87,6 +92,7 @@ describe('GET /experiments', () => {
 				guild_activity_log_presentation: INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
 				expression_info_card: INERT_EXPRESSION_INFO_CARD_ASSIGNMENT,
 				guild_header_collapse: INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT,
+				typing_indicator_rework: INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT,
 			},
 		});
 	});
@@ -416,7 +422,81 @@ describe('GET /experiments', () => {
 		});
 	});
 
-	it('resolves all seven experiments independently', async () => {
+	it('populates the typing indicator rework key even when the rollout is disabled', async () => {
+		const account = await createTestAccount(harness);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(Object.hasOwn(body.assignments, 'typing_indicator_rework')).toBe(true);
+		expect(readTypingIndicatorReworkAssignment(body)).toEqual(INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT);
+	});
+
+	it('targets an allowlisted account for typing indicator rework', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setTypingIndicatorReworkConfig({
+			...DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+			enabled: true,
+			config_version: 6,
+			included_user_ids: [account.userId],
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readTypingIndicatorReworkAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 6,
+			user_targeted: true,
+			source: 'user_rule',
+		});
+	});
+
+	it('leaves an account outside a zero-width typing indicator rework rollout', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setTypingIndicatorReworkConfig({
+			...DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+			enabled: true,
+			config_version: 2,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readTypingIndicatorReworkAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 2,
+			user_targeted: false,
+			source: null,
+		});
+	});
+
+	it('serves a fresh body once the typing indicator rework config changes', async () => {
+		const account = await createTestAccount(harness);
+
+		const first = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
+			.get(ENDPOINT)
+			.executeWithResponse();
+		const staleEtag = first.response.headers.get('etag') as string;
+
+		await getInstanceConfigRepository().setTypingIndicatorReworkConfig({
+			...DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+			enabled: true,
+			config_version: 1,
+			rollout_basis_points: 10000,
+		});
+
+		const refreshed = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token)
+			.get(ENDPOINT)
+			.header('If-None-Match', staleEtag)
+			.executeWithResponse();
+		expect(refreshed.response.status).toBe(HTTP_STATUS.OK);
+		expect(refreshed.response.headers.get('etag')).not.toBe(staleEtag);
+		expect(refreshed.json?.assignments.typing_indicator_rework).toMatchObject({
+			enabled: true,
+			config_version: 1,
+			user_targeted: true,
+		});
+	});
+
+	it('resolves all eight experiments independently', async () => {
 		const account = await createTestAccount(harness);
 		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
 			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
@@ -448,6 +528,11 @@ describe('GET /experiments', () => {
 			enabled: true,
 			rollout_basis_points: 10000,
 		});
+		await getInstanceConfigRepository().setTypingIndicatorReworkConfig({
+			...DEFAULT_TYPING_INDICATOR_REWORK_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
@@ -457,6 +542,7 @@ describe('GET /experiments', () => {
 		expect(readGuildActivityLogPresentationAssignment(body).user_targeted).toBe(true);
 		expect(readExpressionInfoCardAssignment(body).user_targeted).toBe(true);
 		expect(readGuildHeaderCollapseAssignment(body).user_targeted).toBe(true);
+		expect(readTypingIndicatorReworkAssignment(body).user_targeted).toBe(true);
 		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
 	});
 

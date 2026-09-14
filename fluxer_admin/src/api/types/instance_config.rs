@@ -36,6 +36,8 @@ pub struct InstanceConfigResponse {
     pub expression_info_card: ExpressionInfoCardConfigResponse,
     #[serde(default)]
     pub guild_header_collapse: GuildHeaderCollapseConfigResponse,
+    #[serde(default)]
+    pub typing_indicator_rework: TypingIndicatorReworkConfigResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -779,6 +781,44 @@ pub struct GuildHeaderCollapseConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct TypingIndicatorReworkConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for TypingIndicatorReworkConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: "typing-indicator-rework-v1".to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct TypingIndicatorReworkConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -906,6 +946,8 @@ pub struct InstanceConfigUpdateRequest {
     pub expression_info_card: Option<ExpressionInfoCardConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_header_collapse: Option<GuildHeaderCollapseConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub typing_indicator_rework: Option<TypingIndicatorReworkConfigUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1253,6 +1295,8 @@ mod tests {
             .expect("default expression info card config");
         let collapse = serde_json::from_value::<GuildHeaderCollapseConfigResponse>(json!({}))
             .expect("default guild header collapse config");
+        let typing = serde_json::from_value::<TypingIndicatorReworkConfigResponse>(json!({}))
+            .expect("default typing indicator rework config");
         let noise = serde_json::to_value(noise).expect("serializable noise config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let hover =
@@ -1267,6 +1311,8 @@ mod tests {
             serde_json::to_value(expression).expect("serializable expression info card config");
         let collapse =
             serde_json::to_value(collapse).expect("serializable guild header collapse config");
+        let typing =
+            serde_json::to_value(typing).expect("serializable typing indicator rework config");
         let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
             serde_json::from_value(noise.clone()).expect("generated noise config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
@@ -1289,6 +1335,9 @@ mod tests {
         let generated_collapse: generated_types::GuildHeaderCollapseConfigResponse =
             serde_json::from_value(collapse.clone())
                 .expect("generated guild header collapse config contract");
+        let generated_typing: generated_types::TypingIndicatorReworkConfigResponse =
+            serde_json::from_value(typing.clone())
+                .expect("generated typing indicator rework config contract");
         assert_eq!(
             serde_json::to_value(generated_noise).expect("serializable generated noise config"),
             noise
@@ -1328,6 +1377,11 @@ mod tests {
                 .expect("serializable generated guild header collapse config"),
             collapse
         );
+        assert_eq!(
+            serde_json::to_value(generated_typing)
+                .expect("serializable generated typing indicator rework config"),
+            typing
+        );
         for (name, value) in [
             ("VoiceNoiseSuppressionConfigResponse", noise),
             ("ExperimentDeliveryConfigResponse", delivery),
@@ -1337,6 +1391,7 @@ mod tests {
             ("GuildActivityLogPresentationConfigResponse", activity_log),
             ("ExpressionInfoCardConfigResponse", expression),
             ("GuildHeaderCollapseConfigResponse", collapse),
+            ("TypingIndicatorReworkConfigResponse", typing),
         ] {
             for (field, value) in value.as_object().expect("config object") {
                 assert_eq!(
@@ -1437,6 +1492,46 @@ mod tests {
                 .expect("default guild header collapse config")
                 .rollout_salt,
             "guild-header-collapse-v1"
+        );
+    }
+
+    #[test]
+    fn typing_indicator_rework_update_preserves_empty_lists_and_omitted_fields() {
+        let update = TypingIndicatorReworkConfigUpdateRequest {
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::TypingIndicatorReworkConfigUpdateRequest>(
+            value.clone(),
+        )
+        .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"included_user_ids": [], "excluded_user_ids": []})
+        );
+        assert_eq!(
+            serde_json::to_value(TypingIndicatorReworkConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
+    }
+
+    #[test]
+    fn typing_indicator_rework_response_defaults_to_the_typing_indicator_rework_v1_salt() {
+        let config = TypingIndicatorReworkConfigResponse::default();
+        assert!(!config.enabled);
+        assert_eq!(config.config_version, 0);
+        assert_eq!(config.rollout_basis_points, 0);
+        assert_eq!(config.rollout_salt, "typing-indicator-rework-v1");
+        assert!(config.included_user_ids.is_empty());
+        assert!(config.excluded_user_ids.is_empty());
+        assert_eq!(
+            serde_json::from_value::<TypingIndicatorReworkConfigResponse>(json!({}))
+                .expect("default typing indicator rework config")
+                .rollout_salt,
+            "typing-indicator-rework-v1"
         );
     }
 

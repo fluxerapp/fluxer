@@ -3,6 +3,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import {type SendMessageFunction, useMessageSubmission} from '@app/features/messaging/hooks/useMessageSubmission';
+import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {act, createElement} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
@@ -51,7 +52,7 @@ vi.mock('@app/features/slowmode/components/alerts/SlowmodeRateLimitedModal', () 
 	SlowmodeRateLimitedModal: () => null,
 }));
 vi.mock('@app/features/ui/commands/ModalCommands', () => ({modal: (render: unknown) => render, push: vi.fn()}));
-vi.mock('@app/features/typing/utils/TypingUtils', () => ({TypingUtils: {clear: vi.fn()}}));
+vi.mock('@app/features/typing/utils/TypingUtils', () => ({TypingUtils: {handleOwnMessageSent: vi.fn()}}));
 vi.mock('@app/features/platform/utils/ComponentBus', () => ({ComponentBus: {dispatch: vi.fn()}}));
 vi.mock('@lingui/core/macro', () => ({msg: (value: unknown) => value}));
 vi.mock('@lingui/react/macro', () => ({useLingui: () => ({i18n: {_: () => ''}})}));
@@ -61,16 +62,20 @@ const channel = {id: 'c'} as unknown as Channel;
 let host: HTMLDivElement;
 let root: Root;
 
-function renderSendMessage(): SendMessageFunction {
-	let sendMessage: SendMessageFunction | null = null;
+function renderSubmission(): ReturnType<typeof useMessageSubmission> {
+	let submission: ReturnType<typeof useMessageSubmission> | null = null;
 	const Probe = () => {
-		sendMessage = useMessageSubmission({channel, referencedMessage: null, replyingMessage: null}).sendMessage;
+		submission = useMessageSubmission({channel, referencedMessage: null, replyingMessage: null});
 		return null;
 	};
 	act(() => {
 		root.render(createElement(Probe));
 	});
-	return sendMessage!;
+	return submission!;
+}
+
+function renderSendMessage(): SendMessageFunction {
+	return renderSubmission().sendMessage;
 }
 
 beforeEach(() => {
@@ -122,6 +127,22 @@ describe('useMessageSubmission', () => {
 			'c',
 			expect.objectContaining({content: '', flags: MessageFlags.SUPPRESS_NOTIFICATIONS}),
 		);
+	});
+
+	it('tells typing that its own message was sent before creating the optimistic message', () => {
+		const handleOwnMessageSent = vi.mocked(TypingUtils.handleOwnMessageSent);
+		const {sendMessage, sendOptimisticMessage} = renderSubmission();
+
+		expect(sendMessage('hello', false)).toBe(true);
+		sendOptimisticMessage({content: 'a sticker caption'}, {hasAttachments: false});
+
+		expect(handleOwnMessageSent.mock.calls).toEqual([['c'], ['c']]);
+		expect(messageCommands.createOptimistic).toHaveBeenCalledTimes(2);
+		const typingOrder = handleOwnMessageSent.mock.invocationCallOrder;
+		const optimisticOrder = messageCommands.createOptimistic.mock.invocationCallOrder;
+		expect(typingOrder[0]!).toBeLessThan(optimisticOrder[0]!);
+		expect(optimisticOrder[0]!).toBeLessThan(typingOrder[1]!);
+		expect(typingOrder[1]!).toBeLessThan(optimisticOrder[1]!);
 	});
 
 	it('sends the text after @silent with the silent flag', () => {

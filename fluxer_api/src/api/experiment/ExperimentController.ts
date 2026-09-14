@@ -16,6 +16,7 @@ import {resolveGuildActivityLogPresentationAssignment} from '@fluxer/schema/src/
 import {resolveGuildHeaderCollapseAssignment} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
 import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {resolveTypingIndicatorReworkAssignment} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 
 export function ExperimentController(app: HonoApp) {
 	app.get(
@@ -43,6 +44,7 @@ export function ExperimentController(app: HonoApp) {
 				guildActivityLogPresentationConfig,
 				expressionInfoCardConfig,
 				guildHeaderCollapseConfig,
+				typingIndicatorReworkConfig,
 			] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
@@ -52,6 +54,7 @@ export function ExperimentController(app: HonoApp) {
 				instanceConfigRepository.getGuildActivityLogPresentationConfig(),
 				instanceConfigRepository.getExpressionInfoCardConfig(),
 				instanceConfigRepository.getGuildHeaderCollapseConfig(),
+				instanceConfigRepository.getTypingIndicatorReworkConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -68,6 +71,7 @@ export function ExperimentController(app: HonoApp) {
 					),
 					expression_info_card: resolveExpressionInfoCardAssignment(expressionInfoCardConfig, userId),
 					guild_header_collapse: resolveGuildHeaderCollapseAssignment(guildHeaderCollapseConfig, userId),
+					typing_indicator_rework: resolveTypingIndicatorReworkAssignment(typingIndicatorReworkConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

@@ -45,6 +45,7 @@ import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {useThemeStudioBroadcast} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
 import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
+import TypingPolicy from '@app/features/typing/state/TypingPolicy';
 import {SVGMasks} from '@app/features/ui/components/SVGMasks';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import {useTextInputContextMenu} from '@app/features/ui/hooks/useTextInputContextMenu';
@@ -125,8 +126,12 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	const handleSkipLinkFocus = useTabKeyFocusGuard();
 	useInertBackground(ringsContainerRef, hasBlockingModal || topPopoutRequiresBackdrop);
 	useEffect(() => {
+		TypingPolicy.start();
 		showMyselfTypingHelper.start();
-		return () => showMyselfTypingHelper.stop();
+		return () => {
+			showMyselfTypingHelper.stop();
+			TypingPolicy.stop();
+		};
 	}, []);
 	useEffect(
 		() =>

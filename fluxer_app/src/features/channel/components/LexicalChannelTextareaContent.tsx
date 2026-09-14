@@ -33,7 +33,7 @@ import {
 import {MessageCharacterCounter} from '@app/features/channel/components/MessageCharacterCounter';
 import {SlashCommandParamBar} from '@app/features/channel/components/SlashCommandParamBar';
 import {SlowmodeIndicator} from '@app/features/channel/components/SlowmodeIndicator';
-import {TypingUsers, usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
+import {TypingAnnouncer, TypingUsers, usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import wrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
 import {MobileTextareaPlusBottomSheet} from '@app/features/channel/components/textarea/MobileTextareaPlusBottomSheet';
 import {TextareaButton} from '@app/features/channel/components/textarea/TextareaButton';
@@ -190,6 +190,7 @@ export const LexicalChannelTextareaContent = observer(
 		const expressionPickerTriggerRef = useRef<HTMLButtonElement>(null);
 		const invisibleExpressionPickerTriggerRef = useRef<HTMLDivElement>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
+		const typingStatusRailLeftRef = useRef<HTMLElement>(null);
 		const contentAreaRef = useRef<HTMLElement | null>(null);
 		const plusButtonRef = useRef<HTMLButtonElement | null>(null);
 		const plusMenuOpenedAtRef = useRef(0);
@@ -1246,6 +1247,7 @@ export const LexicalChannelTextareaContent = observer(
 						data-flx="channel.lexical-channel-textarea-content.flx-channel-textarea-status-rail"
 					>
 						<flx-channel-textarea-status-rail-left
+							ref={typingStatusRailLeftRef}
 							className={flxElementClassName(wrapperStyles.statusRailLeft)}
 							data-flx="channel.lexical-channel-textarea-content.flx-channel-textarea-status-rail-left"
 						>
@@ -1258,10 +1260,12 @@ export const LexicalChannelTextareaContent = observer(
 										channel={channel}
 										withText={true}
 										showAvatars={true}
+										overflowContainerRef={typingStatusRailLeftRef}
 										data-flx="channel.lexical-channel-textarea-content.typing-users"
 									/>
 								</flx-channel-textarea-typing-slot>
 							)}
+							<TypingAnnouncer channel={channel} data-flx="channel.lexical-channel-textarea-content.typing-announcer" />
 						</flx-channel-textarea-status-rail-left>
 						{isSlowmodeIndicatorVisible && (
 							<flx-channel-textarea-slowmode-slot

@@ -28,6 +28,10 @@ import {
 	INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
 	MessageKeyboardFocusAssignmentResponse,
 } from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {
+	INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT,
+	TypingIndicatorReworkAssignmentResponse,
+} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -72,6 +76,7 @@ const ExperimentAssignmentsSchema = z.object({
 	guild_activity_log_presentation: GuildActivityLogPresentationAssignmentResponse.optional(),
 	expression_info_card: ExpressionInfoCardAssignmentResponse.optional(),
 	guild_header_collapse: GuildHeaderCollapseAssignmentResponse.optional(),
+	typing_indicator_rework: TypingIndicatorReworkAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -128,4 +133,10 @@ export function readGuildHeaderCollapseAssignment(
 	response: ExperimentAssignmentsResponse,
 ): GuildHeaderCollapseAssignmentResponse {
 	return response.assignments.guild_header_collapse ?? INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT;
+}
+
+export function readTypingIndicatorReworkAssignment(
+	response: ExperimentAssignmentsResponse,
+): TypingIndicatorReworkAssignmentResponse {
+	return response.assignments.typing_indicator_rework ?? INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT;
 }

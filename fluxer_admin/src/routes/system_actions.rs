@@ -22,8 +22,9 @@ use crate::{
             LimitConfigUpdateRequest, LimitRule, LimitRuleFilters,
             MessageHoverTrackingConfigUpdateRequest, MessageKeyboardFocusConfigUpdateRequest,
             NoiseSuppressionBackend, PremiumMode, RegistrationMode, SsoConfigUpdateRequest,
-            VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope,
-            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
+            TypingIndicatorReworkConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES,
+            VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
+            VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -233,6 +234,10 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_guild_header_collapse" => match build_guild_header_collapse_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_typing_indicator_rework" => match build_typing_indicator_rework_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -834,6 +839,38 @@ fn build_guild_header_collapse_update(
             )?),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("guild_header_collapse_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_typing_indicator_rework_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        typing_indicator_rework: Some(TypingIndicatorReworkConfigUpdateRequest {
+            enabled: Some(form.bool_value("typing_indicator_rework_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "typing_indicator_rework_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_experiment_rollout_salt(
+                form,
+                "typing_indicator_rework_rollout_salt",
+            )?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("typing_indicator_rework_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("typing_indicator_rework_excluded_user_ids")
                     .unwrap_or_default(),
                 "Excluded user IDs",
             )?),
@@ -1834,6 +1871,79 @@ mod tests {
             Some(vec!["1500000000000000001".to_owned()])
         );
         assert_eq!(update.excluded_user_ids, Some(Vec::new()));
+    }
+
+    #[test]
+    fn build_typing_indicator_rework_update_reads_the_whole_form() {
+        let form = MultiValueForm::parse(
+            b"typing_indicator_rework_enabled=true&typing_indicator_rework_rollout_basis_points=2500&typing_indicator_rework_rollout_salt=%20typing-indicator-rework-v2%20&typing_indicator_rework_included_user_ids=1500000000000000001%0A1500000000000000001&typing_indicator_rework_excluded_user_ids=1500000000000000002%2C%201500000000000000003",
+        );
+        let update = build_typing_indicator_rework_update(&form)
+            .expect("valid form")
+            .typing_indicator_rework
+            .expect("typing indicator rework update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.rollout_basis_points, Some(2_500));
+        assert_eq!(
+            update.rollout_salt,
+            Some("typing-indicator-rework-v2".to_owned())
+        );
+        assert_eq!(
+            update.included_user_ids,
+            Some(vec!["1500000000000000001".to_owned()])
+        );
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec![
+                "1500000000000000002".to_owned(),
+                "1500000000000000003".to_owned()
+            ])
+        );
+    }
+
+    #[test]
+    fn build_typing_indicator_rework_update_leaves_the_rollout_inert_when_nothing_is_submitted() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_typing_indicator_rework_update(&form).expect("valid form");
+        assert_eq!(
+            serde_json::to_value(request).expect("serializable update"),
+            serde_json::json!({"typing_indicator_rework": {
+                "enabled": false,
+                "included_user_ids": [],
+                "excluded_user_ids": [],
+            }})
+        );
+    }
+
+    #[test]
+    fn build_typing_indicator_rework_update_rejects_a_rollout_above_the_maximum() {
+        let form = MultiValueForm::parse(b"typing_indicator_rework_rollout_basis_points=10001");
+        assert_eq!(
+            build_typing_indicator_rework_update(&form).expect_err("invalid rollout"),
+            "Rollout basis points must be a whole number between 0 and 10000"
+        );
+    }
+
+    #[test]
+    fn build_typing_indicator_rework_update_reads_only_its_own_prefix() {
+        let form = MultiValueForm::parse(
+            b"expression_card_enabled=true&expression_card_rollout_basis_points=2500&expression_card_rollout_salt=expression-info-card-v2&expression_card_included_user_ids=1500000000000000001&typing_indicator_rework_rollout_basis_points=750&typing_indicator_rework_rollout_salt=typing-indicator-rework-v2&typing_indicator_rework_excluded_user_ids=1500000000000000009",
+        );
+        let update = build_typing_indicator_rework_update(&form)
+            .expect("valid form")
+            .typing_indicator_rework
+            .expect("typing indicator rework update");
+        assert_eq!(update.enabled, Some(false));
+        assert_eq!(update.rollout_basis_points, Some(750));
+        assert_eq!(
+            update.rollout_salt,
+            Some("typing-indicator-rework-v2".to_owned())
+        );
+        assert_eq!(update.included_user_ids, Some(Vec::new()));
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec!["1500000000000000009".to_owned()])
+        );
     }
 
     #[test]

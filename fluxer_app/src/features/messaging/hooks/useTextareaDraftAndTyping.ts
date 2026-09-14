@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
-import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import type {MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
 import {useEffect, useRef} from 'react';
@@ -57,6 +56,8 @@ export const useTextareaDraftAndTyping = ({
 	isEditingMessageInComposer,
 }: UseTextareaDraftAndTypingOptions) => {
 	const isRestoringDraftRef = useRef(false);
+	const isEditingMessageInComposerRef = useRef(isEditingMessageInComposer);
+	const typingPreviousValueRef = useRef<{channelId: string; value: string} | null>(null);
 	const currentDraftRef = useRef(draft);
 	const currentDraftSegmentsRef = useRef<ReadonlyArray<MentionSegment>>(draftSegments ?? []);
 	const pendingDraftRef = useRef<{
@@ -69,8 +70,11 @@ export const useTextareaDraftAndTyping = ({
 		currentDraftSegmentsRef.current = draftSegments ?? [];
 	}, [draft, draftSegments]);
 	useEffect(() => {
+		isEditingMessageInComposerRef.current = isEditingMessageInComposer;
+	}, [isEditingMessageInComposer]);
+	useEffect(() => {
 		return () => {
-			TypingUtils.clear(channelId);
+			TypingUtils.releaseComposer(channelId);
 		};
 	}, [channelId]);
 	useEffect(() => {
@@ -163,20 +167,19 @@ export const useTextareaDraftAndTyping = ({
 		};
 	}, [channelId, isEditingMessageInComposer]);
 	useEffect(() => {
+		const typingPreviousValue = typingPreviousValueRef.current;
+		typingPreviousValueRef.current = {channelId, value};
 		if (isRestoringDraftRef.current) {
 			return;
 		}
-		if (!enabled || !typingEnabled) {
-			TypingUtils.clear(channelId);
-			return;
-		}
-		const content = value.trim();
-		const isInReplaceMode = ReplaceCommandUtils.isReplaceCommand(content);
-		const isSlashCommand = content.startsWith('/');
-		if (content && !isAutocompleteAttached && !isInReplaceMode && !isSlashCommand) {
-			TypingUtils.typing(channelId);
-		} else {
-			TypingUtils.clear(channelId);
-		}
+		TypingUtils.handleComposerChange({
+			channelId,
+			value,
+			previousValue: typingPreviousValue?.channelId === channelId ? typingPreviousValue.value : null,
+			isAutocompleteAttached,
+			enabled,
+			typingEnabled,
+			isEditingMessageInComposer: isEditingMessageInComposerRef.current,
+		});
 	}, [channelId, value, isAutocompleteAttached, enabled, typingEnabled]);
 };

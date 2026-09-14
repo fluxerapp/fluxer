@@ -61,6 +61,10 @@ import {
 	MessageKeyboardFocusConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import {
+	type TypingIndicatorReworkConfig,
+	TypingIndicatorReworkConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
+import {
 	type InstanceAppPublic,
 	InstanceAppPublicSchema,
 	type InstanceBranding,
@@ -85,6 +89,7 @@ const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
 const BLOCKED_MESSAGE_GROUPS_CONFIG_KEY = 'blocked_message_groups_config';
 const EXPRESSION_INFO_CARD_CONFIG_KEY = 'expression_info_card_config';
 const GUILD_HEADER_COLLAPSE_CONFIG_KEY = 'guild_header_collapse_config';
+const TYPING_INDICATOR_REWORK_CONFIG_KEY = 'typing_indicator_rework_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -374,6 +379,7 @@ type StoredConfigSection =
 	| 'blocked message groups'
 	| 'expression info card'
 	| 'guild header collapse'
+	| 'typing indicator rework'
 	| 'instance policy'
 	| 'integrations'
 	| 'media'
@@ -537,6 +543,10 @@ function parseStoredExpressionInfoCardConfig(raw: string | null): ExpressionInfo
 
 function parseStoredGuildHeaderCollapseConfig(raw: string | null): GuildHeaderCollapseConfig {
 	return parseStoredConfigOrDefault(GuildHeaderCollapseConfigSchema, raw, 'guild header collapse');
+}
+
+function parseStoredTypingIndicatorReworkConfig(raw: string | null): TypingIndicatorReworkConfig {
+	return parseStoredConfigOrDefault(TypingIndicatorReworkConfigSchema, raw, 'typing indicator rework');
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -1064,6 +1074,7 @@ export class InstanceConfigRepository {
 		parseStoredBlockedMessageGroupsConfig(snapshot.get(BLOCKED_MESSAGE_GROUPS_CONFIG_KEY) ?? null);
 		parseStoredExpressionInfoCardConfig(snapshot.get(EXPRESSION_INFO_CARD_CONFIG_KEY) ?? null);
 		parseStoredGuildHeaderCollapseConfig(snapshot.get(GUILD_HEADER_COLLAPSE_CONFIG_KEY) ?? null);
+		parseStoredTypingIndicatorReworkConfig(snapshot.get(TYPING_INDICATOR_REWORK_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
 			parseStoredRegistrationConfig(snapshot.get(REGISTRATION_CONFIG_KEY) ?? null),
@@ -1211,6 +1222,16 @@ export class InstanceConfigRepository {
 	async setGuildHeaderCollapseConfig(config: GuildHeaderCollapseConfig): Promise<void> {
 		const validated = validateStoredConfig(GuildHeaderCollapseConfigSchema, config, 'guild header collapse');
 		await this.setConfig(GUILD_HEADER_COLLAPSE_CONFIG_KEY, JSON.stringify(validated));
+	}
+
+	async getTypingIndicatorReworkConfig(): Promise<TypingIndicatorReworkConfig> {
+		const raw = await this.getConfig(TYPING_INDICATOR_REWORK_CONFIG_KEY);
+		return parseStoredTypingIndicatorReworkConfig(raw);
+	}
+
+	async setTypingIndicatorReworkConfig(config: TypingIndicatorReworkConfig): Promise<void> {
+		const validated = validateStoredConfig(TypingIndicatorReworkConfigSchema, config, 'typing indicator rework');
+		await this.setConfig(TYPING_INDICATOR_REWORK_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async setExperimentDeliveryConfig(config: ExperimentDeliveryConfig): Promise<void> {

@@ -38,6 +38,7 @@ import {GuildActivityLogPresentationConfigSchema} from '@fluxer/schema/src/domai
 import {GuildHeaderCollapseConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
 import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
+import {TypingIndicatorReworkConfigSchema} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
@@ -70,6 +71,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		blockedMessageGroups,
 		expressionInfoCard,
 		guildHeaderCollapse,
+		typingIndicatorRework,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -84,6 +86,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getBlockedMessageGroupsConfig(),
 		instanceConfigRepository.getExpressionInfoCardConfig(),
 		instanceConfigRepository.getGuildHeaderCollapseConfig(),
+		instanceConfigRepository.getTypingIndicatorReworkConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -121,6 +124,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		blocked_message_groups: blockedMessageGroups,
 		expression_info_card: expressionInfoCard,
 		guild_header_collapse: guildHeaderCollapse,
+		typing_indicator_rework: typingIndicatorRework,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -335,6 +339,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentGuildHeaderCollapse.config_version + 1,
 					});
 					await instanceConfigRepository.setGuildHeaderCollapseConfig(validated);
+				}
+			}
+			if (data.typing_indicator_rework) {
+				const patch = omitUndefinedFields(data.typing_indicator_rework);
+				if (Object.keys(patch).length > 0) {
+					const currentTypingIndicatorRework = await instanceConfigRepository.getTypingIndicatorReworkConfig();
+					const validated = TypingIndicatorReworkConfigSchema.parse({
+						...currentTypingIndicatorRework,
+						...patch,
+						config_version: currentTypingIndicatorRework.config_version + 1,
+					});
+					await instanceConfigRepository.setTypingIndicatorReworkConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

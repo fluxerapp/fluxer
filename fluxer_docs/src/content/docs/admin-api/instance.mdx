@@ -42,6 +42,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | blocked_message_groups | [blocked message groups configuration](#blocked-message-groups-configuration-object) object | Blocked message block rendering rollout |
 | expression_info_card | [expression info card configuration](#expression-info-card-configuration-object) object | Emoji and sticker info card rollout |
 | guild_header_collapse | [guild header collapse configuration](#guild-header-collapse-configuration-object) object | Collapsing guild header rollout |
+| typing_indicator_rework | [typing indicator rework configuration](#typing-indicator-rework-configuration-object) object | Reworked typing indicator rollout |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, legal, setup, and registration field policy |
@@ -265,6 +266,27 @@ The instance rollout of how a client draws the guild banner above the channel li
 Every field is present on read. An absent document or missing field uses the defaults above.
 
 `excluded_user_ids` is applied before `included_user_ids`, so an account in both is never drawn. A drawn client reduces the banner to the height of the header as the channel list scrolls down, and a client that is not drawn keeps the fixed banner height it ships with. Neither arm changes any response this API produces.
+
+How often a client revalidates this rollout is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) above.
+
+## Typing indicator rework configuration object
+
+The instance rollout of how a client sends and shows typing indicators. [Experiments](/http-api/experiments/) defines what a client resolves from it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| rollout_basis_points | integer | Share of accounts drawn, in basis points (0-10000, default 0) |
+| rollout_salt | string | Salt of the sampling hash (1-64 characters, default `typing-indicator-rework-v1`) |
+| included_user_ids | array[snowflake] | Accounts always drawn, up to 1000 entries (default empty) |
+| excluded_user_ids | array[snowflake] | Accounts never drawn, up to 1000 entries (default empty) |
+
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+`excluded_user_ids` is applied before `included_user_ids`, so an account in both is never drawn. A drawn client sends at most one typing signal every 8 seconds, names up to three people who are typing, and announces those names to screen readers, and a client that is not drawn keeps the typing indicators it ships with. Neither arm changes any response this API produces.
 
 How often a client revalidates this rollout is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) above.
 
@@ -664,6 +686,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | blocked_message_groups? | object | Any subset of the [blocked message groups](#blocked-message-groups-configuration-object) fields |
 | expression_info_card? | object | Any subset of the [expression info card](#expression-info-card-configuration-object) fields |
 | guild_header_collapse? | object | Any subset of the [guild header collapse](#guild-header-collapse-configuration-object) fields |
+| typing_indicator_rework? | object | Any subset of the [typing indicator rework](#typing-indicator-rework-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal`, and `registration` sub-objects, each merged field by field |
 | integrations?<sup>3</sup> | object | `gif`, `youtube`, `captcha`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
@@ -683,6 +706,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 `blocked_message_groups` takes every [blocked message groups configuration](#blocked-message-groups-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 `expression_info_card` takes every [expression info card configuration](#expression-info-card-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 `guild_header_collapse` takes every [guild header collapse configuration](#guild-header-collapse-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
+`typing_indicator_rework` takes every [typing indicator rework configuration](#typing-indicator-rework-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
 `experiment_delivery` takes both [experiment delivery configuration](#experiment-delivery-configuration-object) fields, each bound as documented there. It is a section of its own, so a write to it changes no `config_version` and changes no assignment, only the cadence on which clients ask for one.
 
@@ -720,7 +744,7 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `voice_noise_suppression`, `guild_activity_log_presentation`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `expression_info_card`, `guild_header_collapse`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `voice_noise_suppression`, `guild_activity_log_presentation`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `expression_info_card`, `guild_header_collapse`, `typing_indicator_rework`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects
