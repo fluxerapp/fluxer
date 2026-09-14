@@ -159,6 +159,10 @@ function renderName(value: string): React.ReactNode {
 	return <strong data-flx="guild.guild-tabs.guild-audit-log-sentence.render-name.strong">{value}</strong>;
 }
 
+function renderValue(value: string): React.ReactNode {
+	return <strong data-flx="guild.guild-tabs.guild-audit-log-sentence.render-value.strong">{value}</strong>;
+}
+
 function renderText(value: string): React.ReactNode {
 	const codePoints = Array.from(value);
 	if (codePoints.length <= TEXT_MAX_CODE_POINTS) {
@@ -221,15 +225,15 @@ function renderPlaceholder(placeholder: AuditLogPlaceholder, guildId: string, i1
 		case 'emoji':
 			return renderEmoji(placeholder);
 		case 'date':
-			return getFormattedDateTime(placeholder.timestamp);
+			return renderValue(getFormattedDateTime(placeholder.timestamp));
 		case 'duration':
-			return formatDuration(i18n, placeholder.seconds);
+			return renderValue(formatDuration(i18n, placeholder.seconds));
 		case 'permissions':
-			return formatPermissions(i18n, placeholder.flags);
+			return renderValue(formatPermissions(i18n, placeholder.flags));
 		case 'color':
 			return renderColor(placeholder.value);
 		case 'label':
-			return i18n._(placeholder.descriptor);
+			return renderValue(i18n._(placeholder.descriptor));
 	}
 }
 
@@ -241,7 +245,7 @@ export const GuildAuditLogSentence: React.FC<GuildAuditLogSentenceProps> = obser
 			values[name] = renderPlaceholder(value, guildId, i18n);
 			continue;
 		}
-		values[name] = name === PLURAL_COUNT_VALUE ? value : getCachedNumberFormat(i18n.locale).format(value);
+		values[name] = name === PLURAL_COUNT_VALUE ? value : renderValue(getCachedNumberFormat(i18n.locale).format(value));
 	}
 	return <Trans id={sentence.descriptor.id} message={sentence.descriptor.message} values={values} />;
 });

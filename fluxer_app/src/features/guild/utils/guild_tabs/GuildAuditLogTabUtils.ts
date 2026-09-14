@@ -349,7 +349,6 @@ const createActions = new Set<AuditLogActionType>([
 	AuditLogActionType.EMOJI_CREATE,
 	AuditLogActionType.STICKER_CREATE,
 	AuditLogActionType.BOT_ADD,
-	AuditLogActionType.MEMBER_BAN_ADD,
 	AuditLogActionType.MESSAGE_PIN,
 ]);
 const updateActions = new Set<AuditLogActionType>([

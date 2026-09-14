@@ -100,7 +100,7 @@ function deletedRole(snapshot: Record<string, unknown>, fixture: Partial<EntryFi
 }
 
 const GENERIC_UPDATE_WITHOUT_ROWS = {
-	summary: 'Hampus updated the role @Mods.',
+	summary: 'Hampus updated the role @Mods',
 	rows: [],
 	blocks: [],
 	expandable: false,
@@ -109,9 +109,9 @@ const GENERIC_UPDATE_WITHOUT_ROWS = {
 describe('presentRoleCreate', () => {
 	it('shows one Granted row for a role created from the app', () => {
 		expect(createdRole({})).toEqual({
-			summary: 'Hampus created the role @New role.',
+			summary: 'Hampus created the role @New role',
 			rows: [
-				'+ Granted Create invite links, Add reactions, Stream video, View channel, Send messages, Embed links, Attach files, and 8 more permissions.',
+				'+ Granted Create invite links, Add reactions, Stream video, View channel, Send messages, Embed links, Attach files, and 8 more permissions',
 			],
 			blocks: [],
 			expandable: true,
@@ -120,7 +120,7 @@ describe('presentRoleCreate', () => {
 
 	it('shows nothing to expand for a role created without permissions', () => {
 		expect(createdRole({permissions: '0'})).toEqual({
-			summary: 'Hampus created the role @New role.',
+			summary: 'Hampus created the role @New role',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -128,18 +128,18 @@ describe('presentRoleCreate', () => {
 	});
 
 	it.each([
-		{label: 'a color', snapshot: {color: ORANGE}, row: '~ Set the role color to #E67E22.'},
+		{label: 'a color', snapshot: {color: ORANGE}, row: '~ Set the role color to #E67E22'},
 		{
 			label: 'members displayed separately',
 			snapshot: {hoist: true},
-			row: '+ Showed members with this role in their own section in the member list.',
+			row: '+ Showed members with this role in their own section in the member list',
 		},
-		{label: 'mentions allowed', snapshot: {mentionable: true}, row: '+ Allowed all members to mention this role.'},
-		{label: 'an emoji icon', snapshot: {unicode_emoji: '🔥'}, row: '+ Set the role icon to 🔥.'},
-		{label: 'a custom icon', snapshot: {icon_hash: 'a1b2c3'}, row: '+ Set a custom role icon.'},
+		{label: 'mentions allowed', snapshot: {mentionable: true}, row: '+ Allowed all members to mention this role'},
+		{label: 'an emoji icon', snapshot: {unicode_emoji: '🔥'}, row: '+ Set the role icon to 🔥'},
+		{label: 'a custom icon', snapshot: {icon_hash: 'a1b2c3'}, row: '+ Set a custom role icon'},
 	])('shows a row for $label', ({snapshot, row}) => {
 		expect(createdRole({permissions: '0', ...snapshot})).toEqual({
-			summary: 'Hampus created the role @New role.',
+			summary: 'Hampus created the role @New role',
 			rows: [row],
 			blocks: [],
 			expandable: true,
@@ -158,14 +158,14 @@ describe('presentRoleCreate', () => {
 				mentionable: true,
 			}),
 		).toEqual({
-			summary: 'Hampus created the role @Moderators.',
+			summary: 'Hampus created the role @Moderators',
 			rows: [
-				'+ Granted Send messages and Manage messages.',
-				'~ Set the role color to #3498DB.',
-				'+ Showed members with this role in their own section in the member list.',
-				'+ Allowed all members to mention this role.',
-				'+ Set the role icon to 🛡️.',
-				'+ Set a custom role icon.',
+				'+ Granted Send messages and Manage messages',
+				'~ Set the role color to #3498DB',
+				'+ Showed members with this role in their own section in the member list',
+				'+ Allowed all members to mention this role',
+				'+ Set the role icon to 🛡️',
+				'+ Set a custom role icon',
 			],
 			blocks: [],
 			expandable: true,
@@ -181,11 +181,11 @@ describe('presentRoleCreate', () => {
 				mentionable: 'false',
 			}),
 		).toEqual({
-			summary: 'Hampus created the role @New role.',
+			summary: 'Hampus created the role @New role',
 			rows: [
-				'+ Granted Send messages.',
-				'~ Set the role color to #E67E22.',
-				'+ Showed members with this role in their own section in the member list.',
+				'+ Granted Send messages',
+				'~ Set the role color to #E67E22',
+				'+ Showed members with this role in their own section in the member list',
 			],
 			blocks: [],
 			expandable: true,
@@ -211,7 +211,7 @@ describe('presentRoleCreate', () => {
 
 	it('adds the decoded Reason block', () => {
 		expect(createdRole({permissions: '0'}, {reason: 'Event%20staff'})).toEqual({
-			summary: 'Hampus created the role @New role.',
+			summary: 'Hampus created the role @New role',
 			rows: [],
 			blocks: [{kind: 'reason', text: 'Event staff'}],
 			expandable: true,
@@ -219,7 +219,7 @@ describe('presentRoleCreate', () => {
 	});
 
 	it('leaves the recorded name empty when the name does not read', () => {
-		expect(createdRole({name: '  '}).summary).toBe(`Hampus created the role @${ROLE_ID}.`);
+		expect(createdRole({name: '  '}).summary).toBe(`Hampus created the role @${ROLE_ID}`);
 		expect(
 			presentRoleCreate(makeEntry({action_type: AuditLogActionType.ROLE_CREATE, target_id: 'role', changes: []}))
 				.summary.values.role,
@@ -229,8 +229,8 @@ describe('presentRoleCreate', () => {
 
 describe('presentRoleUpdate', () => {
 	it.each([
-		{direction: 'up', oldValue: 2, newValue: 5, summary: 'Hampus moved the role @Mods up in the role list.'},
-		{direction: 'down', oldValue: 5, newValue: 2, summary: 'Hampus moved the role @Mods down in the role list.'},
+		{direction: 'up', oldValue: 2, newValue: 5, summary: 'Hampus moved the role @Mods up in the role list'},
+		{direction: 'down', oldValue: 5, newValue: 2, summary: 'Hampus moved the role @Mods down in the role list'},
 	])('summarizes a role moved $direction in the role list', ({oldValue, newValue, summary}) => {
 		expect(updatedRole([{key: 'position', old_value: oldValue, new_value: newValue}])).toEqual({
 			summary,
@@ -245,10 +245,10 @@ describe('presentRoleUpdate', () => {
 	});
 
 	it.each([
-		{label: 'set', oldValue: null, newValue: 4, summary: 'Hampus set a member list position for the role @Mods.'},
-		{label: 'reset', oldValue: 4, newValue: null, summary: 'Hampus reset the member list position for the role @Mods.'},
-		{label: 'moved up', oldValue: 2, newValue: 5, summary: 'Hampus moved the role @Mods up in the member list.'},
-		{label: 'moved down', oldValue: 5, newValue: 2, summary: 'Hampus moved the role @Mods down in the member list.'},
+		{label: 'set', oldValue: null, newValue: 4, summary: 'Hampus set a member list position for the role @Mods'},
+		{label: 'reset', oldValue: 4, newValue: null, summary: 'Hampus reset the member list position for the role @Mods'},
+		{label: 'moved up', oldValue: 2, newValue: 5, summary: 'Hampus moved the role @Mods up in the member list'},
+		{label: 'moved down', oldValue: 5, newValue: 2, summary: 'Hampus moved the role @Mods down in the member list'},
 	])('summarizes a member list position that was $label', ({oldValue, newValue, summary}) => {
 		expect(updatedRole([{key: 'hoist_position', old_value: oldValue, new_value: newValue}])).toEqual({
 			summary,
@@ -273,7 +273,7 @@ describe('presentRoleUpdate', () => {
 		expect(
 			updatedRole([{key: 'name', old_value: 'Mods', new_value: 'Moderators'}], {options: {role_name: 'Moderators'}}),
 		).toEqual({
-			summary: 'Hampus renamed the role Mods to Moderators.',
+			summary: 'Hampus renamed the role Mods to Moderators',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -293,21 +293,21 @@ describe('presentRoleUpdate', () => {
 			previous: Permissions.VIEW_CHANNEL,
 			next: Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES,
 			diff: {added: ['SEND_MESSAGES'], removed: []},
-			rows: ['+ Granted Send messages.'],
+			rows: ['+ Granted Send messages'],
 		},
 		{
 			label: 'a revoked permission',
 			previous: Permissions.VIEW_CHANNEL | Permissions.SEND_MESSAGES,
 			next: Permissions.VIEW_CHANNEL,
 			diff: {added: [], removed: ['SEND_MESSAGES']},
-			rows: ['- Revoked Send messages.'],
+			rows: ['- Revoked Send messages'],
 		},
 		{
 			label: 'granted and revoked permissions',
 			previous: Permissions.KICK_MEMBERS,
 			next: Permissions.BAN_MEMBERS | Permissions.MANAGE_MESSAGES,
 			diff: {added: ['BAN_MEMBERS', 'MANAGE_MESSAGES'], removed: ['KICK_MEMBERS']},
-			rows: ['+ Granted Ban members and Manage messages.', '- Revoked Kick members.'],
+			rows: ['+ Granted Ban members and Manage messages', '- Revoked Kick members'],
 		},
 	])('shows $label from the permissions pair and not permissions_diff', ({previous, next, diff, rows}) => {
 		expect(
@@ -315,7 +315,7 @@ describe('presentRoleUpdate', () => {
 				{key: 'permissions', old_value: previous.toString(), new_value: next.toString()},
 				{key: 'permissions_diff', new_value: diff},
 			]),
-		).toEqual({summary: 'Hampus updated the role @Mods.', rows, blocks: [], expandable: true});
+		).toEqual({summary: 'Hampus updated the role @Mods', rows, blocks: [], expandable: true});
 	});
 
 	it('reads legacy permissions_diff names when the permissions pair is absent', () => {
@@ -327,8 +327,8 @@ describe('presentRoleUpdate', () => {
 				},
 			]),
 		).toEqual({
-			summary: 'Hampus updated the role @Mods.',
-			rows: ['+ Granted Send messages and Manage messages.', '- Revoked Kick members.'],
+			summary: 'Hampus updated the role @Mods',
+			rows: ['+ Granted Send messages and Manage messages', '- Revoked Kick members'],
 			blocks: [],
 			expandable: true,
 		});
@@ -356,12 +356,12 @@ describe('presentRoleUpdate', () => {
 	});
 
 	it.each([
-		{label: 'set', oldValue: 0, newValue: ORANGE, row: '+ Set the role color to #E67E22.'},
-		{label: 'removed', oldValue: ORANGE, newValue: 0, row: '- Removed the role color.'},
-		{label: 'changed', oldValue: ORANGE, newValue: BLUE, row: '~ Changed the role color from #E67E22 to #3498DB.'},
+		{label: 'set', oldValue: 0, newValue: ORANGE, row: '+ Set the role color to #E67E22'},
+		{label: 'removed', oldValue: ORANGE, newValue: 0, row: '- Removed the role color'},
+		{label: 'changed', oldValue: ORANGE, newValue: BLUE, row: '~ Changed the role color from #E67E22 to #3498DB'},
 	])('shows a role color that was $label', ({oldValue, newValue, row}) => {
 		expect(updatedRole([{key: 'color', old_value: oldValue, new_value: newValue}])).toEqual({
-			summary: 'Hampus updated the role @Mods.',
+			summary: 'Hampus updated the role @Mods',
 			rows: [row],
 			blocks: [],
 			expandable: true,
@@ -369,24 +369,24 @@ describe('presentRoleUpdate', () => {
 	});
 
 	it.each([
-		{key: 'hoist', oldValue: false, newValue: true, row: '+ Started displaying members with this role separately.'},
-		{key: 'hoist', oldValue: true, newValue: false, row: '- Stopped displaying members with this role separately.'},
-		{key: 'mentionable', oldValue: false, newValue: true, row: '+ Allowed all members to mention this role.'},
+		{key: 'hoist', oldValue: false, newValue: true, row: '+ Started displaying members with this role separately'},
+		{key: 'hoist', oldValue: true, newValue: false, row: '- Stopped displaying members with this role separately'},
+		{key: 'mentionable', oldValue: false, newValue: true, row: '+ Allowed all members to mention this role'},
 		{
 			key: 'mentionable',
 			oldValue: true,
 			newValue: false,
-			row: '- Limited mentions of this role to members with permission to mention any role.',
+			row: '- Limited mentions of this role to members with permission to mention any role',
 		},
-		{key: 'unicode_emoji', oldValue: null, newValue: '🔥', row: '+ Set the role icon to 🔥.'},
-		{key: 'unicode_emoji', oldValue: '🔥', newValue: '⭐', row: '~ Changed the role icon from 🔥 to ⭐.'},
-		{key: 'unicode_emoji', oldValue: '🔥', newValue: null, row: '- Removed the role icon.'},
-		{key: 'icon_hash', oldValue: null, newValue: 'a1b2c3', row: '+ Set a custom role icon.'},
-		{key: 'icon_hash', oldValue: 'a1b2c3', newValue: 'd4e5f6', row: '~ Changed the custom role icon.'},
-		{key: 'icon_hash', oldValue: 'a1b2c3', newValue: null, row: '- Removed the custom role icon.'},
+		{key: 'unicode_emoji', oldValue: null, newValue: '🔥', row: '+ Set the role icon to 🔥'},
+		{key: 'unicode_emoji', oldValue: '🔥', newValue: '⭐', row: '~ Changed the role icon from 🔥 to ⭐'},
+		{key: 'unicode_emoji', oldValue: '🔥', newValue: null, row: '- Removed the role icon'},
+		{key: 'icon_hash', oldValue: null, newValue: 'a1b2c3', row: '+ Set a custom role icon'},
+		{key: 'icon_hash', oldValue: 'a1b2c3', newValue: 'd4e5f6', row: '~ Changed the custom role icon'},
+		{key: 'icon_hash', oldValue: 'a1b2c3', newValue: null, row: '- Removed the custom role icon'},
 	])('shows $key from $oldValue to $newValue', ({key, oldValue, newValue, row}) => {
 		expect(updatedRole([{key, old_value: oldValue, new_value: newValue}])).toEqual({
-			summary: 'Hampus updated the role @Mods.',
+			summary: 'Hampus updated the role @Mods',
 			rows: [row],
 			blocks: [],
 			expandable: true,
@@ -403,19 +403,19 @@ describe('presentRoleUpdate', () => {
 	});
 
 	it.each([
-		{change: {key: 'position', old_value: 2, new_value: 5}, row: '~ Moved the role up in the role list.'},
-		{change: {key: 'position', old_value: 5, new_value: 2}, row: '~ Moved the role down in the role list.'},
-		{change: {key: 'hoist_position', old_value: null, new_value: 4}, row: '~ Set a member list position for the role.'},
+		{change: {key: 'position', old_value: 2, new_value: 5}, row: '~ Moved the role up in the role list'},
+		{change: {key: 'position', old_value: 5, new_value: 2}, row: '~ Moved the role down in the role list'},
+		{change: {key: 'hoist_position', old_value: null, new_value: 4}, row: '~ Set a member list position for the role'},
 		{
 			change: {key: 'hoist_position', old_value: 4, new_value: null},
-			row: '~ Reset the member list position for the role.',
+			row: '~ Reset the member list position for the role',
 		},
-		{change: {key: 'hoist_position', old_value: 2, new_value: 5}, row: '~ Moved the role up in the member list.'},
-		{change: {key: 'hoist_position', old_value: 5, new_value: 2}, row: '~ Moved the role down in the member list.'},
+		{change: {key: 'hoist_position', old_value: 2, new_value: 5}, row: '~ Moved the role up in the member list'},
+		{change: {key: 'hoist_position', old_value: 5, new_value: 2}, row: '~ Moved the role down in the member list'},
 	])('shows $change.key as a row when it comes with another change', ({change, row}) => {
 		expect(updatedRole([change, {key: 'color', old_value: 0, new_value: ORANGE}])).toEqual({
-			summary: 'Hampus updated the role @Mods.',
-			rows: ['+ Set the role color to #E67E22.', row],
+			summary: 'Hampus updated the role @Mods',
+			rows: ['+ Set the role color to #E67E22', row],
 			blocks: [],
 			expandable: true,
 		});
@@ -444,18 +444,18 @@ describe('presentRoleUpdate', () => {
 				{options: {role_name: 'Moderators'}},
 			),
 		).toEqual({
-			summary: 'Hampus updated the role @Moderators.',
+			summary: 'Hampus updated the role @Moderators',
 			rows: [
-				'~ Changed the name from Mods to Moderators.',
-				'+ Granted Manage messages.',
-				'- Revoked Kick members.',
-				'~ Changed the role color from #E67E22 to #3498DB.',
-				'+ Started displaying members with this role separately.',
-				'- Limited mentions of this role to members with permission to mention any role.',
-				'+ Set the role icon to 🔥.',
-				'- Removed the custom role icon.',
-				'~ Moved the role up in the role list.',
-				'~ Set a member list position for the role.',
+				'~ Changed the name from Mods to Moderators',
+				'+ Granted Manage messages',
+				'- Revoked Kick members',
+				'~ Changed the role color from #E67E22 to #3498DB',
+				'+ Started displaying members with this role separately',
+				'- Limited mentions of this role to members with permission to mention any role',
+				'+ Set the role icon to 🔥',
+				'- Removed the custom role icon',
+				'~ Moved the role up in the role list',
+				'~ Set a member list position for the role',
 			],
 			blocks: [],
 			expandable: true,
@@ -472,8 +472,8 @@ describe('presentRoleUpdate', () => {
 				{options: {role_name: 'Staff'}},
 			),
 		).toEqual({
-			summary: 'Hampus updated the role @Moderators.',
-			rows: ['~ Changed the name from Mods to Moderators.', '+ Started displaying members with this role separately.'],
+			summary: 'Hampus updated the role @Moderators',
+			rows: ['~ Changed the name from Mods to Moderators', '+ Started displaying members with this role separately'],
 			blocks: [],
 			expandable: true,
 		});
@@ -498,8 +498,8 @@ describe('presentRoleUpdate', () => {
 			recordedName: '@everyone',
 		});
 		expect(present({...entry, action_type: AuditLogActionType.ROLE_UPDATE})).toEqual({
-			summary: 'Hampus updated the role @everyone.',
-			rows: ['+ Granted Send messages.'],
+			summary: 'Hampus updated the role @everyone',
+			rows: ['+ Granted Send messages'],
 			blocks: [],
 			expandable: true,
 		});
@@ -507,7 +507,7 @@ describe('presentRoleUpdate', () => {
 
 	it('names a deleted role by the recorded role name', () => {
 		expect(updatedRole([{key: 'position', old_value: 1, new_value: 3}], {options: {role_name: 'Old staff'}})).toEqual({
-			summary: 'Hampus moved the role @Old staff up in the role list.',
+			summary: 'Hampus moved the role @Old staff up in the role list',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -531,11 +531,11 @@ describe('presentRoleUpdate', () => {
 				{key: 'position', old_value: '4', new_value: '2'},
 			]),
 		).toEqual({
-			summary: 'Hampus updated the role @Mods.',
+			summary: 'Hampus updated the role @Mods',
 			rows: [
-				'+ Set the role color to #E67E22.',
-				'+ Started displaying members with this role separately.',
-				'~ Moved the role down in the role list.',
+				'+ Set the role color to #E67E22',
+				'+ Started displaying members with this role separately',
+				'~ Moved the role down in the role list',
 			],
 			blocks: [],
 			expandable: true,
@@ -563,7 +563,7 @@ describe('presentRoleUpdate', () => {
 
 	it('adds the decoded Reason block to a summary-only entry', () => {
 		expect(updatedRole([{key: 'position', old_value: 2, new_value: 5}], {reason: 'Reorder%20pass'})).toEqual({
-			summary: 'Hampus moved the role @Mods up in the role list.',
+			summary: 'Hampus moved the role @Mods up in the role list',
 			rows: [],
 			blocks: [{kind: 'reason', text: 'Reorder pass'}],
 			expandable: true,
@@ -572,7 +572,7 @@ describe('presentRoleUpdate', () => {
 
 	it('names the system as the actor', () => {
 		expect(updatedRole([{key: 'position', old_value: 2, new_value: 5}], {user_id: '0'}).summary).toBe(
-			'System moved the role @Mods up in the role list.',
+			'System moved the role @Mods up in the role list',
 		);
 	});
 });
@@ -580,8 +580,8 @@ describe('presentRoleUpdate', () => {
 describe('presentRoleDelete', () => {
 	it('lists the permissions the deleted role granted', () => {
 		expect(deletedRole({})).toEqual({
-			summary: 'Hampus deleted the role @Mods.',
-			rows: ['- The role granted Kick members, Ban members, and Manage messages.'],
+			summary: 'Hampus deleted the role @Mods',
+			rows: ['- The role granted Kick members, Ban members, and Manage messages'],
 			blocks: [],
 			expandable: true,
 		});
@@ -589,7 +589,7 @@ describe('presentRoleDelete', () => {
 
 	it('shows nothing to expand for a deleted role without permissions', () => {
 		expect(deletedRole({permissions: '0'})).toEqual({
-			summary: 'Hampus deleted the role @Mods.',
+			summary: 'Hampus deleted the role @Mods',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -602,13 +602,13 @@ describe('presentRoleDelete', () => {
 
 	it('caps a long permission list', () => {
 		expect(deletedRole({permissions: DEFAULT_PERMISSIONS.toString()}).rows).toEqual([
-			'- The role granted Create invite links, Add reactions, Stream video, View channel, Send messages, Embed links, Attach files, and 8 more permissions.',
+			'- The role granted Create invite links, Add reactions, Stream video, View channel, Send messages, Embed links, Attach files, and 8 more permissions',
 		]);
 	});
 
 	it('adds the decoded Reason block', () => {
 		expect(deletedRole({permissions: '0'}, {reason: 'No%20longer%20needed'})).toEqual({
-			summary: 'Hampus deleted the role @Mods.',
+			summary: 'Hampus deleted the role @Mods',
 			rows: [],
 			blocks: [{kind: 'reason', text: 'No longer needed'}],
 			expandable: true,
@@ -616,7 +616,7 @@ describe('presentRoleDelete', () => {
 	});
 
 	it('leaves the recorded name empty when the name does not read', () => {
-		expect(deletedRole({name: null}).summary).toBe(`Hampus deleted the role @${ROLE_ID}.`);
+		expect(deletedRole({name: null}).summary).toBe(`Hampus deleted the role @${ROLE_ID}`);
 	});
 });
 

@@ -121,11 +121,11 @@ function renderText(sentence: AuditLogSentence): string {
 }
 
 function channelSentence(channel: AuditLogSentence['values'][string]): AuditLogSentence {
-	return {descriptor: descriptor('test.channel', 'Deleted {channel}.'), values: {channel}};
+	return {descriptor: descriptor('test.channel', 'Deleted {channel}'), values: {channel}};
 }
 
 function roleSentence(role: AuditLogSentence['values'][string]): AuditLogSentence {
-	return {descriptor: descriptor('test.role', 'Deleted the role {role}.'), values: {role}};
+	return {descriptor: descriptor('test.role', 'Deleted the role {role}'), values: {role}};
 }
 
 afterEach(() => {
@@ -140,13 +140,13 @@ describe('GuildAuditLogSentence', () => {
 		fixtures.users.set(ACTOR_ID, {id: ACTOR_ID, displayName: 'Hampus'});
 		fixtures.channels.set(CHANNEL_ID, {id: CHANNEL_ID, name: 'general', type: ChannelTypes.GUILD_TEXT});
 		const html = renderSentence({
-			descriptor: descriptor('test.message-delete', '{actor} deleted a message in {channel}.'),
+			descriptor: descriptor('test.message-delete', '{actor} deleted a message in {channel}'),
 			values: {
 				actor: {kind: 'user', id: ACTOR_ID},
 				channel: {kind: 'channel', id: CHANNEL_ID, recordedName: null, fallback: 'channel'},
 			},
 		});
-		expect(visibleText(html)).toBe('Hampus deleted a message in #general.');
+		expect(visibleText(html)).toBe('Hampus deleted a message in #general');
 		const userChipIndex = html.indexOf(`data-user-id="${ACTOR_ID}"`);
 		const channelChipIndex = html.indexOf(`data-copy-id="${CHANNEL_ID}"`);
 		expect(userChipIndex).toBeGreaterThan(-1);
@@ -154,8 +154,8 @@ describe('GuildAuditLogSentence', () => {
 	});
 
 	it.each([
-		[1, 'Hampus deleted 1 message in #general.'],
-		[5, 'Hampus deleted 5 messages in #general.'],
+		[1, 'Hampus deleted 1 message in #general'],
+		[5, 'Hampus deleted 5 messages in #general'],
 	])('passes the number %i through to the plural', (count, expected) => {
 		fixtures.users.set(ACTOR_ID, {id: ACTOR_ID, displayName: 'Hampus'});
 		fixtures.channels.set(CHANNEL_ID, {id: CHANNEL_ID, name: 'general', type: ChannelTypes.GUILD_TEXT});
@@ -163,7 +163,7 @@ describe('GuildAuditLogSentence', () => {
 			renderText({
 				descriptor: descriptor(
 					'test.message-bulk-delete',
-					'{actor} deleted {count, plural, one {# message} other {# messages}} in {channel}.',
+					'{actor} deleted {count, plural, one {# message} other {# messages}} in {channel}',
 				),
 				values: {
 					actor: {kind: 'user', id: ACTOR_ID},
@@ -176,10 +176,10 @@ describe('GuildAuditLogSentence', () => {
 
 	it('shows the unknown user label when the user is not loaded', () => {
 		const html = renderSentence({
-			descriptor: descriptor('test.kick', '{actor} kicked {target}.'),
+			descriptor: descriptor('test.kick', '{actor} kicked {target}'),
 			values: {actor: {kind: 'user', id: ACTOR_ID}, target: {kind: 'user', id: ''}},
 		});
-		expect(visibleText(html)).toBe('Unknown user kicked Unknown user.');
+		expect(visibleText(html)).toBe('Unknown user kicked Unknown user');
 		expect(html).not.toContain('data-user-id');
 	});
 
@@ -187,22 +187,22 @@ describe('GuildAuditLogSentence', () => {
 		fixtures.users.set(ACTOR_ID, {id: ACTOR_ID, displayName: 'Hampus'});
 		expect(
 			renderText({
-				descriptor: descriptor('test.system-role', '{actor} gave {target} the role {role}.'),
+				descriptor: descriptor('test.system-role', '{actor} gave {target} the role {role}'),
 				values: {
 					actor: {kind: 'system'},
 					target: {kind: 'user', id: ACTOR_ID},
 					role: {kind: 'role', id: ROLE_ID, recordedName: 'Mods'},
 				},
 			}),
-		).toBe('System gave Hampus the role Mods.');
+		).toBe('System gave Hampus the role Mods');
 	});
 
 	describe('channel names', () => {
 		it.each([
-			[ChannelTypes.GUILD_TEXT, 'Deleted #general.'],
-			[ChannelTypes.GUILD_LINK, 'Deleted #general.'],
-			[ChannelTypes.GUILD_VOICE, 'Deleted general.'],
-			[ChannelTypes.GUILD_CATEGORY, 'Deleted general.'],
+			[ChannelTypes.GUILD_TEXT, 'Deleted #general'],
+			[ChannelTypes.GUILD_LINK, 'Deleted #general'],
+			[ChannelTypes.GUILD_VOICE, 'Deleted general'],
+			[ChannelTypes.GUILD_CATEGORY, 'Deleted general'],
 		])('prefixes # only for live text and link channels (type %i)', (type, expected) => {
 			fixtures.channels.set(CHANNEL_ID, {id: CHANNEL_ID, name: 'general', type});
 			expect(
@@ -214,106 +214,104 @@ describe('GuildAuditLogSentence', () => {
 			fixtures.channels.set(CHANNEL_ID, {id: CHANNEL_ID, name: 'new-name', type: ChannelTypes.GUILD_TEXT});
 			expect(
 				renderText(channelSentence({kind: 'channel', id: CHANNEL_ID, recordedName: 'old-name', fallback: 'channel'})),
-			).toBe('Deleted #old-name.');
+			).toBe('Deleted #old-name');
 		});
 
 		it('shows the recorded name without a prefix when the channel is gone', () => {
 			expect(
 				renderText(channelSentence({kind: 'channel', id: CHANNEL_ID, recordedName: 'general', fallback: 'channel'})),
-			).toBe('Deleted general.');
+			).toBe('Deleted general');
 		});
 
 		it('falls back to #deleted-channel for a missing channel', () => {
 			const html = renderSentence(
 				channelSentence({kind: 'channel', id: CHANNEL_ID, recordedName: null, fallback: 'channel'}),
 			);
-			expect(visibleText(html)).toBe('Deleted #deleted-channel.');
+			expect(visibleText(html)).toBe('Deleted #deleted-channel');
 			expect(html).toContain(`data-copy-id="${CHANNEL_ID}"`);
 		});
 
 		it('falls back to deleted-category for a missing category', () => {
 			expect(
 				renderText(channelSentence({kind: 'channel', id: CHANNEL_ID, recordedName: null, fallback: 'category'})),
-			).toBe('Deleted deleted-category.');
+			).toBe('Deleted deleted-category');
 		});
 	});
 
 	describe('role names', () => {
 		it('shows @everyone when the role id equals the community id', () => {
 			expect(renderText(roleSentence({kind: 'role', id: GUILD_ID, recordedName: null}))).toBe(
-				'Deleted the role @everyone.',
+				'Deleted the role @everyone',
 			);
 		});
 
 		it('prefers the recorded name over the live name', () => {
 			fixtures.roles.set(ROLE_ID, {id: ROLE_ID, name: 'Moderators'});
-			expect(renderText(roleSentence({kind: 'role', id: ROLE_ID, recordedName: 'Mods'}))).toBe(
-				'Deleted the role Mods.',
-			);
+			expect(renderText(roleSentence({kind: 'role', id: ROLE_ID, recordedName: 'Mods'}))).toBe('Deleted the role Mods');
 		});
 
 		it('uses the live name when no name was recorded', () => {
 			fixtures.roles.set(ROLE_ID, {id: ROLE_ID, name: 'Moderators'});
 			expect(renderText(roleSentence({kind: 'role', id: ROLE_ID, recordedName: null}))).toBe(
-				'Deleted the role Moderators.',
+				'Deleted the role Moderators',
 			);
 		});
 
 		it('falls back to deleted-role for a missing role', () => {
 			const html = renderSentence(roleSentence({kind: 'role', id: ROLE_ID, recordedName: null}));
-			expect(visibleText(html)).toBe('Deleted the role deleted-role.');
+			expect(visibleText(html)).toBe('Deleted the role deleted-role');
 			expect(html).toContain(`data-copy-id="${ROLE_ID}"`);
 		});
 	});
 
 	describe('text', () => {
 		const textSentence = (value: string): AuditLogSentence => ({
-			descriptor: descriptor('test.topic', 'Set the topic to {text}.'),
+			descriptor: descriptor('test.topic', 'Set the topic to {text}'),
 			values: {text: {kind: 'text', value}},
 		});
 
 		it('keeps text of 200 code points whole without a tooltip', () => {
 			const value = '😀'.repeat(200);
 			const html = renderSentence(textSentence(value));
-			expect(visibleText(html)).toBe(`Set the topic to ${value}.`);
+			expect(visibleText(html)).toBe(`Set the topic to ${value}`);
 			expect(html).not.toContain('title=');
 		});
 
 		it('truncates text past 200 code points and puts the full text in the tooltip', () => {
 			const value = '😀'.repeat(201);
 			const html = renderSentence(textSentence(value));
-			expect(visibleText(html)).toBe(`Set the topic to ${'😀'.repeat(200)}….`);
+			expect(visibleText(html)).toBe(`Set the topic to ${'😀'.repeat(200)}…`);
 			expect(html).toContain(`title="${value}"`);
 		});
 	});
 
 	describe('permissions', () => {
 		const permissionSentence = (flags: Array<bigint>): AuditLogSentence => ({
-			descriptor: descriptor('test.granted', 'Granted {permissions}.'),
+			descriptor: descriptor('test.granted', 'Granted {permissions}'),
 			values: {permissions: {kind: 'permissions', flags}},
 		});
 
 		it('lists up to 8 permissions by name', () => {
 			expect(renderText(permissionSentence([1n, 2n, 4n, 8n, 16n, 32n, 64n, 128n]))).toBe(
-				'Granted Permission 1, Permission 2, Permission 4, Permission 8, Permission 16, Permission 32, Permission 64, and Permission 128.',
+				'Granted Permission 1, Permission 2, Permission 4, Permission 8, Permission 16, Permission 32, Permission 64, and Permission 128',
 			);
 		});
 
 		it('shows 7 names and a count when there are more than 8 permissions', () => {
 			expect(renderText(permissionSentence([1n, 2n, 4n, 8n, 16n, 32n, 64n, 128n, 256n, 512n]))).toBe(
-				'Granted Permission 1, Permission 2, Permission 4, Permission 8, Permission 16, Permission 32, Permission 64, and 3 more permissions.',
+				'Granted Permission 1, Permission 2, Permission 4, Permission 8, Permission 16, Permission 32, Permission 64, and 3 more permissions',
 			);
 		});
 	});
 
 	it.each([
-		[5400, 'Set slowmode to 90 minutes.'],
-		[259200, 'Set slowmode to 3 days.'],
-		[1, 'Set slowmode to 1 second.'],
+		[5400, 'Set slowmode to 90 minutes'],
+		[259200, 'Set slowmode to 3 days'],
+		[1, 'Set slowmode to 1 second'],
 	])('formats a duration of %i seconds in its largest whole unit', (seconds, expected) => {
 		expect(
 			renderText({
-				descriptor: descriptor('test.slowmode', 'Set slowmode to {duration}.'),
+				descriptor: descriptor('test.slowmode', 'Set slowmode to {duration}'),
 				values: {duration: {kind: 'duration', seconds}},
 			}),
 		).toBe(expected);
@@ -323,35 +321,35 @@ describe('GuildAuditLogSentence', () => {
 		const timestamp = Date.parse('2026-09-01T12:00:00.000Z');
 		expect(
 			renderText({
-				descriptor: descriptor('test.mixed', '{name} changed {oldAlignment} on {date}.'),
+				descriptor: descriptor('test.mixed', '{name} changed {oldAlignment} on {date}'),
 				values: {
 					name: {kind: 'name', value: 'Captain Hook'},
 					oldAlignment: {kind: 'label', descriptor: descriptor('test.centered', 'Centered')},
 					date: {kind: 'date', timestamp},
 				},
 			}),
-		).toBe('Captain Hook changed Centered on 2026-09-01T12:00:00.000Z.');
+		).toBe('Captain Hook changed Centered on 2026-09-01T12:00:00.000Z');
 	});
 
 	it('formats a color as uppercase hex with a color dot', () => {
 		const html = renderSentence({
-			descriptor: descriptor('test.color', 'Set the role color to {color}.'),
+			descriptor: descriptor('test.color', 'Set the role color to {color}'),
 			values: {color: {kind: 'color', value: 0xff8800}},
 		});
-		expect(visibleText(html)).toBe('Set the role color to #FF8800.');
+		expect(visibleText(html)).toBe('Set the role color to #FF8800');
 		expect(html).toContain('data-color="#FF8800"');
 	});
 
 	describe('emoji', () => {
 		const emojiSentence = (id: string | null): AuditLogSentence => ({
-			descriptor: descriptor('test.emoji', 'Added the emoji {emoji}.'),
+			descriptor: descriptor('test.emoji', 'Added the emoji {emoji}'),
 			values: {emoji: {kind: 'emoji', id, name: 'blobcat'}},
 		});
 
 		it('shows the emoji image when the emoji is loaded', () => {
 			fixtures.emojis.set(EMOJI_ID, {id: EMOJI_ID, name: 'blobcat', animated: false});
 			const html = renderSentence(emojiSentence(EMOJI_ID));
-			expect(visibleText(html)).toBe('Added the emoji :blobcat:.');
+			expect(visibleText(html)).toBe('Added the emoji :blobcat:');
 			expect(html).toContain(`src="https://media.example.invalid/emojis/${EMOJI_ID}.webp"`);
 		});
 
@@ -360,7 +358,7 @@ describe('GuildAuditLogSentence', () => {
 			['that is not loaded', EMOJI_ID],
 		])('shows only the name for an emoji %s', (_label, id) => {
 			const html = renderSentence(emojiSentence(id));
-			expect(visibleText(html)).toBe('Added the emoji :blobcat:.');
+			expect(visibleText(html)).toBe('Added the emoji :blobcat:');
 			expect(html).not.toContain('<img');
 		});
 	});
