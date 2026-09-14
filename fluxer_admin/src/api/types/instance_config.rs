@@ -28,6 +28,8 @@ pub struct InstanceConfigResponse {
     pub message_hover_tracking: MessageHoverTrackingConfigResponse,
     #[serde(default)]
     pub message_keyboard_focus: MessageKeyboardFocusConfigResponse,
+    #[serde(default)]
+    pub blocked_message_groups: BlockedMessageGroupsConfigResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -619,6 +621,44 @@ pub struct MessageKeyboardFocusConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct BlockedMessageGroupsConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for BlockedMessageGroupsConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: "blocked-message-groups-v1".to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct BlockedMessageGroupsConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -738,6 +778,8 @@ pub struct InstanceConfigUpdateRequest {
     pub message_hover_tracking: Option<MessageHoverTrackingConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message_keyboard_focus: Option<MessageKeyboardFocusConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub blocked_message_groups: Option<BlockedMessageGroupsConfigUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1076,12 +1118,16 @@ mod tests {
             .expect("default message hover tracking config");
         let keyboard = serde_json::from_value::<MessageKeyboardFocusConfigResponse>(json!({}))
             .expect("default message keyboard focus config");
+        let blocked = serde_json::from_value::<BlockedMessageGroupsConfigResponse>(json!({}))
+            .expect("default blocked message groups config");
         let noise = serde_json::to_value(noise).expect("serializable noise config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let hover =
             serde_json::to_value(hover).expect("serializable message hover tracking config");
         let keyboard =
             serde_json::to_value(keyboard).expect("serializable message keyboard focus config");
+        let blocked =
+            serde_json::to_value(blocked).expect("serializable blocked message groups config");
         let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
             serde_json::from_value(noise.clone()).expect("generated noise config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
@@ -1092,6 +1138,9 @@ mod tests {
         let generated_keyboard: generated_types::MessageKeyboardFocusConfigResponse =
             serde_json::from_value(keyboard.clone())
                 .expect("generated message keyboard focus config contract");
+        let generated_blocked: generated_types::BlockedMessageGroupsConfigResponse =
+            serde_json::from_value(blocked.clone())
+                .expect("generated blocked message groups config contract");
         assert_eq!(
             serde_json::to_value(generated_noise).expect("serializable generated noise config"),
             noise
@@ -1111,11 +1160,17 @@ mod tests {
                 .expect("serializable generated message keyboard focus config"),
             keyboard
         );
+        assert_eq!(
+            serde_json::to_value(generated_blocked)
+                .expect("serializable generated blocked message groups config"),
+            blocked
+        );
         for (name, value) in [
             ("VoiceNoiseSuppressionConfigResponse", noise),
             ("ExperimentDeliveryConfigResponse", delivery),
             ("MessageHoverTrackingConfigResponse", hover),
             ("MessageKeyboardFocusConfigResponse", keyboard),
+            ("BlockedMessageGroupsConfigResponse", blocked),
         ] {
             for (field, value) in value.as_object().expect("config object") {
                 assert_eq!(
@@ -1167,6 +1222,29 @@ mod tests {
         );
         assert_eq!(
             serde_json::to_value(MessageKeyboardFocusConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
+    }
+
+    #[test]
+    fn blocked_message_groups_update_preserves_empty_lists_and_omitted_fields() {
+        let update = BlockedMessageGroupsConfigUpdateRequest {
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::BlockedMessageGroupsConfigUpdateRequest>(
+            value.clone(),
+        )
+        .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"included_user_ids": [], "excluded_user_ids": []})
+        );
+        assert_eq!(
+            serde_json::to_value(BlockedMessageGroupsConfigUpdateRequest::default())
                 .expect("serializable update"),
             json!({})
         );

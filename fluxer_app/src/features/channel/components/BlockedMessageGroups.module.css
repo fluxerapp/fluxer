@@ -2,7 +2,26 @@
 
 .container {
 	background-color: var(--background-secondary);
+}
+
+:global(html:not(.experiment-blocked-message-groups)) .container {
 	border-radius: 0.25rem;
+}
+
+:global(html.experiment-blocked-message-groups) .container {
+	margin-left: calc(-1 * var(--chat-mobile-horizontal-padding));
+	margin-right: calc(-1 * var(--chat-mobile-horizontal-padding));
+	padding-left: var(--chat-mobile-horizontal-padding);
+	padding-right: var(--chat-mobile-horizontal-padding);
+}
+
+@media (min-width: 768px) {
+	:global(html.experiment-blocked-message-groups) .container {
+		margin-left: calc(-1 * var(--chat-horizontal-padding));
+		margin-right: calc(-1 * var(--chat-horizontal-padding));
+		padding-left: var(--chat-horizontal-padding);
+		padding-right: var(--chat-horizontal-padding);
+	}
 }
 
 .toggle {

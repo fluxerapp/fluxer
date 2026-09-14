@@ -31,6 +31,7 @@ import {
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+import {BlockedMessageGroupsConfigSchema} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
@@ -62,6 +63,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		experimentDelivery,
 		messageHoverTracking,
 		messageKeyboardFocus,
+		blockedMessageGroups,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -72,6 +74,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getMessageHoverTrackingConfig(),
 		instanceConfigRepository.getMessageKeyboardFocusConfig(),
+		instanceConfigRepository.getBlockedMessageGroupsConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -105,6 +108,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		experiment_delivery: experimentDelivery,
 		message_hover_tracking: messageHoverTracking,
 		message_keyboard_focus: messageKeyboardFocus,
+		blocked_message_groups: blockedMessageGroups,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -270,6 +274,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentMessageKeyboardFocus.config_version + 1,
 					});
 					await instanceConfigRepository.setMessageKeyboardFocusConfig(validated);
+				}
+			}
+			if (data.blocked_message_groups) {
+				const patch = omitUndefinedFields(data.blocked_message_groups);
+				if (Object.keys(patch).length > 0) {
+					const currentBlockedMessageGroups = await instanceConfigRepository.getBlockedMessageGroupsConfig();
+					const validated = BlockedMessageGroupsConfigSchema.parse({
+						...currentBlockedMessageGroups,
+						...patch,
+						config_version: currentBlockedMessageGroups.config_version + 1,
+					});
+					await instanceConfigRepository.setBlockedMessageGroupsConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

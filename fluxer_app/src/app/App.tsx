@@ -21,6 +21,9 @@ import {useServiceWorkerBadge} from '@app/features/app/hooks/useServiceWorkerBad
 import {useTabKeyFocusGuard} from '@app/features/app/hooks/useTabKeyFocusGuard';
 import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state/LayoutVariantContext';
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
+import BlockedMessageGroupsRollout, {
+	BLOCKED_MESSAGE_GROUPS_EXPERIMENT_CLASS,
+} from '@app/features/channel/state/BlockedMessageGroupsRollout';
 import MessageHoverTrackingRollout, {
 	MESSAGE_HOVER_TRACKING_EXPERIMENT_CLASS,
 } from '@app/features/channel/state/MessageHoverTrackingRollout';
@@ -158,6 +161,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	useDocumentClassToggle('mobile-layout', MobileLayout.platformMobileDetected || MobileLayout.enabled);
 	useDocumentClassToggle(UNFOCUSED_FULLY_INTERACTIVE_CLASS, stayInteractiveWhenUnfocused);
 	useDocumentClassToggle(MESSAGE_HOVER_TRACKING_EXPERIMENT_CLASS, MessageHoverTrackingRollout.enabled);
+	useDocumentClassToggle(BLOCKED_MESSAGE_GROUPS_EXPERIMENT_CLASS, BlockedMessageGroupsRollout.enabled);
 	useDesktopAllowTransparency(isNative);
 	useWindowEventListeners({preventDocumentScroll: !isNative});
 	useRemScaleTracking();

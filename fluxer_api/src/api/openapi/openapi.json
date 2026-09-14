@@ -28260,7 +28260,8 @@
 						"properties": {
 							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
 							"message_hover_tracking": {"$ref": "#/components/schemas/MessageHoverTrackingAssignmentResponse"},
-							"message_keyboard_focus": {"$ref": "#/components/schemas/MessageKeyboardFocusAssignmentResponse"}
+							"message_keyboard_focus": {"$ref": "#/components/schemas/MessageKeyboardFocusAssignmentResponse"},
+							"blocked_message_groups": {"$ref": "#/components/schemas/BlockedMessageGroupsAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -31998,6 +31999,17 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try"]},
+			"BlockedMessageGroupsAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+					"user_targeted": {"type": "boolean"},
+					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
+				},
+				"required": ["enabled", "config_version", "user_targeted", "source"],
+				"additionalProperties": false
+			},
 			"MessageKeyboardFocusAssignmentResponse": {
 				"type": "object",
 				"properties": {

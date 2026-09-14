@@ -9,6 +9,7 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {resolveBlockedMessageGroupsAssignment} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
@@ -30,11 +31,18 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig, messageHoverTrackingConfig, messageKeyboardFocusConfig] = await Promise.all([
+			const [
+				delivery,
+				voiceConfig,
+				messageHoverTrackingConfig,
+				messageKeyboardFocusConfig,
+				blockedMessageGroupsConfig,
+			] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 				instanceConfigRepository.getMessageHoverTrackingConfig(),
 				instanceConfigRepository.getMessageKeyboardFocusConfig(),
+				instanceConfigRepository.getBlockedMessageGroupsConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -44,6 +52,7 @@ export function ExperimentController(app: HonoApp) {
 					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
 					message_hover_tracking: resolveMessageHoverTrackingAssignment(messageHoverTrackingConfig, userId),
 					message_keyboard_focus: resolveMessageKeyboardFocusAssignment(messageKeyboardFocusConfig, userId),
+					blocked_message_groups: resolveBlockedMessageGroupsAssignment(blockedMessageGroupsConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

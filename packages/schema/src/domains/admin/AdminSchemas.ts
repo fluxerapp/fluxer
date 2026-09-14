@@ -20,6 +20,10 @@ import {
 	VoiceNoiseSuppressionConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {
+	BlockedMessageGroupsConfigResponse,
+	BlockedMessageGroupsConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
+import {
 	ExperimentDeliveryConfigResponse,
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -640,6 +644,7 @@ export const InstanceConfigResponse = z.object({
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	message_hover_tracking: MessageHoverTrackingConfigResponse,
 	message_keyboard_focus: MessageKeyboardFocusConfigResponse,
+	blocked_message_groups: BlockedMessageGroupsConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -678,6 +683,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	message_hover_tracking: MessageHoverTrackingConfigUpdateRequest.nullish(),
 	message_keyboard_focus: MessageKeyboardFocusConfigUpdateRequest.nullish(),
+	blocked_message_groups: BlockedMessageGroupsConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

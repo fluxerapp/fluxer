@@ -33,6 +33,10 @@ import {
 	VoiceNoiseSuppressionConfigSchema,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {
+	type BlockedMessageGroupsConfig,
+	BlockedMessageGroupsConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
+import {
 	type ExperimentDeliveryConfig,
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -65,6 +69,7 @@ const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
 const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
+const BLOCKED_MESSAGE_GROUPS_CONFIG_KEY = 'blocked_message_groups_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -350,6 +355,7 @@ type StoredConfigSection =
 	| 'experiment delivery'
 	| 'message hover tracking'
 	| 'message keyboard focus'
+	| 'blocked message groups'
 	| 'instance policy'
 	| 'integrations'
 	| 'media'
@@ -497,6 +503,10 @@ function parseStoredMessageHoverTrackingConfig(raw: string | null): MessageHover
 
 function parseStoredMessageKeyboardFocusConfig(raw: string | null): MessageKeyboardFocusConfig {
 	return parseStoredConfigOrDefault(MessageKeyboardFocusConfigSchema, raw, 'message keyboard focus');
+}
+
+function parseStoredBlockedMessageGroupsConfig(raw: string | null): BlockedMessageGroupsConfig {
+	return parseStoredConfigOrDefault(BlockedMessageGroupsConfigSchema, raw, 'blocked message groups');
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -1020,6 +1030,7 @@ export class InstanceConfigRepository {
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredMessageHoverTrackingConfig(snapshot.get(MESSAGE_HOVER_TRACKING_CONFIG_KEY) ?? null);
 		parseStoredMessageKeyboardFocusConfig(snapshot.get(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY) ?? null);
+		parseStoredBlockedMessageGroupsConfig(snapshot.get(BLOCKED_MESSAGE_GROUPS_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
 			parseStoredRegistrationConfig(snapshot.get(REGISTRATION_CONFIG_KEY) ?? null),
@@ -1123,6 +1134,16 @@ export class InstanceConfigRepository {
 	async setMessageKeyboardFocusConfig(config: MessageKeyboardFocusConfig): Promise<void> {
 		const validated = validateStoredConfig(MessageKeyboardFocusConfigSchema, config, 'message keyboard focus');
 		await this.setConfig(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY, JSON.stringify(validated));
+	}
+
+	async getBlockedMessageGroupsConfig(): Promise<BlockedMessageGroupsConfig> {
+		const raw = await this.getConfig(BLOCKED_MESSAGE_GROUPS_CONFIG_KEY);
+		return parseStoredBlockedMessageGroupsConfig(raw);
+	}
+
+	async setBlockedMessageGroupsConfig(config: BlockedMessageGroupsConfig): Promise<void> {
+		const validated = validateStoredConfig(BlockedMessageGroupsConfigSchema, config, 'blocked message groups');
+		await this.setConfig(BLOCKED_MESSAGE_GROUPS_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async setExperimentDeliveryConfig(config: ExperimentDeliveryConfig): Promise<void> {

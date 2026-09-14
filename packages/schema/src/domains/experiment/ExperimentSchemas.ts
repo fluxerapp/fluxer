@@ -5,6 +5,10 @@ import {
 	VoiceNoiseSuppressionAssignmentResponse,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {
+	BlockedMessageGroupsAssignmentResponse,
+	INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
+import {
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 	MessageHoverTrackingAssignmentResponse,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -52,6 +56,7 @@ const ExperimentAssignmentsSchema = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionAssignmentResponse.optional(),
 	message_hover_tracking: MessageHoverTrackingAssignmentResponse.optional(),
 	message_keyboard_focus: MessageKeyboardFocusAssignmentResponse.optional(),
+	blocked_message_groups: BlockedMessageGroupsAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -84,4 +89,10 @@ export function readMessageKeyboardFocusAssignment(
 	response: ExperimentAssignmentsResponse,
 ): MessageKeyboardFocusAssignmentResponse {
 	return response.assignments.message_keyboard_focus ?? INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT;
+}
+
+export function readBlockedMessageGroupsAssignment(
+	response: ExperimentAssignmentsResponse,
+): BlockedMessageGroupsAssignmentResponse {
+	return response.assignments.blocked_message_groups ?? INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT;
 }

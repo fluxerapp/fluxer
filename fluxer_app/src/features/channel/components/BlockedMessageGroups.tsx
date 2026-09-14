@@ -2,12 +2,14 @@
 
 import styles from '@app/features/channel/components/BlockedMessageGroups.module.css';
 import {Divider} from '@app/features/channel/components/ChannelDivider';
+import streamStyles from '@app/features/channel/components/ChannelMessages.module.css';
 import {
 	MessageGroup,
 	type MessageGroupProps,
 	type MessageGroupRenderWrapperProps,
 } from '@app/features/channel/components/MessageGroup';
 import type {Channel} from '@app/features/channel/models/Channel';
+import BlockedMessageGroupsRollout from '@app/features/channel/state/BlockedMessageGroupsRollout';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import {type ChannelStreamItem, ChannelStreamType} from '@app/features/messaging/utils/MessageGroupingUtils';
@@ -100,6 +102,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		renderMessageWrapper,
 		suppressUnreadIndicator,
 	} = props;
+	const groupRenderingEnabled = BlockedMessageGroupsRollout.enabled;
 	const {i18n} = useLingui();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<HTMLButtonElement>(null);
@@ -231,8 +234,20 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		const nodes: Array<React.ReactNode> = [];
 		let currentGroupMessages: Array<Message> = [];
 		let groupId: string | undefined;
+		let renderedGroupCount = 0;
 		const flushGroup = () => {
 			if (currentGroupMessages.length > 0) {
+				if (groupRenderingEnabled && renderedGroupCount > 0 && messageGroupSpacing > 0) {
+					nodes.push(
+						<div
+							key={`blocked-group-spacer-${currentGroupMessages[0].id}`}
+							className={streamStyles.groupSpacer}
+							aria-hidden="true"
+							data-flx="channel.blocked-message-groups.group-spacer"
+						/>,
+					);
+				}
+				renderedGroupCount += 1;
 				nodes.push(
 					<MessageGroup
 						key={currentGroupMessages[0].id}
@@ -264,7 +279,13 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 				flushGroup();
 				nodes.push(
 					<Divider
-						key={item.unreadId || item.contentKey || `divider-${itemIndex}`}
+						key={
+							groupRenderingEnabled
+								? item.unreadId
+									? `unread-divider-${item.unreadId}`
+									: item.contentKey || `divider-${itemIndex}`
+								: item.unreadId || item.contentKey || `divider-${itemIndex}`
+						}
 						spacing={messageGroupSpacing}
 						red={!!item.unreadId}
 						id={item.unreadId ? 'new-messages-bar' : undefined}
@@ -298,6 +319,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		renderMessageActions,
 		renderMessageWrapper,
 		suppressUnreadIndicator,
+		groupRenderingEnabled,
 	]);
 	const leadingUnreadDivider = messageGroups[0]?.type === ChannelStreamType.DIVIDER && !!messageGroups[0].unreadId;
 	return (

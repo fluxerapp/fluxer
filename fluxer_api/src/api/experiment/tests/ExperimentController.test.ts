@@ -11,10 +11,15 @@ import {
 	INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {
+	DEFAULT_BLOCKED_MESSAGE_GROUPS_CONFIG,
+	INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
+import {
 	DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS,
 	DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
+	readBlockedMessageGroupsAssignment,
 	readMessageHoverTrackingAssignment,
 	readMessageKeyboardFocusAssignment,
 	readVoiceNoiseSuppressionAssignment,
@@ -63,6 +68,7 @@ describe('GET /experiments', () => {
 				voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 				message_hover_tracking: INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 				message_keyboard_focus: INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
+				blocked_message_groups: INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
 			},
 		});
 	});
@@ -186,7 +192,53 @@ describe('GET /experiments', () => {
 		});
 	});
 
-	it('resolves all three experiments independently', async () => {
+	it('populates the blocked message groups key even when the rollout is disabled', async () => {
+		const account = await createTestAccount(harness);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(Object.hasOwn(body.assignments, 'blocked_message_groups')).toBe(true);
+		expect(readBlockedMessageGroupsAssignment(body)).toEqual(INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT);
+	});
+
+	it('targets an allowlisted account for blocked message groups', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setBlockedMessageGroupsConfig({
+			...DEFAULT_BLOCKED_MESSAGE_GROUPS_CONFIG,
+			enabled: true,
+			config_version: 4,
+			included_user_ids: [account.userId],
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readBlockedMessageGroupsAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 4,
+			user_targeted: true,
+			source: 'user_rule',
+		});
+	});
+
+	it('leaves an account outside a zero-width blocked message groups rollout', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setBlockedMessageGroupsConfig({
+			...DEFAULT_BLOCKED_MESSAGE_GROUPS_CONFIG,
+			enabled: true,
+			config_version: 2,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readBlockedMessageGroupsAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 2,
+			user_targeted: false,
+			source: null,
+		});
+	});
+
+	it('resolves all four experiments independently', async () => {
 		const account = await createTestAccount(harness);
 		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
 			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
@@ -198,11 +250,17 @@ describe('GET /experiments', () => {
 			enabled: true,
 			rollout_basis_points: 10000,
 		});
+		await getInstanceConfigRepository().setBlockedMessageGroupsConfig({
+			...DEFAULT_BLOCKED_MESSAGE_GROUPS_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
 		expect(readMessageHoverTrackingAssignment(body).user_targeted).toBe(true);
 		expect(readMessageKeyboardFocusAssignment(body).user_targeted).toBe(true);
+		expect(readBlockedMessageGroupsAssignment(body).user_targeted).toBe(true);
 		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
 	});
 
