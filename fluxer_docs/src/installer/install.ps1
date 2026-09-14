@@ -221,7 +221,7 @@ function Show-FluxerUsage {
 	Write-FluxerLine ''
 	Write-FluxerLine 'Options:'
 	Write-FluxerLine '  -Domain <host>          Hostname the instance answers on. Prompted when absent.'
-	Write-FluxerLine '  -Email <address>        Address written as FLUXER_VAPID_EMAIL. Prompted when absent.'
+	Write-FluxerLine '  -Email <address>        Contact email for web push. Prompted when absent.'
 	Write-FluxerLine '  -Engine <command>       Container engine to drive. Default: docker, or podman when'
 	Write-FluxerLine '                          docker is absent.'
 	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home'
@@ -2001,7 +2001,7 @@ function Invoke-FluxerInstall {
 	}
 
 	$domainValue = Resolve-FluxerValue $Domain 'Hostname the instance answers on' '-Domain' $allowPrompt
-	$emailValue = Resolve-FluxerValue $Email 'Address to write as FLUXER_VAPID_EMAIL' '-Email' $allowPrompt
+	$emailValue = Resolve-FluxerValue $Email 'Contact email for web push' '-Email' $allowPrompt
 	Assert-FluxerDomain $domainValue
 	Assert-FluxerEmail $emailValue
 
