@@ -4,7 +4,6 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
-import {BulkCancelledError, type BulkProgressHelpers} from '@app/api/admin/services/BulkProgressHelpers';
 import * as AuthEmail from '@app/api/auth/AuthEmail';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthSession from '@app/api/auth/AuthSession';
@@ -25,9 +24,7 @@ import {
 	ALL_SUSPICIOUS_ACTIVITY_FLAGS,
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-	imposePhoneRequirements,
 	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
-	SuspiciousActivityFlags,
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -37,8 +34,6 @@ import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
-	BulkUpdateSuspiciousActivityFlagsRequest,
-	BulkUpdateUserFlagsRequest,
 	DeleteWebAuthnCredentialRequest,
 	DisableForSuspiciousActivityRequest,
 	DisableMfaRequest,
@@ -61,7 +56,6 @@ interface AdminUserSecurityServiceDeps {
 }
 
 interface FlagAuditMetadataParams {
-	userCount?: number;
 	addFlags: ReadonlyArray<bigint | number | string>;
 	removeFlags: ReadonlyArray<bigint | number | string>;
 	newFlags?: bigint | number | string;
@@ -75,19 +69,11 @@ function joinAuditValues(values: ReadonlyArray<bigint | number | string>): strin
 	return values.map((value) => value.toString()).join(',');
 }
 
-function createFlagAuditMetadata({
-	userCount,
-	addFlags,
-	removeFlags,
-	newFlags,
-}: FlagAuditMetadataParams): Map<string, string> {
+function createFlagAuditMetadata({addFlags, removeFlags, newFlags}: FlagAuditMetadataParams): Map<string, string> {
 	const entries: Array<[string, string]> = [
 		['add_flags', joinAuditValues(addFlags)],
 		['remove_flags', joinAuditValues(removeFlags)],
 	];
-	if (userCount !== undefined) {
-		entries.unshift(['user_count', userCount.toString()]);
-	}
 	if (newFlags !== undefined) {
 		entries.push(['new_flags', newFlags.toString()]);
 	}
@@ -544,140 +530,6 @@ export class AdminUserSecurityService {
 		});
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async bulkUpdateUserFlags(
-		data: BulkUpdateUserFlagsRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-		helpers?: BulkProgressHelpers,
-	) {
-		const {auditService} = this.deps;
-		const successful: Array<string> = [];
-		const failed: Array<{
-			id: string;
-			error: string;
-		}> = [];
-		const addFlags = data.add_flags.map((flag) => BigInt(flag));
-		const removeFlags = data.remove_flags.map((flag) => BigInt(flag));
-		const total = data.user_ids.length;
-		await helpers?.reportProgress(0, total, `Updating flags on ${total} users`);
-		let processed = 0;
-		for (const userIdBigInt of data.user_ids) {
-			if (helpers && (await helpers.shouldCancel())) throw new BulkCancelledError();
-			try {
-				const userId = createUserID(userIdBigInt);
-				await this.updateUserFlags({
-					userId,
-					data: {addFlags, removeFlags},
-					adminUserId,
-					auditLogReason: null,
-					acls,
-				});
-				successful.push(userId.toString());
-			} catch (error) {
-				failed.push({
-					id: userIdBigInt.toString(),
-					error: error instanceof Error ? error.message : 'Unknown error',
-				});
-			}
-			processed++;
-			if (helpers && processed % 25 === 0) {
-				await helpers.reportProgress(processed, total, null);
-			}
-		}
-		await helpers?.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(0),
-			action: 'bulk_update_user_flags',
-			auditLogReason,
-			metadata: createFlagAuditMetadata({
-				userCount: data.user_ids.length,
-				addFlags: data.add_flags,
-				removeFlags: data.remove_flags,
-			}),
-		});
-		return {
-			successful,
-			failed,
-		};
-	}
-
-	async bulkUpdateSuspiciousActivityFlags(
-		data: BulkUpdateSuspiciousActivityFlagsRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		helpers?: BulkProgressHelpers,
-	) {
-		const {users: userRepository} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const successful: Array<string> = [];
-		const failed: Array<{
-			id: string;
-			error: string;
-		}> = [];
-		const addMask = data.add_flags.reduce((mask, flagName) => {
-			const value = SuspiciousActivityFlags[flagName as keyof typeof SuspiciousActivityFlags];
-			return value !== undefined ? mask | value : mask;
-		}, 0);
-		const removeMask = data.remove_flags.reduce((mask, flagName) => {
-			const value = SuspiciousActivityFlags[flagName as keyof typeof SuspiciousActivityFlags];
-			return value !== undefined ? mask | value : mask;
-		}, 0);
-		const total = data.user_ids.length;
-		await helpers?.reportProgress(0, total, `Updating suspicious flags on ${total} users`);
-		let processed = 0;
-		for (const userIdBigInt of data.user_ids) {
-			if (helpers && (await helpers.shouldCancel())) throw new BulkCancelledError();
-			try {
-				const userId = createUserID(userIdBigInt);
-				const user = await userRepository.findUnique(userId);
-				if (!user) {
-					throw new UnknownUserError();
-				}
-				const currentFlags = user.suspiciousActivityFlags ?? 0;
-				const newFlags = imposePhoneRequirements(currentFlags, addMask) & ~removeMask;
-				const updatedUser = await userRepository.patchUpsert(
-					userId,
-					{suspicious_activity_flags: newFlags},
-					user.toRow(),
-				);
-				await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser});
-				if (newFlags !== currentFlags && newFlags !== 0) {
-					await this.recordRiskOutcomes(userId, ['challenged'], 'admin_bulk_update_suspicious_activity_flags');
-				}
-				successful.push(userId.toString());
-			} catch (error) {
-				failed.push({
-					id: userIdBigInt.toString(),
-					error: error instanceof Error ? error.message : 'Unknown error',
-				});
-			}
-			processed++;
-			if (helpers && processed % 25 === 0) {
-				await helpers.reportProgress(processed, total, null);
-			}
-		}
-		await helpers?.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(0),
-			action: 'bulk_update_suspicious_activity_flags',
-			auditLogReason,
-			metadata: createFlagAuditMetadata({
-				userCount: data.user_ids.length,
-				addFlags: data.add_flags,
-				removeFlags: data.remove_flags,
-			}),
-		});
-		return {
-			successful,
-			failed,
 		};
 	}
 

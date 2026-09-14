@@ -7,8 +7,8 @@ use crate::{
     templates::{
         components::{
             form::{
-                checkbox, csrf_input, danger_button, form_actions, form_field_group, select_input,
-                submit_button, text_input, textarea_input,
+                FORM_SELECT_CLASS, checkbox, csrf_input, danger_button, form_actions,
+                form_field_group, select_chevron, submit_button, text_input, textarea_input,
             },
             page_container::page_header,
             section_card::section_card_simple,
@@ -395,16 +395,33 @@ fn bulk_schedule_deletion_section(base: &str, csrf_token: &str) -> Markup {
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     (textarea_input("user_ids", "User IDs (one per line)", "123456789\n987654321", "", 5, true))
-                    (select_input("reason_code", "Deletion Reason", DELETION_REASONS, "1"))
+                    (form_field_group("Deletion Reason", "reason_code", true, None,
+                        Some("User requested skips identifier bans and pending report resolution. Every other reason applies them."),
+                        html! {
+                            div class="relative" {
+                                select id="reason_code" name="reason_code" required
+                                    class=(FORM_SELECT_CLASS) {
+                                    option value="" selected { "Select a reason" }
+                                    @for &(value, label) in DELETION_REASONS {
+                                        option value=(value) { (label) }
+                                    }
+                                }
+                                (select_chevron())
+                            }
+                        },
+                    ))
                     (text_input("public_reason", "Public Reason (optional)", "", "Terms of service violation"))
-                    (form_field_group("Days Until Deletion", "days_until_deletion", true, None, None, html! {
-                        input type="number" id="days_until_deletion" name="days_until_deletion"
-                            value="14" min="14" required
-                            class="w-full rounded-lg border border-neutral-300 bg-white \
-                                   text-neutral-900 text-sm h-8 px-3 py-1.5 \
-                                   focus:border-brand-primary focus:outline-none \
-                                   focus:ring-2 focus:ring-brand-primary/20";
-                    }))
+                    (form_field_group("Days Until Deletion", "days_until_deletion", true, None,
+                        Some("Moderation reasons are held for at least 60 days. Only User requested allows 14."),
+                        html! {
+                            input type="number" id="days_until_deletion" name="days_until_deletion"
+                                value="60" min="14" max="365" required
+                                class="w-full rounded-lg border border-neutral-300 bg-white \
+                                       text-neutral-900 text-sm h-8 px-3 py-1.5 \
+                                       focus:border-brand-primary focus:outline-none \
+                                       focus:ring-2 focus:ring-brand-primary/20";
+                        },
+                    ))
                     (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
                     (form_actions(html! {
                         (danger_button("Schedule Deletion"))
@@ -447,6 +464,21 @@ mod tests {
         assert!(markup.contains(r#"value="CLONE_STICKER_ENABLED""#));
         assert!(!markup.contains(r#"value="CLONE_EMOJI_DISABLED""#));
         assert!(!markup.contains(r#"value="CLONE_STICKER_DISABLED""#));
+    }
+
+    #[test]
+    fn deletion_form_has_no_preselected_reason() {
+        let markup = bulk_schedule_deletion_section("/admin", "csrf").into_string();
+        assert!(markup.contains(r#"<option value="" selected>Select a reason</option>"#));
+        for (value, _) in DELETION_REASONS {
+            assert!(!markup.contains(&format!(r#"<option value="{value}" selected>"#)));
+        }
+    }
+
+    #[test]
+    fn deletion_form_defaults_to_the_moderation_retention_floor() {
+        let markup = bulk_schedule_deletion_section("/admin", "csrf").into_string();
+        assert!(markup.contains(r#"name="days_until_deletion" value="60" min="14" max="365""#));
     }
 
     #[test]

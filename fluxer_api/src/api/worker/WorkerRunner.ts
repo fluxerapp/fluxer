@@ -432,10 +432,10 @@ export class WorkerRunner {
 			},
 		};
 		try {
-			await task(jobPayload, helpers);
+			const result = await task(jobPayload, helpers);
 			if (ledgerJobId !== null) {
 				try {
-					await this.ledger.markSucceeded(ledgerJobId, null);
+					await this.ledger.markSucceeded(ledgerJobId, result ?? null);
 				} catch (err) {
 					Logger.warn({err, jobId: ledgerJobId.toString()}, 'Ledger markSucceeded failed');
 				}

@@ -174,7 +174,7 @@ export {initializeServiceSingletons} from '@app/api/middleware/ServiceSingletons
 
 let _reportService: ReportService | null = null;
 
-function getReportServiceInstance(): ReportService {
+export function getReportServiceInstance(): ReportService {
 	if (!_reportService) {
 		_reportService = new ReportService(
 			getReportRepository(),
@@ -241,7 +241,7 @@ function getRiskAssessmentRepository(): CassandraRiskAssessmentRepository {
 
 let _historicalOutcomeRepository: CassandraHistoricalOutcomeRepository | null = null;
 
-function getHistoricalOutcomeRepository(): CassandraHistoricalOutcomeRepository {
+export function getHistoricalOutcomeRepository(): CassandraHistoricalOutcomeRepository {
 	if (_historicalOutcomeRepository) return _historicalOutcomeRepository;
 	_historicalOutcomeRepository = new CassandraHistoricalOutcomeRepository();
 	return _historicalOutcomeRepository;
@@ -249,7 +249,7 @@ function getHistoricalOutcomeRepository(): CassandraHistoricalOutcomeRepository 
 
 let _suspiciousIpRepository: CassandraSuspiciousIpRepository | null = null;
 
-function getSuspiciousIpRepository(): CassandraSuspiciousIpRepository {
+export function getSuspiciousIpRepository(): CassandraSuspiciousIpRepository {
 	if (_suspiciousIpRepository) return _suspiciousIpRepository;
 	_suspiciousIpRepository = new CassandraSuspiciousIpRepository();
 	return _suspiciousIpRepository;

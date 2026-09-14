@@ -281,7 +281,7 @@ Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-upd
 
 ### Side effects
 
-A guild whose owner node cannot be resolved is not counted. Reloads can still be in progress when the response arrives. No guild data is changed and no Admin audit entry is recorded.
+A guild whose owner node cannot be resolved is not counted. Reloads can still be in progress when the response arrives. No guild data is changed. The operation records one `reload_guilds` Admin audit entry with the audit reason, the requested guild count, and the reloaded count.
 
 ### Rate limit
 

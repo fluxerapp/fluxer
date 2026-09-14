@@ -588,9 +588,9 @@ export class AdminBanManagementService {
 		},
 		adminUserId: UserID,
 		auditLogReason: string | null,
+		options?: {deferRefresh?: boolean},
 	) {
 		const {adminRepository} = this.deps;
-		const {cache: cacheService} = this.deps.apiContext.services;
 		const hex = data.sha256_hex.toLowerCase();
 		await adminRepository.banFileSha({
 			sha256_hex: hex,
@@ -603,7 +603,9 @@ export class AdminBanManagementService {
 			notes: data.notes ?? null,
 		});
 		fileShaCache.add(hex);
-		await cacheService.publish(BANNED_FILE_SHAS_REFRESH_CHANNEL, 'refresh');
+		if (!options?.deferRefresh) {
+			await this.publishFileShaRefresh();
+		}
 		await this.createBlocklistAuditLog({
 			adminUserId,
 			targetType: 'file_sha',
@@ -611,6 +613,11 @@ export class AdminBanManagementService {
 			auditLogReason,
 			metadata: new Map([['sha256', hex]]),
 		});
+	}
+
+	async publishFileShaRefresh(): Promise<void> {
+		const {cache: cacheService} = this.deps.apiContext.services;
+		await cacheService.publish(BANNED_FILE_SHAS_REFRESH_CHANNEL, 'refresh');
 	}
 
 	async unbanFileSha(

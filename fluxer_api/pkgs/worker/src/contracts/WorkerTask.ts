@@ -21,10 +21,12 @@ export interface WorkerTaskHelpers {
 	setContextLink: (link: string) => Promise<void>;
 }
 
+export type WorkerTaskResult = Record<string, unknown>;
+
 export type WorkerTaskHandler<Payload = Record<string, unknown>> = (
 	payload: Payload,
 	helpers: WorkerTaskHelpers,
-) => Promise<void>;
+) => Promise<WorkerTaskResult> | Promise<void>;
 
 export class JobCancelledError extends Error {
 	constructor(message = 'Job cancelled by admin') {

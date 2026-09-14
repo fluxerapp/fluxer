@@ -10,7 +10,7 @@ Admin discovery is the review side of the public guild directory. An Admin decid
 
 Every operation except [Remove discovery listing](#remove-discovery-listing) requires `discovery:review`, which covers the reads, [Review discovery application](#review-discovery-application), [Move discovery listings to a category](#move-discovery-listings-to-a-category), and [Update discovery listing](#update-discovery-listing). [Remove discovery listing](#remove-discovery-listing) requires `discovery:remove` instead. Neither implies the other.
 
-No operation here reads `X-Audit-Log-Reason` or records an Admin audit entry. An operation that stores a reason takes it in its request body.
+[Move discovery listings to a category](#move-discovery-listings-to-a-category) reads `X-Audit-Log-Reason` and records one `update_discovery_categories` Admin audit entry with the audit reason, the category, and the requested, updated, and failed counts. No other operation here reads that header or records an Admin audit entry. An operation that stores a reason takes it in its request body.
 
 :::note[Review runs regardless of the discovery setting]
 An operator can disable discovery for the whole instance. Only the public [Discovery](/http-api/discovery/) routes read that state, and they return 400 `DISCOVERY_DISABLED` while it is off, so an application can be reviewed into a directory no account can see.

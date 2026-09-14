@@ -420,9 +420,9 @@ Every hash is written with the category `manual`, the severity `2`, and a null c
 
 ### Side effects
 
-Each hash is lowercased and replaces any existing entry. Changes become visible across the instance when the job completes. If it is cancelled, changes already made can remain unapplied on other nodes until a later blocklist update or the twelve-hour feed sync. No Gateway Dispatch is emitted.
+Each hash is lowercased and replaces any existing entry. Changes become visible across the instance when the job stops, whether it ran to the end or was cancelled, so a cancelled job still enforces the hashes it already wrote. No Gateway Dispatch is emitted.
 
-The job records one aggregate [Admin audit entry](/admin-api/#admin-audit-entry-object) under the action `bulk_ban_file_shas`, with the submitted, successful, and failed counts. A cancelled job records none.
+The job records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written hash under the action `ban_file_sha`, with that hash in its metadata, exactly as [Add blocklist entry](#add-blocklist-entry) does. It then records one aggregate entry under the action `bulk_ban_file_shas`, with the submitted, processed, successful, and failed counts. A cancelled job records the entries for the hashes it wrote and an aggregate entry marked `cancelled`.
 
 ### Rate limit
 

@@ -33,6 +33,7 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
         ("", "Any"),
         ("user", "User"),
         ("guild", "Guild"),
+        ("bulk_job", "Bulk job"),
         ("email_domain", "Email domain"),
         ("ip", "IP"),
         ("phrase", "Phrase"),
@@ -155,4 +156,25 @@ pub fn audit_logs_page(
         }
     };
     admin_layout(config, auth, "Audit Logs", "audit-logs", None, content)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn target_type_filter_offers_bulk_jobs() {
+        let params = AuditLogsParams {
+            query: "",
+            admin_user_id: "",
+            target_id: "",
+            target_type: "bulk_job",
+            sort_by: "createdAt",
+            sort_order: "desc",
+            limit: 50,
+            current_page: 0,
+        };
+        let markup = filters_section("/admin", &params).into_string();
+        assert!(markup.contains(r#"<option value="bulk_job" selected>Bulk job</option>"#));
+    }
 }
