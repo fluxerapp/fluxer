@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	authorizeOAuth2,
 	createOAuth2Application,
 	createOAuth2TestSetup,
 	exchangeOAuth2AuthorizationCode,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface OAuth2MeResponse {
 	application: {

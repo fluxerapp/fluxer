@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import {incrementDmMentionCounts} from '@app/api/channel/services/message/ReadStateHelpers';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {CannotEditOtherUserMessageError} from '@fluxer/errors/src/domains/channel/CannotEditOtherUserMessageError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import {type ChannelID, createChannelID, createGuildID, type MessageID, type UserID} from '../../../BrandedTypes';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import {Logger} from '../../../Logger';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {User} from '../../../models/User';
-import type {ReadStateService} from '../../../read_state/ReadStateService';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapChannelToResponse} from '../../ChannelMappers';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {MessageDispatchService} from './MessageDispatchService';
-import {isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageMentionService} from './MessageMentionService';
-import type {MessagePersistenceService} from './MessagePersistenceService';
-import {incrementDmMentionCounts} from './ReadStateHelpers';
 
 interface RecipientOpenState {
 	recipientId: UserID;
@@ -31,6 +31,13 @@ interface RecipientOpenState {
 interface MentionProcessingResult {
 	message: Message;
 	mentionChannels: Array<GatewayChannelMention>;
+}
+
+function channelWithLastMessageId(channel: Channel, messageId: MessageID): Channel {
+	if (channel.lastMessageId != null && channel.lastMessageId >= messageId) {
+		return channel;
+	}
+	return new Channel({...channel.toRow(), last_message_id: messageId});
 }
 
 export class MessageProcessingService {
@@ -64,10 +71,12 @@ export class MessageProcessingService {
 	async updateDMRecipients({
 		channel,
 		channelId,
+		messageId,
 		requestCache,
 	}: {
 		channel: Channel;
 		channelId: ChannelID;
+		messageId: MessageID;
 		requestCache: RequestCache;
 	}): Promise<void> {
 		if (channel.guildId || channel.type !== ChannelTypes.DM) return;
@@ -76,11 +85,12 @@ export class MessageProcessingService {
 		const openStates = await this.batchCheckDmChannelOpen(recipientIds, channelId);
 		const closedRecipients = openStates.filter((state) => !state.isOpen);
 		if (closedRecipients.length === 0) return;
+		const snapshotChannel = channelWithLastMessageId(channel, messageId);
 		await Promise.all(
 			closedRecipients.map((state) =>
 				this.openDmAndDispatch({
 					recipientId: state.recipientId,
-					channel,
+					channel: snapshotChannel,
 					requestCache,
 				}),
 			),

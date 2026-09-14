@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT,
+	GatewayRolloutConfigPublisher,
+} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import type {GatewayRolloutConfig} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT, GatewayRolloutConfigPublisher} from './GatewayRolloutConfigPublisher';
 
 interface FakePublish {
 	subject: string;
@@ -63,8 +66,6 @@ describe('GatewayRolloutConfigPublisher', () => {
 			gateway_dispatch_relay_shards: 32,
 			gateway_dispatch_relay_max_queue: 50000,
 			voice_e2ee_scope: 'guild_feature_only',
-			voice_reconciliation_v3_percentage: 100,
-			voice_reconciliation_v3_interval_ms: 2000,
 		};
 
 		await publisher.publish(config);

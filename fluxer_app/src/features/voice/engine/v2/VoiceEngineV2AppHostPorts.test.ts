@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createVoiceEngineV2AppTestControllerHost} from '@app/features/voice/engine/v2/VoiceEngineV2AppControllerHostTestUtils';
+import {
+	createVoiceEngineV2AppHostPorts,
+	createVoiceEngineV2AppIngestionPort,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppHostPorts';
 import type {VoiceEngineV2Event, VoiceEngineV2Stats} from '@fluxer/voice_engine_v2';
 import {waitForRuntime} from '@fluxer/voice_engine_v2/testing';
 import {describe, expect, it} from 'vitest';
-import {createVoiceEngineV2AppTestControllerHost} from './VoiceEngineV2AppControllerHostTestUtils';
-import {createVoiceEngineV2AppHostPorts, createVoiceEngineV2AppIngestionPort} from './VoiceEngineV2AppHostPorts';
 
 type AppHostPortCall =
 	| {type: 'gateway.writeVoiceState'}

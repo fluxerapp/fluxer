@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceEngineV2AppDiagnosticsAdapter,
 	VOICE_ENGINE_V2_DIAGNOSTICS_CODE_MAX_LENGTH,
 	VOICE_ENGINE_V2_DIAGNOSTICS_MESSAGE_MAX_LENGTH,
 	type VoiceEngineV2AppDiagnosticsLogger,
 	type VoiceEngineV2DiagnosticsLevel,
-} from './VoiceEngineV2AppDiagnosticsAdapter';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
+import {describe, expect, it} from 'vitest';
 
 interface FakeLoggerCall {
 	level: VoiceEngineV2DiagnosticsLevel;

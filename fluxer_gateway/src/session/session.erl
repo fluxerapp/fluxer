@@ -132,11 +132,13 @@ handle_cast({dispatch, Event, {pre_encoded, EncodedData} = Data}, State) when
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({dispatch, Event, Data}, State) when
-    is_atom(Event), is_map(Data)
+    is_atom(Event), is_map(Data);
+    is_atom(Event), is_list(Data)
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({dispatch, Event, Data}, State) when
-    is_binary(Event), is_map(Data)
+    is_binary(Event), is_map(Data);
+    is_binary(Event), is_list(Data)
 ->
     session_dispatch:handle_dispatch(Event, Data, State);
 handle_cast({initial_global_presences, Presences}, State) ->
@@ -236,6 +238,10 @@ handle_info({call_reconnect, ChannelId, Attempt}, State) when
     session_connection:handle_call_reconnect(ChannelId, Attempt, State);
 handle_info({gateway_timing_update, Timings}, State) ->
     {noreply, gateway_timings:merge_state(Timings, State)};
+handle_info({dm_partner_mutual, GuildId, PartnerIds}, State) when
+    is_integer(GuildId), is_list(PartnerIds)
+->
+    session_dm_partners:handle_mutual(GuildId, PartnerIds, State);
 handle_info(Msg, State) ->
     handle_info_lifecycle(Msg, State).
 

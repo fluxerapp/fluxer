@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {readFileSync} from 'node:fs';
-import {describe, expect, it} from 'vitest';
 import {
 	getVoiceGridColumnCount,
 	getVoiceGridGap,
@@ -16,7 +15,8 @@ import {
 	VOICE_GRID_COMPACT_MIN_TILE_WIDTH_PX,
 	VOICE_GRID_MIN_TILE_WIDTH_PX,
 	VOICE_GRID_TILE_ASPECT_RATIO,
-} from './VoiceGridLayoutMetrics';
+} from '@app/features/voice/components/VoiceGridLayoutMetrics';
+import {describe, expect, it} from 'vitest';
 
 const EPSILON_PX = 0.001;
 

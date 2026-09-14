@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import type {UpdateGuildVanityRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
+import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
 import {
 	createGuildID,
 	createInviteCode,
 	createVanityURLCode,
 	type UserID,
 	vanityCodeToInviteCode,
-} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {InviteRepository} from '../../../invite/InviteRepository';
-import {mapGuildToAdminResponse} from '../../models/GuildTypes';
-import type {AdminAuditService} from '../AdminAuditService';
-import type {AdminGuildUpdatePropagator} from './AdminGuildUpdatePropagator';
+} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import type {UpdateGuildVanityRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 
 interface AdminGuildVanityServiceDeps {
 	guildRepository: IGuildRepositoryAggregate;

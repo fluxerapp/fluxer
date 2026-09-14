@@ -202,6 +202,9 @@ impl Store {
                         dest.write_all(&chunk?).await?;
                     }
                 }
+                RelayBody::Buffered(bytes) => {
+                    dest.write_all(&bytes).await?;
+                }
             }
             dest.flush().await?;
             dest.sync_all().await?;

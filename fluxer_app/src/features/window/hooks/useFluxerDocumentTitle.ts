@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
+import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {useEffect, useRef} from 'react';
 
 const TITLE_PREFIX = PRODUCT_NAME;
@@ -35,7 +37,7 @@ const buildDocumentTitle = (parts: Array<string>): string => {
 };
 const applyBadgePrefix = (baseTitle: string, badge: BadgeState): string => {
 	if (badge.mentionCount > 0) {
-		return `(${badge.mentionCount}) ${baseTitle}`;
+		return `(${formatNumber(badge.mentionCount, getCurrentLocale())}) ${baseTitle}`;
 	}
 	if (badge.hasUnread) {
 		return `• ${baseTitle}`;

@@ -105,9 +105,9 @@ interface FilterOption {
 	icon?: React.ReactNode;
 }
 
-const formatDuration = (seconds: number | null | undefined): string => {
-	if (!seconds || seconds <= 0) return '0:00';
-	return formatDurationBase(seconds);
+const formatDuration = (seconds: number | null | undefined, locale: string): string => {
+	if (!seconds || seconds <= 0) return formatDurationBase(0, locale);
+	return formatDurationBase(seconds, locale);
 };
 const getFileExtension = (filename: string, contentType: string): string => {
 	const extension = filename.split('.').pop()?.toUpperCase();
@@ -492,7 +492,7 @@ const GridItem = observer(
 								<div className={memeStyles.audioMeta} data-flx="channel.mobile-memes-picker.grid-item.div--3">
 									{duration && (
 										<div className={memeStyles.audioDuration} data-flx="channel.mobile-memes-picker.grid-item.div--4">
-											{formatDuration(duration)}
+											{formatDuration(duration, i18n.locale)}
 										</div>
 									)}
 									<Tooltip text={filename} data-flx="channel.mobile-memes-picker.grid-item.tooltip">

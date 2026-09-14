@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {LatestRiskContextRecord} from '@app/api/risk/RiskHistoryTypes';
 import {getSubnet} from '@fluxer/ip_utils/src/IpAddress';
-import type {LatestRiskContextRecord} from './RiskHistoryTypes';
 
 export function deriveLatestRiskContext(params: {
 	userId: string;

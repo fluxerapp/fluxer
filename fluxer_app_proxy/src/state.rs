@@ -3,9 +3,8 @@
 use crate::config::AppProxyConfig;
 use crate::csp::CompiledCspPolicy;
 use crate::discovery_cache::DiscoveryCache;
-use crate::invite_meta::InviteMetaResolver;
 use fluxer_common::geoip::GeoipResolver;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::io::AsyncReadExt;
 use tokio::sync::Semaphore;
@@ -13,19 +12,11 @@ use tokio::sync::Semaphore;
 pub const MAX_SPA_INDEX_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_RENDERED_SPA_INDEX_BYTES: usize = 8 * 1024 * 1024;
 pub const MAX_STATIC_TEXT_FILE_BYTES: usize = 4 * 1024 * 1024;
-pub const SPA_DOCUMENT_MEMORY_BUDGET_BYTES: usize = 160 * 1024 * 1024;
-pub const SPA_DOCUMENT_RENDER_RESERVATION_BYTES: u32 = 40 * 1024 * 1024;
 pub const UPSTREAM_ASSET_RESPONSES_IN_FLIGHT_MAX: usize = 32;
 pub const LOCAL_FILE_READS_IN_FLIGHT_MAX: usize = 256;
 
-const _: () = assert!(
-    MAX_RENDERED_SPA_INDEX_BYTES <= SPA_DOCUMENT_RENDER_RESERVATION_BYTES as usize,
-    "a rendered SPA document must fit inside the memory reserved to render it"
-);
-
 #[derive(Clone)]
 pub struct AppProxyBudgets {
-    pub spa_document_memory: Arc<Semaphore>,
     pub upstream_asset_slots: Arc<Semaphore>,
     pub local_read_slots: Arc<Semaphore>,
 }
@@ -33,7 +24,6 @@ pub struct AppProxyBudgets {
 impl AppProxyBudgets {
     pub fn new() -> Self {
         Self {
-            spa_document_memory: Arc::new(Semaphore::new(SPA_DOCUMENT_MEMORY_BUDGET_BYTES)),
             upstream_asset_slots: Arc::new(Semaphore::new(UPSTREAM_ASSET_RESPONSES_IN_FLIGHT_MAX)),
             local_read_slots: Arc::new(Semaphore::new(LOCAL_FILE_READS_IN_FLIGHT_MAX)),
         }
@@ -53,7 +43,6 @@ pub struct AppState {
     pub http_client: reqwest::Client,
     pub discovery_cache: Arc<DiscoveryCache>,
     pub geoip: Arc<GeoipResolver>,
-    pub invite_meta: Arc<OnceLock<InviteMetaResolver>>,
     pub index_html: Option<Arc<str>>,
     pub budgets: AppProxyBudgets,
 }

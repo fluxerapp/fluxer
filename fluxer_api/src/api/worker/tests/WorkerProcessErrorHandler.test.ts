@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createWorkerProcessErrorHandler,
+	type WorkerProcessErrorSource,
+} from '@app/api/worker/WorkerProcessErrorHandler';
 import {describe, expect, it, vi} from 'vitest';
-import {createWorkerProcessErrorHandler, type WorkerProcessErrorSource} from '../WorkerProcessErrorHandler';
 
 function createHarness(overrides: {shutdown?: () => Promise<void>; forceExitDelayMs?: number} = {}) {
 	const logger = {error: vi.fn(), warn: vi.fn()};

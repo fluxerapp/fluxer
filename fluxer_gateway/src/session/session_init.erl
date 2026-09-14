@@ -232,6 +232,7 @@ extract_core_fields(
         replay_payload_bytes => replay_payload_bytes(Buffer),
         seq => Seq,
         ack_seq => AckSeq,
+        replay_floor => init_replay_floor(normalize_seq(maps:get(replay_floor, D, 0)), Seq),
         properties => Properties,
         status => Status,
         resume_status => maps:get(resume_status, D, Status),
@@ -312,6 +313,10 @@ init_ready(false, Ready) -> Ready.
 -spec init_ack_seq(seq(), seq()) -> seq().
 init_ack_seq(AckSeq, Seq) when AckSeq =< Seq -> AckSeq;
 init_ack_seq(_AckSeq, Seq) -> Seq.
+
+-spec init_replay_floor(seq(), seq()) -> seq().
+init_replay_floor(Floor, Seq) when Floor =< Seq -> Floor;
+init_replay_floor(_Floor, Seq) -> Seq.
 
 -spec schedule_timers(session_state()) -> ok.
 schedule_timers(#{bot := Bot, guilds := GuildsMap}) ->
@@ -464,6 +469,17 @@ build_state_loads_relationship_ids_from_ready_test() ->
     ),
     ?assertEqual(#{300 => 1}, maps:get(relationships, State)),
     ?assert(maps:is_key(700, maps:get(channels, State))).
+
+build_state_restores_replay_floor_test() ->
+    Data = (base_session_data(#{}))#{seq => 20, replay_floor => 7},
+    ?assertEqual(7, maps:get(replay_floor, build_state(Data))).
+
+build_state_clamps_replay_floor_to_seq_test() ->
+    Data = (base_session_data(#{}))#{seq => 3, replay_floor => 99},
+    ?assertEqual(3, maps:get(replay_floor, build_state(Data))).
+
+build_state_defaults_replay_floor_to_zero_test() ->
+    ?assertEqual(0, maps:get(replay_floor, build_state(base_session_data(#{})))).
 
 base_session_data(Ready) ->
     #{

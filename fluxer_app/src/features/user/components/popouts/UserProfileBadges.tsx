@@ -28,11 +28,6 @@ const STAFF_DESCRIPTOR = msg({
 	comment:
 		'Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.',
 });
-const COMMUNITY_TEAM_DESCRIPTOR = msg({
-	message: '{productName} Community Team',
-	comment:
-		'Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.',
-});
 const PARTNER_DESCRIPTOR = msg({
 	message: '{productName} Partner',
 	comment:
@@ -102,14 +97,6 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					iconUrl: badgeAssetUrl('staff.svg'),
 					tooltip: i18n._(STAFF_DESCRIPTOR, {productName: PRODUCT_NAME}),
 					url: Routes.careers(),
-				});
-			}
-			if (!selfHosted && user.flags & PublicUserFlags.CTP_MEMBER) {
-				result.push({
-					type: 'icon',
-					key: 'ctp_member',
-					iconUrl: badgeAssetUrl('ctp.svg'),
-					tooltip: i18n._(COMMUNITY_TEAM_DESCRIPTOR, {productName: PRODUCT_NAME}),
 				});
 			}
 			if (!selfHosted && user.flags & PublicUserFlags.PARTNER) {

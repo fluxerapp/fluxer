@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 

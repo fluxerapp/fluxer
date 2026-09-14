@@ -1,13 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import {createEmojiID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
-import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {
-	GuildExplicitContentFilterTypes,
-	GuildFeatures,
-	GuildNSFWLevel,
-	GuildOperations,
-} from '@fluxer/constants/src/GuildConstants';
+import {MessageInteractionBase, type ParsedEmoji} from '@app/api/channel/services/interaction/MessageInteractionBase';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {MessageReaction} from '@app/api/models/MessageReaction';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_REACTIONS_PER_MESSAGE, MAX_USERS_PER_MESSAGE_REACTION} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -17,30 +29,10 @@ import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMes
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderation/NsfwEmojiStickerBlockedError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {isValidSingleUnicodeEmoji} from '@fluxer/schema/src/primitives/EmojiValidators';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import {requireEmailVerified} from '../../../auth/EmailVerificationUtils';
-import {createEmojiID, type MessageID, type UserID} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {MessageReaction} from '../../../models/MessageReaction';
-import type {User} from '../../../models/User';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapUserToPartialResponse} from '../../../user/UserMappers';
-import {assertGuildMemberCanCommunicate} from '../../../utils/GuildCommunicationUtils';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import {MessageInteractionBase, type ParsedEmoji} from './MessageInteractionBase';
 
 const REACTION_CUSTOM_EMOJI_REGEX = /^(.+):(\d+)$/;
 
@@ -225,21 +217,6 @@ export class MessageReactionService extends MessageInteractionBase {
 				userId,
 				hasPermission: channel.guildId ? hasPermission : undefined,
 			});
-		}
-		if (parsedEmoji.id) {
-			const reactionEmojiId = createEmojiID(BigInt(parsedEmoji.id));
-			const emojiObj = await this.guildRepository.getEmojiById(reactionEmojiId);
-			if (emojiObj?.isNsfw) {
-				const isNSFWAllowed = this.isNSFWContentAllowedForReaction({
-					channel,
-					guild,
-					member: authChannel.member,
-					isBot: requestingUser?.isBot,
-				});
-				if (!isNSFWAllowed) {
-					throw new NsfwEmojiStickerBlockedError();
-				}
-			}
 		}
 		if (reactionCount >= maxUsersPerReaction) {
 			throw new MaxUsersPerMessageReactionError(maxUsersPerReaction);
@@ -547,43 +524,5 @@ export class MessageReactionService extends MessageInteractionBase {
 				message_id: params.messageId.toString(),
 			},
 		});
-	}
-
-	private isNSFWContentAllowedForReaction(params: {
-		channel: Channel;
-		guild: GuildResponse | null;
-		member: GuildMemberResponse | null;
-		isBot?: boolean;
-	}): boolean {
-		const {channel, guild, member, isBot} = params;
-		if (isBot) {
-			return true;
-		}
-		if (GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) && channel.isNsfw) {
-			return true;
-		}
-		if (channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
-			return true;
-		}
-		if (!guild) {
-			return false;
-		}
-		const guildMarkedNsfw = guild.nsfw_level === GuildNSFWLevel.AGE_RESTRICTED;
-		if (guildMarkedNsfw) {
-			return true;
-		}
-		const features = new Set(guild.features ?? []);
-		if (features.has(GuildFeatures.DISCOVERABLE)) {
-			return false;
-		}
-		const explicitContentFilter = guild.explicit_content_filter;
-		if (explicitContentFilter === GuildExplicitContentFilterTypes.DISABLED) {
-			return true;
-		}
-		if (explicitContentFilter === GuildExplicitContentFilterTypes.MEMBERS_WITHOUT_ROLES) {
-			const hasRoles = member && member.roles.length > 0;
-			return !!hasRoles;
-		}
-		return false;
 	}
 }

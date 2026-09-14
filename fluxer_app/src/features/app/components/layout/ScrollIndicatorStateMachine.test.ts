@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createScrollIndicatorSnapshot,
 	getScrollIndicatorStateValue,
@@ -10,7 +9,8 @@ import {
 	type ScrollIndicatorTargetMeasurement,
 	selectActiveScrollIndicator,
 	transitionScrollIndicatorSnapshot,
-} from './ScrollIndicatorStateMachine';
+} from '@app/features/app/components/layout/ScrollIndicatorStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function target(
 	id: string,

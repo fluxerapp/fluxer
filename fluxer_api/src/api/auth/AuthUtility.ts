@@ -2,15 +2,15 @@
 
 import crypto from 'node:crypto';
 import {promisify} from 'node:util';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import * as AgeUtils from '@app/api/utils/AgeUtils';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
 import {AccountPermanentlySuspendedError} from '@fluxer/errors/src/domains/user/AccountPermanentlySuspendedError';
 import {AccountTemporarilySuspendedError} from '@fluxer/errors/src/domains/user/AccountTemporarilySuspendedError';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import type {User} from '../models/User';
-import * as AgeUtils from '../utils/AgeUtils';
-import * as RandomUtils from '../utils/RandomUtils';
 
 const randomBytesAsync = promisify(crypto.randomBytes);
 const ALPHANUMERIC_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -104,6 +104,7 @@ function checkAccountBanStatus(_ctx: ApiContext, user: User): AccountBanStatus {
 
 export async function handleBanStatus(ctx: ApiContext, user: User): Promise<User> {
 	const {users} = ctx.services;
+	if (user.deletionStartedAt) throw new AccountPermanentlySuspendedError();
 	const banStatus = checkAccountBanStatus(ctx, user);
 	if (banStatus.isPermanentlyBanned) {
 		throw new AccountPermanentlySuspendedError();

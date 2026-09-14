@@ -106,7 +106,7 @@ const BOT_PERMISSIONS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const COPY_AUTHORIZE_LINK_DESCRIPTOR = msg({
-	message: 'Copy authorize link',
+	message: 'Copy authorization link',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const BUILD_AN_AUTHORIZATION_URL_WITH_SCOPES_REDIRECTS_AND_DESCRIPTOR = msg({

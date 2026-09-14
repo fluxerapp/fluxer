@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {describe, expect, it} from 'vitest';
-import {type MentionSegment, TextareaSegmentManager} from './TextareaSegmentManager';
 
 function userSegment(overrides: Partial<MentionSegment> = {}): MentionSegment {
 	return {

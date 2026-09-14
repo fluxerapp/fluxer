@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {splitMediaAndFileAttachments} from '@app/features/channel/components/MessageAttachmentUtils';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {describe, expect, it} from 'vitest';
-import {splitMediaAndFileAttachments} from './MessageAttachmentUtils';
 
 const baseAttachment = {
 	id: 'attachment-1',

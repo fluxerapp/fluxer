@@ -14,13 +14,12 @@ use crate::{
         response::{
             MediaResponse,
             error::{
-                canonical_reason_str, json_response, storage_error_response, text,
-                text_with_reason, text_with_source,
+                canonical_reason_str, json_response, storage_error_response, text, text_with_source,
             },
             media_response,
         },
         state::AppState,
-        transform::execution::run_transform,
+        transform::execution::{run_transform, transform_error_is_timeout},
     },
 };
 use axum::{
@@ -158,7 +157,7 @@ pub(in crate::server) async fn thumbnail_handler(
     }
     let body = match read_limited_body(request).await {
         Ok(body) => body,
-        Err(status) => return text(status, "Bad Request"),
+        Err(status) => return text(status, canonical_reason_str(status)),
     };
     let req: UploadFileRequest = match serde_json::from_slice(&body) {
         Ok(req) => req,
@@ -194,10 +193,19 @@ pub(in crate::server) async fn thumbnail_handler(
             height: Some(512),
             format: OutputFormat::WebP,
             resize_mode: ResizeMode::Fit,
+            deadline_ms: app.media.transforms().transform_deadline_ms(),
             ..Default::default()
         };
         match run_transform(app.media.transforms(), object.data.clone(), options).await {
             Ok(media) => media,
+            Err(err) if transform_error_is_timeout(&err) => {
+                return text_with_source(
+                    StatusCode::GATEWAY_TIMEOUT,
+                    "Gateway Timeout",
+                    "image_thumbnail_timeout",
+                    err,
+                );
+            }
             Err(err) => {
                 return text_with_source(
                     StatusCode::BAD_REQUEST,
@@ -227,7 +235,7 @@ pub(in crate::server) async fn frames_handler(
     }
     let body = match read_limited_body(request).await {
         Ok(body) => body,
-        Err(_) => return text(StatusCode::BAD_REQUEST, "Bad Request"),
+        Err(status) => return text(status, canonical_reason_str(status)),
     };
     let req: FramesRequest = match serde_json::from_slice::<FramesRequest>(&body) {
         Ok(req) if req.version.is_none_or(|version| version == 2) => req,
@@ -235,11 +243,11 @@ pub(in crate::server) async fn frames_handler(
     };
     let input = match req.into_metadata_request().into_media_input() {
         Ok(input) => input,
-        Err(failure) => return frames_input_failure(&failure),
+        Err(failure) => return failure.into_response(),
     };
     let input = match load_media_input(&app, input, MediaInputLimit::INTERNAL_REQUEST).await {
         Ok(input) => input,
-        Err(failure) => return frames_input_failure(&failure),
+        Err(failure) => return failure.into_response(),
     };
     match media_process::extract_video_thumbnail(
         &input.data,
@@ -257,10 +265,6 @@ pub(in crate::server) async fn frames_handler(
         }
         Err(_) => json_response(StatusCode::OK, "{\"frames\":[]}".to_owned()),
     }
-}
-
-fn frames_input_failure(failure: &MediaFailure) -> Response {
-    text_with_reason(StatusCode::BAD_REQUEST, "Bad Request", failure.code())
 }
 
 fn check_internal_auth(headers: &HeaderMap, secret: &str) -> bool {
@@ -302,6 +306,7 @@ mod tests {
     use crate::{config::Config, test_fixtures::synthetic_png};
     use axum::http::HeaderValue;
     use http_body_util::BodyExt as _;
+    use tokio::sync::mpsc;
 
     fn test_app_state() -> Arc<AppState> {
         let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
@@ -323,6 +328,34 @@ mod tests {
             .method(Method::POST)
             .body(Body::from(body))
             .expect("json request")
+    }
+
+    fn oversized_request() -> Request<Body> {
+        Request::builder()
+            .method(Method::POST)
+            .body(Body::from(Bytes::from(vec![
+                0u8;
+                constants::MAX_INTERNAL_REQUEST_BODY_BYTES
+                    + 1
+            ])))
+            .expect("oversized request")
+    }
+
+    fn saturated_transform_app(storage_root: &std::path::Path) -> Arc<AppState> {
+        let mut cfg = Config::load_from_iter([
+            (
+                "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
+                "secret".to_owned(),
+            ),
+            (
+                "FLUXER_MEDIA_PROXY_STORAGE_ROOT".to_owned(),
+                storage_root.display().to_string(),
+            ),
+        ])
+        .expect("test config");
+        cfg.media.max_native_transforms = 1;
+        cfg.media.worker_queue_capacity = 0;
+        Arc::new(AppState::for_tests(cfg))
     }
 
     async fn response_body(response: Response) -> String {
@@ -404,5 +437,78 @@ mod tests {
         let response = metadata_handler(State(app), authorized_headers(), json_request(body)).await;
         assert_eq!(StatusCode::OK, response.status());
         assert!(response_body(response).await.contains("\"width\":4"));
+    }
+
+    #[tokio::test]
+    async fn thumbnail_answers_an_oversized_body_with_413_payload_too_large() {
+        let response = thumbnail_handler(
+            State(test_app_state()),
+            authorized_headers(),
+            oversized_request(),
+        )
+        .await;
+
+        assert_eq!(StatusCode::PAYLOAD_TOO_LARGE, response.status());
+        assert_eq!("Payload Too Large", response_body(response).await);
+    }
+
+    #[tokio::test]
+    async fn frames_answers_an_oversized_body_with_413_payload_too_large() {
+        let response = frames_handler(
+            State(test_app_state()),
+            authorized_headers(),
+            oversized_request(),
+        )
+        .await;
+
+        assert_eq!(StatusCode::PAYLOAD_TOO_LARGE, response.status());
+        assert_eq!("Payload Too Large", response_body(response).await);
+    }
+
+    #[tokio::test]
+    async fn thumbnail_answers_a_full_admission_pool_with_504_gateway_timeout() {
+        let tmp = tempfile::tempdir().expect("temp storage root");
+        let storage_root = tmp.path().canonicalize().expect("canonical storage root");
+        let app = saturated_transform_app(&storage_root);
+        app.store
+            .write_object(
+                &app.cfg.storage.bucket_uploads,
+                "thumb.png",
+                &synthetic_png(8, 8),
+                "image/png",
+            )
+            .await
+            .expect("stored upload");
+        let (release, mut released) = mpsc::channel::<()>(1);
+        let (started, mut has_started) = mpsc::channel::<()>(1);
+        let holder = Arc::clone(&app);
+        let held = tokio::spawn(async move {
+            holder
+                .media
+                .transforms()
+                .tasks()
+                .run_native(None, move || {
+                    let _ = started.blocking_send(());
+                    let _ = released.blocking_recv();
+                    Ok(())
+                })
+                .await
+        });
+        has_started
+            .recv()
+            .await
+            .expect("the held transform started");
+
+        let response = thumbnail_handler(
+            State(Arc::clone(&app)),
+            authorized_headers(),
+            json_request(r#"{"upload_filename":"thumb.png"}"#.to_owned()),
+        )
+        .await;
+
+        assert_eq!(StatusCode::GATEWAY_TIMEOUT, response.status());
+        assert_eq!("Gateway Timeout", response_body(response).await);
+        drop(release);
+        held.await.expect("held task").expect("held work");
     }
 }

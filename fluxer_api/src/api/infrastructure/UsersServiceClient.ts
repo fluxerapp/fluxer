@@ -1,60 +1,66 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import {Logger} from '@app/api/Logger';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {StringCodec} from 'nats';
-import {createUserID, type UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
-import {throwForSvcErrorReply} from './SvcErrorReply';
 
 const USERS_SERVICE_SUBJECT = process.env.FLUXER_USERS_SERVICE_SUBJECT || 'svc.users';
 const DEFAULT_USERS_SERVICE_TIMEOUT_MS = 6000;
 const DEFAULT_USERS_SERVICE_INFLIGHT_MAX_ENTRIES = 10000;
+const MAX_REQUEST_TIMEOUT_MS = 2_147_483_647;
 
 export interface IUsersServiceClient {
 	getUserPartialResponses(userIds: Array<UserID>): Promise<Map<UserID, UserPartialResponse>>;
 	invalidateUserCache(userId: UserID): Promise<void>;
 }
 
-type UsersServiceResponse =
+type PendingUserPartials = Promise<Map<UserID, UserPartialResponse>>;
+
+type UsersServiceRequest =
 	| {
-			FoundApiPartials: Array<UserPartialResponse>;
+			op: 'GetApiPartialsByIds';
+			user_ids: Array<string>;
 	  }
 	| {
-			FoundApiPartial: UserPartialResponse;
-	  }
-	| 'NotFound'
-	| 'Invalidated';
+			op: 'Invalidate';
+			user_id: string;
+	  };
+
+interface UserPartialsResponse {
+	FoundApiPartials: Array<UserPartialResponse>;
+}
 
 function isUserPartialResponse(value: unknown): value is UserPartialResponse {
 	return isJsonRecord(value) && typeof value.id === 'string';
 }
 
-function isUsersServiceResponse(value: unknown): value is UsersServiceResponse {
-	if (value === 'NotFound' || value === 'Invalidated') return true;
-	if (!isJsonRecord(value)) return false;
-	if ('FoundApiPartials' in value) {
-		return Array.isArray(value.FoundApiPartials) && value.FoundApiPartials.every(isUserPartialResponse);
-	}
-	if ('FoundApiPartial' in value) {
-		return isUserPartialResponse(value.FoundApiPartial);
-	}
-	return false;
+function isUserPartialsResponse(value: unknown): value is UserPartialsResponse {
+	return (
+		isJsonRecord(value) && Array.isArray(value.FoundApiPartials) && value.FoundApiPartials.every(isUserPartialResponse)
+	);
 }
 
 export class NatsUsersServiceClient implements IUsersServiceClient {
 	private readonly codec = StringCodec();
-	private readonly inflightPartials = new Map<string, Promise<UserPartialResponse | undefined>>();
+	private readonly inflightPartials = new Map<UserID, PendingUserPartials>();
 
 	constructor(
 		private readonly connectionManager: INatsConnectionManager,
 		private readonly requestTimeoutMs = DEFAULT_USERS_SERVICE_TIMEOUT_MS,
 		private readonly subject = USERS_SERVICE_SUBJECT,
 		private readonly maxInflightEntries = DEFAULT_USERS_SERVICE_INFLIGHT_MAX_ENTRIES,
-	) {}
+	) {
+		requireIntegerInRange('FLUXER_USERS_SERVICE_TIMEOUT_MS', requestTimeoutMs, 1, MAX_REQUEST_TIMEOUT_MS);
+		requireIntegerInRange('FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES', maxInflightEntries, 0, Number.MAX_SAFE_INTEGER);
+	}
 
 	async getUserPartialResponses(userIds: Array<UserID>): Promise<Map<UserID, UserPartialResponse>> {
 		const uniqueUserIds = uniqueSortedUserIds(userIds);
@@ -62,100 +68,93 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 			return new Map();
 		}
 		const result = new Map<UserID, UserPartialResponse>();
-		const existing: Array<Promise<void>> = [];
+		const lookups = new Map<PendingUserPartials, Array<UserID>>();
 		const misses: Array<UserID> = [];
 		for (const userId of uniqueUserIds) {
-			const key = userId.toString();
-			const inflight = this.inflightPartials.get(key);
-			if (inflight) {
-				existing.push(this.copyInflightPartial(userId, inflight, result));
+			const batch = this.inflightPartials.get(userId);
+			if (!batch) {
+				misses.push(userId);
 				continue;
 			}
-			misses.push(userId);
+			const assignedUserIds = lookups.get(batch);
+			if (assignedUserIds) assignedUserIds.push(userId);
+			else lookups.set(batch, [userId]);
 		}
-		const newlyFetched = this.fetchAndCoalesceMissingPartials(misses, result);
-		await Promise.all([...existing, newlyFetched]);
+		const capacity = Math.max(0, this.maxInflightEntries - this.inflightPartials.size);
+		const coalesced = misses.slice(0, capacity);
+		const direct = misses.slice(capacity);
+		if (coalesced.length > 0) {
+			lookups.set(this.fetchCoalescedPartials(coalesced), coalesced);
+		}
+		if (direct.length > 0) {
+			lookups.set(this.fetchUserPartialResponses(direct), direct);
+		}
+		await awaitAll(
+			Array.from(lookups, async ([batch, assignedUserIds]) => {
+				const partials = await batch;
+				for (const userId of assignedUserIds) {
+					const partial = partials.get(userId);
+					if (partial) result.set(userId, partial);
+				}
+			}),
+			'[users-service] failed to fetch user partials',
+		);
 		return result;
 	}
 
 	private async fetchUserPartialResponses(userIds: Array<UserID>): Promise<Map<UserID, UserPartialResponse>> {
-		const response = await this.request({
-			op: 'GetApiPartialsByIds',
-			user_ids: userIds.map((userId) => userId.toString()),
-		});
-		const partials =
-			typeof response === 'object' && 'FoundApiPartials' in response
-				? response.FoundApiPartials
-				: typeof response === 'object' && 'FoundApiPartial' in response
-					? [response.FoundApiPartial]
-					: [];
+		const requestedUserIds = new Map(userIds.map((userId) => [userId.toString(), userId]));
+		const response = await this.request(
+			{
+				op: 'GetApiPartialsByIds',
+				user_ids: Array.from(requestedUserIds.keys()),
+			},
+			isUserPartialsResponse,
+		);
 		const result = new Map<UserID, UserPartialResponse>();
-		for (const partial of partials) {
-			try {
-				const userId = createUserID(BigInt(partial.id));
-				result.set(userId, partial);
-			} catch (error) {
-				Logger.warn({userId: partial.id, error}, '[users-service] invalid user partial id');
+		for (const partial of response.FoundApiPartials) {
+			const userId = requestedUserIds.get(partial.id);
+			if (userId === undefined) {
+				throw new Error('[users-service] response contains an invalid or unrequested user ID');
 			}
+			if (result.has(userId)) {
+				throw new Error('[users-service] response contains a duplicate user ID');
+			}
+			result.set(userId, partial);
 		}
 		return result;
 	}
 
-	private async fetchAndCoalesceMissingPartials(
-		userIds: Array<UserID>,
-		result: Map<UserID, UserPartialResponse>,
-	): Promise<void> {
-		if (userIds.length === 0) {
-			return;
-		}
-		const capacity = Math.max(0, this.maxInflightEntries - this.inflightPartials.size);
-		const coalesced = userIds.slice(0, capacity);
-		const direct = userIds.slice(capacity);
-		const tasks: Array<Promise<void>> = [];
-		if (coalesced.length > 0) {
-			const batch = this.fetchUserPartialResponses(coalesced);
-			for (const userId of coalesced) {
-				const key = userId.toString();
-				const partial = batch
-					.then((partials) => partials.get(userId))
-					.finally(() => {
-						this.inflightPartials.delete(key);
-					});
-				this.inflightPartials.set(key, partial);
-				tasks.push(this.copyInflightPartial(userId, partial, result));
+	private fetchCoalescedPartials(userIds: Array<UserID>): PendingUserPartials {
+		const batch = this.fetchUserPartialResponses(userIds).finally(() => {
+			for (const userId of userIds) {
+				if (this.inflightPartials.get(userId) === batch) {
+					this.inflightPartials.delete(userId);
+				}
 			}
+		});
+		for (const userId of userIds) {
+			this.inflightPartials.set(userId, batch);
 		}
-		if (direct.length > 0) {
-			tasks.push(
-				this.fetchUserPartialResponses(direct).then((partials) => {
-					for (const [userId, partial] of partials) {
-						result.set(userId, partial);
-					}
-				}),
-			);
-		}
-		await Promise.all(tasks);
-	}
-
-	private async copyInflightPartial(
-		userId: UserID,
-		partialPromise: Promise<UserPartialResponse | undefined>,
-		result: Map<UserID, UserPartialResponse>,
-	): Promise<void> {
-		const partial = await partialPromise;
-		if (partial) {
-			result.set(userId, partial);
-		}
+		return batch;
 	}
 
 	async invalidateUserCache(userId: UserID): Promise<void> {
-		await this.request({
-			op: 'Invalidate',
-			user_id: userId.toString(),
-		});
+		this.inflightPartials.delete(userId);
+		try {
+			await this.request(
+				{
+					op: 'Invalidate',
+					user_id: userId.toString(),
+				},
+				(value): value is 'Invalidated' => value === 'Invalidated',
+			);
+		} finally {
+			this.inflightPartials.delete(userId);
+		}
 	}
 
-	private async request(payload: Record<string, unknown>): Promise<UsersServiceResponse> {
+	private async request<T>(payload: UsersServiceRequest, responseGuard: (value: unknown) => value is T): Promise<T> {
 		try {
 			if (this.connectionManager.isClosed()) {
 				await this.connectionManager.connect();
@@ -165,8 +164,8 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 				timeout: this.requestTimeoutMs,
 			});
 			const decoded = this.codec.decode(response.data);
-			const parsed = parseJsonWithGuard(decoded, isUsersServiceResponse);
-			if (!parsed) {
+			const parsed = parseJsonWithGuard(decoded, responseGuard);
+			if (parsed === null) {
 				throwForSvcErrorReply('users-service', parseJsonRecord(decoded));
 				throw new Error('[users-service] invalid response payload');
 			}
@@ -198,25 +197,16 @@ export function createUsersServiceClient(): IUsersServiceClient {
 		token: Config.nats.authToken || undefined,
 		name: process.env.FLUXER_USERS_SERVICE_NATS_CLIENT_NAME || 'fluxer-api-users',
 	});
+	usersServiceClient = new NatsUsersServiceClient(
+		manager,
+		readOptionalIntegerEnv('FLUXER_USERS_SERVICE_TIMEOUT_MS'),
+		USERS_SERVICE_SUBJECT,
+		readOptionalIntegerEnv('FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES'),
+	);
 	void manager.connect().catch((error) => {
 		Logger.warn({error}, '[users-service] Failed to establish NATS connection');
 	});
-	usersServiceClient = new NatsUsersServiceClient(
-		manager,
-		readPositiveIntegerEnv('FLUXER_USERS_SERVICE_TIMEOUT_MS'),
-		USERS_SERVICE_SUBJECT,
-		readPositiveIntegerEnv('FLUXER_USERS_SERVICE_INFLIGHT_MAX_ENTRIES', DEFAULT_USERS_SERVICE_INFLIGHT_MAX_ENTRIES),
-	);
 	return usersServiceClient;
-}
-
-function readPositiveIntegerEnv(name: string, fallback = DEFAULT_USERS_SERVICE_TIMEOUT_MS): number {
-	const value = process.env[name];
-	if (!value) {
-		return fallback;
-	}
-	const parsed = Number(value);
-	return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function uniqueSortedUserIds(userIds: Array<UserID>): Array<UserID> {

@@ -16,7 +16,7 @@ use axum::{
 
 use super::ActionQuery;
 use super::bans_actions::{
-    BanFormData, custom_flash, execute_ban, extract_value, flash_response, htmx_flash,
+    BanFormData, custom_flash, execute_ban, extract_value, flash_response, render_inline_flash,
 };
 
 pub fn router() -> Router<AppState> {
@@ -105,7 +105,7 @@ async fn generic_ban_post(
         form.audit_log_reason.as_deref(),
     )
     .await;
-    flash_response(config, auth, is_htmx, &level, &msg, ban_cfg, csrf_token)
+    flash_response(config, auth, is_htmx, level, &msg, ban_cfg, csrf_token)
 }
 
 macro_rules! ban_post {
@@ -171,19 +171,22 @@ async fn url_domain_bans_post(
         Query::try_from_uri(request.uri()).unwrap_or(Query(ActionQuery { action: None }));
     let form: BanFormData = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
-        Err(_) => return htmx_flash("error", "Invalid form data", &headers),
+        Err(_) => return render_inline_flash("error", "Invalid form data"),
     };
     let is_htmx = htmx::is_htmx_request(&headers);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let domain = form.domain.as_deref().unwrap_or("").trim().to_owned();
     if domain.is_empty() {
-        return htmx_flash("error", "Domain is required", &headers);
+        return render_inline_flash("error", "Domain is required");
     }
     let action = aq.action.as_deref().unwrap_or("");
     let (level, msg) = match action {
         "ban" => {
             let m_sub = form.match_subdomains.as_deref() == Some("true");
-            match client.ban_url_domain(&domain, m_sub).await {
+            match client
+                .ban_url_domain(&domain, m_sub, form.audit_log_reason.as_deref())
+                .await
+            {
                 Ok(()) => ("success", format!("Domain {domain} banned successfully")),
                 Err(error) => {
                     tracing::warn!(%error, domain, "admin API request failed: ban URL domain");
@@ -191,7 +194,10 @@ async fn url_domain_bans_post(
                 }
             }
         }
-        "unban" => match client.unban_url_domain(&domain).await {
+        "unban" => match client
+            .unban_url_domain(&domain, form.audit_log_reason.as_deref())
+            .await
+        {
             Ok(()) => ("success", format!("Domain {domain} unbanned")),
             Err(error) => {
                 tracing::warn!(%error, domain, "admin API request failed: unban URL domain");
@@ -247,25 +253,31 @@ async fn profile_substring_bans_post(
         Query::try_from_uri(request.uri()).unwrap_or(Query(ActionQuery { action: None }));
     let form: BanFormData = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
-        Err(_) => return htmx_flash("error", "Invalid form data", &headers),
+        Err(_) => return render_inline_flash("error", "Invalid form data"),
     };
     let is_htmx = htmx::is_htmx_request(&headers);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let scope = form.scope.as_deref().unwrap_or("").trim().to_owned();
     let substring = form.substring.as_deref().unwrap_or("").trim().to_owned();
     if scope.is_empty() || substring.is_empty() {
-        return htmx_flash("error", "Scope and substring required", &headers);
+        return render_inline_flash("error", "Scope and substring required");
     }
     let action = aq.action.as_deref().unwrap_or("");
     let (level, msg) = match action {
-        "ban" => match client.ban_profile_substring(&scope, &substring).await {
+        "ban" => match client
+            .ban_profile_substring(&scope, &substring, form.audit_log_reason.as_deref())
+            .await
+        {
             Ok(()) => ("success", format!("\"{substring}\" banned for {scope}")),
             Err(error) => {
                 tracing::warn!(%error, scope, substring, "admin API request failed: ban profile substring");
                 ("error", format!("Failed to ban substring for {scope}"))
             }
         },
-        "unban" => match client.unban_profile_substring(&scope, &substring).await {
+        "unban" => match client
+            .unban_profile_substring(&scope, &substring, form.audit_log_reason.as_deref())
+            .await
+        {
             Ok(()) => ("success", format!("\"{substring}\" unbanned for {scope}")),
             Err(error) => {
                 tracing::warn!(%error, scope, substring, "admin API request failed: unban profile substring");

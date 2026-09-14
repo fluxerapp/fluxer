@@ -16,6 +16,7 @@ use crate::types::{
 };
 use crate::udt;
 use chrono::{DateTime, Utc};
+use fluxer_common::user_flags::{USER_FLAG_STAFF, visible_user_flags};
 use fluxer_svc::shard::ShardService;
 use fluxer_svc::transport::Transport;
 use fluxer_svc::{postgres, postgres::BigIntBound, postgres::KeyPart};
@@ -46,14 +47,11 @@ fn effective_reference_type(reference: &MessageReference) -> i32 {
         .unwrap_or(MESSAGE_REFERENCE_TYPE_DEFAULT)
 }
 const MESSAGE_FLAG_SUPPRESS_EMBEDS: i64 = 1 << 2;
-const PUBLIC_USER_FLAGS: i64 =
-    (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6);
 #[cfg(test)]
 const USER_FLAG_DELETED: i64 = 1_i64 << 34;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
-const USER_FLAG_STAFF: i64 = 1;
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
@@ -78,7 +76,7 @@ const MESSAGE_COLUMNS: &str = "\
     webhook_id, webhook_name, webhook_avatar_hash, \
     content, edited_timestamp, pinned_timestamp, flags, mention_everyone, \
     mention_users, mention_roles, mention_channels, \
-    has_reaction, version, nsfw_emojis, \
+    has_reaction, version, \
     attachments, embeds, sticker_items, message_reference, call, message_snapshots";
 
 pub struct MessagesShard<T> {
@@ -141,7 +139,6 @@ struct MessageDbRow {
     mention_channels: Option<std::collections::HashSet<i64>>,
     has_reaction: Option<bool>,
     version: Option<i32>,
-    nsfw_emojis: Option<std::collections::HashSet<i64>>,
     attachments: Option<Vec<udt::AttachmentUdt>>,
     embeds: Option<Vec<udt::EmbedUdt>>,
     sticker_items: Option<Vec<udt::StickerItemUdt>>,
@@ -1134,13 +1131,6 @@ impl<T: Transport> MessagesShard<T> {
             embeds,
             attachments,
             stickers,
-            nsfw_emojis: (!message.nsfw_emojis.is_empty()).then(|| {
-                message
-                    .nsfw_emojis
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect()
-            }),
             reactions: context.reactions.get(&message.message_id).cloned(),
             message_reference: message
                 .message_reference
@@ -2696,7 +2686,7 @@ fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartialRespon
         avatar_color: partial.avatar_color,
         bot: partial.bot.filter(|bot| *bot),
         system: partial.system.filter(|system| *system),
-        flags: flags & PUBLIC_USER_FLAGS,
+        flags: i64::from(visible_user_flags(flags)),
         mention_flags: partial.mention_flags.filter(|flags| *flags != 0),
     }
 }
@@ -2812,7 +2802,6 @@ fn map_sticker(sticker: &MessageStickerItem) -> Option<ApiMessageStickerResponse
         id: sticker.sticker_id?.to_string(),
         name: sticker.name.clone().unwrap_or_default(),
         animated: sticker.animated.unwrap_or(false),
-        nsfw: sticker.nsfw.filter(|nsfw| *nsfw),
     })
 }
 
@@ -2988,7 +2977,6 @@ fn convert_sticker_item(s: udt::StickerItemUdt) -> MessageStickerItem {
         name: s.name,
         format_type: s.format_type,
         animated: s.animated,
-        nsfw: s.nsfw,
     }
 }
 
@@ -3076,10 +3064,6 @@ impl From<MessageDbRow> for Message {
                 .unwrap_or_default(),
             has_reaction: row.has_reaction,
             version: row.version.unwrap_or_default(),
-            nsfw_emojis: row
-                .nsfw_emojis
-                .map(|s| s.into_iter().collect())
-                .unwrap_or_default(),
             attachments: row
                 .attachments
                 .map(|v| v.into_iter().map(convert_attachment).collect()),
@@ -3207,7 +3191,6 @@ mod tests {
             ]},
             "mention_roles": {"__fluxer_type": "set", "value": []},
             "mention_channels": {"__fluxer_type": "set", "value": []},
-            "nsfw_emojis": {"__fluxer_type": "set", "value": []},
             "attachments": [{
                 "attachment_id": {"__fluxer_type": "bigint", "value": "1509197195776110593"},
                 "filename": "a.png",

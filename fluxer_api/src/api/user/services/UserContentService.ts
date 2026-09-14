@@ -2,10 +2,39 @@
 
 import crypto from 'node:crypto';
 import type {Readable} from 'node:stream';
+import type {ApiContext} from '@app/api/ApiContext';
+import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Message} from '@app/api/models/Message';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserContentRepository} from '@app/api/user/repositories/IUserContentRepository';
+import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
+import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
+import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
+import {UserHarvest} from '@app/api/user/UserHarvestModel';
+import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
+import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MaxBookmarksError} from '@fluxer/errors/src/domains/core/MaxBookmarksError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -13,9 +42,11 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {HarvestExpiredError} from '@fluxer/errors/src/domains/moderation/HarvestExpiredError';
 import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestFailedError';
 import {HarvestNotReadyError} from '@fluxer/errors/src/domains/moderation/HarvestNotReadyError';
+import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {HarvestCreationResponse, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
 	BulkDeleteSelfMessagesFilter,
 	HarvestSelfDataRequest,
@@ -27,33 +58,6 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import {createMessageResponseDataService} from '../../channel/services/message/MessageResponseDataService';
-import type {PushSubscriptionRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {KVBulkMessageDeletionQueueService} from '../../infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Message} from '../../models/Message';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserContentRepository} from '../repositories/IUserContentRepository';
-import {UserHarvest, type UserHarvestResponse} from '../UserHarvestModel';
-import {UserHarvestRepository} from '../UserHarvestRepository';
-import {BaseUserUpdatePropagator} from './BaseUserUpdatePropagator';
-import {verifyHarvestDownloadToken} from './HarvestDownloadToken';
-import {buildHarvestDownloadUrl} from './HarvestDownloadUrl';
 
 export interface SavedMessageEntry {
 	channelId: ChannelID;
@@ -116,7 +120,9 @@ function normalizeProviderEnvironment(
 const isUnreachableEntityError = (error: unknown): boolean =>
 	error instanceof MissingPermissionsError ||
 	error instanceof UnknownChannelError ||
-	error instanceof UnknownGuildError;
+	error instanceof UnknownGuildError ||
+	error instanceof AccessDeniedError ||
+	error instanceof NsfwContentRequiresAgeVerificationError;
 
 export const UserContentServiceTestHooks = {isUnreachableEntityError};
 
@@ -225,8 +231,16 @@ export class UserContentService {
 		);
 	}
 
-	async getSavedMessages({userId, limit}: {userId: UserID; limit: number}): Promise<Array<SavedMessageEntry>> {
-		const savedMessages = await this.userRepository.listSavedMessages(userId, limit);
+	async getSavedMessages({
+		userId,
+		limit,
+		before,
+	}: {
+		userId: UserID;
+		limit: number;
+		before?: MessageID;
+	}): Promise<Array<SavedMessageEntry>> {
+		const savedMessages = await this.userRepository.listSavedMessages(userId, limit, before);
 		const messagesByChannel = await this.readMessagesByChannel(userId, savedMessages);
 		const results: Array<SavedMessageEntry> = [];
 		const staleMessageIds: Array<MessageID> = [];
@@ -243,7 +257,17 @@ export class UserContentService {
 			}
 			const message = this.pickMessage(messagesByChannel, savedMessage);
 			if (!message) {
-				staleMessageIds.push(savedMessage.messageId);
+				const stored = await this.channelRepository.messages.getMessage(savedMessage.channelId, savedMessage.messageId);
+				if (!stored) {
+					staleMessageIds.push(savedMessage.messageId);
+					continue;
+				}
+				results.push({
+					channelId: savedMessage.channelId,
+					messageId: savedMessage.messageId,
+					status: 'missing_permissions',
+					message: null,
+				});
 				continue;
 			}
 			results.push({
@@ -274,7 +298,7 @@ export class UserContentService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const savedMessages = await this.userRepository.listSavedMessages(userId, 1000);
+		const savedMessageCount = await this.userRepository.countSavedMessages(userId);
 		const ctx = createLimitMatchContext({user});
 		const maxBookmarks = resolveLimitSafe(
 			this.limitConfigService.getConfigSnapshot(),
@@ -282,7 +306,7 @@ export class UserContentService {
 			'max_bookmarks',
 			MAX_BOOKMARKS_NON_PREMIUM,
 		);
-		if (savedMessages.length >= maxBookmarks) {
+		if (savedMessageCount >= maxBookmarks) {
 			throw new MaxBookmarksError({maxBookmarks});
 		}
 		await this.channelService.channelData.auth.getChannelAuthenticated({userId, channelId});
@@ -416,30 +440,21 @@ export class UserContentService {
 		await this.deleteMobileDevice(userId, deviceId);
 	}
 
-	async requestDataHarvest(userId: UserID): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	async requestDataHarvest(userId: UserID): Promise<HarvestCreationResponse> {
 		return this.requestDataHarvestInternal(userId, null);
 	}
 
-	async requestFilteredDataHarvest(params: {userId: UserID; filter: HarvestSelfDataRequest}): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	async requestFilteredDataHarvest(params: {
+		userId: UserID;
+		filter: HarvestSelfDataRequest;
+	}): Promise<HarvestCreationResponse> {
 		return this.requestDataHarvestInternal(params.userId, params.filter);
 	}
 
 	private async requestDataHarvestInternal(
 		userId: UserID,
 		filter: HarvestSelfDataRequest | null,
-	): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	): Promise<HarvestCreationResponse> {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) throw new UnknownUserError();
 		const harvestId = await this.snowflakeService.generate();
@@ -464,18 +479,7 @@ export class UserContentService {
 			harvestId: harvestId.toString(),
 			...(filter
 				? {
-						filter: {
-							scope: filter.scope,
-							includeDms: filter.include_dms,
-							includeDmsClosed: filter.include_dms_closed,
-							includeGroupDms: filter.include_group_dms,
-							includeGuilds: filter.include_guilds,
-							guildFilterMode: filter.guild_filter_mode,
-							excludedGuildIds: filter.excluded_guild_ids.map((id) => id.toString()),
-							includedGuildIds: filter.included_guild_ids.map((id) => id.toString()),
-							startTimestamp: filter.start_date ? new Date(filter.start_date).getTime() : null,
-							endTimestamp: filter.end_date ? new Date(filter.end_date).getTime() : null,
-						},
+						filter: serializeSelfMessageFilter(filter),
 					}
 				: {}),
 		});
@@ -486,7 +490,7 @@ export class UserContentService {
 		};
 	}
 
-	async getHarvestStatus(userId: UserID, harvestId: bigint): Promise<UserHarvestResponse> {
+	async getHarvestStatus(userId: UserID, harvestId: bigint): Promise<HarvestStatusResponse> {
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findByUserAndHarvestId(userId, harvestId);
 		if (!harvest) {
@@ -495,7 +499,7 @@ export class UserContentService {
 		return harvest.toResponse();
 	}
 
-	async getLatestHarvest(userId: UserID): Promise<UserHarvestResponse | null> {
+	async getLatestHarvest(userId: UserID): Promise<HarvestStatusResponse | null> {
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findLatestByUserId(userId);
 		return harvest ? harvest.toResponse() : null;
@@ -514,11 +518,11 @@ export class UserContentService {
 		if (!harvest) {
 			throw new UnknownHarvestError();
 		}
-		if (!harvest.completedAt || !harvest.storageKey) {
-			throw new HarvestNotReadyError();
-		}
 		if (harvest.failedAt) {
 			throw new HarvestFailedError();
+		}
+		if (!harvest.completedAt || !harvest.storageKey) {
+			throw new HarvestNotReadyError();
 		}
 		if (harvest.downloadUrlExpiresAt && harvest.downloadUrlExpiresAt < new Date()) {
 			throw new HarvestExpiredError();
@@ -628,18 +632,7 @@ export class UserContentService {
 			'bulkDeleteSelfMessagesImmediate',
 			{
 				userId: userId.toString(),
-				filter: {
-					scope: filter.scope,
-					includeDms: filter.include_dms,
-					includeDmsClosed: filter.include_dms_closed,
-					includeGroupDms: filter.include_group_dms,
-					includeGuilds: filter.include_guilds,
-					guildFilterMode: filter.guild_filter_mode,
-					excludedGuildIds: filter.excluded_guild_ids.map((id) => id.toString()),
-					includedGuildIds: filter.included_guild_ids.map((id) => id.toString()),
-					startTimestamp: filter.start_date ? new Date(filter.start_date).getTime() : null,
-					endTimestamp: filter.end_date ? new Date(filter.end_date).getTime() : null,
-				},
+				filter: serializeSelfMessageFilter(filter),
 			},
 			{maxAttempts: 5},
 		);
@@ -696,11 +689,19 @@ export class UserContentService {
 	}
 
 	async dispatchRecentMentionDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'RECENT_MENTION_DELETE',
-			data: {message_id: messageId.toString()},
-		});
+		await this.gatewayService
+			.dispatchPresence({
+				userId,
+				event: 'RECENT_MENTION_DELETE',
+				data: {message_id: messageId.toString()},
+			})
+			.catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), messageId: messageId.toString(), error},
+					'Failed to dispatch RECENT_MENTION_DELETE',
+				);
+				return null;
+			});
 	}
 
 	async dispatchSavedMessageCreate({
@@ -712,11 +713,20 @@ export class UserContentService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'SAVED_MESSAGE_CREATE',
-			data: (await this.buildMessageResponsesForUser(userId, [message]))[0],
-		});
+		const data = (await this.buildMessageResponsesForUser(userId, [message]))[0];
+		await this.gatewayService
+			.dispatchPresence({
+				userId,
+				event: 'SAVED_MESSAGE_CREATE',
+				data,
+			})
+			.catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), messageId: message.id.toString(), error},
+					'Failed to dispatch SAVED_MESSAGE_CREATE',
+				);
+				return null;
+			});
 	}
 
 	async buildMessageResponsesForUser(userId: UserID, messages: Array<Message>): Promise<Array<MessageResponse>> {
@@ -734,10 +744,18 @@ export class UserContentService {
 	}
 
 	async dispatchSavedMessageDelete({userId, messageId}: {userId: UserID; messageId: MessageID}): Promise<void> {
-		await this.gatewayService.dispatchPresence({
-			userId,
-			event: 'SAVED_MESSAGE_DELETE',
-			data: {message_id: messageId.toString()},
-		});
+		await this.gatewayService
+			.dispatchPresence({
+				userId,
+				event: 'SAVED_MESSAGE_DELETE',
+				data: {message_id: messageId.toString()},
+			})
+			.catch((error) => {
+				Logger.error(
+					{userId: userId.toString(), messageId: messageId.toString(), error},
+					'Failed to dispatch SAVED_MESSAGE_DELETE',
+				);
+				return null;
+			});
 	}
 }

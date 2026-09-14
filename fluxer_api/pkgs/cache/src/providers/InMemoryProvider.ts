@@ -8,9 +8,23 @@ import {
 } from '@pkgs/cache/src/CacheLockValidation';
 import {type CacheLookupResult, ICacheService} from '@pkgs/cache/src/ICacheService';
 
-interface CacheEntry<T> {
-	value: T;
+interface CacheEntry {
 	expiresAt?: number;
+}
+
+interface CacheValueEntry extends CacheEntry {
+	kind: 'value';
+	value: unknown;
+}
+
+interface CacheSetEntry extends CacheEntry {
+	kind: 'set';
+	value: Set<string>;
+}
+
+interface CacheLockEntry extends CacheEntry {
+	token: string;
+	expiresAt: number;
 }
 
 interface InMemoryProviderConfig {
@@ -19,16 +33,9 @@ interface InMemoryProviderConfig {
 }
 
 export class InMemoryProvider extends ICacheService {
-	private cache = new Map<string, CacheEntry<unknown>>();
-	private sets = new Map<string, Set<string>>();
-	private locks = new Map<
-		string,
-		{
-			token: string;
-			expiresAt: number;
-		}
-	>();
-	private maxSize: number;
+	private readonly cache = new Map<string, CacheValueEntry | CacheSetEntry>();
+	private readonly locks = new Map<string, CacheLockEntry>();
+	private readonly maxSize: number;
 	private cleanupInterval?: NodeJS.Timeout;
 
 	constructor(config: InMemoryProviderConfig = {}) {
@@ -42,20 +49,53 @@ export class InMemoryProvider extends ICacheService {
 	private cleanup(): void {
 		const now = Date.now();
 		for (const [key, entry] of this.cache.entries()) {
-			if (entry.expiresAt && entry.expiresAt <= now) {
+			if (this.isExpired(entry, now)) {
 				this.cache.delete(key);
 			}
 		}
 		for (const [key, lock] of this.locks.entries()) {
-			if (lock.expiresAt <= now) {
+			if (this.isExpired(lock, now)) {
 				this.locks.delete(key);
 			}
 		}
 	}
 
-	private isExpired(entry: CacheEntry<unknown>): boolean {
-		if (!entry.expiresAt) return false;
-		return Date.now() >= entry.expiresAt;
+	private isExpired(entry: CacheEntry, now = Date.now()): boolean {
+		return entry.expiresAt !== undefined && now >= entry.expiresAt;
+	}
+
+	private getLiveEntry(key: string): CacheValueEntry | CacheSetEntry | undefined {
+		const entry = this.cache.get(key);
+		if (entry && this.isExpired(entry)) {
+			this.cache.delete(key);
+			return undefined;
+		}
+		return entry;
+	}
+
+	private getValueEntry(key: string): CacheValueEntry | undefined {
+		const entry = this.getLiveEntry(key);
+		if (entry && entry.kind !== 'value') {
+			throw new Error('Cache key contains a set, not a value.');
+		}
+		return entry;
+	}
+
+	private getSetEntry(key: string): CacheSetEntry | undefined {
+		const entry = this.getLiveEntry(key);
+		if (entry && entry.kind !== 'set') {
+			throw new Error('Cache key contains a value, not a set.');
+		}
+		return entry;
+	}
+
+	private getLiveLock(key: string): CacheLockEntry | undefined {
+		const lock = this.locks.get(key);
+		if (lock && this.isExpired(lock)) {
+			this.locks.delete(key);
+			return undefined;
+		}
+		return lock;
 	}
 
 	private evictIfNeeded(): void {
@@ -68,18 +108,16 @@ export class InMemoryProvider extends ICacheService {
 	}
 
 	async getEntry<T>(key: string): Promise<CacheLookupResult<T>> {
-		const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-		if (!entry) return {hit: false};
-		if (this.isExpired(entry)) {
-			this.cache.delete(key);
-			return {hit: false};
-		}
-		return {hit: true, value: entry.value};
+		const entry = this.getValueEntry(key);
+		return entry ? {hit: true, value: entry.value as T} : {hit: false};
 	}
 
 	async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
-		this.evictIfNeeded();
-		const entry: CacheEntry<T> = {
+		if (!this.cache.has(key)) {
+			this.evictIfNeeded();
+		}
+		const entry: CacheValueEntry = {
+			kind: 'value',
 			value,
 			expiresAt: ttlSeconds ? Date.now() + ttlSeconds * 1000 : undefined,
 		};
@@ -91,36 +129,28 @@ export class InMemoryProvider extends ICacheService {
 	}
 
 	async getAndDelete<T>(key: string): Promise<T | null> {
-		const value = await this.get<T>(key);
-		if (value !== null) {
-			this.cache.delete(key);
-		}
-		return value;
+		const entry = this.getValueEntry(key);
+		this.cache.delete(key);
+		return entry ? (entry.value as T) : null;
 	}
 
 	async exists(key: string): Promise<boolean> {
-		const entry = this.cache.get(key);
-		if (!entry) return false;
-		if (this.isExpired(entry)) {
-			this.cache.delete(key);
-			return false;
-		}
-		return true;
+		return this.getLiveEntry(key) !== undefined;
 	}
 
 	async expire(key: string, ttlSeconds: number): Promise<void> {
-		const entry = this.cache.get(key);
-		if (entry && !this.isExpired(entry)) {
+		const entry = this.getLiveEntry(key);
+		if (entry) {
 			entry.expiresAt = Date.now() + ttlSeconds * 1000;
 		}
 	}
 
 	async ttl(key: string): Promise<number> {
-		const entry = this.cache.get(key);
-		if (!entry || this.isExpired(entry)) {
+		const entry = this.getLiveEntry(key);
+		if (!entry) {
 			return -2;
 		}
-		if (!entry.expiresAt) {
+		if (entry.expiresAt === undefined) {
 			return -1;
 		}
 		const ttlMs = entry.expiresAt - Date.now();
@@ -128,11 +158,10 @@ export class InMemoryProvider extends ICacheService {
 	}
 
 	async mget<T>(keys: Array<string>): Promise<Array<T | null>> {
-		const results: Array<T | null> = [];
-		for (const key of keys) {
-			results.push(await this.get<T>(key));
-		}
-		return results;
+		return keys.map((key) => {
+			const entry = this.getLiveEntry(key);
+			return entry?.kind === 'value' ? (entry.value as T) : null;
+		});
 	}
 
 	async mset<T>(
@@ -162,8 +191,7 @@ export class InMemoryProvider extends ICacheService {
 	async acquireLock(key: string, ttlSeconds: number): Promise<string | null> {
 		validateLockKey(key);
 		const lockKey = formatLockKey(key);
-		const existingLock = this.locks.get(lockKey);
-		if (existingLock && existingLock.expiresAt > Date.now()) {
+		if (this.getLiveLock(lockKey)) {
 			return null;
 		}
 		const token = generateLockToken();
@@ -178,7 +206,7 @@ export class InMemoryProvider extends ICacheService {
 		validateLockKey(key);
 		validateLockToken(token);
 		const lockKey = formatLockKey(key);
-		const lock = this.locks.get(lockKey);
+		const lock = this.getLiveLock(lockKey);
 		if (!lock || lock.token !== token) {
 			return false;
 		}
@@ -190,23 +218,21 @@ export class InMemoryProvider extends ICacheService {
 		validateLockKey(key);
 		validateLockToken(token);
 		const lockKey = formatLockKey(key);
-		const lock = this.locks.get(lockKey);
-		if (!lock || lock.token !== token || lock.expiresAt <= Date.now()) {
+		const lock = this.getLiveLock(lockKey);
+		if (!lock || lock.token !== token) {
 			return false;
 		}
-		this.locks.set(lockKey, {
-			token,
-			expiresAt: Date.now() + ttlSeconds * 1000,
-		});
+		lock.expiresAt = Date.now() + ttlSeconds * 1000;
 		return true;
 	}
 
 	async getAndRenewTtl<T>(key: string, newTtlSeconds: number): Promise<T | null> {
-		const value = await this.get<T>(key);
-		if (value !== null) {
-			await this.expire(key, newTtlSeconds);
+		const entry = this.getValueEntry(key);
+		if (!entry) {
+			return null;
 		}
-		return value;
+		entry.expiresAt = Date.now() + newTtlSeconds * 1000;
+		return entry.value as T;
 	}
 
 	async publish(_channel: string, _message: string): Promise<void> {
@@ -214,43 +240,35 @@ export class InMemoryProvider extends ICacheService {
 	}
 
 	async sadd(key: string, member: string, ttlSeconds?: number): Promise<void> {
-		let set = this.sets.get(key);
-		if (!set) {
-			set = new Set<string>();
-			this.sets.set(key, set);
+		let entry = this.getSetEntry(key);
+		if (!entry) {
+			this.evictIfNeeded();
+			entry = {kind: 'set', value: new Set<string>()};
+			this.cache.set(key, entry);
 		}
-		set.add(member);
+		entry.value.add(member);
 		if (ttlSeconds) {
-			await this.set(`${key}:expiry`, {}, ttlSeconds);
+			entry.expiresAt = Date.now() + ttlSeconds * 1000;
 		}
 	}
 
 	async srem(key: string, member: string): Promise<void> {
-		const set = this.sets.get(key);
-		if (set) {
-			set.delete(member);
-			if (set.size === 0) {
-				this.sets.delete(key);
-			}
+		const entry = this.getSetEntry(key);
+		if (!entry) {
+			return;
+		}
+		entry.value.delete(member);
+		if (entry.value.size === 0) {
+			this.cache.delete(key);
 		}
 	}
 
 	async smembers(key: string): Promise<Set<string>> {
-		const expiryExists = await this.exists(`${key}:expiry`);
-		if (!expiryExists && this.sets.has(key)) {
-			return new Set();
-		}
-		return this.sets.get(key) ?? new Set<string>();
+		return new Set(this.getSetEntry(key)?.value);
 	}
 
 	async sismember(key: string, member: string): Promise<boolean> {
-		const set = this.sets.get(key);
-		if (!set) return false;
-		const expiryExists = await this.exists(`${key}:expiry`);
-		if (!expiryExists) {
-			return false;
-		}
-		return set.has(member);
+		return this.getSetEntry(key)?.value.has(member) ?? false;
 	}
 
 	destroy(): void {
@@ -259,7 +277,6 @@ export class InMemoryProvider extends ICacheService {
 			this.cleanupInterval = undefined;
 		}
 		this.cache.clear();
-		this.sets.clear();
 		this.locks.clear();
 	}
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BatchBuilder, executeQuery, fetchPage} from '@app/api/database/CassandraQueryExecution';
+import {getStatementMeta, normalizeInParams} from '@app/api/database/CassandraTypes';
 import {describe, expect, it} from 'vitest';
-import {BatchBuilder, executeQuery, fetchPage} from './CassandraQueryExecution';
-import {getStatementMeta, normalizeInParams} from './CassandraTypes';
 
 describe('getStatementMeta', () => {
 	it('flags SELECT * statements as unsafe', () => {

@@ -12,6 +12,7 @@ import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import {createKeyedActionGuard} from '@app/lib/overlay/KeyedActionGuard';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
@@ -58,19 +59,21 @@ export const CloneStickerMenuItem: React.FC<CloneStickerMenuItemProps> = observe
 	const {i18n} = useLingui();
 	const sourceGuild = sticker.guildId ? Guilds.getGuild(sticker.guildId) : null;
 	const metadataState = ExpressionMetadata.getStickerMetadata(sticker.id);
-	const needsMetadataLookup = !sourceGuild;
+	const shortcutEnabled = AdvancedSettings.expressionCloneShortcutsEnabled;
+	const needsMetadataLookup = shortcutEnabled && !sourceGuild;
 	useEffect(() => {
 		if (needsMetadataLookup && !metadataState.data && !metadataState.loading && !metadataState.error) {
 			void ExpressionMetadata.fetchStickerMetadata(sticker.id);
 		}
 	}, [needsMetadataLookup, metadataState.data, metadataState.loading, metadataState.error, sticker.id]);
+	if (!shortcutEnabled) return null;
 	const cloningAllowed = sourceGuild
 		? sourceGuild.cloneStickerAllowed
 		: metadataState.data
 			? metadataState.data.allowCloning
 			: null;
 	const isLoadingPermission = needsMetadataLookup && metadataState.loading;
-	if (cloningAllowed === false) return null;
+	if (cloningAllowed !== true && !isLoadingPermission) return null;
 	const eligible = Guilds.getGuilds()
 		.filter((guild) => guild.id !== sticker.guildId)
 		.filter((guild) => Permission.can(Permissions.MANAGE_EXPRESSIONS, {guildId: guild.id}))

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	getLatencySignalBaseline,
+	getLatencySignalState,
+	type LatencySignalSample,
+} from '@app/features/voice/utils/VoiceLatencySignal';
 import {describe, expect, it} from 'vitest';
-import {getLatencySignalBaseline, getLatencySignalState, type LatencySignalSample} from './VoiceLatencySignal';
 
 function samples(...latencies: Array<number>): Array<LatencySignalSample> {
 	return latencies.map((latency) => ({latency}));

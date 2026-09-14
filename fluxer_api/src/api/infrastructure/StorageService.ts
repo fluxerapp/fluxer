@@ -6,6 +6,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {PassThrough, pipeline, Readable} from 'node:stream';
 import {promisify} from 'node:util';
+import {Config} from '@app/api/Config';
+import {
+	type IStorageService,
+	type ProcessedStorageObjectMetadata,
+	StorageObjectListingOverflowError,
+	StorageObjectRangeNotSatisfiableError,
+} from '@app/api/infrastructure/IStorageService';
+import {processMediaFile} from '@app/api/infrastructure/StorageObjectHelpers';
+import {Logger} from '@app/api/Logger';
 import {
 	AbortMultipartUploadCommand,
 	CompleteMultipartUploadCommand,
@@ -30,15 +39,6 @@ import type {S3ProviderSettings} from '@fluxer/config/src/S3DownloadsProvider';
 import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
 import {temporaryFile} from 'tempy';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {
-	type IStorageService,
-	type ProcessedStorageObjectMetadata,
-	StorageObjectListingOverflowError,
-	StorageObjectRangeNotSatisfiableError,
-} from './IStorageService';
-import {processMediaFile} from './StorageObjectHelpers';
 
 const STREAM_UPLOAD_PART_BYTES = 8 * 1024 * 1024;
 const STREAM_UPLOAD_CONCURRENCY = 4;
@@ -127,7 +127,7 @@ export class StorageService implements IStorageService {
 			region: this.provider.region,
 			accessKeyId: this.provider.accessKeyId,
 			secretAccessKey: this.provider.secretAccessKey,
-			forcePathStyle: true,
+			forcePathStyle: this.provider.forcePathStyle,
 		});
 		this.presignClient = buildPooledS3Client({
 			endpoint: this.resolvePresignEndpoint(),
@@ -136,6 +136,15 @@ export class StorageService implements IStorageService {
 			secretAccessKey: this.provider.secretAccessKey,
 			forcePathStyle: this.provider.forcePathStyle,
 		});
+		Logger.info(
+			{
+				endpoint: this.provider.endpoint,
+				presignEndpoint: this.resolvePresignEndpoint(),
+				region: this.provider.region,
+				addressing: this.provider.forcePathStyle ? 'path' : 'virtual-host',
+			},
+			'Object storage client ready',
+		);
 	}
 
 	private resolvePresignEndpoint(): string {
@@ -231,6 +240,12 @@ export class StorageService implements IStorageService {
 			return;
 		}
 		const stream = fs.createReadStream(filePath, {highWaterMark: 1024 * 1024});
+		const errors = new Set<unknown>();
+		const onSourceError = (error: Error) => {
+			errors.add(error);
+		};
+		stream.on('error', onSourceError);
+		const closed = new Promise<void>((resolve) => stream.once('close', resolve));
 		try {
 			const upload = new Upload({
 				client: this.client,
@@ -246,10 +261,18 @@ export class StorageService implements IStorageService {
 				leavePartsOnError: false,
 			});
 			await upload.done();
+			if (!stream.readableEnded) {
+				throw new Error('File upload completed before its source stream ended');
+			}
 		} catch (error) {
+			errors.add(error);
+		} finally {
 			stream.destroy();
-			throw error;
+			await closed;
+			stream.off('error', onSourceError);
 		}
+		if (errors.size === 1) throw errors.values().next().value;
+		if (errors.size > 1) throw new AggregateError(errors, 'File upload and source stream failed');
 	}
 
 	async getPresignedDownloadURL({

@@ -51,6 +51,7 @@ export const DOWNLOADING_UPDATE_DESCRIPTOR = msg({
 const logger = new Logger('Updater');
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 const MIN_CHECK_INTERVAL_MS = 60 * 1000;
+const MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS = 5 * 1000;
 const VERSION_ENDPOINT = '/version.json';
 const CURRENT_BUILD_VERSION = Config.PUBLIC_BUILD_VERSION ?? null;
 const ALLOWED_WEB_UPDATE_HOSTS = new Set(['web.fluxer.app', 'web.canary.fluxer.app']);
@@ -131,6 +132,8 @@ class Updater {
 	private backgroundCheckInterval: number | null = null;
 	private backgroundCheckCleanups: Array<() => void> = [];
 	private unsubscribeNativeEvents: (() => void) | null = null;
+	private updateReadyNagbarDismissedVersion: string | null = null;
+	private pendingManualDownloadRefreshes = 0;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -191,6 +194,18 @@ class Updater {
 
 	get nativeUpdateReady(): boolean {
 		return this.updateInfo.native.available && this.updateInfo.native.downloaded;
+	}
+
+	get shouldShowUpdateReadyNagbar(): boolean {
+		return (
+			this.nativeUpdateReady &&
+			!this.updateInfo.native.installing &&
+			this.updateReadyNagbarDismissedVersion !== this.updateReadyNagbarVersionKey
+		);
+	}
+
+	private get updateReadyNagbarVersionKey(): string {
+		return this.updateInfo.native.version ?? 'unknown';
 	}
 
 	get nativeDownloadInFlight(): boolean {
@@ -275,7 +290,17 @@ class Updater {
 	}
 
 	private handleNativeEvent(event: UpdaterEvent): void {
-		const isUserCheck = event.context === 'user';
+		const isManualDownloadRefreshResult =
+			event.context === 'user' &&
+			this.pendingManualDownloadRefreshes > 0 &&
+			(event.type === 'available' ||
+				event.type === 'not-available' ||
+				event.type === 'error' ||
+				event.type === 'unsupported');
+		if (isManualDownloadRefreshResult) {
+			this.pendingManualDownloadRefreshes -= 1;
+		}
+		const isUserCheck = event.context === 'user' && !isManualDownloadRefreshResult;
 		const isBackgroundOrFocusCheck = event.context === 'background' || event.context === 'focus';
 		const shouldSurfaceNativeDesktopUpdate = this.shouldSurfaceNativeDesktopUpdate();
 		const shouldShowImmediateUserResult = isUserCheck && !this.checkInProgress;
@@ -348,9 +373,6 @@ class Updater {
 					break;
 				}
 				this.transition({type: 'native.downloaded', version: event.version ?? null});
-				if (shouldShowImmediateUserResult) {
-					this.showCurrentUpdateState();
-				}
 				break;
 			case 'progress':
 				if (!shouldSurfaceNativeDesktopUpdate || !this.nativeDownloadProgressSupported) {
@@ -633,12 +655,48 @@ class Updater {
 				currentVersion: this.currentVersion,
 				version: this.updateInfo.native.version,
 				options: this.nativeManualDownloadOptions,
-				onDownload: (option) => this.downloadManualNativeUpdateOrOpen(option.url, option.suggestedName),
+				onDownload: (option) => this.downloadManualNativeUpdateOption(option),
 			});
 			return;
 		}
 		const url = this.nativeManualDownloadUrl ?? this.nativeUnsupported?.downloadUrl ?? DESKTOP_DOWNLOAD_URL;
 		pushUpdateAvailableModal(this.updateInfo.native.version, () => this.downloadManualNativeUpdateOrOpen(url));
+	}
+
+	private async refreshManualNativeDownloadOption(option: UpdaterDownloadOption): Promise<UpdaterDownloadOption> {
+		if (this.checkInProgress) {
+			return option;
+		}
+		this.transition({type: 'check.started'});
+		let timeoutId: number | undefined;
+		const timedOut = new Promise<boolean>((resolve) => {
+			timeoutId = window.setTimeout(() => resolve(false), MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS);
+		});
+		try {
+			this.pendingManualDownloadRefreshes += 1;
+			const checked = await Promise.race([this.checkNativeUpdate('user'), timedOut]);
+			if (!checked) {
+				return option;
+			}
+			return this.nativeManualDownloadOptions.find((candidate) => candidate.format === option.format) ?? option;
+		} finally {
+			window.clearTimeout(timeoutId);
+			this.transition({type: 'check.finished', now: Date.now()});
+		}
+	}
+
+	private async downloadManualNativeUpdateOption(option: UpdaterDownloadOption): Promise<void> {
+		if (this.manualNativeDownloadInFlight) {
+			return;
+		}
+		this.transition({type: 'manualDownload.started'});
+		let currentOption = option;
+		try {
+			currentOption = await this.refreshManualNativeDownloadOption(option);
+		} finally {
+			this.transition({type: 'manualDownload.finished'});
+		}
+		await this.downloadManualNativeUpdateOrOpen(currentOption.url, currentOption.suggestedName);
 	}
 
 	private async downloadManualNativeUpdateOrOpen(url: string, suggestedName?: string): Promise<void> {
@@ -659,6 +717,10 @@ class Updater {
 		} finally {
 			this.transition({type: 'manualDownload.finished'});
 		}
+	}
+
+	dismissUpdateReadyNagbar(): void {
+		this.updateReadyNagbarDismissedVersion = this.updateReadyNagbarVersionKey;
 	}
 
 	reset(): void {

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {createUserID} from '@app/api/BrandedTypes';
+import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {AdminUserUpdatePropagator} from '../../../admin/services/AdminUserUpdatePropagator';
-import {createUserID} from '../../../BrandedTypes';
-import {reschedulePendingDeletion} from '../../../user/services/PendingDeletionCoordinator';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	user_ids: Array<string>;
@@ -59,17 +59,13 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 			if (!user) throw new Error('user_not_found');
 			const pendingDeletionAt = new Date();
 			pendingDeletionAt.setDate(pendingDeletionAt.getDate() + daysUntilDeletion);
-			const updatedUser = await deps.userRepository.patchUpsert(
-				userId,
-				{
-					flags: user.flags | UserFlags.DELETED,
-					pending_deletion_at: pendingDeletionAt,
-					deletion_reason_code: payload.reason_code,
-					deletion_public_reason: payload.public_reason ?? null,
-					deletion_audit_log_reason: payload.audit_log_reason ?? null,
-				},
-				user.toRow(),
-			);
+			const updatedUser = await deps.userRepository.updateDeletionSchedule(user, {
+				flags: user.flags | UserFlags.DELETED,
+				pending_deletion_at: pendingDeletionAt,
+				deletion_reason_code: payload.reason_code,
+				deletion_public_reason: payload.public_reason ?? null,
+				deletion_audit_log_reason: payload.audit_log_reason ?? null,
+			});
 			await reschedulePendingDeletion({
 				userId,
 				currentPendingDeletionAt: user.pendingDeletionAt,

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createTooltipSnapshot,
 	DEFAULT_TOOLTIP_ENVIRONMENT,
@@ -11,7 +10,8 @@ import {
 	type TooltipSnapshot,
 	tooltipSnapshotsAreEquivalent,
 	transitionTooltipSnapshot,
-} from './TooltipStateMachine';
+} from '@app/features/ui/tooltip/TooltipStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function environment(overrides: Partial<TooltipEnvironment> = {}): TooltipEnvironment {
 	return {...DEFAULT_TOOLTIP_ENVIRONMENT, ...overrides};

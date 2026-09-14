@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createLocalTypingSnapshot,
 	LOCAL_TYPING_REMOTE_REFRESH_MS,
@@ -8,7 +7,8 @@ import {
 	type LocalTypingSnapshot,
 	selectLocalTypingModel,
 	transitionLocalTypingSnapshot,
-} from './LocalTypingStateMachine';
+} from '@app/features/typing/state/LocalTypingStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function transition(snapshot: LocalTypingSnapshot, event: LocalTypingMachineEvent): LocalTypingSnapshot {
 	return transitionLocalTypingSnapshot(snapshot, event);

@@ -1,20 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {CATEGORY_CHILD_SAFETY} from '@fluxer/constants/src/ReportCategories';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {NcmecAlreadySubmittedError} from '@fluxer/errors/src/domains/moderation/NcmecAlreadySubmittedError';
-import {NcmecSubmissionFailedError} from '@fluxer/errors/src/domains/moderation/NcmecSubmissionFailedError';
-import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {ms} from 'itty-time';
-import type {AdminArchiveService} from '../admin/services/AdminArchiveService';
-import type {AdminAuditService} from '../admin/services/AdminAuditService';
-import {AdminUserUpdatePropagator} from '../admin/services/AdminUserUpdatePropagator';
+import type {AdminArchiveService} from '@app/api/admin/services/AdminArchiveService';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import {
 	type AttachmentID,
 	type ChannelID,
@@ -25,40 +13,51 @@ import {
 	type MessageID,
 	type ReportID,
 	type UserID,
-} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {AttachmentUploadTraceRepository} from '../channel/repositories/message/AttachmentUploadTraceRepository';
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {
 	collectMessageAttachments,
 	makeAttachmentCdnKey,
 	makeAttachmentCdnUrl,
 	purgeMessageAttachments,
-} from '../channel/services/message/MessageHelpers';
-import type {AttachmentUploadTraceByAttachmentRow} from '../database/types/AttachmentUploadTypes';
-import type {NcmecAttachmentSubmissionRow, NcmecUserWorkflowRow} from '../database/types/CsamTypes';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {IPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import {Logger} from '../Logger';
-import type {Embed} from '../models/Embed';
-import type {EmbedMedia} from '../models/EmbedMedia';
-import type {Message} from '../models/Message';
-import type {User} from '../models/User';
-import type {IARMessageContext, IARSubmission} from '../report/IReportRepository';
-import type {ReportRepository} from '../report/ReportRepository';
-import {deleteMessageSearchDocuments} from '../search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '../user/IUserRepository';
-import {reschedulePendingDeletion} from '../user/services/PendingDeletionCoordinator';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
-import type {NcmecApiClient} from './NcmecReporter';
-import {buildNcmecFileDetailsXml, buildNcmecReportXml} from './NcmecReporter';
-import type {NcmecRepository} from './NcmecRepository';
-
-export type NcmecSubmissionStatus = 'not_submitted' | 'submitting' | 'submitted' | 'failed';
+} from '@app/api/channel/services/message/MessageHelpers';
+import type {NcmecApiClient} from '@app/api/csam/NcmecReporter';
+import {buildNcmecFileDetailsXml, buildNcmecReportXml} from '@app/api/csam/NcmecReporter';
+import type {NcmecRepository} from '@app/api/csam/NcmecRepository';
+import type {AttachmentUploadTraceByAttachmentRow} from '@app/api/database/types/AttachmentUploadTypes';
+import type {NcmecAttachmentSubmissionRow, NcmecUserWorkflowRow} from '@app/api/database/types/CsamTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {Embed} from '@app/api/models/Embed';
+import type {EmbedMedia} from '@app/api/models/EmbedMedia';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {IARMessageContext, IARSubmission} from '@app/api/report/IReportRepository';
+import type {ReportRepository} from '@app/api/report/ReportRepository';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {CATEGORY_CHILD_SAFETY} from '@fluxer/constants/src/ReportCategories';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {NcmecAlreadySubmittedError} from '@fluxer/errors/src/domains/moderation/NcmecAlreadySubmittedError';
+import {NcmecSubmissionFailedError} from '@fluxer/errors/src/domains/moderation/NcmecSubmissionFailedError';
+import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
+import type {NcmecSubmissionStatus} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
+import {ms} from 'itty-time';
 
 export interface NcmecAttachmentStatusResponse {
 	status: NcmecSubmissionStatus;
@@ -653,18 +652,14 @@ export class NcmecSubmissionService {
 		const privateReason = `Confirmed CSAM - NCMEC Report ${ncmecReportId} - ${contextLabel}`;
 		const pendingDeletionAt = new Date();
 		pendingDeletionAt.setDate(pendingDeletionAt.getDate() + NCMEC_DELETION_GRACE_DAYS);
-		const updatedUser = await this.deps.userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.DELETED | UserFlags.DISABLED,
-				temp_banned_until: null,
-				pending_deletion_at: pendingDeletionAt,
-				deletion_reason_code: DeletionReasons.CHILD_SEXUAL_CONTENT,
-				deletion_public_reason: null,
-				deletion_audit_log_reason: privateReason,
-			},
-			user.toRow(),
-		);
+		const updatedUser = await this.deps.userRepository.updateDeletionSchedule(user, {
+			flags: user.flags | UserFlags.DELETED | UserFlags.DISABLED,
+			temp_banned_until: null,
+			pending_deletion_at: pendingDeletionAt,
+			deletion_reason_code: DeletionReasons.CHILD_SEXUAL_CONTENT,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: privateReason,
+		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,

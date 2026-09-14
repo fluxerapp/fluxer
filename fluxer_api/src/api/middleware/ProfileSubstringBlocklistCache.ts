@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL} from '../constants/ContentModeration';
-import type {BannedProfileSubstringScope} from '../database/types/AdminArchiveTypes';
-import {Logger} from '../Logger';
-import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '../utils/PhraseBlocklistNormalization';
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import type {BannedProfileSubstringScope} from '@app/api/database/types/AdminArchiveTypes';
+import {Logger} from '@app/api/Logger';
+import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 type ProfileScope = BannedProfileSubstringScope;
 
@@ -27,55 +28,31 @@ function emptyMatchers(): ScopeMatchers {
 
 export class ProfileSubstringBlocklistCache {
 	private byScope: Map<ProfileScope, ScopeMatchers> = new Map();
-	private isInitialized = false;
 	private adminRepository = new AdminRepository();
 	private kvClient: IKVProvider | null = null;
-	private kvSubscription: IKVSubscription | null = null;
-	private subscriberInitialized = false;
-	private messageHandler: ((channel: string) => void) | null = null;
 	private consecutiveFailures = 0;
 	private readonly maxConsecutiveFailures = 5;
+	private readonly refreshSubscription = new RefreshSubscription({
+		name: 'profile-substring blocklist cache',
+		channels: [BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL],
+		refresh: () => this.refresh(),
+		onRefreshError: (err) => {
+			this.consecutiveFailures++;
+			const message = err instanceof Error ? err.message : String(err);
+			if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+				Logger.error({error: message}, 'Failed to refresh profile-substring blocklist cache after notification');
+			} else {
+				Logger.warn({error: message}, 'Failed to refresh profile-substring blocklist cache after notification');
+			}
+		},
+	});
 
 	setRefreshSubscriber(kvClient: IKVProvider | null): void {
 		this.kvClient = kvClient;
 	}
 
-	async initialize(): Promise<void> {
-		if (this.isInitialized) return;
-		await this.refresh();
-		this.isInitialized = true;
-		this.setupSubscriber();
-	}
-
-	private setupSubscriber(): void {
-		if (this.subscriberInitialized || !this.kvClient) return;
-		const subscription = this.kvClient.duplicate();
-		this.kvSubscription = subscription;
-		this.messageHandler = (channel: string) => {
-			if (channel === BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL) {
-				this.refresh().catch((err) => {
-					this.consecutiveFailures++;
-					const message = err instanceof Error ? err.message : String(err);
-					if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-						Logger.error({error: message}, 'Failed to refresh profile-substring blocklist cache after notification');
-					} else {
-						Logger.warn({error: message}, 'Failed to refresh profile-substring blocklist cache after notification');
-					}
-				});
-			}
-		};
-		subscription
-			.connect()
-			.then(() => subscription.subscribe(BANNED_PROFILE_SUBSTRINGS_REFRESH_CHANNEL))
-			.then(() => {
-				if (this.messageHandler) {
-					subscription.on('message', this.messageHandler);
-				}
-			})
-			.catch((error) => {
-				Logger.error({error}, 'Failed to subscribe to profile-substring blocklist refresh channel');
-			});
-		this.subscriberInitialized = true;
+	initialize(): Promise<void> {
+		return this.refreshSubscription.start(this.kvClient);
 	}
 
 	async refresh(): Promise<void> {
@@ -181,23 +158,16 @@ export class ProfileSubstringBlocklistCache {
 	}
 
 	resetForTesting(): void {
-		this.shutdown();
+		void this.shutdown().catch((error) => {
+			Logger.error({error}, 'Failed to shut down profile-substring blocklist cache');
+		});
 		this.byScope = new Map();
 		this.kvClient = null;
-		this.subscriberInitialized = false;
 		this.consecutiveFailures = 0;
-		this.isInitialized = false;
 	}
 
-	shutdown(): void {
-		if (this.kvSubscription && this.messageHandler) {
-			this.kvSubscription.off('message', this.messageHandler);
-		}
-		if (this.kvSubscription) {
-			this.kvSubscription.disconnect();
-			this.kvSubscription = null;
-		}
-		this.messageHandler = null;
+	shutdown(): Promise<void> {
+		return this.refreshSubscription.stop();
 	}
 }
 

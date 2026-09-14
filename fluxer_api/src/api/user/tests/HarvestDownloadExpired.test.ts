@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {
+	expectHarvestDownloadFailsWithError,
+	markHarvestCompleted,
+	requestHarvest,
+} from '@app/api/user/tests/HarvestTestUtils';
 import {beforeEach, describe, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {expectHarvestDownloadFailsWithError, markHarvestCompleted, requestHarvest} from './HarvestTestUtils';
 
 describe('Harvest Download Expired', () => {
 	let harness: ApiTestHarness;

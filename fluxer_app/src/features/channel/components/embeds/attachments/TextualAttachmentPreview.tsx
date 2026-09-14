@@ -34,6 +34,7 @@ import {
 	TEXT_PREVIEW_MAX_BYTES,
 } from '@app/features/messaging/utils/AttachmentPreviewUtils';
 import {downloadFile} from '@app/features/messaging/utils/FileDownloadUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {MAX_CODE_HIGHLIGHT_SOURCE_LENGTH} from '@fluxer/constants/src/LimitConstants';
@@ -41,6 +42,8 @@ import {plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {type MouseEvent, useCallback, useEffect, useMemo, useState} from 'react';
+
+const logger = new Logger('TextualAttachmentPreview');
 
 class PreviewSizeLimitError extends Error {
 	constructor() {
@@ -146,7 +149,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 		fetch(attachment.url, {signal: controller.signal})
 			.then((response) => {
 				if (!response.ok) {
-					throw new Error(response.statusText || 'Failed to load preview');
+					throw new Error(`Attachment preview request failed: ${response.status} ${response.statusText}`);
 				}
 				return readPreviewText(response);
 			})
@@ -168,7 +171,8 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 					return;
 				}
 				setStatus('error');
-				setPreviewError({type: 'network', message: error?.message ?? 'Failed to load preview'});
+				logger.warn({error, attachmentId: attachment.id}, 'Unable to load attachment preview');
+				setPreviewError({type: 'network'});
 			});
 		return () => controller.abort();
 	}, [attachment.id, attachment.size, attachment.url, shouldFetchPreview]);
@@ -194,7 +198,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 			},
 		);
 		return [...lines.slice(0, MAX_EXPANDED_PREVIEW_LINES), remainingLinesLabel].join('\n');
-	}, [i18n, isExpanded, textContent]);
+	}, [i18n.locale, isExpanded, textContent]);
 	const inlineCsvRows = useMemo<CsvRows | null>(() => {
 		if (!isCsvPreview || csvRows === null) {
 			return null;
@@ -211,7 +215,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 			},
 		);
 		return [...csvRows.slice(0, MAX_EXPANDED_PREVIEW_LINES), [remainingRowsLabel]];
-	}, [csvRows, i18n, isCsvPreview, isExpanded]);
+	}, [csvRows, i18n.locale, isCsvPreview, isExpanded]);
 	const inlinePreviewLineCount = useMemo(() => getLineCount(inlinePreviewTextContent), [inlinePreviewTextContent]);
 	const visibleLineCount = useMemo(() => {
 		if (status !== 'loaded' || !isExpanded) {

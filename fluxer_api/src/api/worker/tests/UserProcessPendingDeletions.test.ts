@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {User} from '@app/api/models/User';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import userProcessPendingDeletions from '@app/api/worker/tasks/UserProcessPendingDeletions';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, test} from 'vitest';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
-import {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import {User} from '../../models/User';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import userProcessPendingDeletions from '../tasks/UserProcessPendingDeletions';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
 
 function createFakeUser(
 	userId: UserID,
@@ -46,8 +46,8 @@ async function createHarness(users: Array<User>) {
 		},
 	} as unknown as UserRepository;
 	const workerService = {
-		async addJob(name: string, payload: {userId: string}): Promise<bigint> {
-			scheduledJobs.push(`${name}:${payload.userId}`);
+		async addJob(name: string, payload: {userId: string; pendingDeletionAt: string}): Promise<bigint> {
+			scheduledJobs.push(`${name}:${payload.userId}:${payload.pendingDeletionAt}`);
 			return 0n;
 		},
 	} as unknown as IWorkerService;
@@ -94,8 +94,10 @@ describe('userProcessPendingDeletions', () => {
 		const queueSizeAfterFirstPass = await harness.deletionQueueService.getQueueSize();
 		await userProcessPendingDeletions({}, createHelpers());
 
-		expect(harness.scheduledJobs).toEqual([`userProcessPendingDeletion:${genuineUserId.toString()}`]);
-		expect(harness.removedPendingDeletions).toEqual([genuineUserId.toString()]);
+		expect(harness.scheduledJobs).toEqual([
+			`userProcessPendingDeletion:${genuineUserId.toString()}:${genuineAt.toISOString()}`,
+		]);
+		expect(harness.removedPendingDeletions).toEqual([]);
 		expect(queueSizeAfterFirstPass).toBe(1);
 		expect(await harness.deletionQueueService.getQueueSize()).toBe(0);
 	});

@@ -365,7 +365,7 @@ export const PhoneAddModal = observer(() => {
 				footer={
 					<p className={styles.footerText} data-flx="user.phone-add-modal.footer-text--6">
 						<Trans>
-							Enter the code with {MFA_CODE_DIGIT_COUNT} digits sent to{' '}
+							Enter the {MFA_CODE_DIGIT_COUNT}-digit code sent to{' '}
 							{getE164PhoneNumber(phoneNumber, selectedCountry) ?? formattedPhone}.
 						</Trans>
 					</p>

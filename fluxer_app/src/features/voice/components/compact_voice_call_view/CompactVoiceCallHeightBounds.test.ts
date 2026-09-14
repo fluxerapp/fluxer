@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	COMPACT_HEIGHT_CHAT_AREA_RESERVATION,
 	COMPACT_HEIGHT_MIN,
 	resolveCompactHeightMax,
 	resolveCompactHeightMaxFromLayout,
-} from './CompactVoiceCallHeightBounds';
+} from '@app/features/voice/components/compact_voice_call_view/CompactVoiceCallHeightBounds';
+import {describe, expect, it} from 'vitest';
 
 describe('resolveCompactHeightMax', () => {
 	it('reserves chat area space below the call view so the composer remains visible', () => {

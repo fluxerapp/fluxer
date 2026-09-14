@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	getCameraCaptureDimensions,
+	pickCameraSubscriptionQuality,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import type {CameraResolution} from '@app/features/voice/state/VoiceSettings';
 import {VideoPresets} from 'livekit-client';
 import {describe, expect, it} from 'vitest';
-import {getCameraCaptureDimensions, pickCameraSubscriptionQuality} from './VoiceEngineV2AppCameraResolutionPresets';
 
 const EXPECTED_PRESET_TABLE = [
 	{resolution: 'high', width: 1920, height: 1080, frameRate: 30, videoPreset: VideoPresets.h1080},

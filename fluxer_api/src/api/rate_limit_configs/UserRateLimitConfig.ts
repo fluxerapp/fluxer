@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const UserRateLimitConfigs = {
 	USER_GET: {
@@ -82,6 +82,14 @@ export const UserRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	USER_ACCOUNT_DELETE: {
 		bucket: 'user:account:delete',
+		config: {limit: 5, windowMs: ms('1 hour')},
+	} as RouteRateLimitConfig,
+	USER_PHONE_GATE_ESCAPE_PREVIEW: {
+		bucket: 'user:phone_gate_escape:preview',
+		config: {limit: 20, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	USER_PHONE_GATE_ESCAPE: {
+		bucket: 'user:phone_gate_escape:execute',
 		config: {limit: 5, windowMs: ms('1 hour')},
 	} as RouteRateLimitConfig,
 	USER_DATA_HARVEST: {

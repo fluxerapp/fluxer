@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import {Logger} from '@app/api/Logger';
 import type {LookupUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {mapUserToAdminResponse} from '../models/UserTypes';
 
 interface AdminUserLookupServiceDeps {
 	apiContext: ApiContext;
@@ -32,7 +33,7 @@ export class AdminUserLookupService {
 		} else if (/^\d+$/.test(query)) {
 			try {
 				const userId = createUserID(BigInt(query));
-				user = await userRepository.findUnique(userId);
+				user = isSyntheticUserId(userId) ? null : await userRepository.findUnique(userId);
 			} catch (error) {
 				Logger.debug({query, error}, 'Failed to lookup user by numeric ID, invalid ID format');
 				user = null;

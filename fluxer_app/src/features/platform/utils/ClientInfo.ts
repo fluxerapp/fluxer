@@ -2,6 +2,7 @@
 
 import i18n from '@app/app/I18n';
 import Config from '@app/features/app/config/Config';
+import {getTranslationDomGuardStats} from '@app/features/i18n/utils/TranslationDomGuard';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getFluxerDebugObject} from '@app/features/platform/utils/FluxerDebugGlobal';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -290,6 +291,15 @@ export async function getClientInfo(): Promise<ClientInfo> {
 	return {...base, ...getOsContextFromInfo(desktopInfo), ...getDesktopContextFromInfo(desktopInfo)};
 }
 
+function formatTranslationDomGuardFires(): string {
+	const guard = getTranslationDomGuardStats();
+	const fires = guard.insertBefore + guard.removeChild;
+	if (fires === 0) {
+		return '';
+	}
+	return `Translation guard ${fires} (${guard.lastPath ?? 'unknown'})`;
+}
+
 export function formatClientBuildInfo(info: ClientInfo, options: {unknownLabel?: string} = {}): string {
 	const releaseChannel = formatReleaseChannelLabel(Config.PUBLIC_RELEASE_CHANNEL);
 	const buildVersion = Config.PUBLIC_BUILD_VERSION || 'dev';
@@ -314,6 +324,7 @@ export function formatClientBuildInfo(info: ClientInfo, options: {unknownLabel?:
 		info.desktopChromeVersion ? `Chrome ${info.desktopChromeVersion}` : '',
 		info.desktopNodeVersion ? `Node ${info.desktopNodeVersion}` : '',
 		i18n.locale ? `Locale ${i18n.locale}` : '',
+		formatTranslationDomGuardFires(),
 	];
 	return parts.filter(Boolean).join(', ');
 }

@@ -6,6 +6,7 @@
 -export([
     sync_user_voice_permissions/2,
     sync_all_voice_permissions_for_channel/2,
+    sync_users_with_role/2,
     maybe_sync_permissions_on_role_update/2,
     maybe_sync_permissions_on_member_update/2
 ]).
@@ -129,12 +130,34 @@ sync_validated_voice_state(GuildId, UserId, ChId, ConnId, VoiceState, State) ->
             VoicePermissions = VoicePermissions0#{
                 deaf => maps:get(<<"deaf">>, VoiceState, false)
             },
+            ok = maybe_clear_self_stream(ChId, VoiceState, VoicePermissions, State),
             dispatch_permission_update(
                 GuildId, ChId, UserId, ConnId, VoicePermissions, State
             );
         false ->
             dispatch_force_disconnect(GuildId, ChId, UserId, ConnId, State)
     end.
+
+-spec maybe_clear_self_stream(
+    channel_id(), voice_state(), voice_utils:voice_permissions(), guild_state()
+) -> ok.
+maybe_clear_self_stream(ChId, VoiceState, #{can_stream := false}, State) ->
+    SelfStream = maps:get(<<"self_stream">>, VoiceState, false),
+    SelfVideo = maps:get(<<"self_video">>, VoiceState, false),
+    case SelfStream =:= true orelse SelfVideo =:= true of
+        false ->
+            ok;
+        true ->
+            Cleared = VoiceState#{
+                <<"self_stream">> => false,
+                <<"self_video">> => false
+            },
+            guild_voice_broadcast:broadcast_voice_state_update(
+                Cleared, State, integer_to_binary(ChId)
+            )
+    end;
+maybe_clear_self_stream(_ChId, _VoiceState, _VoicePermissions, _State) ->
+    ok.
 
 -spec user_has_base_voice_access(user_id(), channel_id(), guild_state()) -> boolean().
 user_has_base_voice_access(UserId, ChannelId, State) ->
@@ -319,6 +342,7 @@ build_sync_test_data(GuildId, RoleId, UserId, ChannelId, Permissions) ->
     }.
 
 sync_user_voice_permissions_syncs_connected_user_test() ->
+    ok = drain_mailbox(),
     TestFun = make_sync_test_fun(),
     State = build_sync_test_state(TestFun),
     ok = sync_user_voice_permissions(10, State),
@@ -393,6 +417,7 @@ maybe_sync_permissions_on_role_update_uses_role_index_test() ->
     end.
 
 sync_disconnects_when_connect_permission_lost_test() ->
+    ok = drain_mailbox(),
     TestFun = make_sync_test_fun(),
     UserId = 10,
     ChannelId = 500,
@@ -408,6 +433,80 @@ sync_disconnects_when_connect_permission_lost_test() ->
             ?assertEqual(true, maps:get(disconnected, Perms, false))
     after 200 ->
         ?assert(false)
+    end.
+
+sync_clears_self_stream_when_stream_permission_lost_test() ->
+    ok = drain_mailbox(),
+    TestFun = make_sync_test_fun(),
+    UserId = 10,
+    ChannelId = 500,
+    GuildId = 42,
+    RoleId = 999,
+    WithoutStream =
+        constants:view_channel_permission() bor
+            constants:connect_permission() bor
+            constants:speak_permission(),
+    State = build_streaming_sync_test_state(
+        TestFun, GuildId, RoleId, UserId, ChannelId, WithoutStream
+    ),
+    ok = sync_user_voice_permissions(UserId, State),
+    Broadcast = receive_voice_state_dispatch(),
+    ?assertEqual(false, maps:get(<<"self_stream">>, Broadcast)),
+    ?assertEqual(false, maps:get(<<"self_video">>, Broadcast)),
+    ?assertEqual(<<"test-conn">>, maps:get(<<"connection_id">>, Broadcast)).
+
+sync_keeps_self_stream_when_stream_permission_held_test() ->
+    ok = drain_mailbox(),
+    TestFun = make_sync_test_fun(),
+    UserId = 10,
+    ChannelId = 500,
+    GuildId = 42,
+    RoleId = 999,
+    WithStream =
+        constants:view_channel_permission() bor
+            constants:connect_permission() bor
+            constants:speak_permission() bor
+            constants:stream_permission(),
+    State = build_streaming_sync_test_state(
+        TestFun, GuildId, RoleId, UserId, ChannelId, WithStream
+    ),
+    ok = sync_user_voice_permissions(UserId, State),
+    ?assertEqual(undefined, receive_optional_voice_state_dispatch()).
+
+build_streaming_sync_test_state(TestFun, GuildId, RoleId, UserId, ChannelId, Permissions) ->
+    VoiceState = #{
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"channel_id">> => integer_to_binary(ChannelId),
+        <<"connection_id">> => <<"test-conn">>,
+        <<"self_stream">> => true,
+        <<"self_video">> => true
+    },
+    #{
+        id => GuildId,
+        voice_states => #{<<"conn">> => VoiceState},
+        sessions => #{
+            <<"s1">> => #{
+                pid => self(),
+                user_id => UserId,
+                viewable_channels => #{ChannelId => true}
+            }
+        },
+        test_permission_sync_fun => TestFun,
+        data => build_sync_test_data(GuildId, RoleId, UserId, ChannelId, Permissions)
+    }.
+
+receive_voice_state_dispatch() ->
+    case receive_optional_voice_state_dispatch() of
+        undefined -> error(voice_state_update_not_received);
+        Payload -> Payload
+    end.
+
+receive_optional_voice_state_dispatch() ->
+    receive
+        {'$gen_cast', {dispatch, voice_state_update, {pre_encoded, Bin}}} -> json:decode(Bin);
+        {'$gen_cast', {dispatch, voice_state_update, Payload}} -> Payload
+    after 200 ->
+        undefined
     end.
 
 make_sync_test_fun() ->
@@ -460,5 +559,12 @@ role_sync_test_data(
             #{<<"id">> => integer_to_binary(ChannelId), <<"permission_overwrites">> => []}
         ]
     }).
+
+drain_mailbox() ->
+    receive
+        _ -> drain_mailbox()
+    after 0 ->
+        ok
+    end.
 
 -endif.

@@ -1,5 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {
+	type AttachmentID,
+	type ChannelID,
+	createAttachmentID,
+	createChannelID,
+	createMessageID,
+	createUserID,
+	type MessageID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	createMessageResponseDataService,
+	type MessageResponseAccessContext,
+	messageResponseAccessForChannel,
+	messageResponseAccessForGuild,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {getPurgeQueue, getStorageService} from '@app/api/middleware/ServiceSingletons';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
+import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import type {
 	BrowseChannelRequest,
 	SearchChannelMessagesRequest,
@@ -10,33 +37,6 @@ import type {
 	LookupMessageRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {
-	type AttachmentID,
-	type ChannelID,
-	createAttachmentID,
-	createChannelID,
-	createMessageID,
-	createUserID,
-	type MessageID,
-	type UserID,
-} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import {purgeMessageAttachments} from '../../channel/services/message/MessageHelpers';
-import {
-	createMessageResponseDataService,
-	type MessageResponseAccessContext,
-	messageResponseAccessForChannel,
-	messageResponseAccessForGuild,
-} from '../../channel/services/message/MessageResponseDataService';
-import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '../../csam/NcmecSubmissionService';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {getPurgeQueue, getStorageService} from '../../middleware/ServiceSingletons';
-import {getMessageSearchService} from '../../SearchFactory';
-import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
-import {searchExistingMessages} from '../../search/MessageSearchResultReconciler';
-import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminMessageServiceDeps {
 	apiContext: ApiContext;
@@ -229,14 +229,11 @@ export class AdminMessageService {
 			hitsPerPage: limit,
 			page: 1,
 		});
-		const messageEntries = result.hits.map((hit) => ({
-			channelId: createChannelID(BigInt(hit.channelId)),
-			messageId: createMessageID(BigInt(hit.id)),
-		}));
-		const resolvedMessages = await Promise.all(
-			messageEntries.map(({channelId, messageId}) => this.getMessageResponseForAdmin(channelId, messageId)),
-		);
-		const messageResponses = resolvedMessages.filter((message): message is MessageResponse => message !== null);
+		const messageResponses = await createMessageResponseDataService().buildMessages({
+			userId: createUserID(0n),
+			messages: result.messages,
+			access: await this.getMessageResponseAccessForAdmin(channelId),
+		});
 		const attachmentStatuses = await this.getAttachmentStatusesForMessages(messageResponses);
 		const priorReports = await this.getPriorReportsForMessages(messageResponses);
 		const adminMessages = messageResponses.map((message) =>
@@ -278,19 +275,6 @@ export class AdminMessageService {
 			before: params.before,
 			after: params.after,
 			around: params.around,
-			access,
-		});
-	}
-
-	private async getMessageResponseForAdmin(
-		channelId: ChannelID,
-		messageId: MessageID,
-	): Promise<MessageResponse | null> {
-		const access = await this.getMessageResponseAccessForAdmin(channelId);
-		return createMessageResponseDataService().getMessage({
-			userId: createUserID(0n),
-			channelId,
-			messageId,
 			access,
 		});
 	}

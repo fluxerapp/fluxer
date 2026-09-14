@@ -1,0 +1,24 @@
+[package]
+name = "fluxer-recon"
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+fluxer-svc = { path = "../fluxer_svc" }
+anyhow = "1.0.104"
+thiserror = "2.0.18"
+tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+tracing = "0.1.44"
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+hmac = "0.13.0"
+sha2 = "0.11.0"
+base64 = "0.22.1"
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio"] }
+scylla = { version = "1.6.0", optional = true }
+
+[features]
+default = []
+scylla = ["dep:scylla", "fluxer-svc/scylla"]

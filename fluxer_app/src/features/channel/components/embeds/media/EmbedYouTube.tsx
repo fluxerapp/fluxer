@@ -5,6 +5,7 @@ import {YOUTUBE_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstan
 import styles from '@app/features/channel/components/embeds/media/EmbedYouTube.module.css';
 import {OverlayActionButton, OverlayPlayButton} from '@app/features/channel/components/embeds/media/MediaButtons';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import ActiveIframeEmbed from '@app/features/messaging/state/ActiveIframeEmbed';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {
@@ -21,7 +22,9 @@ import {useLingui} from '@lingui/react/macro';
 import {ArrowSquareOutIcon, PlayIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
-import {type FC, useCallback, useEffect, useMemo, useState} from 'react';
+import {type FC, useCallback, useEffect, useId, useMemo, useState} from 'react';
+
+const VIDEO_THUMBNAIL_DESCRIPTOR = msg({message: 'Video thumbnail'});
 
 const PLAY_VIDEO_DESCRIPTOR = msg({
 	message: 'Play video',
@@ -95,7 +98,7 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 				{posterSrc && (
 					<motion.img
 						src={posterSrc}
-						alt={title || 'Video thumbnail'}
+						alt={title || i18n._(VIDEO_THUMBNAIL_DESCRIPTOR)}
 						className={styles.posterImage}
 						initial={{opacity: posterCachedOnMount ? 1 : 0}}
 						animate={{opacity: posterLoaded ? 1 : 0}}
@@ -147,7 +150,8 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 );
 export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOUTUBE_CONFIG.DEFAULT_WIDTH}) => {
 	const {i18n} = useLingui();
-	const [hasInteracted, setHasInteracted] = useState(false);
+	const embedId = useId();
+	const hasInteracted = ActiveIframeEmbed.isActive(embedId);
 	const posterSrc = embed.thumbnail?.proxy_url || '';
 	const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: posterSrc});
 	const [posterCacheAtMount] = useState(() => ({src: posterSrc, cached: ImageCacheUtils.hasImage(posterSrc)}));
@@ -171,10 +175,14 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 		);
 		return cleanup;
 	}, [isNearViewport, loadedPosterSrc, posterSrc]);
-	const handleInitialPlay = useCallback((event: React.MouseEvent | React.KeyboardEvent) => {
-		event.stopPropagation();
-		setHasInteracted(true);
-	}, []);
+	const handleInitialPlay = useCallback(
+		(event: React.MouseEvent | React.KeyboardEvent) => {
+			event.stopPropagation();
+			ActiveIframeEmbed.claim(embedId);
+		},
+		[embedId],
+	);
+	useEffect(() => () => ActiveIframeEmbed.release(embedId), [embedId]);
 	const handleOpenInNewTab = useCallback(
 		(event: React.MouseEvent | React.KeyboardEvent) => {
 			event.stopPropagation();
@@ -250,6 +258,7 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 				sandbox="allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
 				src={embedVideoUrl.toString()}
 				className={styles.iframe}
+				scrolling="no"
 				data-embed-media="true"
 				aria-label={embed.title || i18n._(VIDEO_DESCRIPTOR, {youtubeProviderName: YOUTUBE_PROVIDER_NAME})}
 				data-flx="channel.embeds.media.embed-you-tube.iframe"

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, RoleID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {Attachment} from '@app/api/models/Attachment';
+import {CallInfo} from '@app/api/models/CallInfo';
+import {Embed} from '@app/api/models/Embed';
+import {MessageRef} from '@app/api/models/MessageRef';
+import {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import {StickerItem} from '@app/api/models/StickerItem';
 import type {MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelID, EmojiID, MessageID, RoleID, UserID, WebhookID} from '../BrandedTypes';
-import type {MessageRow} from '../database/types/MessageTypes';
-import {Attachment} from './Attachment';
-import {CallInfo} from './CallInfo';
-import {Embed} from './Embed';
-import {MessageRef} from './MessageRef';
-import {MessageSnapshot} from './MessageSnapshot';
-import {StickerItem} from './StickerItem';
 
 export class Message {
 	readonly channelId: ChannelID;
@@ -33,7 +33,6 @@ export class Message {
 	readonly reference: MessageRef | null;
 	readonly messageSnapshots: Array<MessageSnapshot>;
 	readonly call: CallInfo | null;
-	readonly nsfwEmojis: Set<EmojiID>;
 	readonly hasReaction: boolean | null;
 	readonly version: number;
 
@@ -66,7 +65,6 @@ export class Message {
 		this.reference = row.message_reference ? new MessageRef(row.message_reference) : null;
 		this.messageSnapshots = (row.message_snapshots ?? []).map((snapshot) => new MessageSnapshot(snapshot));
 		this.call = row.call ? new CallInfo(row.call) : null;
-		this.nsfwEmojis = row.nsfw_emojis ?? new Set();
 		this.hasReaction = row.has_reaction ?? null;
 		this.version = row.version;
 	}
@@ -96,7 +94,6 @@ export class Message {
 			message_snapshots:
 				this.messageSnapshots.length > 0 ? this.messageSnapshots.map((snapshot) => snapshot.toMessageSnapshot()) : null,
 			call: this.call?.toMessageCall() ?? null,
-			nsfw_emojis: this.nsfwEmojis.size > 0 ? this.nsfwEmojis : null,
 			has_reaction: this.hasReaction ?? null,
 			version: this.version,
 		};

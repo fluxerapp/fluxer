@@ -6,8 +6,14 @@ pub fn deserialize_discriminator<'de, D: Deserializer<'de>>(d: D) -> Result<Stri
     let v: serde_json::Value = Deserialize::deserialize(d)?;
     match v {
         serde_json::Value::String(s) => Ok(format!("{:0>4}", s)),
-        serde_json::Value::Number(n) => Ok(format!("{:04}", n.as_u64().unwrap_or(0))),
-        _ => Ok("0000".to_owned()),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .map(|value| format!("{value:04}"))
+            .ok_or_else(|| serde::de::Error::custom("expected an unsigned integer discriminator")),
+        serde_json::Value::Null => Ok("0000".to_owned()),
+        _ => Err(serde::de::Error::custom(
+            "expected string or unsigned integer discriminator",
+        )),
     }
 }
 
@@ -15,7 +21,9 @@ pub fn deserialize_string_or_u64<'de, D: Deserializer<'de>>(d: D) -> Result<u64,
     let v: serde_json::Value = Deserialize::deserialize(d)?;
     match v {
         serde_json::Value::String(s) => s.parse::<u64>().map_err(serde::de::Error::custom),
-        serde_json::Value::Number(n) => Ok(n.as_u64().unwrap_or(0)),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .ok_or_else(|| serde::de::Error::custom("expected an unsigned 64-bit integer")),
         serde_json::Value::Null => Ok(0),
         _ => Err(serde::de::Error::custom("expected string or number")),
     }

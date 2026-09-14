@@ -1291,7 +1291,19 @@
     ],
     "en-GB": [
       {
+        "msgid": "128 kbps voice quality"
+      },
+      {
+        "msgid": "256 kbps voice quality"
+      },
+      {
+        "msgid": "384 kbps voice quality"
+      },
+      {
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
+      },
+      {
+        "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
       },
       {
         "msgid": "AV1"
@@ -1304,6 +1316,9 @@
       },
       {
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
+      },
+      {
+        "msgid": "Add new reactions to messages in this channel."
       },
       {
         "msgid": "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
@@ -1354,7 +1369,16 @@
         "msgid": "Automatic ({codec})"
       },
       {
+        "msgid": "Ban members from the community, with the option to delete their recent messages."
+      },
+      {
         "msgid": "Banned {targetUserTag} from the community"
+      },
+      {
+        "msgid": "Be heard over other members in this channel while holding the push to talk (priority) keybind."
+      },
+      {
+        "msgid": "Be heard over other members while holding the push to talk (priority) keybind."
       },
       {
         "msgid": "Bluesky connections"
@@ -1366,13 +1390,31 @@
         "msgid": "Branding asset preview"
       },
       {
+        "msgid": "Built-in suppression from your browser or system."
+      },
+      {
         "msgid": "Camera access is needed for device previews"
+      },
+      {
+        "msgid": "Cancel price change"
+      },
+      {
+        "msgid": "Cancel the scheduled change to move to the current price instead."
       },
       {
         "msgid": "Capture card"
       },
       {
+        "msgid": "Capture entire system audio"
+      },
+      {
         "msgid": "Change stream"
+      },
+      {
+        "msgid": "Change which voice region a voice channel uses."
+      },
+      {
+        "msgid": "Change which voice region this channel uses."
       },
       {
         "msgid": "Choices"
@@ -1387,7 +1429,19 @@
         "msgid": "Clear command"
       },
       {
+        "msgid": "Clear message text"
+      },
+      {
         "msgid": "Clearer text"
+      },
+      {
+        "msgid": "Clearing the text of a message with attachments asks to delete the message unless this is on"
+      },
+      {
+        "msgid": "Clone emoji"
+      },
+      {
+        "msgid": "Clone sticker"
       },
       {
         "msgid": "Closed"
@@ -1420,7 +1474,16 @@
         "msgid": "Connection volume controls"
       },
       {
+        "msgid": "Copy emoji"
+      },
+      {
+        "msgid": "Copy sticker"
+      },
+      {
         "msgid": "Could not load the instance configuration. Try reloading the page."
+      },
+      {
+        "msgid": "Couldn't change your price"
       },
       {
         "msgid": "Couldn't connect to voice. Please try again."
@@ -1441,7 +1504,19 @@
         "msgid": "Custom emoji {emojiName} from {communityName}"
       },
       {
+        "msgid": "Cuts audio below a loudness threshold, lowest CPU cost."
+      },
+      {
+        "msgid": "Deafen other members in this voice channel, so they cannot hear or speak."
+      },
+      {
         "msgid": "Decide how premium limits apply to people on this instance."
+      },
+      {
+        "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
+      },
+      {
+        "msgid": "Delete prompt"
       },
       {
         "msgid": "Delete user"
@@ -1465,13 +1540,37 @@
         "msgid": "Disable direct messages and friend requests"
       },
       {
+        "msgid": "Disable translation DOM guard"
+      },
+      {
+        "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
+      },
+      {
+        "msgid": "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
+      },
+      {
         "msgid": "Duplicate role"
+      },
+      {
+        "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
+      },
+      {
+        "msgid": "Emoji and sticker cloning shortcuts"
+      },
+      {
+        "msgid": "Emoji cloning enabled"
+      },
+      {
+        "msgid": "Empty edit"
       },
       {
         "msgid": "Emulate decode codec (testing)"
       },
       {
         "msgid": "Enable camera access to preview cameras and capture devices before choosing one to stream."
+      },
+      {
+        "msgid": "Enable emoji and sticker cloning shortcuts"
       },
       {
         "msgid": "Enable previews"
@@ -1552,6 +1651,12 @@
         "msgid": "How much of the member's recent message history to delete."
       },
       {
+        "msgid": "If you can't verify by SMS"
+      },
+      {
+        "msgid": "Ignore this channel's slowmode cooldown."
+      },
+      {
         "msgid": "Image assets"
       },
       {
@@ -1567,10 +1672,28 @@
         "msgid": "Input level"
       },
       {
+        "msgid": "Invite new people to the community with a link to this channel."
+      },
+      {
+        "msgid": "Invite new people to the community with an invite link."
+      },
+      {
         "msgid": "Italic"
       },
       {
+        "msgid": "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
+      },
+      {
+        "msgid": "Join voice channels and hear others."
+      },
+      {
         "msgid": "Keep Neko still"
+      },
+      {
+        "msgid": "Keep attachments"
+      },
+      {
+        "msgid": "Keep attachments when clearing an edit"
       },
       {
         "msgid": "Kicked {targetUserTag} from the community"
@@ -1579,10 +1702,25 @@
         "msgid": "Klipy GIFs"
       },
       {
+        "msgid": "Leave and set aside"
+      },
+      {
+        "msgid": "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
+      },
+      {
+        "msgid": "Let others clone your emojis"
+      },
+      {
+        "msgid": "Let others clone your stickers"
+      },
+      {
         "msgid": "Let people link their Bluesky account to their profile."
       },
       {
         "msgid": "Let people search and send GIFs powered by Klipy."
+      },
+      {
+        "msgid": "Lightweight classic filter, works on any device."
       },
       {
         "msgid": "Loading instance configuration"
@@ -1597,16 +1735,40 @@
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
       },
       {
+        "msgid": "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+      },
+      {
+        "msgid": "Message editing"
+      },
+      {
         "msgid": "Microphone ({deviceLabel})"
       },
       {
         "msgid": "Mirror tiers"
       },
       {
+        "msgid": "Mute other members in this voice channel for everyone."
+      },
+      {
+        "msgid": "Mute other members in voice channels for everyone."
+      },
+      {
         "msgid": "My community"
       },
       {
         "msgid": "Neko cat that chases your cursor"
+      },
+      {
+        "msgid": "Neural filter that removes most background noise."
+      },
+      {
+        "msgid": "Neural filter, full audio bandwidth."
+      },
+      {
+        "msgid": "New price scheduled for <0>{pendingChangeDate}</0>."
+      },
+      {
+        "msgid": "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
       },
       {
         "msgid": "No application windows found"
@@ -1622,6 +1784,9 @@
       },
       {
         "msgid": "Nothing to search for"
+      },
+      {
+        "msgid": "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
       },
       {
         "msgid": "Open Settings"
@@ -1645,6 +1810,9 @@
         "msgid": "Ordered upload"
       },
       {
+        "msgid": "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
+      },
+      {
         "msgid": "Pause preview when Fluxer isn’t focused"
       },
       {
@@ -1661,6 +1829,12 @@
       },
       {
         "msgid": "Pin Neko to the top-right of the chat input instead of following your cursor"
+      },
+      {
+        "msgid": "Pin or unpin any message in this channel."
+      },
+      {
+        "msgid": "Pin or unpin any message."
       },
       {
         "msgid": "Pop out user"
@@ -1708,10 +1882,19 @@
         "msgid": "Public registration is closed."
       },
       {
+        "msgid": "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
+      },
+      {
+        "msgid": "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+      },
+      {
         "msgid": "Reason (optional)."
       },
       {
         "msgid": "Registration"
+      },
+      {
+        "msgid": "Remove members from the community. They can rejoin with a new invite."
       },
       {
         "msgid": "Removed timeout from {targetUserTag}"
@@ -1831,16 +2014,37 @@
         "msgid": "Security key PIN form"
       },
       {
+        "msgid": "See this channel. Denying it for {everyoneMention} makes the channel private."
+      },
+      {
         "msgid": "Self-host setup"
       },
       {
         "msgid": "Send file messages in order"
       },
       {
+        "msgid": "Send messages in channels."
+      },
+      {
+        "msgid": "Send messages in this channel."
+      },
+      {
+        "msgid": "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
+      },
+      {
+        "msgid": "Sends your microphone audio with no suppression."
+      },
+      {
         "msgid": "Sequential send"
       },
       {
         "msgid": "Serial send"
+      },
+      {
+        "msgid": "Set this check aside"
+      },
+      {
+        "msgid": "Set this check aside?"
       },
       {
         "msgid": "Set up {productName}"
@@ -1858,13 +2062,28 @@
         "msgid": "Share stream audio"
       },
       {
+        "msgid": "Shared window"
+      },
+      {
+        "msgid": "Shared window audio"
+      },
+      {
         "msgid": "Sharper text at 720p, 30 FPS"
       },
       {
         "msgid": "Shorten your about me and try again."
       },
       {
+        "msgid": "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+      },
+      {
         "msgid": "Show connection volume controls"
+      },
+      {
+        "msgid": "Show embedded previews for links they send in this channel."
+      },
+      {
+        "msgid": "Show embedded previews for links they send."
       },
       {
         "msgid": "Show fewer filters"
@@ -1909,7 +2128,16 @@
         "msgid": "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
       },
       {
+        "msgid": "Something went wrong while changing your price. Please try again in a moment."
+      },
+      {
         "msgid": "Static Neko"
+      },
+      {
+        "msgid": "Stereo microphone"
+      },
+      {
+        "msgid": "Sticker cloning enabled"
       },
       {
         "msgid": "Still Neko"
@@ -1927,6 +2155,18 @@
         "msgid": "Stream quality"
       },
       {
+        "msgid": "Strongest neural filter for speech, limits audio to the speech range."
+      },
+      {
+        "msgid": "Switch price"
+      },
+      {
+        "msgid": "Switch to the new price?"
+      },
+      {
+        "msgid": "Switch to {listPriceNewLabel}"
+      },
+      {
         "msgid": "Symbol"
       },
       {
@@ -1937,6 +2177,9 @@
       },
       {
         "msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+      },
+      {
+        "msgid": "That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish."
       },
       {
         "msgid": "That image could not be used. Try a different file."
@@ -1951,6 +2194,9 @@
         "msgid": "The message to send."
       },
       {
+        "msgid": "The new price is already scheduled for {effectiveDate}."
+      },
+      {
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
       },
       {
@@ -1958,6 +2204,18 @@
       },
       {
         "msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
+      },
+      {
+        "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
+      },
+      {
+        "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+      },
+      {
+        "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+      },
+      {
+        "msgid": "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
       },
       {
         "msgid": "This option is required. Please provide a value."
@@ -1972,10 +2230,28 @@
         "msgid": "Turn off audio sharing for this source or try again in a moment."
       },
       {
+        "msgid": "Turn on a camera or share a screen in this voice channel."
+      },
+      {
         "msgid": "Unable to send verification code"
       },
       {
         "msgid": "Unavailable"
+      },
+      {
+        "msgid": "Upload files and media in messages."
+      },
+      {
+        "msgid": "Upload files and media in this channel."
+      },
+      {
+        "msgid": "Use emoji from other communities in this channel."
+      },
+      {
+        "msgid": "Use stickers from other communities in this channel."
+      },
+      {
+        "msgid": "Use stickers from other communities."
       },
       {
         "msgid": "Use system-wide push-to-talk and shortcuts."
@@ -1996,6 +2272,15 @@
         "msgid": "Volume sliders"
       },
       {
+        "msgid": "We couldn't verify this number automatically. Contact support and a person will review your account."
+      },
+      {
+        "msgid": "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
+      },
+      {
+        "msgid": "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
+      },
+      {
         "msgid": "We'll send a verification code to your email before you can view your backup codes."
       },
       {
@@ -2011,13 +2296,40 @@
         "msgid": "Who can join"
       },
       {
+        "msgid": "Without this permission, push-to-talk is required in this channel."
+      },
+      {
         "msgid": "Wordmark"
+      },
+      {
+        "msgid": "You can still email {supportEmail} for a human review at any time."
+      },
+      {
+        "msgid": "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
       },
       {
         "msgid": "YouTube enrichment"
       },
       {
+        "msgid": "Your account is back to normal."
+      },
+      {
+        "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+      },
+      {
+        "msgid": "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
+      },
+      {
         "msgid": "Your new nickname, or leave blank to reset it."
+      },
+      {
+        "msgid": "Your subscription can't move to the new price right now."
+      },
+      {
+        "msgid": "Your subscription moves to the new price on {effectiveDate}."
+      },
+      {
+        "msgid": "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
       },
       {
         "msgid": "farewell"
@@ -2056,6 +2368,12 @@
         "msgid": "{name} copy"
       },
       {
+        "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
+      },
+      {
+        "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
+      },
+      {
         "msgid": "{productName} application logo"
       },
       {
@@ -2072,6 +2390,22 @@
       },
       {
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Balanced"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Classic"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Focused"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Noise gate"
       },
       {
         "msgctxt": "screen-share",

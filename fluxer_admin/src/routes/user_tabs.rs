@@ -164,25 +164,29 @@ pub async fn render(
             Some(tabs::guilds::guilds_tab(config, user_id, &g))
         }
         "reports" => {
-            let lim = query.reports_limit.unwrap_or(25);
-            let sp = query.reports_sent_page.unwrap_or(0);
-            let rp = query.reports_received_page.unwrap_or(0);
+            let limit = query.reports_limit.unwrap_or(25);
+            let sent_page = query.reports_sent_page.unwrap_or(0);
+            let received_page = query.reports_received_page.unwrap_or(0);
             let sent = client
-                .search_reports_by_reporter(user_id, lim, sp * lim)
+                .search_reports_by_reporter(user_id, limit, u64::from(sent_page) * u64::from(limit))
                 .await
                 .log_error("load reports sent by user");
-            let recv = client
-                .search_reports_by_reported_user(user_id, lim, rp * lim)
+            let received = client
+                .search_reports_by_reported_user(
+                    user_id,
+                    limit,
+                    u64::from(received_page) * u64::from(limit),
+                )
                 .await
                 .log_error("load reports against user");
             Some(tabs::reports::reports_tab(
                 config,
                 user_id,
                 sent.as_ref(),
-                recv.as_ref(),
-                sp,
-                rp,
-                lim,
+                received.as_ref(),
+                sent_page,
+                received_page,
+                limit,
             ))
         }
         "relationships" => {
@@ -244,7 +248,7 @@ pub async fn render(
                     sort_by: Some("created_at".to_owned()),
                     sort_order: Some("desc".to_owned()),
                     limit,
-                    offset: page * limit,
+                    offset: u64::from(page) * u64::from(limit),
                 })
                 .await
                 .log_error("load user admin audit logs")?;

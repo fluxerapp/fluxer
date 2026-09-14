@@ -6,6 +6,7 @@ import styles from '@app/features/channel/components/barriers/BarrierComponents.
 import wrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
 import textareaStyles from '@app/features/channel/components/textarea/TextareaInput.module.css';
 import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {unblockUser} from '@app/features/relationship/utils/RelationshipActionUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -97,6 +98,7 @@ const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) => {
 	);
 });
 const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
+	const {i18n} = useLingui();
 	const [timeRemaining, setTimeRemaining] = useState<number>(initialTime);
 	useEffect(() => {
 		if (timeRemaining <= 0) return;
@@ -115,7 +117,12 @@ const CountdownTimer = observer(({initialTime}: {initialTime: number}) => {
 		const totalSeconds = Math.ceil(ms / 1000);
 		const minutes = Math.floor(totalSeconds / 60);
 		const seconds = totalSeconds % 60;
-		return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+		const minutesLabel = getCachedNumberFormat(i18n.locale, {useGrouping: false}).format(minutes);
+		const secondsLabel = getCachedNumberFormat(i18n.locale, {
+			minimumIntegerDigits: 2,
+			useGrouping: false,
+		}).format(seconds);
+		return `${minutesLabel}:${secondsLabel}`;
 	};
 	if (timeRemaining <= 0) {
 		return null;

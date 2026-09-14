@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
 
 const PROFILE_CUSTOMIZATION_DESCRIPTOR = msg({
 	message: 'Profile customization',

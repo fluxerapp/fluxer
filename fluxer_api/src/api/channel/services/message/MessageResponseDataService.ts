@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {StringCodec} from 'nats';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../../BrandedTypes';
-import {createUserID} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import {throwForSvcErrorReply} from '../../../infrastructure/SvcErrorReply';
-import {Logger} from '../../../Logger';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../../../utils/JsonBoundaryUtils';
 
 const MESSAGE_RESPONSE_SERVICE_SUBJECT = 'svc.messages';
 const MESSAGE_RESPONSE_SERVICE_TIMEOUT_MS = 6000;

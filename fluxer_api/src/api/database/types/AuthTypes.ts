@@ -7,7 +7,7 @@ import type {
 	MfaBackupCode,
 	PasswordResetToken,
 	UserID,
-} from '../../BrandedTypes';
+} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 

@@ -1,19 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
 import {
-	decodeSyncedPreferencesLenient,
-	syncedPreferencesToJson,
-} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import archiver from 'archiver';
-import {ms} from 'itty-time';
-import {z} from 'zod';
-import type {AdminArchive} from '../../admin/models/AdminArchiveModel';
+	type ArchiveTaskHandler,
+	ArchiveTerminalFailureError,
+	createArchiveTask,
+	throwIfArchiveTerminallyFailed,
+} from '@app/api/archive/ArchiveTask';
 import {
 	type ChannelID,
 	createAttachmentID,
@@ -22,59 +19,64 @@ import {
 	type GuildID,
 	type MessageID,
 	type UserID,
-} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {makeAttachmentCdnUrl} from '../../channel/services/message/MessageHelpers';
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
 	type SelfMessageEligibilityContext,
 	type SelfMessageFilter,
-} from '../../channel/services/message/SelfMessageFilter';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import type {Application} from '../../models/Application';
-import type {Attachment} from '../../models/Attachment';
-import type {AuthSession} from '../../models/AuthSession';
-import type {Channel} from '../../models/Channel';
-import type {FavoriteMeme} from '../../models/FavoriteMeme';
-import type {GiftCode} from '../../models/GiftCode';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {Payment} from '../../models/Payment';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {Relationship} from '../../models/Relationship';
-import type {SavedMessage} from '../../models/SavedMessage';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
-import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
-import {buildHarvestDownloadUrl} from '../../user/services/HarvestDownloadUrl';
-import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
-import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
-import {appendAssetToArchive, buildHashedAssetKey, getAnimatedAssetExtension} from '../utils/AssetArchiveHelpers';
-import {ContentAddressedAttachmentCollector} from '../utils/ContentAddressedAttachmentCollector';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/channel/services/message/SelfMessageFilter';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {Application} from '@app/api/models/Application';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {AuthSession} from '@app/api/models/AuthSession';
+import type {Channel} from '@app/api/models/Channel';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {Payment} from '@app/api/models/Payment';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
+import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
+import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
+import {
+	appendAssetToArchive,
+	buildHashedAssetKey,
+	getAnimatedAssetExtension,
+} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {ContentAddressedAttachmentCollector} from '@app/api/worker/utils/ContentAddressedAttachmentCollector';
+import {deserializeSelfMessageFilter, SelfMessageFilterPayload} from '@app/api/worker/utils/SelfMessageFilterPayload';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {
+	decodeSyncedPreferencesLenient,
+	syncedPreferencesToJson,
+} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {ms} from 'itty-time';
+import {z} from 'zod';
 
-const FilterPayloadSchema = z.object({
-	scope: z.enum(['selected', 'inaccessible_only']),
-	includeDms: z.boolean(),
-	includeDmsClosed: z.boolean(),
-	includeGroupDms: z.boolean(),
-	includeGuilds: z.boolean(),
-	guildFilterMode: z.enum(['exclude', 'include_only']).default('exclude'),
-	excludedGuildIds: z.array(z.string()),
-	includedGuildIds: z.array(z.string()).default([]),
-	startTimestamp: z.number().nullable(),
-	endTimestamp: z.number().nullable(),
-});
 const PayloadSchema = z.object({
 	userId: z.string(),
 	harvestId: z.string(),
 	adminRequestedBy: z.string().optional(),
 	includeAttachments: z.boolean().default(false),
-	filter: FilterPayloadSchema.optional(),
+	filter: SelfMessageFilterPayload.optional(),
 });
 
 interface HarvestedAttachment {
@@ -131,6 +133,7 @@ interface UserDataJsonParams {
 	createdGiftCodes: Array<GiftCode>;
 	payments: Array<Payment>;
 	oauthClients: Array<Application>;
+	connections: Array<UserConnectionRow>;
 	pinnedDms: Array<{
 		channel_id: bigint;
 		sort_order: number;
@@ -147,6 +150,8 @@ interface UserDataJsonParams {
 interface ArchiveParams {
 	userId: UserID;
 	harvestId: bigint;
+	attemptId: string;
+	expiresAt: Date;
 	isAdminArchive: boolean;
 	includeAttachments: boolean;
 	userDataJsonBuffer: Buffer;
@@ -171,11 +176,67 @@ interface ArchiveResult {
 	downloadUrl: string;
 }
 
-const CONCURRENT_MESSAGE_LIMIT = 10;
+interface PreparedUserArchive {
+	user: User;
+	totalMessages: number;
+	archive: ArchiveResult;
+}
+
+interface HarvestProgressReporter {
+	attemptId: string;
+	expiresAt: Date | null;
+	updateProgress(percent: number, step: string): Promise<void>;
+	markAsCompleted(storageKey: string, fileSize: bigint, expiresAt: Date): Promise<void>;
+	markAsFailed(message: string): Promise<void>;
+	markAsTerminallyFailed(message: string): Promise<void>;
+}
+
+async function claimUserArchive(
+	userId: UserID,
+	harvestId: bigint,
+	isAdminArchive: boolean,
+	{userHarvestRepository, adminArchiveRepository}: WorkerDependencies,
+): Promise<HarvestProgressReporter | null> {
+	if (isAdminArchive) {
+		const archive = await adminArchiveRepository.findBySubjectAndArchiveId('user', userId, harvestId);
+		if (!archive) throw new Error(`Admin archive ${harvestId} for user ${userId} not found`);
+		throwIfArchiveTerminallyFailed(archive);
+		if (archive.completedAt) return null;
+		const attempt = await adminArchiveRepository.markAsStarted(archive);
+		assert(attempt.attemptId !== null && attempt.expiresAt !== null, 'Claimed admin archive is incomplete');
+		return {
+			attemptId: attempt.attemptId,
+			expiresAt: attempt.expiresAt,
+			updateProgress: (percent, step) => adminArchiveRepository.updateProgress(attempt, percent, step),
+			markAsCompleted: (key, size, expiry) => adminArchiveRepository.markAsCompleted(attempt, key, size, expiry),
+			markAsFailed: (message) => adminArchiveRepository.markAsFailed(attempt, message),
+			markAsTerminallyFailed: (message) => adminArchiveRepository.markAsTerminallyFailed(attempt, message),
+		};
+	}
+	const harvest = await userHarvestRepository.findByUserAndHarvestId(userId, harvestId);
+	if (!harvest) throw new Error(`Harvest ${harvestId} for user ${userId} not found`);
+	throwIfArchiveTerminallyFailed(harvest);
+	if (harvest.completedAt) return null;
+	const attempt = await userHarvestRepository.markAsStarted(harvest);
+	assert(attempt.attemptId !== null, 'Claimed harvest has no attempt ID');
+	return {
+		attemptId: attempt.attemptId,
+		expiresAt: null,
+		updateProgress: (percent, step) => userHarvestRepository.updateProgress(attempt, percent, step),
+		markAsCompleted: (key, size, expiry) => userHarvestRepository.markAsCompleted(attempt, key, size, expiry),
+		markAsFailed: (message) => userHarvestRepository.markAsFailed(attempt, message),
+		markAsTerminallyFailed: (message) => userHarvestRepository.markAsTerminallyFailed(attempt, message),
+	};
+}
+
+// A harvest is every message the account wrote, so the read pages to the end of
+// the account rather than stopping at a count. The page size is what bounds one
+// query, not what bounds the archive.
+const HARVEST_MESSAGE_CHUNK_SIZE = 1000;
+const HARVEST_READ_CONCURRENCY = 10;
 const INITIAL_PROGRESS = 5;
 const MESSAGES_PROGRESS_MAX = 55;
 const METADATA_PROGRESS = 60;
-const COMPLETE_PROGRESS = 100;
 const ZIP_EXPIRY_MS = ms('7 days');
 
 function mapPayment(payment: Payment) {
@@ -226,48 +287,81 @@ interface HarvestMessagesFilterArgs {
 	findChannel: (channelId: ChannelID) => Promise<Channel | null>;
 }
 
-async function harvestMessages(
-	channelRepository: {
-		listMessagesByAuthor: (
-			userId: UserID,
-			limit: number,
-		) => Promise<
-			Array<{
-				channelId: ChannelID;
-				messageId: MessageID;
-			}>
-		>;
-		getMessage: (
-			channelId: ChannelID,
-			messageId: MessageID,
-		) => Promise<{
-			content: string | null;
-			attachments?: Array<Attachment>;
-		} | null>;
-	},
+interface HarvestMessageReference {
+	channelId: ChannelID;
+	messageId: MessageID;
+}
+
+interface HarvestMessageRepository {
+	listMessagesByAuthor(
+		userId: UserID,
+		limit: number,
+		lastMessageId?: MessageID,
+	): Promise<Array<HarvestMessageReference>>;
+	getMessage(
+		channelId: ChannelID,
+		messageId: MessageID,
+	): Promise<{content: string | null; attachments?: Array<Attachment>} | null>;
+}
+
+export async function harvestMessages(
+	channelRepository: HarvestMessageRepository,
 	userId: UserID,
 	startTime: number,
 	filterArgs: HarvestMessagesFilterArgs | null,
 ): Promise<HarvestMessageResult> {
 	const channelMessagesMap = new Map<string, Array<HarvestedMessage>>();
+	const channelEligibility = filterArgs ? new Map<string, boolean>() : null;
 	Logger.debug('Fetching all user messages');
 	const startFetchTime = Date.now();
-	const messageRefs = await channelRepository.listMessagesByAuthor(userId, 100000);
-	Logger.debug(
-		{
-			totalMessages: messageRefs.length,
-			fetchElapsed: Date.now() - startFetchTime,
-			totalElapsed: Date.now() - startTime,
-		},
-		'All messages retrieved',
-	);
-	if (messageRefs.length === 0) {
-		return {channelMessagesMap, totalMessages: 0};
-	}
-	const channelEligibility = filterArgs ? new Map<string, boolean>() : null;
-	const filteredRefs: Array<{channelId: ChannelID; messageId: MessageID}> = [];
-	if (filterArgs) {
-		for (const ref of messageRefs) {
+	let lastMessageId: MessageID | undefined;
+	let scannedMessages = 0;
+	let totalMessages = 0;
+
+	const readMessage = async ({channelId, messageId}: HarvestMessageReference): Promise<ChannelHarvestResult | null> => {
+		const message = await channelRepository.getMessage(channelId, messageId);
+		if (!message) {
+			Logger.warn(
+				{channelId: channelId.toString(), messageId: messageId.toString()},
+				'Message not found during harvest',
+			);
+			return null;
+		}
+		return {
+			channelId: channelId.toString(),
+			messageData: {
+				id: messageId.toString(),
+				timestamp: snowflakeToDate(messageId).toISOString(),
+				content: message.content ?? '',
+				attachments: (message.attachments ?? []).map((attachment) => ({
+					attachment_id: attachment.id.toString(),
+					filename: attachment.filename,
+					size: attachment.size.toString(),
+					content_type: attachment.contentType,
+					content_hash: null,
+					archive_path: null,
+					cdn_url: makeAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
+					width: attachment.width,
+					height: attachment.height,
+				})),
+			},
+		};
+	};
+
+	while (true) {
+		const page = await channelRepository.listMessagesByAuthor(userId, HARVEST_MESSAGE_CHUNK_SIZE, lastMessageId);
+		if (page.length === 0) {
+			break;
+		}
+		scannedMessages += page.length;
+		lastMessageId = page[page.length - 1].messageId;
+
+		const pageRefs: Array<HarvestMessageReference> = [];
+		for (const ref of page) {
+			if (!filterArgs) {
+				pageRefs.push(ref);
+				continue;
+			}
 			const ts = snowflakeToDate(ref.messageId).getTime();
 			if (!isTimestampInWindow(ts, filterArgs.filter)) {
 				continue;
@@ -280,76 +374,37 @@ async function harvestMessages(
 				channelEligibility!.set(channelIdStr, eligible);
 			}
 			if (eligible) {
-				filteredRefs.push(ref);
+				pageRefs.push(ref);
 			}
 		}
-	} else {
-		filteredRefs.push(...messageRefs);
-	}
-	if (filteredRefs.length === 0) {
-		return {channelMessagesMap, totalMessages: 0};
-	}
-	const messages: Array<ChannelHarvestResult> = [];
-	for (let i = 0; i < filteredRefs.length; i += CONCURRENT_MESSAGE_LIMIT) {
-		const batch = filteredRefs.slice(i, i + CONCURRENT_MESSAGE_LIMIT);
-		const batchPromises = batch.map(async ({channelId, messageId}): Promise<ChannelHarvestResult | null> => {
-			try {
-				const message = await channelRepository.getMessage(channelId, messageId);
-				if (!message) {
-					Logger.warn(
-						{channelId: channelId.toString(), messageId: messageId.toString()},
-						'Message not found during harvest',
-					);
-					return null;
-				}
-				const timestamp = snowflakeToDate(messageId);
-				const attachments: Array<HarvestedAttachment> = [];
-				if (message.attachments) {
-					for (const attachment of message.attachments) {
-						attachments.push({
-							attachment_id: attachment.id.toString(),
-							filename: attachment.filename,
-							size: attachment.size.toString(),
-							content_type: attachment.contentType,
-							content_hash: null,
-							archive_path: null,
-							cdn_url: makeAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
-							width: attachment.width,
-							height: attachment.height,
-						});
-					}
-				}
-				return {
-					channelId: channelId.toString(),
-					messageData: {
-						id: messageId.toString(),
-						timestamp: timestamp.toISOString(),
-						content: message.content ?? '',
-						attachments,
-					},
-				};
-			} catch (error) {
-				Logger.error(
-					{error, channelId: channelId.toString(), messageId: messageId.toString()},
-					'Failed to process message during harvest',
-				);
-				return null;
+
+		const pageResults = await mapWithConcurrency(pageRefs, HARVEST_READ_CONCURRENCY, readMessage);
+		for (const result of pageResults) {
+			if (result === null) continue;
+			let bucket = channelMessagesMap.get(result.channelId);
+			if (!bucket) {
+				bucket = [];
+				channelMessagesMap.set(result.channelId, bucket);
 			}
-		});
-		const batchResults = await Promise.all(batchPromises);
-		for (const result of batchResults) {
-			if (result !== null) {
-				messages.push(result);
-			}
+			bucket.push(result.messageData);
+			totalMessages++;
+		}
+
+		if (page.length < HARVEST_MESSAGE_CHUNK_SIZE) {
+			break;
 		}
 	}
-	for (const {channelId, messageData} of messages) {
-		if (!channelMessagesMap.has(channelId)) {
-			channelMessagesMap.set(channelId, []);
-		}
-		channelMessagesMap.get(channelId)!.push(messageData);
-	}
-	return {channelMessagesMap, totalMessages: messages.length};
+
+	Logger.debug(
+		{
+			scannedMessages,
+			totalMessages,
+			fetchElapsed: Date.now() - startFetchTime,
+			totalElapsed: Date.now() - startTime,
+		},
+		'All messages retrieved',
+	);
+	return {channelMessagesMap, totalMessages};
 }
 
 function buildUserDataJson(params: UserDataJsonParams) {
@@ -372,6 +427,7 @@ function buildUserDataJson(params: UserDataJsonParams) {
 		createdGiftCodes,
 		payments,
 		oauthClients,
+		connections,
 		pinnedDms,
 		authorizedIps,
 		activityData,
@@ -575,6 +631,18 @@ function buildUserDataJson(params: UserDataJsonParams) {
 		})),
 		payments: payments.map(mapPayment),
 		oauth_applications: oauthClients.map(mapOAuthApplication),
+		connections: connections.map((connection) => ({
+			id: connection.connection_id,
+			type: connection.connection_type,
+			identifier: connection.identifier,
+			name: connection.name,
+			verified: connection.verified,
+			visibility_flags: connection.visibility_flags,
+			sort_order: connection.sort_order,
+			created_at: connection.created_at.toISOString(),
+			verified_at: connection.verified_at?.toISOString() ?? null,
+			last_verified_at: connection.last_verified_at?.toISOString() ?? null,
+		})),
 		pinned_dms: pinnedDms.map((pin) => ({
 			channel_id: pin.channel_id.toString(),
 			sort_order: pin.sort_order,
@@ -587,6 +655,8 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 	const {
 		userId,
 		harvestId,
+		attemptId,
+		expiresAt,
 		isAdminArchive,
 		includeAttachments,
 		userDataJsonBuffer,
@@ -599,14 +669,10 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 		storageService,
 	} = params;
 	const userIdString = userId.toString();
-	const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'fluxer-harvest-'));
-	const zipPath = path.join(tempDir, `user-data-${userId}.zip`);
-	let output: fs.WriteStream | null = null;
-	try {
-		output = fs.createWriteStream(zipPath);
-		const archive = archiver('zip', {zlib: {level: 6}});
-		archive.pipe(output);
-		archive.append(userDataJsonBuffer, {name: 'user.json'});
+	await using tempDir = await fs.promises.mkdtempDisposable(path.join(os.tmpdir(), 'fluxer-harvest-'));
+	const zipPath = path.join(tempDir.path, `user-data-${userId}.zip`);
+	await writeZipArchive(zipPath, async (archive) => {
+		await archive.append(userDataJsonBuffer, {name: 'user.json'});
 		if (user.avatarHash) {
 			const avatarArchiveName = `assets/user/avatar.${getAnimatedAssetExtension(user.avatarHash)}`;
 			const avatarStorageKey = buildHashedAssetKey('avatars', userIdString, user.avatarHash);
@@ -651,150 +717,97 @@ async function createAndUploadArchive(params: ArchiveParams): Promise<ArchiveRes
 				}
 			}
 			messages.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-			archive.append(createArchiveJsonBuffer(messages), {name: `channels/${channelId}/messages.json`});
+			await archive.append(createArchiveJsonBuffer(messages), {name: `channels/${channelId}/messages.json`});
 		}
 		if (collector) {
 			const manifest = collector.getManifest();
-			archive.append(createArchiveJsonBuffer(manifest), {name: 'attachments_manifest.json'});
+			await archive.append(createArchiveJsonBuffer(manifest), {name: 'attachments_manifest.json'});
 		}
-		archive.append(createArchiveJsonBuffer(payments.map(mapPayment)), {
+		await archive.append(createArchiveJsonBuffer(payments.map(mapPayment)), {
 			name: 'payments/payment_history.json',
 		});
-		archive.append(createArchiveJsonBuffer({applications: oauthClients.map(mapOAuthApplication)}), {
+		await archive.append(createArchiveJsonBuffer({applications: oauthClients.map(mapOAuthApplication)}), {
 			name: 'integrations/oauth.json',
 		});
-		archive.append(createArchiveJsonBuffer(mapSecurityData({authorizedIps, activityData})), {
+		await archive.append(createArchiveJsonBuffer(mapSecurityData({authorizedIps, activityData})), {
 			name: 'account/security.json',
 		});
-		await archive.finalize();
-		await new Promise<void>((resolve, reject) => {
-			if (!output) {
-				reject(new Error('Output stream is null'));
-				return;
-			}
-			output.on('close', resolve);
-			output.on('error', reject);
-		});
-		const storageKey = isAdminArchive
-			? `archives/users/${userId}/${harvestId}/user-data.zip`
-			: `exports/${userId}/${harvestId}/user-data.zip`;
-		const expiresAt = new Date(Date.now() + (isAdminArchive ? ms('1 year') : ZIP_EXPIRY_MS));
-		const zipStat = await fs.promises.stat(zipPath);
-		const fileSize = BigInt(zipStat.size);
-		await storageService.uploadObject({
-			bucket: Config.s3.buckets.harvests,
-			key: storageKey,
-			body: fs.createReadStream(zipPath),
-			contentType: 'application/zip',
-			expiresAt: expiresAt,
-		});
-		const downloadUrl = await buildHarvestDownloadUrl({
-			userId,
-			harvestId,
-			storageKey,
-			expiresInSeconds: ZIP_EXPIRY_MS / 1000,
-			storageService,
-		});
-		return {fileSize, storageKey, expiresAt, downloadUrl};
-	} finally {
-		if (output && !output.destroyed) {
-			output.destroy();
-		}
-		await fs.promises.rm(tempDir, {recursive: true, force: true});
-	}
+	});
+	const storageKey = isAdminArchive
+		? `archives/users/${userId}/${harvestId}/${attemptId}/user-data.zip`
+		: `exports/${userId}/${harvestId}/${attemptId}/user-data.zip`;
+	const zipStat = await fs.promises.stat(zipPath);
+	const fileSize = BigInt(zipStat.size);
+	await storageService.uploadObjectFromFile({
+		bucket: Config.s3.buckets.harvests,
+		key: storageKey,
+		filePath: zipPath,
+		contentLength: zipStat.size,
+		contentType: 'application/zip',
+		expiresAt,
+	});
+	const downloadUrl = await buildHarvestDownloadUrl({
+		userId,
+		harvestId,
+		storageKey,
+		expiresInSeconds: ZIP_EXPIRY_MS / 1000,
+		storageService,
+	});
+	return {fileSize, storageKey, expiresAt, downloadUrl};
 }
 
-const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
+const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) => {
 	const validated = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload}, 'Processing harvestUserData task');
 	const startTime = Date.now();
 	const userId = createUserID(BigInt(validated.userId));
 	const harvestId = BigInt(validated.harvestId);
 	Logger.info({userId, harvestId, startTime: new Date(startTime).toISOString()}, 'Task started');
+	const dependencies = getWorkerDependencies();
 	const {
 		channelRepository,
 		guildRepository,
 		userRepository,
-		userHarvestRepository,
-		adminArchiveRepository,
 		favoriteMemeRepository,
 		paymentRepository,
 		applicationRepository,
+		connectionRepository,
 		storageService,
 		emailService,
 		instanceConfigRepository,
-	} = getWorkerDependencies();
+	} = dependencies;
 	const adminRequestedBy = validated.adminRequestedBy ? BigInt(validated.adminRequestedBy) : null;
 	const isAdminArchive = adminRequestedBy !== null;
-	const existingHarvest = isAdminArchive
-		? await adminArchiveRepository.findBySubjectAndArchiveId('user', userId, harvestId)
-		: await userHarvestRepository.findByUserAndHarvestId(userId, harvestId);
-	if (isAdminArchive && !existingHarvest) {
-		throw new Error(`Admin archive ${harvestId.toString()} for user ${userId.toString()} not found`);
-	}
-	if (existingHarvest?.completedAt) {
-		Logger.info(
-			{userId, harvestId, completedAt: existingHarvest.completedAt},
-			'Harvest already completed, skipping (idempotent early bailout)',
-		);
+	const progressReporter = await claimUserArchive(userId, harvestId, isAdminArchive, dependencies);
+	if (progressReporter === null) {
+		Logger.info({userId, harvestId}, 'Harvest already completed, skipping');
 		return;
 	}
-	const adminArchive = isAdminArchive ? (existingHarvest as AdminArchive) : null;
-	const progressReporter = {
-		markAsStarted: () =>
-			isAdminArchive && adminArchive
-				? adminArchiveRepository.markAsStarted(adminArchive)
-				: userHarvestRepository.markAsStarted(userId, harvestId),
-		updateProgress: (progressPercent: number, progressStep: string) =>
-			isAdminArchive && adminArchive
-				? adminArchiveRepository.updateProgress(adminArchive, progressPercent, progressStep)
-				: userHarvestRepository.updateProgress(userId, harvestId, progressPercent, progressStep),
-		markAsCompleted: (storageKey: string, fileSize: bigint, expiresAt: Date) =>
-			isAdminArchive && adminArchive
-				? adminArchiveRepository.markAsCompleted(adminArchive, storageKey, fileSize, expiresAt)
-				: userHarvestRepository.markAsCompleted(userId, harvestId, storageKey, fileSize, expiresAt),
-		markAsFailed: (message: string) =>
-			isAdminArchive && adminArchive
-				? adminArchiveRepository.markAsFailed(adminArchive, message)
-				: userHarvestRepository.markAsFailed(userId, harvestId, message),
-		shouldSendEmail: !isAdminArchive,
-	};
-	let filterArgs: HarvestMessagesFilterArgs | null = null;
-	if (validated.filter) {
-		const filter: SelfMessageFilter = {
-			scope: validated.filter.scope,
-			includeDms: validated.filter.includeDms,
-			includeDmsClosed: validated.filter.includeDmsClosed,
-			includeGroupDms: validated.filter.includeGroupDms,
-			includeGuilds: validated.filter.includeGuilds,
-			guildFilterMode: validated.filter.guildFilterMode,
-			excludedGuildIds: new Set(validated.filter.excludedGuildIds),
-			includedGuildIds: new Set(validated.filter.includedGuildIds),
-			startTimestamp: validated.filter.startTimestamp,
-			endTimestamp: validated.filter.endTimestamp,
-		};
-		const [privateChannelsForFilter, userGuildsForFilter] = await Promise.all([
-			userRepository.listPrivateChannels(userId),
-			guildRepository.listUserGuilds(userId),
-		]);
-		const openDmChannelIds = new Set<string>();
-		for (const channel of privateChannelsForFilter) {
-			if (channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM) {
-				openDmChannelIds.add(channel.id.toString());
-			}
-		}
-		const context: SelfMessageEligibilityContext = {
-			currentGuildIds: new Set(userGuildsForFilter.map((guild) => guild.id.toString())),
-			openDmChannelIds,
-		};
-		filterArgs = {
-			filter,
-			context,
-			findChannel: (channelId) => channelRepository.findUnique(channelId),
-		};
-	}
+	let prepared: PreparedUserArchive;
 	try {
-		await progressReporter.markAsStarted();
+		let filterArgs: HarvestMessagesFilterArgs | null = null;
+		if (validated.filter) {
+			const filter = deserializeSelfMessageFilter(validated.filter);
+			const [privateChannelsForFilter, userGuildsForFilter] = await Promise.all([
+				userRepository.listPrivateChannels(userId),
+				guildRepository.listUserGuilds(userId),
+			]);
+			const openDmChannelIds = new Set<string>();
+			for (const channel of privateChannelsForFilter) {
+				if (channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM) {
+					openDmChannelIds.add(channel.id.toString());
+				}
+			}
+			const context: SelfMessageEligibilityContext = {
+				currentGuildIds: new Set(userGuildsForFilter.map((guild) => guild.id.toString())),
+				openDmChannelIds,
+			};
+			filterArgs = {
+				filter,
+				context,
+				findChannel: (channelId) => channelRepository.findUnique(channelId),
+			};
+		}
 		Logger.debug({userId, harvestId, elapsed: Date.now() - startTime}, 'Starting user data harvest');
 		await progressReporter.updateProgress(INITIAL_PROGRESS, 'Harvesting messages');
 		Logger.debug({elapsed: Date.now() - startTime}, 'Set progress to INITIAL_PROGRESS');
@@ -834,51 +847,39 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 			createdGiftCodes,
 			payments,
 			oauthClients,
+			connections,
 			pinnedDms,
 			authorizedIps,
 			activityData,
 		] = await Promise.all([
-			userRepository.listAuthSessions(userId) as Promise<Array<AuthSession>>,
-			userRepository.listRelationships(userId) as Promise<Array<Relationship>>,
-			userRepository.getUserNotes(userId) as Promise<Map<UserID, string>>,
-			userRepository.findSettings(userId) as Promise<UserSettings | null>,
-			userRepository.getUserGuildIds(userId) as Promise<Array<GuildID>>,
-			userRepository.listSavedMessages(userId, 1000) as Promise<Array<SavedMessage>>,
-			userRepository.listPrivateChannels(userId) as Promise<Array<Channel>>,
-			favoriteMemeRepository.findByUserId(userId) as Promise<Array<FavoriteMeme>>,
-			userRepository.listPushSubscriptions(userId) as Promise<Array<PushSubscription>>,
-			userRepository.listWebAuthnCredentials(userId) as Promise<Array<WebAuthnCredential>>,
-			userRepository.listMfaBackupCodes(userId) as Promise<Array<MfaBackupCode>>,
-			userRepository.findGiftCodesByCreator(userId) as Promise<Array<GiftCode>>,
-			paymentRepository.findPaymentsByUserId(userId) as Promise<Array<Payment>>,
-			applicationRepository.listApplicationsByOwner(userId) as Promise<Array<Application>>,
-			userRepository.getPinnedDmsWithDetails(userId) as Promise<
-				Array<{
-					channel_id: bigint;
-					sort_order: number;
-				}>
-			>,
-			userRepository.getAuthorizedIps(userId) as Promise<
-				Array<{
-					ip: string;
-				}>
-			>,
-			userRepository.getActivityTracking(userId) as Promise<{
-				last_active_at: Date | null;
-				last_active_ip: string | null;
-			}>,
+			userRepository.listAuthSessions(userId),
+			userRepository.listRelationships(userId),
+			userRepository.getUserNotes(userId),
+			userRepository.findSettings(userId),
+			userRepository.getUserGuildIds(userId),
+			userRepository.listSavedMessages(userId, 1000),
+			userRepository.listPrivateChannels(userId),
+			favoriteMemeRepository.findByUserId(userId),
+			userRepository.listPushSubscriptions(userId),
+			userRepository.listWebAuthnCredentials(userId),
+			userRepository.listMfaBackupCodes(userId),
+			userRepository.findGiftCodesByCreator(userId),
+			paymentRepository.findPaymentsByUserId(userId),
+			applicationRepository.listApplicationsByOwner(userId),
+			connectionRepository.findByUserId(userId),
+			userRepository.getPinnedDmsWithDetails(userId),
+			userRepository.getAuthorizedIps(userId),
+			userRepository.getActivityTracking(userId),
 		]);
 		const guilds = await guildRepository.listGuilds(guildIds);
 		const guildsMap = new Map(guilds.map((guild) => [guild.id.toString(), guild]));
-		const guildMemberships = await Promise.all(
-			guildIds.map(async (guildId: GuildID) => {
-				const member = await guildRepository.getMember(guildId, userId);
-				const guild = guildsMap.get(guildId.toString()) ?? null;
-				return {member, guild, guildId};
-			}),
-		);
-		const guildSettings = await Promise.all(
-			guildIds.map((guildId: GuildID) => userRepository.findGuildSettings(userId, guildId)),
+		const guildMemberships = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, async (guildId) => {
+			const member = await guildRepository.getMember(guildId, userId);
+			const guild = guildsMap.get(guildId.toString()) ?? null;
+			return {member, guild, guildId};
+		});
+		const guildSettings = await mapWithConcurrency(guildIds, HARVEST_READ_CONCURRENCY, (guildId) =>
+			userRepository.findGuildSettings(userId, guildId),
 		);
 		const {branding} = await instanceConfigRepository.getAppPublicConfig();
 		const userData = buildUserDataJson({
@@ -900,6 +901,7 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 			createdGiftCodes,
 			payments,
 			oauthClients,
+			connections,
 			pinnedDms,
 			authorizedIps,
 			activityData,
@@ -909,9 +911,11 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 		const includeAttachments = validated.includeAttachments && isAdminArchive;
 		await progressReporter.updateProgress(METADATA_PROGRESS + 5, 'Downloading attachments and creating archive');
 		Logger.debug({elapsed: Date.now() - startTime}, 'Starting ZIP creation');
-		const {fileSize, storageKey, expiresAt, downloadUrl} = await createAndUploadArchive({
+		const archive = await createAndUploadArchive({
 			userId,
 			harvestId,
+			attemptId: progressReporter.attemptId,
+			expiresAt: progressReporter.expiresAt ?? new Date(Date.now() + ZIP_EXPIRY_MS),
 			isAdminArchive,
 			includeAttachments,
 			userDataJsonBuffer,
@@ -924,34 +928,12 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 			storageService,
 		});
 		Logger.debug(
-			{userId, harvestId, zipSize: fileSize.toString(), elapsed: Date.now() - startTime},
+			{userId, harvestId, zipSize: archive.fileSize.toString(), elapsed: Date.now() - startTime},
 			'Uploaded final ZIP to S3 with TTL',
 		);
-		await progressReporter.markAsCompleted(storageKey, fileSize, expiresAt);
-		Logger.debug({userId, harvestId}, 'Marked harvest as completed');
-		if (progressReporter.shouldSendEmail && user.email && (await instanceConfigRepository.isEmailEnabled())) {
-			await emailService.sendHarvestCompletedEmail(
-				user.email,
-				user.username,
-				downloadUrl,
-				totalMessages,
-				Number(fileSize),
-				expiresAt,
-				user.locale,
-			);
-			Logger.debug({userId, harvestId, email: user.email, totalMessages}, 'Sent harvest completion email');
-		}
-		await progressReporter.updateProgress(COMPLETE_PROGRESS, 'Completed');
-		Logger.info(
-			{
-				userId,
-				harvestId,
-				totalElapsed: Date.now() - startTime,
-				totalElapsedSeconds: Math.round((Date.now() - startTime) / 1000),
-			},
-			'User data harvest completed successfully',
-		);
+		prepared = {user, totalMessages, archive};
 	} catch (error) {
+		if (error instanceof ArchiveAttemptSupersededError) throw error;
 		Logger.error(
 			{
 				error,
@@ -961,9 +943,45 @@ const harvestUserData: WorkerTaskHandler = async (payload, helpers) => {
 			},
 			'Failed to harvest user data',
 		);
-		await progressReporter.markAsFailed(String(error));
+		const message = error instanceof Error ? error.message : String(error);
+		try {
+			if (attempt.isLastAttempt) {
+				await progressReporter.markAsTerminallyFailed(message);
+			} else {
+				await progressReporter.markAsFailed(message);
+			}
+		} catch (statusError) {
+			if (statusError instanceof ArchiveAttemptSupersededError) throw statusError;
+			throw new AggregateError([error, statusError], 'Harvest preparation and failure recording both failed');
+		}
+		if (attempt.isLastAttempt) throw new ArchiveTerminalFailureError(message);
 		throw error;
 	}
+	const {user, totalMessages, archive} = prepared;
+	await progressReporter.markAsCompleted(archive.storageKey, archive.fileSize, archive.expiresAt);
+	Logger.debug({userId, harvestId}, 'Marked harvest as completed');
+	if (!isAdminArchive && user.email && (await instanceConfigRepository.isEmailEnabled())) {
+		const sent = await emailService.sendHarvestCompletedEmail(
+			user.email,
+			user.username,
+			archive.downloadUrl,
+			totalMessages,
+			Number(archive.fileSize),
+			archive.expiresAt,
+			user.locale,
+		);
+		if (!sent) throw new Error(`Completion email for harvest ${harvestId} was not sent`);
+		Logger.debug({userId, harvestId, totalMessages}, 'Sent harvest completion email');
+	}
+	Logger.info(
+		{
+			userId,
+			harvestId,
+			totalElapsed: Date.now() - startTime,
+			totalElapsedSeconds: Math.round((Date.now() - startTime) / 1000),
+		},
+		'User data harvest completed successfully',
+	);
 };
 
-export default harvestUserData;
+export default createArchiveTask(harvestUserData);

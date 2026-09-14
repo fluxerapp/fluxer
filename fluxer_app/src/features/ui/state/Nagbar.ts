@@ -17,6 +17,8 @@ export interface NagbarSettings {
 	pendingBulkDeletionDismissed: Record<string, boolean>;
 	invitesDisabledDismissed: Record<string, boolean>;
 	guildMfaRequirementDismissed: Record<string, boolean>;
+	priceAnnouncementDismissed: Record<string, boolean>;
+	legacyPriceOptInDismissed: Record<string, boolean>;
 	guildMembershipCtaDismissed: boolean;
 	visionaryMfaDismissed: boolean;
 	claimAccountModalShownThisSession: boolean;
@@ -68,6 +70,8 @@ export type NagbarToggleKey = Exclude<
 	| 'invitesDisabledDismissed'
 	| 'claimAccountModalShownThisSession'
 	| 'pendingBulkDeletionDismissed'
+	| 'priceAnnouncementDismissed'
+	| 'legacyPriceOptInDismissed'
 >;
 
 export class Nagbar implements NagbarSettings {
@@ -83,6 +87,8 @@ export class Nagbar implements NagbarSettings {
 	pendingBulkDeletionDismissed: Record<string, boolean> = {};
 	invitesDisabledDismissed: Record<string, boolean> = {};
 	guildMfaRequirementDismissed: Record<string, boolean> = {};
+	priceAnnouncementDismissed: Record<string, boolean> = {};
+	legacyPriceOptInDismissed: Record<string, boolean> = {};
 	guildMembershipCtaDismissed = false;
 	visionaryMfaDismissed = false;
 	buildEnvironmentDismissedThisSession = false;
@@ -153,6 +159,8 @@ export class Nagbar implements NagbarSettings {
 				'pendingBulkDeletionDismissed',
 				'invitesDisabledDismissed',
 				'guildMfaRequirementDismissed',
+				'priceAnnouncementDismissed',
+				'legacyPriceOptInDismissed',
 				'guildMembershipCtaDismissed',
 				'visionaryMfaDismissed',
 			],
@@ -171,6 +179,8 @@ export class Nagbar implements NagbarSettings {
 				pendingBulkDeletion: {...s.pendingBulkDeletionDismissed},
 				invitesDisabled: {...s.invitesDisabledDismissed},
 				guildMfaRequirement: {...s.guildMfaRequirementDismissed},
+				priceAnnouncement: {...s.priceAnnouncementDismissed},
+				legacyPriceOptIn: {...s.legacyPriceOptInDismissed},
 			}),
 			applyMessage: (s, m) => {
 				s.iosInstallDismissed = m.iosInstall;
@@ -187,6 +197,8 @@ export class Nagbar implements NagbarSettings {
 				s.pendingBulkDeletionDismissed = {...m.pendingBulkDeletion};
 				s.invitesDisabledDismissed = {...m.invitesDisabled};
 				s.guildMfaRequirementDismissed = {...m.guildMfaRequirement};
+				s.priceAnnouncementDismissed = {...m.priceAnnouncement};
+				s.legacyPriceOptInDismissed = {...m.legacyPriceOptIn};
 			},
 		});
 	}
@@ -233,6 +245,14 @@ export class Nagbar implements NagbarSettings {
 
 	getGuildMfaRequirementDismissed(guildId: string): boolean {
 		return this.guildMfaRequirementDismissed[guildId] ?? false;
+	}
+
+	getPriceAnnouncementDismissed(campaignId: string): boolean {
+		return this.priceAnnouncementDismissed[campaignId] ?? false;
+	}
+
+	getLegacyPriceOptInDismissed(campaignId: string): boolean {
+		return this.legacyPriceOptInDismissed[campaignId] ?? false;
 	}
 
 	getForceInvitesDisabled(): boolean {
@@ -329,6 +349,20 @@ export class Nagbar implements NagbarSettings {
 		};
 	}
 
+	dismissPriceAnnouncement(campaignId: string): void {
+		this.priceAnnouncementDismissed = {
+			...this.priceAnnouncementDismissed,
+			[campaignId]: true,
+		};
+	}
+
+	dismissLegacyPriceOptIn(campaignId: string): void {
+		this.legacyPriceOptInDismissed = {
+			...this.legacyPriceOptInDismissed,
+			[campaignId]: true,
+		};
+	}
+
 	reset(nagbarType: NagbarToggleKey): void {
 		this[nagbarType] = false;
 	}
@@ -347,6 +381,16 @@ export class Nagbar implements NagbarSettings {
 		this.guildMfaRequirementDismissed = rest;
 	}
 
+	resetPriceAnnouncement(campaignId: string): void {
+		const {[campaignId]: _, ...rest} = this.priceAnnouncementDismissed;
+		this.priceAnnouncementDismissed = rest;
+	}
+
+	resetLegacyPriceOptIn(campaignId: string): void {
+		const {[campaignId]: _, ...rest} = this.legacyPriceOptInDismissed;
+		this.legacyPriceOptInDismissed = rest;
+	}
+
 	resetAll(): void {
 		this.iosInstallDismissed = false;
 		this.pwaInstallDismissed = false;
@@ -360,6 +404,8 @@ export class Nagbar implements NagbarSettings {
 		this.pendingBulkDeletionDismissed = {};
 		this.invitesDisabledDismissed = {};
 		this.guildMfaRequirementDismissed = {};
+		this.priceAnnouncementDismissed = {};
+		this.legacyPriceOptInDismissed = {};
 		this.guildMembershipCtaDismissed = false;
 		this.visionaryMfaDismissed = false;
 		this.buildEnvironmentDismissedThisSession = false;

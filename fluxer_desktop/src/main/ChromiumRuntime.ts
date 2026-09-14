@@ -36,13 +36,6 @@ const MACOS_PRE_SEQUOIA_SCREEN_CAPTURE_DISABLED_FEATURES = [
 	'WarmScreenCaptureSonoma',
 	'UseSCContentSharingPicker',
 ];
-const WINDOWS_WEBRTC_WGC_DISABLED_FEATURES = [
-	'AllowWgcScreenCapturer',
-	'AllowWgcWindowCapturer',
-	'AllowWgcScreenZeroHz',
-	'AllowWgcWindowZeroHz',
-	'WebRtcWgcRequireBorder',
-];
 const WINDOWS_NVIDIA_HEVC_DECODE_WORKAROUND_DEVICE_IDS = new Set([
 	4928, 4929, 4932, 4934, 4935, 4936, 4937, 4939, 4941, 4942, 4943, 4986, 4987, 4992, 4993, 4994, 5008, 5009, 5010,
 	5011, 5016, 5017, 5018, 5019, 5020, 5021, 5040, 5041, 5042, 5043, 5044, 5046, 5049, 5050, 5051, 5052, 5056, 5058,
@@ -308,13 +301,6 @@ export function addMacosPreSequoiaScreenCaptureDisabledFeatures(features: Set<st
 	const majorRelease = Number.parseInt(os.release().split('.')[0] ?? '', 10);
 	if (!Number.isFinite(majorRelease) || majorRelease >= 24) return;
 	for (const feature of MACOS_PRE_SEQUOIA_SCREEN_CAPTURE_DISABLED_FEATURES) {
-		features.add(feature);
-	}
-}
-
-export function addWindowsWebRtcWgcDisabledFeatures(features: Set<string>): void {
-	if (process.platform !== 'win32') return;
-	for (const feature of WINDOWS_WEBRTC_WGC_DISABLED_FEATURES) {
 		features.add(feature);
 	}
 }

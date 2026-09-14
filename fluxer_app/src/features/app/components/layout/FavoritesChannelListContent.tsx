@@ -67,6 +67,13 @@ import type {ConnectableElement} from 'react-dnd';
 import {useDrag, useDragLayer, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
+const DIRECT_MESSAGE_ABBREVIATION_DESCRIPTOR = msg({
+	message: 'DM',
+	context: 'channel-badge',
+	comment:
+		'Very short badge shown in place of an avatar on a favorited direct-message row. Must fit about 2-3 characters; abbreviate rather than translate in full.',
+});
+
 const EMPTY_FAVORITES_DESCRIPTOR = msg({
 	message: 'Empty favorites',
 	comment: 'Short label in the app layout favorites channel list content.',
@@ -341,7 +348,7 @@ const FavoriteChannelResolvedItem = observer(
 							aria-hidden
 							data-flx="app.favorites-channel-list-content.favorite-channel-item.div--4"
 						>
-							DM
+							{i18n._(DIRECT_MESSAGE_ABBREVIATION_DESCRIPTOR)}
 						</div>
 					)}
 					{!channel.isPrivate() && (

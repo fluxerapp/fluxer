@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import type {HardwareEncodeReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import type {VideoCodec} from 'livekit-client';
-import type {HardwareEncodeReport} from './GpuEncoderCapabilities';
 
 const BEST_COMPRESSION_USE_IT_ONLY_WHEN_WEBRTC_EXPOSES_DESCRIPTOR = msg({
 	message:

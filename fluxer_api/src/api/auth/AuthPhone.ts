@@ -1,15 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {phonePrefixBanCache} from '@app/api/auth/PhonePrefixBanCache';
+import {requiresInboundPhoneVerification} from '@app/api/auth/PhoneVerificationPrefixPolicy';
+import {PhoneVerificationReuseStore} from '@app/api/auth/PhoneVerificationReuseStore';
+import type {IssuedChallenge} from '@app/api/auth/services/InboundSmsChallengeService';
+import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {PHONE_ADD_CLEARABLE_FLAGS, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
 import {InvalidPhoneNumberError} from '@fluxer/errors/src/domains/auth/InvalidPhoneNumberError';
 import {InvalidPhoneVerificationCodeError} from '@fluxer/errors/src/domains/auth/InvalidPhoneVerificationCodeError';
 import {PhoneAlreadyUsedError} from '@fluxer/errors/src/domains/auth/PhoneAlreadyUsedError';
+import {PhoneCountryNotSupportedError} from '@fluxer/errors/src/domains/auth/PhoneCountryNotSupportedError';
+import {PhoneInboundVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneInboundVerificationRequiredError';
+import {PhoneLookupUnavailableError} from '@fluxer/errors/src/domains/auth/PhoneLookupUnavailableError';
+import {PhoneNumberNotInServiceError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotInServiceError';
+import {PhoneNumberNotMobileError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotMobileError';
+import {PhoneVerificationNeedsReviewError} from '@fluxer/errors/src/domains/auth/PhoneVerificationNeedsReviewError';
 import {PhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneVerificationRequiredError';
 import {SmsVerificationUnavailableError} from '@fluxer/errors/src/domains/auth/SmsVerificationUnavailableError';
 import {CaptchaVerificationRequiredError} from '@fluxer/errors/src/domains/core/CaptchaVerificationRequiredError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {PHONE_E164_REGEX} from '@fluxer/schema/src/primitives/UserValidators';
 import type {RateLimitResult, RateLimitScope} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {PhoneLookupResult} from '@pkgs/sms/src/PhoneLookupTypes';
@@ -21,17 +39,6 @@ import {
 } from '@pkgs/sms/src/PhoneLookupTypes';
 import {SmsVerificationStartError, TwilioVerificationRateLimitError} from '@pkgs/sms/src/providers/TwilioSmsProvider';
 import type {SmsVerificationStartOptions} from '@pkgs/sms/src/SmsVerificationTypes';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPartialResponse, mapUserToPrivateResponse} from '../user/UserMappers';
-import {phonePrefixBanCache} from './PhonePrefixBanCache';
-import {requiresInboundPhoneVerification} from './PhoneVerificationPrefixPolicy';
-import {PhoneVerificationReuseStore} from './PhoneVerificationReuseStore';
-import type {IssuedChallenge} from './services/InboundSmsChallengeService';
-import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from './services/PhoneLookupRepository';
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -67,15 +74,16 @@ function reuseStoreFor(ctx: ApiContext): PhoneVerificationReuseStore {
 
 export async function startInboundPhoneChallenge(ctx: ApiContext, userId: UserID): Promise<IssuedChallenge> {
 	const {inboundSmsChallenge, users, config} = ctx.services;
-	if (!inboundSmsChallenge) {
-		throw new Error('Inbound SMS challenge flow is not configured on this instance');
-	}
 	const ourNumber = config.sms.inboundChallengeNumber;
-	if (!ourNumber) {
-		throw new Error('Config.sms.inboundChallengeNumber is required for the inbound SMS challenge flow');
+	if (!inboundSmsChallenge || !ourNumber) {
+		Logger.warn(
+			{userId: String(userId)},
+			'Inbound SMS challenge requested but FLUXER_SMS_INBOUND_CHALLENGE_NUMBER is unset',
+		);
+		throw new SmsVerificationUnavailableError();
 	}
 	const user = await users.findUnique(userId);
-	if (!user) throw new Error('User not found');
+	if (!user) throw new UnknownUserError();
 	assertNonBotUser(user);
 	return inboundSmsChallenge.issueChallenge({userId, ourNumber});
 }
@@ -126,7 +134,7 @@ async function validatePhoneOrThrow(ctx: ApiContext, phone: string, options: Val
 				'Phone verification rejected at gate',
 			);
 		}
-		throw new InvalidPhoneNumberError();
+		throw errorForPhoneRejectReason(verdict.rejectReason);
 	}
 	if (verdict.verdict === 'require_inbound') {
 		Logger.info(
@@ -141,7 +149,7 @@ async function validatePhoneOrThrow(ctx: ApiContext, phone: string, options: Val
 		if (options.inboundCapable) {
 			throw new PhoneInboundChallengeRequiredError(verdict.inboundReason);
 		}
-		throw new InvalidPhoneNumberError();
+		throw new PhoneInboundVerificationRequiredError();
 	}
 }
 
@@ -150,7 +158,7 @@ function assertPhoneFormatOrThrow(phone: string): void {
 		throw new InvalidPhoneNumberError();
 	}
 	if (phonePrefixBanCache.isBlocked(phone)) {
-		throw new InvalidPhoneNumberError();
+		throw new PhoneCountryNotSupportedError();
 	}
 }
 
@@ -235,7 +243,7 @@ export async function sendPhoneVerificationCode(
 				await ctx.services.phoneAttemptRisk.record({...riskInput, rejected: false});
 				return await issueInboundChallengeOrThrow(ctx, userId, phone, error.reason);
 			}
-			rejectedAttempt = true;
+			rejectedAttempt = !(error instanceof PhoneLookupUnavailableError);
 			throw error;
 		}
 		const cached = await ctx.services.phoneLookup?.getCachedLookup(phone);
@@ -358,12 +366,6 @@ async function attachVerifiedPhoneToAccount(ctx: ApiContext, userId: UserID, pho
 		reason: 'user_requested',
 		actorUserId: userId,
 	});
-	const userSearchService = getUserSearchService();
-	if (userSearchService && 'updateUser' in userSearchService) {
-		await userSearchService.updateUser(updatedUser).catch((error) => {
-			Logger.error({userId, error}, 'Failed to update user in search index');
-		});
-	}
 	await gateway.dispatchPresence({
 		userId,
 		event: 'USER_UPDATE',
@@ -515,6 +517,25 @@ type PhoneVerdictResult =
 	| {verdict: 'accept'; rejectReason: null}
 	| {verdict: 'reject'; rejectReason: PhoneAttemptRejectReason}
 	| {verdict: 'require_inbound'; inboundReason: PhoneAttemptInboundReason};
+
+export function errorForPhoneRejectReason(reason: PhoneAttemptRejectReason): FluxerError {
+	switch (reason) {
+		case 'invalid_format':
+			return new InvalidPhoneNumberError();
+		case 'banned_prefix':
+			return new PhoneCountryNotSupportedError();
+		case 'lookup_unavailable':
+			return new PhoneLookupUnavailableError();
+		case 'invalid_number':
+			return new PhoneNumberNotInServiceError();
+		case 'line_type_not_mobile':
+		case 'line_type_hard_rejected':
+			return new PhoneNumberNotMobileError();
+		case 'sms_pumping_risk_high':
+		case 'behavioural_risk_blocked':
+			return new PhoneVerificationNeedsReviewError();
+	}
+}
 
 function computePhoneVerdict(lookup: PhoneLookupResult | null, phone: string): PhoneVerdictResult {
 	if (lookup == null) {

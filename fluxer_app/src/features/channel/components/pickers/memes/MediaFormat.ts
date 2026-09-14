@@ -2,9 +2,9 @@
 
 import {formatDuration as formatDurationBase} from '@fluxer/date_utils/src/DateDuration';
 
-export const formatDuration = (seconds: number | null | undefined): string => {
-	if (!seconds || seconds <= 0) return '0:00';
-	return formatDurationBase(seconds);
+export const formatDuration = (seconds: number | null | undefined, locale: string): string => {
+	if (!seconds || seconds <= 0) return formatDurationBase(0, locale);
+	return formatDurationBase(seconds, locale);
 };
 export const getFileExtension = (filename: string, contentType: string): string => {
 	const extension = filename.split('.').pop()?.toUpperCase();

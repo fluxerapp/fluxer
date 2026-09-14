@@ -80,7 +80,7 @@ const UNREAD_BADGES_SECTION_DESCRIPTION_DESCRIPTOR = msg({
 		'Helper text under the unread badges section in the community notification settings modal. The quoted "Default" should match the matching option label.',
 });
 const COMMUNITY_UNREAD_BADGES_LEVEL_ARIA_DESCRIPTOR = msg({
-	message: 'Community unread badges level',
+	message: 'Community unread badge level',
 	comment: 'Accessible label for the unread badges level radio group in the community notification settings modal.',
 });
 const SUPPRESS_EVERYONE_AND_HERE_SWITCH_DESCRIPTOR = msg({
@@ -100,7 +100,7 @@ const REPLY_MENTION_PREFERENCE_SECTION_DESCRIPTOR = msg({
 });
 const REPLY_MENTION_PREFERENCE_SECTION_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'Override how replies to your messages handle the @ mention in this community. "Inherit from account" uses your account-wide setting.',
+		'Override how replies to your messages handle the @mention in this community. "Inherit from account" uses your account-wide setting.',
 	comment:
 		'Helper text under the reply mention preference section in the community notification settings modal. The quoted "Inherit from account" should match the matching option label.',
 });

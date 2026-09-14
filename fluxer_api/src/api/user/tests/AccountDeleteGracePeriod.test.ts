@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {deleteAccount, expectDataExists, fetchUser} from '@app/api/user/tests/UserTestUtils';
 import {DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, loginAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../channel/tests/ChannelTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {deleteAccount, expectDataExists, fetchUser} from './UserTestUtils';
 
 describe('Account Deletion Grace Period', () => {
 	let harness: ApiTestHarness;

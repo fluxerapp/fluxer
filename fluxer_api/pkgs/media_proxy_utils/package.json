@@ -38,7 +38,6 @@
 	},
 	"devDependencies": {
 		"@typescript/native-preview": "catalog:",
-		"vitest": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"vitest": "catalog:"
 	}
 }

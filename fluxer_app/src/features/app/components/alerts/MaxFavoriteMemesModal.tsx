@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Limits} from '@app/features/app/utils/UserLimits';
@@ -11,21 +12,22 @@ import {MAX_FAVORITE_MEMES_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import {GenericErrorModal} from './GenericErrorModal';
 
 const SAVED_MEDIA_LIMIT_REACHED_DESCRIPTOR = msg({
 	message: 'Saved media limit reached',
 	comment: 'Short label in the max favorite memes modal.',
 });
 const YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_THIS_DESCRIPTOR = msg({
-	message: "You're at the cap of {freeItemsText} — your instance admin sets this limit.",
+	message:
+		"You're at the cap of {count, plural, one {# saved media item} other {# saved media items}} — your instance admin sets this limit.",
 	comment:
-		'Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. Limit text is interpolated.',
+		'Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. {count} is the saved media cap.',
 });
 const YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_FOR_DESCRIPTOR = msg({
-	message: "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}.",
+	message:
+		"You're at the free cap of {count, plural, one {# saved media item} other {# saved media items}}. {premiumProductName} bumps you up to {premiumCount, plural, one {# saved media item} other {# saved media items}}.",
 	comment:
-		'Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.',
+		'Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. {count} is the free cap, {premiumCount} the Plutonium cap.',
 });
 const UPGRADE_TO_DESCRIPTOR = msg({
 	message: 'Upgrade to {premiumProductName}',
@@ -42,18 +44,11 @@ export const MaxFavoriteMemesModal = observer(() => {
 	const premiumLimit = Limits.getPremiumValue('max_favorite_memes', MAX_FAVORITE_MEMES_PREMIUM);
 	const maxFavoriteMemes = currentUser?.maxFavoriteMemes ?? premiumLimit;
 	const canUpgradeFavoriteMemes = maxFavoriteMemes < premiumLimit;
-	const freeItemsText = plural(
-		{count: maxFavoriteMemes},
-		{
-			one: '# saved media item',
-			other: '# saved media items',
-		},
-	);
 	if (!showPremium) {
 		return (
 			<GenericErrorModal
 				title={i18n._(SAVED_MEDIA_LIMIT_REACHED_DESCRIPTOR)}
-				message={i18n._(YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_THIS_DESCRIPTOR, {freeItemsText})}
+				message={i18n._(YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_THIS_DESCRIPTOR, {count: maxFavoriteMemes})}
 				data-flx="app.max-favorite-memes-modal.confirm-modal"
 			/>
 		);
@@ -76,17 +71,10 @@ export const MaxFavoriteMemesModal = observer(() => {
 			/>
 		);
 	}
-	const premiumItemsText = plural(
-		{count: premiumLimit},
-		{
-			one: '# saved media item',
-			other: '# saved media items',
-		},
-	);
 	const freeDescription = i18n._(YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_FOR_DESCRIPTOR, {
-		freeItemsText,
+		count: maxFavoriteMemes,
 		premiumProductName: PREMIUM_PRODUCT_NAME,
-		premiumItemsText,
+		premiumCount: premiumLimit,
 	});
 	return (
 		<ConfirmModal

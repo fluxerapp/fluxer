@@ -1,22 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminArchive} from '@app/api/admin/models/AdminArchiveModel';
+import type {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRepository';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {HarvestExpiredError} from '@fluxer/errors/src/domains/moderation/HarvestExpiredError';
 import {HarvestFailedError} from '@fluxer/errors/src/domains/moderation/HarvestFailedError';
 import {HarvestNotReadyError} from '@fluxer/errors/src/domains/moderation/HarvestNotReadyError';
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import type {AdminArchiveResponse, ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms, seconds} from 'itty-time';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import {AdminArchive, type AdminArchiveResponse, type ArchiveSubjectType} from '../models/AdminArchiveModel';
-import type {AdminArchiveRepository} from '../repositories/AdminArchiveRepository';
 
 const ARCHIVE_RETENTION_DAYS = 365;
 const DOWNLOAD_LINK_DAYS = 7;
@@ -129,16 +131,14 @@ export class AdminArchiveService {
 
 	async listArchives(params: ListArchivesParams): Promise<Array<AdminArchiveResponse>> {
 		const {subjectType = 'all', subjectId, requestedBy, limit = 50, includeExpired = false} = params;
-		if (subjectId !== undefined && subjectType === 'all') {
-			throw new Error('subject_type must be specified when subject_id is provided');
-		}
 		if (subjectId !== undefined) {
-			const archives = await this.adminArchiveRepository.listBySubject(
-				subjectType as ArchiveSubjectType,
-				subjectId,
-				limit,
-				includeExpired,
-			);
+			if (subjectType === 'all') {
+				throw InputValidationError.create(
+					'subject_type',
+					'subject_type must name user or guild when subject_id is supplied',
+				);
+			}
+			const archives = await this.adminArchiveRepository.listBySubject(subjectType, subjectId, limit, includeExpired);
 			return archives.map((a) => a.toResponse());
 		}
 		if (requestedBy !== undefined) {
@@ -155,11 +155,7 @@ export class AdminArchiveService {
 				.slice(0, limit)
 				.map((a) => a.toResponse());
 		}
-		const archives = await this.adminArchiveRepository.listByType(
-			subjectType as ArchiveSubjectType,
-			limit,
-			includeExpired,
-		);
+		const archives = await this.adminArchiveRepository.listByType(subjectType, limit, includeExpired);
 		return archives.map((a) => a.toResponse());
 	}
 
@@ -175,11 +171,11 @@ export class AdminArchiveService {
 		if (!archive) {
 			throw new UnknownHarvestError();
 		}
-		if (!archive.completedAt || !archive.storageKey) {
-			throw new HarvestNotReadyError();
-		}
 		if (archive.failedAt) {
 			throw new HarvestFailedError();
+		}
+		if (!archive.completedAt || !archive.storageKey) {
+			throw new HarvestNotReadyError();
 		}
 		if (archive.expiresAt && archive.expiresAt < new Date()) {
 			throw new HarvestExpiredError();

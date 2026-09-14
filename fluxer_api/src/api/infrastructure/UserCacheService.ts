@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {
 	DELETED_USER_DISCRIMINATOR,
 	DELETED_USER_GLOBAL_NAME,
 	DELETED_USER_USERNAME,
 } from '@fluxer/constants/src/UserConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import type {IUsersServiceClient} from './UsersServiceClient';
 
 type UserPartialResponseTimingRecorder = <T>(name: string, operation: () => Promise<T>) => Promise<T>;
 

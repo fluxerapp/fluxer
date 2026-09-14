@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {$getComposerLineNodes} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {
 	$createComposerCommandNode,
 	$isComposerCommandNode,
@@ -32,6 +33,7 @@ import {
 	parseSlashSlotStateSegment,
 	parseSlashSlotStateSegmentId,
 } from '@app/features/lexical/composer/SlashSlotPersistence';
+import {isSpecialMentionKind} from '@app/features/lexical/composer/specialMentions';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {
 	$createLineBreakNode,
@@ -92,9 +94,7 @@ function isValidSegmentWire(segment: MentionSegment): boolean {
 		}
 		case 'special':
 			return (
-				(segment.id === 'everyone' || segment.id === 'here') &&
-				segment.actualText === `@${segment.id}` &&
-				segment.displayText === segment.actualText
+				isSpecialMentionKind(segment.id) && segment.actualText === segment.id && segment.displayText === segment.id
 			);
 	}
 }
@@ -228,7 +228,7 @@ export function $projectComposer(): ComposerProjection {
 			wire += block.getTextContent();
 			continue;
 		}
-		for (const child of block.getChildren()) {
+		for (const child of $getComposerLineNodes(block)) {
 			if ($isLineBreakNode(child)) {
 				display += '\n';
 				wire += '\n';

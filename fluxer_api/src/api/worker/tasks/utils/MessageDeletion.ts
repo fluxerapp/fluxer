@@ -1,16 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type ChannelID, createChannelID, type MessageID} from '../../../BrandedTypes';
-import type {IChannelRepository} from '../../../channel/IChannelRepository';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-
-export function chunkArray<T>(items: Array<T>, chunkSize: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	for (let i = 0; i < items.length; i += chunkSize) {
-		chunks.push(items.slice(i, i + chunkSize));
-	}
-	return chunks;
-}
+import {type ChannelID, createChannelID, type MessageID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 
 interface BulkDeleteDispatcherDeps {
 	channelRepository: IChannelRepository;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MatureEmojiWrapper} from '@app/features/app/components/shared/MatureEmojiWrapper';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {requestDeleteMessage} from '@app/features/channel/components/MessageActionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
@@ -27,8 +26,8 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo, useState} from 'react';
 
-const FAILED_TO_LOAD_DESCRIPTOR = msg({
-	message: '(failed to load)',
+const EMOJI_FAILED_TO_LOAD_DESCRIPTOR = msg({
+	message: '{emojiName} (failed to load)',
 	comment: 'Error message in the messaging emoji renderer.',
 });
 
@@ -211,29 +210,13 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 		},
 		[buildEmojiForSubtext, emojiData.id, emojiRecord, isCustomEmoji, channelId, messageId, i18n],
 	);
-	const messageMatureContentEmojis =
-		messageId && channelId ? Messages.getMessage(channelId, messageId)?.nsfwEmojis : null;
-	const isMature =
-		isCustomEmoji && (!!emojiRecord?.nsfw || (emojiData.id != null && !!messageMatureContentEmojis?.has(emojiData.id)));
-	const wrapWithMatureContent = (element: React.ReactElement<{className?: string}>) =>
-		isMature ? (
-			<MatureEmojiWrapper
-				mature={true}
-				channelId={channelId}
-				data-flx="messaging.markdown.renderers.emoji-renderer.wrap-with-mature-content.mature-emoji-wrapper"
-			>
-				{element}
-			</MatureEmojiWrapper>
-		) : (
-			element
-		);
 	const hasFailed = emojiUrl != null && failedUrl === emojiUrl;
 	const renderEmojiElement = (contextMenu: boolean, dataFlx: string) =>
 		emojiUrl ? (
 			<img
 				draggable={false}
 				className={className}
-				alt={hasFailed ? `${emojiData.name} ${i18n._(FAILED_TO_LOAD_DESCRIPTOR)}` : emojiData.name}
+				alt={hasFailed ? i18n._(EMOJI_FAILED_TO_LOAD_DESCRIPTOR, {emojiName: emojiData.name}) : emojiData.name}
 				src={emojiUrl}
 				style={hasFailed ? FAILED_EMOJI_STYLE : undefined}
 				data-message-id={messageId}
@@ -271,9 +254,7 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 					tabIndex={0}
 					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.button.open-bottom-sheet--2"
 				>
-					{wrapWithMatureContent(
-						renderEmojiElement(false, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji'),
-					)}
+					{renderEmojiElement(false, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji')}
 				</span>
 				<EmojiInfoBottomSheet
 					isOpen={bottomSheetState.isOpen}
@@ -293,9 +274,7 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 			emojiForSubtext={tooltipData.emojiForSubtext}
 			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji-with-tooltip--2"
 		>
-			{wrapWithMatureContent(
-				renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji.context-menu'),
-			)}
+			{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji.context-menu')}
 		</EmojiWithTooltip>
 	);
 });

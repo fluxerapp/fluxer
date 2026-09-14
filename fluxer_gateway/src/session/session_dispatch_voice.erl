@@ -39,7 +39,7 @@ buffer_reaction(Data, State) ->
         end,
     State#{reaction_buffer => NewBuffer, reaction_buffer_timer => NewTimer}.
 
--spec maybe_cancel_buffered_reaction(event(), map(), session_state()) ->
+-spec maybe_cancel_buffered_reaction(event(), map() | list(), session_state()) ->
     {cancelled, session_state()} | not_applicable.
 maybe_cancel_buffered_reaction(message_reaction_remove, Data, State) ->
     BufferQ = ensure_queue(maps:get(reaction_buffer, State, [])),

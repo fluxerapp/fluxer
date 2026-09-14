@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {Webhook} from '../models/Webhook';
+import type {Webhook} from '@app/api/models/Webhook';
 
 export abstract class IWebhookRepository {
 	abstract findUnique(webhookId: bigint): Promise<Webhook | null>;

@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createApplicationID, createUserID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {ACCESS_TOKEN_TTL_SECONDS} from '../OAuth2TokenConstants';
-import {generateOAuthTokenSecret} from '../OAuthTokenSecret';
-import {OAuth2TokenRepository} from '../repositories/OAuth2TokenRepository';
+import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
+import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
+import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {
 	authorizeOAuth2,
 	createOAuth2TestSetup,
@@ -15,7 +11,11 @@ import {
 	getOAuth2UserInfo,
 	introspectOAuth2Token,
 	refreshOAuth2Token,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Token Expiration', () => {
 	let harness: ApiTestHarness;

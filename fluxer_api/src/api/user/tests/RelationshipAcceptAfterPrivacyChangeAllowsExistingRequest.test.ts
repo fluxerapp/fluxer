@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	acceptFriendRequest,
 	assertRelationshipId,
 	assertRelationshipType,
 	listRelationships,
 	sendFriendRequest,
-} from './RelationshipTestUtils';
+} from '@app/api/user/tests/RelationshipTestUtils';
+import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('RelationshipAcceptAfterPrivacyChangeAllowsExistingRequest', () => {
 	let harness: ApiTestHarness;

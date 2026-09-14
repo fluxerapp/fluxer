@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createMessageLocalSendRateLimitSnapshot,
 	createMessageQueuePayloadRouteSnapshot,
@@ -19,7 +18,8 @@ import {
 	transitionMessageQueuePayloadRouteSnapshot,
 	transitionMessageQueueRequestOutcomeSnapshot,
 	transitionMessageQueueSendExecutionSnapshot,
-} from './MessageQueueStateMachine';
+} from '@app/features/messaging/state/MessageQueueStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function localLimiter(overrides: Partial<MessageLocalSendRateLimitInput> = {}): MessageLocalSendRateLimitInput {
 	return {

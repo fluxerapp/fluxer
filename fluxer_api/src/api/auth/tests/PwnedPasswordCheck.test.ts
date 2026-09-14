@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import {isPasswordPwned, resetPwnedPasswordCacheForTesting} from '@app/api/auth/AuthPassword';
+import {server} from '@app/api/test/msw/server';
 import {delay, HttpResponse, http} from 'msw';
 import {beforeEach, describe, expect, test} from 'vitest';
-import type {ApiContext} from '../../ApiContext';
-import {server} from '../../test/msw/server';
-import {isPasswordPwned, resetPwnedPasswordCacheForTesting} from '../AuthPassword';
 
 const PWNED_PASSWORD = 'fluxer-prefix-592';
 const SAFE_PASSWORD_SAME_PREFIX = 'fluxer-prefix-837';

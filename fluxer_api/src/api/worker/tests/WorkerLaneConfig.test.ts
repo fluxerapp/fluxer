@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	resolveCronSchedulerEnabled,
 	resolveWorkerLanes,
 	validateLaneCompleteness,
 	WORKER_LANES,
-} from '../WorkerLaneConfig';
+} from '@app/api/worker/WorkerLaneConfig';
+import {describe, expect, it} from 'vitest';
 
 describe('WorkerLaneConfig', () => {
 	it('returns all lanes in all_lanes mode', () => {

@@ -42,7 +42,6 @@ fn default_test_nats_url() -> String {
 }
 
 fn run_generators(for_typecheck: bool) -> Result<()> {
-    task_run(&["pnpm", "--filter", "@fluxer/config", "generate"])?;
     task_run(&["pnpm", "--filter", "@fluxer/schema", "generate"])?;
     if for_typecheck {
         return task_run(&["pnpm", "--filter", "@fluxer/i18n", "generate:types"]);
@@ -106,6 +105,12 @@ pub fn run_build() -> Result<i32> {
     run_generators(false)?;
     task_run(&["pnpm", "--filter", "fluxer_app", "build"])?;
     build_desktop(false)?;
+    Ok(0)
+}
+
+pub fn run_lint() -> Result<i32> {
+    task_run(&["pnpm", "exec", "biome", "ci"])?;
+    task_run(&["pnpm", "exec", "eslint", ".", "--max-warnings", "0"])?;
     Ok(0)
 }
 

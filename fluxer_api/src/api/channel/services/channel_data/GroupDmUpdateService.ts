@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {createMessageID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
@@ -7,18 +19,6 @@ import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessE
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {CannotTransferOwnershipToBotError} from '@fluxer/errors/src/domains/guild/CannotTransferOwnershipToBotError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {ChannelID, UserID} from '../../../BrandedTypes';
-import {createMessageID} from '../../../BrandedTypes';
-import type {ChannelRow} from '../../../database/types/ChannelTypes';
-import type {AvatarService} from '../../../infrastructure/AvatarService';
-import {contentModerationService} from '../../../infrastructure/ContentModerationService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {MessagePersistenceService} from '../message/MessagePersistenceService';
-import type {ChannelUtilsService} from './ChannelUtilsService';
 
 export class GroupDmUpdateService {
 	constructor(

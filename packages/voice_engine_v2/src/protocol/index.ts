@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type {VoiceEngineV2Command, VoiceEngineV2CommandType} from './commands';
-export {getVoiceEngineV2CommandResourceKey, getVoiceEngineV2CommandTypeResourceKey} from './commands';
+export type {VoiceEngineV2Command, VoiceEngineV2CommandType} from '@fluxer/voice_engine_v2/src/protocol/commands';
+export {
+	getVoiceEngineV2CommandResourceKey,
+	getVoiceEngineV2CommandTypeResourceKey,
+} from '@fluxer/voice_engine_v2/src/protocol/commands';
 export type {
 	VoiceEngineV2Event,
 	VoiceEngineV2SourceLifecycleRemovedEvent,
 	VoiceEngineV2SourceLifecycleTransitionedEvent,
 	VoiceEngineV2SourceLifecycleTransitionKind,
-} from './events';
+} from '@fluxer/voice_engine_v2/src/protocol/events';
 export type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2AudioControlsPatch,
@@ -88,4 +91,4 @@ export type {
 	VoiceEngineV2VoiceStats,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from './types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';

@@ -17,6 +17,7 @@ pub type RelayBodyChunks =
 pub enum RelayBody {
     Spooled(tokio::fs::File),
     Streamed(RelayBodyChunks),
+    Buffered(Bytes),
 }
 
 pub struct RelayPutOptions {

@@ -92,6 +92,7 @@ let cachedReportHardwareAccelerationDisabled: boolean | undefined;
 let cachedReportAv1OptIn: boolean | undefined;
 let cachedReportHevcOptIn: boolean | undefined;
 const runtimeEncodeFailureCodecs = new Set<VideoCodec>();
+const observedSoftwareEncodeCodecs = new Set<VideoCodec>();
 
 interface RawProbeResult {
 	caps: CodecCapabilities;
@@ -223,6 +224,11 @@ function getEffectiveScreenShareCapabilities(caps: CodecCapabilities): CodecCapa
 	};
 }
 
+function hasPublishPathNativeHardwareEncoder(codec: VideoCodec): boolean {
+	if (!hasNativeHardwareEncoder(codec)) return false;
+	return getNativeHardwareEncoderCapabilitiesSync()?.backend !== 'videotoolbox';
+}
+
 function buildReport(): CodecCapabilityReport {
 	const {caps, probedSuccessfully} = probeRawCapabilities();
 	const context = buildScreenShareCodecPolicyContext();
@@ -231,18 +237,19 @@ function buildReport(): CodecCapabilityReport {
 	const linuxNvidiaWebRtcEncodeLimited =
 		context.platform === 'linux' && gpuReport?.gpuFamily?.startsWith('nvidia-') === true;
 	const hardwareAccelerationDisabled = isDesktopHardwareAccelerationDisabled();
-	const openH264Status = getOpenH264StatusSync();
-	const openH264Active = openH264Status?.enabled === true && openH264Status.downloaded === true;
 	function hwAccel(codec: keyof CodecCapabilities): HardwareEncodeAnswer {
 		if (hardwareAccelerationDisabled) {
 			return 'software';
 		}
-		if (hasNativeHardwareEncoder(codec)) {
+		if (observedSoftwareEncodeCodecs.has(codec)) {
+			return 'software';
+		}
+		if (hasPublishPathNativeHardwareEncoder(codec)) {
 			return 'hardware';
 		}
 		const gpu = gpuReport ? gpuReport[codec] : 'unknown';
-		if (codec === 'h264' && openH264Active && gpu === 'unknown') {
-			return 'software';
+		if (codec === 'h264') {
+			return gpu === 'hardware' ? 'hardware' : 'software';
 		}
 		return gpu;
 	}
@@ -481,6 +488,14 @@ export function markScreenShareCodecEncodeRuntimeFailure(codec: VideoCodec, reas
 	return true;
 }
 
+export function markScreenShareCodecSoftwareEncodeObserved(codec: VideoCodec): boolean {
+	if (observedSoftwareEncodeCodecs.has(codec)) return false;
+	observedSoftwareEncodeCodecs.add(codec);
+	cachedReport = null;
+	logger.warn('Treating this codec as software-encoded for the rest of the session', {codec});
+	return true;
+}
+
 export type VideoPublishCodecDenial = 'sender-cannot-encode' | 'policy' | 'runtime-failed';
 
 export interface VideoPublishCodecPolicy {
@@ -654,6 +669,7 @@ export function resetCachedCodecCapabilities(): void {
 	cachedReportAv1OptIn = undefined;
 	cachedReportHevcOptIn = undefined;
 	runtimeEncodeFailureCodecs.clear();
+	observedSoftwareEncodeCodecs.clear();
 	resetNativeHardwareEncoderCapabilities();
 	resetOpenH264Status();
 }

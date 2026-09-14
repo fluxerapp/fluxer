@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	COMFY_MESSAGE_GROUP_SPACING_DEFAULT,
 	COMPACT_MESSAGE_GROUP_SPACING_DEFAULT,
@@ -8,7 +7,8 @@ import {
 	getMessageGroupSpacingForDisplayMode,
 	getMessageGroupSpacingPatch,
 	migrateLegacyMessageGroupSpacing,
-} from './MessageGroupSpacing';
+} from '@app/features/accessibility/state/MessageGroupSpacing';
+import {describe, expect, it} from 'vitest';
 
 describe('MessageGroupSpacing', () => {
 	it('keeps explicit defaults per display mode', () => {

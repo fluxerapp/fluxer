@@ -30,6 +30,23 @@ describe('VoiceParticipantTile stability', () => {
 		expect(css).not.toMatch(/transform:\s*scale/);
 		expect(css).not.toContain('will-change: transform');
 	});
+	it('drives the tile avatar animation from the speaking signal so animated avatars play without hover', () => {
+		const tileSource = sourceFile('VoiceParticipantTile.tsx');
+		const avatarElement = tileSource.match(/<Avatar\b[\s\S]*?\/>/)?.[0];
+		expect(avatarElement).toBeDefined();
+		const forceAnimateExpression = avatarElement?.match(/forceAnimate=\{([^}]+)\}/)?.[1]?.trim();
+		expect(forceAnimateExpression).toBeDefined();
+		const animateFlagSource =
+			forceAnimateExpression === 'isActuallySpeaking'
+				? 'isActuallySpeaking'
+				: tileSource.match(new RegExp(`const ${forceAnimateExpression} = ([^;]+);`))?.[1];
+		expect(animateFlagSource).toContain('isActuallySpeaking');
+		expect(animateFlagSource).toContain('!Accessibility.useReducedMotion');
+		expect(tileSource).toContain("import Accessibility from '@app/features/accessibility/state/Accessibility';");
+		const afterAvatarElement = tileSource.slice(tileSource.indexOf(avatarElement!) + avatarElement!.length);
+		const mediaNodeDeps = afterAvatarElement.match(/\}, \[([\s\S]*?)\]\);/)?.[1] ?? '';
+		expect(mediaNodeDeps).toContain(forceAnimateExpression);
+	});
 	it('keeps the fullscreen call surface mounted while the media room catches up to a channel switch', () => {
 		const voiceCallViewSource = sourceFile('VoiceCallView.tsx');
 		const guildChannelViewSource = appSourceFile('features/channel/components/channel_view/GuildChannelView.tsx');

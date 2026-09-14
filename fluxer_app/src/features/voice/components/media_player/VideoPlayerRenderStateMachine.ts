@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type VideoPlayerRenderState = 'poster' | 'playing' | 'paused' | 'ended' | 'error';
 export type VideoPlayerPlayPauseIndicator = 'play' | 'pause';
@@ -127,7 +127,7 @@ export const videoPlayerRenderStateMachine = setup({
 export type VideoPlayerRenderSnapshot = SnapshotFrom<typeof videoPlayerRenderStateMachine>;
 
 export function createVideoPlayerRenderSnapshot(): VideoPlayerRenderSnapshot {
-	return getInitialSnapshot(videoPlayerRenderStateMachine);
+	return initialTransition(videoPlayerRenderStateMachine)[0];
 }
 
 export function transitionVideoPlayerRenderSnapshot(

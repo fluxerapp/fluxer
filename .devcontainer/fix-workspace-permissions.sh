@@ -28,8 +28,7 @@ for path in \
 	/home/vscode/.cargo/registry \
 	/home/vscode/.cargo/git \
 	/home/vscode/.local \
-	/home/vscode/.local/share/pnpm/store \
-	/workspaces/fluxer/fluxer_docs/.venv; do
+	/home/vscode/.local/share/pnpm/store; do
 	repair_tree "$path"
 done
 

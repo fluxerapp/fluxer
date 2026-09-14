@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
+import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {incrementDmMentionCounts} from '@app/api/channel/services/message/ReadStateHelpers';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {CallData, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import {AUTOMATIC_VOICE_REGION_ID, ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {IncomingCallFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -9,21 +24,6 @@ import {NoActiveCallError} from '@fluxer/errors/src/domains/channel/NoActiveCall
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import {type ChannelID, createMessageID, type MessageID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {CallData, IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IVoiceRoomStore} from '../../infrastructure/IVoiceRoomStore';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {ReadStateService} from '../../read_state/ReadStateService';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {VoiceAccessContext, VoiceAvailabilityService} from '../../voice/VoiceAvailabilityService';
-import {mapChannelToResponse} from '../ChannelMappers';
-import type {IChannelRepository} from '../IChannelRepository';
-import {DMPermissionValidator} from './DMPermissionValidator';
-import {buildBroadcastMessageData} from './message/MessageGatewayDispatch';
-import {incrementDmMentionCounts} from './message/ReadStateHelpers';
 
 export class CallService {
 	private dmPermissionValidator: DMPermissionValidator;
@@ -205,7 +205,6 @@ export class CallService {
 				participant_ids: new Set(allRecipients),
 				ended_timestamp: null,
 			},
-			nsfw_emojis: null,
 			has_reaction: false,
 			version: 1,
 		});

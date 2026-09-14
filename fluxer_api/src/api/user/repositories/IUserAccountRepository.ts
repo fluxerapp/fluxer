@@ -1,13 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
+
+export interface UserDeletionScheduleUpdate {
+	pending_deletion_at: Date | null;
+	flags?: bigint;
+	deletion_reason_code?: number | null;
+	deletion_public_reason?: string | null;
+	deletion_audit_log_reason?: string | null;
+	temp_banned_until?: Date | null;
+	first_refund_at?: Date | null;
+}
 
 export interface IUserAccountRepository {
 	create(data: UserRow): Promise<User>;
 	upsert(data: UserRow, oldData?: UserRow | null): Promise<User>;
 	patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User>;
+	updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User>;
+	startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null>;
+	anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User>;
+	completeDeletion(user: User): Promise<void>;
 	findUnique(userId: UserID): Promise<User | null>;
 	findUniqueAssert(userId: UserID): Promise<User>;
 	findByUsernameDiscriminator(username: string, discriminator: number): Promise<User | null>;

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
+import {Logger} from '@app/api/Logger';
+import {addGiftCodeDuration, type GiftCode} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import type {UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {PremiumStateReconciliationQueueService} from '../../infrastructure/PremiumStateReconciliationQueueService';
-import {Logger} from '../../Logger';
-import {addGiftCodeDuration, type GiftCode} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import type {StripePremiumService} from './StripePremiumService';
 
 interface RemainingGiftEntitlement {
 	hasLifetimeGift: boolean;

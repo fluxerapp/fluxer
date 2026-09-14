@@ -18,10 +18,12 @@ export function normaliseAudioBitrateBps(value: number | null | undefined): numb
 export function buildMicrophonePublishOptions(
 	channelBitrate: number | null | undefined,
 	processingMode: VoiceProcessingMode,
+	stereoCapture = false,
 ): TrackPublishOptions | undefined {
 	const maxBitrate = normaliseAudioBitrateBps(channelBitrate);
 	if (!maxBitrate) return undefined;
 	const studioMode = processingMode === 'studio';
+	const bitrateAllowsStereo = maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS;
 	return {
 		audioPreset: {
 			maxBitrate,
@@ -31,9 +33,11 @@ export function buildMicrophonePublishOptions(
 		...(studioMode
 			? {
 					dtx: false,
-					forceStereo: maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS,
+					forceStereo: bitrateAllowsStereo,
 				}
-			: {}),
+			: stereoCapture && !bitrateAllowsStereo
+				? {forceStereo: false}
+				: {}),
 	};
 }
 

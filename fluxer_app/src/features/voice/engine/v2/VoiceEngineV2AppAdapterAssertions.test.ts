@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	assertBoolean,
 	assertDisconnectReason,
@@ -15,7 +14,8 @@ import {
 	isMutedOrDeafened,
 	isPermissionDeniedError,
 	isReadyToRepublishTrack,
-} from './VoiceEngineV2AppAdapterAssertions';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
+import {describe, expect, it} from 'vitest';
 
 describe('VoiceEngineV2AppAdapterAssertions', () => {
 	describe('assertNonEmptyString', () => {

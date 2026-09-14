@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {createDownloadsStorageService} from '@app/api/infrastructure/StorageServiceFactory';
 import {describe, expect, it} from 'vitest';
-import {Config} from '../Config';
-import {createDownloadsStorageService} from './StorageServiceFactory';
 
 describe('createDownloadsStorageService', () => {
 	it('returns null when no downloads override is configured', () => {

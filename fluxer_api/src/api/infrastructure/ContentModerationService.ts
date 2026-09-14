@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {Logger} from '@app/api/Logger';
+import {fileShaCache} from '@app/api/middleware/FileShaCache';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
+import {extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
-import {Logger} from '../Logger';
-import {fileShaCache} from '../middleware/FileShaCache';
-import {phraseBlocklistCache} from '../middleware/PhraseBlocklistCache';
-import {urlBlocklistCache} from '../middleware/UrlBlocklistCache';
-import {extractUrlCandidates} from '../utils/UrlNormalizer';
 
 export interface ModerationContext {
 	userId: bigint | null;

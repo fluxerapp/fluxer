@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	buildScreenShareOptions,
 	capScreenShareEncodingToDimensions,
@@ -11,7 +10,8 @@ import {
 	STREAMING_MODE_PRESETS,
 	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
 	type SupportedScreenShareFrameRate,
-} from './ScreenShareOptions';
+} from '@app/features/voice/utils/ScreenShareOptions';
+import {describe, expect, it} from 'vitest';
 
 const RESOLUTIONS = ['low_240p', 'low_480p', 'medium', 'high', 'ultra', 'source'] as const;
 

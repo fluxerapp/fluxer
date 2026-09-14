@@ -8,10 +8,10 @@ use crate::constants;
 use crate::secret::{SecretBytes, SecretString};
 use parse::{
     EnvMap, decode_upload_relay_secret, default_native_transform_concurrency, non_empty,
-    parse_bool, parse_bucket_style, parse_f32, parse_ip_list_env, parse_mode_env,
-    parse_storage_backend, parse_u16, parse_u64, parse_usize, validate_read_endpoint,
+    parse_bool, parse_bucket_style, parse_f32, parse_mode_env, parse_storage_backend, parse_u16,
+    parse_u64, parse_usize, validate_read_endpoint,
 };
-use std::{env, net::IpAddr, path::PathBuf};
+use std::{env, path::PathBuf};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -70,7 +70,6 @@ pub struct MediaServingConfig {
 pub struct UploadRelayConfig {
     pub(crate) secret: SecretBytes,
     pub max_body_bytes: u64,
-    pub token_ttl_secs: u64,
     pub s3_timeout_ms: u64,
     pub buffered_retry_max_bytes: u64,
     pub buffered_retry_total_bytes: u64,
@@ -85,6 +84,7 @@ pub struct Config {
     pub bind_host: String,
     pub port: u16,
     pub(crate) secret_key: SecretString,
+    pub public_endpoint: Option<String>,
     pub mode: DeploymentMode,
     pub read_only: bool,
     pub shutdown_grace_ms: u64,
@@ -92,9 +92,6 @@ pub struct Config {
     pub storage: StorageConfig,
     pub media: MediaServingConfig,
     pub upload_relay: UploadRelayConfig,
-    pub bunny_ip_gate_enabled: bool,
-    pub bunny_ip_gate_trusted_proxies: Vec<IpAddr>,
-    pub bunny_ip_gate_refresh_secs: u64,
 }
 
 impl Config {
@@ -121,6 +118,10 @@ impl Config {
             !secret_key.is_empty(),
             "FLUXER_MEDIA_PROXY_SECRET_KEY is required"
         );
+        let (public_base_domain, public_port) =
+            fluxer_common::config::resolve_public_domain_and_port(|name| {
+                env.get(name).map(ToOwned::to_owned)
+            })?;
 
         Ok(Self {
             node_env: env.get("NODE_ENV").unwrap_or("development").to_owned(),
@@ -134,6 +135,15 @@ impl Config {
                 8080,
             )?,
             secret_key,
+            public_endpoint: non_empty(env.get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")).map(
+                |endpoint| {
+                    fluxer_common::config::normalize_public_endpoint(
+                        endpoint.trim_end_matches('/'),
+                        &public_base_domain,
+                        public_port,
+                    )
+                },
+            ),
             mode,
             read_only: parse_bool(
                 "FLUXER_MEDIA_PROXY_READ_ONLY",
@@ -157,22 +167,6 @@ impl Config {
             storage: StorageConfig::load(&env)?,
             media: MediaServingConfig::load(&env)?,
             upload_relay: UploadRelayConfig::load(&env, mode)?,
-            bunny_ip_gate_enabled: parse_bool(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED"),
-            )?
-            .unwrap_or(false),
-            bunny_ip_gate_trusted_proxies: parse_ip_list_env(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES"),
-            )?,
-            bunny_ip_gate_refresh_secs: parse_u64(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS"),
-                3_600,
-                60,
-                24 * 60 * 60,
-            )?,
         })
     }
 }
@@ -326,25 +320,30 @@ impl MediaServingConfig {
 
 impl UploadRelayConfig {
     fn load(env: &EnvMap, mode: DeploymentMode) -> anyhow::Result<Self> {
+        let max_body_bytes = parse_u64(
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES",
+            env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES"),
+            500 * 1024 * 1024,
+            1,
+            5 * 1024 * 1024 * 1024,
+        )?;
+        let spool_max_total_bytes = parse_u64(
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
+            env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"),
+            8 * 1024 * 1024 * 1024,
+            0,
+            256 * 1024 * 1024 * 1024,
+        )?;
+        anyhow::ensure!(
+            max_body_bytes <= spool_max_total_bytes,
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES must not exceed FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"
+        );
         Ok(Self {
             secret: decode_upload_relay_secret(
                 env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64"),
                 mode,
             )?,
-            max_body_bytes: parse_u64(
-                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES",
-                env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES"),
-                500 * 1024 * 1024,
-                1,
-                5 * 1024 * 1024 * 1024,
-            )?,
-            token_ttl_secs: parse_u64(
-                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS",
-                env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS"),
-                3_600,
-                1,
-                7 * 24 * 60 * 60,
-            )?,
+            max_body_bytes,
             s3_timeout_ms: parse_u64(
                 "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS",
                 env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS"),
@@ -377,13 +376,7 @@ impl UploadRelayConfig {
                 64 * 1024,
                 64 * 1024 * 1024,
             )?,
-            spool_max_total_bytes: parse_u64(
-                "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES",
-                env.get("FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES"),
-                8 * 1024 * 1024 * 1024,
-                0,
-                256 * 1024 * 1024 * 1024,
-            )?,
+            spool_max_total_bytes,
         })
     }
 }

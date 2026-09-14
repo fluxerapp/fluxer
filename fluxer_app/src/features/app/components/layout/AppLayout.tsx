@@ -8,6 +8,7 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import AccountManager from '@app/features/auth/state/AccountManager';
 import Authentication from '@app/features/auth/state/Authentication';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import {MediaDeviceStartupPreloadManager} from '@app/features/voice/components/MediaDeviceStartupPreloadManager';
 import {NewDeviceMonitoringManager} from '@app/features/voice/components/NewDeviceMonitoringManager';
 import {VoiceReconnectionManager} from '@app/features/voice/components/VoiceReconnectionManager';
 import {clsx} from 'clsx';
@@ -35,6 +36,9 @@ export const AppLayout = observer(({children}: {children: React.ReactNode}) => {
 	return (
 		<>
 			{isAuthenticated && socket && <VoiceReconnectionManager data-flx="app.app-layout.voice-reconnection-manager" />}
+			{isAuthenticated && (
+				<MediaDeviceStartupPreloadManager data-flx="app.app-layout.media-device-startup-preload-manager" />
+			)}
 			{isAuthenticated && <NewDeviceMonitoringManager data-flx="app.app-layout.new-device-monitoring-manager" />}
 			{isAuthenticated && <RequiredActionGate data-flx="app.app-layout.required-action-gate" />}
 			<div

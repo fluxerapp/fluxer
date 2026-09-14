@@ -21,7 +21,16 @@ use axum::response::Response;
 use bytes::Bytes;
 use http::{HeaderMap, HeaderName, HeaderValue, Method, StatusCode, header};
 use parking_lot::Mutex;
-use std::{collections::HashMap, path::Path, sync::Arc, time::Duration};
+use std::{
+    collections::HashMap,
+    path::Path,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    time::Duration,
+};
+use tokio::io::AsyncReadExt as _;
 
 pub(crate) type CapturedRequest = (Method, http::Uri, HeaderMap, Bytes);
 
@@ -31,6 +40,7 @@ fn test_config(root: &Path) -> Config {
         bind_host: "127.0.0.1".to_owned(),
         port: 0,
         secret_key: SecretString::new("secret".to_owned()),
+        public_endpoint: None,
         mode: DeploymentMode::Mp,
         read_only: false,
         shutdown_grace_ms: 0,
@@ -67,7 +77,6 @@ fn test_config(root: &Path) -> Config {
         upload_relay: UploadRelayConfig {
             secret: SecretBytes::new(Vec::new()),
             max_body_bytes: 1024,
-            token_ttl_secs: 3600,
             s3_timeout_ms: 1000,
             buffered_retry_max_bytes: 0,
             buffered_retry_total_bytes: 0,
@@ -75,9 +84,6 @@ fn test_config(root: &Path) -> Config {
             spool_chunk_bytes: 64 * 1024,
             spool_max_total_bytes: 1 << 30,
         },
-        bunny_ip_gate_enabled: false,
-        bunny_ip_gate_trusted_proxies: Vec::new(),
-        bunny_ip_gate_refresh_secs: 3_600,
     }
 }
 
@@ -289,4 +295,31 @@ fn fake_s3_response(
         );
     }
     response
+}
+
+pub(crate) async fn connection_dropping_front(
+    origin: &str,
+    dropped: usize,
+) -> (String, Arc<AtomicUsize>) {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let endpoint = format!("http://{}", listener.local_addr().unwrap());
+    let origin = origin.trim_start_matches("http://").to_owned();
+    let accepted = Arc::new(AtomicUsize::new(0));
+    let counter = Arc::clone(&accepted);
+    tokio::spawn(async move {
+        while let Ok((mut client, _)) = listener.accept().await {
+            let index = counter.fetch_add(1, Ordering::SeqCst);
+            let origin = origin.clone();
+            tokio::spawn(async move {
+                if index < dropped {
+                    let mut request = [0u8; 4096];
+                    let _ = client.read(&mut request).await;
+                    return;
+                }
+                let mut upstream = tokio::net::TcpStream::connect(origin).await.unwrap();
+                let _ = tokio::io::copy_bidirectional(&mut client, &mut upstream).await;
+            });
+        }
+    });
+    (endpoint, accepted)
 }

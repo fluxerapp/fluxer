@@ -105,8 +105,9 @@ import {
 	FOCUS_THIS_PERSON_DESCRIPTOR,
 	MENTION_DESCRIPTOR,
 	MESSAGE_DESCRIPTOR,
-	MUTE_DESCRIPTOR,
 	MUTE_DEVICE_DESCRIPTOR,
+	MUTE_MICROPHONE_DESCRIPTOR,
+	MUTE_PLAYBACK_DESCRIPTOR,
 	POP_OUT_CAMERA_DESCRIPTOR,
 	POP_OUT_USER_DESCRIPTOR,
 	PREVIEW_CAMERA_DESCRIPTOR,
@@ -128,6 +129,7 @@ import type {
 	MenuSliderType,
 	MenuSubmenuItemType,
 } from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
 import {ChangeNicknameModal} from '@app/features/user/components/modals/ChangeNicknameModal';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
@@ -246,6 +248,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 	const isBlocked = relationshipType === RelationshipTypes.BLOCKED;
 	const hasActiveDirectCall = hasActiveDirectCallWithUser(user.id);
 	const canMuteMembers = guildId ? Permission.can(Permissions.MUTE_MEMBERS, {guildId}) : false;
+	const canDeafenMembers = guildId ? Permission.can(Permissions.DEAFEN_MEMBERS, {guildId}) : false;
 	const canMoveMembers = guildId ? Permission.can(Permissions.MOVE_MEMBERS, {guildId}) : false;
 	const canKickMembers = guildId ? Permission.can(Permissions.KICK_MEMBERS, {guildId}) : false;
 	const canBanMembers = guildId ? Permission.can(Permissions.BAN_MEMBERS, {guildId}) : false;
@@ -410,7 +413,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					MediaEngine.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
-			onFormat: (value: number) => `${Math.round(value)}%`,
+			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 			factoryDefaultValue: 100,
 		});
 		const buildConnectionVolumeSlider = (targetConnectionId: string): MenuSliderType => ({
@@ -424,7 +427,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					MediaEngine.applyLocalAudioPreferencesForUser(user.id);
 				}
 			},
-			onFormat: (value: number) => `${Math.round(value)}%`,
+			onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 			factoryDefaultValue: 100,
 		});
 		const buildVolumeControls = (targetConnectionId?: string): Array<MenuSliderType> => {
@@ -448,7 +451,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 					minValue: 0,
 					maxValue: 200,
 					onChange: (value: number) => EntranceSoundListenerPrefs.setVolume(user.id, value),
-					onFormat: (value: number) => `${Math.round(value)}%`,
+					onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 					factoryDefaultValue: 100,
 				},
 			],
@@ -770,7 +773,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 							data-flx="ui.action-menu.items.voice-participant-menu-data.groups.self-mute-icon--2"
 						/>
 					),
-					label: i18n._(MUTE_DESCRIPTOR),
+					label: i18n._(MUTE_MICROPHONE_DESCRIPTOR),
 					checked: isSelfMuted,
 					onChange: () => {
 						VoiceStateCommands.toggleSelfMute(null);
@@ -888,7 +891,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 							data-flx="ui.action-menu.items.voice-participant-menu-data.menu-assembly.local-mute-icon"
 						/>
 					),
-					label: i18n._(MUTE_DESCRIPTOR),
+					label: i18n._(MUTE_PLAYBACK_DESCRIPTOR),
 					checked: isParticipantLocallyMuted,
 					onChange: (checked: boolean) => {
 						ParticipantVolume.setLocalMute(user.id, checked);
@@ -1181,49 +1184,53 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		}
 		if (guildId && member) {
 			const nextModerationActions: Array<MenuItemType | MenuCheckboxType> = [];
-			if (canMuteMembers && (isCurrentUser || canManageTarget(user.id))) {
+			if ((canMuteMembers || canDeafenMembers) && (isCurrentUser || canManageTarget(user.id))) {
 				const isGuildMuted = memberMute;
 				const isGuildDeafened = memberDeaf;
-				nextModerationActions.push({
-					icon: (
-						<GuildMuteIcon
-							size={16}
-							data-flx="ui.action-menu.items.voice-participant-menu-data.groups.guild-mute-icon"
-						/>
-					),
-					label: i18n._(VOICE_COMMUNITY_MUTE_DESCRIPTOR),
-					checked: isGuildMuted,
-					onChange: async (checked: boolean) => {
-						try {
-							await GuildMemberCommands.update(guildId, user.id, {mute: checked});
-							if (checked) SoundCommands.playSound(SoundType.Mute);
-							else SoundCommands.playSound(SoundType.Unmute);
-						} catch (error) {
-							logger.error('Failed to update community mute:', error);
-							showVoiceMemberModerationFailedModal(error, VOICE_COMMUNITY_MUTE_DESCRIPTOR);
-						}
-					},
-				});
-				nextModerationActions.push({
-					icon: (
-						<GuildDeafenIcon
-							size={16}
-							data-flx="ui.action-menu.items.voice-participant-menu-data.groups.guild-deafen-icon"
-						/>
-					),
-					label: i18n._(VOICE_COMMUNITY_DEAFEN_DESCRIPTOR),
-					checked: isGuildDeafened,
-					onChange: async (checked: boolean) => {
-						try {
-							await GuildMemberCommands.update(guildId, user.id, {deaf: checked});
-							if (checked) SoundCommands.playSound(SoundType.Deaf);
-							else SoundCommands.playSound(SoundType.Undeaf);
-						} catch (error) {
-							logger.error('Failed to update community deafen:', error);
-							showVoiceMemberModerationFailedModal(error, VOICE_COMMUNITY_DEAFEN_DESCRIPTOR);
-						}
-					},
-				});
+				if (canMuteMembers) {
+					nextModerationActions.push({
+						icon: (
+							<GuildMuteIcon
+								size={16}
+								data-flx="ui.action-menu.items.voice-participant-menu-data.groups.guild-mute-icon"
+							/>
+						),
+						label: i18n._(VOICE_COMMUNITY_MUTE_DESCRIPTOR),
+						checked: isGuildMuted,
+						onChange: async (checked: boolean) => {
+							try {
+								await GuildMemberCommands.update(guildId, user.id, {mute: checked});
+								if (checked) SoundCommands.playSound(SoundType.Mute);
+								else SoundCommands.playSound(SoundType.Unmute);
+							} catch (error) {
+								logger.error('Failed to update community mute:', error);
+								showVoiceMemberModerationFailedModal(error, VOICE_COMMUNITY_MUTE_DESCRIPTOR);
+							}
+						},
+					});
+				}
+				if (canDeafenMembers) {
+					nextModerationActions.push({
+						icon: (
+							<GuildDeafenIcon
+								size={16}
+								data-flx="ui.action-menu.items.voice-participant-menu-data.groups.guild-deafen-icon"
+							/>
+						),
+						label: i18n._(VOICE_COMMUNITY_DEAFEN_DESCRIPTOR),
+						checked: isGuildDeafened,
+						onChange: async (checked: boolean) => {
+							try {
+								await GuildMemberCommands.update(guildId, user.id, {deaf: checked});
+								if (checked) SoundCommands.playSound(SoundType.Deaf);
+								else SoundCommands.playSound(SoundType.Undeaf);
+							} catch (error) {
+								logger.error('Failed to update community deafen:', error);
+								showVoiceMemberModerationFailedModal(error, VOICE_COMMUNITY_DEAFEN_DESCRIPTOR);
+							}
+						},
+					});
+				}
 			}
 			if (!isCurrentUser && canMoveMembers && canManageTarget(user.id) && !isParentGroupedItem) {
 				nextModerationActions.push({
@@ -1396,6 +1403,7 @@ export function useVoiceParticipantMenuData(options: VoiceParticipantMenuDataOpt
 		canMention,
 		focusedChannelId,
 		canMuteMembers,
+		canDeafenMembers,
 		canMoveMembers,
 		canManageTarget,
 		canKickTarget,

@@ -8,110 +8,84 @@ import {getErrorMessage} from '@fluxer/errors/src/i18n/ErrorI18n';
 import type {BaseHonoEnv} from '@fluxer/hono_types/src/HonoTypes';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {Hono} from 'hono';
-import {describe, expect, it, vi} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
 
-interface ErrorResponse {
-	code: string;
-	message: string;
-}
+afterEach(() => {
+	vi.restoreAllMocks();
+});
 
-function createApp(): Hono<BaseHonoEnv> {
+function createApp(error: Error, requestLocale?: string, requestId?: string): Hono<BaseHonoEnv> {
 	const app = new Hono<BaseHonoEnv>();
 	app.onError(AppErrorHandler);
+	app.use('*', async (ctx, next) => {
+		ctx.set('requestLocale', requestLocale);
+		ctx.set('requestId', requestId);
+		await next();
+	});
+	app.get('/test', () => {
+		throw error;
+	});
 	return app;
 }
 
 describe('AppErrorHandler i18n fallbacks', () => {
-	it('localizes unexpected errors from Accept-Language when middleware locale is missing', async () => {
-		const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-		const error = new Error('boom');
-		const app = createApp();
-		app.get('/test', () => {
-			throw error;
-		});
-		try {
-			const response = await app.request('/test', {
-				headers: {
-					'accept-language': 'fr-CA,fr;q=0.9,en;q=0.8',
-				},
-			});
-			expect(response.status).toBe(500);
-			const body = (await response.json()) as ErrorResponse;
-			expect(body.code).toBe(APIErrorCodes.INTERNAL_SERVER_ERROR);
-			expect(body.message).toBe('Erreur interne du serveur.');
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-			expect(errorLoggerSpy).toHaveBeenCalledWith(
-				{err: error, status: 500, method: 'GET', path: '/test', requestId: undefined},
-				'Unhandled error occurred',
-			);
-		} finally {
-			errorLoggerSpy.mockRestore();
+	it.each([
+		{
+			name: 'uses Accept-Language when middleware locale is missing',
+			acceptLanguage: 'fr-CA,fr;q=0.9,en;q=0.8',
+			requestLocale: undefined,
+			requestId: undefined,
+			message: 'Erreur interne du serveur.',
+		},
+		{
+			name: 'prefers the middleware locale over Accept-Language',
+			acceptLanguage: 'fr',
+			requestLocale: Locales.EN_US,
+			requestId: 'request-123',
+			message: 'Internal server error.',
+		},
+		{
+			name: 'defaults to English without a locale or language header',
+			acceptLanguage: undefined,
+			requestLocale: undefined,
+			requestId: undefined,
+			message: 'Internal server error.',
+		},
+	])('$name and logs unexpected errors with request metadata', async ({
+		acceptLanguage,
+		requestLocale,
+		requestId,
+		message,
+	}) => {
+		const errorLogger = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+		const error = new Error('Private internal failure');
+		const headers = new Headers();
+		if (acceptLanguage !== undefined) {
+			headers.set('accept-language', acceptLanguage);
 		}
+		const response = await createApp(error, requestLocale, requestId).request('/test', {headers});
+		expect(response.status).toBe(500);
+		expect(await response.json()).toEqual({code: APIErrorCodes.INTERNAL_SERVER_ERROR, message});
+		expect(errorLogger).toHaveBeenCalledExactlyOnceWith(
+			{err: error, status: 500, method: 'GET', path: '/test', requestId},
+			'Unhandled error occurred',
+		);
 	});
-	it('localizes FluxerError responses without errorI18nService in context', async () => {
-		const app = createApp();
-		app.get('/test', () => {
-			throw new BadRequestError({code: APIErrorCodes.BAD_REQUEST});
-		});
-		const response = await app.request('/test', {
-			headers: {
-				'accept-language': 'fr',
-			},
-		});
+
+	it('localizes FluxerError responses without an i18n service and logs them as expected rejections', async () => {
+		const errorLogger = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+		const debugLogger = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
+		const error = new BadRequestError({code: APIErrorCodes.BAD_REQUEST});
+		const response = await createApp(error).request('/test', {headers: {'accept-language': 'fr'}});
 		expect(response.status).toBe(400);
-		const body = (await response.json()) as ErrorResponse;
-		expect(body.code).toBe(APIErrorCodes.BAD_REQUEST);
-		expect(body.message).toBe(getErrorMessage('http.bad_request', 'fr'));
-	});
-	it('prefers requestLocale context over Accept-Language header', async () => {
-		const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-		const error = new Error('boom');
-		const app = createApp();
-		app.use('*', async (ctx, next) => {
-			ctx.set('requestLocale', Locales.EN_US);
-			await next();
+		expect(await response.json()).toEqual({
+			code: APIErrorCodes.BAD_REQUEST,
+			message: getErrorMessage('http.bad_request', 'fr'),
 		});
-		app.get('/test', () => {
-			throw error;
-		});
-		try {
-			const response = await app.request('/test', {
-				headers: {
-					'accept-language': 'fr',
-				},
-			});
-			expect(response.status).toBe(500);
-			const body = (await response.json()) as ErrorResponse;
-			expect(body.code).toBe(APIErrorCodes.INTERNAL_SERVER_ERROR);
-			expect(body.message).toBe('Internal server error.');
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-			expect(errorLoggerSpy).toHaveBeenCalledWith(
-				{err: error, status: 500, method: 'GET', path: '/test', requestId: undefined},
-				'Unhandled error occurred',
-			);
-		} finally {
-			errorLoggerSpy.mockRestore();
-		}
-	});
-	it('returns 500 for unexpected errors with request metadata', async () => {
-		const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-		const error = new Error('boom');
-		const app = createApp();
-		app.get('/test', () => {
-			throw error;
-		});
-		try {
-			const response = await app.request('/test');
-			expect(response.status).toBe(500);
-			const body = (await response.json()) as ErrorResponse;
-			expect(body.code).toBe(APIErrorCodes.INTERNAL_SERVER_ERROR);
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-			expect(errorLoggerSpy).toHaveBeenCalledWith(
-				{err: error, status: 500, method: 'GET', path: '/test', requestId: undefined},
-				'Unhandled error occurred',
-			);
-		} finally {
-			errorLoggerSpy.mockRestore();
-		}
+		expect(errorLogger).not.toHaveBeenCalled();
+		expect(debugLogger).toHaveBeenCalledExactlyOnceWith(
+			{err: error, status: 400, method: 'GET', path: '/test', requestId: undefined},
+			'Request rejected',
+		);
 	});
 });

@@ -16,7 +16,7 @@
 		"mfa_level": 0,
 		"nsfw_level": 0,
 		"nsfw": false,
-		"content_warning_level": null,
+		"content_warning_level": 0,
 		"content_warning_text": null,
 		"explicit_content_filter": 2,
 		"default_message_notifications": 1,
@@ -36,7 +36,7 @@
 				"parent_id": null,
 				"nsfw": false,
 				"nsfw_override": null,
-				"content_warning_level": null,
+				"content_warning_level": 0,
 				"content_warning_text": null,
 				"url": null
 			}
@@ -51,7 +51,6 @@
 				"hoist": false,
 				"mentionable": false
 			}
-		],
-		"description": "Guild used by admin parity fixtures."
+		]
 	}
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {VOICE_MEDIA_GRAPH_ENTRY_LIMIT, type VoiceMediaGraphSnapshot} from './VoiceMediaGraph';
+import {VOICE_MEDIA_GRAPH_ENTRY_LIMIT, type VoiceMediaGraphSnapshot} from '@app/features/voice/engine/VoiceMediaGraph';
 
 function collectSubscriptionViolations(snapshot: VoiceMediaGraphSnapshot, violations: Array<string>): void {
 	let visited = 0;

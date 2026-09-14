@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	asVoiceTrackSource,
+	type VoiceTrackSource,
+	VoiceTrackSource as VoiceTrackSourceValue,
+} from '@app/features/voice/engine/VoiceTrackSource';
 import type {LocalParticipant, LocalTrack, LocalTrackPublication} from 'livekit-client';
-import {asVoiceTrackSource, type VoiceTrackSource, VoiceTrackSource as VoiceTrackSourceValue} from './VoiceTrackSource';
 
 interface LocalParticipantWithAudioPublications extends Pick<LocalParticipant, 'audioTrackPublications'> {}
 interface LocalParticipantWithTrackPublications extends Pick<LocalParticipant, 'trackPublications'> {}

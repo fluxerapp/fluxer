@@ -1040,6 +1040,7 @@ export default class LocalParticipant extends Participant {
 							transceiver: trackTransceiver,
 							codec: 'opus',
 							maxbr: encodings[0]?.maxBitrate ? encodings[0].maxBitrate / 1000 : 0,
+							stereo: isStereo,
 						});
 					}
 				} else if (track.codec) {

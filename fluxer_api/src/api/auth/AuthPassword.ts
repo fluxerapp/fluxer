@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {createMfaTicket, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '@app/api/utils/PasswordUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {FLUXER_USER_AGENT} from '@fluxer/constants/src/Core';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {ForgotPasswordRequest, ResetPasswordRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createMfaTicket, createPasswordResetToken} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {EXTERNAL_RESPONSE_LIMITS} from '../utils/ExternalResponseLimits';
-import * as FetchUtils from '../utils/FetchUtils';
-import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '../utils/PasswordUtils';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
 
 const PWNED_PASSWORDS_TIMEOUT_MS = ms('5 seconds');
 const PWNED_PASSWORD_CACHE_MAX_PREFIXES = 128;
@@ -132,6 +132,7 @@ export async function isPasswordPwned(_ctx: ApiContext, password: string): Promi
 			signal: AbortSignal.timeout(PWNED_PASSWORDS_TIMEOUT_MS),
 		});
 		if (!response.ok) {
+			FetchUtils.discardResponseBody(response.body, response.status);
 			Logger.warn(
 				{
 					status: response.status,
@@ -183,33 +184,25 @@ export async function forgotPassword(ctx: ApiContext, {data, request}: ForgotPas
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
 		clientIpHeaderName: config.proxy.client_ip_header,
 	});
-	const ipLimitConfig = {maxAttempts: 20, windowMs: ms('30 minutes')};
-	const emailLimitConfig = {maxAttempts: 5, windowMs: ms('30 minutes')};
 	const ipRateLimit = await rateLimit.checkLimit({
 		identifier: `password_reset:ip:${getSameIpDecisionKey(clientIp) ?? clientIp}`,
-		...ipLimitConfig,
+		maxAttempts: 20,
+		windowMs: ms('30 minutes'),
 	});
 	const emailRateLimit = await rateLimit.checkLimit({
 		identifier: `password_reset:email:${data.email.toLowerCase()}`,
-		...emailLimitConfig,
+		maxAttempts: 5,
+		windowMs: ms('30 minutes'),
 	});
-	const exceeded = !ipRateLimit.allowed
-		? {result: ipRateLimit, config: ipLimitConfig}
-		: !emailRateLimit.allowed
-			? {result: emailRateLimit, config: emailLimitConfig}
-			: null;
-	if (exceeded) {
-		const retryAfter =
-			exceeded.result.retryAfter ?? Math.max(0, Math.ceil((exceeded.result.resetTime.getTime() - Date.now()) / 1000));
-		throw new RateLimitError({
-			retryAfter,
-			limit: exceeded.result.limit,
-			resetTime: exceeded.result.resetTime,
-		});
+	if (!ipRateLimit.allowed) {
+		throw createRateLimitError(ipRateLimit);
+	}
+	if (!emailRateLimit.allowed) {
+		throw createRateLimitError(emailRateLimit);
 	}
 	const hasValidDns = await emailDnsValidation.hasValidDnsRecords(data.email);
 	if (!hasValidDns) {
-		throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 	}
 	const user = await users.findByEmail(data.email);
 	if (!user) {
@@ -235,7 +228,11 @@ export async function validateResetToken(ctx: ApiContext, token: string): Promis
 	if (!user) {
 		return false;
 	}
-	if (user.flags & UserFlags.DELETED) {
+	if (
+		user.flags & UserFlags.DELETED ||
+		!user.email ||
+		user.email.trim().toLowerCase() !== tokenData.email.trim().toLowerCase()
+	) {
 		return false;
 	}
 	return true;
@@ -255,7 +252,11 @@ export async function resetPassword(
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	if (user.flags & UserFlags.DELETED) {
+	if (
+		user.flags & UserFlags.DELETED ||
+		!user.email ||
+		user.email.trim().toLowerCase() !== tokenData.email.trim().toLowerCase()
+	) {
 		throw InputValidationError.fromCode('token', ValidationErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
 	}
 	await AuthUtility.handleBanStatus(ctx, user);

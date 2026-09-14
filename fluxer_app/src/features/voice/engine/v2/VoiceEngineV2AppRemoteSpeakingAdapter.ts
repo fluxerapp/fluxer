@@ -17,6 +17,11 @@ import {
 import {getSharedVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import {getRemoteSpeakingThresholdRms} from '@app/features/voice/engine/VoiceSpeakingThreshold';
 import {VoiceTrackKind, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {
+	assertNonEmptyString,
+	assertNonNegativeFinite,
+	assertObjectLike,
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import {
 	clearRemoteVoicePlaybackBoost,
@@ -24,7 +29,6 @@ import {
 } from '@app/features/voice/state/RemoteVoicePlaybackBoost';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import type {Participant, RemoteAudioTrack, RemoteTrack, RemoteTrackPublication, Room} from 'livekit-client';
-import {assertNonEmptyString, assertNonNegativeFinite, assertObjectLike} from './VoiceEngineV2AppAdapterAssertions';
 
 const logger = new Logger('VoiceEngineV2AppRemoteSpeakingAdapter');
 export const REMOTE_SPEAKING_ANALYSER_INTERVAL_MS = 50;

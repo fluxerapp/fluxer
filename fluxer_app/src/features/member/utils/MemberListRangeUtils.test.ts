@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	areMemberListRangesCovered,
 	areMemberListRangesEqual,
@@ -10,7 +8,9 @@ import {
 	buildMemberListRangeWindow,
 	buildMemberListRenderWindow,
 	normalizeMemberListRanges,
-} from './MemberListRangeUtils';
+} from '@app/features/member/utils/MemberListRangeUtils';
+import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('MemberListRangeUtils', () => {
 	it('compares ranges after normalization and page splitting', () => {

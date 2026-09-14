@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {createGuildID, createRoleID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {addGiftCodeDuration} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
-import type {UserID} from '../../BrandedTypes';
-import {createGuildID, createRoleID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {GiftCodeDurationType} from '../../database/types/PaymentTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../../guild/services/GuildService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import {addGiftCodeDuration} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
 
 export class StripePremiumService {
 	constructor(

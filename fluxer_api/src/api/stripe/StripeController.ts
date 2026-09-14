@@ -1,12 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {mapGiftCodeToMetadataResponse, mapGiftCodeToResponse} from '@app/api/stripe/StripeModel';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {Validator} from '@app/api/Validator';
 import {StripeWebhookNotAvailableError} from '@fluxer/errors/src/domains/payment/StripeWebhookNotAvailableError';
 import {StripeWebhookSignatureInvalidError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureInvalidError';
 import {StripeWebhookSignatureMissingError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureMissingError';
 import {GiftCodeParam, SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	CreateCheckoutSessionRequest,
-	GiftCodeMetadataResponse,
+	GiftCodeMetadataListResponse,
 	GiftCodeResponse,
 } from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import {
@@ -18,20 +28,10 @@ import {
 	PriceIdsResponse,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
+	SwitchToListPriceResponse,
 	UrlResponse,
 	WebhookReceivedResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
-import {z} from 'zod';
-import {Config} from '../Config';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {CaptchaMiddleware} from '../middleware/CaptchaMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {lookupGeoip} from '../utils/IpUtils';
-import {Validator} from '../Validator';
-import {mapGiftCodeToMetadataResponse, mapGiftCodeToResponse} from './StripeModel';
 
 async function getPurchaseGeoipCountryCode(request: Request): Promise<string | null> {
 	const geoip = await lookupGeoip(request);
@@ -91,7 +91,6 @@ export function StripeController(app: HonoApp) {
 				country_code,
 				client_geoip_country_code,
 				eu_withdrawal_waiver_accepted,
-				pricing_mode,
 				payment_method,
 				is_business,
 			} = ctx.req.valid('json');
@@ -104,7 +103,6 @@ export function StripeController(app: HonoApp) {
 				clientGeoipCountryCode: client_geoip_country_code,
 				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				pricingMode: pricing_mode,
 				paymentMethod: payment_method,
 				isBusiness: is_business,
 			});
@@ -128,14 +126,8 @@ export function StripeController(app: HonoApp) {
 		}),
 		Validator('json', CreateCheckoutSessionRequest),
 		async (ctx) => {
-			const {
-				price_id,
-				country_code,
-				client_geoip_country_code,
-				eu_withdrawal_waiver_accepted,
-				pricing_mode,
-				is_business,
-			} = ctx.req.valid('json');
+			const {price_id, country_code, client_geoip_country_code, eu_withdrawal_waiver_accepted, is_business} =
+				ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const checkoutUrl = await ctx.get('stripeService').createLocalizedCardPreapprovalSession({
 				userId,
@@ -144,7 +136,6 @@ export function StripeController(app: HonoApp) {
 				clientGeoipCountryCode: client_geoip_country_code,
 				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				pricingMode: pricing_mode,
 				isBusiness: is_business,
 			});
 			return ctx.json({url: checkoutUrl});
@@ -186,14 +177,8 @@ export function StripeController(app: HonoApp) {
 		}),
 		Validator('json', CreateCheckoutSessionRequest),
 		async (ctx) => {
-			const {
-				price_id,
-				country_code,
-				client_geoip_country_code,
-				eu_withdrawal_waiver_accepted,
-				pricing_mode,
-				is_business,
-			} = ctx.req.valid('json');
+			const {price_id, country_code, client_geoip_country_code, eu_withdrawal_waiver_accepted, is_business} =
+				ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const checkoutUrl = await ctx.get('stripeService').createCheckoutSession({
 				userId,
@@ -203,7 +188,6 @@ export function StripeController(app: HonoApp) {
 				clientGeoipCountryCode: client_geoip_country_code,
 				purchaseGeoipCountryCode: await getPurchaseGeoipCountryCode(ctx.req.raw),
 				euWithdrawalWaiverAccepted: eu_withdrawal_waiver_accepted,
-				pricingMode: pricing_mode,
 				isBusiness: is_business,
 			});
 			return ctx.json({url: checkoutUrl});
@@ -237,9 +221,9 @@ export function StripeController(app: HonoApp) {
 	app.post(
 		'/gifts/:code/redeem',
 		RateLimitMiddleware(RateLimitConfigs.GIFT_CODE_REDEEM),
-		CaptchaMiddleware,
 		LoginRequired,
 		DefaultUserOnly,
+		CaptchaMiddleware,
 		OpenAPI({
 			operationId: 'redeem_gift_code',
 			summary: 'Redeem gift code',
@@ -266,7 +250,7 @@ export function StripeController(app: HonoApp) {
 			operationId: 'list_user_gifts',
 			summary: 'List user gifts',
 			description: 'Lists all gift codes created by the authenticated user.',
-			responseSchema: z.array(GiftCodeMetadataResponse),
+			responseSchema: GiftCodeMetadataListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: 'Users',
@@ -300,8 +284,9 @@ export function StripeController(app: HonoApp) {
 			tags: 'Premium',
 		}),
 		async (ctx) => {
-			const {country_code, pricing_mode} = ctx.req.valid('query');
-			const priceIds = await ctx.get('stripeService').getPriceIds(country_code, pricing_mode);
+			const {country_code} = ctx.req.valid('query');
+			const geoipCountryCode = await getPurchaseGeoipCountryCode(ctx.req.raw);
+			const priceIds = await ctx.get('stripeService').getPriceIds(geoipCountryCode ?? country_code);
 			return ctx.json(priceIds);
 		},
 	);
@@ -492,6 +477,27 @@ export function StripeController(app: HonoApp) {
 			const {billing_cycle, effective_at} = ctx.req.valid('json');
 			await ctx.get('stripeService').changeSubscriptionBillingCycle(userId, billing_cycle, effective_at);
 			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/premium/switch-to-list-price',
+		RateLimitMiddleware(RateLimitConfigs.STRIPE_SUBSCRIPTION_CHANGE),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'switch_subscription_to_list_price',
+			summary: 'Switch subscription to the current list price',
+			description:
+				"Moves the authenticated user's grandfathered premium subscription down to the current list price for the same currency and billing cycle, effective at the end of the current billing period. The target price is resolved on the server and the switch is refused unless it lowers the amount charged.",
+			responseSchema: SwitchToListPriceResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: 'Premium',
+		}),
+		async (ctx) => {
+			const userId = ctx.get('user').id;
+			const result = await ctx.get('stripeService').switchSubscriptionToCurrentListPrice(userId);
+			return ctx.json(result);
 		},
 	);
 	app.post(

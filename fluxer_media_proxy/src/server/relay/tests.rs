@@ -7,7 +7,7 @@ use crate::{
     config::Config,
     secret::SecretBytes,
     server::{
-        routes::relay::{relay_cors, relay_put},
+        routes::relay::{relay_cors, relay_error, relay_put},
         state::AppState,
     },
     upload_relay::{
@@ -16,7 +16,7 @@ use crate::{
     },
 };
 use axum::{
-    body::Body,
+    body::{Body, to_bytes},
     extract::{Path, Query, State},
     http::{HeaderMap, HeaderValue, Method, Request, StatusCode, header},
 };
@@ -24,7 +24,7 @@ use base64::engine::general_purpose::STANDARD;
 use bytes::Bytes;
 use std::{
     collections::HashMap,
-    sync::{Arc, OnceLock},
+    sync::{Arc, OnceLock, atomic::Ordering},
     time::Duration,
 };
 
@@ -278,6 +278,103 @@ fn relay_test_token(key: &str, relay_secret: &[u8]) -> String {
     .unwrap()
 }
 
+#[test]
+fn relay_capability_mismatches_are_forbidden() {
+    for err in [
+        RelayError::WrongBucket,
+        RelayError::KeyMismatch,
+        RelayError::MethodMismatch,
+        RelayError::PartNumberMismatch,
+        RelayError::UploadIdMismatch,
+    ] {
+        assert_eq!(
+            StatusCode::FORBIDDEN,
+            relay_error(err).status(),
+            "{err} must answer 403"
+        );
+    }
+
+    assert_eq!(
+        StatusCode::BAD_REQUEST,
+        relay_error(RelayError::BadQuery).status()
+    );
+    assert_eq!(
+        StatusCode::UNAUTHORIZED,
+        relay_error(RelayError::InvalidToken).status()
+    );
+    assert_eq!(
+        StatusCode::INTERNAL_SERVER_ERROR,
+        relay_error(RelayError::InternalError).status()
+    );
+}
+
+#[tokio::test]
+async fn relay_put_rejects_a_capability_issued_for_another_key() {
+    let tmp = tempfile::tempdir().unwrap();
+    let tmp_root = tmp.path().canonicalize().unwrap();
+    let storage_root = tmp_root.join("storage");
+    let spool_dir = tmp_root.join("spool");
+    tokio::fs::create_dir_all(&spool_dir).await.unwrap();
+    let relay_secret = [7u8; 32];
+    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let token = relay_test_token("guild/a.bin", &relay_secret);
+    let requested_key = "guild/b.bin";
+
+    let response = relay_put(
+        State(test_app_state(cfg)),
+        Path(requested_key.to_owned()),
+        Query(HashMap::from([("t".to_owned(), token)])),
+        HeaderMap::new(),
+        Request::builder()
+            .method(Method::PUT)
+            .body(Body::from(Bytes::from_static(b"not mine to write")))
+            .unwrap(),
+    )
+    .await;
+
+    assert_eq!(StatusCode::FORBIDDEN, response.status());
+    assert!(
+        response
+            .headers()
+            .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+    );
+    assert!(
+        !tokio::fs::try_exists(storage_root.join("uploads").join(requested_key))
+            .await
+            .unwrap_or(false)
+    );
+}
+
+#[tokio::test]
+async fn relay_put_answers_500_when_the_spool_write_fails() {
+    let tmp = tempfile::tempdir().unwrap();
+    let tmp_root = tmp.path().canonicalize().unwrap();
+    let storage_root = tmp_root.join("storage");
+    let spool_dir = tmp_root.join("missing-spool");
+    let relay_secret = [7u8; 32];
+    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let key = "guild/unspoolable.bin";
+    let token = relay_test_token(key, &relay_secret);
+    let request = Request::builder()
+        .method(Method::PUT)
+        .body(Body::from(Bytes::from_static(b"unspoolable")))
+        .unwrap();
+    assert!(request.headers().get(header::CONTENT_LENGTH).is_none());
+
+    let response = relay_put(
+        State(test_app_state(cfg)),
+        Path(key.to_owned()),
+        Query(HashMap::from([("t".to_owned(), token)])),
+        HeaderMap::new(),
+        request,
+    )
+    .await;
+
+    assert_eq!(StatusCode::INTERNAL_SERVER_ERROR, response.status());
+    let body = to_bytes(response.into_body(), 64).await.unwrap();
+    assert_eq!(b"Internal Server Error", body.as_ref());
+}
+
 fn content_length_headers(declared: u64) -> HeaderMap {
     let mut headers = HeaderMap::new();
     headers.insert(
@@ -493,6 +590,118 @@ fn relay_etag_degrades_an_unrepresentable_upstream_value_to_an_empty_header() {
     assert_eq!("", relay_etag("\"broken\ntag\"").to_str().unwrap());
     assert_eq!("W/\"weak\"", relay_etag("W/\"weak\"").to_str().unwrap());
     assert_eq!("\"etag-123\"", relay_etag("\"etag-123\"").to_str().unwrap());
+}
+
+struct DroppedConnectionRelay {
+    status: StatusCode,
+    accepted: usize,
+    stored_puts: Vec<Bytes>,
+    metrics: String,
+}
+
+async fn relay_put_through_a_dropped_connection(
+    body: Bytes,
+    declared_length: Option<u64>,
+    buffered_retry_max_bytes: u64,
+) -> DroppedConnectionRelay {
+    let fake = crate::storage::tests::fake_s3().await;
+    let (endpoint, accepted) =
+        crate::storage::tests::connection_dropping_front(fake.endpoint(), 1).await;
+    let tmp = tempfile::tempdir().unwrap();
+    let relay_secret = [7u8; 32];
+    let mut cfg = fake.config(tmp.path());
+    cfg.storage.s3_endpoint = endpoint;
+    cfg.mode = crate::config::DeploymentMode::Upload;
+    cfg.socket_io_timeout_ms = 30_000;
+    cfg.upload_relay.secret = SecretBytes::new(relay_secret.to_vec());
+    cfg.upload_relay.max_body_bytes = 4096;
+    cfg.upload_relay.buffered_retry_max_bytes = buffered_retry_max_bytes;
+    cfg.upload_relay.buffered_retry_total_bytes = 1 << 20;
+    let key = "guild/dropped.bin";
+    let token = relay_test_token(key, &relay_secret);
+    let app = test_app_state(cfg);
+
+    let response = relay_put(
+        State(Arc::clone(&app)),
+        Path(key.to_owned()),
+        Query(HashMap::from([("t".to_owned(), token)])),
+        declared_length
+            .map(content_length_headers)
+            .unwrap_or_default(),
+        Request::builder()
+            .method(Method::PUT)
+            .body(Body::from(body))
+            .unwrap(),
+    )
+    .await;
+
+    DroppedConnectionRelay {
+        status: response.status(),
+        accepted: accepted.load(Ordering::SeqCst),
+        stored_puts: fake
+            .requests()
+            .into_iter()
+            .filter(|(method, ..)| *method == Method::PUT)
+            .map(|(.., sent)| sent)
+            .collect(),
+        metrics: app.metrics.render(),
+    }
+}
+
+#[tokio::test]
+async fn relay_put_retries_a_buffered_body_after_a_dropped_connection() {
+    let body = Bytes::from_static(b"buffered upload bytes");
+
+    let relay =
+        relay_put_through_a_dropped_connection(body.clone(), Some(body.len() as u64), 4096).await;
+
+    assert_eq!(StatusCode::OK, relay.status);
+    assert_eq!(2, relay.accepted);
+    assert_eq!(vec![body], relay.stored_puts);
+    assert!(
+        relay
+            .metrics
+            .contains("fluxer_media_proxy_relay_upstream_retries_total 1"),
+        "{}",
+        relay.metrics
+    );
+}
+
+#[tokio::test]
+async fn relay_put_retries_a_spooled_body_after_a_dropped_connection() {
+    let body = Bytes::from_static(b"spooled upload bytes");
+
+    let relay = relay_put_through_a_dropped_connection(body.clone(), None, 4096).await;
+
+    assert_eq!(StatusCode::OK, relay.status);
+    assert_eq!(2, relay.accepted);
+    assert_eq!(vec![body], relay.stored_puts);
+    assert!(
+        relay
+            .metrics
+            .contains("fluxer_media_proxy_relay_upstream_retries_total 1"),
+        "{}",
+        relay.metrics
+    );
+}
+
+#[tokio::test]
+async fn relay_put_does_not_retry_a_body_too_large_to_buffer() {
+    let body = Bytes::from_static(b"streamed upload bytes");
+
+    let relay =
+        relay_put_through_a_dropped_connection(body.clone(), Some(body.len() as u64), 4).await;
+
+    assert_eq!(StatusCode::BAD_GATEWAY, relay.status);
+    assert_eq!(1, relay.accepted);
+    assert!(relay.stored_puts.is_empty());
+    assert!(
+        relay
+            .metrics
+            .contains("fluxer_media_proxy_relay_upstream_retries_total 0"),
+        "{}",
+        relay.metrics
+    );
 }
 
 #[tokio::test]

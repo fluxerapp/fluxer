@@ -46,7 +46,7 @@ const ATTACHMENT_DESCRIPTOR = msg({
 		'Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.',
 });
 const ATTACHMENTS_DESCRIPTOR = msg({
-	message: '{length} attachments',
+	message: '{length, plural, one {# attachment} other {# attachments}}',
 	comment: 'Screen-reader fragment listing multiple attachments on a message. length is the count.',
 });
 const STICKER_DESCRIPTOR = msg({
@@ -55,7 +55,7 @@ const STICKER_DESCRIPTOR = msg({
 		'Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.',
 });
 const STICKERS_DESCRIPTOR = msg({
-	message: '{length} stickers',
+	message: '{length, plural, one {# sticker} other {# stickers}}',
 	comment: 'Screen-reader fragment listing multiple stickers on a message. length is the count.',
 });
 const EMBED_DESCRIPTOR = msg({
@@ -64,7 +64,7 @@ const EMBED_DESCRIPTOR = msg({
 		'Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.',
 });
 const EMBEDS_DESCRIPTOR = msg({
-	message: '{length} embeds',
+	message: '{length, plural, one {# embed} other {# embeds}}',
 	comment: 'Screen-reader fragment listing multiple embeds on a message. length is the count.',
 });
 const NO_TEXT_CONTENT_DESCRIPTOR = msg({

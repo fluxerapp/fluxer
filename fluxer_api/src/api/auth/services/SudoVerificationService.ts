@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import {deriveSudoMethods, userHasMfa} from '@app/api/auth/services/SudoMethods';
+import {getSudoModeService} from '@app/api/auth/services/SudoModeService';
+import {SUDO_MODE_HEADER} from '@app/api/middleware/SudoModeMiddleware';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {type SudoModeMethods, SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
+import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
 import type {Context} from 'hono';
-import * as AuthMfa from '../../auth/AuthMfa';
-import * as AuthPassword from '../../auth/AuthPassword';
-import {SUDO_MODE_HEADER} from '../../middleware/SudoModeMiddleware';
-import type {User} from '../../models/User';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {setSudoCookie} from '../../utils/SudoCookieUtils';
-import {getSudoModeService} from './SudoModeService';
 
 export interface SudoVerificationBody {
 	password?: string;
@@ -24,13 +23,6 @@ export interface SudoVerificationBody {
 
 type SudoVerificationMethod = 'password' | 'mfa' | 'sudo_token';
 
-export function userHasMfa(user: {authenticatorTypes?: Set<number> | null}): boolean {
-	return (
-		(user.authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false) ||
-		(user.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false)
-	);
-}
-
 export function hasNoVerifiableCredential(
 	user: {passwordHash: string | null; isBot: boolean},
 	hasMfa: boolean,
@@ -39,17 +31,6 @@ export function hasNoVerifiableCredential(
 		return false;
 	}
 	return user.passwordHash === null;
-}
-
-export function deriveSudoMethods(user: {
-	totpSecret?: string | null;
-	authenticatorTypes?: Set<number> | null;
-}): SudoModeMethods {
-	const authenticatorTypes = user.authenticatorTypes ?? null;
-	return {
-		totp: (user.totpSecret ?? null) !== null && (authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false),
-		webauthn: authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false,
-	};
 }
 
 export interface SudoVerificationResult {
@@ -127,10 +108,6 @@ function setSudoTokenHeader(
 	const tokenToSet = result.sudoToken ?? ctx.req.header(SUDO_MODE_HEADER);
 	if (tokenToSet) {
 		ctx.header(SUDO_MODE_HEADER, tokenToSet);
-		const user = ctx.get('user');
-		if (user) {
-			setSudoCookie(ctx, tokenToSet, user.id.toString());
-		}
 	}
 }
 

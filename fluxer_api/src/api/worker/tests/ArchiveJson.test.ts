@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createArchiveJsonBuffer, stringifyArchiveJson} from '@app/api/worker/utils/ArchiveJson';
 import {describe, expect, test} from 'vitest';
-import {createArchiveJsonBuffer, stringifyArchiveJson} from '../utils/ArchiveJson';
 
 describe('ArchiveJson', () => {
 	test('serializes non-ASCII text as JSON escapes while preserving parsed values', () => {

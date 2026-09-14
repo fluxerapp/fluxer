@@ -15,7 +15,10 @@ import type {
 } from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {i18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 
+const TOO_MANY_REQUESTS_DESCRIPTOR = msg({message: 'Too many requests. Try again later.'});
 const log = new Logger('RestClient');
 const RETRY_BACKOFF_BASE_MS = 1000;
 const RETRY_BACKOFF_CAP_MS = 30_000;
@@ -83,6 +86,8 @@ interface OnlineWaiter {
 	signal: AbortSignal | undefined;
 	onAbort: () => void;
 }
+
+const strippedAuthorizationOrigins = new Set<string>();
 
 const onlineWaiters = new Set<OnlineWaiter>();
 let onlineListenerActive = false;
@@ -165,6 +170,10 @@ export class RestClient {
 	installHooks(hooks: RestClientHooks): void {
 		this.state.prepare = hooks.prepareRequest;
 		this.state.globalIntercept = hooks.intercept;
+	}
+
+	carriesAuthorization(): boolean {
+		return !isOffOrigin(resolveUrl(this.state, '/', undefined));
 	}
 
 	dispatch<T = unknown>(method: HttpMethod, path: string, options: RestRequestOptions = {}): Promise<RestResponse<T>> {
@@ -319,7 +328,12 @@ function composePlan(
 ): Plan {
 	const url = resolveUrl(state, path, options.query);
 	const body = encodeBody(options);
-	const sameOrigin = !looksAbsolute(path) && !isOffOrigin(url);
+	const targetsApiBase = !looksAbsolute(path);
+	const apiOrigin = targetsApiBase ? originOf(url) : null;
+	const sameOrigin = targetsApiBase && (apiOrigin === null || apiOrigin === window.location.origin);
+	if (apiOrigin !== null && !sameOrigin) {
+		reportStrippedAuthorization(state, apiOrigin, options.auth);
+	}
 	const headers = assembleHeaders({
 		state,
 		callerHeaders: options.headers,
@@ -365,12 +379,24 @@ function looksAbsolute(path: string): boolean {
 	return path.startsWith('//') || /^[a-z][a-z0-9+.-]*:\/\//i.test(path);
 }
 
-function isOffOrigin(url: string): boolean {
+function originOf(url: string): string | null {
 	try {
-		return new URL(url).origin !== window.location.origin;
+		return new URL(url).origin;
 	} catch {
-		return false;
+		return null;
 	}
+}
+
+function isOffOrigin(url: string): boolean {
+	const origin = originOf(url);
+	return origin !== null && origin !== window.location.origin;
+}
+
+function reportStrippedAuthorization(state: RuntimeState, apiOrigin: string, auth: RestAuthMode | undefined): void {
+	if (auth === 'none' || strippedAuthorizationOrigins.has(apiOrigin)) return;
+	if (!state.authProvider()) return;
+	strippedAuthorizationOrigins.add(apiOrigin);
+	log.warn(`authorization withheld from off-origin api base: ${apiOrigin} (page ${window.location.origin})`);
 }
 
 function encodeBody(options: RestRequestOptions): BodyShape {
@@ -504,7 +530,7 @@ function synthesizePacingReply<T>(_plan: Plan, hit: {until: number; note?: strin
 		'content-type': 'application/json',
 	};
 	const payload = {
-		message: hit.note ?? 'You are being rate limited.',
+		message: hit.note ?? i18n._(TOO_MANY_REQUESTS_DESCRIPTOR),
 		retry_after: remaining / 1000,
 		global: false,
 	};

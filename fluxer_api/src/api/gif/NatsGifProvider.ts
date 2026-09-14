@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {GifProviderMeta, IGifProvider} from '@app/api/gif/IGifProvider';
+import {Logger} from '@app/api/Logger';
+import {readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {isJsonRecord, parseJsonUnknown} from '@app/api/utils/JsonBoundaryUtils';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {
@@ -11,14 +16,11 @@ import {
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {StringCodec} from 'nats';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonUnknown} from '../utils/JsonBoundaryUtils';
-import type {GifProviderMeta, IGifProvider} from './IGifProvider';
 
 const GIF_SERVICE_SUBJECT = process.env.FLUXER_GIF_SERVICE_SUBJECT || 'svc.gifs';
 const DEFAULT_GIF_SERVICE_TIMEOUT_MS = 12_000;
 const DEFAULT_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS = 3_000;
+const MAX_REQUEST_TIMEOUT_MS = 2_147_483_647;
 const GIF_PROVIDER_META: GifProviderMeta = {
 	name: 'klipy',
 	displayName: 'Klipy',
@@ -71,13 +73,6 @@ export function buildKlipyShareUrl(slug: string): string {
 		return `${KLIPY_SHARE_ORIGIN}/gifs`;
 	}
 	return `${KLIPY_SHARE_ORIGIN}/gifs/${encodeURIComponent(trimmed)}`;
-}
-
-function readPositiveIntegerEnv(name: string, fallback: number): number {
-	const value = process.env[name];
-	if (!value) return fallback;
-	const parsed = Number(value);
-	return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 function readFailedMessage(value: unknown): string | null {
@@ -147,16 +142,18 @@ class NatsGifProvider implements IGifProvider {
 	constructor(
 		private readonly connectionManager: INatsConnectionManager,
 		private readonly apiKeyResolver: GifApiKeyResolver,
-		private readonly requestTimeoutMs = readPositiveIntegerEnv(
-			'FLUXER_GIF_SERVICE_TIMEOUT_MS',
-			DEFAULT_GIF_SERVICE_TIMEOUT_MS,
-		),
-		private readonly registerShareTimeoutMs = readPositiveIntegerEnv(
-			'FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS',
-			DEFAULT_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS,
-		),
+		private readonly requestTimeoutMs = DEFAULT_GIF_SERVICE_TIMEOUT_MS,
+		private readonly registerShareTimeoutMs = DEFAULT_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS,
 		private readonly subject = GIF_SERVICE_SUBJECT,
-	) {}
+	) {
+		requireIntegerInRange('FLUXER_GIF_SERVICE_TIMEOUT_MS', requestTimeoutMs, 1, MAX_REQUEST_TIMEOUT_MS);
+		requireIntegerInRange(
+			'FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS',
+			registerShareTimeoutMs,
+			1,
+			MAX_REQUEST_TIMEOUT_MS,
+		);
+	}
 
 	async isAvailable(): Promise<boolean> {
 		return Boolean((await this.apiKeyResolver())?.trim());
@@ -283,8 +280,14 @@ export function createNatsGifProvider(apiKeyResolver: GifApiKeyResolver): NatsGi
 		token: Config.nats.authToken || undefined,
 		name: process.env.FLUXER_GIF_SERVICE_NATS_CLIENT_NAME || 'fluxer-api-gifs',
 	});
+	const provider = new NatsGifProvider(
+		manager,
+		apiKeyResolver,
+		readOptionalIntegerEnv('FLUXER_GIF_SERVICE_TIMEOUT_MS'),
+		readOptionalIntegerEnv('FLUXER_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS'),
+	);
 	void manager.connect().catch((error) => {
 		Logger.warn({error}, '[gif-service] Failed to establish NATS connection');
 	});
-	return new NatsGifProvider(manager, apiKeyResolver);
+	return provider;
 }

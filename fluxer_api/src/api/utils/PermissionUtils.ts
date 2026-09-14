@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
 
 interface PermissionsDiff {
 	added: Array<string>;

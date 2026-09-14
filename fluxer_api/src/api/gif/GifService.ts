@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
-import type {IGifProvider} from './IGifProvider';
 
 export class GifService {
 	private readonly provider: IGifProvider;

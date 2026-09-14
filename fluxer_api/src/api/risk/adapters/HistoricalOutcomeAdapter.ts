@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {HistoricalOutcomeRecord} from '@app/api/risk/RiskHistoryTypes';
+import type {HistoricalOutcomeResult} from '@app/api/risk/RiskTypes';
 import {getSubnet} from '@fluxer/ip_utils/src/IpAddress';
-import type {IRiskHistoryRepository} from '../HistoricalOutcomeRepository';
-import type {HistoricalOutcomeRecord} from '../RiskHistoryTypes';
-import type {HistoricalOutcomeResult} from '../RiskTypes';
 
 const DEFAULT_LIST_LIMIT = 200;
 

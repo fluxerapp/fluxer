@@ -48,7 +48,7 @@ function resolveMentionBadgeMotion(useReducedMotion: boolean): MentionBadgeMotio
 const formatMentionCount = (mentionCount: number) => {
 	const locale = getCurrentLocale();
 	if (mentionCount > 99 && mentionCount < 1000) {
-		return '99+';
+		return `${formatNumber(99, locale)}+`;
 	}
 	if (mentionCount >= 1000) {
 		return formatCompactNumber(mentionCount, locale, 0).replace(/\s/g, '');

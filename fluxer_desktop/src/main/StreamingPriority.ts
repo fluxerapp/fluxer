@@ -2,9 +2,9 @@
 
 import {createRequire} from 'node:module';
 import os from 'node:os';
+import {retainWindowsScreenCaptureGuard, stopWindowsScreenCaptureGuard} from '@electron/main/WindowsScreenCaptureGuard';
 import {app, powerSaveBlocker} from 'electron';
 import log from 'electron-log';
-import {retainWindowsScreenCaptureGuard, stopWindowsScreenCaptureGuard} from './WindowsScreenCaptureGuard';
 
 const STREAMING_PRIORITY = os.constants?.priority?.PRIORITY_ABOVE_NORMAL ?? -7;
 const CAN_ELEVATE_PROCESS_PRIORITY = process.platform === 'win32';
@@ -16,7 +16,7 @@ const requireModule = createRequire(import.meta.url);
 
 type WindowsGpuSchedulingPriority = 'high' | 'realtime';
 type WindowsGpuPriorityTargetReason =
-	| 'native-main-encoder-capture'
+	| 'browser-main'
 	| 'renderer'
 	| 'tracked-renderer'
 	| 'chromium-gpu'
@@ -308,7 +308,7 @@ function getChromiumProcessTargetReasons(metric: Electron.ProcessMetric): Array<
 
 function collectGpuSchedulingPriorityTargets(webContents?: Electron.WebContents): Array<GpuPriorityTarget> {
 	const targets = new Map<number, Set<WindowsGpuPriorityTargetReason>>();
-	addGpuPriorityTarget(targets, process.pid, 'native-main-encoder-capture');
+	addGpuPriorityTarget(targets, process.pid, 'browser-main');
 	const rendererProcessId = getRendererProcessId(webContents);
 	addGpuPriorityTarget(targets, rendererProcessId, 'renderer');
 	for (const trackedWebContents of streamingPriorityWebContents) {

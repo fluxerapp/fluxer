@@ -96,7 +96,7 @@ const LONG_FORM_CONTENT_DESCRIPTOR = msg({
 	comment: 'Short label in the inputs tab. Keep it concise.',
 });
 const WRITE_YOUR_CONTENT_HERE_THIS_TEXTAREA_EXPANDS_AS_DESCRIPTOR = msg({
-	message: 'Write your content here. This textarea expands as you type.',
+	message: 'Write your content here. This text area expands as you type.',
 	comment: 'Description text in the inputs tab.',
 });
 const VALUE_SAVED_DESCRIPTOR = msg({
@@ -262,7 +262,7 @@ export const InputsTab: React.FC<InputsTabProps> = observer(
 						</div>
 					</SettingsTabSection>
 					<SettingsTabSection
-						title={<Trans>Textarea</Trans>}
+						title={<Trans>Text area</Trans>}
 						data-flx="user.component-gallery-tab.inputs-tab.settings-tab-section--4"
 					>
 						<div className={styles.grid} data-flx="user.component-gallery-tab.inputs-tab.grid--4">
@@ -297,7 +297,7 @@ export const InputsTab: React.FC<InputsTabProps> = observer(
 										className={styles.inlineEditLabel}
 										data-flx="user.component-gallery-tab.inputs-tab.inline-edit-label"
 									>
-										<Trans>This textarea auto-expands between 4 and 12 rows as you type.</Trans>
+										<Trans>This text area auto-expands between 4 and 12 rows as you type.</Trans>
 									</p>
 								}
 								data-flx="user.component-gallery-tab.inputs-tab.textarea--3"

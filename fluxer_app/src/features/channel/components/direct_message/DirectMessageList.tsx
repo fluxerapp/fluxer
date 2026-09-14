@@ -79,7 +79,7 @@ const PURGE_DESCRIPTOR = msg({
 	comment: 'Confirm button label on the purge-personal-notes destructive alert.',
 });
 const PURGED_MESSAGES_FROM_PERSONAL_NOTES_DESCRIPTOR = msg({
-	message: 'Purged {deletedCount} messages from personal notes',
+	message: 'Purged {deletedCount, plural, one {# message} other {# messages}} from personal notes',
 	comment: 'Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.',
 });
 const PERSONAL_NOTES_WERE_ALREADY_EMPTY_DESCRIPTOR = msg({

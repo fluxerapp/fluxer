@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{CreateAdminApiKeyResponse, ListAdminApiKeyEntry};
@@ -12,7 +12,7 @@ impl AdminApiClient {
         acls: &[String],
     ) -> ApiResult<CreateAdminApiKeyResponse> {
         let body = generated_types::CreateAdminApiKeyRequest {
-            acls: acls.to_vec(),
+            acls: parse_acls(acls)?,
             expires_in_days: None,
             name: generated_types::CreateAdminApiKeyRequestName::try_from(name)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
@@ -35,10 +35,20 @@ impl AdminApiClient {
     }
 
     pub async fn revoke_api_key(&self, key_id: &str) -> ApiResult<()> {
+        let key_id = snowflake(key_id);
         self.generated()
-            .delete_admin_api_key(key_id)
+            .delete_admin_api_key(&key_id)
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())
     }
+}
+
+pub(super) fn parse_acls(acls: &[String]) -> ApiResult<Vec<generated_types::AdminAclType>> {
+    acls.iter()
+        .map(|acl| {
+            generated_types::AdminAclType::try_from(acl.as_str())
+                .map_err(|e| ApiError::Parse(e.to_string()))
+        })
+        .collect()
 }

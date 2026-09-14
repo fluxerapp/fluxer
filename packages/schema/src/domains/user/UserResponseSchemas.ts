@@ -8,7 +8,6 @@ import {
 	GroupDmAddPermissionFlagsDescriptions,
 	GuildFolderFlags,
 	GuildFolderFlagsDescriptions,
-	GuildFolderIcons,
 	IncomingCallFlags,
 	IncomingCallFlagsDescriptions,
 	type MentionReplyPreference,
@@ -33,6 +32,7 @@ import {
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {
+	GuildFolderIconSchema,
 	MentionReplyPreferencesSchema,
 	ProfilePrivacyLevelSchema,
 	RelationshipTypesSchema,
@@ -257,21 +257,6 @@ export const CustomStatusResponse = z.object({
 
 export type CustomStatusResponse = z.infer<typeof CustomStatusResponse>;
 
-const GuildFolderIconSchema = withOpenApiType(
-	createNamedStringLiteralUnion(
-		[
-			[GuildFolderIcons.FOLDER, 'FOLDER', 'Classic folder icon'],
-			[GuildFolderIcons.STAR, 'STAR', 'Star icon'],
-			[GuildFolderIcons.HEART, 'HEART', 'Heart icon'],
-			[GuildFolderIcons.BOOKMARK, 'BOOKMARK', 'Bookmark icon'],
-			[GuildFolderIcons.GAME_CONTROLLER, 'GAME_CONTROLLER', 'Game controller icon'],
-			[GuildFolderIcons.SHIELD, 'SHIELD', 'Shield icon'],
-			[GuildFolderIcons.MUSIC_NOTE, 'MUSIC_NOTE', 'Music note icon'],
-		] as const,
-		'Guild folder icon',
-	),
-	'GuildFolderIconType',
-);
 export const UserSettingsResponse = z.object({
 	status: z.string().describe('The current online status of the user'),
 	status_resets_at: z.iso.datetime().nullish().describe('ISO8601 timestamp of when the status will reset'),
@@ -454,13 +439,7 @@ export interface PendingBulkMessageDeletion {
 	readonly message_count: number;
 }
 
-export interface UserProfile {
-	readonly bio: string | null;
-	readonly banner: string | null;
-	readonly banner_color?: number | null;
-	readonly pronouns: string | null;
-	readonly accent_color: number | null;
-}
+export type UserProfile = Readonly<UserProfileResponse>;
 
 export interface UserPartial {
 	readonly id: string;
@@ -671,3 +650,22 @@ export const BulkIgnoreFriendRequestsResponse = z.object({
 });
 
 export type BulkIgnoreFriendRequestsResponse = z.infer<typeof BulkIgnoreFriendRequestsResponse>;
+
+const PhoneGateEscapeGuildResponse = z.object({
+	id: SnowflakeStringType.describe('The unique identifier (snowflake) for the community'),
+	name: z.string().describe('The community name'),
+});
+
+export const PhoneGateEscapePreviewResponse = z.object({
+	available: z.boolean().describe('Whether this account can set the deferred phone verification check aside right now'),
+	guilds: z
+		.array(PhoneGateEscapeGuildResponse)
+		.describe('Communities that trigger the phone check and will be left when the escape runs'),
+	owned_guilds: z
+		.array(PhoneGateEscapeGuildResponse)
+		.describe('Communities that trigger the phone check but are owned by this user, so they are kept'),
+});
+
+export type PhoneGateEscapePreviewResponse = z.infer<typeof PhoneGateEscapePreviewResponse>;
+
+export const RelationshipListResponse = z.array(RelationshipResponse);

@@ -131,7 +131,7 @@ const DOWNLOAD_MEDIA_DESCRIPTOR = msg({
 	comment: 'Generic media context menu download action when the specific type is unknown.',
 });
 const ATTACHMENT_IS_EXPIRED_OR_UNAVAILABLE_DESCRIPTOR = msg({
-	message: 'Attachment is expired or unavailable',
+	message: 'Attachment has expired or is unavailable',
 	comment: 'Toast shown when an attachment URL is no longer accessible.',
 });
 const URL_COPIED_TO_CLIPBOARD_DESCRIPTOR = msg({

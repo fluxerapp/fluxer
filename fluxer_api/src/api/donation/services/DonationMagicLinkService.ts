@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomBytes} from 'node:crypto';
+import {Config} from '@app/api/Config';
+import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
+import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import {Logger} from '@app/api/Logger';
 import {DONATION_MAGIC_LINK_EXPIRY_MS} from '@fluxer/constants/src/DonationConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -8,11 +13,6 @@ import {DonationMagicLinkExpiredError} from '@fluxer/errors/src/domains/donation
 import {DonationMagicLinkInvalidError} from '@fluxer/errors/src/domains/donation/DonationMagicLinkInvalidError';
 import {DonationMagicLinkUsedError} from '@fluxer/errors/src/domains/donation/DonationMagicLinkUsedError';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
-import {Config} from '../../Config';
-import type {IEmailDnsValidationService} from '../../infrastructure/IEmailDnsValidationService';
-import {Logger} from '../../Logger';
-import type {IDonationRepository} from '../IDonationRepository';
-import {DonorMagicLinkToken} from '../models/DonorMagicLinkToken';
 
 export class DonationMagicLinkService {
 	constructor(
@@ -21,10 +21,10 @@ export class DonationMagicLinkService {
 		private emailDnsValidationService: IEmailDnsValidationService,
 	) {}
 
-	async sendMagicLink(email: string): Promise<void> {
+	async sendMagicLink(email: string, locale: string | null = null): Promise<void> {
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(email);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		const donor = await this.donationRepository.findDonorByEmail(email);
 		if (!donor) {
@@ -42,7 +42,7 @@ export class DonationMagicLinkService {
 		});
 		await this.donationRepository.createMagicLinkToken(tokenModel);
 		const manageUrl = `${Config.endpoints.apiPublic}/donations/manage?token=${token}`;
-		await this.emailService.sendDonationMagicLink(email, token, manageUrl, expiresAt, null);
+		await this.emailService.sendDonationMagicLink(email, token, manageUrl, expiresAt, locale);
 		Logger.debug({email}, 'Donation magic link sent');
 	}
 

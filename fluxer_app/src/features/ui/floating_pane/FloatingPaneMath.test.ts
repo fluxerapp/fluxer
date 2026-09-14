@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	ALL_CORNERS,
 	ALL_RESIZE_EDGES,
@@ -18,7 +17,8 @@ import {
 	type ResizeEdge,
 	reconcileToGeometry,
 	snapPointToCorner,
-} from './FloatingPaneMath';
+} from '@app/features/ui/floating_pane/FloatingPaneMath';
+import {describe, expect, it} from 'vitest';
 
 const BASE_GEOMETRY: FloatingPaneGeometry = {
 	viewport: {width: 1000, height: 600},

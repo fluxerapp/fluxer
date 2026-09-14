@@ -287,7 +287,7 @@ maybe_valid_owner_node(OwnerNode) ->
         false -> unavailable
     end.
 
--spec handle_offline_dispatch(atom(), integer(), map()) -> true.
+-spec handle_offline_dispatch(atom(), integer(), map() | list()) -> true.
 handle_offline_dispatch(message_create, UserId, Data) ->
     case offline_message_author_id(Data) of
         {ok, AuthorId} ->

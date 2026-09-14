@@ -2,10 +2,10 @@
 
 import fs from 'node:fs';
 import {PassThrough, Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import {StorageObjectListingOverflowError} from '@app/api/infrastructure/IStorageService';
+import {StorageService} from '@app/api/infrastructure/StorageService';
 import {describe, expect, it} from 'vitest';
-import {Config} from '../Config';
-import {StorageObjectListingOverflowError} from './IStorageService';
-import {StorageService} from './StorageService';
 
 interface CopyObjectTestParams {
 	sourceBucket: string;
@@ -44,7 +44,6 @@ interface S3BucketConfigOverrides {
 	downloads?: string;
 	reports?: string;
 	harvests?: string;
-	static?: string;
 }
 
 interface S3ConfigOverrides {
@@ -72,9 +71,12 @@ class TestStorageService extends StorageService {
 		this.readObjects.push(
 			maxBytes === undefined ? {bucket: _bucket, key: _key} : {bucket: _bucket, key: _key, maxBytes},
 		);
-		return maxBytes !== undefined && this.sourceData.length > maxBytes
-			? this.sourceData.slice(0, maxBytes)
-			: this.sourceData;
+		if (maxBytes !== undefined && this.sourceData.length > maxBytes) {
+			throw new Error(
+				`Stream exceeds maximum buffer size of ${maxBytes} bytes (got at least ${this.sourceData.length} bytes)`,
+			);
+		}
+		return this.sourceData;
 	}
 
 	override async copyObject(params: CopyObjectTestParams): Promise<void> {
@@ -141,6 +143,32 @@ describe('StorageService.getPresignedUploadURL', () => {
 			},
 		);
 	});
+
+	it('gives both clients the configured addressing rather than pinning one to path style', async () => {
+		await withS3Config(
+			{
+				endpoint: 'https://s3.example.test',
+				presignedUrlBase: '',
+				forcePathStyle: false,
+				region: 'eu-central-1',
+				accessKeyId: 'fluxer',
+				secretAccessKey: 'fluxer-secret',
+				buckets: {uploads: 'fluxer-uploads'},
+			},
+			async () => {
+				const service = new StorageService();
+				const probe = service as unknown as {
+					client: {config: {forcePathStyle?: unknown}};
+					presignClient: {config: {forcePathStyle?: unknown}};
+				};
+				const resolve = async (value: unknown): Promise<unknown> =>
+					typeof value === 'function' ? await (value as () => Promise<unknown>)() : value;
+
+				expect(await resolve(probe.client.config.forcePathStyle)).toBe(false);
+				expect(await resolve(probe.presignClient.config.forcePathStyle)).toBe(false);
+			},
+		);
+	});
 });
 
 describe('StorageService.copyObjectWithMetadataStripping', () => {
@@ -186,6 +214,40 @@ describe('StorageService.copyObjectWithMetadataStripping', () => {
 				newContentType: 'image/png',
 			},
 		]);
+	});
+});
+
+interface S3ClientProbe {
+	client: {send: (command: unknown) => Promise<{Body: Readable}>};
+}
+
+function stubObjectBody(service: StorageService, chunks: Array<Uint8Array>): void {
+	(service as unknown as S3ClientProbe).client = {
+		send: async () => ({Body: Readable.from(chunks.map((chunk) => Buffer.from(chunk)))}),
+	};
+}
+
+describe('StorageService.readObject', () => {
+	it('returns the whole object when it fits inside the ceiling', async () => {
+		const service = new StorageService();
+		stubObjectBody(service, [new Uint8Array([1, 2, 3]), new Uint8Array([4, 5])]);
+		const data = await service.readObject('fluxer-uploads', 'stream_previews/preview.jpg', 5);
+		expect(data).toEqual(new Uint8Array([1, 2, 3, 4, 5]));
+	});
+
+	it('rejects an object larger than the ceiling instead of truncating it', async () => {
+		const service = new StorageService();
+		stubObjectBody(service, [new Uint8Array([1, 2, 3]), new Uint8Array([4, 5, 6])]);
+		await expect(service.readObject('fluxer-uploads', 'stream_previews/preview.jpg', 5)).rejects.toThrow(
+			/^Stream exceeds maximum buffer size of 5 bytes/,
+		);
+	});
+
+	it('reads the whole object when no ceiling is given', async () => {
+		const service = new StorageService();
+		stubObjectBody(service, [new Uint8Array([1, 2, 3]), new Uint8Array([4, 5, 6])]);
+		const data = await service.readObject('fluxer-uploads', 'stream_previews/preview.jpg');
+		expect(data).toEqual(new Uint8Array([1, 2, 3, 4, 5, 6]));
 	});
 });
 

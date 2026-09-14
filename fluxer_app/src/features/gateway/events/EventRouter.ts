@@ -13,7 +13,6 @@ import {handleFavoriteMemeDelete} from '@app/features/expressions/events/Favorit
 import {handleFavoriteMemeUpdate} from '@app/features/expressions/events/FavoriteMemeUpdate';
 import {handleWebhooksUpdate} from '@app/features/expressions/events/WebhooksUpdate';
 import {handleReady} from '@app/features/gateway/events/GatewayReady';
-import {handleResumed} from '@app/features/gateway/events/GatewayResumed';
 import type {GatewaySocket} from '@app/features/gateway/transport/GatewaySocket';
 import {handleChannelMemberCountsUpdate} from '@app/features/guild/events/ChannelMemberCountsUpdate';
 import {handleGuildBanAdd, handleGuildBanRemove} from '@app/features/guild/events/GuildBan';
@@ -68,7 +67,6 @@ import {handleCallDelete} from '@app/features/voice/events/CallDelete';
 import {handleCallUpdate} from '@app/features/voice/events/CallUpdate';
 import {handleEntranceSoundPlay} from '@app/features/voice/events/EntranceSoundPlay';
 import {handleVoiceServerUpdate} from '@app/features/voice/events/VoiceServerUpdate';
-import {handleVoiceStateAck} from '@app/features/voice/events/VoiceStateAck';
 import {handleVoiceStateUpdate} from '@app/features/voice/events/VoiceStateUpdate';
 
 export interface GatewayGeoipPayload {
@@ -92,7 +90,6 @@ export type GatewayHandlerRegistry = Map<string, GatewayEventHandler>;
 export function createHandlerRegistry(): GatewayHandlerRegistry {
 	const registry: GatewayHandlerRegistry = new Map();
 	registry.set('READY', handleReady as GatewayEventHandler);
-	registry.set('RESUMED', handleResumed as GatewayEventHandler);
 	registry.set('AUTH_SESSION_CHANGE', handleAuthSessionChange as GatewayEventHandler);
 	registry.set('USER_UPDATE', handleUserUpdate as GatewayEventHandler);
 	registry.set('USER_SETTINGS_UPDATE', handleUserSettingsUpdate as GatewayEventHandler);
@@ -145,7 +142,6 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('SAVED_MESSAGE_DELETE', handleSavedMessageDelete as GatewayEventHandler);
 	registry.set('PRESENCE_UPDATE', handlePresenceUpdate as GatewayEventHandler);
 	registry.set('PRESENCE_UPDATE_BULK', handlePresenceUpdateBulk as GatewayEventHandler);
-	registry.set('VOICE_STATE_ACK', handleVoiceStateAck as GatewayEventHandler);
 	registry.set('VOICE_STATE_UPDATE', handleVoiceStateUpdate as GatewayEventHandler);
 	registry.set('VOICE_SERVER_UPDATE', handleVoiceServerUpdate as GatewayEventHandler);
 	registry.set('CALL_CREATE', handleCallCreate as GatewayEventHandler);

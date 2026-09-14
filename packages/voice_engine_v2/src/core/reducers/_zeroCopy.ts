@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Error} from '../../protocol/types';
-import {implementationError} from './_helpers';
+import {implementationError} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import type {VoiceEngineV2Error} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export function nativeZeroCopyRequiredError(
 	resource: 'capture' | 'frame' | 'frameSink' | 'hardwareEncoder',

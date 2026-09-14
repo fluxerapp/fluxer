@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type DragItem, DragItemType} from '@app/features/app/components/layout/types/DndTypes';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	type ChannelReorderRect,
 	type ChannelReorderTarget,
@@ -13,7 +10,10 @@ import {
 	selectChannelReorderIntent,
 	selectChannelReorderResolution,
 	transitionChannelReorderSnapshot,
-} from './ChannelReorderStateMachine';
+} from '@app/features/app/components/layout/dnd/ChannelReorderStateMachine';
+import {type DragItem, DragItemType} from '@app/features/app/components/layout/types/DndTypes';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {describe, expect, it} from 'vitest';
 
 const rect: ChannelReorderRect = {
 	top: 40,

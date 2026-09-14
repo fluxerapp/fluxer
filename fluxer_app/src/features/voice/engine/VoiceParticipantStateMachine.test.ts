@@ -1,12 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SPEAKING_REMOTE_ATTACK_MS, SPEAKING_REMOTE_RELEASE_MS} from '@app/features/voice/engine/VoiceSpeakingThreshold';
-import {
-	VoiceConnectionQuality,
-	type VoiceConnectionQuality as VoiceConnectionQualityType,
-} from '@app/features/voice/engine/VoiceTrackSource';
-import type {Participant, Room} from 'livekit-client';
-import {describe, expect, it} from 'vitest';
 import {
 	__TEST__,
 	createLivekitParticipantSnapshot,
@@ -18,7 +11,14 @@ import {
 	transitionVoiceRemoteSpeakingSnapshot,
 	type VoiceRemoteSpeakingCommand,
 	type VoiceRemoteSpeakingSnapshot,
-} from './VoiceParticipantStateMachine';
+} from '@app/features/voice/engine/VoiceParticipantStateMachine';
+import {SPEAKING_REMOTE_ATTACK_MS, SPEAKING_REMOTE_RELEASE_MS} from '@app/features/voice/engine/VoiceSpeakingThreshold';
+import {
+	VoiceConnectionQuality,
+	type VoiceConnectionQuality as VoiceConnectionQualityType,
+} from '@app/features/voice/engine/VoiceTrackSource';
+import type {Participant, Room} from 'livekit-client';
+import {describe, expect, it} from 'vitest';
 
 const connectionQuality = VoiceConnectionQuality.Good;
 

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelUpdateRequest} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {ChannelResponse, ChannelSlowmodeStateResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import {mapChannelToResponse} from '../ChannelMappers';
-import type {ChannelService} from './ChannelService';
 
 export class ChannelRequestService {
 	constructor(

@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {WebhookEvent} from 'livekit-server-sdk';
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {
+	computeLiveKitPublishSources,
+	LiveKitService,
+	VOICE_TOKEN_TTL_SECONDS,
+} from '@app/api/infrastructure/LiveKitService';
 import {AccessToken, TrackSource} from 'livekit-server-sdk';
-import {describe, expect, it, vi} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {getConfig} from '../../Config';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {VoiceTopology} from '../../voice/VoiceTopology';
-import type {IGatewayService} from '../IGatewayService';
-import type {ILiveKitService} from '../ILiveKitService';
-import type {IVoiceRoomStore} from '../IVoiceRoomStore';
-import {computeLiveKitPublishSources, computeRevokedPublishGrant, VOICE_TOKEN_TTL_SECONDS} from '../LiveKitService';
-import {LiveKitWebhookService} from '../LiveKitWebhookService';
+import {describe, expect, it} from 'vitest';
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
 	const [, payload] = token.split('.');
@@ -55,45 +49,6 @@ describe('LiveKitService publish permissions', () => {
 			canPublishSources: ['microphone', 'screen_share', 'screen_share_audio'],
 		});
 	});
-	it('revokes only the offending source and keeps the rest of the grant', () => {
-		expect(
-			computeRevokedPublishGrant(
-				{
-					canPublish: true,
-					canPublishSources: [
-						TrackSource.MICROPHONE,
-						TrackSource.CAMERA,
-						TrackSource.SCREEN_SHARE,
-						TrackSource.SCREEN_SHARE_AUDIO,
-					],
-				},
-				TrackSource.CAMERA,
-			),
-		).toEqual({
-			canPublish: true,
-			canPublishSources: [TrackSource.MICROPHONE, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
-		});
-	});
-	it('revokes screen share audio together with screen share video', () => {
-		expect(
-			computeRevokedPublishGrant(
-				{
-					canPublish: true,
-					canPublishSources: [TrackSource.MICROPHONE, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
-				},
-				TrackSource.SCREEN_SHARE,
-			),
-		).toEqual({canPublish: true, canPublishSources: [TrackSource.MICROPHONE]});
-	});
-	it('treats an empty source list as every source and never leaves it empty', () => {
-		expect(computeRevokedPublishGrant({canPublish: true, canPublishSources: []}, TrackSource.CAMERA)).toEqual({
-			canPublish: true,
-			canPublishSources: [TrackSource.MICROPHONE, TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO],
-		});
-		expect(
-			computeRevokedPublishGrant({canPublish: true, canPublishSources: [TrackSource.CAMERA]}, TrackSource.CAMERA),
-		).toEqual({canPublish: false, canPublishSources: []});
-	});
 	it('bounds voice token lifetime to the configured TTL', async () => {
 		const token = new AccessToken('test-key', 'test-secret', {
 			identity: 'user_1_conn',
@@ -108,107 +63,77 @@ describe('LiveKitService publish permissions', () => {
 	});
 });
 
-function createFreeUser(): User {
-	return {
-		id: createUserID(1n),
-		isBot: false,
-		premiumType: null,
-		premiumUntil: null,
-		premiumGiftExtensionEndsAt: null,
-		premiumWillCancel: false,
-		premiumGraceEndsAt: null,
-		flags: 0n,
-		premiumFlags: 0,
-		traits: new Set<string>(),
-	} as unknown as User;
+class FakeTwirpError extends Error {
+	status: number;
+	code?: string;
+	constructor(message: string, status: number, code?: string) {
+		super(message);
+		this.name = 'TwirpError';
+		this.status = status;
+		this.code = code;
+	}
 }
 
-function createTrackPublishedEvent(width: number, height: number): WebhookEvent {
-	return {
-		event: 'track_published',
-		room: {name: 'guild_2_channel_3'},
-		participant: {identity: 'user_1_conn'},
-		track: {type: 1, source: TrackSource.CAMERA, sid: 'TR_oversized', width, height},
-	} as unknown as WebhookEvent;
-}
-
-function createWebhookHarness() {
-	const muteParticipantTrack = vi.fn().mockResolvedValue(true);
-	const revokeParticipantPublishSource = vi.fn().mockResolvedValue(true);
-	const disconnectParticipant = vi.fn().mockResolvedValue(undefined);
-	const disconnectVoiceUserIfInChannel = vi.fn().mockResolvedValue(undefined);
-	const service = new LiveKitWebhookService(
-		{
-			getPinnedRoomServer: vi.fn().mockResolvedValue({regionId: 'region-1', serverId: 'region-1-server-1'}),
-		} as unknown as IVoiceRoomStore,
-		{disconnectVoiceUserIfInChannel} as unknown as IGatewayService,
-		{findUnique: vi.fn().mockResolvedValue(createFreeUser())} as unknown as IUserRepository,
-		{muteParticipantTrack, revokeParticipantPublishSource, disconnectParticipant} as unknown as ILiveKitService,
-		{
-			getAllRegions: () => [],
-			getServersForRegion: () => [],
-			registerSubscriber: () => {},
-		} as unknown as VoiceTopology,
-		{getConfigSnapshot: () => null} as unknown as LimitConfigService,
-	);
-	return {
+function createServiceWithRoomServiceClient(roomServiceClient: unknown): LiveKitService {
+	const service = Object.create(LiveKitService.prototype) as LiveKitService;
+	Reflect.set(
 		service,
-		muteParticipantTrack,
-		revokeParticipantPublishSource,
-		disconnectParticipant,
-		disconnectVoiceUserIfInChannel,
-	};
+		'serverClients',
+		new Map([
+			[
+				'region-1',
+				new Map([
+					[
+						'region-1-server-1',
+						{
+							endpoint: 'ws://livekit.test/livekit',
+							apiKey: 'test-key',
+							apiSecret: 'test-secret',
+							isActive: true,
+							roomServiceClient,
+						},
+					],
+				]),
+			],
+		]),
+	);
+	return service;
 }
 
-describe('LiveKit free tier video resolution enforcement', () => {
-	it('mutes the oversized track and revokes its source instead of ending the call', async () => {
-		const {
-			service,
-			muteParticipantTrack,
-			revokeParticipantPublishSource,
-			disconnectParticipant,
-			disconnectVoiceUserIfInChannel,
-		} = createWebhookHarness();
+describe('LiveKitService listParticipants', () => {
+	const params = {
+		guildId: createGuildID(1n),
+		channelId: createChannelID(2n),
+		regionId: 'region-1',
+		serverId: 'region-1-server-1',
+	};
 
-		await service.handleTrackPublished(createTrackPublishedEvent(1920, 1080), 'api-key');
-
-		expect(muteParticipantTrack).toHaveBeenCalledTimes(1);
-		expect(muteParticipantTrack).toHaveBeenCalledWith(
-			expect.objectContaining({trackSid: 'TR_oversized', muted: true, regionId: 'region-1'}),
-		);
-		expect(revokeParticipantPublishSource).toHaveBeenCalledTimes(1);
-		expect(revokeParticipantPublishSource).toHaveBeenCalledWith(
-			expect.objectContaining({source: TrackSource.CAMERA, connectionId: 'conn', regionId: 'region-1'}),
-		);
-		expect(disconnectParticipant).not.toHaveBeenCalled();
-		expect(disconnectVoiceUserIfInChannel).not.toHaveBeenCalled();
+	it('reports a 404 as an unreadable room instead of an empty one', async () => {
+		const service = createServiceWithRoomServiceClient({
+			listParticipants: async () => {
+				throw new FakeTwirpError('not_found', 404, 'not_found');
+			},
+		});
+		const result = await service.listParticipants(params);
+		expect(result.status).toBe('error');
 	});
 
-	it('leaves tracks within the free tier limits alone', async () => {
-		const {service, muteParticipantTrack, revokeParticipantPublishSource, disconnectParticipant} =
-			createWebhookHarness();
-
-		await service.handleTrackPublished(createTrackPublishedEvent(1280, 720), 'api-key');
-
-		expect(muteParticipantTrack).not.toHaveBeenCalled();
-		expect(revokeParticipantPublishSource).not.toHaveBeenCalled();
-		expect(disconnectParticipant).not.toHaveBeenCalled();
+	it('reports a bad_route 404 as an unreadable room instead of an empty one', async () => {
+		const service = createServiceWithRoomServiceClient({
+			listParticipants: async () => {
+				throw new FakeTwirpError('invalid path prefix', 404, 'bad_route');
+			},
+		});
+		const result = await service.listParticipants(params);
+		expect(result.status).toBe('error');
+		expect(result.status === 'error' && result.retryable).toBe(false);
 	});
 
-	it('does not enforce resolution limits on self-hosted instances', async () => {
-		const {service, muteParticipantTrack, revokeParticipantPublishSource, disconnectParticipant} =
-			createWebhookHarness();
-		const config = getConfig();
-		const originalSelfHosted = config.instance.selfHosted;
-		config.instance.selfHosted = true;
-		try {
-			await service.handleTrackPublished(createTrackPublishedEvent(3840, 2160), 'api-key');
-		} finally {
-			config.instance.selfHosted = originalSelfHosted;
-		}
-
-		expect(muteParticipantTrack).not.toHaveBeenCalled();
-		expect(revokeParticipantPublishSource).not.toHaveBeenCalled();
-		expect(disconnectParticipant).not.toHaveBeenCalled();
+	it('still reports a genuinely empty room as empty', async () => {
+		const service = createServiceWithRoomServiceClient({
+			listParticipants: async () => [],
+		});
+		const result = await service.listParticipants(params);
+		expect(result).toEqual({status: 'ok', participants: []});
 	});
 });

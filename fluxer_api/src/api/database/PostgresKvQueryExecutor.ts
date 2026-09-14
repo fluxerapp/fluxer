@@ -1,10 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getKvMeta, getTableMetadata} from '@app/api/database/CassandraMetaRegistry';
+import type {
+	CassandraParams,
+	ColumnName,
+	KvColumnParam,
+	KvQueryMeta,
+	PreparedQuery,
+	WhereExpr,
+} from '@app/api/database/CassandraTypes';
+import {isConditionalQuery, validateTtlSeconds} from '@app/api/database/CassandraTypes';
+import {Logger} from '@app/api/Logger';
 import {type IPostgresClient, type PostgresQueryable, quoteIdentifier} from '@pkgs/postgres/src/Client';
 import cassandra from 'cassandra-driver';
-import {Logger} from '../Logger';
-import {getKvMeta, getTableMetadata} from './CassandraMetaRegistry';
-import type {CassandraParams, ColumnName, KvQueryMeta, PreparedQuery, WhereExpr} from './CassandraTypes';
 
 type Row = Record<string, unknown>;
 type EqWhereExpr = Extract<WhereExpr<Row>, {kind: 'eq'}>;
@@ -198,6 +206,17 @@ function paramsRow(params: CassandraParams, columns: ReadonlyArray<string>): Row
 			throw new Error(`Missing Postgres KV key parameter: ${column}`);
 		}
 		row[column] = params[column];
+	}
+	return row;
+}
+
+function boundColumns(params: CassandraParams, columns: ReadonlyArray<KvColumnParam>): CassandraParams {
+	const row: CassandraParams = {};
+	for (const {col, param} of columns) {
+		if (!Object.hasOwn(params, param) || params[param] === undefined) {
+			throw new Error(`Missing conditional write parameter: ${param}`);
+		}
+		row[col] = params[param];
 	}
 	return row;
 }
@@ -667,7 +686,8 @@ function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | null |
 	if (typeof ttlRaw !== 'number') {
 		throw new Error(`TTL parameter ${ttlParam} must be a number`);
 	}
-	return new Date(Date.now() + ttlRaw * 1000);
+	const ttlSeconds = validateTtlSeconds(ttlRaw);
+	return ttlSeconds === 0 ? null : new Date(Date.now() + ttlSeconds * 1000);
 }
 
 function encodePageState(pageState: PageState): string {
@@ -945,6 +965,9 @@ export class PostgresKvQueryExecutor {
 		db: PostgresQueryable = this.client,
 	): Promise<Array<T>> {
 		const meta = this.meta(query);
+		if (meta.conditions !== undefined) {
+			return (await this.conditionalWrite(meta, query.params, db)) as Array<T>;
+		}
 		switch (meta.action) {
 			case 'select':
 				return (await this.select(meta, query.params, buildCandidatePlan(meta, query.params), db)) as Array<T>;
@@ -961,7 +984,11 @@ export class PostgresKvQueryExecutor {
 				await this.delete(meta, query.params, db);
 				return [];
 			case 'batch':
-				return [];
+				if (meta.batchEntries === undefined) return [];
+				if (db !== this.client) {
+					throw new Error('Conditional batches must own their database transaction');
+				}
+				return (await this.conditionalBatch(meta, query.params)) as Array<T>;
 			default: {
 				const _exhaustive: never = meta.action;
 				throw new Error(`Unsupported Postgres KV action: ${_exhaustive}`);
@@ -1047,6 +1074,11 @@ export class PostgresKvQueryExecutor {
 		queries: Array<{query: string; params: object; meta?: KvQueryMeta}>,
 		atomic = true,
 	): Promise<void> {
+		for (const query of queries) {
+			if (isConditionalQuery({cql: query.query, params: query.params as CassandraParams, kvMeta: query.meta})) {
+				throw new Error('Conditional writes must use executeConditional to preserve their result');
+			}
+		}
 		if (atomic) {
 			await this.client.transaction(async (db) => {
 				for (const query of queries) {
@@ -1180,6 +1212,132 @@ WHERE NOT $6`,
 			return [{'[applied]': result.rowCount === 1}];
 		}
 		return [];
+	}
+
+	private async conditionalWrite(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		db: PostgresQueryable,
+	): Promise<Array<Row>> {
+		if (meta.action !== 'patch' && meta.action !== 'delete') {
+			throw new Error(`Unsupported conditional write action: ${meta.action}`);
+		}
+		if (!meta.conditions?.length) {
+			throw new Error('Conditional writes require expected values');
+		}
+		const bindings: Array<unknown> = [meta.table.name, rowKeyFromParams(meta, params)];
+		const predicates = ['kv.table_name = $1', 'kv.row_key = $2', '(kv.expires_at IS NULL OR kv.expires_at > now())'];
+		for (const {col, expectedParam} of meta.conditions) {
+			if (!Object.hasOwn(params, expectedParam) || params[expectedParam] === undefined) {
+				throw new Error(`Missing conditional write parameter: ${expectedParam}`);
+			}
+			bindings.push(col, JSON.stringify(encodeValue(params[expectedParam])));
+			predicates.push(
+				`COALESCE(kv.row_data -> $${bindings.length - 1}::text, 'null'::jsonb) = $${bindings.length}::jsonb`,
+			);
+		}
+		const where = predicates.join(' AND ');
+		let sql = `DELETE FROM ${this.table} kv WHERE ${where}`;
+		if (meta.action === 'patch') {
+			if (!meta.patchKeys?.length) {
+				throw new Error('Conditional patches require at least one column');
+			}
+			bindings.push(JSON.stringify(encodeRow(paramsRow(params, meta.patchKeys))));
+			const assignments = [`row_data = kv.row_data || $${bindings.length}::jsonb`, 'updated_at = now()'];
+			const expiresAt = ttlExpiresAt(meta, params);
+			if (expiresAt !== undefined) {
+				bindings.push(expiresAt);
+				assignments.push(`expires_at = $${bindings.length}`);
+			}
+			sql = `UPDATE ${this.table} kv SET ${assignments.join(', ')} WHERE ${where}`;
+		}
+		const result = await db.query(sql, bindings);
+		if (result.rowCount !== 0 && result.rowCount !== 1) {
+			throw new Error('Conditional write returned an invalid affected row count');
+		}
+		return [{'[applied]': result.rowCount === 1}];
+	}
+
+	private async conditionalBatch(meta: KvQueryMeta, params: CassandraParams): Promise<Array<Row>> {
+		const entries = meta.batchEntries;
+		if (!entries?.length) {
+			throw new Error('Conditional batches require at least one row');
+		}
+		const writes = entries.map((entry) => {
+			const values = boundColumns(params, entry.pk);
+			const writeMeta: KvQueryMeta = {
+				action: entry.action,
+				table: meta.table,
+				pkColumns: entry.pk.map(({col}) => col),
+			};
+			if (entry.action === 'insert') {
+				Object.assign(values, boundColumns(params, entry.values));
+				writeMeta.ifNotExists = true;
+			} else {
+				if (entry.conditions.length === 0) {
+					throw new Error('Conditional batch updates and deletes require expected values');
+				}
+				if (entry.action === 'patch') {
+					if (entry.patch.length === 0) {
+						throw new Error('Conditional batch patches require at least one column');
+					}
+					Object.assign(values, boundColumns(params, entry.patch));
+					writeMeta.patchKeys = entry.patch.map(({col}) => col);
+				}
+				const expected = boundColumns(
+					params,
+					entry.conditions.map(({col, expectedParam}) => ({col, param: expectedParam})),
+				);
+				writeMeta.conditions = Object.entries(expected).map(([col, value]) => {
+					const expectedParam = `expected_${col}`;
+					if (Object.hasOwn(values, expectedParam)) {
+						throw new Error(`Conditional batch parameter conflicts with a column value: ${expectedParam}`);
+					}
+					values[expectedParam] = value;
+					return {col, expectedParam};
+				});
+			}
+			if (entry.action !== 'delete' && entry.ttlParamName !== undefined) {
+				const ttl = params[entry.ttlParamName];
+				if (typeof ttl !== 'number') {
+					throw new Error(`TTL parameter ${entry.ttlParamName} must be a number`);
+				}
+				if (Object.hasOwn(values, entry.ttlParamName)) {
+					throw new Error(`Conditional batch TTL parameter conflicts with a column value: ${entry.ttlParamName}`);
+				}
+				values[entry.ttlParamName] = validateTtlSeconds(ttl);
+				writeMeta.ttlParamName = entry.ttlParamName;
+			}
+			const key = rowKey(meta, values);
+			return {key, keyBytes: Buffer.from(key), partition: partitionKey(meta, values), meta: writeMeta, params: values};
+		});
+		if (new Set(writes.map(({key}) => key)).size !== writes.length) {
+			throw new Error('Conditional batches cannot repeat a row');
+		}
+		if (new Set(writes.map(({partition}) => partition)).size !== 1) {
+			throw new Error('Conditional batches must stay within one partition');
+		}
+		writes.sort((left, right) => Buffer.compare(left.keyBytes, right.keyBytes));
+		const rejected = new Error('Conditional batch was not applied');
+		try {
+			await this.client.transaction(async (db) => {
+				for (const write of writes) {
+					const result =
+						write.meta.action === 'insert'
+							? await this.upsert(write.meta, write.params, db)
+							: await this.conditionalWrite(write.meta, write.params, db);
+					const applied = result[0]?.['[applied]'];
+					if (result.length !== 1 || typeof applied !== 'boolean') {
+						throw new Error('Conditional batch entry returned an invalid database result');
+					}
+					if (!applied) throw rejected;
+				}
+			});
+		} catch (error) {
+			if (error !== rejected) throw error;
+			return [{'[applied]': false}];
+		}
+		return [{'[applied]': true}];
 	}
 
 	private async patch(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<void> {

@@ -32,7 +32,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import Users from '@app/features/user/state/Users';
-import {COMMAND_PRIORITY_HIGH, PASTE_COMMAND} from 'lexical';
+import {$addUpdateTag, COMMAND_PRIORITY_HIGH, PASTE_COMMAND, PASTE_TAG} from 'lexical';
 import type React from 'react';
 import {useCallback, useEffect} from 'react';
 
@@ -233,6 +233,7 @@ export function useChannelComposerPaste({
 			if (!insertPastedText(pastedText)) {
 				return false;
 			}
+			$addUpdateTag(PASTE_TAG);
 			event.preventDefault();
 			return true;
 		};

@@ -13,7 +13,7 @@ use axum::{
     Router,
     extract::Request,
     http::{HeaderName, HeaderValue, header},
-    middleware::{Next, from_fn, from_fn_with_state},
+    middleware::{Next, from_fn},
     response::{IntoResponse, Response},
     routing::get,
 };
@@ -56,10 +56,7 @@ pub fn build_router(state: AppState) -> Router {
         .fallback(get(spa_index::spa_catch_all))
         .layer(from_fn(request_id_middleware))
         .layer(from_fn(cache_headers_middleware))
-        .layer(from_fn_with_state(
-            state.clone(),
-            security_headers_middleware,
-        ))
+        .layer(from_fn(security_headers_middleware))
         .layer(
             CompressionLayer::new()
                 .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
@@ -68,14 +65,13 @@ pub fn build_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-async fn security_headers_middleware(
-    axum::extract::State(_state): axum::extract::State<AppState>,
-    request: Request,
-    next: Next,
-) -> Response {
+async fn security_headers_middleware(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
-    let headers = response.headers_mut();
+    set_security_headers(response.headers_mut());
+    response
+}
 
+fn set_security_headers(headers: &mut axum::http::HeaderMap) {
     set_static_header(
         headers,
         header::STRICT_TRANSPORT_SECURITY,
@@ -89,8 +85,6 @@ async fn security_headers_middleware(
         HeaderName::from_static("permissions-policy"),
         PERMISSIONS_POLICY_VALUE,
     );
-
-    response
 }
 
 async fn cache_headers_middleware(request: Request, next: Next) -> Response {

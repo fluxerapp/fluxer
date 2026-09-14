@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AssetDeletionQueue} from '@app/api/infrastructure/AssetDeletionQueue';
+import {NoopPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import processAssetDeletionQueue from '@app/api/worker/tasks/ProcessAssetDeletionQueue';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {AssetDeletionQueue} from '../../infrastructure/AssetDeletionQueue';
-import {NoopPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import processAssetDeletionQueue from '../tasks/ProcessAssetDeletionQueue';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
 
 const HELPERS = {logger: new NoopLogger()} as unknown as WorkerTaskHelpers;
 

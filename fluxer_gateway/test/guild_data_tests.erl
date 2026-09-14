@@ -263,6 +263,46 @@ find_everyone_viewable_text_channel_ignores_user_overwrite_for_guild_id_test() -
     ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
     ?assertEqual(12, ChannelId).
 
+find_everyone_viewable_text_channel_accepts_voice_when_no_text_channel_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"roles">> => [
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(ViewPerm)
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{<<"id">> => <<"501">>, <<"type">> => 2, <<"permission_overwrites">> => []}
+    ],
+    ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
+    ?assertEqual(501, ChannelId).
+
+find_everyone_viewable_text_channel_skips_link_channel_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"roles">> => [
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(ViewPerm)
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{<<"id">> => <<"998">>, <<"type">> => 998, <<"permission_overwrites">> => []}
+    ],
+    ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
+    ?assertEqual(null, ChannelId).
+
 voice_members_from_states_reads_embedded_member_test() ->
     EmbeddedMember = #{<<"user">> => #{<<"id">> => <<"300">>}, <<"roles">> => []},
     IndexedMember = #{<<"user">> => #{<<"id">> => <<"200">>}, <<"roles">> => []},

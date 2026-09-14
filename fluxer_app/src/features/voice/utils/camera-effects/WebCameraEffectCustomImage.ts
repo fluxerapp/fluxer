@@ -5,6 +5,7 @@ import {
 	readBoundedResponseBlob,
 	runWithResponseDeadline,
 } from '@app/features/voice/utils/camera-effects/BoundedResponse';
+import type {WebCameraEffectCustomFrameSource} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
 import {createWebCameraEffectImageFrameSource} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
 
 export type {
@@ -17,8 +18,6 @@ export {
 	createWebCameraEffectVideoFrameSource,
 	WebCameraEffectCustomFrameSourceKind,
 } from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
-
-import type {WebCameraEffectCustomFrameSource} from '@app/features/voice/utils/camera-effects/WebCameraEffectCustomFrameSource';
 
 const MAX_CUSTOM_MEDIA_BYTES = 10 * 1024 * 1024;
 const MAX_CUSTOM_MEDIA_URL_LENGTH = 16 * 1024;

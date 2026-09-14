@@ -144,10 +144,8 @@ fn run_generators(root: &Path, for_typecheck: bool) -> Result<()> {
 }
 
 fn generator_commands(for_typecheck: bool) -> Vec<CommandSpec> {
-    let mut commands = vec![
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/config", "generate"]),
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"]),
-    ];
+    let mut commands =
+        vec![CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"])];
     if for_typecheck {
         commands.push(CommandSpec::new("pnpm").args([
             "--filter",
@@ -379,6 +377,11 @@ mod tests {
                 "fluxer_messages",
                 "fluxer-messages",
                 include_str!("../../../fluxer_messages/Dockerfile"),
+            ),
+            (
+                "fluxer_recon",
+                "fluxer-recon",
+                include_str!("../../../fluxer_recon/Dockerfile"),
             ),
             (
                 "fluxer_snowflakes",

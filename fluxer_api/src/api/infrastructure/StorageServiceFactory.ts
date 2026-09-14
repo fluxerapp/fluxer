@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import type {IStorageService} from './IStorageService';
-import {StorageService} from './StorageService';
+import {Config} from '@app/api/Config';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {StorageService} from '@app/api/infrastructure/StorageService';
 
 export function createStorageService(): IStorageService {
 	return new StorageService();

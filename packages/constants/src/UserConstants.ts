@@ -48,7 +48,6 @@ export const UserPremiumTypesDescriptions: Record<keyof typeof UserPremiumTypes,
 };
 export const UserFlags = {
 	STAFF: 1n << 0n,
-	CTP_MEMBER: 1n << 1n,
 	PARTNER: 1n << 2n,
 	BUG_HUNTER: 1n << 3n,
 	HIGH_GLOBAL_RATE_LIMIT: 1n << 33n,
@@ -72,7 +71,6 @@ export const UserFlags = {
 } as const;
 export const UserFlagsDescriptions: Record<keyof typeof UserFlags, string> = {
 	STAFF: 'User is a staff member',
-	CTP_MEMBER: 'User is a CTP member',
 	PARTNER: 'User is a partner',
 	BUG_HUNTER: 'User is a bug hunter',
 	HIGH_GLOBAL_RATE_LIMIT: 'User has elevated global rate limits',
@@ -146,7 +144,6 @@ export function extractPremiumFlagsFromLegacyUserFlags(legacyFlags: bigint): num
 
 export const PUBLIC_USER_FLAGS =
 	UserFlags.STAFF |
-	UserFlags.CTP_MEMBER |
 	UserFlags.PARTNER |
 	UserFlags.BUG_HUNTER |
 	UserFlags.FRIENDLY_BOT |
@@ -155,9 +152,9 @@ export const PUBLIC_USER_FLAGS =
 export const DELETED_USER_USERNAME = 'DeletedUser';
 export const DELETED_USER_GLOBAL_NAME = 'Deleted User';
 export const DELETED_USER_DISCRIMINATOR = 0;
+export const DELETED_USER_ID = 1n;
 export const PublicUserFlags = {
 	STAFF: Number(UserFlags.STAFF),
-	CTP_MEMBER: Number(UserFlags.CTP_MEMBER),
 	PARTNER: Number(UserFlags.PARTNER),
 	BUG_HUNTER: Number(UserFlags.BUG_HUNTER),
 	FRIENDLY_BOT: Number(UserFlags.FRIENDLY_BOT),
@@ -166,7 +163,6 @@ export const PublicUserFlags = {
 } as const;
 export const PublicUserFlagsDescriptions: Record<keyof typeof PublicUserFlags, string> = {
 	STAFF: 'User is a staff member',
-	CTP_MEMBER: 'User is a CTP member',
 	PARTNER: 'User is a partner',
 	BUG_HUNTER: 'User is a bug hunter',
 	FRIENDLY_BOT: 'Bot accepts friend requests from users',
@@ -200,6 +196,7 @@ export const ALL_SUSPICIOUS_ACTIVITY_FLAGS = Object.values(SuspiciousActivityFla
 	0,
 );
 export const DEFERRED_PHONE_ON_COMMUNITY_JOIN = 1 << 16;
+export const PHONE_GATE_PROMOTED_FROM_DEFERRAL = 1 << 17;
 export const DEFERRABLE_PHONE_FLAGS =
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE;
 export const NEVER_DEFERRABLE_PHONE_FLAGS = SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
@@ -209,14 +206,16 @@ export function imposePhoneRequirements(currentFlags: number, addedFlags: number
 	if ((addedFlags & DEFERRABLE_PHONE_FLAGS) === 0) {
 		return nextFlags;
 	}
-	return nextFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
+	return nextFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN & ~PHONE_GATE_PROMOTED_FROM_DEFERRAL;
 }
 export const ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS =
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
 export const PHONE_ADD_CLEARABLE_FLAGS =
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |

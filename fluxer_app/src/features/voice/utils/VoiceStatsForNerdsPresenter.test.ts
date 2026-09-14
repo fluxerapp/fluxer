@@ -2,6 +2,7 @@
 
 import {
 	buildVoiceStatsForNerdsPresentation,
+	collectScreenShareAudioPublicationDiagnostics,
 	type ParticipantPublicationLookup,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {
@@ -84,6 +85,64 @@ const timeSeries: Array<VoiceEngineV2StatsSample> = [
 
 function nativeStats(overrides: Partial<VoiceEngineV2Stats>): VoiceEngineV2Stats {
 	return {rttMs: null, outbound: [], inbound: [], ...overrides};
+}
+
+function chromiumCameraSimulcastTracks(): Array<VoiceEngineV2PerTrackStats> {
+	return [
+		{
+			direction: 'send',
+			kind: 'video',
+			ssrc: 1001,
+			rid: 'q',
+			active: false,
+			mid: '2',
+			trackIdentifier: 'cam-track',
+			mediaSourceId: 'SV1',
+			bitrateKbps: 0,
+			bitrateWindowMs: 2001,
+			framesEncoded: 1,
+			targetBitrateKbps: 0,
+		},
+		{
+			direction: 'send',
+			kind: 'video',
+			ssrc: 1002,
+			rid: 'h',
+			active: false,
+			mid: '2',
+			trackIdentifier: 'cam-track',
+			mediaSourceId: 'SV1',
+			bitrateKbps: 0,
+			bitrateWindowMs: 2001,
+			framesEncoded: 1,
+			targetBitrateKbps: 0,
+		},
+		{
+			direction: 'send',
+			kind: 'video',
+			ssrc: 1003,
+			rid: 'f',
+			active: true,
+			mid: '2',
+			trackIdentifier: 'cam-track',
+			mediaSourceId: 'SV1',
+			bitrateKbps: 0,
+			bitrateWindowMs: 2001,
+			framesEncoded: 1,
+			frameWidth: 1280,
+			frameHeight: 720,
+			targetBitrateKbps: 1133,
+		},
+		{
+			direction: 'send',
+			kind: 'video',
+			ssrc: 2001,
+			mid: '3',
+			trackIdentifier: 'screen-track',
+			mediaSourceId: 'SV2',
+			bitrateKbps: 3500,
+		},
+	];
 }
 
 describe('buildVoiceStatsForNerdsPresentation', () => {
@@ -178,6 +237,203 @@ describe('buildVoiceStatsForNerdsPresentation', () => {
 
 		expect(presentation.remoteScreenShareAudio?.trackIdentifier).toBe('remote-screen-audio');
 		expect(presentation.remoteAudio).toBeNull();
+	});
+
+	it('classifies a firefox screen share whose outbound stats omit the track identifier', () => {
+		const localParticipant = participant({
+			microphone: 'b0d2f1a7-6c3e-4f8a-9b21-5d7c4e0a1f36',
+			screen_share: '2f4c8de1-9a07-4b53-8c6d-1e5b7a02d94f',
+		});
+		const remoteParticipant = participant({microphone: '8a106956-d202-4916-8e19-0a1672c64b73'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = [
+			{
+				direction: 'recv',
+				kind: 'audio',
+				mid: '2',
+				trackIdentifier: '{8a106956-d202-4916-8e19-0a1672c64b73}',
+				bitrateKbps: 46,
+			},
+			{direction: 'send', kind: 'audio', mid: '1', bitrateKbps: 30},
+			{direction: 'send', kind: 'video', mid: '3', bitrateKbps: 47, framesPerSecond: 58, frameWidth: 1920},
+		];
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant,
+			remoteParticipants: [remoteParticipant],
+		});
+
+		expect(presentation.localScreenShare?.mid).toBe('3');
+		expect(presentation.localVideo).toBeNull();
+	});
+
+	it('classifies a firefox inbound screen share reported with a braced track identifier', () => {
+		const remoteParticipant = participant({screen_share: '34171e0d-174d-4d56-bb71-76b4fba330c3'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = [
+			{
+				direction: 'recv',
+				kind: 'video',
+				mid: '3',
+				trackIdentifier: '{34171e0d-174d-4d56-bb71-76b4fba330c3}',
+				bitrateKbps: 3585,
+			},
+		];
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant: null,
+			remoteParticipants: [remoteParticipant],
+		});
+
+		expect(presentation.remoteScreenShare?.mid).toBe('3');
+		expect(presentation.remoteVideo).toBeNull();
+	});
+
+	it('exposes every camera simulcast layer next to the projected localVideo row', () => {
+		const localParticipant = participant({camera: 'cam-track', screen_share: 'screen-track'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = chromiumCameraSimulcastTracks();
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant,
+			remoteParticipants: null,
+		});
+
+		expect(presentation.localVideo?.rid).toBe('q');
+		expect(presentation.localVideoLayers).toHaveLength(3);
+		expect(presentation.localVideoLayers.map((layer) => layer.rid)).toEqual(['q', 'h', 'f']);
+		expect(presentation.localVideoLayers.map((layer) => layer.active)).toEqual([false, false, true]);
+		expect(presentation.localVideoLayers.map((layer) => layer.bitrateWindowMs)).toEqual([2001, 2001, 2001]);
+	});
+
+	it('keeps the screen-share publication out of the camera layer view', () => {
+		const localParticipant = participant({camera: 'cam-track', screen_share: 'screen-track'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = chromiumCameraSimulcastTracks();
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant,
+			remoteParticipants: null,
+		});
+
+		expect(presentation.localScreenShare?.trackIdentifier).toBe('screen-track');
+		expect(presentation.localVideoLayers).not.toContain(perTrackStats[3]);
+	});
+
+	it('reports a single camera layer when firefox omits rid and media source ids', () => {
+		const localParticipant = participant({camera: 'cam-track'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = [
+			{direction: 'send', kind: 'audio', mid: '1', bitrateKbps: 30},
+			{direction: 'send', kind: 'video', mid: '3', bitrateKbps: 47, framesPerSecond: 58, frameWidth: 1920},
+		];
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant,
+			remoteParticipants: null,
+		});
+
+		expect(presentation.localVideo?.mid).toBe('3');
+		expect(presentation.localVideoLayers).toEqual([perTrackStats[1]]);
+	});
+
+	it('reports no camera layers rather than a false single layer when firefox simulcast is unidentifiable', () => {
+		const localParticipant = participant({camera: 'cam-track'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = [
+			{direction: 'send', kind: 'audio', mid: '1', bitrateKbps: 30},
+			{direction: 'send', kind: 'video', mid: '3', rid: 'q', bitrateKbps: 0},
+			{direction: 'send', kind: 'video', mid: '3', rid: 'h', bitrateKbps: 0},
+			{direction: 'send', kind: 'video', mid: '3', rid: 'f', bitrateKbps: 1133},
+		];
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant,
+			remoteParticipants: null,
+		});
+
+		expect(presentation.localVideo).toBeNull();
+		expect(presentation.localVideoLayers).toEqual([]);
+	});
+
+	it('keeps the chromium simulcast projection byte-identical', () => {
+		const localParticipant = participant({camera: 'cam-track', screen_share: 'screen-track'});
+		const perTrackStats: Array<VoiceEngineV2PerTrackStats> = chromiumCameraSimulcastTracks();
+
+		const presentation = buildVoiceStatsForNerdsPresentation({
+			connectionId: 'connection-a',
+			connectionQuality: 'excellent',
+			currentLatency: 37,
+			averageLatency: 41,
+			stats: voiceStats,
+			perTrackStats,
+			statsTimeSeries: timeSeries,
+			nativeStats: null,
+			publisherTransport: null,
+			subscriberTransport: null,
+			localParticipant,
+			remoteParticipants: null,
+		});
+
+		expect(presentation.localVideo).toBe(perTrackStats[0]);
+		expect(presentation.localScreenShare).toBe(perTrackStats[3]);
+		expect(presentation.localAudio).toBeNull();
+		expect(presentation.remoteVideo).toBeNull();
+		expect(presentation.network.videoSendBitrateKbps).toBe(1200);
 	});
 
 	it('uses the canonical v2 native stats projection when native stats are available', () => {
@@ -307,5 +563,89 @@ describe('buildVoiceStatsForNerdsPresentation', () => {
 		});
 
 		expect(presentation.network.rttMs).toBeNull();
+	});
+});
+
+describe('collectScreenShareAudioPublicationDiagnostics', () => {
+	it('reports the mute and upstream state of every local screen-share audio publication', () => {
+		const displayPublication = {
+			trackSid: 'TR_display',
+			source: 'screen_share_audio',
+			isMuted: false,
+			audioTrack: {
+				isUpstreamPaused: true,
+				mediaStreamTrack: {
+					id: 'display-audio',
+					readyState: 'live',
+					muted: true,
+					enabled: true,
+				} as MediaStreamTrack,
+			},
+		};
+		const devicePublication = {
+			trackSid: 'TR_device',
+			source: 'screen_share_audio',
+			isMuted: false,
+			audioTrack: {
+				isUpstreamPaused: false,
+				mediaStreamTrack: {
+					id: 'device-audio',
+					readyState: 'live',
+					muted: false,
+					enabled: true,
+				} as MediaStreamTrack,
+			},
+		};
+		const micPublication = {
+			trackSid: 'TR_mic',
+			source: 'microphone',
+			isMuted: false,
+			audioTrack: {
+				isUpstreamPaused: false,
+				mediaStreamTrack: {
+					id: 'mic-audio',
+					readyState: 'live',
+					muted: false,
+					enabled: true,
+				} as MediaStreamTrack,
+			},
+		};
+		const localParticipant: ParticipantPublicationLookup = {
+			getTrackPublication: (source) => (String(source) === 'screen_share_audio' ? displayPublication : undefined),
+			audioTrackPublications: new Map([
+				['TR_display', displayPublication],
+				['TR_device', devicePublication],
+				['TR_mic', micPublication],
+			]),
+		};
+
+		const diagnostics = collectScreenShareAudioPublicationDiagnostics(localParticipant);
+
+		expect(diagnostics).toEqual([
+			{
+				trackSid: 'TR_display',
+				source: 'screen_share_audio',
+				isMuted: false,
+				isUpstreamPaused: true,
+				mediaStreamTrackId: 'display-audio',
+				mediaStreamTrackReadyState: 'live',
+				mediaStreamTrackMuted: true,
+				mediaStreamTrackEnabled: true,
+			},
+			{
+				trackSid: 'TR_device',
+				source: 'screen_share_audio',
+				isMuted: false,
+				isUpstreamPaused: false,
+				mediaStreamTrackId: 'device-audio',
+				mediaStreamTrackReadyState: 'live',
+				mediaStreamTrackMuted: false,
+				mediaStreamTrackEnabled: true,
+			},
+		]);
+	});
+
+	it('reports nothing when there is no local participant', () => {
+		expect(collectScreenShareAudioPublicationDiagnostics(null)).toEqual([]);
 	});
 });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PhonePrefixBanCache} from '@app/api/auth/PhonePrefixBanCache';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {PhonePrefixBanCache} from '../PhonePrefixBanCache';
 
 describe('PhonePrefixBanCache', () => {
 	let cache: PhonePrefixBanCache;

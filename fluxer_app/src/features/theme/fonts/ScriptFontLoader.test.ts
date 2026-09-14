@@ -193,6 +193,20 @@ describe('the cascade the gate is computed from', () => {
 		expect(chain.indexOf('Fluxer Sans TC')).toBeLessThan(chain.indexOf('Fluxer Sans JP'));
 	});
 
+	it('leaves kana to JP, so the Han tie-break cannot claim text that is only ever Japanese', () => {
+		for (const sheet of ['script-sc.css', 'script-tc.css']) {
+			const text = readFileSync(join(FONTS_CSS, sheet), 'utf8');
+			for (const [, value] of text.matchAll(/unicode-range:([^;]*);/g)) {
+				for (const part of value.split(',')) {
+					const [start, end] = part.trim().replace('U+', '').split('-');
+					const from = Number.parseInt(start, 16);
+					const to = end === undefined ? from : Number.parseInt(end, 16);
+					expect(from > 0x30ff || to < 0x3040, `${sheet} claims ${part.trim()}`).toBe(true);
+				}
+			}
+		}
+	});
+
 	it('hoists the family hanChunkForLanguage picks, for every locale rule that exists', () => {
 		const expected: Record<string, string> = {
 			ja: 'Fluxer Sans JP',

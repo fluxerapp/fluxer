@@ -4,7 +4,7 @@ import type {ComposerTypeaheadActiveState} from '@app/features/lexical/composer/
 import {analyzeCodeIndent} from '@app/features/lexical/composer/codeBlockIndent';
 import {
 	$captureSelectionOffsets,
-	$getComposerDisplayText,
+	$getComposerScanText,
 	$replaceComposerRange,
 	$selectComposerRange,
 } from '@app/features/lexical/composer/composerOffsets';
@@ -27,7 +27,7 @@ export function registerComposerCodeIndent(
 			const backward = offsets.anchor > offsets.focus;
 			const start = Math.min(offsets.anchor, offsets.focus);
 			const end = Math.max(offsets.anchor, offsets.focus);
-			const plan = analyzeCodeIndent($getComposerDisplayText(), start, end, event != null && event.shiftKey === true);
+			const plan = analyzeCodeIndent($getComposerScanText(), start, end, event != null && event.shiftKey === true);
 			if (plan == null) {
 				return false;
 			}

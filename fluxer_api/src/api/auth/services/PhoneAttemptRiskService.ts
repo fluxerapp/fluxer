@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, randomBytes, randomUUID} from 'node:crypto';
+import {Logger} from '@app/api/Logger';
 import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../../Logger';
 
 const WINDOW_SECONDS = 24 * 60 * 60;
 const HARD_BLOCK_TTL_SECONDS = 24 * 60 * 60;

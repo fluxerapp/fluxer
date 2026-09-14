@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type MentionType = '@everyone' | '@here' | 'role';
 
@@ -121,7 +121,7 @@ export const mentionConfirmationStateMachine = setup({
 });
 
 export function createMentionConfirmationSnapshot(): MentionConfirmationSnapshot {
-	return getInitialSnapshot(mentionConfirmationStateMachine);
+	return initialTransition(mentionConfirmationStateMachine)[0];
 }
 
 export function transitionMentionConfirmationSnapshot(

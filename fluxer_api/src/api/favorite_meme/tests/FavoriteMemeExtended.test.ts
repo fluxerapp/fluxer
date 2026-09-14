@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {FavoriteMemeResponse} from '@fluxer/schema/src/domains/meme/MemeSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {
 	createChannel,
 	createTestAccountForAttachmentTests,
 	loadFixture,
 	sendMessageWithAttachments,
 	setupTestGuildAndChannel,
-} from '../../channel/tests/AttachmentTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {
 	createFavoriteMemeFromMessage,
 	createFavoriteMemeFromUrl,
@@ -20,7 +18,9 @@ import {
 	getFavoriteMeme,
 	listFavoriteMemes,
 	updateFavoriteMeme,
-} from '../../user/tests/FavoriteMemeTestUtils';
+} from '@app/api/user/tests/FavoriteMemeTestUtils';
+import type {FavoriteMemeResponse} from '@fluxer/schema/src/domains/meme/MemeSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const TEST_IMAGE_URL = 'https://picsum.photos/id/1/100';
 

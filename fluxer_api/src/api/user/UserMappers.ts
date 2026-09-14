@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, type UserID} from '@app/api/BrandedTypes';
+import {stripAvatarForUser, stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {GuildChannelOverride} from '@app/api/models/GuildChannelOverride';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {MuteConfiguration} from '@app/api/models/MuteConfiguration';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import {canUseProfileTimezone, getRequiredActions} from '@app/api/user/UserHelpers';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import type {ChannelMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -23,17 +34,6 @@ import type {
 	UserProfileResponse,
 	UserSettingsResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {createGuildID, type UserID} from '../BrandedTypes';
-import {stripAvatarForUser, stripBannerForUser} from '../infrastructure/AssetEntitlementUtils';
-import type {GuildChannelOverride} from '../models/GuildChannelOverride';
-import type {GuildMember} from '../models/GuildMember';
-import type {MuteConfiguration} from '../models/MuteConfiguration';
-import type {Relationship} from '../models/Relationship';
-import type {User} from '../models/User';
-import type {UserGuildSettings} from '../models/UserGuildSettings';
-import type {UserSettings} from '../models/UserSettings';
-import {canUserAccessNsfwContent} from '../utils/AgeUtils';
-import {canUseProfileTimezone, getRequiredActions} from './UserHelpers';
 
 const PUBLIC_USER_FLAGS_WITHOUT_STAFF = PUBLIC_USER_FLAGS & ~UserFlags.STAFF;
 

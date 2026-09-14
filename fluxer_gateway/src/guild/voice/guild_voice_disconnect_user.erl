@@ -7,7 +7,6 @@
     handle_voice_disconnect/5,
     disconnect_voice_user/2,
     disconnect_voice_user_if_in_channel/2,
-    reconcile_absent_voice_connections/2,
     force_disconnect_participant/4,
     cleanup_virtual_channel_access_for_user/2
 ]).
@@ -196,51 +195,6 @@ disconnect_voice_user_if_in_channel(
                 UserId, ExpectedChannelId, ConnId, VoiceStates, State
             )
     end.
-
--spec reconcile_absent_voice_connections([binary()], guild_state()) -> guild_state().
-reconcile_absent_voice_connections([], State) ->
-    State;
-reconcile_absent_voice_connections(ConnectionIds, State) when is_list(ConnectionIds) ->
-    VoiceStates = voice_state_utils:voice_states(State),
-    RemovedVoiceStates = maps:with(ConnectionIds, VoiceStates),
-    case maps:size(RemovedVoiceStates) of
-        0 ->
-            State;
-        _ ->
-            do_reconcile_absent_voice_connections(RemovedVoiceStates, VoiceStates, State)
-    end.
-
--spec do_reconcile_absent_voice_connections(
-    voice_state_map(), voice_state_map(), guild_state()
-) ->
-    guild_state().
-do_reconcile_absent_voice_connections(RemovedVoiceStates, VoiceStates, State) ->
-    ok = guild_voice_disconnect_broadcast:purge_count_cache(maps:keys(RemovedVoiceStates)),
-    NewVoiceStates = voice_state_utils:drop_voice_states(RemovedVoiceStates, VoiceStates),
-    NewState0 = State#{voice_states => NewVoiceStates},
-    NewState1 = guild_voice_disconnect_broadcast:clear_e2ee_room_keys_for_removed(
-        RemovedVoiceStates, NewVoiceStates, NewState0
-    ),
-    NewState2 = clear_recently_disconnected_connections(RemovedVoiceStates, NewState1),
-    voice_state_utils:broadcast_disconnects(RemovedVoiceStates, NewState2),
-    cleanup_absent_users(RemovedVoiceStates, NewVoiceStates, NewState2).
-
--spec cleanup_absent_users(voice_state_map(), voice_state_map(), guild_state()) ->
-    guild_state().
-cleanup_absent_users(RemovedVoiceStates, RemainingVoiceStates, State) ->
-    UserIds = lists:usort([
-        UserId
-     || VoiceState <- maps:values(RemovedVoiceStates),
-        UserId <- [voice_state_utils:voice_state_user_id(VoiceState)],
-        is_integer(UserId)
-    ]),
-    lists:foldl(
-        fun(UserId, AccState) ->
-            maybe_cleanup_virtual_channel_access(UserId, RemainingVoiceStates, AccState)
-        end,
-        State,
-        UserIds
-    ).
 
 -spec force_disconnect_participant(integer(), integer(), integer(), binary()) ->
     {ok, map()} | {error, term()}.

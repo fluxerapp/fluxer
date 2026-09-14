@@ -22,17 +22,15 @@ f:docs:
 f:gateway:
   - changed-files:
     - any-glob-to-any-file: fluxer_gateway/**/*
-f:marketing:
-  - changed-files:
-    - any-glob-to-any-file:
-      - fluxer_marketing
-      - packages/i18n/marketing/**/*
 f:media_proxy:
   - changed-files:
     - any-glob-to-any-file: fluxer_media_proxy/**/*
 f:messages:
   - changed-files:
     - any-glob-to-any-file: fluxer_messages/**/*
+f:recon:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_recon/**/*
 f:snowflakes:
   - changed-files:
     - any-glob-to-any-file: fluxer_snowflakes/**/*

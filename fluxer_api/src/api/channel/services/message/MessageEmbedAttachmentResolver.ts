@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, ChannelID} from '@app/api/BrandedTypes';
+import type {AttachmentRequestData} from '@app/api/channel/AttachmentDTOs';
+import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
+import {makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {AttachmentID, ChannelID} from '../../../BrandedTypes';
-import type {AttachmentRequestData} from '../../AttachmentDTOs';
-import type {RichEmbedMediaWithMetadata} from '../../EmbedTypes';
-import {makeAttachmentCdnUrl} from './MessageHelpers';
 
 interface ProcessedAttachment {
 	attachment_id: AttachmentID;

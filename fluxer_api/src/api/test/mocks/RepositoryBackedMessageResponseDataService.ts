@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {
+	type MessageResponseAccessContext,
+	MessageResponseDataService,
+	messageResponseAccessForChannel,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import {getChannelRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {CallInfo} from '@app/api/models/CallInfo';
+import type {Embed} from '@app/api/models/Embed';
+import type {EmbedAuthor} from '@app/api/models/EmbedAuthor';
+import type {EmbedField} from '@app/api/models/EmbedField';
+import type {EmbedFooter} from '@app/api/models/EmbedFooter';
+import type {EmbedMedia} from '@app/api/models/EmbedMedia';
+import type {EmbedProvider} from '@app/api/models/EmbedProvider';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {StickerItem} from '@app/api/models/StickerItem';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {
 	DELETED_USER_DISCRIMINATOR,
@@ -19,30 +43,6 @@ import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResp
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import type {NatsConnection} from 'nats';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {AttachmentDecayService} from '../../attachment/AttachmentDecayService';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {
-	type MessageResponseAccessContext,
-	MessageResponseDataService,
-	messageResponseAccessForChannel,
-} from '../../channel/services/message/MessageResponseDataService';
-import {getChannelRepository, getUserRepository} from '../../middleware/ServiceSingletons';
-import type {Attachment} from '../../models/Attachment';
-import type {CallInfo} from '../../models/CallInfo';
-import type {Embed} from '../../models/Embed';
-import type {EmbedAuthor} from '../../models/EmbedAuthor';
-import type {EmbedField} from '../../models/EmbedField';
-import type {EmbedFooter} from '../../models/EmbedFooter';
-import type {EmbedMedia} from '../../models/EmbedMedia';
-import type {EmbedProvider} from '../../models/EmbedProvider';
-import type {Message} from '../../models/Message';
-import type {MessageSnapshot} from '../../models/MessageSnapshot';
-import type {StickerItem} from '../../models/StickerItem';
-import {mapUserToPartialResponse} from '../../user/UserMappers';
-import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
 
 class NoopNatsConnectionManager implements INatsConnectionManager {
 	async connect(): Promise<void> {}
@@ -255,7 +255,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			embeds: this.mapEmbeds(message.embeds, message),
 			attachments: await this.mapAttachments(message.attachments, message),
 			stickers: this.mapStickers(message.stickers),
-			nsfw_emojis: message.nsfwEmojis.size > 0 ? [...message.nsfwEmojis].map((id) => id.toString()) : undefined,
 			reactions,
 			message_reference: message.reference
 				? {
@@ -481,7 +480,6 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			id: sticker.id.toString(),
 			name: sticker.name,
 			animated: sticker.animated,
-			nsfw: sticker.nsfw,
 		}));
 	}
 

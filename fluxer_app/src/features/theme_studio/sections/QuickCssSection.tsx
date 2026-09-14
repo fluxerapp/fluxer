@@ -6,7 +6,12 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
+import type {QuickCssEditorProps} from '@app/features/theme_studio/sections/QuickCssEditor';
+import styles from '@app/features/theme_studio/sections/QuickCssSection.module.css';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
+import type {ThemeStudioBaseTheme} from '@app/features/theme_studio/utils/ThemeStudioPinnedVariables';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -27,11 +32,6 @@ import {
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useRef, useState} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import {StudioButton} from '../ui/StudioButton';
-import type {ThemeStudioBaseTheme} from '../utils/ThemeStudioPinnedVariables';
-import type {QuickCssEditorProps} from './QuickCssEditor';
-import styles from './QuickCssSection.module.css';
 
 const QUICK_CSS_REPLACED_FROM_DESCRIPTOR = msg({
 	message: 'Quick CSS replaced from {fileName}.',
@@ -79,7 +79,7 @@ function QuickCssEditorLoading() {
 const QuickCssEditor = createDefaultLoadableComponent<QuickCssEditorProps>({
 	displayName: 'QuickCssEditor',
 	LoadingComponent: QuickCssEditorLoading,
-	load: () => import('./QuickCssEditor'),
+	load: () => import('@app/features/theme_studio/sections/QuickCssEditor'),
 });
 
 interface QuickCssSectionProps {

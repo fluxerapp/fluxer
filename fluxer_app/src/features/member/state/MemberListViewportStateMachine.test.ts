@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MEMBER_LIST_RANGE_MAX_END} from '@fluxer/constants/src/GatewayConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	createMemberListViewportSnapshot,
 	getMemberListViewportStateValue,
 	resolveMemberListViewportModel,
 	selectMemberListViewportModel,
 	transitionMemberListViewportSnapshot,
-} from './MemberListViewportStateMachine';
+} from '@app/features/member/state/MemberListViewportStateMachine';
+import {MEMBER_LIST_RANGE_MAX_END} from '@fluxer/constants/src/GatewayConstants';
+import {describe, expect, it} from 'vitest';
 
 const INITIAL_RANGE: Array<[number, number]> = [[0, 99]];
 

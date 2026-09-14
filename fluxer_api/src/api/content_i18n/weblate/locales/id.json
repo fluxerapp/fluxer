@@ -1,12 +1,18 @@
 {
-    "billing.eu_withdrawal_waiver_checkout": "Jika saya konsumen EU/EEA, saya setuju konten digital {product_name} paket {premium_tier_name} diberikan segera dan mengakui bahwa saya kehilangan hak pembatalan begitu akses diberikan. Ini tidak memengaruhi hak konsumen wajib lainnya. Lihat [Ketentuan Layanan]({terms_url}).",
-    "bulk_message_deletion.complete": "Kami sudah selesai menghapus pesanmu. Kami menghapus {message_count, plural, =0 {0 pesan} other {# pesan}} dari {channel_count, plural, =0 {0 tempat} other {# tempat}}.",
-    "content.virus_detected": "File itu ditandai sebagai tidak aman dan berbahaya dan sudah dihapus.",
-    "guild.bulk_create.emoji_limit": "Maksimal emoji telah mencapai ({limit}).",
-    "guild.bulk_create.sticker_limit": "Maksimal stiker sudah mencapai ({limit}).",
-    "guild.bulk_create.unknown_error": "Kesalahan tidak diketahui.",
-    "guild.default_category_text": "Saluran teks",
-    "guild.default_category_voice": "Saluran suara",
-    "guild.default_channel_text": "umum",
-    "guild.default_channel_voice": "Umum"
+	"auth.unknown_location": "Lokasi tidak diketahui",
+	"billing.donation_description_monthly": "Donasi bulanan untuk mendukung {product_name}",
+	"billing.donation_description_one_time": "Donasi satu kali untuk mendukung {product_name}",
+	"billing.donation_description_yearly": "Donasi tahunan untuk mendukung {product_name}",
+	"billing.donation_name_one_time": "Donasi {product_name}",
+	"billing.donation_name_recurring": "Donasi {product_name} berulang",
+	"billing.eu_withdrawal_waiver_checkout": "Jika saya konsumen UE/EEA, saya secara tegas menyetujui agar konten digital {product_name} paket {premium_tier_name} diberikan segera dan mengakui bahwa saya kehilangan hak pembatalan yang dijamin undang-undang begitu akses diberikan. Ini tidak memengaruhi hak konsumen lain yang wajib dilindungi. Lihat [Ketentuan layanan]({terms_url}).",
+	"bulk_message_deletion.complete": "Kami sudah selesai menghapus pesanmu. Kami menghapus {message_count, plural, =0 {0 pesan} other {# pesan}} dari {channel_count, plural, =0 {0 tempat} other {# tempat}}.",
+	"content.virus_detected": "File itu ditandai sebagai berpotensi tidak aman dan sudah dihapus.",
+	"guild.bulk_create.emoji_limit": "Jumlah maksimum emoji telah tercapai ({limit}).",
+	"guild.bulk_create.sticker_limit": "Jumlah maksimum stiker telah tercapai ({limit}).",
+	"guild.bulk_create.unknown_error": "Kesalahan tidak diketahui.",
+	"guild.default_category_text": "Saluran teks",
+	"guild.default_category_voice": "Saluran suara",
+	"guild.default_channel_text": "umum",
+	"guild.default_channel_voice": "Umum"
 }

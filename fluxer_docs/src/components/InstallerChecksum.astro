@@ -1,0 +1,19 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import {powershellInstaller, shellInstaller} from '@/installer/Installer';
+
+interface Props {
+	script: 'install.sh' | 'install.ps1';
+}
+
+const {script} = Astro.props;
+const installer = script === 'install.ps1' ? powershellInstaller : shellInstaller;
+---
+
+<code class="installer-checksum">{installer.digest}</code>
+
+<style>
+	.installer-checksum {
+		overflow-wrap: anywhere;
+	}
+</style>

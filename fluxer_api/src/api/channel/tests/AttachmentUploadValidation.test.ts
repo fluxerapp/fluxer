@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createChannel,
+	createGuild,
+	loadFixture,
+	sendMessageWithAttachments,
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import type {MediaProxyMetadataRequest} from '@app/api/infrastructure/IMediaService';
+import {setInjectedMediaService} from '@app/api/middleware/ServiceRegistry';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {TestMediaService} from '@app/api/test/TestMediaService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import type {MediaProxyMetadataRequest} from '../../infrastructure/IMediaService';
-import {setInjectedMediaService} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {TestMediaService} from '../../test/TestMediaService';
-import {createChannel, createGuild, loadFixture, sendMessageWithAttachments} from './AttachmentTestUtils';
 
 class NullUploadMetadataService extends TestMediaService {
 	override async getMetadata(request: MediaProxyMetadataRequest) {

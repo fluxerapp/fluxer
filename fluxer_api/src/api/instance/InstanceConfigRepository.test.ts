@@ -1,15 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, describe, expect, it, vi} from 'vitest';
-import {setCassandraQueryExecutorForTesting} from '../database/CassandraQueryExecution';
-import type {PreparedQuery} from '../database/CassandraTypes';
-import {InMemoryCassandraQueryExecutor} from '../test/InMemoryCassandraQueryExecutor';
-import {MockKVProvider} from '../test/mocks/MockKVProvider';
+import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {PreparedQuery} from '@app/api/database/CassandraTypes';
 import {
 	INSTANCE_CONFIG_REFRESH_CHANNEL,
 	InstanceConfigRepository,
 	type InstanceRegistrationConfig,
-} from './InstanceConfigRepository';
+} from '@app/api/instance/InstanceConfigRepository';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {
+	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+	type VoiceNoiseSuppressionConfig,
+} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {
+	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
+	type ExperimentDeliveryConfig,
+} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {afterEach, describe, expect, it, vi} from 'vitest';
+
+const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
+const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
+const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
+const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
+const INSTANCE_INTEGRATIONS_CONFIG_KEY = 'instance_integrations_config';
 
 class CountingInMemoryCassandraQueryExecutor extends InMemoryCassandraQueryExecutor {
 	instanceConfigSelects = 0;
@@ -112,6 +126,280 @@ describe('InstanceConfigRepository', () => {
 
 		await vi.waitFor(async () => {
 			expect((await reader.getEffectiveBlueskyConfig()).client_name).toBe('Refreshed Instance');
+		});
+	});
+
+	it('reports the effective captcha provider as none while the selected pair is incomplete', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setInstanceIntegrationsConfig({
+			captcha: {
+				provider: 'turnstile',
+				hcaptcha_site_key: 'hcaptcha-site-key',
+				hcaptcha_secret_key: 'hcaptcha-secret-key',
+			},
+		});
+
+		await expect(repository.getEffectiveCaptchaConfig()).resolves.toMatchObject({
+			enabled: false,
+			provider: 'none',
+		});
+
+		await repository.setInstanceIntegrationsConfig({
+			captcha: {
+				turnstile_site_key: 'turnstile-site-key',
+				turnstile_secret_key: 'turnstile-secret-key',
+			},
+		});
+
+		await expect(repository.getEffectiveCaptchaConfig()).resolves.toMatchObject({
+			enabled: true,
+			provider: 'turnstile',
+		});
+	});
+
+	it('keeps the stored setup state when a branding field is invalid', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			APP_PUBLIC_CONFIG_KEY,
+			JSON.stringify({branding: {product_name: 'Kept', icon_url: 42}, setup: {configured: false}}),
+		);
+
+		const config = await repository.getAppPublicConfig();
+		expect(config.setup.configured).toBe(false);
+		expect(config.branding.product_name).toBe('Kept');
+	});
+
+	it('keeps valid stored instance policy flags when one field is invalid', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			INSTANCE_POLICY_CONFIG_KEY,
+			JSON.stringify({direct_messages_disabled: true, single_community_enabled: true, premium_mode: 'nonsense'}),
+		);
+
+		const policy = await repository.getInstancePolicyConfig();
+		expect(policy.direct_messages_disabled).toBe(true);
+		expect(policy.single_community_enabled).toBe(true);
+		expect(policy.premium_mode).toBe('everyone');
+	});
+
+	it('keeps valid stored integration settings when one field is invalid', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			INSTANCE_INTEGRATIONS_CONFIG_KEY,
+			JSON.stringify({bluesky: {client_name: 'Kept Instance', enabled: 'yes'}}),
+		);
+
+		expect((await repository.getEffectiveBlueskyConfig()).client_name).toBe('Kept Instance');
+		expect((await repository.getInstanceIntegrationsConfig()).bluesky.enabled).toBeNull();
+	});
+
+	it('drops invalid stored SSO allowed domains and keeps the valid ones', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig('sso_allowed_domains', JSON.stringify(['example.com', 'nope@example.com', 'Kept.ORG']));
+
+		expect((await repository.getSsoConfig()).allowedEmailDomains).toEqual(['example.com', 'kept.org']);
+	});
+
+	it('falls back to the default SSO flags when a stored flag is not a boolean', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig('sso_enabled', 'yes');
+		await repository.setConfig('sso_enforced', 'sometimes');
+		await repository.setConfig('sso_auto_provision', 'maybe');
+
+		const config = await repository.getSsoConfig();
+		expect(config.enabled).toBe(false);
+		expect(config.enforced).toBe(false);
+		expect(config.autoProvision).toBe(true);
+	});
+
+	it('clears an invalid allowed domain list only while SSO is disabled', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const cleared = await repository.setSsoConfig({enabled: false, allowedEmailDomains: ['nope@example.com']});
+		expect(cleared.allowedEmailDomains).toEqual([]);
+
+		await expect(repository.setSsoConfig({enabled: true, allowedEmailDomains: ['nope@example.com']})).rejects.toThrow();
+	});
+
+	it('keeps an all-invalid stored allowed domain list non-empty so SSO still rejects every domain', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig('sso_allowed_domains', JSON.stringify(['nope@example.com', 'bad/domain']));
+
+		const domains = (await repository.getSsoConfig()).allowedEmailDomains;
+		expect(domains.length).toBeGreaterThan(0);
+		expect(domains).not.toContain('example.com');
+	});
+
+	it('returns the default voice noise suppression config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
+		{name: 'an unknown backend', stored: '{"default_backend":"magic"}'},
+	])('falls back to the default voice noise suppression config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY, stored);
+
+		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
+	});
+
+	it('round-trips a stored voice noise suppression config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: VoiceNoiseSuppressionConfig = {
+			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+			enabled: true,
+			config_version: 3,
+			default_backend: 'rnnoise',
+			enabled_backends: ['none', 'standard', 'rnnoise'],
+			allow_user_override: false,
+			rollout_basis_points: 2500,
+			rollout_salt: 'voice-ns-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+			guild_overrides: [{guild_id: '2400000000000000001', backend: 'rnnoise'}],
+			stereo_enabled: true,
+			suppression_strength: 55,
+		};
+		await repository.setVoiceNoiseSuppressionConfig(config);
+
+		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(config);
+	});
+
+	it('fills newly added voice noise suppression fields from the schema defaults', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			VOICE_NOISE_SUPPRESSION_CONFIG_KEY,
+			JSON.stringify({enabled: true, config_version: 2, rollout_basis_points: 1000}),
+		);
+
+		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual({
+			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 1000,
+		});
+	});
+
+	it('returns the default experiment delivery config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual(DEFAULT_EXPERIMENT_DELIVERY_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'an out-of-range poll interval', stored: '{"poll_interval_seconds":1}'},
+		{name: 'an out-of-range jitter', stored: '{"poll_jitter_percent":99}'},
+		{name: 'a non-numeric poll interval', stored: '{"poll_interval_seconds":"often"}'},
+	])('falls back to the default experiment delivery config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(EXPERIMENT_DELIVERY_CONFIG_KEY, stored);
+
+		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual(DEFAULT_EXPERIMENT_DELIVERY_CONFIG);
+	});
+
+	it('round-trips a stored experiment delivery config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: ExperimentDeliveryConfig = {poll_interval_seconds: 900, poll_jitter_percent: 0};
+		await repository.setExperimentDeliveryConfig(config);
+
+		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual(config);
+	});
+
+	it('fills missing experiment delivery fields from the schema defaults', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(EXPERIMENT_DELIVERY_CONFIG_KEY, JSON.stringify({poll_interval_seconds: 3600}));
+
+		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual({
+			...DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
+			poll_interval_seconds: 3600,
+		});
+	});
+
+	it('publishes a refresh so another repository observes the voice noise suppression config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const reader = createRepository(kvProvider);
+		const writer = createRepository(kvProvider);
+
+		await expect(reader.getVoiceNoiseSuppressionConfig()).resolves.toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
+
+		await writer.setVoiceNoiseSuppressionConfig({
+			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+			enabled: true,
+			config_version: 1,
+		});
+
+		await vi.waitFor(async () => {
+			expect(await reader.getVoiceNoiseSuppressionConfig()).toMatchObject({enabled: true, config_version: 1});
 		});
 	});
 

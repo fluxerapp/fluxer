@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {DonationRepository} from '../DonationRepository';
+import {Config} from '@app/api/Config';
+import {DonationRepository} from '@app/api/donation/DonationRepository';
 import {
 	clearDonationTestEmails,
 	createDonationRequestLinkBuilder,
 	createUniqueEmail,
 	listDonationTestEmails,
 	TEST_DONOR_EMAIL,
-} from './DonationTestUtils';
+} from '@app/api/donation/tests/DonationTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('POST /donations/request-link', () => {
 	let harness: ApiTestHarness;

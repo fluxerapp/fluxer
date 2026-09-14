@@ -23,6 +23,9 @@ import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMember
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {action, makeAutoObservable, reaction} from 'mobx';
 
+const STALE_WINDOW_REFETCH_INTERVAL_MS = 10_000;
+const staleWindowRefetchedAt = new Map<string, number>();
+
 interface GuildMemberUpdateAction {
 	type: 'GUILD_MEMBER_UPDATE';
 	guildId: string;
@@ -201,7 +204,7 @@ class Messages {
 	}
 
 	private hasLoadedPage(messages: ChannelMessages): boolean {
-		return messages.ready && messages.length > 0;
+		return messages.ready && messages.length > 0 && !messages.cached;
 	}
 
 	shouldPreloadLatestPage(channelId: string): boolean {
@@ -209,7 +212,9 @@ class Messages {
 			return false;
 		}
 		const messages = ChannelMessages.get(channelId);
-		return !messages || (messages.length === 0 && !messages.loadingMore && !messages.ready);
+		if (!messages) return true;
+		if (messages.loadingMore || ChannelMessages.isRetained(channelId)) return false;
+		return messages.length === 0 ? !messages.ready : messages.cached;
 	}
 
 	@action
@@ -282,15 +287,6 @@ class Messages {
 		this.indexedAuthorsByChannel.clear();
 		this.pendingJumpDispatches.clear();
 		this.pendingFullHydration = true;
-		this.notifyChange();
-		return true;
-	}
-
-	@action
-	handleResumed(): boolean {
-		ChannelMessages.forEach((messages) => {
-			this.commitMessages(messages.withPatch({ready: true}));
-		});
 		this.notifyChange();
 		return true;
 	}
@@ -518,7 +514,21 @@ class Messages {
 		});
 		this.commitMessages(messages);
 		this.notifyChange();
+		this.refetchStaleWindow(action.channelId, action.cached === true, action.jump);
 		return false;
+	}
+
+	private refetchStaleWindow(channelId: string, stale: boolean, jump?: JumpOptions): void {
+		if (!stale || !GatewayConnection.isConnected || SelectedChannel.currentChannelId !== channelId) {
+			return;
+		}
+		const lastAttemptAt = staleWindowRefetchedAt.get(channelId) ?? 0;
+		const now = Date.now();
+		if (now - lastAttemptAt < STALE_WINDOW_REFETCH_INTERVAL_MS) {
+			return;
+		}
+		staleWindowRefetchedAt.set(channelId, now);
+		MessageCommands.fetchMessages(channelId, null, null, MAX_MESSAGES_PER_CHANNEL, jump, {staleRefetch: true});
 	}
 
 	@action

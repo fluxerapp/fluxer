@@ -118,7 +118,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	const readStateVersion = ReadStates.version;
 	const settingsVersion = UserGuildSettings.version;
 	const unreadChannels = useMemo(() => getUnreadChannels(), [readStateVersion, settingsVersion]);
-	const baseTabs: Array<TabConfig> = [
+	const tabs: Array<TabConfig> = [
 		{
 			key: 'unreadChannels',
 			label: i18n._(UNREAD_DESCRIPTOR),
@@ -135,7 +135,6 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 			icon: <AtIcon weight="bold" className={styles.iconSmall} data-flx="messaging.inbox-popout.icon-small--3" />,
 		},
 	];
-	const tabs = baseTabs;
 	const normalizedActiveTab = tabs.some((tab) => tab.key === activeTab) ? activeTab : tabs[0].key;
 	const setActiveTab = useCallback((tab: InboxTab) => {
 		InboxCommands.setTab(tab);

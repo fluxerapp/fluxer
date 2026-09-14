@@ -111,7 +111,7 @@
 }
 
 .markup .link {
-	color: var(--text-link) !important;
+	color: var(--markup-link-color, var(--text-link)) !important;
 	text-decoration: var(--link-decoration, none);
 	transition:
 		color var(--transition-fast),
@@ -124,12 +124,12 @@
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.markup
 	.link:hover {
-	color: var(--text-link) !important;
+	color: var(--markup-link-color, var(--text-link)) !important;
 	text-decoration: underline;
 }
 
 .markup .link[data-context-menu-open='true'] {
-	color: var(--text-link) !important;
+	color: var(--markup-link-color, var(--text-link)) !important;
 	text-decoration: underline;
 }
 
@@ -537,7 +537,7 @@
 	margin: 0;
 	font-weight: 500;
 	unicode-bidi: plaintext;
-	color: var(--mention-color) !important;
+	color: var(--markup-mention-color, var(--mention-color)) !important;
 	background-color: var(--markup-mention-fill);
 	border: 0;
 	box-shadow: none;
@@ -585,7 +585,7 @@
 .markup .mention.interactive.mentionActive,
 .inlineFormat .mention.interactive.mentionActive {
 	background-color: var(--markup-interactive-hover-fill);
-	color: var(--text-link) !important;
+	color: var(--markup-mention-color, var(--text-link)) !important;
 	text-decoration: none;
 }
 

@@ -1,26 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {CallAlreadyExistsError} from '@fluxer/errors/src/domains/channel/CallAlreadyExistsError';
-import {InvalidChannelTypeForCallError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeForCallError';
-import {NoActiveCallError} from '@fluxer/errors/src/domains/channel/NoActiveCallError';
-import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
-import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
-import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
-import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
-import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {ms} from 'itty-time';
-import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, createUserID} from '../BrandedTypes';
-import {SYSTEM_USER_ID} from '../constants/Core';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
-import {Logger} from '../Logger';
-import {GatewayRpcClient} from './GatewayRpcClient';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from './GatewayRpcError';
+import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
+import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
 import type {
 	CallData,
 	GatewayActiveVoiceRooms,
@@ -32,7 +17,24 @@ import type {
 	GatewayVoiceStateCounts,
 	GatewayVoiceStateEntry,
 	GuildChannelAuthContext,
-} from './IGatewayService';
+} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {CallAlreadyExistsError} from '@fluxer/errors/src/domains/channel/CallAlreadyExistsError';
+import {InvalidChannelTypeForCallError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeForCallError';
+import {NoActiveCallError} from '@fluxer/errors/src/domains/channel/NoActiveCallError';
+import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
+import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
+import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {ms} from 'itty-time';
 
 const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
 
@@ -47,6 +49,8 @@ const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
 	[GatewayRpcMethodErrorCodes.CONNECTION_NOT_FOUND]: () => new UserNotInVoiceError(),
 	[GatewayRpcMethodErrorCodes.MODERATOR_MISSING_CONNECT]: () => new MissingPermissionsError(),
 	[GatewayRpcMethodErrorCodes.TARGET_MISSING_CONNECT]: () => new MissingPermissionsError(),
+	[GatewayRpcMethodErrorCodes.INVALID_PARAMS]: () => new BadRequestError({code: APIErrorCodes.INVALID_FORM_BODY}),
+	[GatewayRpcMethodErrorCodes.BATCH_TOO_LARGE]: () => new BadRequestError({code: APIErrorCodes.INVALID_FORM_BODY}),
 };
 
 interface DispatchGuildParams {

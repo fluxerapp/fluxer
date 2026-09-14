@@ -6,7 +6,7 @@ import {
 	ANIMATED_AVATAR_FORMATS,
 	ANIMATED_IMAGE_FORMATS,
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	PREMIUM_PRODUCT_NAME,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
@@ -36,6 +36,7 @@ import {
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
@@ -178,7 +179,7 @@ export const AvatarUploader = observer(
 					showUserErrorModal(
 						i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
 						i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 						}),
 					);
 					return;
@@ -212,8 +213,8 @@ export const AvatarUploader = observer(
 												data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.spaced-paragraph"
 											>
 												<Trans>
-													With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}), profile
-													banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
+													With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
+													profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
 												</Trans>
 											</p>
 										</>
@@ -327,13 +328,13 @@ export const AvatarUploader = observer(
 			const uploadHint = canUploadAnimatedAvatar
 				? formatImageUploadRecommendedHint(i18n, {
 						formats: ANIMATED_IMAGE_FORMATS,
-						maxSize: IMAGE_MAX_SIZE_LABEL,
+						maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 						recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 					})
 				: shouldShowPremiumFeatures()
 					? formatImageUploadRecommendedHintWithNote(i18n, {
 							formats: STATIC_IMAGE_FORMATS,
-							maxSize: IMAGE_MAX_SIZE_LABEL,
+							maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 							recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 							note: i18n._(ANIMATED_AVATARS_REQUIRE_PREMIUM_NOTE_DESCRIPTOR, {
 								animatedAvatarFormats: ANIMATED_AVATAR_FORMATS,
@@ -342,7 +343,7 @@ export const AvatarUploader = observer(
 						})
 					: formatImageUploadRecommendedHint(i18n, {
 							formats: STATIC_IMAGE_FORMATS,
-							maxSize: IMAGE_MAX_SIZE_LABEL,
+							maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 							recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 						});
 			openAssetSourceModal({

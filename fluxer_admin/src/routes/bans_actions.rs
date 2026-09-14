@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::client::AdminApiClient;
+use crate::api::client::{AdminApiClient, ApiResult};
 use crate::api::types::{FlashLevel, FlashMessage};
 use crate::middleware::auth::AuthContext;
 use crate::templates;
-use axum::{
-    http::HeaderMap,
-    response::{Html, IntoResponse, Response},
-};
+use axum::response::{Html, IntoResponse, Response};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 pub struct BanFormData {
     #[serde(default)]
     pub ip: Option<String>,
@@ -65,7 +61,7 @@ pub async fn execute_ban(
     bulk_hashes: Option<&str>,
     bulk_sha256_list: Option<&str>,
     audit_log_reason: Option<&str>,
-) -> (String, String) {
+) -> (&'static str, String) {
     if (action == "bulk-ban" || action == "bulk-ban-files") && ban_type == "file-sha-bans" {
         let raw_hashes = if action == "bulk-ban-files" {
             bulk_sha256_list
@@ -75,13 +71,13 @@ pub async fn execute_ban(
         return execute_bulk_ban(client, raw_hashes, audit_log_reason).await;
     }
     if value.is_empty() {
-        return ("error".into(), "Value is required".into());
+        return ("error", "Value is required".into());
     }
     match action {
         "ban" => execute_single_ban(client, ban_type, value, audit_log_reason).await,
         "unban" => execute_single_unban(client, ban_type, value, audit_log_reason).await,
         "check" => execute_check(client, ban_type, value).await,
-        _ => ("error".into(), "Unknown action".into()),
+        _ => ("error", "Unknown action".into()),
     }
 }
 
@@ -89,7 +85,7 @@ async fn execute_bulk_ban(
     client: &AdminApiClient,
     bulk_hashes: Option<&str>,
     audit_log_reason: Option<&str>,
-) -> (String, String) {
+) -> (&'static str, String) {
     let hashes: Vec<String> = bulk_hashes
         .unwrap_or("")
         .split(|c: char| c.is_whitespace() || c == ',' || c == ';')
@@ -98,18 +94,15 @@ async fn execute_bulk_ban(
         .collect();
     if hashes.is_empty() {
         return (
-            "error".into(),
+            "error",
             "No valid 64-character hex hashes found in input".into(),
         );
     }
     match client.bulk_ban_file_shas(&hashes, audit_log_reason).await {
-        Ok(r) => (
-            "success".into(),
-            format!("Bulk ban job created: {}", r.job_id),
-        ),
+        Ok(r) => ("success", format!("Bulk ban job created: {}", r.job_id)),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: bulk ban file SHAs");
-            ("error".into(), "Failed to enqueue bulk ban job".into())
+            ("error", "Failed to enqueue bulk ban job".into())
         }
     }
 }
@@ -119,29 +112,26 @@ async fn execute_single_ban(
     ban_type: &str,
     value: &str,
     audit_log_reason: Option<&str>,
-) -> (String, String) {
-    let success = format!("{value} banned successfully");
-    let failure = format!("Failed to ban {value}");
-    match ban_type {
-        "ip-bans" => ban_action_result(client.ban_ip(value).await, success, failure),
-        "email-bans" => ban_action_result(client.ban_email(value).await, success, failure),
-        "suspicious-email-domains" => ban_action_result(
-            client.add_suspicious_email_domain(value).await,
-            success,
-            failure,
-        ),
-        "phrase-bans" => ban_action_result(client.ban_phrase(value).await, success, failure),
-        "url-bans" => ban_action_result(client.ban_url(value).await, success, failure),
-        "file-sha-bans" => ban_action_result(
-            client.ban_file_sha(value, audit_log_reason).await,
-            success,
-            failure,
-        ),
-        "avatar-hash-bans" => {
-            ban_action_result(client.ban_avatar_hash(value).await, success, failure)
+) -> (&'static str, String) {
+    let result = match ban_type {
+        "ip-bans" => client.ban_ip(value, audit_log_reason).await,
+        "email-bans" => client.ban_email(value, audit_log_reason).await,
+        "suspicious-email-domains" => {
+            client
+                .add_suspicious_email_domain(value, audit_log_reason)
+                .await
         }
-        _ => ("error".into(), "Unknown ban type".into()),
-    }
+        "phrase-bans" => client.ban_phrase(value, audit_log_reason).await,
+        "url-bans" => client.ban_url(value, audit_log_reason).await,
+        "file-sha-bans" => client.ban_file_sha(value, audit_log_reason).await,
+        "avatar-hash-bans" => client.ban_avatar_hash(value, audit_log_reason).await,
+        _ => return ("error", "Unknown ban type".into()),
+    };
+    ban_action_result(
+        result,
+        format!("{value} banned successfully"),
+        format!("Failed to ban {value}"),
+    )
 }
 
 async fn execute_single_unban(
@@ -149,32 +139,33 @@ async fn execute_single_unban(
     ban_type: &str,
     value: &str,
     audit_log_reason: Option<&str>,
-) -> (String, String) {
-    let success = format!("{value} unbanned successfully");
-    let failure = format!("Failed to unban {value}");
-    match ban_type {
-        "ip-bans" => ban_action_result(client.unban_ip(value).await, success, failure),
-        "email-bans" => ban_action_result(client.unban_email(value).await, success, failure),
-        "suspicious-email-domains" => ban_action_result(
-            client.remove_suspicious_email_domain(value).await,
-            success,
-            failure,
-        ),
-        "phrase-bans" => ban_action_result(client.unban_phrase(value).await, success, failure),
-        "url-bans" => ban_action_result(client.unban_url(value).await, success, failure),
-        "file-sha-bans" => ban_action_result(
-            client.unban_file_sha(value, audit_log_reason).await,
-            success,
-            failure,
-        ),
-        "avatar-hash-bans" => {
-            ban_action_result(client.unban_avatar_hash(value).await, success, failure)
+) -> (&'static str, String) {
+    let result = match ban_type {
+        "ip-bans" => client.unban_ip(value, audit_log_reason).await,
+        "email-bans" => client.unban_email(value, audit_log_reason).await,
+        "suspicious-email-domains" => {
+            client
+                .remove_suspicious_email_domain(value, audit_log_reason)
+                .await
         }
-        _ => ("error".into(), "Unknown ban type".into()),
-    }
+        "phrase-bans" => client.unban_phrase(value, audit_log_reason).await,
+        "url-bans" => client.unban_url(value, audit_log_reason).await,
+        "file-sha-bans" => client.unban_file_sha(value, audit_log_reason).await,
+        "avatar-hash-bans" => client.unban_avatar_hash(value, audit_log_reason).await,
+        _ => return ("error", "Unknown ban type".into()),
+    };
+    ban_action_result(
+        result,
+        format!("{value} unbanned successfully"),
+        format!("Failed to unban {value}"),
+    )
 }
 
-async fn execute_check(client: &AdminApiClient, ban_type: &str, value: &str) -> (String, String) {
+async fn execute_check(
+    client: &AdminApiClient,
+    ban_type: &str,
+    value: &str,
+) -> (&'static str, String) {
     let result = match ban_type {
         "ip-bans" => client.check_ip_ban(value).await,
         "email-bans" => client.check_email_ban(value).await,
@@ -183,28 +174,28 @@ async fn execute_check(client: &AdminApiClient, ban_type: &str, value: &str) -> 
         "url-bans" => client.check_url_ban(value).await,
         "file-sha-bans" => client.check_file_sha_ban(value).await,
         "avatar-hash-bans" => client.check_avatar_hash_ban(value).await,
-        _ => return ("error".into(), "Unknown ban type".into()),
+        _ => return ("error", "Unknown ban type".into()),
     };
     match result {
-        Ok(r) if r.banned => ("info".into(), format!("{value} is banned")),
-        Ok(_) => ("info".into(), format!("{value} is NOT banned")),
+        Ok(r) if r.banned => ("info", format!("{value} is banned")),
+        Ok(_) => ("info", format!("{value} is NOT banned")),
         Err(error) => {
             tracing::warn!(%error, ban_type, value, "admin API request failed: check ban status");
-            ("error".into(), "Error checking ban status".into())
+            ("error", "Error checking ban status".into())
         }
     }
 }
 
-fn ban_action_result<T, E: std::fmt::Display>(
-    result: Result<T, E>,
+fn ban_action_result(
+    result: ApiResult<()>,
     success_message: String,
     error_message: String,
-) -> (String, String) {
+) -> (&'static str, String) {
     match result {
-        Ok(_) => ("success".into(), success_message),
+        Ok(()) => ("success", success_message),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: ban action");
-            ("error".into(), error_message)
+            ("error", error_message)
         }
     }
 }
@@ -226,11 +217,6 @@ pub fn flash_response(
             templates::pages::bans::bans_page(config, auth, ban_cfg, Some(&flash), csrf_token);
         Html(markup.into_string()).into_response()
     }
-}
-
-pub fn htmx_flash(level: &str, message: &str, headers: &HeaderMap) -> Response {
-    let _ = headers;
-    render_inline_flash(level, message)
 }
 
 pub fn render_inline_flash(level: &str, message: &str) -> Response {

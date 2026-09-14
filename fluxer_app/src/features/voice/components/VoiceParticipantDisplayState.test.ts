@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import {
+	resolveVoiceParticipantDisplayState,
+	resolveVoiceParticipantSpeaking,
+} from '@app/features/voice/components/VoiceParticipantDisplayState';
 import {describe, expect, it} from 'vitest';
-import {resolveVoiceParticipantDisplayState, resolveVoiceParticipantSpeaking} from './VoiceParticipantDisplayState';
 
 function voiceState(overrides: Partial<VoiceState>): VoiceState {
 	return overrides as VoiceState;

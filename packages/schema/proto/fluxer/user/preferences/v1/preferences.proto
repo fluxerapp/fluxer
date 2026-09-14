@@ -49,6 +49,7 @@ message SyncedPreferences {
   KeybindSettings keybinds = 111;
   ChatInputSettings chat_input = 112;
   optional bool save_camera_uploads_to_device = 113;
+  ReactionEmoji double_tap_reaction = 114;
 
 }
 
@@ -153,6 +154,8 @@ message NagbarDismissals {
   map<string, bool> pending_bulk_deletion = 15;
   map<string, bool> invites_disabled = 16;
   map<string, bool> guild_mfa_requirement = 17;
+  map<string, bool> price_announcement = 18;
+  map<string, bool> legacy_price_opt_in = 19;
 }
 
 message DismissedUpsells {
@@ -259,4 +262,9 @@ enum MfaMethod {
 
 message ChatInputSettings {
   optional bool convert_emoticons = 1;
+}
+
+message ReactionEmoji {
+  optional string id = 1;
+  string name = 2;
 }

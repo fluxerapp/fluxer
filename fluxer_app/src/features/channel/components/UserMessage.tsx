@@ -19,6 +19,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
@@ -29,6 +30,7 @@ import {hasStyleableMessageText} from '@app/features/messaging/utils/FailedMessa
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
+	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
@@ -193,13 +195,13 @@ export const UserMessage = observer(() => {
 			if (message.messageSnapshots) {
 				return;
 			}
-			const content = (actualContent ?? '').trim();
+			const content = dropTrailingEmptyBlockquoteLines(actualContent ?? '').trim();
 			if (!content) {
+				if (isAttachmentOnlyMessage(message)) {
+					finishEditing();
+					return;
+				}
 				if (canSubmitEmptyMessageEdit(message)) {
-					if (message.content.length === 0) {
-						finishEditing();
-						return;
-					}
 					finishEditing();
 					void MessageCommands.edit(
 						channel.id,

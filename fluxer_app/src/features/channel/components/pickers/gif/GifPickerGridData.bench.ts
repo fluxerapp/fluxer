@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {buildGifPickerGridData} from '@app/features/channel/components/pickers/gif/GifPickerGridData';
 import {bench, describe} from 'vitest';
-import {buildGifPickerGridData} from './GifPickerGridData';
 
 function gif(index: number, width = 200 + (index % 80), height = 120 + (index % 160)) {
 	return {

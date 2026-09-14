@@ -10,7 +10,6 @@ export interface GuildEmojiShape {
 	allNamesString: string;
 	url: string;
 	animated: boolean;
-	nsfw?: boolean;
 	user?: UserPartial;
 }
 

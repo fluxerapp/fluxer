@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createMfaBackupCode, type UserID} from '../../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, upsertOne} from '../../../database/CassandraQueryExecution';
-import {Db} from '../../../database/CassandraTypes';
-import type {MfaBackupCodeRow} from '../../../database/types/AuthTypes';
-import {MfaBackupCode} from '../../../models/MfaBackupCode';
-import {MfaBackupCodes} from '../../../Tables';
+import {createMfaBackupCode, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, deleteOneOrMany, fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {MfaBackupCodeRow} from '@app/api/database/types/AuthTypes';
+import {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import {MfaBackupCodes} from '@app/api/Tables';
 
 const FETCH_MFA_BACKUP_CODES_CQL = MfaBackupCodes.selectCql({
 	where: MfaBackupCodes.where.eq('user_id'),

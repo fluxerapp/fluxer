@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import {SearchAdapterServiceBase} from '@app/api/search/SearchAdapterServiceBase';
+import {convertToSearchableUser} from '@app/api/search/user/UserSearchSerializer';
 import type {SearchResult as SchemaSearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {SearchableUser, UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {
 	ElasticsearchUserAdapter,
 	type ElasticsearchUserAdapterOptions,
 } from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchUserAdapter';
-import type {UserID} from '../../BrandedTypes';
-import type {User} from '../../models/User';
-import type {IUserSearchService} from '../IUserSearchService';
-import {SearchAdapterServiceBase} from '../SearchAdapterServiceBase';
-import {convertToSearchableUser} from '../user/UserSearchSerializer';
 
 interface ElasticsearchUserSearchServiceOptions extends ElasticsearchUserAdapterOptions {}
 

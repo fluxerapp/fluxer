@@ -1,22 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID, type UserID} from '../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	LatestRiskContextByUserRow,
 	RiskOutcomeByAsnRow,
 	RiskOutcomeByEmailDomainRow,
 	RiskOutcomeByIpRow,
 	RiskOutcomeBySubnetRow,
-} from '../database/types/RiskTypes';
+} from '@app/api/database/types/RiskTypes';
+import type {
+	HistoricalOutcomeCode,
+	HistoricalOutcomeRecord,
+	LatestRiskContextRecord,
+} from '@app/api/risk/RiskHistoryTypes';
 import {
 	LatestRiskContextByUser,
 	RiskOutcomesByAsn,
 	RiskOutcomesByEmailDomain,
 	RiskOutcomesByIp,
 	RiskOutcomesBySubnet,
-} from '../Tables';
-import type {HistoricalOutcomeCode, HistoricalOutcomeRecord, LatestRiskContextRecord} from './RiskHistoryTypes';
+} from '@app/api/Tables';
 
 export interface IRiskHistoryRepository {
 	upsertLatestContext(context: LatestRiskContextRecord): Promise<void>;

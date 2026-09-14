@@ -7,6 +7,8 @@ import {EXAMPLE_EMAIL, SUPPORT_EMAIL, SUPPORT_EMAIL_MAILTO} from '@app/features/
 import styles from '@app/features/auth/components/modals/RequiredActionModal.module.css';
 import {
 	A_NEW_VERIFICATION_CODE_HAS_BEEN_SENT_DESCRIPTOR,
+	ALT_ROUTES_HUMAN_REVIEW_DESCRIPTOR,
+	ALT_ROUTES_TITLE_DESCRIPTOR,
 	CAPTCHA_REQUIRED_DESCRIPTOR,
 	CODE_DID_NOT_WORK_DESCRIPTOR,
 	CODE_EXPIRED_DESCRIPTOR,
@@ -16,17 +18,25 @@ import {
 	EMAIL_MUST_BE_DIFFERENT_DESCRIPTOR,
 	ENTER_VALID_EMAIL_DESCRIPTOR,
 	ENTER_VALID_PHONE_DESCRIPTOR,
+	ESCAPE_BUTTON_DESCRIPTOR,
 	FAILED_TO_RESEND_VERIFICATION_CODE_PLEASE_TRY_AGAIN_DESCRIPTOR,
 	NEW_EMAIL_DESCRIPTOR,
 	PHONE_ALREADY_USED_DESCRIPTOR,
 	PHONE_CANNOT_BE_USED_DESCRIPTOR,
+	PHONE_COUNTRY_NOT_SUPPORTED_DESCRIPTOR,
+	PHONE_INBOUND_REQUIRED_DESCRIPTOR,
+	PHONE_LOOKUP_UNAVAILABLE_DESCRIPTOR,
+	PHONE_NEEDS_REVIEW_DESCRIPTOR,
 	PHONE_NOT_ELIGIBLE_DESCRIPTOR,
+	PHONE_NOT_IN_SERVICE_DESCRIPTOR,
+	PHONE_NOT_MOBILE_DESCRIPTOR,
 	SMS_UNAVAILABLE_DESCRIPTOR,
 	SOMETHING_WENT_WRONG_TRY_AGAIN_DESCRIPTOR,
 	SUPPORT_LINK_LABEL_DESCRIPTOR,
 	TOO_MANY_ATTEMPTS_DESCRIPTOR,
 	VERIFICATION_SESSION_EXPIRED_DESCRIPTOR,
 } from '@app/features/auth/components/modals/required_action/RequiredActionDescriptors';
+import {buildPhoneGateEscapeHint} from '@app/features/auth/components/modals/required_action/RequiredActionEscapeCopy';
 import type {
 	CodeFormInputs,
 	NewEmailFormInputs,
@@ -73,6 +83,7 @@ const EMAIL_VALIDATION_CODES = new Set<string>([
 	ValidationErrorCodes.INVALID_EMAIL_FORMAT,
 	ValidationErrorCodes.INVALID_EMAIL_LOCAL_PART,
 	ValidationErrorCodes.INVALID_EMAIL_ADDRESS,
+	ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL,
 ]);
 const CODE_SESSION_VALIDATION_CODES = new Set<string>([
 	ValidationErrorCodes.EMAIL_TOKEN_EXPIRED,
@@ -156,6 +167,18 @@ export function resolveRequiredActionErrorMessage(
 			return context === 'phone-number'
 				? i18n._(ENTER_VALID_PHONE_DESCRIPTOR)
 				: i18n._(PHONE_CANNOT_BE_USED_DESCRIPTOR);
+		case APIErrorCodes.PHONE_COUNTRY_NOT_SUPPORTED:
+			return i18n._(PHONE_COUNTRY_NOT_SUPPORTED_DESCRIPTOR);
+		case APIErrorCodes.PHONE_NUMBER_NOT_IN_SERVICE:
+			return i18n._(PHONE_NOT_IN_SERVICE_DESCRIPTOR);
+		case APIErrorCodes.PHONE_NUMBER_NOT_MOBILE:
+			return i18n._(PHONE_NOT_MOBILE_DESCRIPTOR);
+		case APIErrorCodes.PHONE_LOOKUP_UNAVAILABLE:
+			return i18n._(PHONE_LOOKUP_UNAVAILABLE_DESCRIPTOR);
+		case APIErrorCodes.PHONE_INBOUND_VERIFICATION_REQUIRED:
+			return i18n._(PHONE_INBOUND_REQUIRED_DESCRIPTOR);
+		case APIErrorCodes.PHONE_VERIFICATION_NEEDS_REVIEW:
+			return i18n._(PHONE_NEEDS_REVIEW_DESCRIPTOR);
 		case APIErrorCodes.INVALID_PHONE_VERIFICATION_CODE:
 			return i18n._(CODE_DID_NOT_WORK_DESCRIPTOR);
 		case APIErrorCodes.PHONE_ALREADY_USED:
@@ -275,6 +298,53 @@ export const SupportLinkLine: React.FC = () => {
 		>
 			{i18n._(SUPPORT_LINK_LABEL_DESCRIPTOR)} ({SUPPORT_EMAIL})
 		</ExternalLink>
+	);
+};
+
+interface RequiredActionAltRoutesProps {
+	escapeAction: {
+		guildCount: number;
+		submitting: boolean;
+		onPress: () => void;
+	} | null;
+}
+
+export const RequiredActionAltRoutes: React.FC<RequiredActionAltRoutesProps> = ({escapeAction}) => {
+	const {i18n} = useLingui();
+	return (
+		<div data-flx="auth.required-action-modal.alt-routes">
+			<p
+				className={styles.altRoutesTitle}
+				data-step-focus="true"
+				tabIndex={-1}
+				data-flx="auth.required-action-modal.alt-routes.title"
+			>
+				{i18n._(ALT_ROUTES_TITLE_DESCRIPTOR)}
+			</p>
+			<p className={styles.altRoutesBody} data-flx="auth.required-action-modal.alt-routes.body">
+				{i18n._(ALT_ROUTES_HUMAN_REVIEW_DESCRIPTOR)}
+			</p>
+			<div className={styles.supportBlock} data-flx="auth.required-action-modal.alt-routes.support-block">
+				<SupportLinkLine data-flx="auth.required-action.required-action-shared.required-action-alt-routes.support-link-line" />
+			</div>
+			{escapeAction ? (
+				<>
+					<div className={styles.altRoutesDivider} data-flx="auth.required-action-modal.alt-routes.divider" />
+					<p data-flx="auth.required-action-modal.alt-routes.escape-hint">
+						{buildPhoneGateEscapeHint(i18n, escapeAction.guildCount)}
+					</p>
+					<Button
+						variant="secondary"
+						className={styles.altRoutesAction}
+						submitting={escapeAction.submitting}
+						onClick={escapeAction.onPress}
+						data-flx="auth.required-action-modal.alt-routes.button.set-aside"
+					>
+						{i18n._(ESCAPE_BUTTON_DESCRIPTOR)}
+					</Button>
+				</>
+			) : null}
+		</div>
 	);
 };
 

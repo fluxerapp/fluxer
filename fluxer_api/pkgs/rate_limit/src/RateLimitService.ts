@@ -88,9 +88,8 @@ export class RateLimitService implements IRateLimitService {
 		if (identifierPrefix.length === 0) {
 			throw new Error('identifierPrefix must be non-empty');
 		}
-		const sentinelKey = this.keyFactory.getIdentifierKey(`${identifierPrefix}\x00`);
-		const keyPrefix = sentinelKey.slice(0, -1);
-		const pattern = `${keyPrefix}*`;
+		const keyPrefix = this.keyFactory.getIdentifierKey(identifierPrefix);
+		const pattern = `${keyPrefix.replace(/[\\*?[\]]/g, '\\$&')}*`;
 		let totalDeleted = 0;
 		const batchSize = 256;
 		while (true) {

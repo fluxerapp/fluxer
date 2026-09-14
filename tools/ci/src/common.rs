@@ -365,20 +365,12 @@ fn format_calver(instant: DateTime<Utc>) -> String {
     )
 }
 
-fn month_day_segment(instant: DateTime<Utc>) -> String {
+pub(crate) fn month_day_segment(instant: DateTime<Utc>) -> String {
     format!("{}{:02}", instant.month(), instant.day())
 }
 
-fn micro_segment(instant: DateTime<Utc>) -> String {
-    format!(
-        "{:02}{:02}{:02}",
-        instant.hour(),
-        instant.minute(),
-        instant.second()
-    )
-    .parse::<u32>()
-    .expect("HHMMSS time segment should parse")
-    .to_string()
+pub(crate) fn micro_segment(instant: DateTime<Utc>) -> String {
+    (instant.hour() * 10_000 + instant.minute() * 100 + instant.second()).to_string()
 }
 
 pub(crate) fn parse_version_instant(version: &str) -> Result<DateTime<Utc>> {
@@ -1312,13 +1304,13 @@ pub(crate) fn collect_files(root: &Path) -> Result<Vec<PathBuf>> {
     if !root.exists() {
         return Ok(Vec::new());
     }
-    let mut files = WalkDir::new(root)
-        .into_iter()
-        .collect::<std::result::Result<Vec<_>, _>>()?
-        .into_iter()
-        .filter(|entry| entry.file_type().is_file())
-        .map(|entry| entry.into_path())
-        .collect::<Vec<_>>();
+    let mut files = Vec::new();
+    for entry in WalkDir::new(root) {
+        let entry = entry?;
+        if entry.file_type().is_file() {
+            files.push(entry.into_path());
+        }
+    }
     files.sort();
     Ok(files)
 }
@@ -1328,13 +1320,13 @@ pub(crate) fn count_files(root: &Path) -> Result<usize> {
 }
 
 pub(crate) fn count_files_min_depth(root: &Path, min_depth: usize) -> Result<usize> {
-    Ok(WalkDir::new(root)
-        .min_depth(min_depth)
-        .into_iter()
-        .collect::<std::result::Result<Vec<_>, _>>()?
-        .into_iter()
-        .filter(|entry| entry.file_type().is_file())
-        .count())
+    let mut count = 0;
+    for entry in WalkDir::new(root).min_depth(min_depth) {
+        if entry?.file_type().is_file() {
+            count += 1;
+        }
+    }
+    Ok(count)
 }
 
 pub(crate) fn title_case(value: &str) -> String {

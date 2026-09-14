@@ -4,7 +4,7 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useAntiShiftFloating} from '@app/features/app/hooks/useAntiShiftFloating';
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
-import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
+import {scopePortalHostToDocument, usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {type Popout, PopoutKeyContext, type PopoutReferenceRect} from '@app/features/ui/popover';
 import {PopoutResizePositionContext} from '@app/features/ui/popover/PopoutResizePositionContext';
 import {getPopoutFocusManagerInsideElements} from '@app/features/ui/popover/PopoverFocusManagerUtils';
@@ -186,6 +186,7 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		);
 		const {
 			ref: popoutRef,
+			setFloating,
 			state,
 			style,
 			beginManualPositioning,
@@ -206,7 +207,7 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		useLayoutEffect(() => {
 			focusRefs.setReference(target);
 		}, [focusRefs, target]);
-		const mergedPopoutRef = useMergeRefs([popoutRef, focusRefs.setFloating]);
+		const mergedPopoutRef = useMergeRefs([setFloating, focusRefs.setFloating]);
 		const prefersReducedMotion = Accessibility.useReducedMotion;
 		const [isVisible, setIsVisible] = useState(true);
 		const [targetInDOM, setTargetInDOM] = useState(() => ownerDocument.contains(target));
@@ -426,10 +427,11 @@ interface PopoutsProps {
 
 export const Popouts: React.FC<PopoutsProps> = observer(({ownerDocument}) => {
 	const prevPopoutKeysRef = useRef<Set<string>>(new Set());
-	const portalHost = usePortalHost();
+	const activePortalHost = usePortalHost();
 	let scopeDocument = document;
-	if (portalHost != null) scopeDocument = portalHost.ownerDocument;
+	if (activePortalHost != null) scopeDocument = activePortalHost.ownerDocument;
 	if (ownerDocument != null) scopeDocument = ownerDocument;
+	const portalHost = scopePortalHostToDocument(activePortalHost, scopeDocument);
 	const popouts = PopoutState.getPopouts(scopeDocument);
 	const topPopout = popouts.length ? popouts[popouts.length - 1] : null;
 	const needsBackdrop = Boolean(topPopout && !topPopout.disableBackdrop);

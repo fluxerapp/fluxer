@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createDmChannel,
 	createGuild,
 	getChannel,
-} from '../../channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
 
 describe('Voice Call Update', () => {
 	let harness: ApiTestHarness;

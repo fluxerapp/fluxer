@@ -18,7 +18,6 @@ import type {CheckoutPaymentMethod, PriceIds} from '@app/features/premium/comman
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {recordPremiumCheckoutReturnIntent} from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
-import type {PricingMode} from '@app/features/premium/utils/PricingUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -37,7 +36,7 @@ const CUSTOMER_PORTAL_OPEN_FAILED_BODY_DESCRIPTOR = msg({
 });
 const PIX_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		"Pay with {pixPaymentMethod} automático to authorize recurring charges directly from your Brazilian bank. Or choose use card to enter a credit card on {paymentProviderName}'s next screen.",
+		'Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose "Use card" to enter a credit card on {paymentProviderName}\'s next screen.',
 	comment:
 		'Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.',
 });
@@ -47,7 +46,7 @@ const USE_PIX_BUTTON_DESCRIPTOR = msg({
 });
 const UPI_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		"Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose use card to enter a credit card on {paymentProviderName}'s next screen.",
+		'Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose "Use card" to enter a credit card on {paymentProviderName}\'s next screen.',
 	comment:
 		'Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.',
 });
@@ -181,7 +180,7 @@ const COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR = msg({
 });
 const VERIFY_CARD_MODAL_BODY_DESCRIPTOR = msg({
 	message:
-		"{paymentProviderName} will first verify that your card is eligible for localized pricing, then continue you to payment. Return to {productName} once you've completed it.",
+		"{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it.",
 	comment: 'Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.',
 });
 const COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR = msg({
@@ -246,7 +245,6 @@ function alternativePaymentMethodForCurrency(
 export const useCheckoutActions = (
 	priceIds: PriceIds | null,
 	countryCode: string | null,
-	pricingMode: PricingMode,
 	isGiftSubscription: boolean,
 	mobileEnabled: boolean,
 ) => {
@@ -552,7 +550,6 @@ export const useCheckoutActions = (
 						priceId,
 						countryCode ?? undefined,
 						isGift,
-						pricingMode,
 						paymentMethod,
 					);
 					await openCheckoutUrl(checkoutUrl, {promptKind: 'payment', skipMobilePrompt});
@@ -572,11 +569,7 @@ export const useCheckoutActions = (
 				}
 				setLoadingCheckout(true);
 				try {
-					const checkoutUrl = await PremiumCommands.createLocalizedCardPreapprovalSession(
-						priceId,
-						countryCode,
-						pricingMode,
-					);
+					const checkoutUrl = await PremiumCommands.createLocalizedCardPreapprovalSession(priceId, countryCode);
 					await openCheckoutUrl(checkoutUrl, {
 						promptKind: 'localized_card_preapproval',
 						skipMobilePrompt,
@@ -641,7 +634,6 @@ export const useCheckoutActions = (
 			getAlternativePaymentMethodPrompt,
 			isGiftSubscription,
 			mobileEnabled,
-			pricingMode,
 			i18n,
 		],
 	);

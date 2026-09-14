@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getScaledMediaDimensions,
 	hasRenderableLocalPreview,
 	LOCAL_MEDIA_PREVIEW_MAX_BYTES,
 	shouldEagerlyPreviewLocalImage,
 	shouldEagerlyPreviewLocalVideo,
-} from './LocalAttachmentPreviewUtils';
+} from '@app/features/messaging/utils/LocalAttachmentPreviewUtils';
+import {describe, expect, it} from 'vitest';
 
 describe('Local attachment preview utils', () => {
 	it('allows eager image previews at or below the local preview size cap', () => {

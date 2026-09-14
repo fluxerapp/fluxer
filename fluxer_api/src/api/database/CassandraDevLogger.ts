@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Logger} from '../Logger';
-import {getIsDev} from './CassandraMetaRegistry';
-import {getStatementMeta} from './CassandraTypes';
+import {getIsDev} from '@app/api/database/CassandraMetaRegistry';
+import {getStatementMeta} from '@app/api/database/CassandraTypes';
+import {Logger} from '@app/api/Logger';
 
 const colors = {
 	reset: '\x1b[0m',

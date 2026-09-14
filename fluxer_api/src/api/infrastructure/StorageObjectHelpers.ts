@@ -4,10 +4,10 @@ import {execFile} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import {promisify} from 'node:util';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonArray} from '@app/api/utils/JsonBoundaryUtils';
 import sharp from 'sharp';
 import {temporaryFile} from 'tempy';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonArray} from '../utils/JsonBoundaryUtils';
 
 const execFilePromise = promisify(execFile);
 

@@ -1,22 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {AdminRepository} from '../../admin/AdminRepository';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {
+	createTestPayment,
+	createTestUserWithPremium,
+	setupSyncStripeWebhookWorker,
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createMockWebhookPayload,
 	createStripeApiHandlers,
 	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {createTestPayment, createTestUserWithPremium, setupSyncStripeWebhookWorker} from './StripeWebhookTestUtils';
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Stripe Webhook Early Fraud Warning', () => {
 	let harness: ApiTestHarness;

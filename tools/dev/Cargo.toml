@@ -22,8 +22,6 @@ scylla = { version = "1.6.0", features = ["chrono-04"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
 sha2 = "0.11.0"
+tempfile = "3.27.0"
 tokio = { version = "1.52.3", features = ["fs", "io-util", "macros", "net", "process", "rt-multi-thread", "signal", "time"] }
 url = "2.5.8"
-
-[dev-dependencies]
-tempfile = "3.27.0"

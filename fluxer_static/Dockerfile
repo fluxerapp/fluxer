@@ -28,7 +28,8 @@ COPY --chown=65532:65532 fluxer_static/emoji /srv/fluxer-static/emoji
 COPY --chown=65532:65532 fluxer_static/libs /srv/fluxer-static/libs
 COPY --chown=65532:65532 fluxer_static/web /srv/fluxer-static/web
 
-RUN mkdir -p /config/caddy /data/caddy \
+RUN setcap -r /usr/bin/caddy \
+	&& mkdir -p /config/caddy /data/caddy \
 	&& chown -R 65532:65532 /config /data /srv/fluxer-static
 
 USER 65532:65532

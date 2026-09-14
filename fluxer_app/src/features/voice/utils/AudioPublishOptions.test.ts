@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	buildMicrophonePublishOptions,
 	normaliseAudioBitrateBps,
 	OPUS_MAX_AUDIO_BITRATE_BPS,
 	SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS,
-} from './AudioPublishOptions';
+} from '@app/features/voice/utils/AudioPublishOptions';
+import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('normaliseAudioBitrateBps', () => {
 	it('keeps stored channel bitrates in bits per second', () => {
@@ -31,6 +32,28 @@ describe('normaliseAudioBitrateBps', () => {
 });
 
 describe('buildMicrophonePublishOptions', () => {
+	it('leaves stereo to the track when the rollout requests it and the bitrate allows', () => {
+		expect(buildMicrophonePublishOptions(256000, 'voice', true)).toEqual({
+			audioPreset: {maxBitrate: 256000, priority: 'high'},
+			red: true,
+		});
+	});
+
+	it('forces mono when the rollout requests stereo but the bitrate is too low', () => {
+		expect(buildMicrophonePublishOptions(96000, 'voice', true)).toEqual({
+			audioPreset: {maxBitrate: 96000, priority: 'high'},
+			red: true,
+			forceStereo: false,
+		});
+	});
+
+	it('is unchanged when the rollout does not request stereo', () => {
+		expect(buildMicrophonePublishOptions(96000, 'voice', false)).toEqual(buildMicrophonePublishOptions(96000, 'voice'));
+		expect(buildMicrophonePublishOptions(320000, 'studio', false)).toEqual(
+			buildMicrophonePublishOptions(320000, 'studio'),
+		);
+	});
+
 	it('uses the channel bitrate for normal voice tracks', () => {
 		expect(buildMicrophonePublishOptions(96000, 'voice')).toEqual({
 			audioPreset: {
@@ -48,6 +71,15 @@ describe('buildMicrophonePublishOptions', () => {
 			},
 			dtx: false,
 			forceStereo: true,
+			red: true,
+		});
+	});
+	it('pins a call outside a guild to 64 kbps', () => {
+		expect(buildMicrophonePublishOptions(resolveVoiceChannelBitrate(null, null), 'voice')).toEqual({
+			audioPreset: {
+				maxBitrate: 64000,
+				priority: 'high',
+			},
 			red: true,
 		});
 	});

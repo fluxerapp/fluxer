@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createAttachmentID, createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {Message} from '@app/api/models/Message';
+import {convertToSearchableMessage} from '@app/api/search/message/MessageSearchSerializer';
 import {describe, expect, it} from 'vitest';
-import {createAttachmentID, createChannelID, createMessageID, createUserID} from '../../../BrandedTypes';
-import type {MessageRow} from '../../../database/types/MessageTypes';
-import {Message} from '../../../models/Message';
-import {convertToSearchableMessage} from '../MessageSearchSerializer';
 
 describe('MessageSearchSerializer', () => {
 	it('extracts unique hosts and attachment metadata when indexing a message', () => {
@@ -84,7 +84,6 @@ describe('MessageSearchSerializer', () => {
 			message_reference: null,
 			message_snapshots: [],
 			call: null,
-			nsfw_emojis: null,
 			has_reaction: null,
 			version: 1,
 		};
@@ -176,7 +175,6 @@ describe('MessageSearchSerializer', () => {
 				},
 			],
 			call: null,
-			nsfw_emojis: null,
 			has_reaction: null,
 			version: 1,
 		};
@@ -255,7 +253,6 @@ describe('MessageSearchSerializer', () => {
 				},
 			],
 			call: null,
-			nsfw_emojis: null,
 			has_reaction: null,
 			version: 1,
 		};

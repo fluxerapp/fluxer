@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, createTotpSecret, generateTotpCode, setUserACLs} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount, createTotpSecret, generateTotpCode, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createRegistrationResponse,
 	createWebAuthnDevice,
 	type WebAuthnCredentialMetadata,
 	type WebAuthnRegistrationOptions,
-} from '../../auth/tests/WebAuthnTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface AdminLookupResponse {
 	users: Array<{
@@ -77,16 +77,11 @@ describe('Admin WebAuthn credential delete', () => {
 			.expect(204)
 			.execute();
 		const userBeforeDelete = await createBuilder<AdminLookupResponse>(harness, `${admin.token}`)
-			.post('/admin/users/lookup')
-			.body({user_ids: [target.userId]})
+			.get(`/admin/users/${target.userId}`)
 			.execute();
 		expect(userBeforeDelete.users[0]?.authenticator_types).toEqual([UserAuthenticatorTypes.WEBAUTHN]);
 		await createBuilder(harness, `${admin.token}`)
-			.post('/admin/users/delete-webauthn-credential')
-			.body({
-				user_id: target.userId,
-				credential_id: credentialsBeforeDelete[0]!.id,
-			})
+			.delete(`/admin/users/${target.userId}/webauthn-credentials/${credentialsBeforeDelete[0]!.id}`)
 			.expect(204)
 			.execute();
 		const credentialsAfterDelete = await createBuilder<Array<WebAuthnCredentialMetadata>>(harness, target.token)
@@ -94,8 +89,7 @@ describe('Admin WebAuthn credential delete', () => {
 			.execute();
 		expect(credentialsAfterDelete).toHaveLength(0);
 		const userAfterDelete = await createBuilder<AdminLookupResponse>(harness, `${admin.token}`)
-			.post('/admin/users/lookup')
-			.body({user_ids: [target.userId]})
+			.get(`/admin/users/${target.userId}`)
 			.execute();
 		expect(userAfterDelete.users[0]?.authenticator_types).toEqual([]);
 	});

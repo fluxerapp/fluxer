@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ALL_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {type ChannelID, type GuildID, guildIdToRoleId, type MessageID, type RoleID, type UserID} from '../BrandedTypes';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
+import {
+	type ChannelID,
+	type GuildID,
+	guildIdToRoleId,
+	type MessageID,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import {
 	mapGuildEmojiToResponse,
 	mapGuildRoleToResponse,
 	mapGuildStickerToResponse,
 	mapGuildToGuildResponse,
-} from '../guild/GuildModel';
-import {GuildMemberRepository} from '../guild/repositories/GuildMemberRepository';
-import {GuildRepository} from '../guild/repositories/GuildRepository';
-import {GuildRoleRepository} from '../guild/repositories/GuildRoleRepository';
+} from '@app/api/guild/GuildModel';
+import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
 import {
 	type CallData,
 	type GatewayActiveVoiceRooms,
@@ -27,9 +30,13 @@ import {
 	type GatewayVoiceStateEntry,
 	type GuildChannelAuthContext,
 	IGatewayService,
-} from '../infrastructure/IGatewayService';
-import {UserRepository} from '../user/repositories/UserRepository';
-import {mapUserToPartialResponse} from '../user/UserMappers';
+} from '@app/api/infrastructure/IGatewayService';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {ALL_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
 const guildOwners = new Map<string, UserID>();
 const guildMembers = new Map<string, Set<UserID>>();
@@ -260,7 +267,7 @@ export class NoopGatewayService extends IGatewayService {
 		}
 		const roles = await roleRepository.listRoles(params.guildId);
 		const basePermissions = this.calculateGuildPermissions(new Set(), roles, params.guildId);
-		const {ChannelDataRepository} = await import('../channel/repositories/ChannelDataRepository');
+		const {ChannelDataRepository} = await import('@app/api/channel/repositories/ChannelDataRepository');
 		const channelRepo = new ChannelDataRepository();
 		const channels = await channelRepo.listGuildChannels(params.guildId);
 		const channelsById = new Map(channels.map((channel) => [channel.id, channel]));
@@ -301,7 +308,7 @@ export class NoopGatewayService extends IGatewayService {
 		if (!channelId) {
 			return guildPermissions;
 		}
-		const {ChannelDataRepository} = await import('../channel/repositories/ChannelDataRepository');
+		const {ChannelDataRepository} = await import('@app/api/channel/repositories/ChannelDataRepository');
 		const channelRepo = new ChannelDataRepository();
 		const channel = await channelRepo.findUnique(channelId);
 		if (!channel) {
@@ -470,7 +477,7 @@ export class NoopGatewayService extends IGatewayService {
 	async getViewableChannels(params: {guildId: GuildID; userId: UserID}): Promise<Array<ChannelID>> {
 		const {guildId, userId} = params;
 		const guild = await guildRepository.findUnique(guildId);
-		const {ChannelDataRepository} = await import('../channel/repositories/ChannelDataRepository');
+		const {ChannelDataRepository} = await import('@app/api/channel/repositories/ChannelDataRepository');
 		const channelRepo = new ChannelDataRepository();
 		const channels = await channelRepo.listGuildChannels(guildId);
 		if (guild?.ownerId === userId) {
@@ -533,7 +540,7 @@ export class NoopGatewayService extends IGatewayService {
 					? Promise.resolve<Array<ChannelID>>([])
 					: this.getViewableChannels({guildId: params.guildId, userId: params.userId}),
 			]);
-			const {ChannelDataRepository} = await import('../channel/repositories/ChannelDataRepository');
+			const {ChannelDataRepository} = await import('@app/api/channel/repositories/ChannelDataRepository');
 			const channelRepo = new ChannelDataRepository();
 			const allChannels = await channelRepo.listGuildChannels(params.guildId);
 			const viewableChannelIdSet = new Set(
@@ -681,7 +688,7 @@ export class NoopGatewayService extends IGatewayService {
 		}
 		let userPermissions = guildPermissions;
 		if (channelId) {
-			const {ChannelDataRepository} = await import('../channel/repositories/ChannelDataRepository');
+			const {ChannelDataRepository} = await import('@app/api/channel/repositories/ChannelDataRepository');
 			const channelRepo = new ChannelDataRepository();
 			const channel = await channelRepo.findUnique(channelId);
 			if (channel) {

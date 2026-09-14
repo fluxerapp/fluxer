@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '../BrandedTypes';
-import type {ChannelRow} from '../database/types/ChannelTypes';
-import type {MessageRow} from '../database/types/MessageTypes';
-import type {Channel} from '../models/Channel';
-import type {Message} from '../models/Message';
-import type {MessageReaction} from '../models/MessageReaction';
-import {IChannelRepositoryAggregate} from './repositories/IChannelRepositoryAggregate';
+import type {AttachmentID, ChannelID, EmojiID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {MessageReaction} from '@app/api/models/MessageReaction';
 
 export abstract class IChannelRepository extends IChannelRepositoryAggregate {
 	abstract findUnique(channelId: ChannelID): Promise<Channel | null>;

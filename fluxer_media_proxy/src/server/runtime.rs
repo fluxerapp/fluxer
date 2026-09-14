@@ -7,13 +7,7 @@ use super::{
     routes,
     state::AppState,
 };
-use crate::{
-    aggregate_error::aggregate_results,
-    bunny_ip_gate::{self, BunnyIpGate},
-    config::Config,
-    media_process, request_log,
-};
-use anyhow::Context as _;
+use crate::{aggregate_error::aggregate_results, config::Config, media_process, request_log};
 use axum::{
     Router, middleware,
     routing::{any, get, post, put},
@@ -26,7 +20,6 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
     media_process::warmup_vips()?;
     let addr: SocketAddr = format!("{}:{}", cfg.bind_host, cfg.port).parse()?;
     let state = Arc::new(AppState::try_new(cfg)?);
-    let bunny_gate = start_bunny_ip_gate(&state).await?;
     if let Some(read_endpoint) = state.cfg.storage.s3_read_endpoint.as_deref() {
         info!(
             endpoint = read_endpoint,
@@ -37,7 +30,7 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
         );
     }
     let drain = HttpRequestDrain::new();
-    let app = build_router(Arc::clone(&state), bunny_gate, drain.clone());
+    let app = build_router(Arc::clone(&state), drain.clone());
     let listener = TcpListener::bind(addr).await?;
     info!(%addr, "media proxy listening");
     axum::serve(
@@ -49,12 +42,8 @@ pub async fn run(cfg: Config) -> anyhow::Result<()> {
     drain_and_shutdown(&state, &drain).await
 }
 
-fn build_router(
-    state: Arc<AppState>,
-    bunny_gate: Option<Arc<BunnyIpGate>>,
-    drain: HttpRequestDrain,
-) -> Router {
-    let mut router = Router::new()
+fn build_router(state: Arc<AppState>, drain: HttpRequestDrain) -> Router {
+    Router::new()
         .route("/_health", get(routes::ops::health))
         .route("/_metrics", get(routes::ops::metrics_handler))
         .route("/_metadata", post(routes::internal::metadata_handler))
@@ -69,43 +58,13 @@ fn build_router(
         .layer(middleware::from_fn_with_state(
             state.metrics.request(),
             request_log::trace,
-        ));
-    if let Some(gate) = bunny_gate {
-        router = router.layer(middleware::from_fn_with_state(
-            gate,
-            bunny_ip_gate::gate_middleware,
-        ));
-    }
-    router
+        ))
         .layer(middleware::from_fn_with_state(
             state.cfg.mode,
             add_security_header_middleware,
         ))
         .layer(middleware::from_fn_with_state(drain, track_active_request))
         .with_state(state)
-}
-
-async fn start_bunny_ip_gate(state: &Arc<AppState>) -> anyhow::Result<Option<Arc<BunnyIpGate>>> {
-    if !state.cfg.bunny_ip_gate_enabled {
-        return Ok(None);
-    }
-    let gate = Arc::new(BunnyIpGate::new(
-        bunny_ip_gate::build_refresh_client()?,
-        state.cfg.bunny_ip_gate_trusted_proxies.clone(),
-    ));
-    let count = gate
-        .refresh_once()
-        .await
-        .context("initial bunny ip allowlist fetch failed")?;
-    info!(
-        count,
-        trusted_proxies = state.cfg.bunny_ip_gate_trusted_proxies.len(),
-        refresh_secs = state.cfg.bunny_ip_gate_refresh_secs,
-        "bunny ip gate enabled"
-    );
-    Arc::clone(&gate)
-        .spawn_background_refresher(Duration::from_secs(state.cfg.bunny_ip_gate_refresh_secs));
-    Ok(Some(gate))
 }
 
 async fn drain_and_shutdown(state: &Arc<AppState>, drain: &HttpRequestDrain) -> anyhow::Result<()> {
@@ -177,11 +136,7 @@ mod tests {
     fn test_router() -> Router {
         let cfg = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")])
             .expect("test config");
-        build_router(
-            Arc::new(AppState::for_tests(cfg)),
-            None,
-            HttpRequestDrain::new(),
-        )
+        build_router(Arc::new(AppState::for_tests(cfg)), HttpRequestDrain::new())
     }
 
     async fn probe(path: &str, method: Method) -> axum::response::Response {

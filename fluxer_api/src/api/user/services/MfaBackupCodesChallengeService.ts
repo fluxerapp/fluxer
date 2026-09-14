@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID, timingSafeEqual} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {User} from '@app/api/models/User';
+import {regenerateMfaBackupCodes} from '@app/api/user/services/UserAuth';
 import {
 	assertChangeCooldown,
 	checkChangeRateLimit,
@@ -15,11 +20,6 @@ import type {
 	MfaBackupCodesResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {User} from '../../models/User';
-import {regenerateMfaBackupCodes} from './UserAuth';
 
 interface MfaBackupCodesChallengeTicket {
 	user_id: string;

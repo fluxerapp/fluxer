@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	createGuildReadStateContributionSnapshot,
 	type GuildReadStateContributionInput,
 	resolveGuildReadStateContribution,
 	selectGuildReadStateContribution,
 	transitionGuildReadStateContributionSnapshot,
-} from './GuildReadStateContributionMachine';
+} from '@app/features/guild/state/GuildReadStateContributionMachine';
+import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<GuildReadStateContributionInput> = {}): GuildReadStateContributionInput {
 	return {

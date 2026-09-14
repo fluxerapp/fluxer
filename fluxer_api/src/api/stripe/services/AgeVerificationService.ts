@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {AgeVerificationAlreadyVerifiedError} from '@fluxer/errors/src/domains/payment/AgeVerificationAlreadyVerifiedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -8,14 +16,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
 
 const CUSTOMER_LOCK_TTL_SECONDS = seconds('30 seconds');
 

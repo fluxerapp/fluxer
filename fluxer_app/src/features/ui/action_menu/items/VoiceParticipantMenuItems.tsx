@@ -64,6 +64,7 @@ import {useCallback, useMemo} from 'react';
 
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'voice-control-action',
 	comment: "Voice menu checkbox label. Mutes the current user's microphone, not what they hear.",
 });
 const TURN_OFF_STREAM_DESCRIPTOR = msg({
@@ -72,6 +73,7 @@ const TURN_OFF_STREAM_DESCRIPTOR = msg({
 });
 const MUTE_2_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Voice menu checkbox label. Locally mutes another participant only for the current user.',
 });
 const DISABLE_VIDEO_LOCALLY_DESCRIPTOR = msg({
@@ -300,7 +302,6 @@ export const ParticipantVolumeSlider: React.FC<ParticipantVolumeSliderProps> = o
 			minValue={0}
 			maxValue={200}
 			onChange={handleChange}
-			onFormat={(value) => `${Math.round(value)}%`}
 			data-flx="ui.action-menu.items.voice-participant-menu-items.participant-volume-slider.menu-item-slider.change"
 		/>
 	);
@@ -358,7 +359,6 @@ export const EntranceSoundListenerSubmenu: React.FC<EntranceSoundListenerSubmenu
 						minValue={0}
 						maxValue={200}
 						onChange={handleVolumeChange}
-						onFormat={(value) => `${Math.round(value)}%`}
 						data-flx="ui.action-menu.items.voice-participant-menu-items.entrance-sound-volume-slider"
 					/>
 				</>

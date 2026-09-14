@@ -160,6 +160,30 @@ prefetch_user_guild_settings_skips_direct_messages_test() ->
     end),
     ?assertEqual([], settings_requests()).
 
+init_logs_a_mismatched_vapid_pair_test() ->
+    with_push_env(
+        fun() ->
+            {Pub, _} = generate_vapid_pair(),
+            {_, OtherPriv} = generate_vapid_pair(),
+            patch_vapid(true, Pub, OtherPriv),
+            {ok, Pid} = with_captured_logs(fun() -> push:start_link() end),
+            ?assert(is_process_alive(Pid)),
+            ?assert(any_error_log_mentions("FLUXER_VAPID_PUBLIC_KEY")),
+            gen_server:stop(Pid)
+        end
+    ).
+
+init_accepts_a_matching_vapid_pair_test() ->
+    with_push_env(
+        fun() ->
+            {Pub, Priv} = generate_vapid_pair(),
+            patch_vapid(true, Pub, Priv),
+            {ok, Pid} = push:start_link(),
+            ?assert(is_process_alive(Pid)),
+            gen_server:stop(Pid)
+        end
+    ).
+
 with_rpc_client_stub(Result, Fun) ->
     Self = self(),
     ok = meck:new(rpc_client, [passthrough, no_link]),
@@ -182,6 +206,70 @@ settings_requests() ->
             ]
     after 0 ->
         []
+    end.
+
+with_push_env(Fun) ->
+    push_ets_cache:init(),
+    push_worker_pool:init_counter(),
+    OldConfig = fluxer_gateway_env:get_map(),
+    OldTrap = erlang:process_flag(trap_exit, true),
+    try
+        Fun()
+    after
+        _ = erlang:process_flag(trap_exit, OldTrap),
+        flush_exit_signals(),
+        _ = fluxer_gateway_env:update(fun(_) -> OldConfig end)
+    end.
+
+with_captured_logs(Fun) ->
+    Self = self(),
+    ok = logger:add_primary_filter(
+        capture_logs, {
+            fun(Event, Pid) ->
+                Pid ! {captured_log, Event},
+                stop
+            end,
+            Self
+        }
+    ),
+    try
+        Fun()
+    after
+        _ = logger:remove_primary_filter(capture_logs)
+    end.
+
+any_error_log_mentions(Needle) ->
+    receive
+        {captured_log, #{level := error, msg := {string, Message}}} ->
+            case string:find(Message, Needle) of
+                nomatch -> any_error_log_mentions(Needle);
+                _ -> true
+            end;
+        {captured_log, _} ->
+            any_error_log_mentions(Needle)
+    after 0 ->
+        false
+    end.
+
+patch_vapid(Enabled, Pub, Priv) ->
+    _ = fluxer_gateway_env:patch(#{
+        push_enabled => Enabled,
+        vapid_public_key => push_utils:base64url_encode(Pub),
+        vapid_private_key => push_utils:base64url_encode(Priv)
+    }),
+    ok.
+
+generate_vapid_pair() ->
+    case crypto:generate_key(ecdh, prime256v1) of
+        {<<4, _:64/binary>> = Pub, <<_:32/binary>> = Priv} -> {Pub, Priv};
+        _ -> generate_vapid_pair()
+    end.
+
+flush_exit_signals() ->
+    receive
+        {'EXIT', _, _} -> flush_exit_signals()
+    after 0 ->
+        ok
     end.
 
 erase_persistent_term(Key) ->

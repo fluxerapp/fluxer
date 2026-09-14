@@ -4,25 +4,26 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {Readable} from 'node:stream';
 import * as v8 from 'node:v8';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {HeapSnapshotResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
 
 export function SystemAdminController(app: HonoApp) {
 	app.post(
-		'/admin/system/heap-snapshot',
+		'/admin/system/heap-snapshots',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_SYSTEM_HEAP_SNAPSHOT),
 		requireAdminACL(AdminACLs.SYSTEM_HEAP_SNAPSHOT),
 		OpenAPI({
-			operationId: 'take_heap_snapshot',
-			summary: 'Take a V8 heap snapshot',
+			operationId: 'create_admin_system_heap_snapshot',
+			summary: 'Create a V8 heap snapshot',
 			description:
-				'Triggers a V8 heap snapshot of the current process and returns the snapshot file. Used for diagnosing memory leaks. Requires SYSTEM_HEAP_SNAPSHOT permission.',
+				'Writes a V8 heap snapshot of the current process and returns the snapshot file. Used for diagnosing memory leaks. Requires SYSTEM_HEAP_SNAPSHOT permission.',
 			responseSchema: HeapSnapshotResponse,
+			responseContentType: 'application/octet-stream',
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',

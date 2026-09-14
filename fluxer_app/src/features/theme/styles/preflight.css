@@ -26,6 +26,10 @@
 	display: block;
 }
 
+flx-i18n {
+	display: contents;
+}
+
 html,
 :host {
 	line-height: 1.5;

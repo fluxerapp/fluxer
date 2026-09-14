@@ -41,7 +41,7 @@ const DATE_OF_BIRTH_DESCRIPTOR = msg({
 	comment: 'Short label in the authentication auth register form core. Keep the tone plain and specific.',
 });
 const USERNAME_MUST_BE_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
-	message: 'Username must be {maxUsernameLength} characters or less',
+	message: 'Username must be {maxUsernameLength} characters or fewer',
 	comment: 'Registration form validation error when the username exceeds the maximum length. Limit is interpolated.',
 });
 const ONLY_LETTERS_NUMBERS_AND_UNDERSCORES_DESCRIPTOR = msg({

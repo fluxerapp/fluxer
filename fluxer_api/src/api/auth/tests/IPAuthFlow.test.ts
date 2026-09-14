@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -11,7 +8,10 @@ import {
 	findLastTestEmail,
 	listTestEmails,
 	registerUser,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Auth IP Authorization Flow', () => {
 	let harness: ApiTestHarness;

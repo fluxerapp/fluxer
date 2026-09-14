@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled' | 'deadletter';
+export type JobStatus = 'queued' | 'running' | 'succeeded' | 'cancelled' | 'deadletter';
 
 export interface JobByIdRow {
 	job_id: bigint;

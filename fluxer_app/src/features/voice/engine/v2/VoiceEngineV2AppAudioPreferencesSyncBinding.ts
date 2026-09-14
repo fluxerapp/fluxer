@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
-import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
-import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import type {Room} from 'livekit-client';
 import {
 	createVoiceEngineV2AppAudioSettingsSnapshot,
 	hasVoiceEngineV2InputProcessorSettingsChanged,
 	hasVoiceEngineV2MicrophoneCaptureSettingsChanged,
 	type VoiceEngineV2AppAudioSettingsSnapshot,
-} from './VoiceEngineV2AppAudioSettingsSync';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioSettingsSync';
+import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
+import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import type {Room} from 'livekit-client';
 
 export interface VoiceEngineV2AppAudioPreferencesSnapshot {
 	readonly audioSettings: VoiceEngineV2AppAudioSettingsSnapshot;
@@ -49,7 +50,7 @@ export function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2A
 
 export function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
 	return {
-		stores: [VoiceSettings, VoiceDevicePermissionState, ParticipantVolume, StreamAudioPrefs],
+		stores: [VoiceSettings, VoiceDevicePermissionState, ParticipantVolume, StreamAudioPrefs, ExperimentAssignments],
 		getSnapshot: createVoiceEngineV2AppAudioPreferencesSnapshot,
 	};
 }

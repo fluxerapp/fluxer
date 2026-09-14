@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {selectFrozenUnreadChannels} from '@app/features/app/components/floating/UnreadChannelOrder';
 import {describe, expect, it} from 'vitest';
-import {selectFrozenUnreadChannels} from './UnreadChannelOrder';
 
 function ids(channels: ReadonlyArray<{id: string}>): Array<string> {
 	return channels.map((channel) => channel.id);

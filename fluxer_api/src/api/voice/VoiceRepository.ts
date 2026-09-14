@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createGuildIDSet, createUserIDSet} from '../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {defineTable} from '../database/CassandraTableDsl';
+import {createGuildIDSet, createUserIDSet} from '@app/api/BrandedTypes';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
 	VOICE_REGION_COLUMNS,
 	VOICE_SERVER_COLUMNS,
 	type VoiceRegionRow,
 	type VoiceServerRow,
-} from '../database/types/VoiceTypes';
-import type {IVoiceRepository} from './IVoiceRepository';
-import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from './VoiceModel';
+} from '@app/api/database/types/VoiceTypes';
+import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
+import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 function toIterable<T>(value: unknown): Array<T> {
 	if (value === null || value === undefined) return [];
@@ -147,6 +147,7 @@ export class VoiceRepository implements IVoiceRepository {
 			latitude: server.latitude ?? null,
 			longitude: server.longitude ?? null,
 			is_active: server.isActive,
+			soft_connection_limit: server.softConnectionLimit ?? null,
 			vip_only: server.restrictions.vipOnly,
 			required_guild_features: new Set(server.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: new Set(Array.from(server.restrictions.allowedGuildIds).map((id) => BigInt(id))),
@@ -190,6 +191,7 @@ export class VoiceRepository implements IVoiceRepository {
 			latitude: row.latitude ?? null,
 			longitude: row.longitude ?? null,
 			isActive: row.is_active ?? true,
+			softConnectionLimit: row.soft_connection_limit ?? null,
 			restrictions: {
 				vipOnly: row.vip_only ?? false,
 				requiredGuildFeatures: new Set(toIterable<string>(row.required_guild_features)),

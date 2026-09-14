@@ -146,7 +146,7 @@ fn deletion_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                     (csrf_input(csrf_token))
                     div class="space-y-3" {
                         (form_label("Days until deletion"))
-                        input type="number" name="days" value="60"
+                        input type="number" name="days_until_deletion" value="60"
                             min="60" max="365"
                             class="block w-full rounded-md border border-neutral-300 \
                                    px-3 py-2 text-sm shadow-sm \
@@ -322,9 +322,8 @@ fn message_shred_status_content(status: &serde_json::Value) -> Markup {
     let total = value_u64(status, "total").unwrap_or(0);
     let processed = value_u64(status, "processed").unwrap_or(0);
     let skipped = value_u64(status, "skipped").unwrap_or(0);
-    let percentage = processed
-        .saturating_mul(100)
-        .checked_div(total)
+    let percentage = (u128::from(processed) * 100)
+        .checked_div(u128::from(total))
         .unwrap_or(0)
         .min(100);
     html! {

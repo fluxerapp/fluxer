@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -15,18 +27,6 @@ import type {
 	VerifyUserEmailRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {types} from 'cassandra-driver';
-import type {ApiContext} from '../../ApiContext';
-import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '../../auth/AuthEmail';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {GuildMemberSearchIndexService} from '../../guild/services/member/GuildMemberSearchIndexService';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {EntityAssetService, PreparedAssetUpload} from '../../infrastructure/EntityAssetService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
 
 interface AdminUserProfileServiceDeps {
 	apiContext: ApiContext;
@@ -90,14 +90,8 @@ export class AdminUserProfileService {
 				updates['global_name'] = null;
 			}
 		}
-		let updatedUser: User;
-		try {
-			updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
-		} catch (error) {
-			await Promise.all(preparedAssets.map((p) => entityAssetService.rollbackAssetUpload(p)));
-			throw error;
-		}
-		await Promise.all(preparedAssets.map((p) => entityAssetService.commitAssetChange({prepared: p})));
+		const updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
+		await entityAssetService.commitAssetChanges(preparedAssets);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,
@@ -334,21 +328,7 @@ export class AdminUserProfileService {
 			const {users: userRepository} = this.deps.apiContext.services;
 			const {guildRepository} = this.deps;
 			const guildIds = await userRepository.getUserGuildIds(updatedUser.id);
-			if (guildIds.length === 0) return;
-			const guilds = await guildRepository.listGuilds(guildIds);
-			const indexedGuilds = guilds.filter((guild) => guild.membersIndexedAt != null);
-			if (indexedGuilds.length === 0) return;
-			const members = await Promise.all(
-				indexedGuilds.map((guild) => guildRepository.getMember(guild.id, updatedUser.id)),
-			);
-			for (let i = 0; i < members.length; i++) {
-				const member = members[i];
-				if (member) {
-					const guild = indexedGuilds[i]!;
-					const includeDefault = guild.membersIndexedAt != null;
-					void this.searchIndexService.updateMember(member, updatedUser, {includeDefault});
-				}
-			}
+			await this.searchIndexService.updateUserMembers(updatedUser, guildIds, guildRepository);
 		} catch (error) {
 			Logger.error(
 				{userId: updatedUser.id.toString(), error},

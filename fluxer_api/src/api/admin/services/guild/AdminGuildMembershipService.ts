@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {BulkCancelledError, type BulkProgressHelpers} from '@app/api/admin/services/BulkProgressHelpers';
+import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import {createRequestCache, type RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -8,12 +14,7 @@ import type {
 	ForceAddUserToGuildRequest,
 	KickGuildMemberRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
-import {createGuildID, createUserID, type UserID} from '../../../BrandedTypes';
-import type {GuildService} from '../../../guild/services/GuildService';
-import {createRequestCache, type RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {AdminAuditService} from '../AdminAuditService';
-import {BulkCancelledError, type BulkProgressHelpers} from '../BulkProgressHelpers';
+import type {SuccessResponse} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 interface AdminGuildMembershipServiceDeps {
 	userRepository: IUserRepository;
@@ -34,7 +35,7 @@ export class AdminGuildMembershipService {
 		requestCache: RequestCache;
 		adminUserId: UserID;
 		auditLogReason: string | null;
-	}) {
+	}): Promise<SuccessResponse> {
 		const {userRepository, guildService, auditService} = this.deps;
 		const userId = createUserID(data.user_id);
 		const guildId = createGuildID(data.guild_id);

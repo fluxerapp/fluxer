@@ -32,14 +32,16 @@ export type ArmedNativeAudioCapture =
 			kind: 'self-window-web-audio';
 	  };
 
+export type NativeAudioBridgeCleanup = (stopRemote?: boolean, endDetail?: string) => Promise<void>;
+
 export interface NativeAudioBridgeHandle {
 	track: MediaStreamTrack;
-	cleanup: (stopRemote?: boolean) => Promise<void>;
+	cleanup: NativeAudioBridgeCleanup;
 }
 
 export interface ActiveNativeAudioBridge {
 	captureId: string;
-	cleanup: (stopRemote?: boolean) => Promise<void>;
+	cleanup: NativeAudioBridgeCleanup;
 	linuxRule?: NativeAudioRoutingRule;
 	includeSelfWindowAudio?: boolean;
 }
@@ -122,11 +124,27 @@ export interface NativeAudioBridgeStats {
 	maxFramePeak: number;
 	maxFrameRms: number;
 	nonSilentFrameCount: number;
+	lastNonSilentFrameAt: number | null;
+	silentFrameStreak: number;
+	maxSilentRunMs: number;
+	sustainedSilenceWarned: boolean;
 	prebufferTargetMs: number | null;
 	frameDurationMs: number | null;
 	endReason: string | null;
 	endDetail: string | null;
 	endedAt: number | null;
+}
+
+export interface NativeAudioBridgeEndedCapture {
+	captureId: string;
+	bridgeMode: 'generator' | 'script-processor' | null;
+	startedAt: number | null;
+	endedAt: number | null;
+	endReason: string | null;
+	endDetail: string | null;
+	framesReceived: number;
+	nonSilentFrameCount: number;
+	lastFramePeak: number | null;
 }
 
 export interface NativeAudioBridgeFrameMetrics {
@@ -156,6 +174,10 @@ export const initialBridgeStats: NativeAudioBridgeStats = {
 	maxFramePeak: 0,
 	maxFrameRms: 0,
 	nonSilentFrameCount: 0,
+	lastNonSilentFrameAt: null,
+	silentFrameStreak: 0,
+	maxSilentRunMs: 0,
+	sustainedSilenceWarned: false,
 	prebufferTargetMs: null,
 	frameDurationMs: null,
 	endReason: null,

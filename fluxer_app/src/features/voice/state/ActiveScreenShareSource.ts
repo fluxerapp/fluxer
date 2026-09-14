@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {StreamSettingsShareContext} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import type {
+	StreamSettingsShareContext,
+	WindowShareAudioScope,
+} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {makeAutoObservable} from 'mobx';
 
 export interface ActiveScreenShareSourceOptions {
@@ -13,6 +16,8 @@ class ActiveScreenShareSource {
 	sourceId: string | null = null;
 	ownWindow = false;
 	publishedSource: PublishedScreenShareSource | null = null;
+	windowAudioScope: WindowShareAudioScope = 'window';
+	pendingWindowAudioScope: WindowShareAudioScope | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -40,6 +45,26 @@ class ActiveScreenShareSource {
 		return this.publishedSource;
 	}
 
+	getWindowAudioScope(): WindowShareAudioScope {
+		return this.windowAudioScope;
+	}
+
+	setWindowAudioScope(scope: WindowShareAudioScope): void {
+		this.windowAudioScope = scope;
+	}
+
+	getPendingWindowAudioScope(): WindowShareAudioScope {
+		return this.pendingWindowAudioScope ?? this.windowAudioScope;
+	}
+
+	setPendingWindowAudioScope(scope: WindowShareAudioScope): void {
+		this.pendingWindowAudioScope = scope;
+	}
+
+	clearPendingWindowAudioScope(): void {
+		this.pendingWindowAudioScope = null;
+	}
+
 	getShareContext(): StreamSettingsShareContext | null {
 		if (this.publishedSource === 'app') return 'app';
 		if (this.publishedSource === 'device') return 'device';
@@ -51,6 +76,8 @@ class ActiveScreenShareSource {
 		this.sourceId = null;
 		this.ownWindow = false;
 		this.publishedSource = null;
+		this.windowAudioScope = 'window';
+		this.pendingWindowAudioScope = null;
 	}
 }
 

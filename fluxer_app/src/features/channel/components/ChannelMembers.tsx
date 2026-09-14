@@ -30,6 +30,7 @@ import {MemberListUnavailableFallback} from '@app/features/channel/components/sh
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {OFFLINE_DESCRIPTOR, ONLINE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {useMemberListSubscription} from '@app/features/member/hooks/useMemberListSubscription';
 import {resolveMemberListViewportModel} from '@app/features/member/state/MemberListViewportStateMachine';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
@@ -142,6 +143,7 @@ interface MemberListGroupHeaderContentProps {
 }
 
 function MemberListGroupHeaderContent({name, count}: MemberListGroupHeaderContentProps) {
+	const {i18n} = useLingui();
 	return (
 		<>
 			<span
@@ -160,7 +162,7 @@ function MemberListGroupHeaderContent({name, count}: MemberListGroupHeaderConten
 				className={styles.groupHeaderCount}
 				data-flx="channel.channel-members.member-list-group-header-content.group-header-count"
 			>
-				{count}
+				{getCachedNumberFormat(i18n.locale).format(count)}
 			</span>
 		</>
 	);

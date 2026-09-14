@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {availableParallelism} from 'node:os';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import {configDefaults, defineConfig} from 'vitest/config';
 
 function parseParallelInteger(value: string | undefined, fallback: number): number {
@@ -26,6 +25,14 @@ const configuredMaxConcurrency = parseParallelInteger(process.env.API_TEST_MAX_C
 const MODULE_REGISTRY_TEST_FILES = [
 	'src/api/gif/GifRequestCountry.test.ts',
 	'src/api/risk/__tests__/AccountPolicyService.test.ts',
+	'src/api/stripe/tests/StripeCheckoutCountryEnforcement.test.ts',
+	'src/api/stripe/tests/StripeNordicCurrencies.test.ts',
+];
+
+const INSTANCE_POLICY_TEST_FILES = [
+	'src/api/admin/tests/InstanceConfigPendingRegistrationApproval.test.ts',
+	'src/api/auth/tests/DeferredPhoneGate.test.ts',
+	'src/api/instance/tests/SingleCommunityService.test.ts',
 ];
 
 const sharedExclude = [
@@ -71,21 +78,31 @@ export default defineConfig({
 		},
 		projects: [
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api',
 					include: ['src/**/*.{test,spec}.{ts,tsx}'],
-					exclude: [...sharedExclude, ...MODULE_REGISTRY_TEST_FILES],
+					exclude: [...sharedExclude, ...MODULE_REGISTRY_TEST_FILES, ...INSTANCE_POLICY_TEST_FILES],
 					isolate: false,
 				},
 			},
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api-module-registry',
 					include: MODULE_REGISTRY_TEST_FILES,
+					exclude: sharedExclude,
+					isolate: true,
+				},
+			},
+			{
+				resolve: {tsconfigPaths: true},
+				test: {
+					...sharedTestConfig,
+					name: 'api-instance-policy',
+					include: INSTANCE_POLICY_TEST_FILES,
 					exclude: sharedExclude,
 					isolate: true,
 				},

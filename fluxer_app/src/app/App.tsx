@@ -23,6 +23,7 @@ import {type LayoutVariant, LayoutVariantProvider} from '@app/features/app/state
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
 import {showMyselfTypingHelper} from '@app/features/devtools/utils/ShowMyselfTypingHelper';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import {startDeepLinkHandling} from '@app/features/navigation/utils/DeepLinkUtils';
 import {Outlet, RouterProvider} from '@app/features/platform/components/router/RouterReact';
@@ -54,13 +55,11 @@ import {VoiceLiveKitRoot} from '@app/features/voice/components/VoiceLiveKitRoot'
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useElectronScreenSharePicker} from '@app/features/voice/hooks/useElectronScreenSharePicker';
 import {startScreenSharePiPController} from '@app/features/voice/state/ScreenSharePiPController';
-import {startMediaDeviceStartupPreload} from '@app/features/voice/utils/MediaDeviceStartupPreload';
 import {useNativeTitleBar} from '@app/features/window/hooks/useNativeTitleBar';
 import {useStopFlashFrameOnFocus} from '@app/features/window/hooks/useStopFlashFrameOnFocus';
 import {useWindowEventListeners} from '@app/features/window/hooks/useWindowEventListeners';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {I18nProvider} from '@lingui/react';
 import {useLingui} from '@lingui/react/macro';
 import {IconContext} from '@phosphor-icons/react';
 import {reaction} from 'mobx';
@@ -149,7 +148,6 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 		};
 	}, []);
 	useEffect(() => startScreenSharePiPController(), []);
-	useEffect(() => startMediaDeviceStartupPreload(), []);
 	useServiceWorkerBadge();
 	useKeybindManager(i18n);
 	useDesktopElectronBridges();
@@ -239,7 +237,7 @@ export const App = observer((): React.ReactElement => {
 		return () => detach?.();
 	}, []);
 	return (
-		<I18nProvider i18n={i18n}>
+		<AppI18nProvider i18n={i18n}>
 			<IconContext.Provider value={{color: 'currentColor', weight: 'fill'}}>
 				<PremiumCheckoutReturnWatcher data-flx="app.app.premium-checkout-return-watcher" />
 				<DndContext data-flx="app.app.dnd-context">
@@ -250,6 +248,6 @@ export const App = observer((): React.ReactElement => {
 					</RouterProvider>
 				</DndContext>
 			</IconContext.Provider>
-		</I18nProvider>
+		</AppI18nProvider>
 	);
 });

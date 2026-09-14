@@ -7,6 +7,14 @@ import {
 	isDesktop,
 	type NativePlatform,
 } from '@app/features/ui/utils/NativeUtils';
+import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {
+	getScreenShareBitrateBps,
+	resolveEffectiveScreenShareDimensions,
+	resolveStreamingModeSettings,
+	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
+} from '@app/features/voice/utils/ScreenShareOptions';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {GpuDeviceInfo, GpuInfo} from '@app/types/electron.d';
 import type {VideoCodec} from 'livekit-client';
 
@@ -236,18 +244,51 @@ export function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 	};
 }
 
+export const NEGOTIABLE_H264_PROBE_CONTENT_TYPE =
+	'video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f';
+
 const WEBRTC_ENCODE_PROBE_CONTENT_TYPES: Record<VideoCodec, ReadonlyArray<string>> = {
 	av1: ['video/AV1'],
 	h265: ['video/H265'],
-	h264: [
-		'video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f',
-		'video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f',
-		'video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
-		'video/H264',
-	],
+	h264: [NEGOTIABLE_H264_PROBE_CONTENT_TYPE],
 	vp9: ['video/VP9'],
 	vp8: ['video/VP8'],
 };
+
+interface EncodeProbeVideoConfig {
+	width: number;
+	height: number;
+	bitrate: number;
+	framerate: number;
+}
+
+const DEFAULT_ENCODE_PROBE_VIDEO_CONFIG: EncodeProbeVideoConfig = {
+	width: 1920,
+	height: 1080,
+	bitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
+	framerate: 60,
+};
+
+function resolveEncodeProbeVideoConfig(): EncodeProbeVideoConfig {
+	try {
+		const settings = resolveStreamingModeSettings(
+			VoiceSettings.getStreamingMode(),
+			VoiceSettings.getScreenshareResolution(),
+			VoiceSettings.getVideoFrameRate(),
+			hasHigherVideoQuality(),
+		);
+		const {width, height} = resolveEffectiveScreenShareDimensions(settings.resolution);
+		return {
+			width,
+			height,
+			bitrate: getScreenShareBitrateBps(settings.resolution, settings.frameRate),
+			framerate: settings.frameRate,
+		};
+	} catch (error) {
+		logger.debug('Share settings were unavailable, probing at the largest share size instead', {error});
+		return DEFAULT_ENCODE_PROBE_VIDEO_CONFIG;
+	}
+}
 
 interface WebRtcEncodingInfoResult {
 	supported?: boolean;
@@ -261,13 +302,14 @@ interface MediaCapabilitiesLike {
 async function probeCodecEncodeEfficiency(
 	mediaCapabilities: MediaCapabilitiesLike,
 	contentTypes: ReadonlyArray<string>,
+	video: EncodeProbeVideoConfig,
 ): Promise<HardwareEncodeAnswer> {
 	let sawSupported = false;
 	for (const contentType of contentTypes) {
 		try {
 			const info = await mediaCapabilities.encodingInfo?.({
 				type: 'webrtc',
-				video: {contentType, width: 1920, height: 1080, bitrate: 2_500_000, framerate: 30},
+				video: {contentType, ...video},
 			});
 			if (!info?.supported) continue;
 			sawSupported = true;
@@ -282,8 +324,11 @@ export async function probeWebRtcEncodeEfficiency(): Promise<Record<VideoCodec, 
 	const mediaCapabilities = (navigator as Navigator & {mediaCapabilities?: MediaCapabilitiesLike}).mediaCapabilities;
 	if (!mediaCapabilities?.encodingInfo) return null;
 	const codecs: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
+	const video = resolveEncodeProbeVideoConfig();
 	const answers = await Promise.all(
-		codecs.map((codec) => probeCodecEncodeEfficiency(mediaCapabilities, WEBRTC_ENCODE_PROBE_CONTENT_TYPES[codec])),
+		codecs.map((codec) =>
+			probeCodecEncodeEfficiency(mediaCapabilities, WEBRTC_ENCODE_PROBE_CONTENT_TYPES[codec], video),
+		),
 	);
 	const result = {} as Record<VideoCodec, HardwareEncodeAnswer>;
 	codecs.forEach((codec, index) => {
@@ -299,19 +344,21 @@ export function reconcileHardwareEncodeReport(
 	vendorId: number,
 ): HardwareEncodeReport {
 	const isNvidiaReport = vendorId === PCI_VENDOR_NVIDIA || report.gpuFamily?.startsWith('nvidia-') === true;
-	if (platform !== 'linux' || !isNvidiaReport) return report;
 	const adjust = (codec: VideoCodec): HardwareEncodeAnswer => {
 		if (report[codec] !== 'hardware') return report[codec];
 		return efficiency?.[codec] === 'hardware' ? 'hardware' : 'software';
 	};
-	return {
-		...report,
-		av1: adjust('av1'),
-		h265: adjust('h265'),
-		h264: adjust('h264'),
-		vp9: adjust('vp9'),
-		vp8: adjust('vp8'),
-	};
+	if (platform === 'linux' && isNvidiaReport) {
+		return {
+			...report,
+			av1: adjust('av1'),
+			h265: adjust('h265'),
+			h264: adjust('h264'),
+			vp9: adjust('vp9'),
+			vp8: adjust('vp8'),
+		};
+	}
+	return {...report, h264: adjust('h264')};
 }
 
 let cachedReport: HardwareEncodeReport | null = null;

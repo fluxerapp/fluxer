@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {VoiceParticipantTilePresentation} from '@app/features/voice/components/voice_participant_tile/shared';
 import type {VoiceMediaGraphStreamTileState} from '@app/features/voice/engine/VoiceMediaGraphTileState';
-import {assign, getInitialSnapshot, setup, transition} from 'xstate';
+import {assign, initialTransition, setup, transition} from 'xstate';
 
 export type VoiceParticipantTileScreenShareStateValue =
 	| 'idle'
@@ -29,6 +30,15 @@ export interface VoiceParticipantTileCameraBufferingSignals {
 	isCameraActive: boolean;
 	hasVideo: boolean;
 	hasRenderedVideoFrame: boolean;
+}
+
+export interface VoiceParticipantTileStreamAudioSignals {
+	isScreenShare: boolean;
+	isOwnScreenShare: boolean;
+	isWatching: boolean;
+	hasScreenShareAudio: boolean;
+	isFocusedPlaceholderTile: boolean;
+	presentation: VoiceParticipantTilePresentation;
 }
 
 export interface VoiceParticipantTileCameraActiveSignals {
@@ -77,6 +87,8 @@ export function graphTileStateHoldsWatchIntent(graphTileState: VoiceMediaGraphSt
 			return true;
 		case 'rendering':
 			return true;
+		case 'recovering':
+			return true;
 		case 'failed':
 			return true;
 		case 'idle':
@@ -98,6 +110,8 @@ export function shouldShowScreenShareBuffering(signals: VoiceParticipantTileScre
 		case 'attaching':
 			return true;
 		case 'subscribedAwaitingFrame':
+			return true;
+		case 'recovering':
 			return true;
 		case 'publicationMissing':
 			if (signals.isRepublishGracePending) return true;
@@ -139,6 +153,15 @@ export function shouldShowWatchPrompt(signals: VoiceParticipantTileScreenShareSi
 	if (!signals.isTrackReference) return false;
 	if (signals.cameraLocallyDisabled) return false;
 	return !signals.isFocusPresentationTile;
+}
+
+export function shouldShowTileStreamAudioControls(signals: VoiceParticipantTileStreamAudioSignals): boolean {
+	if (!signals.isScreenShare) return false;
+	if (signals.isOwnScreenShare) return false;
+	if (signals.isFocusedPlaceholderTile) return false;
+	if (!signals.isWatching) return false;
+	if (!signals.hasScreenShareAudio) return false;
+	return signals.presentation === 'grid' || signals.presentation === 'focus-main';
 }
 
 export function shouldShowCameraBuffering(signals: VoiceParticipantTileCameraBufferingSignals): boolean {
@@ -198,7 +221,7 @@ export function selectVoiceParticipantTileScreenShareState(
 ): VoiceParticipantTileScreenShareStateValue {
 	const [snapshot] = transition(
 		voiceParticipantTileStateMachine,
-		getInitialSnapshot(voiceParticipantTileStateMachine),
+		initialTransition(voiceParticipantTileStateMachine)[0],
 		{
 			type: 'tile.evaluateScreenShare',
 			signals,

@@ -709,7 +709,11 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 																className={styles.actionLabel}
 																data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.action-label"
 															>
-																{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans>Message</Trans>}
+																{isBlocked ? (
+																	i18n._(OPEN_DM_DESCRIPTOR)
+																) : (
+																	<Trans context="message-action">Message</Trans>
+																)}
 															</span>
 														</button>
 													)}

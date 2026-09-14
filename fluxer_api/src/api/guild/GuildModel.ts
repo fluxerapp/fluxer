@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
+import {
+	stripGuildBannerForFeatures,
+	stripGuildIconForFeatures,
+	stripGuildSplashForFeatures,
+} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildBan} from '@app/api/models/GuildBan';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {GuildRole} from '@app/api/models/GuildRole';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
+import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -10,24 +25,8 @@ import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/dom
 import type {GuildPartialResponse, GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {z} from 'zod';
-import {
-	stripGuildBannerForFeatures,
-	stripGuildIconForFeatures,
-	stripGuildSplashForFeatures,
-} from '../infrastructure/AssetEntitlementUtils';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Guild} from '../models/Guild';
-import type {GuildBan} from '../models/GuildBan';
-import type {GuildEmoji} from '../models/GuildEmoji';
-import type {GuildMember} from '../models/GuildMember';
-import type {GuildRole} from '../models/GuildRole';
-import type {GuildSticker} from '../models/GuildSticker';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../user/UserCacheHelpers';
-import {mapGuildFeatures} from './GuildFeatureUtils';
 
-export function mapGuildToPartialResponse(guild: Guild): z.infer<typeof GuildPartialResponse> {
+export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 	const guildId = guild.id.toString();
 	const iconHash = stripGuildIconForFeatures(guild.iconHash, guild.features);
 	const bannerHash = stripGuildBannerForFeatures(guild.bannerHash, guild.features);
@@ -56,7 +55,7 @@ export function mapGuildToGuildResponse(
 	options?: {
 		permissions?: bigint | null;
 	},
-): z.infer<typeof GuildResponse> {
+): GuildResponse {
 	const iconHash = stripGuildIconForFeatures(guild.iconHash, guild.features);
 	const bannerHash = stripGuildBannerForFeatures(guild.bannerHash, guild.features);
 	const splashHash = stripGuildSplashForFeatures(guild.splashHash, guild.features);
@@ -97,7 +96,7 @@ export function mapGuildToGuildResponse(
 	};
 }
 
-export function mapGuildRoleToResponse(role: GuildRole): z.infer<typeof GuildRoleResponse> {
+export function mapGuildRoleToResponse(role: GuildRole): GuildRoleResponse {
 	return {
 		id: role.id.toString(),
 		name: role.name,
@@ -110,17 +109,17 @@ export function mapGuildRoleToResponse(role: GuildRole): z.infer<typeof GuildRol
 	};
 }
 
-export function mapGuildEmojiToResponse(emoji: GuildEmoji): z.infer<typeof GuildEmojiResponse> {
+export function mapGuildEmojiToResponse(emoji: GuildEmoji): GuildEmojiResponse {
 	const id = emoji.id.toString();
 	return {
 		id,
 		name: emoji.name,
 		animated: emoji.isAnimated,
-		nsfw: emoji.isNsfw,
+		nsfw: false,
 	};
 }
 
-export function mapGuildStickerToResponse(sticker: GuildSticker): z.infer<typeof GuildStickerResponse> {
+export function mapGuildStickerToResponse(sticker: GuildSticker): GuildStickerResponse {
 	const id = sticker.id.toString();
 	return {
 		id,
@@ -128,14 +127,11 @@ export function mapGuildStickerToResponse(sticker: GuildSticker): z.infer<typeof
 		description: sticker.description ?? '',
 		tags: sticker.tags,
 		animated: sticker.animated,
-		nsfw: sticker.isNsfw,
+		nsfw: false,
 	};
 }
 
-function mapMemberWithUser(
-	member: GuildMember,
-	userPartial: z.infer<typeof UserPartialResponse>,
-): z.infer<typeof GuildMemberResponse> {
+function mapMemberWithUser(member: GuildMember, userPartial: UserPartialResponse): GuildMemberResponse {
 	const now = Date.now();
 	const isTimedOut = member.communicationDisabledUntil != null && member.communicationDisabledUntil.getTime() > now;
 	return {
@@ -154,7 +150,7 @@ function mapMemberWithUser(
 	};
 }
 
-export function isGuildMemberTimedOut(member?: z.infer<typeof GuildMemberResponse> | null): boolean {
+export function isGuildMemberTimedOut(member?: GuildMemberResponse | null): boolean {
 	if (!member?.communication_disabled_until) {
 		return false;
 	}
@@ -166,21 +162,18 @@ export async function mapGuildMemberToResponse(
 	member: GuildMember,
 	userCacheService: Pick<UserCacheService, 'getUserPartialResponse'>,
 	requestCache: RequestCache,
-): Promise<z.infer<typeof GuildMemberResponse>> {
+): Promise<GuildMemberResponse> {
 	const userPartial = await getCachedUserPartialResponse({userId: member.userId, userCacheService, requestCache});
 	return mapMemberWithUser(member, userPartial);
 }
 
-function mapEmojiWithUser(
-	emoji: GuildEmoji,
-	userPartial: z.infer<typeof UserPartialResponse>,
-): z.infer<typeof GuildEmojiWithUserResponse> {
+function mapEmojiWithUser(emoji: GuildEmoji, userPartial: UserPartialResponse): GuildEmojiWithUserResponse {
 	const id = emoji.id.toString();
 	return {
 		id,
 		name: emoji.name,
 		animated: emoji.isAnimated,
-		nsfw: emoji.isNsfw,
+		nsfw: false,
 		user: userPartial,
 	};
 }
@@ -189,7 +182,7 @@ export async function mapGuildEmojisWithUsersToResponse(
 	emojis: Array<GuildEmoji>,
 	userCacheService: Pick<UserCacheService, 'getUserPartialResponses'>,
 	requestCache: RequestCache,
-): Promise<Array<z.infer<typeof GuildEmojiWithUserResponse>>> {
+): Promise<Array<GuildEmojiWithUserResponse>> {
 	const userIds = [...new Set(emojis.map((emoji) => emoji.creatorId))];
 	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
 	return emojis
@@ -197,17 +190,14 @@ export async function mapGuildEmojisWithUsersToResponse(
 		.map((emoji) => mapEmojiWithUser(emoji, userPartials.get(emoji.creatorId)!));
 }
 
-function mapStickerWithUser(
-	sticker: GuildSticker,
-	userPartial: z.infer<typeof UserPartialResponse>,
-): z.infer<typeof GuildStickerWithUserResponse> {
+function mapStickerWithUser(sticker: GuildSticker, userPartial: UserPartialResponse): GuildStickerWithUserResponse {
 	return {
 		id: sticker.id.toString(),
 		name: sticker.name,
 		description: sticker.description ?? '',
 		tags: sticker.tags,
 		animated: sticker.animated,
-		nsfw: sticker.isNsfw,
+		nsfw: false,
 		user: userPartial,
 	};
 }
@@ -216,7 +206,7 @@ export async function mapGuildStickersWithUsersToResponse(
 	stickers: Array<GuildSticker>,
 	userCacheService: Pick<UserCacheService, 'getUserPartialResponses'>,
 	requestCache: RequestCache,
-): Promise<Array<z.infer<typeof GuildStickerWithUserResponse>>> {
+): Promise<Array<GuildStickerWithUserResponse>> {
 	const userIds = [...new Set(stickers.map((sticker) => sticker.creatorId))];
 	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
 	return stickers
@@ -224,10 +214,7 @@ export async function mapGuildStickersWithUsersToResponse(
 		.map((sticker) => mapStickerWithUser(sticker, userPartials.get(sticker.creatorId)!));
 }
 
-function mapBanWithUser(
-	ban: GuildBan,
-	userPartial: z.infer<typeof UserPartialResponse>,
-): z.infer<typeof GuildBanResponse> {
+function mapBanWithUser(ban: GuildBan, userPartial: UserPartialResponse): GuildBanResponse {
 	return {
 		user: userPartial,
 		reason: ban.reason,
@@ -241,7 +228,7 @@ export async function mapGuildBansToResponse(
 	bans: Array<GuildBan>,
 	userCacheService: Pick<UserCacheService, 'getUserPartialResponses'>,
 	requestCache: RequestCache,
-): Promise<Array<z.infer<typeof GuildBanResponse>>> {
+): Promise<Array<GuildBanResponse>> {
 	const userIds = [...new Set(bans.map((ban) => ban.userId))];
 	const userPartials = await getCachedUserPartialResponses({userIds, userCacheService, requestCache});
 	return bans

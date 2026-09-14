@@ -9,36 +9,7 @@ use super::user_display::format_user_display;
 use crate::config::AdminConfig;
 use crate::routes::auth::json_string;
 
-pub struct Attachment {
-    pub id: String,
-    pub url: String,
-    pub filename: String,
-    pub nsfw: Option<bool>,
-    pub content_type: Option<String>,
-    pub width: Option<u32>,
-    pub height: Option<u32>,
-    pub size: Option<u64>,
-    pub ncmec_status: String,
-    pub ncmec_report_id: Option<String>,
-    pub ncmec_failure_reason: Option<String>,
-}
-
-pub struct Message {
-    pub id: String,
-    pub content: String,
-    pub timestamp: String,
-    pub author_id: String,
-    pub author_username: String,
-    pub author_global_name: Option<String>,
-    pub author_discriminator: String,
-    pub author_avatar: Option<String>,
-    pub channel_id: String,
-    pub channel_nsfw: Option<bool>,
-    pub channel_content_warning_level: Option<i32>,
-    pub channel_content_warning_text: Option<String>,
-    pub guild_nsfw: Option<bool>,
-    pub attachments: Vec<Attachment>,
-}
+use super::message_data::{Attachment, Message};
 
 fn is_image(att: &Attachment) -> bool {
     att.content_type
@@ -74,8 +45,8 @@ fn ncmec_badge(att: &Attachment) -> Markup {
 }
 
 fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
-    let images: Vec<&Attachment> = msg.attachments.iter().filter(|a| is_image(a)).collect();
-    if images.is_empty() {
+    let mut images = msg.attachments.iter().filter(|a| is_image(a)).peekable();
+    if images.peek().is_none() {
         return html! {};
     }
     let spacer = if !msg.content.is_empty() {
@@ -85,7 +56,7 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
     };
     html! {
         div class=(spacer) {
-            @for att in &images {
+            @for att in images {
                 div class="max-w-xl overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50" {
                     a href=(att.url) target="_blank" rel="noopener noreferrer"
                       class="block overflow-hidden bg-neutral-100" {
@@ -145,8 +116,8 @@ fn render_image_attachments(msg: &Message, include_delete: bool) -> Markup {
 }
 
 fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Markup {
-    let others: Vec<&Attachment> = msg.attachments.iter().filter(|a| !is_image(a)).collect();
-    if others.is_empty() {
+    let mut others = msg.attachments.iter().filter(|a| !is_image(a)).peekable();
+    if others.peek().is_none() {
         return html! {};
     }
     let spacer = if has_content_or_images {
@@ -156,7 +127,7 @@ fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Marku
     };
     html! {
         div class=(spacer) {
-            @for att in &others {
+            @for att in others {
                 div class="flex flex-wrap items-center gap-2 text-xs" {
                     (paperclip_icon("text-neutral-400"))
                     a href=(att.url) target="_blank" rel="noopener noreferrer"

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilderWithoutAuth, type TestRequestBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	DONATION_CURRENCIES,
 	type DonationCurrency,
 	getDonationAmountConstraints,
 } from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilderWithoutAuth, type TestRequestBuilder} from '../../test/TestRequestBuilder';
 
 interface DonationTestEmailRecord {
 	to: string;

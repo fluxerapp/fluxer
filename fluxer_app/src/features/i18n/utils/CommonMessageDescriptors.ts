@@ -648,10 +648,6 @@ export const NEVER_DESCRIPTOR = msg({
 	message: 'Never',
 	comment: 'Generic short option label for "never" in time / frequency dropdowns.',
 });
-export const NO_DESCRIPTION_PROVIDED_DESCRIPTOR = msg({
-	message: 'No description provided.',
-	comment: 'Generic short empty-state body shown when an entity has no description set.',
-});
 export const PINNED_DM_DESCRIPTOR = msg({
 	message: 'Pinned DM',
 	comment: 'Generic short toast / status label confirming a DM was pinned.',
@@ -685,11 +681,11 @@ export const INVITES_DESCRIPTOR = msg({
 	comment: 'Generic section / tab label for the invites list.',
 });
 export const MUTE_FAVORITES_DESCRIPTOR = msg({
-	message: 'Mute favourites',
+	message: 'Mute favorites',
 	comment: 'Action label that mutes notifications for the favourites pseudo-guild.',
 });
 export const UNMUTE_FAVORITES_DESCRIPTOR = msg({
-	message: 'Unmute favourites',
+	message: 'Unmute favorites',
 	comment: 'Action label that unmutes notifications for the favourites pseudo-guild.',
 });
 export const HIDE_FAVORITES_DESCRIPTOR = msg({
@@ -797,7 +793,7 @@ export const GET_PREMIUM_DESCRIPTOR = msg({
 	comment: 'Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.',
 });
 export const MENTION_COUNT_ARIA_DESCRIPTOR = msg({
-	message: '{mentionCount} mentions',
+	message: '{mentionCount, plural, one {# mention} other {# mentions}}',
 	comment: 'Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.',
 });
 export const SENT_DESCRIPTOR = msg({

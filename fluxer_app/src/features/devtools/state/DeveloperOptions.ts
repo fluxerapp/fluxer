@@ -96,6 +96,7 @@ export type DeveloperOptionsState = Readonly<{
 		}
 	>;
 	noOpInAppReports: boolean;
+	disableTranslationDomGuard: boolean;
 }>;
 type MutableDeveloperOptionsState = {
 	-readonly [K in keyof DeveloperOptionsState]: DeveloperOptionsState[K];
@@ -179,6 +180,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 	mockGiftRedeemed: boolean | null = null;
 	mockTitlebarPlatformOverride: DeveloperOptionsState['mockTitlebarPlatformOverride'] = 'auto';
 	noOpInAppReports = false;
+	disableTranslationDomGuard = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -250,6 +252,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'mockTitlebarPlatformOverride',
 			'mockAttachmentStates',
 			'noOpInAppReports',
+			'disableTranslationDomGuard',
 		]);
 	}
 

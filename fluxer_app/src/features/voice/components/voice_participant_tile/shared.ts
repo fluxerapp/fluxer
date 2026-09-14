@@ -73,7 +73,7 @@ export const WATCH_DESCRIPTOR = msg({
 	comment: 'Compact button label on a participant tile. Joins / opens the remote screen share.',
 });
 export const WATCHING_DESCRIPTOR = msg({
-	message: '{length} watching',
+	message: '{length, plural, one {# watching} other {# watching}}',
 	comment:
 		'Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.',
 });
@@ -97,6 +97,7 @@ export const STREAM_LIMITED_DESCRIPTOR = msg({
 });
 export const MUTED_DESCRIPTOR = msg({
 	message: 'Muted',
+	context: 'microphone-state',
 	comment: "Status badge on a voice participant tile. The participant's microphone is muted.",
 });
 export const MOBILE_DEVICE_DESCRIPTOR = msg({

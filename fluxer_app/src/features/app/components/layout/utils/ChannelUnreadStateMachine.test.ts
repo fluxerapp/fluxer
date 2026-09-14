@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {describe, expect, it} from 'vitest';
-import type {ChannelUnreadStateInput} from './ChannelUnreadState';
+import type {ChannelUnreadStateInput} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {
 	type ChannelUnreadStateValue,
 	createChannelUnreadSnapshot,
 	selectChannelUnreadState,
 	transitionChannelUnreadSnapshot,
-} from './ChannelUnreadStateMachine';
+} from '@app/features/app/components/layout/utils/ChannelUnreadStateMachine';
+import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<ChannelUnreadStateInput> = {}): ChannelUnreadStateInput {
 	return {

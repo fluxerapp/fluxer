@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
-import {IMAGE_MAX_SIZE_LABEL} from '@app/features/app/config/I18nDisplayConstants';
+import {IMAGE_MAX_SIZE_BYTES} from '@app/features/app/config/I18nDisplayConstants';
 import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {
@@ -9,6 +9,7 @@ import {
 	SOMETHING_WENT_WRONG_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
@@ -162,7 +163,7 @@ export const WebhookListItem: React.FC<WebhookListItemProps> = observer(
 					title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 					message: () =>
 						i18n._(AVATAR_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-							imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+							imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 						}),
 					dataFlx: 'webhook.webhook-list-item.avatar-too-large-error-modal',
 				});

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {describe, expect, it} from 'vitest';
-import {getChannelUnreadState} from './ChannelUnreadState';
 
 describe('getChannelUnreadState', () => {
 	it('shows a normal unread indicator for all-messages unread badges', () => {

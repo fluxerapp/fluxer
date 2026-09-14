@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
 	discardVoiceJoinChimeSequence,
 	resetSelfJoinChimesForTests,
@@ -11,7 +10,8 @@ import {
 	VOICE_JOIN_CHIME_SEQUENCE_RETENTION_MS,
 	type VoiceJoinChimeSequenceResult,
 	waitForVoiceJoinChimeSequence,
-} from './VoiceSelfJoinChime';
+} from '@app/features/voice/engine/VoiceSelfJoinChime';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 vi.mock('@app/features/ui/commands/SoundCommands', () => ({
 	playOneShotSoundImmediatelyBypassingSelfDeafened: vi.fn(() => Promise.resolve(true)),

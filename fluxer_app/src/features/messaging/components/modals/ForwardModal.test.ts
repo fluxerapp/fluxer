@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {shouldNavigateAfterForward} from '@app/features/messaging/components/modals/ForwardModalUtils';
 import {describe, expect, it} from 'vitest';
-import {shouldNavigateAfterForward} from './ForwardModalUtils';
 
 describe('ForwardModal', () => {
 	it('navigates only for an unmodified single-destination forward', () => {

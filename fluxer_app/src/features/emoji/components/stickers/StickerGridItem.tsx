@@ -125,7 +125,6 @@ export const StickerGridItem = observer(function StickerGridItem({
 		tags: sticker.tags,
 		url: stickerUrl,
 		animated: sticker.animated,
-		nsfw: sticker.nsfw,
 		user: sticker.user,
 	};
 	const handleContextMenu = (event: React.MouseEvent) => {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {checkGeoVsLocale} from '@app/api/risk/adapters/LocaleGeoMatcher';
 import {describe, expect, it} from 'vitest';
-import {checkGeoVsLocale} from '../adapters/LocaleGeoMatcher';
 
 describe('checkGeoVsLocale', () => {
 	it('matches en-US to US', async () => {

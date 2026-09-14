@@ -1,61 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
-import {AdminRepository} from '../admin/AdminRepository';
-import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '../constants/ContentModeration';
-import {Logger} from '../Logger';
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import {Logger} from '@app/api/Logger';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 class FileShaCache {
 	private banned: Set<string> = new Set();
-	private isInitialized = false;
 	private adminRepository = new AdminRepository();
 	private kvClient: IKVProvider | null = null;
-	private kvSubscription: IKVSubscription | null = null;
-	private subscriberInitialized = false;
-	private messageHandler: ((channel: string) => void) | null = null;
 	private consecutiveFailures = 0;
 	private readonly maxConsecutiveFailures = 5;
+	private readonly refreshSubscription = new RefreshSubscription({
+		name: 'file-SHA blocklist cache',
+		channels: [BANNED_FILE_SHAS_REFRESH_CHANNEL],
+		refresh: () => this.refresh(),
+		onRefreshError: (err) => {
+			this.consecutiveFailures++;
+			const message = err instanceof Error ? err.message : String(err);
+			if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+				Logger.error({error: message}, 'Failed to refresh file-SHA blocklist cache after notification');
+			} else {
+				Logger.warn({error: message}, 'Failed to refresh file-SHA blocklist cache after notification');
+			}
+		},
+	});
 
 	setRefreshSubscriber(kvClient: IKVProvider | null): void {
 		this.kvClient = kvClient;
 	}
 
-	async initialize(): Promise<void> {
-		if (this.isInitialized) return;
-		await this.refresh();
-		this.isInitialized = true;
-		this.setupSubscriber();
-	}
-
-	private setupSubscriber(): void {
-		if (this.subscriberInitialized || !this.kvClient) return;
-		const subscription = this.kvClient.duplicate();
-		this.kvSubscription = subscription;
-		this.messageHandler = (channel: string) => {
-			if (channel === BANNED_FILE_SHAS_REFRESH_CHANNEL) {
-				this.refresh().catch((err) => {
-					this.consecutiveFailures++;
-					const message = err instanceof Error ? err.message : String(err);
-					if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-						Logger.error({error: message}, 'Failed to refresh file-SHA blocklist cache after notification');
-					} else {
-						Logger.warn({error: message}, 'Failed to refresh file-SHA blocklist cache after notification');
-					}
-				});
-			}
-		};
-		subscription
-			.connect()
-			.then(() => subscription.subscribe(BANNED_FILE_SHAS_REFRESH_CHANNEL))
-			.then(() => {
-				if (this.messageHandler) {
-					subscription.on('message', this.messageHandler);
-				}
-			})
-			.catch((error) => {
-				Logger.error({error}, 'Failed to subscribe to file-SHA blocklist refresh channel');
-			});
-		this.subscriberInitialized = true;
+	initialize(): Promise<void> {
+		return this.refreshSubscription.start(this.kvClient);
 	}
 
 	async refresh(): Promise<void> {
@@ -86,23 +63,16 @@ class FileShaCache {
 	}
 
 	resetForTesting(): void {
-		this.shutdown();
+		void this.shutdown().catch((error) => {
+			Logger.error({error}, 'Failed to shut down file-SHA blocklist cache');
+		});
 		this.banned = new Set();
 		this.kvClient = null;
-		this.subscriberInitialized = false;
 		this.consecutiveFailures = 0;
-		this.isInitialized = false;
 	}
 
-	shutdown(): void {
-		if (this.kvSubscription && this.messageHandler) {
-			this.kvSubscription.off('message', this.messageHandler);
-		}
-		if (this.kvSubscription) {
-			this.kvSubscription.disconnect();
-			this.kvSubscription = null;
-		}
-		this.messageHandler = null;
+	shutdown(): Promise<void> {
+		return this.refreshSubscription.stop();
 	}
 }
 

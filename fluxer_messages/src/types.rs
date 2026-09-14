@@ -184,11 +184,6 @@ pub struct Message {
     pub mention_channels: Vec<i64>,
     pub has_reaction: Option<bool>,
     pub version: i32,
-    #[serde(
-        default,
-        deserialize_with = "serde_id::vec_i64_from_strings_or_numbers"
-    )]
-    pub nsfw_emojis: Vec<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<MessageAttachment>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -363,8 +358,6 @@ pub struct ApiMessageStickerResponse {
     pub id: String,
     pub name: String,
     pub animated: bool,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub nsfw: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -457,8 +450,6 @@ pub struct ApiMessageResponse {
     pub embeds: Vec<ApiMessageEmbedResponse>,
     pub attachments: Vec<ApiMessageAttachmentResponse>,
     pub stickers: Vec<ApiMessageStickerResponse>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub nsfw_emojis: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reactions: Option<Vec<ApiMessageReactionResponse>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -625,7 +616,6 @@ pub struct MessageStickerItem {
     pub name: Option<String>,
     pub format_type: Option<i32>,
     pub animated: Option<bool>,
-    pub nsfw: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -702,7 +692,6 @@ mod tests {
             "mention_channels": [],
             "has_reaction": false,
             "version": 1,
-            "nsfw_emojis": [],
             "attachments": [{
                 "attachment_id": "1509197195776110593",
                 "filename": "a.png",
@@ -788,7 +777,6 @@ mod tests {
             embeds: Vec::new(),
             attachments: Vec::new(),
             stickers: Vec::new(),
-            nsfw_emojis: None,
             reactions: None,
             message_reference: None,
             message_snapshots: None,

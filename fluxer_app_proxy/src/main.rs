@@ -5,13 +5,13 @@ use fluxer_app_proxy::{
     config::AppProxyConfig,
     csp::CompiledCspPolicy,
     discovery_cache::DiscoveryCache,
-    geoip, invite_meta,
+    geoip,
     routes::build_router,
     state::{
         AppProxyBudgets, AppState, MAX_SPA_INDEX_BYTES, build_http_client, read_bounded_text_file,
     },
 };
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 use tokio::{net::TcpListener, runtime::Builder};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -56,11 +56,6 @@ fn main() -> anyhow::Result<()> {
             config.discovery_refresh_interval_ms,
         );
 
-        let invite_meta = Arc::new(OnceLock::new());
-        let invite_meta_connect = config
-            .invite_meta_enabled
-            .then(|| invite_meta::start_background_connect(&invite_meta, Arc::clone(&config)));
-
         let index_html = if config.index_upstream_url.is_none() {
             let index_path = std::path::Path::new(&config.static_dir).join("index.html");
             match read_bounded_text_file(&index_path, MAX_SPA_INDEX_BYTES).await {
@@ -80,7 +75,6 @@ fn main() -> anyhow::Result<()> {
             http_client,
             discovery_cache,
             geoip,
-            invite_meta,
             index_html,
             budgets: AppProxyBudgets::default(),
         };
@@ -97,9 +91,6 @@ fn main() -> anyhow::Result<()> {
             .context("app proxy server exited unexpectedly")?;
 
         cancel.abort();
-        if let Some(handle) = invite_meta_connect {
-            handle.abort();
-        }
         Ok(())
     })
 }

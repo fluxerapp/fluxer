@@ -1,23 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../../BrandedTypes';
-import {createChannelID} from '../../../BrandedTypes';
-import type {IChannelRepository} from '../../../channel/IChannelRepository';
-import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import {Logger} from '../../../Logger';
-import type {Message} from '../../../models/Message';
-import {deleteMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
-import {ChannelEventDispatcher} from '../../../worker/services/ChannelEventDispatcher';
-import {purgeMessageAttachments} from './MessageHelpers';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	isChannelEligible,
 	isTimestampInWindow,
 	type SelfMessageEligibilityContext,
 	type SelfMessageFilter,
-} from './SelfMessageFilter';
+} from '@app/api/channel/services/message/SelfMessageFilter';
+import {assertMutableUserId} from '@app/api/constants/Core';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {Message} from '@app/api/models/Message';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {ChannelEventDispatcher} from '@app/api/worker/services/ChannelEventDispatcher';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
 interface UserMessageDeletionServiceDeps {
 	channelRepository: IChannelRepository;
@@ -50,14 +52,6 @@ interface MessageWithChannel {
 	message: Message;
 }
 
-function chunkArray<T>(items: Array<T>, chunkSize: number): Array<Array<T>> {
-	const chunks: Array<Array<T>> = [];
-	for (let i = 0; i < items.length; i += chunkSize) {
-		chunks.push(items.slice(i, i + chunkSize));
-	}
-	return chunks;
-}
-
 export class UserMessageDeletionService {
 	private readonly eventDispatcher: ChannelEventDispatcher;
 	private readonly FETCH_BATCH_SIZE = 100;
@@ -81,6 +75,7 @@ export class UserMessageDeletionService {
 	}
 
 	async deleteUserMessagesBulk(userId: UserID, options: BulkDeleteUserMessagesOptions = {}): Promise<number> {
+		assertMutableUserId(userId);
 		const {beforeTimestamp = Number.POSITIVE_INFINITY, channelIdAllowlist, onProgress} = options;
 		Logger.debug({userId, beforeTimestamp}, 'Starting bulk user message deletion');
 		const messagesByChannel = await this.collectUserMessages(userId, beforeTimestamp, channelIdAllowlist);

@@ -76,10 +76,10 @@ type VoiceSettingsPatch = Partial<{
 	linuxAudioCaptureIgnoreDevices: boolean;
 	linuxAudioCaptureGranularSelect: boolean;
 	linuxAudioCaptureDeviceSelect: boolean;
-	screenShareManualAudioSourcesOptIn: boolean;
 	screenShareAudioSourceMode: 'none' | 'system' | 'specific';
 	screenShareAudioIncludeSources: Array<Record<string, string>>;
 	screenShareAudioExcludeSources: Array<Record<string, string>>;
+	screenShareDeviceAudioUsesMicrophone: boolean;
 	openH264Enabled: boolean;
 }>;
 
@@ -103,6 +103,11 @@ const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'mirrorCamera',
 ];
 const CAMERA_CAPTURE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = ['cameraResolution', 'videoDeviceId'];
+const SCREEN_SHARE_CODEC_NEGOTIATION_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
+	'preferredScreenShareCodec',
+	'screenShareAv1OptIn',
+	'screenShareHevcOptIn',
+];
 function refreshMicrophone(): void {
 	MediaEngine.refreshMicrophoneFromSettings();
 }
@@ -115,12 +120,20 @@ function refreshCameraCapture(): void {
 	MediaEngine.refreshCameraCaptureFromSettings();
 }
 
+function refreshScreenShareCodecNegotiation(): void {
+	MediaEngine.refreshScreenShareCodecNegotiationFromSettings();
+}
+
 function shouldRefreshMicrophone(settings: VoiceSettingsPatch): boolean {
 	return MICROPHONE_REFRESH_KEYS.some((key) => settings[key] !== undefined);
 }
 
 function shouldRefreshCameraBackground(settings: VoiceSettingsPatch): boolean {
 	return CAMERA_BACKGROUND_REFRESH_KEYS.some((key) => settings[key] !== undefined);
+}
+
+function shouldRefreshScreenShareCodecNegotiation(settings: VoiceSettingsPatch): boolean {
+	return SCREEN_SHARE_CODEC_NEGOTIATION_REFRESH_KEYS.some((key) => settings[key] !== undefined);
 }
 
 function readCameraCaptureRefreshValues(): VoiceSettingsPatch {
@@ -195,6 +208,9 @@ function applyUpdatedVoiceSettings(
 	}
 	if (shouldRefreshCameraCapture(settings, cameraCaptureBefore, readCameraCaptureRefreshValues())) {
 		refreshCameraCapture();
+	}
+	if (shouldRefreshScreenShareCodecNegotiation(settings)) {
+		refreshScreenShareCodecNegotiation();
 	}
 }
 

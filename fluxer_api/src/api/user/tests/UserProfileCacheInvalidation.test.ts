@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
+import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {UserProfileFullResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createFriendship} from '../../channel/tests/ChannelTestUtils';
-import {UserCacheService} from '../../infrastructure/UserCacheService';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 describe('User Profile Cache Invalidation', () => {
 	let harness: ApiTestHarness;

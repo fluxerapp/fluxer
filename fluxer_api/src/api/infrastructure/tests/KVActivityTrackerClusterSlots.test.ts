@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import type {User} from '@app/api/models/User';
+import {BatchRecordingKVProvider} from '@app/api/test/mocks/BatchRecordingKVProvider';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import type {User} from '../../models/User';
-import {BatchRecordingKVProvider} from '../../test/mocks/BatchRecordingKVProvider';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {KVActivityTracker} from '../KVActivityTracker';
 
 function createUser(id: bigint, lastActiveAt: Date): User {
 	return {id: createUserID(id), lastActiveAt} as unknown as User;

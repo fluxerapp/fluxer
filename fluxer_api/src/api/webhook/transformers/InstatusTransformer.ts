@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {parseString, safeUrl} from '@app/api/utils/StringUtils';
 import {
 	RICH_EMBED_DESCRIPTION_MAX_LENGTH,
 	RICH_EMBED_FIELD_VALUE_MAX_LENGTH,
@@ -8,10 +9,10 @@ import {
 	type RichEmbedRequest,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
-import {parseString, safeUrl} from '../../utils/StringUtils';
 
 type EmbedField = NonNullable<RichEmbedRequest['fields']>[number];
 type UpdateLike = {
+	id?: string | null | undefined;
 	created_at?: string | null | undefined;
 	markdown?: string | null | undefined;
 };
@@ -227,8 +228,30 @@ function transformComponentUpdate(body: InstatusWebhook): RichEmbedRequest | nul
 }
 
 export function transformInstatusWebhook(body: InstatusWebhook): RichEmbedRequest | null {
-	if (body.incident) return transformIncident(body);
-	if (body.maintenance) return transformMaintenance(body);
-	if (body.component_update || body.component) return transformComponentUpdate(body);
+	return transformIncident(body) ?? transformMaintenance(body) ?? transformComponentUpdate(body);
+}
+
+export function instatusDeliveryKey(body: InstatusWebhook): string | null {
+	const incident = body.incident;
+	if (incident) {
+		const id = nonEmpty(incident.id);
+		if (!id) return null;
+		const latest = pickLatestUpdate(incident.incident_updates);
+		return `incident:${id}:${nonEmpty(latest?.id) ?? nonEmpty(incident.updated_at) ?? ''}`;
+	}
+	const maintenance = body.maintenance;
+	if (maintenance) {
+		const id = nonEmpty(maintenance.id);
+		if (!id) return null;
+		const latest = pickLatestUpdate(maintenance.maintenance_updates);
+		return `maintenance:${id}:${nonEmpty(latest?.id) ?? nonEmpty(maintenance.updated_at) ?? ''}`;
+	}
+	const update = body.component_update;
+	if (update) {
+		const componentId = nonEmpty(update.component_id);
+		const createdAt = nonEmpty(update.created_at);
+		if (!componentId || !createdAt) return null;
+		return `component:${componentId}:${createdAt}:${nonEmpty(update.new_status) ?? ''}`;
+	}
 	return null;
 }

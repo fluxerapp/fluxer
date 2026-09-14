@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createCalculator, fitMediaWithinBounds, mediaAspectRatioValue} from '@app/features/ui/utils/DimensionUtils';
 import {describe, expect, it} from 'vitest';
-import {createCalculator, fitMediaWithinBounds, mediaAspectRatioValue} from './DimensionUtils';
 
 const ATTACHMENT_CAPS = {maxWidth: 550, maxHeight: 350};
 

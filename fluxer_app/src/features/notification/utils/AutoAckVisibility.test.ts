@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	getDirectCallFullscreenScopeKey,
 	isTextChatVisibleForAutoAck,
 	isVoiceCallFullscreenScopeForChannel,
-} from './AutoAckVisibility';
+} from '@app/features/notification/utils/AutoAckVisibility';
+import {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {describe, expect, it} from 'vitest';
 
 describe('isTextChatVisibleForAutoAck', () => {
 	it('allows normal text channels to auto-ack when no fullscreen call view is active', () => {

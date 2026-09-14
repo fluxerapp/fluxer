@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createRandomWelcomeRotationState,
 	createWelcomeRotationState,
 	WELCOME_ROTATION,
 	type WelcomeRotationState,
-} from './SetupWizardWelcomeRotation';
+} from '@app/features/app/components/setup/SetupWizardWelcomeRotation';
+import {describe, expect, it} from 'vitest';
 
 function constantRandom(value: number): () => number {
 	return () => value;

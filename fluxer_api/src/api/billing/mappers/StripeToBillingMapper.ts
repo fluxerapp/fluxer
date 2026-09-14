@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type Stripe from 'stripe';
 import type {
 	BillingChargeByCustomerRow,
 	BillingChargeRow,
@@ -28,7 +27,8 @@ import type {
 	BillingSubscriptionByCustomerRow,
 	BillingSubscriptionByUserRow,
 	BillingSubscriptionRow,
-} from '../../database/types/BillingTypes';
+} from '@app/api/database/types/BillingTypes';
+import type Stripe from 'stripe';
 
 type BillingSubscriptionItemValue = NonNullable<BillingSubscriptionRow['items']>[number];
 type BillingSubscriptionRowWithRawItems = Omit<BillingSubscriptionRow, 'items'> & {

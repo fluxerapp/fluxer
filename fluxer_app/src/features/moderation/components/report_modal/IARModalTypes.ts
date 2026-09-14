@@ -37,7 +37,7 @@ export type IARRadioOption<T> = RadioOption<T> & {
 	name: string;
 	desc?: string;
 };
-export type IARStep = 'path' | 'category' | 'reason' | 'guidance' | 'success';
+export type IARStep = 'category' | 'reason' | 'success';
 export type IARContext =
 	| {
 			type: 'message';

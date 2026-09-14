@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {Config} from '@app/api/Config';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {RequestUrlPolicy} from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
-import {Config} from '../Config';
 
 interface SsoConfigValidationInput {
 	enabled: boolean;
@@ -38,6 +39,7 @@ export function getSsoRequestUrlPolicy(): RequestUrlPolicy {
 	return ssoRequestUrlPolicy;
 }
 const DOMAIN_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+const SsoAllowedDomainsSchema = InstanceConfigResponse.shape.sso.shape.allowed_domains;
 
 function normalizeOptionalSsoString(value: string | null): string | null {
 	if (typeof value !== 'string') {
@@ -69,9 +71,11 @@ export function isTestSsoProvider(
 	);
 }
 
-export function normalizeSsoAllowedEmailDomains(domains: Array<string>): Array<string> {
+export function normalizeSsoAllowedEmailDomains(domains: unknown): Array<string> {
+	const result = SsoAllowedDomainsSchema.safeParse(domains);
+	if (!result.success) throwInvalidDomain();
 	const normalized = new Set<string>();
-	for (const rawDomain of domains) {
+	for (const rawDomain of result.data) {
 		const trimmed = rawDomain.trim().toLowerCase();
 		if (!trimmed) {
 			continue;

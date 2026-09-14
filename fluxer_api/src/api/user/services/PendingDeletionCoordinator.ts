@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import type {UserID} from '../../BrandedTypes';
 
 interface PendingDeletionRepositoryLike {
 	addPendingDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void>;

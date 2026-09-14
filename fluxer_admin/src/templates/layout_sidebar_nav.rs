@@ -57,6 +57,7 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                     acl::BULK_UPDATE_GUILD_FEATURES,
                     acl::BULK_ADD_GUILD_MEMBERS,
                     acl::BULK_DELETE_USERS,
+                    acl::BULK_DELETE_USER_MESSAGES,
                 ]
             ),
         ],

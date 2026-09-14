@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {KeybindCommand, KeybindConfig, KeybindSection, KeyCombo} from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {formatKeyCombo, formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
+import type {I18n} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import type React from 'react';
+
+const ANY_KEY_DESCRIPTOR = msg({message: 'Any key'});
 
 export const UNASSIGNED = '__unassigned__' as const;
 
@@ -147,24 +151,14 @@ export function sortBySectionDisplayOrder(
 	return [...entries].sort((a, b) => indexFor(a.action) - indexFor(b.action));
 }
 
-export function chipsForDefaultEntry(entry: KeybindConfig): Array<string> {
+export function chipsForDefaultEntry(i18n: I18n, entry: KeybindConfig): Array<string> {
 	if (entry.defaultsShortcutDisplayKind === 'any_key') {
-		return ['ANY KEY'];
+		return [i18n._(ANY_KEY_DESCRIPTOR)];
 	}
 	if (entry.defaultsShortcutDisplayKind === 'space_or_enter') {
-		const space = formatKeyCombo({key: ' '}).split(' + ');
-		const enter = formatKeyCombo({key: 'Enter'}).split(' + ');
-		return [...space, ...enter];
+		return [...formatKeyComboParts(i18n, {key: ' '}), ...formatKeyComboParts(i18n, {key: 'Enter'})];
 	}
-	const combo = entry.combo;
-	if (!combo) return [];
-	if (combo.modifierOnly && combo.bothSides) {
-		const formatted = formatKeyCombo(combo);
-		return formatted ? formatted.split(' + ') : [];
-	}
-	const formatted = formatKeyCombo(combo);
-	if (!formatted) return [];
-	return formatted.split(' + ');
+	return entry.combo ? formatKeyComboParts(i18n, entry.combo) : [];
 }
 
 export function partitionMergedShortcutRows(entries: ReadonlyArray<KeybindConfig>): Array<ShortcutRowModel> {
@@ -191,19 +185,19 @@ export function normalizeQuery(query: string): string {
 	return query.trim().toLowerCase();
 }
 
-export function entryMatchesQuery(entry: KeybindConfig, normalized: string): boolean {
+export function entryMatchesQuery(i18n: I18n, entry: KeybindConfig, normalized: string): boolean {
 	if (!normalized) return true;
 	if (entry.label.toLowerCase().includes(normalized)) return true;
-	const chips = chipsForDefaultEntry(entry);
+	const chips = chipsForDefaultEntry(i18n, entry);
 	for (const chip of chips) {
 		if (chip.toLowerCase().includes(normalized)) return true;
 	}
 	return false;
 }
 
-export function comboMatchesQuery(combo: KeyCombo, normalized: string): boolean {
+export function comboMatchesQuery(i18n: I18n, combo: KeyCombo, normalized: string): boolean {
 	if (!normalized) return true;
-	const formatted = formatKeyCombo(combo);
+	const formatted = formatKeyCombo(i18n, combo);
 	if (formatted?.toLowerCase().includes(normalized)) return true;
 	if (combo.key?.toLowerCase().includes(normalized)) return true;
 	return false;

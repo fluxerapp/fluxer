@@ -1,27 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import archiver from 'archiver';
-import {ms} from 'itty-time';
-import {z} from 'zod';
-import {type AttachmentID, type ChannelID, createGuildID, type MessageID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../../channel/services/message/MessageHelpers';
-import {Logger} from '../../Logger';
-import {createArchiveJsonBuffer} from '../utils/ArchiveJson';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
+import {
+	type ArchiveTaskHandler,
+	ArchiveTerminalFailureError,
+	createArchiveTask,
+	throwIfArchiveTerminallyFailed,
+} from '@app/api/archive/ArchiveTask';
+import {type AttachmentID, type ChannelID, createGuildID, type MessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {writeZipArchive} from '@app/api/worker/utils/ArchiveFile';
+import {createArchiveJsonBuffer} from '@app/api/worker/utils/ArchiveJson';
 import {
 	buildHashedAssetKey,
 	buildSimpleAssetKey,
 	getAnimatedAssetExtension,
 	getEmojiExtension,
-} from '../utils/AssetArchiveHelpers';
-import {getWorkerDependencies} from '../WorkerContext';
-import type {WorkerDependencies} from '../WorkerDependencies';
+} from '@app/api/worker/utils/AssetArchiveHelpers';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import {z} from 'zod';
 
 const CHANNEL_CONCURRENCY = 4;
 const ASSET_CONCURRENCY = 8;
@@ -32,7 +39,6 @@ const P_MESSAGES = 60;
 const P_ASSETS = 68;
 const P_ATTACHMENTS = 88;
 const P_ZIP = 95;
-const P_DONE = 100;
 const MESSAGE_BATCH_SIZE = 100;
 const MESSAGE_LIMIT_PER_CHANNEL = 1000;
 const PayloadSchema = z.object({
@@ -48,66 +54,57 @@ interface PendingAttachmentDownload {
 	filename: string;
 }
 
-async function parallel<T>(
-	items: Array<T>,
-	concurrency: number,
-	fn: (item: T, index: number) => Promise<void>,
-): Promise<void> {
-	let i = 0;
-	const worker = async () => {
-		while (true) {
-			const idx = i++;
-			if (idx >= items.length) return;
-			await fn(items[idx]!, idx);
-		}
-	};
-	await Promise.all(Array.from({length: Math.min(concurrency, items.length || 1)}, worker));
-}
-
 function cdnBucket(): string {
 	return Config.s3.buckets.cdn;
 }
 
 async function downloadToDisk(
-	storageService: WorkerDependencies['storageService'],
+	storageService: IStorageService,
 	bucket: string,
 	key: string,
 	destPath: string,
-): Promise<boolean> {
+): Promise<void> {
 	try {
 		await fs.promises.mkdir(path.dirname(destPath), {recursive: true});
 		await storageService.writeObjectToDisk(bucket, key, destPath);
-		return true;
-	} catch (err) {
-		const name = err instanceof Error ? err.name : String(err);
-		if (name === 'NoSuchKey' || name === 'NotFound') return false;
-		Logger.warn({key, err: name}, 'Skipping unreadable S3 object during harvest');
-		return false;
+	} catch (error) {
+		if (!(error instanceof Error) || (error.name !== 'NoSuchKey' && error.name !== 'NotFound')) throw error;
+		Logger.warn({key}, 'Skipping missing S3 object during harvest');
 	}
 }
 
-const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
+const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) => {
 	const validated = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload}, 'Processing harvestGuildData task');
 	const guildId = createGuildID(BigInt(validated.guildId));
 	const archiveId = BigInt(validated.archiveId);
 	const guildIdStr = guildId.toString();
 	const {guildRepository, channelRepository, adminArchiveRepository, storageService} = getWorkerDependencies();
-	const adminArchive = await adminArchiveRepository.findBySubjectAndArchiveId('guild', guildId, archiveId);
-	if (!adminArchive) throw new Error('Admin archive record not found for guild');
-	const upd = (pct: number, step: string) => adminArchiveRepository.updateProgress(adminArchive, pct, step);
-	const fail = (msg: string) => adminArchiveRepository.markAsFailed(adminArchive, msg);
-	const done = (key: string, size: bigint, exp: Date) =>
-		adminArchiveRepository.markAsCompleted(adminArchive, key, size, exp);
-	const tmpDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'fluxer-guild-archive-'));
-	const contentDir = path.join(tmpDir, 'content');
-	const zipPath = path.join(tmpDir, 'archive.zip');
-	await fs.promises.mkdir(contentDir);
+	const existingArchive = await adminArchiveRepository.findBySubjectAndArchiveId('guild', guildId, archiveId);
+	if (!existingArchive) throw new Error('Admin archive record not found for guild');
+	throwIfArchiveTerminallyFailed(existingArchive);
+	if (existingArchive.completedAt) {
+		Logger.info({guildId, archiveId}, 'Guild archive already completed, skipping');
+		return;
+	}
+	const adminArchive = await adminArchiveRepository.markAsStarted(existingArchive, 'Starting guild archive');
+	const {attemptId, expiresAt} = adminArchive;
+	assert(attemptId !== null && expiresAt !== null, 'Claimed guild archive is incomplete');
+	let progressUpdate = Promise.resolve();
+	const updateProgress = (percent: number, step: string): Promise<void> => {
+		progressUpdate = progressUpdate.then(() => adminArchiveRepository.updateProgress(adminArchive, percent, step));
+		return progressUpdate;
+	};
+	let storageKey: string;
+	let fileSize: bigint;
 	try {
-		await adminArchiveRepository.markAsStarted(adminArchive, 'Starting guild archive');
+		await using tmpDir = await fs.promises.mkdtempDisposable(path.join(os.tmpdir(), 'fluxer-guild-archive-'));
+		const contentDir = path.join(tmpDir.path, 'content');
+		const zipPath = path.join(tmpDir.path, 'archive.zip');
+		await fs.promises.mkdir(contentDir);
 		const guild = await guildRepository.findUnique(guildId);
 		if (!guild) throw new Error(`Guild ${guildIdStr} not found`);
-		await upd(P_START, 'Collecting guild metadata');
+		await updateProgress(P_START, 'Collecting guild metadata');
 		const [roles, members, channels, emojis, stickers] = await Promise.all([
 			guildRepository.listRoles(guildId),
 			guildRepository.listMembers(guildId),
@@ -115,7 +112,7 @@ const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
 			guildRepository.listEmojis(guildId),
 			guildRepository.listStickers(guildId),
 		]);
-		await upd(P_META, 'Writing guild metadata');
+		await updateProgress(P_META, 'Writing guild metadata');
 		const guildJson = {
 			guild: {
 				id: guild.id.toString(),
@@ -170,11 +167,11 @@ const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
 			})),
 		};
 		await fs.promises.writeFile(path.join(contentDir, 'guild.json'), createArchiveJsonBuffer(guildJson));
-		await upd(P_META, `Harvesting messages from ${channels.length} channels`);
+		await updateProgress(P_META, `Harvesting messages from ${channels.length} channels`);
 		const textChannels = channels.filter((c) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(c.type));
 		const pendingDownloads: Array<PendingAttachmentDownload> = [];
 		let processedChannels = 0;
-		await parallel(textChannels, CHANNEL_CONCURRENCY, async (channel) => {
+		await mapWithConcurrency(textChannels, CHANNEL_CONCURRENCY, async (channel) => {
 			const messages: Array<object> = [];
 			let beforeMessageId: MessageID | undefined;
 			let channelDownloads: Array<PendingAttachmentDownload> = [];
@@ -220,11 +217,9 @@ const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
 			channelDownloads = [];
 			processedChannels++;
 			const pct = P_META + Math.floor((processedChannels / Math.max(textChannels.length, 1)) * (P_MESSAGES - P_META));
-			upd(pct, `Messages: ${processedChannels}/${textChannels.length} channels`).catch((error: unknown) =>
-				Logger.warn({error}, 'Failed to report guild archive progress'),
-			);
+			await updateProgress(pct, `Messages: ${processedChannels}/${textChannels.length} channels`);
 		});
-		await upd(P_MESSAGES, 'Downloading guild assets');
+		await updateProgress(P_MESSAGES, 'Downloading guild assets');
 		type AssetJob = {
 			key: string;
 			dest: string;
@@ -257,14 +252,14 @@ const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
 				dest: path.join(contentDir, 'assets', 'guild', 'stickers', `${id}.${sticker.animated ? 'gif' : 'png'}`),
 			});
 		}
-		await parallel(assetJobs, ASSET_CONCURRENCY, async ({key, dest}) => {
+		await mapWithConcurrency(assetJobs, ASSET_CONCURRENCY, async ({key, dest}) => {
 			await downloadToDisk(storageService, cdnBucket(), key, dest);
 		});
-		await upd(P_ASSETS, `Downloading ${pendingDownloads.length} attachments`);
+		await updateProgress(P_ASSETS, `Downloading ${pendingDownloads.length} attachments`);
 		if (pendingDownloads.length > 0) {
 			let doneCount = 0;
 			let lastPct = P_ASSETS;
-			await parallel(pendingDownloads, ATTACHMENT_CONCURRENCY, async (dl) => {
+			await mapWithConcurrency(pendingDownloads, ATTACHMENT_CONCURRENCY, async (dl) => {
 				const storageKey = makeAttachmentCdnKey(dl.channelId, dl.attachmentId, dl.filename);
 				const dest = path.join(
 					contentDir,
@@ -278,43 +273,42 @@ const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
 				const newPct = P_ASSETS + Math.floor((doneCount / pendingDownloads.length) * (P_ATTACHMENTS - P_ASSETS));
 				if (newPct > lastPct) {
 					lastPct = newPct;
-					upd(newPct, `Attachments: ${doneCount}/${pendingDownloads.length}`).catch((error: unknown) =>
-						Logger.warn({error}, 'Failed to report guild archive progress'),
-					);
+					await updateProgress(newPct, `Attachments: ${doneCount}/${pendingDownloads.length}`);
 				}
 			});
 		}
-		await upd(P_ATTACHMENTS, 'Creating archive');
-		await new Promise<void>((resolve, reject) => {
-			const output = fs.createWriteStream(zipPath);
-			const arc = archiver('zip', {zlib: {level: 6}});
-			arc.on('error', reject);
-			output.on('error', reject);
-			output.on('close', resolve);
-			arc.pipe(output);
-			arc.directory(contentDir, false);
-			arc.finalize();
-		});
-		await upd(P_ZIP, 'Uploading archive');
-		const expiresAt = new Date(Date.now() + ms('1 year'));
-		const storageKey = `archives/guilds/${guildId}/${archiveId}/guild-archive.zip`;
-		const fileSize = BigInt((await fs.promises.stat(zipPath)).size);
-		await storageService.uploadObject({
+		await updateProgress(P_ATTACHMENTS, 'Creating archive');
+		await writeZipArchive(zipPath, (archive) => archive.directory(contentDir));
+		await updateProgress(P_ZIP, 'Uploading archive');
+		storageKey = `archives/guilds/${guildId}/${archiveId}/${attemptId}/guild-archive.zip`;
+		const zipStat = await fs.promises.stat(zipPath);
+		fileSize = BigInt(zipStat.size);
+		await storageService.uploadObjectFromFile({
 			bucket: Config.s3.buckets.harvests,
 			key: storageKey,
-			body: fs.createReadStream(zipPath),
+			filePath: zipPath,
+			contentLength: zipStat.size,
 			contentType: 'application/zip',
 			expiresAt,
 		});
-		await done(storageKey, fileSize, expiresAt);
-		await upd(P_DONE, 'Completed');
 	} catch (error) {
+		if (error instanceof ArchiveAttemptSupersededError) throw error;
 		Logger.error({error, guildId, archiveId}, 'Failed to harvest guild data');
-		await fail(error instanceof Error ? error.message : String(error));
+		const message = error instanceof Error ? error.message : String(error);
+		try {
+			if (attempt.isLastAttempt) {
+				await adminArchiveRepository.markAsTerminallyFailed(adminArchive, message);
+			} else {
+				await adminArchiveRepository.markAsFailed(adminArchive, message);
+			}
+		} catch (failureError) {
+			if (failureError instanceof ArchiveAttemptSupersededError) throw failureError;
+			throw new AggregateError([error, failureError], 'Failed to prepare guild archive and record its failure');
+		}
+		if (attempt.isLastAttempt) throw new ArchiveTerminalFailureError(message);
 		throw error;
-	} finally {
-		await fs.promises.rm(tmpDir, {recursive: true, force: true});
 	}
+	await adminArchiveRepository.markAsCompleted(adminArchive, storageKey, fileSize, expiresAt);
 };
 
-export default harvestGuildData;
+export default createArchiveTask(harvestGuildData);

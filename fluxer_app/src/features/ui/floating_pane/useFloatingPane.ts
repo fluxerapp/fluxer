@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
-import {canUseWindowFocusedHoverControls} from '@app/features/ui/utils/WindowFocusInteractionGuard';
-import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {
 	type Corner,
 	clampPoint,
@@ -17,7 +13,11 @@ import {
 	type ResizeEdge,
 	type ResizeStart,
 	reconcileToGeometry,
-} from './FloatingPaneMath';
+} from '@app/features/ui/floating_pane/FloatingPaneMath';
+import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
+import {canUseWindowFocusedHoverControls} from '@app/features/ui/utils/WindowFocusInteractionGuard';
+import type React from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 const DRAG_ACTIVATION_DISTANCE_SQ = 9;
 

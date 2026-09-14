@@ -1,0 +1,19 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+import Default from '@astrojs/starlight/components/Head.astro';
+import LatinFontFaces from '@/fonts/LatinFontFaces.astro';
+import {docsSearchIndexing} from '@/server/DocsConfig';
+
+function resolveRobotsDirective(searchIndexingEnabled: boolean): string {
+	if (searchIndexingEnabled) {
+		return 'index,follow';
+	}
+	return 'noindex,nofollow,noarchive,nosnippet,noimageindex';
+}
+
+const robots = resolveRobotsDirective(docsSearchIndexing());
+---
+
+<Default />
+<meta name="robots" content={robots} />
+<LatinFontFaces preloadFallback={false} />

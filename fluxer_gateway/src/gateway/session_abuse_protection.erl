@@ -5,8 +5,6 @@
 
 -export([
     ensure_tables/0,
-    is_token_banned/1,
-    ban_token/1,
     check_user_session_limit/1,
     increment_user_sessions/1,
     decrement_user_sessions/1,
@@ -19,7 +17,6 @@
 
 -define(IDENTIFY_TABLE, gateway_identify_rate).
 -define(SESSION_USER_COUNTS, session_user_counts).
--define(TOKEN_BAN_TABLE, gateway_token_bans).
 -define(IDENTIFY_MAX_PER_IP, 300).
 -define(IDENTIFY_WINDOW_SECS, 60).
 -define(IDENTIFY_CLEANUP_INTERVAL_MS, ?IDENTIFY_WINDOW_SECS * 2 * 1000).
@@ -29,48 +26,17 @@
 ensure_tables() ->
     ensure_identify_table(),
     ensure_session_user_counts_table(),
-    ensure_token_ban_table(),
     ok.
-
--spec is_token_banned(term()) -> boolean().
-is_token_banned(Token) when is_binary(Token) ->
-    ok = ensure_token_ban_table(),
-    Key = utils:hash_token(Token),
-    try ets:member(?TOKEN_BAN_TABLE, Key) of
-        Member when is_boolean(Member) -> Member
-    catch
-        error:badarg -> false
-    end;
-is_token_banned(_) ->
-    false.
-
--spec ban_token(term()) -> ok.
-ban_token(Token) when is_binary(Token) ->
-    ok = ensure_token_ban_table(),
-    Key = utils:hash_token(Token),
-    try
-        _ = ets:insert(?TOKEN_BAN_TABLE, {Key, erlang:system_time(second)}),
-        ok
-    catch
-        error:badarg -> ok
-    end;
-ban_token(_) ->
-    ok.
-
--spec ensure_token_ban_table() -> ok.
-ensure_token_ban_table() ->
-    case ets:whereis(?TOKEN_BAN_TABLE) of
-        undefined ->
-            _ = create_rate_table(?TOKEN_BAN_TABLE),
-            ok;
-        _ ->
-            ok
-    end.
 
 -spec check_user_session_limit(term()) -> ok | {error, too_many_sessions}.
 check_user_session_limit(UserId) when is_integer(UserId), UserId > 0 ->
-    ok = ensure_session_user_counts_table(),
-    do_check_user_session_limit(UserId);
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ok = ensure_session_user_counts_table(),
+            do_check_user_session_limit(UserId)
+    end;
 check_user_session_limit(_) ->
     ok.
 
@@ -116,8 +82,13 @@ decrement_user_sessions(_) ->
 
 -spec check_identify_rate(term()) -> ok | {error, identify_rate_limited}.
 check_identify_rate(PeerIP) when is_binary(PeerIP) ->
-    ok = ensure_identify_table(),
-    do_check_identify_rate(PeerIP);
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ok = ensure_identify_table(),
+            do_check_identify_rate(PeerIP)
+    end;
 check_identify_rate(_) ->
     ok.
 
@@ -218,29 +189,33 @@ check_identify_rate_allows_under_limit_test() ->
     ?assertEqual(ok, check_identify_rate(IP)).
 
 check_identify_rate_blocks_over_limit_test() ->
-    ensure_tables(),
-    IP = <<"192.0.2.200">>,
-    lists:foreach(
-        fun(_) -> check_identify_rate(IP) end,
-        lists:seq(1, ?IDENTIFY_MAX_PER_IP)
-    ),
-    ?assertEqual({error, identify_rate_limited}, check_identify_rate(IP)).
+    with_rate_limits_enabled(fun() ->
+        ensure_tables(),
+        IP = <<"192.0.2.200">>,
+        lists:foreach(
+            fun(_) -> check_identify_rate(IP) end,
+            lists:seq(1, ?IDENTIFY_MAX_PER_IP)
+        ),
+        ?assertEqual({error, identify_rate_limited}, check_identify_rate(IP))
+    end).
+
+check_identify_rate_disabled_by_env_test() ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:putenv("FLUXER_DISABLE_RATE_LIMITS", "true"),
+    try
+        ensure_tables(),
+        IP = <<"192.0.2.201">>,
+        lists:foreach(
+            fun(_) -> ?assertEqual(ok, check_identify_rate(IP)) end,
+            lists:seq(1, ?IDENTIFY_MAX_PER_IP + 1)
+        ),
+        ?assertEqual(ok, check_identify_rate(IP))
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
 
 check_identify_rate_non_binary_returns_ok_test() ->
     ?assertEqual(ok, check_identify_rate(undefined)).
-
-token_ban_round_trips_test() ->
-    ensure_tables(),
-    Token = <<"banned_token_abc">>,
-    ?assertEqual(false, is_token_banned(Token)),
-    ?assertEqual(ok, ban_token(Token)),
-    ?assertEqual(true, is_token_banned(Token)),
-    ?assertEqual(false, is_token_banned(<<"other_token">>)),
-    ets:delete(?TOKEN_BAN_TABLE, utils:hash_token(Token)).
-
-token_ban_non_binary_returns_ok_test() ->
-    ?assertEqual(false, is_token_banned(undefined)),
-    ?assertEqual(ok, ban_token(undefined)).
 
 user_session_limit_allows_under_limit_test() ->
     ensure_tables(),
@@ -252,28 +227,49 @@ user_session_limit_allows_under_limit_test() ->
     delete_user_session_count(UserId).
 
 user_session_limit_blocks_over_limit_test() ->
-    ensure_tables(),
-    UserId = 900002,
-    delete_user_session_count(UserId),
-    lists:foreach(
-        fun(_) -> increment_user_sessions(UserId) end,
-        lists:seq(1, ?MAX_SESSIONS_PER_USER)
-    ),
-    ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
-    delete_user_session_count(UserId).
+    with_rate_limits_enabled(fun() ->
+        ensure_tables(),
+        UserId = 900002,
+        delete_user_session_count(UserId),
+        lists:foreach(
+            fun(_) -> increment_user_sessions(UserId) end,
+            lists:seq(1, ?MAX_SESSIONS_PER_USER)
+        ),
+        ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
+        delete_user_session_count(UserId)
+    end).
+
+check_user_session_limit_disabled_by_env_test() ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:putenv("FLUXER_DISABLE_RATE_LIMITS", "true"),
+    try
+        ensure_tables(),
+        UserId = 900005,
+        delete_user_session_count(UserId),
+        lists:foreach(
+            fun(_) -> increment_user_sessions(UserId) end,
+            lists:seq(1, ?MAX_SESSIONS_PER_USER + 1)
+        ),
+        ?assertEqual(ok, check_user_session_limit(UserId)),
+        delete_user_session_count(UserId)
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
 
 user_session_decrement_works_test() ->
-    ensure_tables(),
-    UserId = 900003,
-    delete_user_session_count(UserId),
-    lists:foreach(
-        fun(_) -> increment_user_sessions(UserId) end,
-        lists:seq(1, ?MAX_SESSIONS_PER_USER)
-    ),
-    ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
-    decrement_user_sessions(UserId),
-    ?assertEqual(ok, check_user_session_limit(UserId)),
-    delete_user_session_count(UserId).
+    with_rate_limits_enabled(fun() ->
+        ensure_tables(),
+        UserId = 900003,
+        delete_user_session_count(UserId),
+        lists:foreach(
+            fun(_) -> increment_user_sessions(UserId) end,
+            lists:seq(1, ?MAX_SESSIONS_PER_USER)
+        ),
+        ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
+        decrement_user_sessions(UserId),
+        ?assertEqual(ok, check_user_session_limit(UserId)),
+        delete_user_session_count(UserId)
+    end).
 
 user_session_decrement_does_not_go_negative_test() ->
     ensure_tables(),
@@ -432,6 +428,20 @@ delete_user_session_count(UserId) ->
         _ -> ok
     catch
         error:badarg -> ok
+    end.
+
+restore_env(Key, false) ->
+    os:unsetenv(Key);
+restore_env(Key, Value) ->
+    os:putenv(Key, Value).
+
+with_rate_limits_enabled(Fun) ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:unsetenv("FLUXER_DISABLE_RATE_LIMITS"),
+    try
+        Fun()
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
     end.
 
 -endif.

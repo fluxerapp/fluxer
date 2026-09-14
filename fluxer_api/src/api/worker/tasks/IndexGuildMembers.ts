@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {getGuildMemberSearchService} from '@app/api/SearchFactory';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import type {UserID} from '../../BrandedTypes';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import {getGuildMemberSearchService} from '../../SearchFactory';
-import type {IGuildMemberSearchService} from '../../search/IGuildMemberSearchService';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	guildId: z.string(),
@@ -18,17 +18,10 @@ const PAGE_SIZE = 1000;
 const INDEX_CONCURRENCY = 4;
 const INDEX_CHUNK_SIZE = 500;
 
-function getGuildMemberIndexServices(): Array<IGuildMemberSearchService> {
-	const services = [getGuildMemberSearchService()].filter(
-		(service): service is IGuildMemberSearchService => service != null,
-	);
-	return Array.from(new Set(services));
-}
-
 const indexGuildMembers: WorkerTaskHandler = async (payload, _helpers) => {
 	const validated = PayloadSchema.parse(payload);
-	const searchServices = getGuildMemberIndexServices();
-	if (searchServices.length === 0) {
+	const searchService = getGuildMemberSearchService();
+	if (!searchService) {
 		return;
 	}
 	const guildId = createGuildID(BigInt(validated.guildId));
@@ -45,34 +38,15 @@ const indexGuildMembers: WorkerTaskHandler = async (payload, _helpers) => {
 			const uniqueUserIds = Array.from(new Set(members.map((m) => m.userId)));
 			const users = await userRepository.listUsers(uniqueUserIds);
 			const userMap = new Map<UserID, User>(users.map((u) => [u.id, u]));
-			const membersWithUsers = members
-				.map((member) => {
-					const user = userMap.get(member.userId);
-					return user ? {member, user} : null;
-				})
-				.filter((item): item is NonNullable<typeof item> => item != null);
-			if (membersWithUsers.length > 0) {
-				if (membersWithUsers.length <= INDEX_CHUNK_SIZE) {
-					await Promise.all(searchServices.map((searchService) => searchService.indexMembers(membersWithUsers)));
-				} else {
-					const chunks: Array<
-						Array<{
-							member: (typeof membersWithUsers)[0]['member'];
-							user: User;
-						}>
-					> = [];
-					for (let i = 0; i < membersWithUsers.length; i += INDEX_CHUNK_SIZE) {
-						chunks.push(membersWithUsers.slice(i, i + INDEX_CHUNK_SIZE));
-					}
-					for (let i = 0; i < chunks.length; i += INDEX_CONCURRENCY) {
-						const batch = chunks.slice(i, i + INDEX_CONCURRENCY);
-						await Promise.all(
-							batch.flatMap((chunk) => searchServices.map((searchService) => searchService.indexMembers(chunk))),
-						);
-					}
-				}
-				totalIndexed += membersWithUsers.length;
+			const membersWithUsers = members.flatMap((member) => {
+				const user = userMap.get(member.userId);
+				return user ? [{member, user}] : [];
+			});
+			const chunks = chunkArray(membersWithUsers, INDEX_CHUNK_SIZE);
+			for (const batch of chunkArray(chunks, INDEX_CONCURRENCY)) {
+				await Promise.all(batch.map((chunk) => searchService.indexMembers(chunk)));
 			}
+			totalIndexed += membersWithUsers.length;
 			Logger.debug(
 				{
 					guildId: guildId.toString(),

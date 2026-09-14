@@ -1,6 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import {resolveArtifactRoute} from '@app/api/download/DownloadRouting';
+import type {DesktopChecksumFile, DownloadService, DownloadStreamResult} from '@app/api/download/DownloadService';
+import {
+	DESKTOP_REDIRECT_PREFIX,
+	DOWNLOAD_PREFIX,
+	downloadCacheControlForKey,
+	UnsatisfiableRangeError,
+} from '@app/api/download/DownloadService';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	DesktopChecksumRedirectParam,
 	DesktopRedirectParam,
@@ -10,21 +22,11 @@ import {
 	DesktopVersionsParam,
 	DesktopVersionsQuery,
 	DesktopVersionsResponse,
+	DownloadChecksumResponse,
+	DownloadFileResponse,
 	VersionInfoResponse,
 } from '@fluxer/schema/src/domains/download/DownloadSchemas';
 import type {Context, Hono} from 'hono';
-import {Config} from '../Config';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import type {HonoEnv} from '../types/HonoEnv';
-import {Validator} from '../Validator';
-import {resolveArtifactRoute} from './DownloadRouting';
-import type {DesktopChecksumFile, DownloadService, DownloadStreamResult} from './DownloadService';
-import {
-	DESKTOP_REDIRECT_PREFIX,
-	DOWNLOAD_PREFIX,
-	downloadCacheControlForKey,
-	UnsatisfiableRangeError,
-} from './DownloadService';
 
 function artifactFilename(key: string, filenameOverride?: string): string {
 	return filenameOverride ?? key.split('/').pop() ?? 'download';
@@ -204,7 +206,8 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_latest_desktop_version_checksum',
 			summary: 'Download latest desktop version checksum',
-			responseSchema: null,
+			responseSchema: DownloadChecksumResponse,
+			responseContentType: 'text/plain',
 			statusCode: 200,
 			security: [],
 			tags: ['Downloads'],
@@ -231,8 +234,10 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_latest_desktop_version',
 			summary: 'Download latest desktop version',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: DownloadFileResponse,
+			responseContentType: '*/*',
+			statusCode: [200, 206, 302],
+			bodylessStatusCodes: [302],
 			security: [],
 			tags: ['Downloads'],
 			description:
@@ -288,7 +293,8 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_desktop_version_checksum',
 			summary: 'Download desktop version checksum',
-			responseSchema: null,
+			responseSchema: DownloadChecksumResponse,
+			responseContentType: 'text/plain',
 			statusCode: 200,
 			security: [],
 			tags: ['Downloads'],
@@ -315,8 +321,10 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_desktop_version',
 			summary: 'Download desktop version',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: DownloadFileResponse,
+			responseContentType: '*/*',
+			statusCode: [200, 206, 302],
+			bodylessStatusCodes: [302],
 			security: [],
 			tags: ['Downloads'],
 			description:
@@ -340,8 +348,10 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 		OpenAPI({
 			operationId: 'download_file',
 			summary: 'Download file',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: DownloadFileResponse,
+			responseContentType: '*/*',
+			statusCode: [200, 206, 302],
+			bodylessStatusCodes: [302],
 			security: [],
 			tags: ['Downloads'],
 			description:

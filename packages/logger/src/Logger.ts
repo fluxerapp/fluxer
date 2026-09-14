@@ -6,18 +6,7 @@ import pino, {type Logger as PinoLogger} from 'pino';
 interface LoggerOptions {
 	level?: pino.Level;
 	environment?: string;
-	serviceVersion?: string;
 	baseProperties?: Record<string, unknown>;
-}
-
-interface PinoTransportOptions {
-	target: string;
-	options?: Record<string, unknown>;
-	caller?: Array<string>;
-	worker?: {
-		autoEnd?: boolean;
-		endTimeout?: number;
-	};
 }
 
 const PINO_LEVELS: ReadonlyArray<pino.Level> = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
@@ -49,39 +38,29 @@ function createPinoLogger(serviceName: string, options: LoggerOptions = {}): Pin
 	const environment = resolveEnvironment(options);
 	const isDev = isDevelopment(environment);
 	const level = resolveLevel(options, isDev);
-	const streams: Array<pino.StreamEntry> = [];
+	let destination: pino.DestinationStream;
 	if (isDev) {
 		try {
 			const require = createRequire(import.meta.url);
 			const pinoPrettyTarget = require.resolve('pino-pretty');
-			streams.push({
-				level: 'trace',
-				stream: pino.transport({
-					target: pinoPrettyTarget,
-					options: {
-						colorize: true,
-						translateTime: 'HH:MM:ss.l',
-						ignore: 'pid,hostname',
-						messageFormat: '{msg}',
-					},
-					sync: true,
-				} as PinoTransportOptions),
-			});
+			const transportOptions: pino.TransportSingleOptions & {sync: boolean} = {
+				target: pinoPrettyTarget,
+				options: {
+					colorize: true,
+					translateTime: 'HH:MM:ss.l',
+					ignore: 'pid,hostname',
+					messageFormat: '{msg}',
+				},
+				sync: true,
+			};
+			destination = pino.transport(transportOptions);
 		} catch (error) {
 			console.warn('pino-pretty not available, falling back to stdout', error);
-			streams.push({
-				level: 'trace',
-				stream: pino.destination({dest: 1, sync: true}),
-			});
+			destination = pino.destination({dest: 1, sync: true});
 		}
 	} else {
-		streams.push({
-			level: 'trace',
-			stream: pino.destination({dest: 1, sync: false}),
-		});
+		destination = pino.destination({dest: 1, sync: false});
 	}
-	const destination =
-		streams.length === 1 && streams[0] ? streams[0].stream : pino.multistream(streams, {dedupe: true});
 	const pinoOptions: pino.LoggerOptions = {
 		level,
 		formatters: {
@@ -135,72 +114,46 @@ export class Logger {
 	trace(obj: Record<string, unknown>, msg?: string): void;
 	trace(msg: string): void;
 	trace(objOrMsg: Record<string, unknown> | string, msg?: string): void {
-		if (typeof objOrMsg === 'string') {
-			this.logger.trace(objOrMsg);
-		} else if (msg) {
-			this.logger.trace(objOrMsg, msg);
-		} else {
-			this.logger.trace(objOrMsg);
-		}
+		this.log('trace', objOrMsg, msg);
 	}
 
 	debug(obj: Record<string, unknown>, msg?: string): void;
 	debug(msg: string): void;
 	debug(objOrMsg: Record<string, unknown> | string, msg?: string): void {
-		if (typeof objOrMsg === 'string') {
-			this.logger.debug(objOrMsg);
-		} else if (msg) {
-			this.logger.debug(objOrMsg, msg);
-		} else {
-			this.logger.debug(objOrMsg);
-		}
+		this.log('debug', objOrMsg, msg);
 	}
 
 	info(obj: Record<string, unknown>, msg?: string): void;
 	info(msg: string): void;
 	info(objOrMsg: Record<string, unknown> | string, msg?: string): void {
-		if (typeof objOrMsg === 'string') {
-			this.logger.info(objOrMsg);
-		} else if (msg) {
-			this.logger.info(objOrMsg, msg);
-		} else {
-			this.logger.info(objOrMsg);
-		}
+		this.log('info', objOrMsg, msg);
 	}
 
 	warn(obj: Record<string, unknown>, msg?: string): void;
 	warn(msg: string): void;
 	warn(objOrMsg: Record<string, unknown> | string, msg?: string): void {
-		if (typeof objOrMsg === 'string') {
-			this.logger.warn(objOrMsg);
-		} else if (msg) {
-			this.logger.warn(objOrMsg, msg);
-		} else {
-			this.logger.warn(objOrMsg);
-		}
+		this.log('warn', objOrMsg, msg);
 	}
 
 	error(obj: Record<string, unknown>, msg?: string): void;
 	error(msg: string): void;
 	error(objOrMsg: Record<string, unknown> | string, msg?: string): void {
-		if (typeof objOrMsg === 'string') {
-			this.logger.error(objOrMsg);
-		} else if (msg) {
-			this.logger.error(objOrMsg, msg);
-		} else {
-			this.logger.error(objOrMsg);
-		}
+		this.log('error', objOrMsg, msg);
 	}
 
 	fatal(obj: Record<string, unknown>, msg?: string): void;
 	fatal(msg: string): void;
 	fatal(objOrMsg: Record<string, unknown> | string, msg?: string): void {
+		this.log('fatal', objOrMsg, msg);
+	}
+
+	private log(level: pino.Level, objOrMsg: Record<string, unknown> | string, msg?: string): void {
 		if (typeof objOrMsg === 'string') {
-			this.logger.fatal(objOrMsg);
+			this.logger[level](objOrMsg);
 		} else if (msg) {
-			this.logger.fatal(objOrMsg, msg);
+			this.logger[level](objOrMsg, msg);
 		} else {
-			this.logger.fatal(objOrMsg);
+			this.logger[level](objOrMsg);
 		}
 	}
 

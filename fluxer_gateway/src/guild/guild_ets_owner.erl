@@ -8,8 +8,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(DEFAULT_CALL_TIMEOUT_MS, 5000).
+-define(ORPHAN_SWEEP_INTERVAL_MS, 60000).
 
--type state() :: #{}.
+-type state() :: #{sweep_timer => reference()}.
 
 -spec start_link() -> {ok, pid()} | {error, term()}.
 start_link() ->
@@ -32,7 +33,7 @@ ensure_table(TableName, Options) ->
 init([]) ->
     erlang:process_flag(fullsweep_after, 0),
     ok = ensure_core_tables(),
-    {ok, #{}}.
+    {ok, #{sweep_timer => schedule_orphan_sweep()}}.
 
 -spec handle_call(term(), gen_server:from(), state()) -> {reply, ok, state()}.
 handle_call({ensure_table, TableName, Options}, _From, State) when
@@ -47,11 +48,26 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
+handle_info(sweep_orphan_tables, State) ->
+    _ = sweep_orphan_tables(),
+    {noreply, State#{sweep_timer => schedule_orphan_sweep()}};
 handle_info(_Info, State) ->
     {noreply, State}.
 
+-spec schedule_orphan_sweep() -> reference().
+schedule_orphan_sweep() ->
+    erlang:send_after(?ORPHAN_SWEEP_INTERVAL_MS, self(), sweep_orphan_tables).
+
 -spec terminate(term(), state()) -> ok.
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    cancel_orphan_sweep(State),
+    ok.
+
+-spec cancel_orphan_sweep(state()) -> ok.
+cancel_orphan_sweep(#{sweep_timer := Ref}) when is_reference(Ref) ->
+    _ = erlang:cancel_timer(Ref),
+    ok;
+cancel_orphan_sweep(_State) ->
     ok.
 
 -spec code_change(term(), state(), term()) -> {ok, state()}.
@@ -228,6 +244,20 @@ sweep_orphan_tables_detects_dead_owner_test() ->
     {ok, Count} = sweep_orphan_tables(),
     ?assert(Count >= 0),
     ets:delete(Tab).
+
+orphan_sweep_is_scheduled_and_rearmed_test() ->
+    {ok, Pid} = start_link(),
+    try
+        #{sweep_timer := Ref} = sys:get_state(Pid),
+        ?assert(is_reference(Ref)),
+        Pid ! sweep_orphan_tables,
+        #{sweep_timer := NextRef} = sys:get_state(Pid),
+        ?assert(is_reference(NextRef)),
+        ?assertNotEqual(Ref, NextRef),
+        ?assertEqual(Pid, ets:info(guild_voice_registry, owner))
+    after
+        gen_server:stop(?MODULE)
+    end.
 
 sweep_orphan_tables_returns_zero_when_clean_test() ->
     {ok, Count} = sweep_orphan_tables(),

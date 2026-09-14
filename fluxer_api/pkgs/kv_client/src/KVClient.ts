@@ -1,14 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import type {IKVPipeline, IKVProvider, IKVSubscription, KVRateLimitResult} from '@pkgs/kv_client/src/IKVProvider';
+import type {
+	IKVPipeline,
+	IKVProvider,
+	IKVSubscription,
+	KVPurgeBatchResult,
+	KVRateLimitResult,
+} from '@pkgs/kv_client/src/IKVProvider';
 import {
 	type IKVLogger,
 	type KVClientConfig,
 	type ResolvedKVClientConfig,
 	resolveKVClientConfig,
 } from '@pkgs/kv_client/src/KVClientConfig';
-import {KVClientError, KVClientErrorCode} from '@pkgs/kv_client/src/KVClientError';
+import {createInvalidResponseError, KVClientError, KVClientErrorCode} from '@pkgs/kv_client/src/KVClientError';
+import {resolveKVClusterConnection} from '@pkgs/kv_client/src/KVClusterConnection';
 import {
 	createStringEntriesFromPairs,
 	createZSetMembersFromScorePairs,
@@ -20,6 +27,30 @@ import {runSlotBatches, splitIntoSlotBatches} from '@pkgs/kv_client/src/KVHashSl
 import {KVPipeline} from '@pkgs/kv_client/src/KVPipeline';
 import {KVSubscription} from '@pkgs/kv_client/src/KVSubscription';
 import Redis, {Cluster} from 'ioredis';
+
+const MAX_DATE_TIMESTAMP = 8640000000000000;
+
+const DECODE_BUCKET_STATE_SCRIPT = `
+local function decodeBucketState(rawState, amountField, timestampField)
+	local ok, state = pcall(cjson.decode, rawState)
+	if not ok or type(state) ~= 'table' then
+		error('invalid stored bucket state')
+	end
+	local amount = state[amountField]
+	if type(amount) ~= 'number' or amount ~= amount or amount < 0 or amount == math.huge then
+		error('invalid stored bucket amount: ' .. amountField)
+	end
+	local timestamp = state[timestampField]
+	if type(timestamp) ~= 'number'
+		or timestamp ~= timestamp
+		or math.abs(timestamp) > ${MAX_DATE_TIMESTAMP}
+		or timestamp ~= math.floor(timestamp)
+	then
+		error('invalid stored bucket timestamp: ' .. timestampField)
+	end
+	return amount, timestamp
+end
+`;
 
 const RELEASE_LOCK_SCRIPT = `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
@@ -42,6 +73,7 @@ end
 return 0
 `;
 const TRY_CONSUME_TOKENS_SCRIPT = `
+${DECODE_BUCKET_STATE_SCRIPT}
 local key = KEYS[1]
 local now = tonumber(ARGV[1])
 local requested = tonumber(ARGV[2])
@@ -54,11 +86,7 @@ local tokens = maxTokens
 local lastRefill = now
 
 if data then
-	local ok, bucket = pcall(cjson.decode, data)
-	if ok and bucket then
-		tokens = tonumber(bucket.tokens) or maxTokens
-		lastRefill = tonumber(bucket.lastRefill) or now
-	end
+	tokens, lastRefill = decodeBucketState(data, 'tokens', 'lastRefill')
 end
 
 local elapsed = now - lastRefill
@@ -84,6 +112,7 @@ redis.call('SET', key, cjson.encode({tokens = tokens, lastRefill = lastRefill}),
 return consumed
 `;
 const CHECK_LEAKY_BUCKET_LIMIT_SCRIPT = `
+${DECODE_BUCKET_STATE_SCRIPT}
 local key = KEYS[1]
 local nowMs = tonumber(ARGV[1])
 local limit = tonumber(ARGV[2])
@@ -107,11 +136,7 @@ local updatedAt = nowMs
 
 local rawState = redis.call('GET', key)
 if rawState then
-	local ok, state = pcall(cjson.decode, rawState)
-	if ok and state then
-		level = tonumber(state.level) or 0
-		updatedAt = tonumber(state.updatedAt) or nowMs
-	end
+	level, updatedAt = decodeBucketState(rawState, 'level', 'updatedAt')
 end
 
 local elapsed = nowMs - updatedAt
@@ -181,6 +206,7 @@ redis.call('SET', KEYS[2], ARGV[2])
 return 1
 `;
 const DEQUEUE_PURGE_BATCH_SCRIPT = `
+${DECODE_BUCKET_STATE_SCRIPT}
 local queueKey = KEYS[1]
 local bucketKey = KEYS[2]
 local maxItems = tonumber(ARGV[1])
@@ -191,18 +217,14 @@ local refillIntervalMs = tonumber(ARGV[5])
 
 local queueSize = redis.call('SCARD', queueKey)
 if queueSize == 0 then
-	return cjson.encode({urls = {}, tokens = 0})
+	return '{"urls":[],"tokens":0}'
 end
 
 local tokens = maxTokens
 local lastRefill = now
 local data = redis.call('GET', bucketKey)
 if data then
-	local ok, bucket = pcall(cjson.decode, data)
-	if ok and bucket then
-		tokens = tonumber(bucket.tokens) or maxTokens
-		lastRefill = tonumber(bucket.lastRefill) or now
-	end
+	tokens, lastRefill = decodeBucketState(data, 'tokens', 'lastRefill')
 end
 
 local elapsed = now - lastRefill
@@ -215,7 +237,7 @@ end
 local toPop = math.min(maxItems, math.floor(tokens), queueSize)
 if toPop <= 0 then
 	redis.call('SET', bucketKey, cjson.encode({tokens = tokens, lastRefill = lastRefill}), 'EX', 3600)
-	return cjson.encode({urls = {}, tokens = 0})
+	return '{"urls":[],"tokens":0}'
 end
 
 local urls = redis.call('SPOP', queueKey, toPop)
@@ -252,17 +274,13 @@ return 1
 
 const SCRIPT_SHA_CACHE = new Map<string, string>();
 
-interface ScriptPurgeBatchResult {
-	urls: Array<string>;
-	tokens: number;
-}
-
 export class KVClient implements IKVProvider {
 	private readonly client: Redis | Cluster;
 	private readonly config: ResolvedKVClientConfig;
 	private readonly logger: IKVLogger;
 	private readonly url: string;
 	private readonly timeoutMs: number;
+	private closed = false;
 
 	constructor(config: KVClientConfig | string) {
 		const resolvedConfig = resolveKVClientConfig(config);
@@ -283,13 +301,13 @@ export class KVClient implements IKVProvider {
 	}
 
 	private createClusterClient(clusterConfig: ResolvedKVClientConfig): Cluster {
-		const nodes =
-			clusterConfig.clusterNodes.length > 0 ? clusterConfig.clusterNodes : parseClusterNodesFromUrl(clusterConfig.url);
+		const {nodes, redisOptions} = resolveKVClusterConnection(clusterConfig.url, clusterConfig.clusterNodes);
 		const natMap = clusterConfig.clusterNatMap;
 		const hasNatMap = Object.keys(natMap).length > 0;
 		return new Cluster(nodes, {
 			clusterRetryStrategy: createRetryStrategy(),
 			redisOptions: {
+				...redisOptions,
 				connectTimeout: clusterConfig.timeoutMs,
 				commandTimeout: clusterConfig.timeoutMs,
 				maxRetriesPerRequest: 1,
@@ -299,11 +317,19 @@ export class KVClient implements IKVProvider {
 		});
 	}
 
+	close(): void {
+		if (this.closed) {
+			return;
+		}
+		this.closed = true;
+		this.client.disconnect(false);
+	}
+
 	async health(): Promise<boolean> {
 		try {
 			return (await this.execute('health', async () => this.client.ping())) === 'PONG';
 		} catch (error) {
-			this.logger.debug({url: this.url, error}, 'KV health check failed');
+			this.logger.debug({error}, 'KV health check failed');
 			return false;
 		}
 	}
@@ -314,45 +340,38 @@ export class KVClient implements IKVProvider {
 
 	async set(key: string, value: string, ...args: Array<string | number>): Promise<string | null> {
 		const options = parseSetArguments(args);
-		if (options.useNx) {
-			if (options.ttlSeconds !== undefined) {
-				const ttlSeconds = options.ttlSeconds;
-				return await this.execute('set', async () => {
-					const result = await this.client.call('SET', key, value, 'EX', ttlSeconds, 'NX');
-					return normalizeStringOrNull(result);
-				});
-			}
-			return await this.execute('set', async () => {
-				const result = await this.client.call('SET', key, value, 'NX');
-				return normalizeStringOrNull(result);
-			});
-		}
+		const modifiers: Array<string | number> = [];
 		if (options.ttlSeconds !== undefined) {
-			const ttlSeconds = options.ttlSeconds;
-			return await this.execute('set', async () => {
-				const result = await this.client.call('SET', key, value, 'EX', ttlSeconds);
-				return normalizeStringOrNull(result);
-			});
+			modifiers.push('EX', options.ttlSeconds);
 		}
-		return await this.execute('set', async () => this.client.set(key, value));
+		if (options.useNx) {
+			modifiers.push('NX');
+		}
+		return await this.execute('set', async () => {
+			const result =
+				modifiers.length === 0
+					? await this.client.set(key, value)
+					: await this.client.call('SET', key, value, ...modifiers);
+			return parseSetReply(result, 'set', options.useNx);
+		});
 	}
 
 	async setex(key: string, ttlSeconds: number, value: string): Promise<void> {
 		await this.execute('setex', async () => {
-			await this.client.setex(key, ttlSeconds, value);
+			parseSetReply(await this.client.setex(key, ttlSeconds, value), 'setex');
 		});
 	}
 
 	async setnx(key: string, value: string, ttlSeconds?: number): Promise<boolean> {
 		if (ttlSeconds !== undefined) {
-			const ttlSecondsValue = ttlSeconds;
 			const result = await this.execute('setnx', async () => {
-				const commandResult = await this.client.call('SET', key, value, 'EX', ttlSecondsValue, 'NX');
-				return normalizeStringOrNull(commandResult);
+				const commandResult = await this.client.call('SET', key, value, 'EX', ttlSeconds, 'NX');
+				return parseSetReply(commandResult, 'setnx', true);
 			});
 			return result === 'OK';
 		}
-		return (await this.execute('setnx', async () => this.client.setnx(key, value))) === 1;
+		const result = await this.execute('setnx', async () => this.client.setnx(key, value));
+		return parseIntegerDecision(result, 'setnx');
 	}
 
 	async mget(...keys: Array<string>): Promise<Array<string | null>> {
@@ -360,15 +379,18 @@ export class KVClient implements IKVProvider {
 			return [];
 		}
 		return await this.execute('mget', async () => {
-			const values = new Array<string | null>(keys.length).fill(null);
+			const values = new Array<string | null>(keys.length);
 			const batches = this.splitBySlot(
 				keys.map((key, index) => ({key, index})),
 				(entry) => entry.key,
 			);
 			await runSlotBatches(batches, async (batch) => {
 				const batchValues = await this.client.mget(...batch.map((entry) => entry.key));
+				if (!Array.isArray(batchValues) || batchValues.length !== batch.length) {
+					throw createInvalidResponseError('mget', `${batch.length} values`);
+				}
 				for (const [position, entry] of batch.entries()) {
-					values[entry.index] = batchValues[position] ?? null;
+					values[entry.index] = parseNullableStringReply(batchValues[position], 'mget');
 				}
 			});
 			return values;
@@ -383,7 +405,8 @@ export class KVClient implements IKVProvider {
 		await this.execute('mset', async () => {
 			const batches = this.splitBySlot(entries, (entry) => entry.key);
 			await runSlotBatches(batches, async (batch) => {
-				await this.client.mset(...batch.flatMap((entry) => [entry.key, entry.value]));
+				const result = await this.client.mset(...batch.flatMap((entry) => [entry.key, entry.value]));
+				parseSetReply(result, 'mset');
 			});
 		});
 	}
@@ -421,14 +444,14 @@ export class KVClient implements IKVProvider {
 	async getex(key: string, ttlSeconds: number): Promise<string | null> {
 		return await this.execute('getex', async () => {
 			const result = await this.client.call('GETEX', key, 'EX', ttlSeconds);
-			return normalizeStringOrNull(result);
+			return parseNullableStringReply(result, 'getex');
 		});
 	}
 
 	async getdel(key: string): Promise<string | null> {
 		return await this.execute('getdel', async () => {
 			const result = await this.client.call('GETDEL', key);
-			return normalizeStringOrNull(result);
+			return parseNullableStringReply(result, 'getdel');
 		});
 	}
 
@@ -464,10 +487,7 @@ export class KVClient implements IKVProvider {
 		}
 		return await this.execute('spop', async () => {
 			const result = await this.client.spop(key, count);
-			if (result === null) {
-				return [];
-			}
-			return Array.isArray(result) ? result : [result];
+			return parsePoppedValues(result, 'spop', count);
 		});
 	}
 
@@ -522,16 +542,9 @@ export class KVClient implements IKVProvider {
 		}
 		return await this.execute('lpop', async () => {
 			if (count !== undefined) {
-				const result = await this.client.call('LPOP', key, count);
-				if (result === null) {
-					return [];
-				}
-				if (Array.isArray(result)) {
-					return result.map((entry) => String(entry));
-				}
-				return [String(result)];
+				return parsePoppedValues(await this.client.lpop(key, count), 'lpop', count);
 			}
-			const single = await this.client.lpop(key);
+			const single = parseNullableStringReply(await this.client.lpop(key), 'lpop');
 			return single === null ? [] : [single];
 		});
 	}
@@ -564,6 +577,7 @@ export class KVClient implements IKVProvider {
 	}
 
 	duplicate(): IKVSubscription {
+		this.assertOpen();
 		return new KVSubscription({
 			url: this.url,
 			mode: this.config.mode,
@@ -576,19 +590,19 @@ export class KVClient implements IKVProvider {
 	async acquireLock(key: string, token: string, ttlSeconds: number): Promise<boolean> {
 		const result = await this.execute('acquireLock', async () => {
 			const commandResult = await this.client.call('SET', key, token, 'EX', ttlSeconds, 'NX');
-			return normalizeStringOrNull(commandResult);
+			return parseSetReply(commandResult, 'acquireLock', true);
 		});
 		return result === 'OK';
 	}
 
 	async releaseLock(key: string, token: string): Promise<boolean> {
 		const result = await this.executeScript('releaseLock', RELEASE_LOCK_SCRIPT, 1, key, token);
-		return Number(result) === 1;
+		return parseIntegerDecision(result, 'releaseLock');
 	}
 
 	async extendLock(key: string, token: string, ttlSeconds: number): Promise<boolean> {
 		const result = await this.executeScript('extendLock', EXTEND_LOCK_SCRIPT, 1, key, token, ttlSeconds);
-		return Number(result) === 1;
+		return parseIntegerDecision(result, 'extendLock');
 	}
 
 	async renewSnowflakeNode(key: string, instanceId: string, ttlSeconds: number): Promise<boolean> {
@@ -600,20 +614,21 @@ export class KVClient implements IKVProvider {
 			instanceId,
 			ttlSeconds,
 		);
-		return Number(result) === 1;
+		return parseIntegerDecision(result, 'renewSnowflakeNode');
 	}
 
 	async checkLeakyBucketLimit(key: string, limit: number, windowMs: number, cost: number): Promise<KVRateLimitResult> {
-		const now = Date.now();
-		return await this.executeRateLimitScript(
+		const result = await this.executeJsonScript(
 			'checkLeakyBucketLimit',
 			CHECK_LEAKY_BUCKET_LIMIT_SCRIPT,
+			1,
 			key,
-			now,
+			Date.now(),
 			limit,
 			windowMs,
 			cost,
 		);
+		return parseRateLimitResult(result);
 	}
 
 	async tryConsumeTokens(
@@ -635,11 +650,14 @@ export class KVClient implements IKVProvider {
 			refillRate,
 			refillIntervalMs,
 		);
-		return Number(result);
+		if (!isNonNegativeSafeInteger(result) || result > requested) {
+			throw createInvalidResponseError('tryConsumeTokens', 'an integer token count within the requested amount');
+		}
+		return result;
 	}
 
 	async scheduleBulkDeletion(queueKey: string, secondaryKey: string, score: number, value: string): Promise<void> {
-		await this.executeScript(
+		const result = await this.executeScript(
 			'scheduleBulkDeletion',
 			SCHEDULE_BULK_DELETION_SCRIPT,
 			2,
@@ -648,6 +666,7 @@ export class KVClient implements IKVProvider {
 			score,
 			value,
 		);
+		if (result !== 1) throw createInvalidResponseError('scheduleBulkDeletion', 'the acknowledgement 1');
 	}
 
 	async claimBulkDeletion(queueKey: string, member: string, maxScore: number, leaseScore: number): Promise<boolean> {
@@ -660,7 +679,7 @@ export class KVClient implements IKVProvider {
 			maxScore,
 			leaseScore,
 		);
-		return Number(result) === 1;
+		return parseIntegerDecision(result, 'claimBulkDeletion');
 	}
 
 	async removeBulkDeletion(queueKey: string, secondaryKey: string, member = ''): Promise<boolean> {
@@ -672,7 +691,7 @@ export class KVClient implements IKVProvider {
 			secondaryKey,
 			member,
 		);
-		return Number(result) === 1;
+		return parseIntegerDecision(result, 'removeBulkDeletion');
 	}
 
 	async dequeuePurgeBatch(
@@ -682,12 +701,9 @@ export class KVClient implements IKVProvider {
 		maxTokens: number,
 		refillRate: number,
 		refillIntervalMs: number,
-	): Promise<{
-		urls: Array<string>;
-		tokensConsumed: number;
-	}> {
+	): Promise<KVPurgeBatchResult> {
 		const now = Date.now();
-		const parsed = await this.executeJsonScript<ScriptPurgeBatchResult>(
+		const result = await this.executeJsonScript(
 			'dequeuePurgeBatch',
 			DEQUEUE_PURGE_BATCH_SCRIPT,
 			2,
@@ -699,7 +715,7 @@ export class KVClient implements IKVProvider {
 			refillRate,
 			refillIntervalMs,
 		);
-		return {urls: parsed.urls, tokensConsumed: parsed.tokens};
+		return parsePurgeBatchResult(result, maxItems);
 	}
 
 	async evalScript(
@@ -738,7 +754,10 @@ export class KVClient implements IKVProvider {
 
 	pipeline(): IKVPipeline {
 		return new KVPipeline({
-			createCommander: () => this.client.pipeline(),
+			createCommander: () => {
+				this.assertOpen();
+				return this.client.pipeline();
+			},
 			normalizeError: (command, error) => this.normalizeError(command, error),
 			mode: 'pipeline',
 		});
@@ -746,7 +765,10 @@ export class KVClient implements IKVProvider {
 
 	multi(): IKVPipeline {
 		return new KVPipeline({
-			createCommander: () => this.client.multi(),
+			createCommander: () => {
+				this.assertOpen();
+				return this.client.multi();
+			},
 			normalizeError: (command, error) => this.normalizeError(command, error),
 			mode: 'multi',
 		});
@@ -754,9 +776,16 @@ export class KVClient implements IKVProvider {
 
 	private async execute<T>(command: string, fn: () => Promise<T>): Promise<T> {
 		try {
+			this.assertOpen();
 			return await fn();
 		} catch (error) {
 			throw this.normalizeError(command, error);
+		}
+	}
+
+	private assertOpen(): void {
+		if (this.closed) {
+			throw new Error('KV client is closed');
 		}
 	}
 
@@ -780,43 +809,21 @@ export class KVClient implements IKVProvider {
 		}
 	}
 
-	private async executeJsonScript<T>(
+	private async executeJsonScript(
 		command: string,
 		script: string,
 		keyCount: number,
 		...args: Array<string | number>
-	): Promise<T> {
+	): Promise<unknown> {
 		const result = await this.executeScript(command, script, keyCount, ...args);
-		try {
-			return JSON.parse(String(result)) as T;
-		} catch (error) {
-			throw new KVClientError({
-				code: KVClientErrorCode.INVALID_RESPONSE,
-				message: `KV request returned invalid JSON (${command}): ${getErrorMessage(error)}`,
-			});
+		if (typeof result !== 'string') {
+			throw createInvalidResponseError(command, 'a JSON string');
 		}
-	}
-
-	private async executeRateLimitScript(
-		command: string,
-		script: string,
-		key: string,
-		nowMs: number,
-		limit: number,
-		windowMs: number,
-		cost: number,
-	): Promise<KVRateLimitResult> {
-		const parsed = await this.executeJsonScript<KVRateLimitResult>(
-			command,
-			script,
-			1,
-			key,
-			nowMs,
-			limit,
-			windowMs,
-			cost,
-		);
-		return normalizeRateLimitResult(parsed);
+		try {
+			return JSON.parse(result);
+		} catch {
+			throw createInvalidResponseError(command, 'valid JSON');
+		}
 	}
 
 	private normalizeError(command: string, error: unknown): KVClientError {
@@ -836,18 +843,6 @@ export class KVClient implements IKVProvider {
 	}
 }
 
-function parseClusterNodesFromUrl(url: string): Array<{
-	host: string;
-	port: number;
-}> {
-	try {
-		const parsed = new URL(url);
-		return [{host: parsed.hostname, port: Number.parseInt(parsed.port || '6379', 10)}];
-	} catch {
-		return [{host: '127.0.0.1', port: 6379}];
-	}
-}
-
 function createRetryStrategy(): (times: number) => number {
 	return (times: number) => {
 		const backoffMs = Math.min(times * 100, 2000);
@@ -855,22 +850,77 @@ function createRetryStrategy(): (times: number) => number {
 	};
 }
 
-function normalizeStringOrNull(value: unknown): string | null {
-	if (value === null || value === undefined) {
-		return null;
-	}
-	return String(value);
+function parseNullableStringReply(value: unknown, command: string): string | null {
+	if (value === null || typeof value === 'string') return value;
+	throw createInvalidResponseError(command, 'a string or null');
 }
 
-function normalizeRateLimitResult(result: KVRateLimitResult): KVRateLimitResult {
-	return {
-		allowed: Boolean(result.allowed),
-		limit: Number(result.limit),
-		remaining: Number(result.remaining),
-		resetAfterMs: Number(result.resetAfterMs),
-		resetAtMs: Number(result.resetAtMs),
-		retryAfterMs: Number(result.retryAfterMs),
-	};
+function parseSetReply(value: unknown, command: string, conditional = false): 'OK' | null {
+	if (value === 'OK' || (conditional && value === null)) return value;
+	throw createInvalidResponseError(command, conditional ? 'OK or null' : 'OK');
+}
+
+function parsePoppedValues(value: unknown, command: string, count: number): Array<string> {
+	if (value === null) return [];
+	if (!Array.isArray(value) || value.length > count) {
+		throw createInvalidResponseError(command, 'a string array within the requested count or null');
+	}
+	for (const entry of value) {
+		if (typeof entry !== 'string') throw createInvalidResponseError(command, 'string array entries');
+	}
+	return value;
+}
+
+function parseIntegerDecision(value: unknown, command: string): boolean {
+	if (value === 0 || value === 1) return value === 1;
+	throw createInvalidResponseError(command, 'the integer 0 or 1');
+}
+
+function parseRateLimitResult(value: unknown): KVRateLimitResult {
+	const command = 'checkLeakyBucketLimit';
+	if (!isJsonObject(value)) throw createInvalidResponseError(command, 'a rate-limit result object');
+	const {allowed, limit, remaining, resetAfterMs, resetAtMs, retryAfterMs} = value;
+	if (
+		typeof allowed !== 'boolean' ||
+		!isNonNegativeSafeInteger(limit) ||
+		limit === 0 ||
+		!isNonNegativeSafeInteger(remaining) ||
+		remaining > limit ||
+		!isNonNegativeSafeInteger(resetAfterMs) ||
+		typeof resetAtMs !== 'number' ||
+		!Number.isSafeInteger(resetAtMs) ||
+		Math.abs(resetAtMs) > MAX_DATE_TIMESTAMP ||
+		!isNonNegativeSafeInteger(retryAfterMs) ||
+		retryAfterMs > resetAfterMs ||
+		(allowed ? retryAfterMs !== 0 : remaining !== 0 || retryAfterMs === 0)
+	) {
+		throw createInvalidResponseError(command, 'a boolean decision and valid integer rate-limit counts and times');
+	}
+	return {allowed, limit, remaining, resetAfterMs, resetAtMs, retryAfterMs};
+}
+
+function parsePurgeBatchResult(value: unknown, maxItems: number): KVPurgeBatchResult {
+	const command = 'dequeuePurgeBatch';
+	if (!isJsonObject(value)) throw createInvalidResponseError(command, 'a purge batch object');
+	const {urls, tokens} = value;
+	if (
+		!Array.isArray(urls) ||
+		!urls.every((url): url is string => typeof url === 'string') ||
+		!isNonNegativeSafeInteger(tokens) ||
+		tokens !== urls.length ||
+		urls.length > maxItems
+	) {
+		throw createInvalidResponseError(command, 'a bounded string array and matching token count');
+	}
+	return {urls, tokensConsumed: tokens};
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNonNegativeSafeInteger(value: unknown): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 function getScriptSha(script: string): string {

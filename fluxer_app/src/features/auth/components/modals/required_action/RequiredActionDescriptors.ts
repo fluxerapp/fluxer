@@ -265,12 +265,111 @@ export const SUPPORT_LINK_LABEL_DESCRIPTOR = msg({
 	message: 'Contact support',
 	comment: 'Link label in the required-action modal. Opens an email to Fluxer support.',
 });
+export const ALT_ROUTES_TITLE_DESCRIPTOR = msg({
+	message: "If you can't verify by SMS",
+	comment:
+		'Heading of the alternative-routes block in the required-action modal. Introduces human review and the option to set the phone check aside. Must read as a real supported route, not fine print.',
+});
+export const ALT_ROUTES_HUMAN_REVIEW_DESCRIPTOR = msg({
+	message:
+		'Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant.',
+	comment:
+		'Body of the human-review option in the required-action modal, rendered directly above the Contact support link. Sets the expectation that a reply takes time.',
+});
+export const ESCAPE_BUTTON_DESCRIPTOR = msg({
+	message: 'Set this check aside',
+	comment:
+		'Secondary button in the required-action modal that restores the deferred phone check instead of verifying a number. Must not read as skipping or circumventing, and must not use back or undo wording, which collides with the modal back button.',
+});
+export const ESCAPE_HINT_NO_GUILDS_DESCRIPTOR = msg({
+	message:
+		'Your account works normally again straight away and nothing is removed. We can ask for this check again later.',
+	comment:
+		'Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.',
+});
+export const ESCAPE_HINT_WITH_GUILDS_DESCRIPTOR = msg({
+	message:
+		'You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account will work normally again.',
+	comment:
+		'Hint under the set-aside button in the required-action modal when the user is in communities that trigger the check. count is inserted by code.',
+});
+export const ESCAPE_CONFIRM_TITLE_NO_GUILDS_DESCRIPTOR = msg({
+	message: 'Set this check aside?',
+	comment: 'Confirmation dialog title in the required-action modal when nothing will be left.',
+});
+export const ESCAPE_CONFIRM_TITLE_WITH_GUILDS_DESCRIPTOR = msg({
+	message: 'Leave {count, plural, one {# community} other {# communities}} and set this check aside?',
+	comment:
+		'Confirmation dialog title in the required-action modal when communities will be left. count is inserted by code.',
+});
+export const ESCAPE_CONFIRM_OUTCOME_DESCRIPTOR = msg({
+	message:
+		'Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back.',
+	comment:
+		'First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.',
+});
+export const ESCAPE_CONFIRM_LEAVE_DESCRIPTOR = msg({
+	message: 'You will leave {guildNames}. Nothing you posted is deleted, and you can join again later.',
+	comment:
+		'Confirmation line in the required-action modal, shown only when the user is in communities that trigger the check. guildNames is a comma-separated list inserted by code. Both reassurances answer fears people actually have.',
+});
+export const ESCAPE_CONFIRM_OWNED_DESCRIPTOR = msg({
+	message: 'You stay in {ownedNames}. Owners cannot leave their own community.',
+	comment:
+		'Confirmation line in the required-action modal explaining that communities the user owns are kept rather than left. ownedNames is a comma-separated list inserted by code.',
+});
+export const ESCAPE_CONFIRM_EMAIL_REMAINS_DESCRIPTOR = msg({
+	message: 'You will still need to finish the email step.',
+	comment:
+		'Confirmation line in the required-action modal when an email requirement remains alongside the phone check, so the modal stays open afterwards.',
+});
+export const ESCAPE_CONFIRM_SUPPORT_DESCRIPTOR = msg({
+	message: 'You can still email {supportEmail} for a human review at any time.',
+	comment:
+		'Last line of the set-aside confirmation in the required-action modal. supportEmail is inserted by code. The self-serve route never closes the support route.',
+});
+export const ESCAPE_CONFIRM_PRIMARY_NO_GUILDS_DESCRIPTOR = msg({
+	message: 'Set this check aside',
+	comment:
+		'Primary button of the set-aside confirmation in the required-action modal when nothing will be left. Uses the normal button style, not the destructive one.',
+});
+export const ESCAPE_CONFIRM_PRIMARY_WITH_GUILDS_DESCRIPTOR = msg({
+	message: 'Leave and set aside',
+	comment:
+		'Primary button of the set-aside confirmation in the required-action modal when communities will be left. Uses the destructive button style.',
+});
+export const ESCAPE_SUCCESS_TOAST_DESCRIPTOR = msg({
+	message: 'Your account is back to normal.',
+	comment:
+		'Success toast after the phone check is set aside and no verification steps remain. Deliberately count-free, because any communities that were left already disappear from the sidebar.',
+});
+export const ESCAPE_SUCCESS_EMAIL_REMAINS_TOAST_DESCRIPTOR = msg({
+	message: 'The phone check is set aside. One email step is left.',
+	comment:
+		'Success toast after the phone check is set aside while an email requirement remains, so the modal stays open on the email step. Never tell someone they are done while a modal is still in front of them.',
+});
+export const ESCAPE_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'This is not available on your account right now. Email {supportEmail} and a person will review it.',
+	comment:
+		'Shown in the required-action modal when setting the check aside is refused, and when it reported success but the phone requirement is still in force. supportEmail is inserted by code, and the address is named in full because the support link may have scrolled out of view.',
+});
+export const ESCAPE_FAILED_NOTHING_CHANGED_DESCRIPTOR = msg({
+	message: 'That did not go through. Nothing changed. Try again.',
+	comment:
+		'Shown in the required-action modal when setting the check aside failed and the user was in no community that would have been left, so nothing can have been lost.',
+});
+export const ESCAPE_FAILED_PARTIAL_DESCRIPTOR = msg({
+	message:
+		'That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish.',
+	comment:
+		'Shown in the required-action modal when setting the check aside failed part way through leaving communities. Retrying is safe and continues from where it stopped. Names the button so the reader knows what to press.',
+});
 export const ADD_WORKING_EMAIL_TITLE_DESCRIPTOR = msg({
 	message: 'Add a working email',
 	comment: 'Required-action modal carousel step title for replacing a bounced email address.',
 });
 export const ADD_WORKING_EMAIL_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Enter an email you can open. We will send a code there.',
+	message: 'Enter an email address you can access. We will send a code there.',
 	comment: 'Required-action modal body for entering a replacement email address.',
 });
 export const ENTER_NEW_EMAIL_TITLE_DESCRIPTOR = msg({
@@ -278,7 +377,7 @@ export const ENTER_NEW_EMAIL_TITLE_DESCRIPTOR = msg({
 	comment: 'Required-action modal carousel step title for changing to a new email address.',
 });
 export const ENTER_NEW_EMAIL_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Use an email you can open. We will send a code there.',
+	message: 'Use an email address you can access. We will send a code there.',
 	comment: 'Required-action modal body for entering a new email address.',
 });
 export const ENTER_EMAIL_CODE_TITLE_DESCRIPTOR = msg({
@@ -332,7 +431,7 @@ export const INBOUND_PHONE_PREPARE_TITLE_DESCRIPTOR = msg({
 	comment: 'Required-action modal carousel step title for the first inbound phone verification instruction.',
 });
 export const INBOUND_PHONE_PREPARE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Open your phone messaging app and start a new text message.',
+	message: "Open your phone's messaging app and start a new text message.",
 	comment: 'Required-action modal body for the first inbound phone verification instruction.',
 });
 export const INBOUND_PHONE_SEND_TITLE_DESCRIPTOR = msg({
@@ -422,6 +521,41 @@ export const SMS_UNAVAILABLE_DESCRIPTOR = msg({
 export const PHONE_NOT_ELIGIBLE_DESCRIPTOR = msg({
 	message: 'Phone verification is not available for this account. Use another method or contact support.',
 	comment: 'Required-action error when the account is not eligible to add phone verification.',
+});
+export const PHONE_COUNTRY_NOT_SUPPORTED_DESCRIPTOR = msg({
+	message:
+		"We don't send verification texts to this country. Try a mobile number from another country, or contact support.",
+	comment:
+		"Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.",
+});
+export const PHONE_INBOUND_REQUIRED_DESCRIPTOR = msg({
+	message:
+		'This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text.',
+	comment:
+		'Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.',
+});
+export const PHONE_LOOKUP_UNAVAILABLE_DESCRIPTOR = msg({
+	message:
+		'Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again.',
+	comment:
+		'Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.',
+});
+export const PHONE_NOT_IN_SERVICE_DESCRIPTOR = msg({
+	message:
+		"Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct.",
+	comment:
+		'Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.',
+});
+export const PHONE_NOT_MOBILE_DESCRIPTOR = msg({
+	message:
+		"This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong.",
+	comment:
+		'Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.',
+});
+export const PHONE_NEEDS_REVIEW_DESCRIPTOR = msg({
+	message: "We couldn't verify this number automatically. Contact support and a person will review your account.",
+	comment:
+		'Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.',
 });
 export const CAPTCHA_REQUIRED_DESCRIPTOR = msg({
 	message: 'A browser check is required before phone verification. Try again from the sign-in page or contact support.',

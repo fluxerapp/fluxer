@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveGuildModerationCapabilities} from '@app/features/guild/utils/GuildModerationCapabilityUtils';
 import {describe, expect, it} from 'vitest';
-import {resolveGuildModerationCapabilities} from './GuildModerationCapabilityUtils';
 
 describe('resolveGuildModerationCapabilities', () => {
 	const baseOptions = {

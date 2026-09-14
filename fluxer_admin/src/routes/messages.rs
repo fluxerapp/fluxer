@@ -16,7 +16,6 @@ use axum::{
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct MessagesQuery {
     channel_id: Option<String>,
     message_id: Option<String>,
@@ -82,13 +81,7 @@ async fn messages_page(
     let before = query.before.as_deref().filter(|s| !s.is_empty());
     let after = query.after.as_deref().filter(|s| !s.is_empty());
     let search = query.search.as_deref().filter(|s| !s.is_empty());
-    let context_limit = query
-        .context_limit
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .filter(|n| *n > 0)
-        .unwrap_or(50)
-        .min(100);
+    let context_limit = super::message_actions::parse_context_limit(query.context_limit.as_deref());
     let mut lookup_result = None;
     let mut browse_result = None;
     let mut search_result = None;

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isAutoplayBlockedError} from '@app/features/voice/components/media_player/hooks/useMediaPlayer';
-import {afterEach, describe, expect, it} from 'vitest';
 import {
 	areBufferedSpanFractionsEqual,
 	armPendingSeekTarget,
@@ -17,7 +16,8 @@ import {
 	readPendingSeekTarget,
 	resolveDoubleTapSeekDirection,
 	stepPlayheadPrediction,
-} from './MediaSeekUtils';
+} from '@app/features/voice/components/media_player/utils/MediaSeekUtils';
+import {afterEach, describe, expect, it} from 'vitest';
 
 function mediaWithBufferedRanges({
 	duration,

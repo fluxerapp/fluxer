@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type Stripe from 'stripe';
-import {describe, expect, it} from 'vitest';
 import {
 	computeStripeUpdatedAt,
 	mapStripeChargeToRow,
@@ -19,7 +17,9 @@ import {
 	type StripeSubscriptionPayload,
 	safeMetadata,
 	unixToDate,
-} from './StripeToBillingMapper';
+} from '@app/api/billing/mappers/StripeToBillingMapper';
+import type Stripe from 'stripe';
+import {describe, expect, it} from 'vitest';
 
 const NOW_UNIX = 1700000000;
 

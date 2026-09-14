@@ -17,14 +17,12 @@ use serde::Deserialize;
 use super::system_actions;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct GatewayQuery {
     leaderboard_limit: Option<String>,
     node_stats: Option<String>,
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct AuditLogsQuery {
     q: Option<String>,
     admin_user_id: Option<String>,
@@ -136,7 +134,7 @@ async fn audit_logs_page(
         sort_by: Some(params.sort_by.to_owned()),
         sort_order: Some(params.sort_order.to_owned()),
         limit,
-        offset: current_page * limit,
+        offset: u64::from(current_page) * u64::from(limit),
     };
     let result = client
         .search_audit_logs(&search_params)

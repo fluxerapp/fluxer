@@ -5,12 +5,15 @@ import {
 	type RadioMenuOption,
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {
+	formatDurationMs,
+	NO_TIMER_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/FormatHelpers';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import {EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {formatDurationMs, NO_TIMER_DESCRIPTOR} from './FormatHelpers';
 
 export const SUBSCRIPTION_DESCRIPTOR = msg({
 	message: 'Subscription',

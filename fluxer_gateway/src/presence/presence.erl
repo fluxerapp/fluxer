@@ -97,7 +97,10 @@ handle_call(get_current_visible_presence, _From, State) ->
     {reply, presence_broadcast:current_visible_presence(State), State};
 handle_call({terminate_session, SessionIdHashes}, _From, State) when is_list(SessionIdHashes) ->
     presence_connect:handle_terminate_session_call(binary_list(SessionIdHashes), State);
-handle_call({dispatch, EventAtom, Data}, _From, State) when is_atom(EventAtom), is_map(Data) ->
+handle_call({dispatch, EventAtom, Data}, _From, State) when
+    is_atom(EventAtom), is_map(Data);
+    is_atom(EventAtom), is_list(Data)
+->
     handle_dispatch_call(EventAtom, Data, State);
 handle_call({join_guild, GuildId}, _From, State) when is_integer(GuildId) ->
     presence_connect:handle_join_guild(GuildId, State);
@@ -114,7 +117,10 @@ handle_call(_, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
-handle_cast({dispatch, Event, Data}, State) when is_atom(Event), is_map(Data) ->
+handle_cast({dispatch, Event, Data}, State) when
+    is_atom(Event), is_map(Data);
+    is_atom(Event), is_list(Data)
+->
     handle_dispatch_cast(Event, Data, State);
 handle_cast(presence_rejoin, State) ->
     handle_presence_rejoin(State);
@@ -232,12 +238,12 @@ cast_guild_op(Fun, GuildId, State) ->
     {reply, _Reply, NewState} = Fun(GuildId, State),
     NewState.
 
--spec handle_dispatch_call(atom(), map(), state()) -> {reply, ok, state()}.
+-spec handle_dispatch_call(atom(), map() | list(), state()) -> {reply, ok, state()}.
 handle_dispatch_call(EventAtom, Data, State) ->
     presence_broadcast:dispatch_to_all_sessions(EventAtom, Data, State),
     {reply, ok, process_dispatch_event(EventAtom, Data, State)}.
 
--spec handle_dispatch_cast(atom(), map(), state()) -> {noreply, state()}.
+-spec handle_dispatch_cast(atom(), map() | list(), state()) -> {noreply, state()}.
 handle_dispatch_cast(Event, Data, State) ->
     presence_broadcast:dispatch_to_all_sessions(Event, Data, State),
     {noreply, process_dispatch_event(Event, Data, State)}.

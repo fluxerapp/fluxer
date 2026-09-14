@@ -26,7 +26,6 @@
 		"@types/node": "catalog:",
 		"@typescript/native-preview": "catalog:",
 		"tsx": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:"
 	}
 }

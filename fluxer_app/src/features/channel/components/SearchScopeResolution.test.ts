@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveSearchScope} from '@app/features/channel/components/SearchScopeResolution';
 import type {MessageSearchScope} from '@app/features/search/utils/SearchUtils';
 import {describe, expect, it} from 'vitest';
-import {resolveSearchScope} from './SearchScopeResolution';
 
 const GUILD_SCOPE_OPTIONS = new Set<MessageSearchScope>([
 	'current',

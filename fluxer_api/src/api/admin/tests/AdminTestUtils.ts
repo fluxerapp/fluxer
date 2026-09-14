@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {TestAccount} from '../../auth/tests/AuthTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 
 interface AdminApiKey {
 	keyId: string;

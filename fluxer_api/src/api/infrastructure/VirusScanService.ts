@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {VirusHashCache} from '@pkgs/virus_scan/src/cache/VirusHashCache';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import {ClamAVProvider} from '@pkgs/virus_scan/src/providers/ClamAVProvider';
 import type {VirusScanResult} from '@pkgs/virus_scan/src/VirusScanResult';
 import {VirusScanService as SharedVirusScanService} from '@pkgs/virus_scan/src/VirusScanService';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
 
 export class VirusScanService implements IVirusScanService {
 	readonly enabled = true;

@@ -1,3 +1,5 @@
+name: fluxer-dev
+
 services:
   workspace:
     build:
@@ -241,7 +243,6 @@ services:
         volume:
           nocopy: true
       - pnpm-store:/home/vscode/.local/share/pnpm/store
-      - docs-venv:/workspaces/fluxer/fluxer_docs/.venv
       - cargo-registry:/home/vscode/.cargo/registry
       - cargo-git:/home/vscode/.cargo/git
       - rust-target:/workspaces/fluxer/target
@@ -255,7 +256,6 @@ services:
       - "127.0.0.1:${FLUXER_DEV_GATEWAY_PORT:-8771}:8771"
       - "127.0.0.1:${FLUXER_DEV_MEDIA_PROXY_PORT:-8082}:8082"
       - "127.0.0.1:${FLUXER_DEV_APP_PROXY_PORT:-8773}:8773"
-      - "127.0.0.1:${FLUXER_DEV_MARKETING_PORT:-3010}:3010"
       - "127.0.0.1:${FLUXER_DEV_ADMIN_PORT:-3020}:3020"
       - "127.0.0.1:${FLUXER_DEV_SEAWEEDFS_S3_PORT:-3900}:8333"
     depends_on:
@@ -349,7 +349,6 @@ services:
 
 volumes:
   pnpm-store:
-  docs-venv:
   root-node-modules:
   fluxer-api-node-modules:
   fluxer-app-node-modules:

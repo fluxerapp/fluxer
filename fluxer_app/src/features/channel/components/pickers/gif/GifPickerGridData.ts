@@ -2,6 +2,7 @@
 
 import {
 	type FavoriteGifEntry,
+	inferFormatContentType,
 	pickBestPreviewFormat,
 } from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
 import type {GifPickerGridItemData} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
@@ -72,6 +73,7 @@ function buildFavoriteGifItems(
 		const previewProxySrc = best?.format.proxy_src ?? fallbackSrc;
 		const previewWidth = best?.format.width ?? entry.width;
 		const previewHeight = best?.format.height ?? entry.height;
+		const previewContentType = best ? inferFormatContentType(best.key) : entry.content_type;
 		items.push({
 			type: 'gif',
 			key: entry.url,
@@ -86,6 +88,7 @@ function buildFavoriteGifItems(
 				width: previewWidth > 0 ? previewWidth : DEFAULT_GIF_SIZE,
 				height: previewHeight > 0 ? previewHeight : DEFAULT_GIF_SIZE,
 				media: entry.media,
+				contentType: previewContentType,
 				favoriteGifLookup: {url: entry.url},
 			},
 		});
@@ -102,21 +105,21 @@ function buildFeaturedItems(input: BuildGifPickerGridDataInput): Array<GifPicker
 	const favoriteGifPreviewEntry =
 		favoriteGifPreviewIndex >= 0 ? input.favoriteGifs[favoriteGifPreviewIndex] : undefined;
 	const favoriteGifPreview = pickBestPreviewFormat(favoriteGifPreviewEntry?.media);
-	const favoriteMemePreview =
-		gifvMemes.length > 0
-			? (gifvMemes[Math.floor(input.featuredFavoritePreviewSeed * gifvMemes.length)]?.url ?? '')
-			: '';
-	const favoriteTilePreview =
-		input.useSavedMediaForGifFavorites && input.favoriteGifs.length === 0
-			? favoriteMemePreview
-			: favoriteGifPreview?.format.src || favoriteGifPreviewEntry?.proxy_url || favoriteGifPreviewEntry?.url || '';
-	const favoriteTileProxyPreview =
-		input.useSavedMediaForGifFavorites && input.favoriteGifs.length === 0
-			? favoriteTilePreview
-			: favoriteGifPreview?.format.proxy_src ||
-				favoriteGifPreviewEntry?.proxy_url ||
-				favoriteGifPreviewEntry?.url ||
-				'';
+	const favoriteMemeCandidate =
+		gifvMemes.length > 0 ? (gifvMemes[Math.floor(input.featuredFavoritePreviewSeed * gifvMemes.length)] ?? null) : null;
+	const favoriteMemePreview = favoriteMemeCandidate?.url ?? '';
+	const usesFavoriteMemePreview = input.useSavedMediaForGifFavorites && input.favoriteGifs.length === 0;
+	const favoriteTilePreview = usesFavoriteMemePreview
+		? favoriteMemePreview
+		: favoriteGifPreview?.format.src || favoriteGifPreviewEntry?.proxy_url || favoriteGifPreviewEntry?.url || '';
+	const favoriteTileProxyPreview = usesFavoriteMemePreview
+		? favoriteTilePreview
+		: favoriteGifPreview?.format.proxy_src || favoriteGifPreviewEntry?.proxy_url || favoriteGifPreviewEntry?.url || '';
+	const favoriteTileContentType = (() => {
+		if (usesFavoriteMemePreview) return favoriteMemeCandidate?.contentType ?? '';
+		if (favoriteGifPreview) return inferFormatContentType(favoriteGifPreview.key);
+		return favoriteGifPreviewEntry?.proxy_url ? favoriteGifPreviewEntry.content_type : '';
+	})();
 	const favoritesTile: Array<GifPickerGridItemData> =
 		(input.includeFavoritesTile ?? true)
 			? [
@@ -128,6 +131,7 @@ function buildFeaturedItems(input: BuildGifPickerGridDataInput): Array<GifPicker
 						title: input.favoriteTitle,
 						previewUrl: favoriteTilePreview,
 						previewProxySrc: favoriteTileProxyPreview,
+						previewContentType: favoriteTileContentType,
 						width: CATEGORY_TILE_WIDTH,
 						height: CATEGORY_TILE_HEIGHT,
 					},

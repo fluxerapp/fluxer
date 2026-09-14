@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use fluxer_common::config::{self as cfg, GeoipS3Config, GeoipSourceConfig};
-use fluxer_svc::config::{DatabaseBackend, normalize_host, parse_hosts};
 use reqwest::Url;
 use std::env;
 use std::fmt;
@@ -310,30 +309,20 @@ impl fmt::Display for CspReportUri {
     }
 }
 
-fn warn_invalid(error: InvalidAppProxyEnvironmentError) {
+fn warn_invalid(error: &InvalidAppProxyEnvironmentError) {
     tracing::warn!(%error, "ignoring invalid app proxy environment value");
 }
 
 fn parse_optional_http_url(name: &'static str, value: Option<String>) -> Option<HttpUrl> {
     let value = value?;
-    match HttpUrl::parse(name, &value) {
-        Ok(url) => Some(url),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    HttpUrl::parse(name, &value).inspect_err(warn_invalid).ok()
 }
 
 fn parse_optional_http_endpoint(name: &'static str, value: Option<String>) -> Option<HttpEndpoint> {
     let value = value?;
-    match HttpEndpoint::parse(name, &value) {
-        Ok(endpoint) => Some(endpoint),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    HttpEndpoint::parse(name, &value)
+        .inspect_err(warn_invalid)
+        .ok()
 }
 
 fn parse_env_or_warn<T: std::str::FromStr>(name: &str, raw: &str, default: T) -> T {
@@ -368,25 +357,6 @@ pub struct AppProxyConfig {
     pub geoip_s3_config: Option<GeoipS3Config>,
     pub trust_client_ip_header: bool,
     pub client_ip_header_name: String,
-    pub invite_meta_enabled: bool,
-    pub invite_meta_cache_max_entries: u64,
-    pub invite_meta_cache_ttl_ms: u64,
-    pub database_backend: DatabaseBackend,
-    pub scylla_hosts: Vec<String>,
-    pub scylla_keyspace: String,
-    pub scylla_username: Option<String>,
-    pub scylla_password: Option<String>,
-    pub postgres_url: Option<String>,
-    pub postgres_host: String,
-    pub postgres_port: u16,
-    pub postgres_database: String,
-    pub postgres_username: String,
-    pub postgres_password: Option<String>,
-    pub postgres_ssl: bool,
-    pub postgres_ssl_ca: Option<String>,
-    pub postgres_max_connections: usize,
-    pub postgres_kv_table: String,
-    pub postgres_prepared_statements: bool,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -454,25 +424,19 @@ fn read_csp_sources(name: &'static str) -> Vec<CspSource> {
         .split([',', ' ', '\t', '\n'])
         .map(str::trim)
         .filter(|source| !source.is_empty())
-        .filter_map(|source| match CspSource::parse(name, source) {
-            Ok(source) => Some(source),
-            Err(error) => {
-                warn_invalid(error);
-                None
-            }
+        .filter_map(|source| {
+            CspSource::parse(name, source)
+                .inspect_err(warn_invalid)
+                .ok()
         })
         .collect()
 }
 
 fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
     let value = cfg::non_empty_env(name)?;
-    match CspReportUri::parse(name, &value) {
-        Ok(report_uri) => Some(report_uri),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    CspReportUri::parse(name, &value)
+        .inspect_err(warn_invalid)
+        .ok()
 }
 
 impl AppProxyConfig {
@@ -488,47 +452,16 @@ impl AppProxyConfig {
         );
         let geoip_s3_config = cfg::read_geoip_s3_config_from_env(&geoip_source);
 
-        let cassandra_port = parse_env_or_warn(
-            "FLUXER_CASSANDRA_PORT",
-            &cfg::read_env("FLUXER_CASSANDRA_PORT", "9042"),
-            9042u16,
-        );
-        let scylla_hosts = cfg::non_empty_env("FLUXER_CASSANDRA_HOSTS")
-            .map(|hosts| {
-                parse_hosts(&hosts)
-                    .into_iter()
-                    .map(|host| normalize_host(&host, cassandra_port))
-                    .collect::<Vec<_>>()
-            })
-            .filter(|hosts| !hosts.is_empty())
-            .unwrap_or_else(|| vec![normalize_host("127.0.0.1", cassandra_port)]);
-        let database_backend =
-            parse_database_backend(&cfg::read_env("FLUXER_DATABASE_BACKEND", "postgres"));
-        let postgres_port = parse_env_or_warn(
-            "FLUXER_POSTGRES_PORT",
-            &cfg::read_env("FLUXER_POSTGRES_PORT", "5432"),
-            5432u16,
-        );
-        let postgres_max_connections = parse_env_or_warn(
-            "FLUXER_POSTGRES_MAX_CONNECTIONS",
-            &cfg::read_env("FLUXER_POSTGRES_MAX_CONNECTIONS", "20"),
-            20usize,
-        )
-        .max(1);
-
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
             cfg::non_empty_env("FLUXER_S3_PUBLIC_ENDPOINT"),
         );
         let s3_uploads_bucket = cfg::read_env("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads");
         let s3_uploads_endpoint = s3_public_endpoint.as_ref().and_then(|endpoint| {
-            match endpoint.with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim()) {
-                Ok(endpoint) => Some(endpoint),
-                Err(error) => {
-                    warn_invalid(error);
-                    None
-                }
-            }
+            endpoint
+                .with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim())
+                .inspect_err(warn_invalid)
+                .ok()
         });
 
         Self {
@@ -547,7 +480,7 @@ impl AppProxyConfig {
                 "FLUXER_STATIC_CDN_ENDPOINT",
                 cfg::non_empty_env("FLUXER_STATIC_CDN_ENDPOINT"),
             ),
-            s3_public_endpoint: s3_public_endpoint.clone(),
+            s3_public_endpoint,
             s3_uploads_endpoint,
             discovery_upstream_url: resolve_discovery_upstream_url_from_env(),
             discovery_refresh_interval_ms: parse_env_or_warn(
@@ -581,45 +514,7 @@ impl AppProxyConfig {
             )
             .trim()
             .to_ascii_lowercase(),
-            invite_meta_enabled: cfg::read_bool_env(
-                &["FLUXER_APP_PROXY_INVITE_META_ENABLED"],
-                true,
-            ),
-            invite_meta_cache_max_entries: parse_env_or_warn(
-                "FLUXER_APP_PROXY_INVITE_META_CACHE_MAX_ENTRIES",
-                &cfg::read_env("FLUXER_APP_PROXY_INVITE_META_CACHE_MAX_ENTRIES", "10000"),
-                10_000u64,
-            ),
-            invite_meta_cache_ttl_ms: parse_env_or_warn(
-                "FLUXER_APP_PROXY_INVITE_META_CACHE_TTL_MS",
-                &cfg::read_env("FLUXER_APP_PROXY_INVITE_META_CACHE_TTL_MS", "30000"),
-                30_000u64,
-            ),
-            database_backend,
-            scylla_hosts,
-            scylla_keyspace: cfg::read_env("FLUXER_CASSANDRA_KEYSPACE", "fluxer"),
-            scylla_username: cfg::non_empty_env("FLUXER_CASSANDRA_USERNAME"),
-            scylla_password: cfg::non_empty_env("FLUXER_CASSANDRA_PASSWORD"),
-            postgres_url: cfg::non_empty_env("FLUXER_POSTGRES_URL"),
-            postgres_host: cfg::read_env("FLUXER_POSTGRES_HOST", "127.0.0.1"),
-            postgres_port,
-            postgres_database: cfg::read_env("FLUXER_POSTGRES_DATABASE", "fluxer"),
-            postgres_username: cfg::read_env("FLUXER_POSTGRES_USERNAME", "fluxer"),
-            postgres_password: cfg::non_empty_env("FLUXER_POSTGRES_PASSWORD")
-                .or_else(|| Some("fluxer".to_owned())),
-            postgres_ssl: cfg::read_bool_env(&["FLUXER_POSTGRES_SSL"], false),
-            postgres_ssl_ca: cfg::non_empty_env("FLUXER_POSTGRES_SSL_CA"),
-            postgres_max_connections,
-            postgres_kv_table: cfg::read_env("FLUXER_POSTGRES_KV_TABLE", "fluxer_kv"),
-            postgres_prepared_statements: resolve_postgres_prepared_statements_from_env(),
         }
-    }
-}
-
-fn parse_database_backend(value: &str) -> DatabaseBackend {
-    match value.trim().to_ascii_lowercase().as_str() {
-        "cassandra" | "scylla" | "scylladb" => DatabaseBackend::Cassandra,
-        _ => DatabaseBackend::Postgres,
     }
 }
 
@@ -631,29 +526,28 @@ fn resolve_time_freeze_enabled_from_env() -> bool {
     resolve_time_freeze_enabled(|name| env::var(name).ok())
 }
 
-fn resolve_postgres_prepared_statements_from_env() -> bool {
-    resolve_postgres_prepared_statements(|name| env::var(name).ok())
-}
-
 fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
     resolve_bootstrap_api_public_endpoint(|name| env::var(name).ok())
+        .unwrap_or_else(|error| panic!("{error}"))
 }
 
-fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> Option<String>
+fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> anyhow::Result<Option<String>>
 where
     F: FnMut(&str) -> Option<String>,
 {
-    let endpoint = read_var("PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT")
+    let (base_domain, public_port) = cfg::resolve_public_domain_and_port(&mut read_var)?;
+    let Some(endpoint) = read_var("PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT")
         .map(|value| value.trim().to_owned())
-        .filter(|value| !value.is_empty())?;
-    let base_domain = read_var("FLUXER_BASE_DOMAIN").unwrap_or_default();
-    let public_port = read_var("FLUXER_PUBLIC_PORT").and_then(|port| port.trim().parse().ok());
+        .filter(|value| !value.is_empty())
+    else {
+        return Ok(None);
+    };
 
-    Some(cfg::normalize_public_endpoint(
+    Ok(Some(cfg::normalize_public_endpoint(
         &endpoint,
         &base_domain,
         public_port,
-    ))
+    )))
 }
 
 fn resolve_time_freeze_enabled<F>(mut read_var: F) -> bool
@@ -672,31 +566,6 @@ fn parse_boolish(value: &str) -> bool {
         value.trim().to_ascii_lowercase().as_str(),
         "1" | "true" | "yes" | "on"
     )
-}
-
-fn resolve_postgres_prepared_statements<F>(mut read_var: F) -> bool
-where
-    F: FnMut(&str) -> Option<String>,
-{
-    let Some(value) = read_var("FLUXER_POSTGRES_PREPARED_STATEMENTS")
-        .map(|value| value.trim().to_ascii_lowercase())
-        .filter(|value| !value.is_empty())
-    else {
-        return true;
-    };
-
-    match value.as_str() {
-        "1" | "true" | "yes" | "y" | "on" => true,
-        "0" | "false" | "no" | "n" | "off" => false,
-        other => {
-            tracing::warn!(
-                env = "FLUXER_POSTGRES_PREPARED_STATEMENTS",
-                value = other,
-                "invalid value; falling back to default"
-            );
-            true
-        }
-    }
 }
 
 fn resolve_discovery_upstream_url<F>(mut read_var: F) -> String
@@ -749,12 +618,13 @@ mod tests {
         resolve_time_freeze_enabled(|name| env.get(name).map(|value| value.to_string()))
     }
 
-    fn resolve_prepared_statements_from_pairs(pairs: &[(&str, &str)]) -> bool {
-        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
-        resolve_postgres_prepared_statements(|name| env.get(name).map(|value| value.to_string()))
+    fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
+        try_resolve_bootstrap_endpoint_from_pairs(pairs).expect("the boot html endpoint resolves")
     }
 
-    fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
+    fn try_resolve_bootstrap_endpoint_from_pairs(
+        pairs: &[(&str, &str)],
+    ) -> anyhow::Result<Option<String>> {
         let env: HashMap<&str, &str> = pairs.iter().copied().collect();
         resolve_bootstrap_api_public_endpoint(|name| env.get(name).map(|value| value.to_string()))
     }
@@ -814,6 +684,49 @@ mod tests {
             Some("http://fluxer.example/api".to_owned())
         );
         assert_eq!(resolve_bootstrap_endpoint_from_pairs(&[]), None);
+    }
+
+    #[test]
+    fn the_public_origin_supplies_the_boot_html_port() {
+        assert_eq!(
+            resolve_bootstrap_endpoint_from_pairs(&[
+                (
+                    "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                    "https://fluxer.example/api",
+                ),
+                ("FLUXER_PUBLIC_ORIGIN", "https://fluxer.example:19080"),
+                ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+                ("FLUXER_PUBLIC_PORT", "443"),
+            ]),
+            Some("https://fluxer.example:19080/api".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_malformed_public_port_is_loud() {
+        let error = try_resolve_bootstrap_endpoint_from_pairs(&[
+            (
+                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                "http://fluxer.example/api",
+            ),
+            ("FLUXER_BASE_DOMAIN", "fluxer.example"),
+            ("FLUXER_PUBLIC_PORT", "not-a-port"),
+        ])
+        .expect_err("a malformed port is refused");
+        assert!(error.to_string().contains("FLUXER_PUBLIC_PORT"));
+    }
+
+    #[test]
+    fn a_malformed_public_origin_is_loud() {
+        let error = try_resolve_bootstrap_endpoint_from_pairs(&[
+            (
+                "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
+                "http://fluxer.example/api",
+            ),
+            ("FLUXER_PUBLIC_ORIGIN", "fluxer.example:19080"),
+        ])
+        .expect_err("a malformed origin is refused");
+        assert!(error.to_string().contains("FLUXER_PUBLIC_ORIGIN"));
     }
 
     #[test]
@@ -903,43 +816,6 @@ mod tests {
             resolve_discovery_from_pairs(&[("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api")]),
             DEFAULT_DISCOVERY_UPSTREAM_URL
         );
-    }
-
-    #[test]
-    fn a_set_but_empty_prepared_statements_value_keeps_the_shared_default() {
-        assert!(resolve_prepared_statements_from_pairs(&[]));
-        assert!(
-            resolve_prepared_statements_from_pairs(&[("FLUXER_POSTGRES_PREPARED_STATEMENTS", "")]),
-            "an empty value disabled named statements here while every other service kept them"
-        );
-        assert!(resolve_prepared_statements_from_pairs(&[(
-            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
-            "   ",
-        )]));
-    }
-
-    #[test]
-    fn an_explicit_prepared_statements_value_is_honoured() {
-        assert!(!resolve_prepared_statements_from_pairs(&[(
-            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
-            "false",
-        )]));
-        assert!(!resolve_prepared_statements_from_pairs(&[(
-            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
-            "OFF",
-        )]));
-        assert!(resolve_prepared_statements_from_pairs(&[(
-            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
-            "yes",
-        )]));
-    }
-
-    #[test]
-    fn a_non_boolean_prepared_statements_value_keeps_the_shared_default() {
-        assert!(resolve_prepared_statements_from_pairs(&[(
-            "FLUXER_POSTGRES_PREPARED_STATEMENTS",
-            "maybe",
-        )]));
     }
 
     #[test]

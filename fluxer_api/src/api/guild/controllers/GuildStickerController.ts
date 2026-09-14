@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createStickerID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	GuildIdParam,
 	GuildIdStickerIdParam,
@@ -18,13 +25,6 @@ import {
 	GuildStickerCreateRequest,
 	GuildStickerUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {createGuildID, createStickerID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function GuildStickerController(app: HonoApp) {
 	app.post(
@@ -165,6 +165,7 @@ export function GuildStickerController(app: HonoApp) {
 	app.delete(
 		'/guilds/:guild_id/stickers/:sticker_id',
 		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_DELETE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_DELETE_DAILY),
 		LoginRequired,
 		Validator('param', GuildIdStickerIdParam),
 		Validator('query', PurgeQuery),

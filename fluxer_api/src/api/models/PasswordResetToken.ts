@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import {createPasswordResetToken} from '../BrandedTypes';
-import type {PasswordResetTokenRow} from '../database/types/AuthTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import {createPasswordResetToken} from '@app/api/BrandedTypes';
+import type {PasswordResetTokenRow} from '@app/api/database/types/AuthTypes';
 
 export class PasswordResetToken {
 	readonly token: string;

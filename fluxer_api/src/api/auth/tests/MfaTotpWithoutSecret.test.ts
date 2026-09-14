@@ -1,11 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createAuthHarness,
+	createTestAccount,
+	createTotpSecret,
+	generateTotpCode,
+	seedMfaTicket,
+} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createRegistrationResponse,
+	createWebAuthnDevice,
+	type WebAuthnRegistrationOptions,
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createAuthHarness, createTestAccount, createTotpSecret, generateTotpCode, seedMfaTicket} from './AuthTestUtils';
-import {createRegistrationResponse, createWebAuthnDevice, type WebAuthnRegistrationOptions} from './WebAuthnTestUtils';
 
 describe('Auth MFA TOTP without secret', () => {
 	let harness: ApiTestHarness;

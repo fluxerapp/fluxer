@@ -79,19 +79,7 @@ pub fn which(name: &str) -> Option<PathBuf> {
 }
 
 fn is_writable(path: &Path) -> bool {
-    let probe = path.join(".fluxer-write-test");
-    match std::fs::OpenOptions::new()
-        .create(true)
-        .write(true)
-        .truncate(true)
-        .open(&probe)
-    {
-        Ok(_) => {
-            let _ = std::fs::remove_file(probe);
-            true
-        }
-        Err(_) => false,
-    }
+    tempfile::NamedTempFile::new_in(path).is_ok()
 }
 
 #[cfg(unix)]

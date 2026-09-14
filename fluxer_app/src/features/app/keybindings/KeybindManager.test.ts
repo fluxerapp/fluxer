@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {describe, expect, it} from 'vitest';
 import {
 	keyboardEventCanRecoverStaleMacMetaPress,
 	keyboardEventMatchesCombo,
@@ -9,11 +7,16 @@ import {
 	keyboardEventStartsComboPress,
 	keyboardEventTriggerMatchesCombo,
 	shouldAllowLocalShortcutForChannelTextarea,
-} from './KeybindEventUtils';
-import {isKeybindAllowedDuringVoiceCallFullscreen, isKeybindBlockedByCompactVoiceCallView} from './KeybindScopeUtils';
-import {comboToCombokeysStrings} from './utils/ComboShortcutStrings';
-import {keyNameForGlobalHook, physicalKeyNameForGlobalHook} from './utils/GlobalHookKeys';
-import {hookShortcutIdForKeybind} from './utils/HookShortcutIds';
+} from '@app/features/app/keybindings/KeybindEventUtils';
+import {
+	isKeybindAllowedDuringVoiceCallFullscreen,
+	isKeybindBlockedByCompactVoiceCallView,
+} from '@app/features/app/keybindings/KeybindScopeUtils';
+import {comboToCombokeysStrings} from '@app/features/app/keybindings/utils/ComboShortcutStrings';
+import {keyNameForGlobalHook, physicalKeyNameForGlobalHook} from '@app/features/app/keybindings/utils/GlobalHookKeys';
+import {hookShortcutIdForKeybind} from '@app/features/app/keybindings/utils/HookShortcutIds';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {describe, expect, it} from 'vitest';
 
 const keyEvent = (
 	overrides: Partial<{

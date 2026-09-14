@@ -11,7 +11,7 @@ interface AutocompleteCommandOptionalAddProps {
 	options: Array<AutocompleteOption>;
 	onMouseEnter: (index: number) => void;
 	onMouseLeave: () => void;
-	rowRefs?: React.MutableRefObject<Array<HTMLButtonElement | null>>;
+	rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
 	getOptionId?: (index: number) => string;
 }
 

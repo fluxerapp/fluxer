@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannel, createGuild} from '../../guild/tests/GuildTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createGuildEmoji,
 	createWebhook,
@@ -14,7 +13,8 @@ import {
 	grantCreateExpressionsPermission,
 	grantStaffAccess,
 	sendChannelMessage,
-} from './WebhookTestUtils';
+} from '@app/api/webhook/tests/WebhookTestUtils';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Webhook compare to regular user', () => {
 	let harness: ApiTestHarness;

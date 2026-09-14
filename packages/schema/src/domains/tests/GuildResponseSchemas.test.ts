@@ -44,12 +44,9 @@ describe('GuildResponse', () => {
 		permissions: '8',
 	};
 	it('accepts valid guild response', () => {
-		const result = GuildResponse.safeParse(validGuild);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.id).toBe('123456789012345678');
-			expect(result.data.name).toBe('Test Guild');
-		}
+		const result = GuildResponse.parse(validGuild);
+		expect(result.id).toBe('123456789012345678');
+		expect(result.name).toBe('Test Guild');
 	});
 	it('accepts guild with null optional fields', () => {
 		const guild = {
@@ -116,33 +113,24 @@ describe('GuildResponse', () => {
 			...validGuild,
 			features: [GuildFeatures.RAID_DETECTED, GuildFeatures.VERIFIED],
 		};
-		const result = GuildResponse.safeParse(guild);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.features).toEqual([GuildFeatures.RAID_DETECTED, GuildFeatures.VERIFIED]);
-		}
+		const result = GuildResponse.parse(guild);
+		expect(result.features).toEqual([GuildFeatures.RAID_DETECTED, GuildFeatures.VERIFIED]);
 	});
 	it('preserves unknown features in guild response', () => {
 		const guild = {
 			...validGuild,
 			features: [GuildFeatures.VERIFIED, 'DISALLOW_UNCLAIMED_ACCOUNTS'],
 		};
-		const result = GuildResponse.safeParse(guild);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.features).toEqual(['DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED]);
-		}
+		const result = GuildResponse.parse(guild);
+		expect(result.features).toEqual(['DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED]);
 	});
 	it('deduplicates and sorts guild features while preserving values', () => {
 		const guild = {
 			...validGuild,
 			features: [GuildFeatures.VERIFIED, 'DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED],
 		};
-		const result = GuildResponse.safeParse(guild);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.features).toEqual(['DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED]);
-		}
+		const result = GuildResponse.parse(guild);
+		expect(result.features).toEqual(['DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED]);
 	});
 	it('rejects non-integer system_channel_flags', () => {
 		const guild = {...validGuild, system_channel_flags: 1.5};
@@ -174,12 +162,9 @@ describe('GuildPartialResponse', () => {
 		features: [GuildFeatures.VERIFIED],
 	};
 	it('accepts valid partial guild response', () => {
-		const result = GuildPartialResponse.safeParse(validPartialGuild);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.id).toBe('123456789012345678');
-			expect(result.data.name).toBe('Test Guild');
-		}
+		const result = GuildPartialResponse.parse(validPartialGuild);
+		expect(result.id).toBe('123456789012345678');
+		expect(result.name).toBe('Test Guild');
 	});
 	it('accepts partial guild with null optional fields', () => {
 		const guild = {
@@ -212,11 +197,8 @@ describe('GuildPartialResponse', () => {
 			...validPartialGuild,
 			features: [GuildFeatures.VERIFIED, 'DISALLOW_UNCLAIMED_ACCOUNTS'],
 		};
-		const result = GuildPartialResponse.safeParse(guild);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data.features).toEqual(['DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED]);
-		}
+		const result = GuildPartialResponse.parse(guild);
+		expect(result.features).toEqual(['DISALLOW_UNCLAIMED_ACCOUNTS', GuildFeatures.VERIFIED]);
 	});
 });
 

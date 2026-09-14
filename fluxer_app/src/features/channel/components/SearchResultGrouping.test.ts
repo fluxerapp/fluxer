@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {describe, expect, it} from 'vitest';
 import {
 	buildSearchResultGroups,
 	buildSearchResultGroupsByMessageId,
 	countSearchResultChannels,
-} from './SearchResultGrouping';
+} from '@app/features/channel/components/SearchResultGrouping';
+import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import {describe, expect, it} from 'vitest';
 
 const message = (id: string, channelId: string): Message => ({id, channelId}) as Message;
 

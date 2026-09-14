@@ -82,7 +82,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 		'aria-describedby': ariaDescribedBy,
 		'aria-hidden': ariaHidden,
 	}) => {
-		const rootRef = useRef<React.ElementRef<typeof CheckboxPrimitive.Root>>(null);
+		const rootRef = useRef<React.ComponentRef<typeof CheckboxPrimitive.Root>>(null);
 		const checkboxRef = useRef<HTMLLabelElement>(null);
 		const labelRef = useRef<HTMLDivElement>(null);
 		const actualSize = size === 'small' ? 18 : size;

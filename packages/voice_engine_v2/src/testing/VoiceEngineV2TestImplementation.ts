@@ -3,7 +3,7 @@
 import {
 	type VoiceEngineV2Driver,
 	VoiceEngineV2ImplementationBase,
-} from '../implementations/VoiceEngineV2ImplementationBase';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 
 export interface VoiceEngineV2TestDriver extends VoiceEngineV2Driver {}
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::{AlertType, ListItem, Node, ParserFlags, TableAlignment};
-use crate::constants::{MAX_AST_NODES, MAX_LINE_LENGTH};
+use crate::constants::{CODE_FENCE_LENGTH, MAX_AST_NODES, MAX_LINE_LENGTH};
 use crate::links::{has_open_inline_code, has_valid_code_fence_language};
 use crate::normalize::{normalize_nodes, replace_trailing_whitespace_with_newline};
 use crate::parser::{MarkdownParser, ParseError, RuntimeState};
@@ -157,7 +157,7 @@ pub(crate) fn parse_block(state: &mut RuntimeState<'_>) -> Result<BlockParseResu
     }
 
     if ParserFlags::has(state.parser.flags(), ParserFlags::ALLOW_CODE_BLOCKS) {
-        if let Some(fence_pos) = line.find("```") {
+        if let Some(fence_pos) = find_unescaped_fence(&line) {
             let starts_with_fence =
                 starts_with(trimmed, "```") && fence_pos == line.len() - trimmed.len();
             if starts_with_fence {
@@ -459,7 +459,7 @@ fn parse_code_block(lines: &[Line], current: usize) -> Result<Option<CodeBlockRe
     while fence_length < trimmed_line.len() && byte_at(trimmed_line, fence_length) == b'`' {
         fence_length += 1;
     }
-    if fence_length < 3 {
+    if fence_length < CODE_FENCE_LENGTH {
         return Ok(None);
     }
     let language_part = &trimmed_line[fence_length..];
@@ -1197,7 +1197,7 @@ pub(crate) fn opens_code_block_midline(lines: &[Line], index: usize, flags: u32)
         return false;
     }
     let line = &lines[index].text;
-    let Some(fence_pos) = line.find("```") else {
+    let Some(fence_pos) = find_unescaped_fence(line) else {
         return false;
     };
     let trimmed = trim_start(line);
@@ -1265,6 +1265,28 @@ fn alert_type(label: &str) -> Option<AlertType> {
     } else {
         None
     }
+}
+
+fn find_unescaped_fence(line: &str) -> Option<usize> {
+    let mut search = 0usize;
+    while let Some(offset) = line[search..].find("```") {
+        let fence_pos = search + offset;
+        if !is_escaped_fence(line, fence_pos) {
+            return Some(fence_pos);
+        }
+        search = fence_pos + 1;
+    }
+    None
+}
+
+fn is_escaped_fence(line: &str, fence_pos: usize) -> bool {
+    let mut backslashes = 0usize;
+    let mut index = fence_pos;
+    while index > 0 && byte_at(line, index - 1) == b'\\' {
+        backslashes += 1;
+        index -= 1;
+    }
+    backslashes % 2 == 1
 }
 
 fn slice_lines_from_fence(lines: &[Line], current: usize, fence_pos: usize) -> Vec<Line> {

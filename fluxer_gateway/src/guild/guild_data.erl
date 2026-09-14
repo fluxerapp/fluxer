@@ -26,6 +26,7 @@
     <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
 ]).
 -define(CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, [active_guilds, user_roles, viewable_channels]).
+-define(DEFAULT_CONNECT_SNAPSHOT_TRIM_MEMBERS, 5000).
 
 -export_type([guild_state/0, guild_reply/1, user_id/0]).
 
@@ -212,7 +213,11 @@ member_count_at_least(Threshold, State) ->
 -spec connect_snapshot_trim_member_threshold() -> pos_integer() | undefined.
 connect_snapshot_trim_member_threshold() ->
     case
-        application:get_env(fluxer_gateway, connect_snapshot_trim_member_threshold, undefined)
+        application:get_env(
+            fluxer_gateway,
+            connect_snapshot_trim_member_threshold,
+            ?DEFAULT_CONNECT_SNAPSHOT_TRIM_MEMBERS
+        )
     of
         N when is_integer(N), N > 0 -> N;
         _ -> undefined
@@ -552,9 +557,12 @@ with_trim_threshold(Threshold, Fun) ->
         application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold)
     end.
 
-trim_is_off_without_threshold_test() ->
+trim_defaults_to_large_guilds_test() ->
     application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold),
-    ?assertEqual(false, should_trim_connect_snapshot(trim_state(49435))).
+    Default = ?DEFAULT_CONNECT_SNAPSHOT_TRIM_MEMBERS,
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(49435))),
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(Default))),
+    ?assertEqual(false, should_trim_connect_snapshot(trim_state(Default - 1))).
 
 trim_needs_member_count_at_threshold_test() ->
     with_trim_threshold(20000, fun() ->

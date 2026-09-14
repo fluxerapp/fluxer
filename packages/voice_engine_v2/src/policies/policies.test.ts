@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import cameraShareEncodingPlanFixtures from '../../fixtures/policies/camera_share_encoding_plan.json';
-import hardwareEncoderCapabilityFixtures from '../../fixtures/policies/hardware_encoder_capabilities.json';
-import microphoneFailureFixtures from '../../fixtures/policies/microphone_failure_action.json';
-import screenShareEncodingPlanFixtures from '../../fixtures/policies/screen_share_encoding_plan.json';
-import voiceStatsCoercionFixtures from '../../fixtures/policies/voice_stats_coercion.json';
-import voiceStatsSummaryFixtures from '../../fixtures/policies/voice_stats_summary.json';
-import voiceTrackClassificationFixtures from '../../fixtures/policies/voice_track_classification.json';
-import type {
-	VoiceEngineV2CameraEncodingOptions,
-	VoiceEngineV2CameraOptions,
-	VoiceEngineV2ScreenEncodingOptions,
-	VoiceEngineV2ScreenOptions,
-	VoiceEngineV2Stats,
-} from '../protocol';
+import cameraShareEncodingPlanFixtures from '@fluxer/voice_engine_v2/fixtures/policies/camera_share_encoding_plan.json';
+import hardwareEncoderCapabilityFixtures from '@fluxer/voice_engine_v2/fixtures/policies/hardware_encoder_capabilities.json';
+import microphoneFailureFixtures from '@fluxer/voice_engine_v2/fixtures/policies/microphone_failure_action.json';
+import screenShareEncodingPlanFixtures from '@fluxer/voice_engine_v2/fixtures/policies/screen_share_encoding_plan.json';
+import voiceStatsCoercionFixtures from '@fluxer/voice_engine_v2/fixtures/policies/voice_stats_coercion.json';
+import voiceStatsSummaryFixtures from '@fluxer/voice_engine_v2/fixtures/policies/voice_stats_summary.json';
+import voiceTrackClassificationFixtures from '@fluxer/voice_engine_v2/fixtures/policies/voice_track_classification.json';
 import {
 	classifyVoiceEngineV2TrackStats,
 	coerceVoiceEngineV2Stats,
@@ -29,7 +21,15 @@ import {
 	type VoiceEngineV2StatsSummary,
 	type VoiceEngineV2StatsTrackClassificationInput,
 	type VoiceEngineV2StatsTrackRoleSelection,
-} from './index';
+} from '@fluxer/voice_engine_v2/src/policies/index';
+import type {
+	VoiceEngineV2CameraEncodingOptions,
+	VoiceEngineV2CameraOptions,
+	VoiceEngineV2ScreenEncodingOptions,
+	VoiceEngineV2ScreenOptions,
+	VoiceEngineV2Stats,
+} from '@fluxer/voice_engine_v2/src/protocol';
+import {describe, expect, it} from 'vitest';
 
 interface MicrophoneFailureFixture {
 	name: string;

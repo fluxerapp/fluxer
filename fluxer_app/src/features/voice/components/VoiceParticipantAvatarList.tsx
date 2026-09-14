@@ -489,7 +489,7 @@ export const VoiceParticipantSpeakingAvatarStack: React.FC<VoiceParticipantSpeak
 						className={styles.remainingCount}
 						data-flx="voice.voice-participant-avatar-list.remaining-content.remaining-count"
 					>
-						+{remainingCount}
+						+{i18n.number(remainingCount)}
 					</div>
 				</Popout>
 			);

@@ -2,6 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PerksButton} from '@app/features/app/components/dialogs/components/PerksButton';
+import {useSubscriptionActions} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions';
 import type {GracePeriodInfo} from '@app/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionStatus';
 import statusStyles from '@app/features/app/components/dialogs/components/plutonium/PurchaseHistoryStatus.module.css';
 import styles from '@app/features/app/components/dialogs/components/plutonium/SubscriptionCard.module.css';
@@ -11,6 +12,7 @@ import {
 	PREMIUM_PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import PremiumState from '@app/features/premium/state/PremiumState';
 import {
 	CLAIM_ACCOUNT_TO_PURCHASE_OR_REDEEM_PREMIUM_DESCRIPTOR,
 	MANAGE_SUBSCRIPTION_DESCRIPTOR,
@@ -21,6 +23,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import Users from '@app/features/user/state/Users';
 import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
 import type {PendingSubscriptionChangeResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import {msg} from '@lingui/core/macro';
@@ -54,6 +57,14 @@ const SWITCH_TO_YEARLY_DESCRIPTOR = msg({
 const SWITCH_TO_MONTHLY_DESCRIPTOR = msg({
 	message: 'Switch to monthly',
 	comment: 'Button confirming a change to monthly subscription billing.',
+});
+const SWITCH_TO_THE_NEW_PRICE_TITLE_DESCRIPTOR = msg({
+	message: 'Switch to the new price?',
+	comment: 'Billing confirmation title for moving an active subscription down to the current price.',
+});
+const SWITCH_PRICE_DESCRIPTOR = msg({
+	message: 'Switch price',
+	comment: 'Button confirming a move of an active subscription down to the current price.',
 });
 const NOT_NOW_DESCRIPTOR = msg({
 	message: 'Not now',
@@ -171,6 +182,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 		purchaseDisabledTooltip,
 	}) => {
 		const {i18n} = useLingui();
+		const {loadingSwitchToListPrice, handleSwitchToListPrice} = useSubscriptionActions();
 		const {isInGracePeriod, isExpired: isFullyExpired, graceEndDate} = gracePeriodInfo;
 		const tooltipText: string | (() => React.ReactNode) =
 			purchaseDisabledTooltip != null
@@ -184,9 +196,26 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 		const effectiveYearlyPrice =
 			billingCycle === 'yearly' && currentSubscriptionPriceLabel ? currentSubscriptionPriceLabel : yearlyPrice;
 		const hasPendingSubscriptionChange = pendingSubscriptionChange != null && !premiumWillCancel;
+		const currentUserId = Users.currentUser?.id;
+		const listPriceSwitch =
+			currentUserId != null && PremiumState.loadedForUserId === currentUserId
+				? (PremiumState.state?.billing.list_price_switch ?? null)
+				: null;
+		const listPriceNewLabel = listPriceSwitch
+			? formatMinorUnitPrice(listPriceSwitch.list_amount_minor, listPriceSwitch.currency, locale)
+			: null;
+		const listPriceCurrentLabel = listPriceSwitch
+			? formatMinorUnitPrice(listPriceSwitch.current_amount_minor, listPriceSwitch.currency, locale)
+			: null;
+		const listPriceEffectiveDate = listPriceSwitch?.effective_at
+			? getFormattedLongDate(listPriceSwitch.effective_at, locale)
+			: null;
+		const hasPendingListPriceSwitch = listPriceSwitch?.pending === true && !premiumWillCancel;
 		const pendingChangeDate = pendingSubscriptionChange
 			? getFormattedLongDate(new Date(pendingSubscriptionChange.effective_at), locale)
-			: null;
+			: hasPendingListPriceSwitch
+				? listPriceEffectiveDate
+				: null;
 		const pendingInitialPriceLabel = pendingSubscriptionChange
 			? formatMinorUnitPrice(pendingSubscriptionChange.initial_amount_minor, pendingSubscriptionChange.currency, locale)
 			: null;
@@ -200,6 +229,26 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 		const pendingCreditPriceLabel = pendingSubscriptionChange
 			? formatMinorUnitPrice(pendingSubscriptionChange.credit_amount_minor, pendingSubscriptionChange.currency, locale)
 			: null;
+		const canSwitchToListPrice =
+			listPriceSwitch?.available === true &&
+			!premiumWillCancel &&
+			!hasPendingSubscriptionChange &&
+			listPriceNewLabel != null &&
+			listPriceCurrentLabel != null &&
+			listPriceEffectiveDate != null;
+		const shouldSuggestCancelingPendingChange =
+			listPriceSwitch?.available === false &&
+			listPriceSwitch.reason === 'conflicting_pending_change' &&
+			listPriceSwitch.list_amount_minor != null &&
+			listPriceSwitch.current_amount_minor != null &&
+			listPriceSwitch.list_amount_minor < listPriceSwitch.current_amount_minor;
+		const shouldMentionListPriceWhileCancelling =
+			listPriceSwitch?.available === false &&
+			listPriceSwitch.reason === 'subscription_cancelling' &&
+			listPriceSwitch.list_amount_minor != null &&
+			listPriceSwitch.current_amount_minor != null &&
+			listPriceSwitch.list_amount_minor < listPriceSwitch.current_amount_minor;
+		const pendingTargetPriceLabel = hasPendingListPriceSwitch ? listPriceNewLabel : null;
 		const grandfatheredTooltip =
 			isCurrentSubscriptionGrandfathered && currentSubscriptionListPriceLabel
 				? i18n._(LEGACY_RATE_WITH_PRICE_DESCRIPTOR, {currentSubscriptionListPriceLabel})
@@ -314,6 +363,32 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 				yearlyAmountMinor,
 			],
 		);
+		const handleConfirmSwitchToListPrice = useCallback(() => {
+			ModalCommands.push(
+				modal(() => (
+					<ConfirmModal
+						title={i18n._(SWITCH_TO_THE_NEW_PRICE_TITLE_DESCRIPTOR)}
+						description={
+							<Trans comment="Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.">
+								On{' '}
+								<strong data-flx="app.plutonium.subscription-card.handle-confirm-switch-to-list-price.strong">
+									{listPriceEffectiveDate}
+								</strong>{' '}
+								your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today,
+								and the rest of your subscription stays exactly as it is.
+							</Trans>
+						}
+						primaryText={i18n._(SWITCH_PRICE_DESCRIPTOR)}
+						primaryVariant="primary"
+						secondaryText={i18n._(NOT_NOW_DESCRIPTOR)}
+						onPrimary={async () => {
+							await handleSwitchToListPrice();
+						}}
+						data-flx="app.plutonium.subscription-card.handle-confirm-switch-to-list-price.confirm-modal"
+					/>
+				)),
+			);
+		}, [handleSwitchToListPrice, i18n, listPriceCurrentLabel, listPriceEffectiveDate, listPriceNewLabel]);
 		const wrapIfDisabled = (element: React.ReactElement, key: string, disabled: boolean) =>
 			disabled ? (
 				<Tooltip key={key} text={tooltipText} data-flx="app.plutonium.subscription-card.wrap-if-disabled.tooltip">
@@ -498,8 +573,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 							)}
 						</div>
 						{!isVisionary &&
-							hasPendingSubscriptionChange &&
-							pendingSubscriptionChange &&
+							(hasPendingSubscriptionChange || hasPendingListPriceSwitch) &&
 							pendingChangeDate &&
 							!isInGracePeriod &&
 							!isFullyExpired &&
@@ -508,7 +582,20 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 									className={styles.pendingChangeInfo}
 									data-flx="app.plutonium.subscription-card.pending-change-info"
 								>
-									{pendingSubscriptionChange.target_billing_cycle === 'yearly' ? (
+									{hasPendingListPriceSwitch ? (
+										pendingTargetPriceLabel ? (
+											<Trans comment="Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.">
+												New price scheduled for{' '}
+												<strong data-flx="app.plutonium.subscription-card.strong--13">{pendingChangeDate}</strong>.
+												Renewals will be {pendingTargetPriceLabel} from then on.
+											</Trans>
+										) : (
+											<Trans comment="Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.">
+												New price scheduled for{' '}
+												<strong data-flx="app.plutonium.subscription-card.strong--13">{pendingChangeDate}</strong>.
+											</Trans>
+										)
+									) : pendingSubscriptionChange?.target_billing_cycle === 'yearly' ? (
 										pendingInitialPriceLabel && pendingRecurringPriceLabel ? (
 											pendingCreditPriceLabel ? (
 												<Trans>
@@ -544,6 +631,59 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 											<strong data-flx="app.plutonium.subscription-card.strong--12">{pendingChangeDate}</strong>.
 										</Trans>
 									)}
+								</div>
+							)}
+						{!isVisionary &&
+							shouldSuggestCancelingPendingChange &&
+							!isInGracePeriod &&
+							!isFullyExpired &&
+							!isGiftSubscription && (
+								<div
+									className={styles.pendingChangeInfo}
+									data-flx="app.plutonium.subscription-card.list-price-switch-blocked-info"
+								>
+									<Trans comment="Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.">
+										Cancel the scheduled change to move to the current price instead.
+									</Trans>
+								</div>
+							)}
+						{!isVisionary &&
+							shouldMentionListPriceWhileCancelling &&
+							listPriceNewLabel &&
+							premiumUntil &&
+							!isInGracePeriod &&
+							!isFullyExpired &&
+							!isGiftSubscription &&
+							(() => {
+								const cancelDate = getFormattedLongDate(premiumUntil, locale);
+								return (
+									<div
+										className={styles.pendingChangeInfo}
+										data-flx="app.plutonium.subscription-card.list-price-switch-cancelling-info"
+									>
+										<Trans comment="Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.">
+											Your subscription still ends on{' '}
+											<strong data-flx="app.plutonium.subscription-card.strong--15">{cancelDate}</strong>. The current
+											price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here.
+										</Trans>
+									</div>
+								);
+							})()}
+						{!isVisionary &&
+							canSwitchToListPrice &&
+							listPriceEffectiveDate &&
+							!isInGracePeriod &&
+							!isFullyExpired &&
+							!isGiftSubscription && (
+								<div
+									className={styles.pendingChangeInfo}
+									data-flx="app.plutonium.subscription-card.list-price-switch-info"
+								>
+									<Trans comment="Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.">
+										A lower price is available. Switching takes effect on{' '}
+										<strong data-flx="app.plutonium.subscription-card.strong--14">{listPriceEffectiveDate}</strong> and
+										changes nothing else.
+									</Trans>
 								</div>
 							)}
 						{!isVisionary &&
@@ -628,6 +768,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 								{shouldUseChangePlanQuickAction &&
 									targetBillingCycle &&
 									!hasPendingSubscriptionChange &&
+									!hasPendingListPriceSwitch &&
 									wrapIfDisabled(
 										<Button
 											variant="secondary"
@@ -651,7 +792,21 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 										'change-plan',
 										purchaseDisabled,
 									)}
-								{hasPendingSubscriptionChange && (
+								{canSwitchToListPrice && listPriceNewLabel && (
+									<Button
+										variant="secondary"
+										onClick={handleConfirmSwitchToListPrice}
+										submitting={loadingSwitchToListPrice}
+										small
+										className={styles.actionButton}
+										data-flx="app.plutonium.subscription-card.action-button.confirm-switch-to-list-price"
+									>
+										<Trans comment="Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.">
+											Switch to {listPriceNewLabel}
+										</Trans>
+									</Button>
+								)}
+								{(hasPendingSubscriptionChange || hasPendingListPriceSwitch) && (
 									<Button
 										variant="secondary"
 										onClick={handleCancelPendingSubscriptionChange}
@@ -660,7 +815,11 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 										className={styles.actionButton}
 										data-flx="app.plutonium.subscription-card.action-button.cancel-pending-subscription-change"
 									>
-										{pendingSubscriptionChange?.target_billing_cycle === 'yearly' ? (
+										{hasPendingListPriceSwitch ? (
+											<Trans comment="Billing button that cancels a scheduled move to a lower subscription price.">
+												Cancel price change
+											</Trans>
+										) : pendingSubscriptionChange?.target_billing_cycle === 'yearly' ? (
 											<Trans comment="Billing button that cancels a scheduled yearly upgrade.">
 												Cancel yearly upgrade
 											</Trans>

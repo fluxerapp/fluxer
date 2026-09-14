@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
 import {
 	areMemberListRangesCovered,
 	areMemberListRangesEqual,
@@ -9,7 +8,8 @@ import {
 	buildMemberListRangeWindow,
 	buildMemberListRenderWindow,
 	normalizeMemberListRanges,
-} from './MemberListRangeUtils';
+} from '@app/features/member/utils/MemberListRangeUtils';
+import {bench, describe} from 'vitest';
 
 const ROW_HEIGHT = 44;
 const VIEWPORT_HEIGHT = ROW_HEIGHT * 18;

@@ -8,8 +8,6 @@ import {msg} from '@lingui/core/macro';
 
 export const logger = new Logger('VoiceConnectionStatus');
 
-export type NoiseSuppressionMethod = 'enhanced' | 'standard' | 'none';
-
 export const AUDIO_PROCESSING_DIRECT_INPUT_RAW_DESCRIPTOR = msg({
 	message: 'Audio processing (direct input, raw)',
 	comment: 'Tooltip in the voice status popout. Describes the studio / direct-input mic processing profile.',
@@ -202,10 +200,4 @@ export function getAudioProcessingTooltip(
 
 export function isAudioProcessingActive(mode: VoiceProcessingMode, browserNs: boolean, deepFilter: boolean): boolean {
 	return mode === 'voice' || (mode === 'custom' && (browserNs || deepFilter));
-}
-
-export function resolveNoiseSuppressionMethod(deepFilter: boolean, browserNs: boolean): NoiseSuppressionMethod {
-	if (deepFilter) return 'enhanced';
-	if (browserNs) return 'standard';
-	return 'none';
 }

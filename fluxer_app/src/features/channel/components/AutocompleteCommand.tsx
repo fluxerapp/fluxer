@@ -3,7 +3,7 @@
 import {type AutocompleteOption, isCommand} from '@app/features/channel/components/Autocomplete';
 import {AutocompleteItem} from '@app/features/channel/components/AutocompleteItem';
 import {observer} from 'mobx-react-lite';
-import type {MutableRefObject} from 'react';
+import type {RefObject} from 'react';
 
 interface Props {
 	onSelect: (option: AutocompleteOption) => void;
@@ -12,7 +12,7 @@ interface Props {
 	options: Array<AutocompleteOption>;
 	onMouseEnter: (index: number) => void;
 	onMouseLeave: () => void;
-	rowRefs?: MutableRefObject<Array<HTMLButtonElement | null>>;
+	rowRefs?: RefObject<Array<HTMLButtonElement | null>>;
 	getOptionId?: (index: number) => string;
 }
 

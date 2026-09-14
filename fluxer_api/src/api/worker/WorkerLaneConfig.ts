@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
+import type {APIWorkerLaneName, APIWorkerMode} from '@app/api/config/APIConfig';
 
 interface LaneSettings {
 	readonly consumerName: string;
@@ -49,13 +49,13 @@ const LANE_CONFIG = {
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
-			'revalidateUserConnections',
 			'bulkUpdateUserFlags',
 			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',
 			'bulkBanFileShas',
+			'bulkDeleteMessagesForUsers',
 		] as const,
 		retiredTasks: ['sendScheduledMessage'],
 		concurrency: 8,
@@ -70,7 +70,7 @@ const LANE_CONFIG = {
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',
-			'processBunnyPurgeQueue',
+			'processCachePurgeQueue',
 			'processExpiredPremiumSweep',
 			'processInactivityDeletions',
 			'processPendingBulkMessageDeletions',

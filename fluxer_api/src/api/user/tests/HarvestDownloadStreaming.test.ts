@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {getConfig} from '@app/api/Config';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {signHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
+import {fetchHarvestDownload, markHarvestCompleted, requestHarvest} from '@app/api/user/tests/HarvestTestUtils';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {getConfig} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {signHarvestDownloadToken} from '../services/HarvestDownloadToken';
-import {fetchHarvestDownload, markHarvestCompleted, requestHarvest} from './HarvestTestUtils';
 
 const ZIP_BYTES = new TextEncoder().encode('PK pretend zip');
 

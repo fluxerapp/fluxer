@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {RegistrationTimingResult} from '../RiskTypes';
+import type {RegistrationTimingResult} from '@app/api/risk/RiskTypes';
 
 const TZ_OFFSETS: Record<string, number> = {
 	'Pacific/Midway': -11,

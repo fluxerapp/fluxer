@@ -172,10 +172,11 @@ route_cast(Tag, Msg, State) ->
     case cast_handler(Tag) of
         voice -> guild_voice_handler:handle_cast(Msg, State);
         subscription -> guild_subscription_handler:handle_cast(Msg, State);
+        dm_partners -> guild_dm_partners:handle_cast(Msg, State);
         undefined -> {noreply, State}
     end.
 
--spec cast_handler(atom()) -> voice | subscription | undefined.
+-spec cast_handler(atom()) -> voice | subscription | dm_partners | undefined.
 cast_handler(relay_voice_state_update) -> voice;
 cast_handler(relay_voice_server_update) -> voice;
 cast_handler(store_pending_connection) -> voice;
@@ -183,6 +184,7 @@ cast_handler(add_virtual_channel_access) -> voice;
 cast_handler(remove_virtual_channel_access) -> voice;
 cast_handler(cleanup_virtual_access_for_user) -> voice;
 cast_handler(update_member_subscriptions) -> subscription;
+cast_handler(update_dm_partners) -> dm_partners;
 cast_handler(_) -> undefined.
 
 -spec handle_info(term(), guild_state()) -> info_reply().
@@ -545,7 +547,7 @@ dispatch_event(Event, EventData, State) ->
         Event, NewState
     ),
     ok = maybe_refresh_permission_cache(Event, ParsedEventData, State, StateAfterPrune),
-    StateAfterPrune.
+    guild_dm_partners:maybe_reevaluate(Event, ParsedEventData, State, StateAfterPrune).
 
 -spec parse_event_data(term()) -> map().
 parse_event_data(D) when is_binary(D) -> require_map(json:decode(D));

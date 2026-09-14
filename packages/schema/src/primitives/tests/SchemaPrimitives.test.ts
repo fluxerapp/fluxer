@@ -4,6 +4,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {
 	ColorType,
 	coerceNumberFromString,
+	createInt32EnumType,
 	createStringType,
 	createUnboundedStringType,
 	Int32Type,
@@ -13,337 +14,211 @@ import {
 	normalizeString,
 	normalizeWhitespace,
 	removeStandaloneSurrogates,
+	SnowflakeType,
 	stripInvisibles,
 	stripVariationSelectors,
 	UnsignedInt64Type,
+	withFieldDescription,
+	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {describe, expect, it} from 'vitest';
 import {z} from 'zod';
 
 describe('normalizeString', () => {
-	it('removes stripped RTL override characters', () => {
-		const input = 'hello\u202Eworld';
-		expect(normalizeString(input)).toBe('helloworld');
-	});
-	it('removes stripped form feed characters', () => {
-		const input = 'hello\u000Cworld';
-		expect(normalizeString(input)).toBe('helloworld');
-	});
-	it('preserves allowed control characters', () => {
-		const input = 'hello\x00\x01\x1B\x7F\u009Bworld';
-		expect(normalizeString(input)).toBe(input);
-	});
-	it('trims whitespace', () => {
-		const input = '  hello world  ';
-		expect(normalizeString(input)).toBe('hello world');
-	});
-	it('handles empty strings', () => {
-		expect(normalizeString('')).toBe('');
-	});
-	it('handles strings with only whitespace', () => {
-		expect(normalizeString('   ')).toBe('');
-	});
-	it('preserves normal text', () => {
-		const input = 'Hello, World!';
-		expect(normalizeString(input)).toBe('Hello, World!');
+	it.each([
+		['hello\u202Eworld', 'helloworld'],
+		['hello\u000Cworld', 'helloworld'],
+		['hello\x00\x01\x1B\x7F\u009Bworld', 'hello\x00\x01\x1B\x7F\u009Bworld'],
+		['  hello world  ', 'hello world'],
+		['', ''],
+		['   ', ''],
+		['Hello, World!', 'Hello, World!'],
+	])('normalizes %j to %j', (input, expected) => {
+		expect(normalizeString(input)).toBe(expected);
 	});
 });
 
 describe('Int64Type', () => {
-	it('accepts valid integer strings', () => {
-		const result = Int64Type.safeParse('12345');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(12345n);
-		}
+	it.each([
+		['12345', 12345n],
+		[12345, 12345n],
+		['  +0012345  ', 12345n],
+		['-9223372036854775808', -9223372036854775808n],
+		['9223372036854775807', 9223372036854775807n],
+	])('parses decimal input %j without precision loss', (input, expected) => {
+		expect(Int64Type.parse(input)).toBe(expected);
 	});
-	it('accepts valid integer numbers', () => {
-		const result = Int64Type.safeParse(12345);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(12345n);
-		}
+
+	it.each(['9223372036854775808', '-9223372036854775809'])('rejects out-of-range integer %s', (input) => {
+		expect(Int64Type.safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE}]},
+		});
 	});
-	it('accepts negative integers', () => {
-		const result = Int64Type.safeParse('-9223372036854775808');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(-9223372036854775808n);
-		}
+
+	it.each(['not-a-number', '', '   ', '0x10', '0b10', '1e3', '3.14'])('rejects nondecimal input %j', (input) => {
+		expect(Int64Type.safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.INVALID_INTEGER_FORMAT}]},
+		});
 	});
-	it('accepts maximum int64 value', () => {
-		const result = Int64Type.safeParse('9223372036854775807');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(9223372036854775807n);
-		}
-	});
-	it('rejects values exceeding int64 range', () => {
-		const result = Int64Type.safeParse('9223372036854775808');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE);
-		}
-	});
-	it('rejects values below int64 range', () => {
-		const result = Int64Type.safeParse('-9223372036854775809');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE);
-		}
-	});
-	it('rejects invalid integer strings', () => {
-		const result = Int64Type.safeParse('not-a-number');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.INVALID_INTEGER_FORMAT);
-		}
-	});
-	it('rejects unsafe JavaScript integers', () => {
-		const result = Int64Type.safeParse(Number.MAX_SAFE_INTEGER + 1);
-		expect(result.success).toBe(false);
-	});
-	it('handles whitespace in string input', () => {
-		const result = Int64Type.safeParse('  12345  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(12345n);
-		}
+
+	it.each([
+		Number.MAX_SAFE_INTEGER + 1,
+		Number.NaN,
+		Number.POSITIVE_INFINITY,
+		1.5,
+	])('rejects lossy or noninteger numeric input %j', (input) => {
+		expect(Int64Type.safeParse(input).success).toBe(false);
 	});
 });
 
 describe('Int64StringType', () => {
-	it('accepts positive integer strings', () => {
-		const result = Int64StringType.safeParse('12345');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('12345');
-		}
+	it.each(['12345', '-12345'])('preserves integer string %j', (input) => {
+		expect(Int64StringType.parse(input)).toBe(input);
 	});
-	it('accepts negative integer strings', () => {
-		const result = Int64StringType.safeParse('-12345');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('-12345');
-		}
-	});
-	it('rejects non-integer strings', () => {
-		const result = Int64StringType.safeParse('not-a-number');
-		expect(result.success).toBe(false);
+	it.each(['not-a-number', '1.5', ''])('rejects noninteger string %j', (input) => {
+		expect(Int64StringType.safeParse(input).success).toBe(false);
 	});
 });
 
 describe('UnsignedInt64Type', () => {
-	it('accepts positive integer strings', () => {
-		const result = UnsignedInt64Type.safeParse('12345');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(12345n);
-		}
+	it.each([
+		['0', 0n],
+		['12345', 12345n],
+		['9223372036854775807', 9223372036854775807n],
+	])('parses unsigned storage integer %j', (input, expected) => {
+		expect(UnsignedInt64Type.parse(input)).toBe(expected);
 	});
-	it('rejects negative integer strings', () => {
-		const result = UnsignedInt64Type.safeParse('-12345');
-		expect(result.success).toBe(false);
+
+	it.each([
+		'-1',
+		'+1',
+		'9223372036854775808',
+		'18446744073709551615',
+	])('rejects %s outside unsigned signed-64-bit storage', (input) => {
+		expect(UnsignedInt64Type.safeParse(input).success).toBe(false);
+	});
+});
+
+describe('SnowflakeType', () => {
+	it.each([
+		['0', 0n],
+		[123, 123n],
+		['  123  ', 123n],
+		['9223372036854775807', 9223372036854775807n],
+	])('parses snowflake %j', (input, expected) => {
+		expect(SnowflakeType.parse(input)).toBe(expected);
+	});
+
+	it.each(['01', '+1', '-1', '0x10', '', '1.5'])('rejects noncanonical snowflake %j', (input) => {
+		expect(SnowflakeType.safeParse(input)).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.INVALID_SNOWFLAKE_FORMAT}]},
+		});
+	});
+
+	it('reports the snowflake-specific range error', () => {
+		expect(SnowflakeType.safeParse('9223372036854775808')).toMatchObject({
+			success: false,
+			error: {issues: [{message: ValidationErrorCodes.SNOWFLAKE_OUT_OF_RANGE}]},
+		});
 	});
 });
 
 describe('ColorType', () => {
-	it('accepts valid color values', () => {
-		const result = ColorType.safeParse(0xff5500);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(0xff5500);
-		}
+	it.each([0xff5500, 0x000000, 0xffffff])('preserves valid color %i', (value) => {
+		expect(ColorType.parse(value)).toBe(value);
 	});
-	it('accepts minimum color value (black)', () => {
-		const result = ColorType.safeParse(0x000000);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(0x000000);
-		}
+	it.each([
+		[-1, ValidationErrorCodes.COLOR_VALUE_TOO_LOW],
+		[0x1000000, ValidationErrorCodes.COLOR_VALUE_TOO_HIGH],
+	])('reports the color-specific boundary error for %i', (input, message) => {
+		expect(ColorType.safeParse(input)).toMatchObject({success: false, error: {issues: [{message}]}});
 	});
-	it('accepts maximum color value (white)', () => {
-		const result = ColorType.safeParse(0xffffff);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(0xffffff);
-		}
-	});
-	it('rejects negative color values', () => {
-		const result = ColorType.safeParse(-1);
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.COLOR_VALUE_TOO_LOW);
-		}
-	});
-	it('rejects color values exceeding max', () => {
-		const result = ColorType.safeParse(0x1000000);
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.COLOR_VALUE_TOO_HIGH);
-		}
-	});
-	it('rejects non-integer values', () => {
-		const result = ColorType.safeParse(123.45);
-		expect(result.success).toBe(false);
+	it('rejects fractional colors', () => {
+		expect(ColorType.safeParse(123.45).success).toBe(false);
 	});
 });
 
-describe('Int32Type', () => {
-	it('accepts valid int32 values', () => {
-		const result = Int32Type.safeParse(1000);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(1000);
-		}
+describe.each([
+	{name: 'Int32Type', schema: Int32Type, maximum: 2147483647},
+	{name: 'NonNegativeSafeIntegerType', schema: NonNegativeSafeIntegerType, maximum: Number.MAX_SAFE_INTEGER},
+])('$name', ({schema, maximum}) => {
+	it.each([0, 1000, maximum])('preserves integer %i', (value) => {
+		expect(schema.parse(value)).toBe(value);
 	});
-	it('accepts zero', () => {
-		const result = Int32Type.safeParse(0);
-		expect(result.success).toBe(true);
-	});
-	it('accepts maximum int32 value', () => {
-		const result = Int32Type.safeParse(2147483647);
-		expect(result.success).toBe(true);
-	});
-	it('rejects negative values', () => {
-		const result = Int32Type.safeParse(-1);
-		expect(result.success).toBe(false);
-	});
-	it('rejects values exceeding int32 max', () => {
-		const result = Int32Type.safeParse(2147483648);
-		expect(result.success).toBe(false);
+	it.each([-1, 1.5, maximum + 1, Number.NaN, Number.POSITIVE_INFINITY])('rejects invalid number %j', (value) => {
+		expect(schema.safeParse(value).success).toBe(false);
 	});
 });
 
-describe('NonNegativeSafeIntegerType', () => {
-	it('accepts maximum JavaScript safe integer', () => {
-		const result = NonNegativeSafeIntegerType.safeParse(Number.MAX_SAFE_INTEGER);
-		expect(result.success).toBe(true);
-	});
-	it('accepts values above int32', () => {
-		const result = NonNegativeSafeIntegerType.safeParse(2147483648);
-		expect(result.success).toBe(true);
-	});
-	it('rejects unsafe JavaScript integers', () => {
-		const result = NonNegativeSafeIntegerType.safeParse(Number.MAX_SAFE_INTEGER + 1);
-		expect(result.success).toBe(false);
-	});
-	it('rejects negative values', () => {
-		const result = NonNegativeSafeIntegerType.safeParse(-1);
-		expect(result.success).toBe(false);
-	});
-	it('rejects non-integer values', () => {
-		const result = NonNegativeSafeIntegerType.safeParse(1.5);
-		expect(result.success).toBe(false);
-	});
+it('preserves safe integers above int32', () => {
+	expect(NonNegativeSafeIntegerType.parse(2147483648)).toBe(2147483648);
 });
 
 describe('coerceNumberFromString', () => {
-	it('coerces valid integer strings to numbers', () => {
-		const schema = coerceNumberFromString(z.number().int().min(0).max(100));
-		const result = schema.safeParse('50');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(50);
-		}
+	const schema = coerceNumberFromString(z.number().int());
+	it.each([
+		['50', 50],
+		['-42', -42],
+		[42, 42],
+		['  123  ', 123],
+		['+0012', 12],
+	])('parses decimal input %j to %i', (input, expected) => {
+		expect(schema.parse(input)).toBe(expected);
 	});
-	it('coerces negative integer strings', () => {
-		const schema = coerceNumberFromString(z.number().int());
-		const result = schema.safeParse('-42');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(-42);
-		}
+	it.each(['not-a-number', '', ' ', '1.5', '0x10', '1e3', '9007199254740992'])('rejects invalid input %j', (value) => {
+		expect(schema.safeParse(value).success).toBe(false);
 	});
-	it('passes through numbers unchanged', () => {
-		const schema = coerceNumberFromString(z.number().int());
-		const result = schema.safeParse(42);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(42);
-		}
+	it('leaves overflow rejection to the numeric schema', () => {
+		expect(coerceNumberFromString(z.number()).safeParse('9'.repeat(400)).success).toBe(false);
 	});
-	it('does not coerce non-integer strings', () => {
-		const schema = coerceNumberFromString(z.number().int());
-		const result = schema.safeParse('not-a-number');
-		expect(result.success).toBe(false);
-	});
-	it('handles empty strings', () => {
-		const schema = coerceNumberFromString(z.number().int());
-		const result = schema.safeParse('');
-		expect(result.success).toBe(false);
-	});
-	it('handles whitespace trimming', () => {
-		const schema = coerceNumberFromString(z.number().int());
-		const result = schema.safeParse('  123  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(123);
-		}
+	it('preserves the supplied numeric bounds', () => {
+		const bounded = coerceNumberFromString(z.number().int().min(0).max(100));
+		expect(bounded.parse('50')).toBe(50);
+		expect(bounded.safeParse('101').success).toBe(false);
 	});
 });
 
 describe('createStringType', () => {
-	it('validates string within length bounds', () => {
-		const StringType = createStringType(1, 10);
-		const result = StringType.safeParse('hello');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('hello');
-		}
+	it.each(['hello', '  hello  ', '  hel\u202Elo\u000C  '])('normalizes before checking length: %j', (input) => {
+		expect(createStringType(5, 5).parse(input)).toBe('hello');
 	});
-	it('normalizes and trims input', () => {
-		const StringType = createStringType(1, 10);
-		const result = StringType.safeParse('  hello  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('hello');
-		}
-	});
-	it('rejects strings shorter than minimum', () => {
-		const StringType = createStringType(5, 10);
-		const result = StringType.safeParse('hi');
-		expect(result.success).toBe(false);
-	});
-	it('rejects strings longer than maximum', () => {
-		const StringType = createStringType(1, 5);
-		const result = StringType.safeParse('hello world');
-		expect(result.success).toBe(false);
-	});
-	it('uses STRING_LENGTH_EXACT for exact length requirement', () => {
-		const StringType = createStringType(5, 5);
-		const result = StringType.safeParse('hi');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.STRING_LENGTH_EXACT);
-		}
-	});
-	it('uses STRING_LENGTH_INVALID for range requirement', () => {
-		const StringType = createStringType(5, 10);
-		const result = StringType.safeParse('hi');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.STRING_LENGTH_INVALID);
-		}
+	it.each([
+		{min: 5, max: 10, input: 'hi', message: ValidationErrorCodes.STRING_LENGTH_INVALID, params: {min: 5, max: 10}},
+		{
+			min: 1,
+			max: 5,
+			input: 'hello world',
+			message: ValidationErrorCodes.STRING_LENGTH_INVALID,
+			params: {min: 1, max: 5},
+		},
+		{
+			min: 5,
+			max: 5,
+			input: 'hi',
+			message: ValidationErrorCodes.STRING_LENGTH_EXACT,
+			params: {min: 5, max: 5, length: 5},
+		},
+	])('reports exact length issue for $input in $min..$max', ({min, max, input, message, params}) => {
+		expect(createStringType(min, max).safeParse(input).error?.issues).toEqual([
+			{code: 'custom', message, params, path: []},
+		]);
 	});
 });
 
 describe('createUnboundedStringType', () => {
 	it('normalizes string without length validation', () => {
 		const UnboundedStringType = createUnboundedStringType();
-		const result = UnboundedStringType.safeParse('  hello\x00world  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('hello\x00world');
-		}
+		const result = UnboundedStringType.parse('  hello\x00world  ');
+		expect(result).toBe('hello\x00world');
 	});
 	it('accepts empty strings', () => {
 		const UnboundedStringType = createUnboundedStringType();
-		const result = UnboundedStringType.safeParse('');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('');
-		}
+		const result = UnboundedStringType.parse('');
+		expect(result).toBe('');
 	});
 });
 
@@ -419,5 +294,40 @@ describe('stripVariationSelectors', () => {
 	it('throws on excessively long strings', () => {
 		const longString = 'a'.repeat(10001);
 		expect(() => stripVariationSelectors(longString)).toThrow(ValidationErrorCodes.STRING_LENGTH_INVALID);
+	});
+});
+
+describe('named enum metadata', () => {
+	const schema = createInt32EnumType(
+		[
+			[0, 'NONE', 'No selection'],
+			[2, 'SECOND'],
+		],
+		'Selection',
+		'OriginalSelection',
+	);
+	it.each([0, 2])('preserves enum member %i', (value) => {
+		expect(schema.parse(value)).toBe(value);
+	});
+	it('retains the custom error for an unrecognized integer', () => {
+		expect(schema.safeParse(1).error?.issues).toEqual([{code: 'custom', message: 'Expected one of [0, 2]', path: []}]);
+	});
+	it.each([-1, 0.5, '0'])('does not loosen integer validation for %j', (value) => {
+		expect(schema.safeParse(value).success).toBe(false);
+	});
+	it('retains enum metadata when describing and renaming a clone', () => {
+		const described = withFieldDescription(schema, 'Field selection');
+		const renamed = withOpenApiType(described, 'FieldSelection');
+		expect(schema.description).toBe('Selection');
+		expect(schemaMetadata.get(schema)?.name).toBe('OriginalSelection');
+		expect(renamed.description).toBe('Field selection');
+		expect(schemaMetadata.get(renamed)).toEqual({
+			name: 'FieldSelection',
+			format: 'int32',
+			enumEntries: [
+				{value: 0, name: 'NONE', description: 'No selection'},
+				{value: 2, name: 'SECOND'},
+			],
+		});
 	});
 });

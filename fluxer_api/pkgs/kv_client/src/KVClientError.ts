@@ -26,3 +26,10 @@ export class KVClientError extends FluxerError {
 		this.name = 'KVClientError';
 	}
 }
+
+export function createInvalidResponseError(command: string, expected: string): KVClientError {
+	return new KVClientError({
+		code: KVClientErrorCode.INVALID_RESPONSE,
+		message: `KV request returned an invalid response (${command}): expected ${expected}`,
+	});
+}

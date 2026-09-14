@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ApplicationID, createApplicationID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {ApplicationByOwnerRow, ApplicationRow} from '@app/api/database/types/OAuth2Types';
+import {APPLICATION_COLUMNS} from '@app/api/database/types/OAuth2Types';
+import {Application} from '@app/api/models/Application';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import {Applications, ApplicationsByOwner} from '@app/api/Tables';
+import {hashPassword} from '@app/api/utils/PasswordUtils';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
-import {type ApplicationID, createApplicationID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import type {ApplicationByOwnerRow, ApplicationRow} from '../../database/types/OAuth2Types';
-import {APPLICATION_COLUMNS} from '../../database/types/OAuth2Types';
-import {Application} from '../../models/Application';
-import {Applications, ApplicationsByOwner} from '../../Tables';
-import {hashPassword} from '../../utils/PasswordUtils';
-import type {IApplicationRepository} from './IApplicationRepository';
+import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 
 const SELECT_APPLICATION_CQL = Applications.selectCql({
 	where: Applications.where.eq('application_id'),
@@ -93,7 +95,10 @@ export class ApplicationRepository implements IApplicationRepository {
 	async upsertApplication(data: ApplicationRow, oldData?: ApplicationRow | null): Promise<Application> {
 		const applicationId = data.application_id;
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
-			throw new Error('Cannot modify the built-in admin OAuth2 application');
+			throw new ForbiddenError({
+				code: APIErrorCodes.FORBIDDEN,
+				message: 'Cannot modify the built-in admin OAuth2 application',
+			});
 		}
 		const result = await executeVersionedUpdate<ApplicationRow, 'application_id'>(
 			async () => fetchOne<ApplicationRow>(SELECT_APPLICATION_CQL, {application_id: applicationId}),
@@ -125,7 +130,10 @@ export class ApplicationRepository implements IApplicationRepository {
 
 	async deleteApplication(applicationId: ApplicationID): Promise<void> {
 		if (applicationId === createApplicationID(ADMIN_OAUTH2_APPLICATION_ID)) {
-			throw new Error('Cannot delete the built-in admin OAuth2 application');
+			throw new ForbiddenError({
+				code: APIErrorCodes.FORBIDDEN,
+				message: 'Cannot delete the built-in admin OAuth2 application',
+			});
 		}
 		const applicationRow = await fetchOne<ApplicationRow>(SELECT_APPLICATION_CQL, {application_id: applicationId});
 		const application = applicationRow ? new Application(applicationRow) : null;

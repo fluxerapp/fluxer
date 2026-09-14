@@ -31,8 +31,8 @@ describe('parseEnvValue', () => {
 	test('parses JSON arrays', () => {
 		expect(parseEnvValue('[1, 2, 3]')).toEqual([1, 2, 3]);
 	});
-	test('returns raw string for invalid JSON-like values', () => {
-		expect(parseEnvValue('{not json}')).toBe('{not json}');
+	test('rejects invalid JSON-like values', () => {
+		expect(() => parseEnvValue('{not json}')).toThrow('must be valid JSON');
 	});
 	test('returns raw string for plain strings', () => {
 		expect(parseEnvValue('hello')).toBe('hello');
@@ -104,6 +104,136 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				admin: {base_path: ''},
 			},
 			integrations: {stripe: {prices: {monthly_usd: 'price_monthly_usd'}}},
+		});
+	});
+
+	test('maps the internal scheme and KV provider names', () => {
+		expect(buildNamedFluxerEnvOverrides({FLUXER_INTERNAL_SCHEME: 'https', FLUXER_KV_PROVIDER: 'redis'})).toMatchObject({
+			domain: {internal_scheme: 'https'},
+			internal: {kv_provider: 'redis'},
+		});
+	});
+
+	test('rejects a non-integer value for an integer override', () => {
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_API_PORT: '80a'})).toThrow(
+			'FLUXER_API_PORT must be an integer, got "80a"',
+		);
+	});
+
+	test('leaves the default in place for a blank integer override', () => {
+		expect(buildNamedFluxerEnvOverrides({FLUXER_API_PORT: ''})).toEqual({});
+	});
+
+	test('the canonical name wins over its alias regardless of declaration order', () => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_MEDIA_PROXY_ENDPOINT: 'http://alias',
+				FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'http://canonical',
+				FLUXER_NATS_CORE_URL: 'nats://alias',
+				FLUXER_NATS_URL: 'nats://canonical',
+			}),
+		).toMatchObject({
+			internal: {media_proxy: 'http://canonical'},
+			services: {nats: {core_url: 'nats://canonical'}},
+		});
+	});
+
+	test('an alias alone still applies', () => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_MEDIA_PROXY_ENDPOINT: 'http://alias',
+				FLUXER_NATS_CORE_URL: 'nats://alias',
+			}),
+		).toMatchObject({
+			internal: {media_proxy: 'http://alias'},
+			services: {nats: {core_url: 'nats://alias'}},
+		});
+	});
+
+	test('rejects malformed JSON for a JSON-shaped override', () => {
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_LIVEKIT_DEFAULT_REGION: '{bad'})).toThrow(
+			'FLUXER_LIVEKIT_DEFAULT_REGION must be valid JSON',
+		);
+	});
+
+	test('parses the legacy Stripe price map onto integrations.stripe.legacy_prices', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_LEGACY_PRICES:
+				'{"monthly_brl":["price_old_monthly_brl","price_older_monthly_brl"],"yearly_brl":["price_old_yearly_brl"],"monthly_try":["price_archived_monthly_try"],"gift_1_month_brl":["price_old_gift_1_month_brl"],"gift_1_year_brl":["price_old_gift_1_year_brl"]}',
+		});
+
+		expect(overrides).toMatchObject({
+			integrations: {
+				stripe: {
+					legacy_prices: {
+						monthly_brl: ['price_old_monthly_brl', 'price_older_monthly_brl'],
+						yearly_brl: ['price_old_yearly_brl'],
+						monthly_try: ['price_archived_monthly_try'],
+						gift_1_month_brl: ['price_old_gift_1_month_brl'],
+						gift_1_year_brl: ['price_old_gift_1_year_brl'],
+					},
+				},
+			},
+		});
+	});
+
+	test('the legacy Stripe price map does not disturb the live price map', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_new_monthly_brl"}',
+			FLUXER_STRIPE_LEGACY_PRICES: '{"monthly_brl":["price_old_monthly_brl"]}',
+		});
+
+		const stripe = (overrides.integrations as {stripe: Record<string, unknown>}).stripe;
+		expect(stripe.prices).toEqual({monthly_brl: 'price_new_monthly_brl'});
+		expect(stripe.legacy_prices).toEqual({monthly_brl: ['price_old_monthly_brl']});
+	});
+
+	test('rejects malformed JSON for the legacy Stripe price map', () => {
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_STRIPE_LEGACY_PRICES: '{"monthly_brl":['})).toThrow(
+			'FLUXER_STRIPE_LEGACY_PRICES must be valid JSON',
+		);
+	});
+
+	test('an individual Stripe price env var wins over the blob, and the blob keys it does not name survive', () => {
+		// The deploy runbook flips one slot at a time with FLUXER_STRIPE_PRICE_* while the blob stays
+		// pinned to the previous release. The individual variable is declared after the blob, so it is
+		// merged into the blob rather than replaced by it.
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES:
+				'{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl","monthly_usd":"price_blob_monthly_usd"}',
+			FLUXER_STRIPE_PRICE_MONTHLY_BRL: 'price_individual_monthly_brl',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_brl: 'price_individual_monthly_brl',
+			yearly_brl: 'price_blob_yearly_brl',
+			monthly_usd: 'price_blob_monthly_usd',
+		});
+	});
+
+	test('several individual Stripe price env vars merge into the blob together', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl"}',
+			FLUXER_STRIPE_PRICE_MONTHLY_BRL: 'price_individual_monthly_brl',
+			FLUXER_STRIPE_PRICE_YEARLY_BRL: 'price_individual_yearly_brl',
+			FLUXER_STRIPE_PRICE_MONTHLY_EUR: 'price_individual_monthly_eur',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_brl: 'price_individual_monthly_brl',
+			yearly_brl: 'price_individual_yearly_brl',
+			monthly_eur: 'price_individual_monthly_eur',
+		});
+	});
+
+	test('the Stripe price blob applies on its own when no individual price var is set', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_STRIPE_PRICES: '{"monthly_brl":"price_blob_monthly_brl","yearly_brl":"price_blob_yearly_brl"}',
+		});
+
+		expect((overrides.integrations as {stripe: {prices: unknown}}).stripe.prices).toEqual({
+			monthly_brl: 'price_blob_monthly_brl',
+			yearly_brl: 'price_blob_yearly_brl',
 		});
 	});
 });

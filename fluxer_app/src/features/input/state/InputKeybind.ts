@@ -82,6 +82,16 @@ import {
 	ZOOM_IN_DESCRIPTOR,
 	ZOOM_OUT_DESCRIPTOR,
 } from '@app/features/input/state/input_keybind/shared';
+import {
+	getActiveCombosForResolvedAction,
+	getDisplayKeybindForResolvedAction,
+} from '@app/features/input/state/KeybindResolution';
+import {
+	DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
+	getKeyboardShortcutsOverlayComboForCurrentLayout,
+	keyCombosEqual,
+	SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
+} from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {awaitHydration, makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
@@ -97,13 +107,6 @@ import {
 } from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import type {I18n} from '@lingui/core';
 import {makeAutoObservable, runInAction} from 'mobx';
-import {
-	DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
-	getKeyboardShortcutsOverlayComboForCurrentLayout,
-	keyCombosEqual,
-	SHIFTED_SLASH_FALLBACK_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
-} from '../utils/KeyboardShortcutLayoutUtils';
-import {getActiveCombosForResolvedAction, getDisplayKeybindForResolvedAction} from './KeybindResolution';
 
 const KEYBIND_STORE_NAME = 'Keybind';
 const KEYBIND_COMMAND_VALUES = [

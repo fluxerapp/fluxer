@@ -105,7 +105,7 @@ async fn discovery_approve(
             return flash::redirect_with_flash(
                 &format!("{base}/discovery"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -115,7 +115,7 @@ async fn discovery_approve(
             return flash::redirect_with_flash(
                 &format!("{base}/discovery"),
                 FlashData::error("Guild ID is required"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -131,7 +131,7 @@ async fn discovery_approve(
     flash::redirect_with_flash(
         &format!("{base}/discovery?tab=pending"),
         flash,
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 
@@ -149,7 +149,7 @@ async fn discovery_reject(
             return flash::redirect_with_flash(
                 &format!("{base}/discovery"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -159,7 +159,7 @@ async fn discovery_reject(
             return flash::redirect_with_flash(
                 &format!("{base}/discovery"),
                 FlashData::error("Guild ID is required"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -173,7 +173,7 @@ async fn discovery_reject(
     flash::redirect_with_flash(
         &format!("{base}/discovery?tab=pending"),
         flash,
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 
@@ -191,7 +191,7 @@ async fn discovery_remove(
             return flash::redirect_with_flash(
                 &format!("{base}/discovery"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -201,7 +201,7 @@ async fn discovery_remove(
             return flash::redirect_with_flash(
                 &format!("{base}/discovery"),
                 FlashData::error("Guild ID is required"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -215,6 +215,6 @@ async fn discovery_remove(
     flash::redirect_with_flash(
         &format!("{base}/discovery?tab=listed"),
         flash,
-        config.is_production(),
+        config.secure_cookies(),
     )
 }

@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ChannelID, MemeID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createAttachmentID, createMemeID, userIdToChannelId} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
+import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import {
+	isOptionalGifProviderError,
+	type ResolvedGifProviderSlug,
+	tryExtractGifProviderSlug,
+} from '@app/api/gif/GifProviderUtils';
+import type {GifService} from '@app/api/gif/GifService';
+import type {MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
 import {EmbedMediaFlags, MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_FAVORITE_MEME_TAGS, MAX_FAVORITE_MEMES_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
@@ -12,30 +36,6 @@ import {UnknownFavoriteMemeError} from '@fluxer/errors/src/domains/core/UnknownF
 import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {normalizeFilename} from '@fluxer/schema/src/primitives/FileValidators';
 import mime from 'mime';
-import type {ApiContext} from '../ApiContext';
-import type {ChannelID, MemeID, MessageID, UserID} from '../BrandedTypes';
-import {createAttachmentID, createMemeID, userIdToChannelId} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {ChannelService} from '../channel/services/ChannelService';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../channel/services/message/MessageHelpers';
-import {
-	isOptionalGifProviderError,
-	type ResolvedGifProviderSlug,
-	tryExtractGifProviderSlug,
-} from '../gif/GifProviderUtils';
-import type {GifService} from '../gif/GifService';
-import type {MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {FavoriteMeme} from '../models/FavoriteMeme';
-import type {Message} from '../models/Message';
-import type {User} from '../models/User';
-import {mapFavoriteMemeToResponse} from './FavoriteMemeModel';
-import type {IFavoriteMemeRepository} from './IFavoriteMemeRepository';
 
 type MessageAttachmentCandidate = Message['attachments'][number];
 type MessageEmbedCandidate = Message['embeds'][number];

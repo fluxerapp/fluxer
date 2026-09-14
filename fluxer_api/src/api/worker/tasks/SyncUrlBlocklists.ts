@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BANNED_URLS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import {RISK_S3_KEYS, writeLinesToS3} from '@app/api/risk/RiskBlocklistS3';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {BANNED_URLS_REFRESH_CHANNEL} from '../../constants/ContentModeration';
-import {RISK_S3_KEYS, writeLinesToS3} from '../../risk/RiskBlocklistS3';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {canonicalizeUrl} from '../../utils/UrlNormalizer';
-import {getWorkerDependencies} from '../WorkerContext';
 
 interface FeedSource {
 	url: string;
@@ -49,7 +49,10 @@ const FEED_SOURCES: Array<FeedSource> = [
 
 async function fetchFeed(source: FeedSource): Promise<Array<string>> {
 	const res = await fetch(source.url, {signal: AbortSignal.timeout(120000)});
-	if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${source.url}`);
+	if (!res.ok) {
+		FetchUtils.discardResponseBody(res.body, res.status);
+		throw new Error(`HTTP ${res.status} fetching ${source.url}`);
+	}
 	const text = await FetchUtils.streamToStringWithLimit(res.body, {
 		maxBytes: EXTERNAL_RESPONSE_LIMITS.urlBlocklistBytes,
 		headers: res.headers,

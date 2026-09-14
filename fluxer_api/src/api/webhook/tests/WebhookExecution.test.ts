@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannel, createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {
 	createWebhook,
 	deleteWebhook,
 	deleteWebhookMessageByToken,
 	executeWebhook,
 	sendChannelMessage,
-} from './WebhookTestUtils';
+} from '@app/api/webhook/tests/WebhookTestUtils';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Webhook execution', () => {
 	let harness: ApiTestHarness;
@@ -142,6 +143,29 @@ describe('Webhook execution', () => {
 			.body({content: ''})
 			.expect(HTTP_STATUS.BAD_REQUEST, 'CANNOT_SEND_EMPTY_MESSAGE')
 			.execute();
+		await deleteWebhook(harness, webhook.id, owner.token);
+	});
+	it('returns the original message when a webhook execution repeats a nonce', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Webhook Exec Guild');
+		const channelId = guild.system_channel_id!;
+		const webhook = await createWebhook(harness, channelId, owner.token, 'Test Webhook');
+		const nonce = '4815162342';
+		const first = await createBuilderWithoutAuth<MessageResponse>(harness)
+			.post(`/webhooks/${webhook.id}/${webhook.token}?wait=true`)
+			.body({content: 'Retried webhook message', nonce})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const second = await createBuilderWithoutAuth<MessageResponse>(harness)
+			.post(`/webhooks/${webhook.id}/${webhook.token}?wait=true`)
+			.body({content: 'Retried webhook message', nonce})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(second.id).toBe(first.id);
+		const messages = await createBuilder<Array<MessageResponse>>(harness, owner.token)
+			.get(`/channels/${channelId}/messages`)
+			.execute();
+		expect(messages.filter((message) => message.webhook_id === webhook.id)).toHaveLength(1);
 		await deleteWebhook(harness, webhook.id, owner.token);
 	});
 	it('rejects webhook execution with invalid token', async () => {

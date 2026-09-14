@@ -63,3 +63,6 @@ export interface GuildMemberData {
 	readonly profile_flags?: number | null;
 	readonly mention_flags?: number | null;
 }
+
+export const GuildMemberListResponse = z.array(GuildMemberResponse);
+export const GuildBanListResponse = z.array(GuildBanResponse);

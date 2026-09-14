@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MarkdownParseOptions} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {parseMarkdownContent as parse} from '@app/features/messaging/utils/markdown/MarkdownParseCache';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {bench, describe} from 'vitest';
-import {MarkdownContext} from './renderers/RendererTypes';
 
 const SIMPLE_CONTENT = 'hello **world** with <@1234567890> and https://fluxer.app';
 const RICH_CONTENT = [

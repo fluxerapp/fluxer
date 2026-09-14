@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import {NoopLogger} from './mocks/NoopLogger';
 
 type TaskHandlerMap = Record<string, WorkerTaskHandler>;
 

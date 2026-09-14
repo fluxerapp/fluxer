@@ -37,7 +37,7 @@ export interface ComposerTypeaheadPluginProps {
 	listboxId: string;
 	enabled: boolean;
 	onSelect: (option: AutocompleteOption) => void;
-	activeRef: React.MutableRefObject<boolean>;
+	activeRef: React.RefObject<boolean>;
 }
 
 export const ComposerTypeaheadPlugin = ({

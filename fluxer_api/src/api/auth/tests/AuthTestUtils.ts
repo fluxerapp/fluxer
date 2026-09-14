@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, randomBytes, randomUUID} from 'node:crypto';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {TEST_CREDENTIALS, TEST_USER_DATA} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {TEST_CREDENTIALS, TEST_USER_DATA} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface RegisterResponse {
 	user_id: string;
@@ -336,12 +336,12 @@ export async function enableSso(
 		redirect_uri: '',
 		...overrides,
 	};
-	await createBuilder(harness, token).post('/admin/instance-config/update').body({sso: ssoConfig}).execute();
+	await createBuilder(harness, token).patch('/admin/instance/config').body({sso: ssoConfig}).execute();
 }
 
 export async function disableSso(harness: ApiTestHarness, token: string): Promise<void> {
 	await createBuilder(harness, token)
-		.post('/admin/instance-config/update')
+		.patch('/admin/instance/config')
 		.body({
 			sso: {
 				enabled: false,

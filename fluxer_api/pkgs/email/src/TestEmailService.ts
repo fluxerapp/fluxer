@@ -126,11 +126,11 @@ export class TestEmailService implements ITestEmailService {
 	async sendUnbanNotification(
 		email: string,
 		username: string,
-		reason: string,
+		reason: string | null,
 		_locale?: string | null,
 	): Promise<boolean> {
-		this.logger.info(`Unban notification sent to ${email} for user ${username}, reason: ${reason}`);
-		return this.record(email, 'unban_notification', {reason});
+		this.logger.info(`Unban notification sent to ${email} for user ${username}, reason: ${reason ?? 'none'}`);
+		return this.record(email, 'unban_notification', {reason: reason ?? ''});
 	}
 
 	async sendScheduledDeletionNotification(

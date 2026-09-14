@@ -55,7 +55,7 @@ const MORE_STICKER_ACTIONS_DESCRIPTOR = msg({
 });
 
 export type StickerContextMenuSticker = Readonly<
-	Pick<GuildSticker, 'id' | 'guildId' | 'name' | 'description' | 'tags' | 'animated' | 'nsfw' | 'url' | 'user'>
+	Pick<GuildSticker, 'id' | 'guildId' | 'name' | 'description' | 'tags' | 'animated' | 'url' | 'user'>
 >;
 
 interface StickerContextMenuItemsProps {

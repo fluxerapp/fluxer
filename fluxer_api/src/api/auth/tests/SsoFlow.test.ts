@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createTestAccount,
@@ -11,7 +8,10 @@ import {
 	enableSso,
 	setUserACLs,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface SsoStartResponse {
 	authorization_url: string;
@@ -90,7 +90,7 @@ describe('Auth SSO flow', () => {
 		});
 		it('rejects enforced SSO config that cannot resolve claims', async () => {
 			await createBuilder(harness, admin.token)
-				.post('/admin/instance-config/update')
+				.patch('/admin/instance/config')
 				.body({
 					sso: {
 						enabled: true,
@@ -458,7 +458,7 @@ describe('Auth SSO flow', () => {
 		});
 		it('rejects invalid allowed domains during config update', async () => {
 			await createBuilder(harness, admin.token)
-				.post('/admin/instance-config/update')
+				.patch('/admin/instance/config')
 				.body({
 					sso: {
 						enabled: true,
@@ -477,7 +477,7 @@ describe('Auth SSO flow', () => {
 		});
 		it('rejects unsafe provider URLs during config update', async () => {
 			await createBuilder(harness, admin.token)
-				.post('/admin/instance-config/update')
+				.patch('/admin/instance/config')
 				.body({
 					sso: {
 						enabled: true,
@@ -504,8 +504,7 @@ describe('Auth SSO flow', () => {
 					allowed_domains: Array<string>;
 				};
 			}>(harness, admin.token)
-				.post('/admin/instance-config/get')
-				.body({})
+				.get('/admin/instance/config')
 				.execute();
 			expect(config.sso.allowed_domains).toEqual(['example.com', 'xn--bcher-kva.example']);
 		});
@@ -715,7 +714,7 @@ describe('Auth SSO flow', () => {
 		});
 		it('does not advertise enabled SSO when optional SSO cannot resolve claims', async () => {
 			await createBuilder(harness, admin.token)
-				.post('/admin/instance-config/update')
+				.patch('/admin/instance/config')
 				.body({
 					sso: {
 						enabled: true,

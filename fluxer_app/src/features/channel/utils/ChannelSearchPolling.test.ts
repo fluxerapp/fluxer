@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	CHANNEL_SEARCH_INDEXING_INITIAL_POLL_INTERVAL_MS,
 	CHANNEL_SEARCH_INDEXING_MAX_POLL_INTERVAL_MS,
 	getChannelSearchIndexingPollInterval,
-} from './ChannelSearchPolling';
+} from '@app/features/channel/utils/ChannelSearchPolling';
+import {describe, expect, it} from 'vitest';
 
 describe('getChannelSearchIndexingPollInterval', () => {
 	it('starts with a short retry interval for newly indexing channels', () => {

@@ -1,6 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	type ChannelID,
+	createChannelID,
+	createGuildID,
+	createUserID,
+	type GuildID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import type {ChannelOverride, UserGuildSettingsRow} from '@app/api/database/types/UserTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
+import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
+import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
+import {dedupeGuildFolders} from '@app/api/user/utils/GuildFolderUtils';
+import {isUserAdult} from '@app/api/utils/AgeUtils';
+import {
 	DEFAULT_GUILD_FOLDER_ICON,
 	GroupDmAddPermissionFlags,
 	IncomingCallFlags,
@@ -26,32 +52,6 @@ import type {
 	UserGuildSettingsUpdateRequest,
 	UserSettingsUpdateRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {
-	type ChannelID,
-	createChannelID,
-	createGuildID,
-	createUserID,
-	type GuildID,
-	type UserID,
-} from '../../BrandedTypes';
-import type {ChannelOverride, UserGuildSettingsRow} from '../../database/types/UserTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
-import {isUserAdult} from '../../utils/AgeUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {IUserSettingsRepository} from '../repositories/IUserSettingsRepository';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapRelationshipToResponse} from '../UserMappers';
-import {dedupeGuildFolders} from '../utils/GuildFolderUtils';
-import {CustomStatusValidator} from './CustomStatusValidator';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
 
 interface UserAccountSettingsServiceDeps {
 	userAccountRepository: IUserAccountRepository;
@@ -99,8 +99,6 @@ export class UserAccountSettingsService {
 		if (data.status_resets_at !== undefined) updatedRowData.status_resets_at = data.status_resets_at;
 		if (data.status_resets_to !== undefined) updatedRowData.status_resets_to = data.status_resets_to;
 		if (data.theme !== undefined) {
-			if (data.theme !== currentSettings.theme) {
-			}
 			updatedRowData.theme = data.theme;
 		}
 		if (data.locale !== undefined) updatedRowData.locale = data.locale;

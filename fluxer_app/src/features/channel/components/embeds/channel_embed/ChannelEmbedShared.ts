@@ -15,7 +15,6 @@ import {createCalculator, type MediaDimensionCalculator} from '@app/features/ui/
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {EmbedMedia, MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {msg} from '@lingui/core/macro';
 import type React from 'react';
 
 export const logger = new Logger('Embed');
@@ -55,40 +54,6 @@ export interface EmbedMediaRendererProps {
 	isPreview?: boolean;
 }
 
-export const REPOST_DESCRIPTOR = msg({
-	message: 'repost',
-	comment:
-		'Singular external-post stat label on a social post embed (e.g. Twitter/X). Lowercase to appear after the count.',
-});
-export const REPOSTS_DESCRIPTOR = msg({
-	message: 'reposts',
-	comment:
-		'Plural external-post stat label on a social post embed (e.g. Twitter/X). Lowercase to appear after the count.',
-});
-export const QUOTE_DESCRIPTOR = msg({
-	message: 'quote',
-	comment: 'Singular external-post stat label on a social post embed. Lowercase to appear after the count.',
-});
-export const QUOTES_DESCRIPTOR = msg({
-	message: 'quotes',
-	comment: 'Plural external-post stat label on a social post embed. Lowercase to appear after the count.',
-});
-export const LIKE_DESCRIPTOR = msg({
-	message: 'like',
-	comment: 'Singular external-post stat label on a social post embed. Lowercase to appear after the count.',
-});
-export const LIKES_DESCRIPTOR = msg({
-	message: 'likes',
-	comment: 'Plural external-post stat label on a social post embed. Lowercase to appear after the count.',
-});
-export const SAVE_DESCRIPTOR = msg({
-	message: 'save',
-	comment: 'Singular external-post stat label on a social post embed. Lowercase to appear after the count.',
-});
-export const SAVES_DESCRIPTOR = msg({
-	message: 'saves',
-	comment: 'Plural external-post stat label on a social post embed. Lowercase to appear after the count.',
-});
 const URL_CACHE_CAPACITY = 4096;
 const normalizedUrlCache = new Map<string, string | null>();
 const hostnameCache = new Map<string, string | null>();

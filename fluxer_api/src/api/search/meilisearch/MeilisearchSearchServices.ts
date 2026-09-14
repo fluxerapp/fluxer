@@ -1,5 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
+import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {IARSubmission} from '@app/api/report/IReportRepository';
+import {convertToSearchableAuditLog} from '@app/api/search/auditlog/AuditLogSearchSerializer';
+import {convertToSearchableGuild, type GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
+import {resolveDiscoveryContextForIndexing} from '@app/api/search/guild/LazyDiscoveryMigration';
+import {convertToSearchableGuildMember} from '@app/api/search/guild_member/GuildMemberSearchSerializer';
+import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import type {MeilisearchClient} from '@app/api/search/meilisearch/MeilisearchClient';
+import {
+	MeilisearchAuditLogAdapter,
+	MeilisearchGuildAdapter,
+	MeilisearchGuildMemberAdapter,
+	MeilisearchMessageAdapter,
+	MeilisearchReportAdapter,
+	MeilisearchUserAdapter,
+} from '@app/api/search/meilisearch/MeilisearchDomainAdapters';
+import {meiliTermFilter} from '@app/api/search/meilisearch/MeilisearchFilterUtils';
+import {
+	convertMessagesToSearchableMessages,
+	convertToSearchableMessage,
+} from '@app/api/search/message/MessageSearchSerializer';
+import {convertToSearchableReport} from '@app/api/search/report/ReportSearchSerializer';
+import {SearchAdapterServiceBase} from '@app/api/search/SearchAdapterServiceBase';
+import {convertToSearchableUser} from '@app/api/search/user/UserSearchSerializer';
 import type {
 	SearchOptions as SchemaSearchOptions,
 	SearchResult as SchemaSearchResult,
@@ -18,38 +53,6 @@ import type {
 	SearchableUser,
 	UserSearchFilters,
 } from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {AdminAuditLog} from '../../admin/IAdminRepository';
-import type {ChannelID, GuildID, MessageID, ReportID, UserID} from '../../BrandedTypes';
-import type {IGuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {Message} from '../../models/Message';
-import type {User} from '../../models/User';
-import type {IARSubmission} from '../../report/IReportRepository';
-import {convertToSearchableAuditLog} from '../auditlog/AuditLogSearchSerializer';
-import {convertToSearchableGuild, type GuildDiscoveryContext} from '../guild/GuildSearchSerializer';
-import {resolveDiscoveryContextForIndexing} from '../guild/LazyDiscoveryMigration';
-import {convertToSearchableGuildMember} from '../guild_member/GuildMemberSearchSerializer';
-import type {IAuditLogSearchService} from '../IAuditLogSearchService';
-import type {IGuildMemberSearchService} from '../IGuildMemberSearchService';
-import type {IGuildSearchService} from '../IGuildSearchService';
-import type {IMessageSearchService} from '../IMessageSearchService';
-import type {IReportSearchService} from '../IReportSearchService';
-import type {IUserSearchService} from '../IUserSearchService';
-import {convertMessagesToSearchableMessages, convertToSearchableMessage} from '../message/MessageSearchSerializer';
-import {convertToSearchableReport} from '../report/ReportSearchSerializer';
-import {SearchAdapterServiceBase} from '../SearchAdapterServiceBase';
-import {convertToSearchableUser} from '../user/UserSearchSerializer';
-import type {MeilisearchClient} from './MeilisearchClient';
-import {
-	MeilisearchAuditLogAdapter,
-	MeilisearchGuildAdapter,
-	MeilisearchGuildMemberAdapter,
-	MeilisearchMessageAdapter,
-	MeilisearchReportAdapter,
-	MeilisearchUserAdapter,
-} from './MeilisearchDomainAdapters';
-import {meiliTermFilter} from './MeilisearchFilterUtils';
 
 const DEFAULT_HITS_PER_PAGE = 25;
 const DEFAULT_MEMBER_LIMIT = 25;

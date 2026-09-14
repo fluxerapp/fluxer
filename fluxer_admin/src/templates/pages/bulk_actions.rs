@@ -52,10 +52,6 @@ const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
         value: 1 << 0,
     },
     UserFlag {
-        name: "CTP_MEMBER",
-        value: 1 << 1,
-    },
-    UserFlag {
         name: "PARTNER",
         value: 1 << 2,
     },
@@ -151,9 +147,14 @@ const SUSPICIOUS_ACTIVITY_FLAGS: &[&str] = &[
 const GUILD_FEATURES: &[&str] = &[
     "ANIMATED_ICON",
     "ANIMATED_BANNER",
+    "AUDIO_BITRATE_128_KBPS",
+    "AUDIO_BITRATE_256_KBPS",
+    "AUDIO_BITRATE_384_KBPS",
     "BANNER",
     "CLONE_EMOJI_DISABLED",
+    "CLONE_EMOJI_ENABLED",
     "CLONE_STICKER_DISABLED",
+    "CLONE_STICKER_ENABLED",
     "DETACHED_BANNER",
     "INVITE_SPLASH",
     "INVITES_DISABLED",
@@ -178,6 +179,16 @@ const GUILD_FEATURES: &[&str] = &[
     "LARGE_GUILD_OVERRIDE",
     "VERY_LARGE_GUILD",
 ];
+
+const DEPRECATED_GUILD_FEATURES: &[&str] = &["CLONE_EMOJI_DISABLED", "CLONE_STICKER_DISABLED"];
+
+fn guild_feature_label(feature: &str) -> String {
+    if DEPRECATED_GUILD_FEATURES.contains(&feature) {
+        format!("{feature} (deprecated, removal only)")
+    } else {
+        feature.to_owned()
+    }
+}
 
 pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &str) -> Markup {
     let base = &config.base_path;
@@ -205,6 +216,9 @@ pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &
             @if acl::has_permission(admin_acls, acl::BULK_DELETE_USERS) {
                 (bulk_schedule_deletion_section(base, csrf_token))
             }
+            @if acl::has_permission(admin_acls, acl::BULK_DELETE_USER_MESSAGES) {
+                (bulk_delete_user_messages_section(base, csrf_token))
+            }
         }
     };
     admin_layout(config, auth, "Bulk Actions", "bulk-actions", None, content)
@@ -215,6 +229,18 @@ fn flag_checkbox_grid(prefix: &str, flags: &[&str]) -> Markup {
         div class="grid grid-cols-1 gap-3 sm:grid-cols-2" {
             @for flag in flags {
                 (checkbox(prefix, flag, flag, false, true))
+            }
+        }
+    }
+}
+
+fn guild_feature_checkbox_grid(prefix: &str, include_deprecated: bool) -> Markup {
+    html! {
+        div class="grid grid-cols-1 gap-3 sm:grid-cols-2" {
+            @for feature in GUILD_FEATURES {
+                @if include_deprecated || !DEPRECATED_GUILD_FEATURES.contains(feature) {
+                    (checkbox(prefix, feature, &guild_feature_label(feature), false, true))
+                }
             }
         }
     }
@@ -302,13 +328,13 @@ fn bulk_update_guild_features_section(base: &str, csrf_token: &str) -> Markup {
                         p class="font-semibold text-neutral-500 text-xs uppercase tracking-wide mb-2" {
                             "Features to Add"
                         }
-                        (flag_checkbox_grid("add_features[]", GUILD_FEATURES))
+                        (guild_feature_checkbox_grid("add_features[]", false))
                     }
                     div {
                         p class="font-semibold text-neutral-500 text-xs uppercase tracking-wide mb-2" {
                             "Features to Remove"
                         }
-                        (flag_checkbox_grid("remove_features[]", GUILD_FEATURES))
+                        (guild_feature_checkbox_grid("remove_features[]", true))
                     }
                     (form_field_group("Custom features to add", "custom_add_features", false, None,
                         Some("Comma-separated list of custom features not in the standard set."),
@@ -387,4 +413,48 @@ fn bulk_schedule_deletion_section(base: &str, csrf_token: &str) -> Markup {
             }
         },
     )
+}
+
+fn bulk_delete_user_messages_section(base: &str, csrf_token: &str) -> Markup {
+    section_card_simple(
+        "Bulk Delete User Messages",
+        html! {
+            form method="post" action={(base) "/bulk-actions?action=bulk-delete-user-messages"} {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    p class="text-neutral-500 text-sm" {
+                        "Deletes every message authored by each user across all channels. This cannot be undone."
+                    }
+                    (textarea_input("user_ids", "User IDs (one per line)", "123456789\n987654321", "", 5, true))
+                    (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
+                    (form_actions(html! {
+                        (danger_button("Delete All Messages"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn add_grid_offers_only_the_opt_in_clone_features() {
+        let markup = guild_feature_checkbox_grid("add_features[]", false).into_string();
+        assert!(markup.contains(r#"value="CLONE_EMOJI_ENABLED""#));
+        assert!(markup.contains(r#"value="CLONE_STICKER_ENABLED""#));
+        assert!(!markup.contains(r#"value="CLONE_EMOJI_DISABLED""#));
+        assert!(!markup.contains(r#"value="CLONE_STICKER_DISABLED""#));
+    }
+
+    #[test]
+    fn remove_grid_can_clear_the_deprecated_clone_features() {
+        let markup = guild_feature_checkbox_grid("remove_features[]", true).into_string();
+        assert!(markup.contains(r#"value="CLONE_EMOJI_DISABLED""#));
+        assert!(markup.contains(r#"value="CLONE_STICKER_DISABLED""#));
+        assert!(markup.contains("CLONE_EMOJI_DISABLED (deprecated, removal only)"));
+        assert!(markup.contains(r#"value="CLONE_EMOJI_ENABLED""#));
+    }
 }

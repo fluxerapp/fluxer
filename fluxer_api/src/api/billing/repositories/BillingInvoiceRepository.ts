@@ -1,18 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type Stripe from 'stripe';
-import {fetchMany, fetchOne, fetchPage, type PagedQueryResult, upsertOne} from '../../database/CassandraQueryExecution';
-import type {BillingInvoiceRow} from '../../database/types/BillingTypes';
-import {BILLING_INVOICE_COLUMNS} from '../../database/types/BillingTypes';
+import {mapStripeInvoiceToRow} from '@app/api/billing/mappers/StripeToBillingMapper';
+import type {BillingPaymentRepository} from '@app/api/billing/repositories/BillingPaymentRepository';
+import {
+	buildPatchFromRow,
+	executeBillingVersionedUpdate,
+	isExistingNewer,
+	rowsEquivalent,
+} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {
+	fetchMany,
+	fetchOne,
+	fetchPage,
+	type PagedQueryResult,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
+import type {BillingInvoiceRow} from '@app/api/database/types/BillingTypes';
+import {BILLING_INVOICE_COLUMNS} from '@app/api/database/types/BillingTypes';
 import {
 	BillingCustomersByUserId,
 	BillingInvoices,
 	BillingInvoicesByCustomer,
 	BillingInvoicesBySubscription,
-} from '../../Tables';
-import {mapStripeInvoiceToRow} from '../mappers/StripeToBillingMapper';
-import type {BillingPaymentRepository} from './BillingPaymentRepository';
-import {buildPatchFromRow, executeBillingVersionedUpdate, isExistingNewer, rowsEquivalent} from './BillingRepoHelpers';
+} from '@app/api/Tables';
+import type Stripe from 'stripe';
 
 const FETCH_BY_ID = BillingInvoices.selectCql({
 	where: BillingInvoices.where.eq('provider_id'),

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	buildProcessedMediaObject,
+	stripNonJpegImageMetadataForUpload,
+} from '@app/api/infrastructure/StorageObjectHelpers';
 import {describe, expect, it} from 'vitest';
-import {buildProcessedMediaObject, stripNonJpegImageMetadataForUpload} from './StorageObjectHelpers';
 
 const PNG_SIGNATURE = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 

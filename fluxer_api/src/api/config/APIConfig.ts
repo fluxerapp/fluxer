@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
 import type {ResolvedDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
-import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
 export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
@@ -12,6 +13,15 @@ export interface PushProviderAppConfig {
 	topic?: string;
 	environment?: PushProviderEnvironment;
 	projectId?: string;
+}
+
+export interface APICachePurgeConfig {
+	adapter: CachePurgeAdapterName;
+	http: {
+		endpoint: string;
+		token: string;
+		timeoutMs: number;
+	};
 }
 
 interface APIGeoipFilesystemConfig {
@@ -153,7 +163,6 @@ export interface APIConfig {
 			reports: string;
 			harvests: string;
 			downloads: string;
-			static: string;
 		};
 	};
 	s3Downloads: ResolvedDownloadsProvider;
@@ -227,17 +236,29 @@ export interface APIConfig {
 			monthlyUsd?: string;
 			monthlyEur?: string;
 			monthlyBrl?: string;
+			monthlyDkk?: string;
 			monthlyInr?: string;
+			monthlyNok?: string;
 			monthlyPln?: string;
+			monthlySek?: string;
 			monthlyTry?: string;
 			yearlyUsd?: string;
 			yearlyEur?: string;
 			yearlyBrl?: string;
+			yearlyDkk?: string;
 			yearlyInr?: string;
+			yearlyNok?: string;
 			yearlyPln?: string;
+			yearlySek?: string;
 			yearlyTry?: string;
 			gift1MonthUsd?: string;
 			gift1MonthEur?: string;
+			gift1MonthSek?: string;
+			gift1YearSek?: string;
+			gift1MonthDkk?: string;
+			gift1YearDkk?: string;
+			gift1MonthNok?: string;
+			gift1YearNok?: string;
 			gift1MonthBrl?: string;
 			gift1MonthInr?: string;
 			gift1MonthPln?: string;
@@ -249,12 +270,9 @@ export interface APIConfig {
 			gift1YearPln?: string;
 			gift1YearTry?: string;
 		};
+		legacyPrices?: Record<string, Array<string> | undefined>;
 	};
-	bunny: {
-		purgeEnabled: boolean;
-		apiKey?: string;
-		pullZoneId?: number;
-	};
+	cachePurge: APICachePurgeConfig;
 	clamav: {
 		enabled: boolean;
 		host: string;
@@ -280,10 +298,6 @@ export interface APIConfig {
 			email?: string;
 		};
 		bluesky: BlueskyOAuthConfig;
-	};
-	cookie: {
-		domain: string;
-		secure: boolean;
 	};
 	klipy: {
 		apiKey?: string;
@@ -371,15 +385,6 @@ export interface APIConfig {
 		laneName?: APIWorkerLaneName;
 		taskName?: WorkerTaskName;
 		enableCronScheduler?: boolean;
-		enableVoiceReconciliation: boolean;
-		voiceReconciliation: {
-			intervalMs: number | undefined;
-			staggerDelayMs: number | undefined;
-			lockTtlSeconds: number | undefined;
-			cadenceTtlSeconds: number | undefined;
-			gatewayOnlyGraceMs: number | undefined;
-			liveKitOnlyGraceMs: number | undefined;
-		};
 		laneConcurrencyOverrides: {
 			realtime?: number;
 			unfurl?: number;

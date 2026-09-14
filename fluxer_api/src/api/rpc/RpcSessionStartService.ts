@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import {countryRequiresInboundPhoneVerification} from '@app/api/risk/AbusePolicy';
+import {
+	createRpcTimingNode,
+	RpcTimingRecorder,
+	type RpcTimingSteps,
+	startRpcTiming,
+	timeRpcStep,
+	timeRpcStepSync,
+} from '@app/api/rpc/RpcTimings';
+import type {UserData} from '@app/api/rpc/RpcTypes';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	imposePhoneRequirements,
@@ -8,30 +32,6 @@ import {
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
 import type {RpcSessionTimings} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
-import {Config} from '../Config';
-import type {UserRow} from '../database/types/UserTypes';
-import {mapGuildMemberToResponse} from '../guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {IDiscriminatorService} from '../infrastructure/DiscriminatorService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {User} from '../models/User';
-import {countryRequiresInboundPhoneVerification} from '../risk/AbusePolicy';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {PaymentRepository} from '../user/repositories/PaymentRepository';
-import {createPremiumClearPatch, shouldStripExpiredPremium} from '../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import {
-	createRpcTimingNode,
-	RpcTimingRecorder,
-	type RpcTimingSteps,
-	startRpcTiming,
-	timeRpcStep,
-	timeRpcStepSync,
-} from './RpcTimings';
-import type {UserData} from './RpcTypes';
 
 interface SessionStartUserRepository
 	extends Pick<

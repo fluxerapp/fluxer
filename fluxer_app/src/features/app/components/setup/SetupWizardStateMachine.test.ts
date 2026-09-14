@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createSetupWizardSnapshot,
 	type SetupWizardMachineEvent,
 	type SetupWizardSnapshot,
 	selectSetupWizardModel,
 	transitionSetupWizardSnapshot,
-} from './SetupWizardStateMachine';
+} from '@app/features/app/components/setup/SetupWizardStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function transition(snapshot: SetupWizardSnapshot, event: SetupWizardMachineEvent): SetupWizardSnapshot {
 	return transitionSetupWizardSnapshot(snapshot, event);

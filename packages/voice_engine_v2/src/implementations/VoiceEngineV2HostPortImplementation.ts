@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {VoiceEngineV2ExternalEventListener} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import {
+	type VoiceEngineV2Driver,
+	VoiceEngineV2ImplementationBase,
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
 import type {
 	CapabilitiesPort,
 	DevicePort,
@@ -16,8 +21,8 @@ import type {
 	VoiceEngineV2EventSourcePort,
 	VoiceEngineV2HostPorts,
 	VoiceStateIngestionPort,
-} from '../ports';
-import {unsupportedPortError} from '../ports';
+} from '@fluxer/voice_engine_v2/src/ports';
+import {unsupportedPortError} from '@fluxer/voice_engine_v2/src/ports';
 import type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
@@ -40,9 +45,7 @@ import type {
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2Stats,
-} from '../protocol';
-import type {VoiceEngineV2ExternalEventListener} from './VoiceEngineV2ImplementationBase';
-import {type VoiceEngineV2Driver, VoiceEngineV2ImplementationBase} from './VoiceEngineV2ImplementationBase';
+} from '@fluxer/voice_engine_v2/src/protocol';
 
 export class VoiceEngineV2HostPortImplementation extends VoiceEngineV2ImplementationBase {
 	readonly kind = 'native' as const;

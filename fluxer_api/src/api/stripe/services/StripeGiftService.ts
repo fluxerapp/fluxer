@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {type GiftCode, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
+import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {CannotRedeemPlutoniumWithVisionaryError} from '@fluxer/errors/src/domains/payment/CannotRedeemPlutoniumWithVisionaryError';
 import {GiftCodeAlreadyRedeemedError} from '@fluxer/errors/src/domains/payment/GiftCodeAlreadyRedeemedError';
@@ -11,21 +26,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {type GiftCode, mapGiftDurationMonthsToFields} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import * as RandomUtils from '../../utils/RandomUtils';
-import type {ProductInfo} from '../ProductRegistry';
-import type {StripeCheckoutService} from './StripeCheckoutService';
-import type {StripePremiumService} from './StripePremiumService';
-import type {StripeSubscriptionService} from './StripeSubscriptionService';
 
 export class StripeGiftService {
 	constructor(

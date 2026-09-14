@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, createTotpSecret, generateTotpCode} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createAuthenticationResponse,
+	createRegistrationResponse,
+	createWebAuthnDevice,
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createTestAccount, createTotpSecret, generateTotpCode} from './AuthTestUtils';
-import {createAuthenticationResponse, createRegistrationResponse, createWebAuthnDevice} from './WebAuthnTestUtils';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{

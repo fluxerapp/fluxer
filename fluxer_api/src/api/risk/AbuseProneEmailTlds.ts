@@ -4,7 +4,7 @@ import {
 	classifyAccountPolicyEmailTld,
 	isAccountPolicyBlockedRegistrationEmailDomain,
 	isAccountPolicyLowRiskEmailTld,
-} from './AccountPolicyService';
+} from '@app/api/risk/AccountPolicyService';
 
 export enum AbuseProneEmailTldRisk {
 	High = 'high',

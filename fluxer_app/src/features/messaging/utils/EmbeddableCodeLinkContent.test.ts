@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as CodeLinkUtils from '@app/features/messaging/utils/CodeLinkUtils';
+import {extractEmbeddableCodeLinkContent} from '@app/features/messaging/utils/EmbeddableCodeLinkContent';
 import {describe, expect, it} from 'vitest';
-
-import {extractEmbeddableCodeLinkContent} from './EmbeddableCodeLinkContent';
 
 const TEST_LINK_CONFIG: CodeLinkUtils.CodeLinkConfig = {
 	path: 'invite',

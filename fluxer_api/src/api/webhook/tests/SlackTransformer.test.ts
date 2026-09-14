@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {transformSlackWebhookRequest} from '@app/api/webhook/transformers/SlackTransformer';
 import type {SlackWebhookRequest} from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import {describe, expect, it} from 'vitest';
-import {transformSlackWebhookRequest} from '../transformers/SlackTransformer';
 
 describe('Slack Transformer', () => {
 	describe('transformSlackWebhookRequest', () => {

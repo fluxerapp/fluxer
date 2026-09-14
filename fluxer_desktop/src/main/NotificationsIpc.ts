@@ -5,6 +5,7 @@ import {DESKTOP_APP_NAME, LINUX_DESKTOP_ENTRY_ID} from '@electron/common/Desktop
 import {createChildLogger} from '@electron/common/Logger';
 import type {NotificationOptions} from '@electron/common/Types';
 import {getNativeNotificationsMode} from '@electron/main/LaunchOptions';
+import {t} from '@electron/main/MainI18n';
 import {resolveNotificationIcon} from '@electron/main/NotificationIcon';
 import {shouldPlayNotificationSound} from '@electron/main/NotificationState';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
@@ -291,7 +292,7 @@ async function showLinuxNativeNotification(
 			actionIcons: false,
 			...(imageData ? {imageData} : {}),
 		},
-		actions: [{key: 'default', label: 'Open'}],
+		actions: [{key: 'default', label: t('desktop.notifications.open')}],
 	};
 	try {
 		const nativeId = await client.notify(payload);

@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	shouldShowCategoryWhenHidingMutedChannels,
+	shouldShowChannelInCollapsedCategory,
+	shouldShowChannelWhenHidingMutedChannels,
+} from '@app/features/app/components/layout/utils/ChannelListVisibility';
 import {describe, expect, it} from 'vitest';
-import {shouldShowChannelInCollapsedCategory, shouldShowChannelWhenHidingMutedChannels} from './ChannelListVisibility';
 
 describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('keeps muted channels with visible unread state so mentions are findable', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: false,
+				isChannelMuted: true,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: true,
@@ -18,7 +23,8 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('hides muted channels without visible unread state', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: false,
+				isChannelMuted: true,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: false,
@@ -26,10 +32,35 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 		).toBe(false);
 	});
 
+	it('inherits the mute from a muted category', () => {
+		expect(
+			shouldShowChannelWhenHidingMutedChannels({
+				isCategoryMuted: true,
+				isChannelMuted: false,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: false,
+			}),
+		).toBe(false);
+	});
+
+	it('keeps channels of a muted category that have visible unread state', () => {
+		expect(
+			shouldShowChannelWhenHidingMutedChannels({
+				isCategoryMuted: true,
+				isChannelMuted: false,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: true,
+			}),
+		).toBe(true);
+	});
+
 	it('keeps selected and connected muted channels visible', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: true,
+				isChannelMuted: true,
 				isSelected: true,
 				isConnected: false,
 				hasVisibleUnread: false,
@@ -37,7 +68,8 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 		).toBe(true);
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: true,
+				isCategoryMuted: true,
+				isChannelMuted: false,
 				isSelected: false,
 				isConnected: true,
 				hasVisibleUnread: false,
@@ -48,10 +80,40 @@ describe('shouldShowChannelWhenHidingMutedChannels', () => {
 	it('keeps unmuted channels visible', () => {
 		expect(
 			shouldShowChannelWhenHidingMutedChannels({
-				isMuted: false,
+				isCategoryMuted: false,
+				isChannelMuted: false,
 				isSelected: false,
 				isConnected: false,
 				hasVisibleUnread: false,
+			}),
+		).toBe(true);
+	});
+});
+
+describe('shouldShowCategoryWhenHidingMutedChannels', () => {
+	it('keeps a category that has no channels at all', () => {
+		expect(
+			shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: false,
+				hasVisibleChannels: false,
+			}),
+		).toBe(true);
+	});
+
+	it('hides a category whose channels were all filtered out as muted', () => {
+		expect(
+			shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: true,
+				hasVisibleChannels: false,
+			}),
+		).toBe(false);
+	});
+
+	it('keeps a category that still has visible channels', () => {
+		expect(
+			shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: true,
+				hasVisibleChannels: true,
 			}),
 		).toBe(true);
 	});
@@ -63,24 +125,66 @@ describe('shouldShowChannelInCollapsedCategory', () => {
 			shouldShowChannelInCollapsedCategory({
 				isCategoryMuted: false,
 				isSelected: false,
+				isConnected: false,
 				hasVisibleUnread: true,
+				hasMentions: false,
 			}),
 		).toBe(true);
 	});
 
-	it('does not reveal unread channels from muted collapsed categories unless selected', () => {
-		expect(
-			shouldShowChannelInCollapsedCategory({
-				isCategoryMuted: true,
-				isSelected: false,
-				hasVisibleUnread: true,
-			}),
-		).toBe(false);
+	it('keeps selected and connected channels visible without unread state, even in muted categories', () => {
 		expect(
 			shouldShowChannelInCollapsedCategory({
 				isCategoryMuted: true,
 				isSelected: true,
+				isConnected: false,
 				hasVisibleUnread: false,
+				hasMentions: false,
+			}),
+		).toBe(true);
+		expect(
+			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
+				isSelected: false,
+				isConnected: true,
+				hasVisibleUnread: false,
+				hasMentions: false,
+			}),
+		).toBe(true);
+	});
+
+	it('hides read channels in collapsed categories', () => {
+		expect(
+			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: false,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: false,
+				hasMentions: false,
+			}),
+		).toBe(false);
+	});
+
+	it('hides unread channels without mentions in muted collapsed categories', () => {
+		expect(
+			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: true,
+				hasMentions: false,
+			}),
+		).toBe(false);
+	});
+
+	it('keeps mentioned channels reachable in muted collapsed categories', () => {
+		expect(
+			shouldShowChannelInCollapsedCategory({
+				isCategoryMuted: true,
+				isSelected: false,
+				isConnected: false,
+				hasVisibleUnread: true,
+				hasMentions: true,
 			}),
 		).toBe(true);
 	});

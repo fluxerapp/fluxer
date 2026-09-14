@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {screenShareWatchAttemptKey} from '@app/features/voice/components/useScreenShareWatchFailure';
 import {
 	selectVoiceMediaGraphFailure,
 	selectVoiceMediaGraphViewerStreamKeys,
@@ -101,7 +102,7 @@ describe('VoiceMediaGraphTimerScheduler', () => {
 		store.transition({
 			type: 'watch.attemptEnsured',
 			streamKey: STREAM_KEY,
-			attemptKey: `${STREAM_KEY}:1:watch`,
+			attemptKey: screenShareWatchAttemptKey({streamKey: STREAM_KEY, watchGeneration: 1}),
 			startedAt: store.nowMs(),
 		});
 		harness.advance(WATCH_ATTEMPT_TIMEOUT_MS);

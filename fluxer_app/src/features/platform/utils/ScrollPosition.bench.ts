@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {evaluateScrollPinning} from '@app/features/platform/utils/ScrollPosition';
 import {bench, describe} from 'vitest';
-import {evaluateScrollPinning} from './ScrollPosition';
 
 const SCROLL_METRICS = Array.from({length: 100_000}, (_value, index) => ({
 	scrollTop: (index * 37) % 200_000,

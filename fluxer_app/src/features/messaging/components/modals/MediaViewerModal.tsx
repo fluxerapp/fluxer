@@ -523,7 +523,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 			? `${currentItem.naturalWidth}×${currentItem.naturalHeight}`
 			: undefined;
 	const fileName = currentItem.filename || currentItem.originalSrc.split('/').pop()?.split('?')[0] || 'media';
-	const fileSize = currentItem.fileSize != null ? formatFileSize(currentItem.fileSize) : undefined;
+	const fileSize = currentItem.fileSize != null ? formatFileSize(i18n.locale, currentItem.fileSize) : undefined;
 	const expiryInfo =
 		currentItem.expiresAt && currentItem.expiresAt.length > 0
 			? {

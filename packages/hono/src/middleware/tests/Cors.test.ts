@@ -47,6 +47,7 @@ describe('CORS Middleware', () => {
 			});
 			expect(response.status).toBe(200);
 			expect(response.headers.get('Access-Control-Allow-Origin')).toBeNull();
+			expect(response.headers.get('Vary')).toBe('Origin');
 		});
 		test('does not set origin header when no origin header in request', async () => {
 			const app = new Hono();

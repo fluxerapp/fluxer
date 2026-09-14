@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {nextVersion} from '../../database/CassandraTypes';
-import type {DonorRow} from '../../database/types/DonationTypes';
+import {nextVersion} from '@app/api/database/CassandraTypes';
+import type {DonorRow} from '@app/api/database/types/DonationTypes';
 
 export class Donor {
 	readonly email: string;

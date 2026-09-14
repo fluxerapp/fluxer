@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ALL_PERMISSIONS, Permissions} from './ChannelConstants';
+import {ALL_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 
 export function normalizeBotInvitePermissions(requestedPermissions: bigint): bigint {
 	return requestedPermissions & ALL_PERMISSIONS;

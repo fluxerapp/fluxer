@@ -18,7 +18,7 @@ import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import {ScreenShareWatchErrorCode, ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import {scheduleScreenShareDecoderVerification} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
-import {markVideoDecoderRuntimeFailure} from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {markScreenShareDecodeFailure} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
 import type {
 	LocalParticipant,
@@ -29,7 +29,7 @@ import type {
 	RemoteTrackPublication,
 	Room,
 } from 'livekit-client';
-import {ParticipantEvent, RoomEvent, Track} from 'livekit-client';
+import {ConnectionState, ParticipantEvent, RoomEvent, Track} from 'livekit-client';
 
 const logger = new Logger('VoiceRoomEventBinder');
 
@@ -141,10 +141,11 @@ export function bindRoomEvents(
 ): void {
 	const guard = dependencies.connection.createGuardedHandler;
 	const participantSpeakingDisposers = new Map<string, ParticipantSpeakingDisposer>();
-	const screenShareDecoderVerificationTimers = new Map<string, NodeJS.Timeout>();
+	const screenShareDecoderVerificationCancels = new Map<string, () => void>();
 	const remoteTrackLifecycleDisposers = new Map<string, () => void>();
 	let codecNegotiationDisposer: (() => void) | null = null;
 	let screenShareMigrationDisposer: (() => void) | null = null;
+	let screenShareNegotiationBound = false;
 	const remoteTrackLifecycleRoleFor = (pub: RemoteTrackPublication): 'remote-screen-share' | 'remote-camera' | null => {
 		if (pub.kind !== Track.Kind.Video) return null;
 		if (pub.source === Track.Source.ScreenShare) return 'remote-screen-share';
@@ -227,16 +228,16 @@ export function bindRoomEvents(
 	};
 	const clearScreenShareDecoderVerification = (trackSid: string | undefined): void => {
 		if (!trackSid) return;
-		const timer = screenShareDecoderVerificationTimers.get(trackSid);
-		if (!timer) return;
-		clearTimeout(timer);
-		screenShareDecoderVerificationTimers.delete(trackSid);
+		const cancel = screenShareDecoderVerificationCancels.get(trackSid);
+		if (!cancel) return;
+		cancel();
+		screenShareDecoderVerificationCancels.delete(trackSid);
 	};
 	const clearAllScreenShareDecoderVerifications = (): void => {
-		for (const timer of screenShareDecoderVerificationTimers.values()) {
-			clearTimeout(timer);
+		for (const cancel of screenShareDecoderVerificationCancels.values()) {
+			cancel();
 		}
-		screenShareDecoderVerificationTimers.clear();
+		screenShareDecoderVerificationCancels.clear();
 	};
 	const bindCodecNegotiation = (): void => {
 		codecNegotiationDisposer?.();
@@ -254,19 +255,30 @@ export function bindRoomEvents(
 		ScreenSharePublicationMigration.dispose();
 		screenShareMigrationDisposer = null;
 	};
+	const bindScreenShareNegotiation = (): void => {
+		if (screenShareNegotiationBound) return;
+		screenShareNegotiationBound = true;
+		bindCodecNegotiation();
+		bindScreenShareMigration();
+	};
+	const unbindScreenShareNegotiation = (): void => {
+		screenShareNegotiationBound = false;
+		unbindCodecNegotiation();
+		unbindScreenShareMigration();
+	};
 	const scheduleDecoderVerification = (track: RemoteTrack, pub: RemoteTrackPublication): void => {
 		if (pub.source !== Track.Source.ScreenShare || pub.kind !== Track.Kind.Video) return;
 		clearScreenShareDecoderVerification(pub.trackSid);
 		const trackSid = pub.trackSid;
-		screenShareDecoderVerificationTimers.set(
+		screenShareDecoderVerificationCancels.set(
 			trackSid,
 			scheduleScreenShareDecoderVerification(
 				() => track.getRTCStatsReport(),
 				() => {
-					screenShareDecoderVerificationTimers.delete(trackSid);
+					screenShareDecoderVerificationCancels.delete(trackSid);
 				},
 				(failure) => {
-					if (!markVideoDecoderRuntimeFailure(failure.codec, 'screen-share-decode-stalled')) return;
+					if (!markScreenShareDecodeFailure(failure.codec, 'screen-share-decode-stalled')) return;
 					void ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual').catch((error) => {
 						logger.warn('Failed to publish updated codec capabilities after decode stall', {
 							error,
@@ -307,8 +319,7 @@ export function bindRoomEvents(
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 			dependencies.remoteSpeaking.hydrateFromRoom(room);
-			bindCodecNegotiation();
-			bindScreenShareMigration();
+			bindScreenShareNegotiation();
 			dependencies.permissions.applyDeafen(room, getEffectiveAudioState().effectiveDeaf);
 			dependencies.connection.markConnected();
 			await callbacks.onConnected();
@@ -335,8 +346,7 @@ export function bindRoomEvents(
 		guard(attemptId, () => {
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
 			participantSpeakingDisposers.clear();
-			unbindCodecNegotiation();
-			unbindScreenShareMigration();
+			unbindScreenShareNegotiation();
 			clearAllScreenShareDecoderVerifications();
 			clearAllRemoteTrackLifecycleBindings();
 			dependencies.remoteSpeaking.clear();
@@ -610,4 +620,7 @@ export function bindRoomEvents(
 			}
 		}),
 	);
+	if (room.state === ConnectionState.Connected) {
+		guard(attemptId, bindScreenShareNegotiation)();
+	}
 }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildMFALevel} from '@fluxer/constants/src/GuildConstants';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {UserID} from '../../BrandedTypes';
-import type {IUserRepository} from '../../user/IUserRepository';
 
 const ELEVATED_MFA_PERMISSIONS =
 	Permissions.KICK_MEMBERS |

@@ -3,8 +3,12 @@
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import {UploadingAttachment} from '@app/features/messaging/models/UploadingAttachment';
 import {resolveChannelIncomingMessageDecision} from '@app/features/messaging/state/ChannelIncomingMessageStateMachine';
-import {resolveChannelMessagesLoadDecision} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
+import {
+	resolveChannelMessagesLoadDecision,
+	selectChannelMessagesLoadRestoresTrust,
+} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
+import {mergeAscendingById} from '@app/features/messaging/utils/MessagePaginationUtils';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import type {JumpType} from '@fluxer/constants/src/JumpConstants';
 import {JumpTypes} from '@fluxer/constants/src/JumpConstants';
@@ -281,6 +285,8 @@ class MessageBufferSegment {
 	}
 }
 
+let nextLoadGeneration = 0;
+
 export class ChannelMessages {
 	private static readonly channelCache = new Map<string, ChannelMessages>();
 	private static readonly maxChannelsInMemory = 50;
@@ -292,6 +298,7 @@ export class ChannelMessages {
 	jumpDestinationId: string | null = null;
 	jumpDestinationOffset = 0;
 	jumpTicket = 1;
+	loadGeneration = 0;
 	hasJumped = false;
 	landedAtLiveEdge = false;
 	jumpHighlight = true;
@@ -350,6 +357,10 @@ export class ChannelMessages {
 
 	static releaseRetainedChannel(channelId: string): void {
 		ChannelMessages.retainedChannelIds.delete(channelId);
+	}
+
+	static isRetained(channelId: string): boolean {
+		return ChannelMessages.retainedChannelIds.has(channelId);
 	}
 
 	static dropBuffers(channelId: string): void {
@@ -605,9 +616,9 @@ export class ChannelMessages {
 		}, true);
 	}
 
-	merge(records: Array<Message>, prepend = false, clearBuffer = false): ChannelMessages {
+	merge(records: Array<Message>, prepend = false, clearBuffer = false, ordered = false): ChannelMessages {
 		return this.cloneAnd((draft) => {
-			draft.mergeInto(records, prepend, clearBuffer);
+			draft.mergeInto(records, prepend, clearBuffer, ordered);
 		}, true);
 	}
 
@@ -824,6 +835,7 @@ export class ChannelMessages {
 
 	beginLoad(jump?: JumpOptions): ChannelMessages {
 		return this.cloneAnd({
+			loadGeneration: ++nextLoadGeneration,
 			loadingMore: true,
 			hasJumped: jump != null,
 			landedAtLiveEdge: jump?.present ?? false,
@@ -862,16 +874,14 @@ export class ChannelMessages {
 				next = next.merge(unsent);
 			}
 		} else {
-			next = this.merge(records, loadDecision.prepend, true);
+			next = this.merge(records, loadDecision.prepend, true, true);
 			if (loadDecision.trimBottom) {
 				next = next.trimToWindow(true, false);
 			} else if (loadDecision.trimTop) {
 				next = next.trimToWindow(false, true);
 			}
 		}
-		next = next.cloneAnd({
-			ready: true,
-			loadingMore: false,
+		const jumpPatch = {
 			jumpType: jump?.jumpType ?? JumpTypes.ANIMATED,
 			jumpHighlight: jump?.flash ?? false,
 			hasJumped: jump != null,
@@ -882,9 +892,19 @@ export class ChannelMessages {
 			jumpReturnMessageId: jump?.returnToMessageId ?? null,
 			jumpReturnChannelId: jump?.returnToMessageId ? (jump.returnChannelId ?? this.channelId) : null,
 			jumpReturnGuildId: jump?.returnToMessageId ? (jump.returnGuildId ?? null) : null,
+		};
+		const reachesLiveEdge = selectChannelMessagesLoadRestoresTrust({
+			mode: loadDecision.mode,
+			isAfter,
+			hasMoreAfter,
+		});
+		next = next.cloneAnd({
+			ready: true,
+			loadingMore: false,
+			...jumpPatch,
 			hasMoreBefore: loadDecision.preserveHasMoreBefore ? next.hasMoreBefore : hasMoreBefore,
 			hasMoreAfter: loadDecision.preserveHasMoreAfter ? next.hasMoreAfter : hasMoreAfter,
-			cached,
+			cached: reachesLiveEdge ? cached : next.cached || cached,
 			error: false,
 		});
 		return next;
@@ -914,7 +934,7 @@ export class ChannelMessages {
 		this.messageIndex = {};
 	}
 
-	private mergeInto(incoming: Array<Message>, prepend = false, clearSideBuffer = false): void {
+	private mergeInto(incoming: Array<Message>, prepend = false, clearSideBuffer = false, ordered = false): void {
 		const newItems: Array<Message> = [];
 		for (const msg of incoming) {
 			const existing = this.messageIndex[msg.id];
@@ -937,7 +957,11 @@ export class ChannelMessages {
 			buffer.clear();
 		}
 		if (newItems.length === 0) return;
-		this.messageList = prepend ? newItems.concat(this.messageList) : this.messageList.concat(newItems);
+		if (prepend) {
+			this.messageList = newItems.concat(this.messageList);
+			return;
+		}
+		this.messageList = ordered ? mergeAscendingById(this.messageList, newItems) : this.messageList.concat(newItems);
 	}
 
 	private cloneAnd(
@@ -956,6 +980,7 @@ export class ChannelMessages {
 			clone.jumpDestinationId = this.jumpDestinationId;
 			clone.jumpDestinationOffset = this.jumpDestinationOffset;
 			clone.jumpTicket = this.jumpTicket;
+			clone.loadGeneration = this.loadGeneration;
 			clone.hasJumped = this.hasJumped;
 			clone.landedAtLiveEdge = this.landedAtLiveEdge;
 			clone.jumpHighlight = this.jumpHighlight;
@@ -978,6 +1003,7 @@ export class ChannelMessages {
 			clone.jumpDestinationOffset =
 				patch.jumpDestinationOffset !== undefined ? patch.jumpDestinationOffset : this.jumpDestinationOffset;
 			clone.jumpTicket = patch.jumpTicket !== undefined ? patch.jumpTicket : this.jumpTicket;
+			clone.loadGeneration = patch.loadGeneration !== undefined ? patch.loadGeneration : this.loadGeneration;
 			clone.hasJumped = 'hasJumped' in patch ? !!patch.hasJumped : this.hasJumped;
 			clone.landedAtLiveEdge = 'landedAtLiveEdge' in patch ? !!patch.landedAtLiveEdge : this.landedAtLiveEdge;
 			clone.jumpHighlight = 'jumpHighlight' in patch ? !!patch.jumpHighlight : this.jumpHighlight;

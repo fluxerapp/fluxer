@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	getEffectiveVideoLayoutDimensions,
 	hasDifferentAspectRatio,
 	isInlinePlayableVideoSize,
 	resolveVideoLayout,
-} from './VideoDimensionUtils';
+} from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
+import {describe, expect, it} from 'vitest';
 
 describe('getEffectiveVideoLayoutDimensions', () => {
 	it('prefers decoded dimensions over declared upload dimensions', () => {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Store} from '@app/features/voice/engine/Store';
 import {autorun} from 'mobx';
 import {describe, expect, it} from 'vitest';
-import {Store} from './Store';
 
 class TestStore extends Store {
 	bump(): void {

@@ -35,7 +35,7 @@ const DEFAULT_API_ENDPOINTS: Record<DesktopDownloadChannel, string> = {
 	canary: 'https://api.canary.fluxer.app',
 };
 
-interface ParsedLinuxLatestDownloadUrl {
+interface ParsedLinuxDownloadUrl {
 	apiEndpoint: string;
 	channel: DesktopDownloadChannel;
 	arch: LinuxDownloadArch;
@@ -79,7 +79,7 @@ function normalizeApiEndpoint(value: string | null | undefined, channel: Desktop
 	return DEFAULT_API_ENDPOINTS[channel];
 }
 
-function parseLinuxLatestDownloadUrl(value: string | null | undefined): ParsedLinuxLatestDownloadUrl | null {
+function parseLinuxDownloadUrl(value: string | null | undefined): ParsedLinuxDownloadUrl | null {
 	if (!value) {
 		return null;
 	}
@@ -94,7 +94,8 @@ function parseLinuxLatestDownloadUrl(value: string | null | undefined): ParsedLi
 		const platform = segments[dlIndex + 3];
 		const arch = normalizeLinuxDownloadArch(segments[dlIndex + 4]);
 		const version = segments[dlIndex + 5];
-		if (platform !== 'linux' || version !== 'latest') {
+		const format = segments[dlIndex + 6];
+		if (platform !== 'linux' || !version || !format) {
 			return null;
 		}
 		const endpointSegments = segments.slice(0, dlIndex);
@@ -126,7 +127,7 @@ function getLinuxDownloadArchFromText(value: string | null | undefined): LinuxDo
 
 function getLinuxDownloadOptionArch(option: UpdaterDownloadOption): LinuxDownloadArch | null {
 	return (
-		parseLinuxLatestDownloadUrl(option.url)?.arch ??
+		parseLinuxDownloadUrl(option.url)?.arch ??
 		getLinuxDownloadArchFromText(option.suggestedName) ??
 		getLinuxDownloadArchFromText(option.label)
 	);
@@ -144,14 +145,15 @@ function getKnownLinuxManualOption(
 	);
 }
 
-function buildLinuxLatestDownloadUrl(params: {
+function buildLinuxDownloadUrl(params: {
 	apiEndpoint: string;
 	channel: DesktopDownloadChannel;
 	arch: LinuxDownloadArch;
+	versionToken: string;
 	format: LinuxManualDownloadFormat;
 	search: string;
 }): string {
-	return `${params.apiEndpoint}/dl/desktop/${params.channel}/linux/${params.arch}/latest/${params.format}${params.search}`;
+	return `${params.apiEndpoint}/dl/desktop/${params.channel}/linux/${params.arch}/${params.versionToken}/${params.format}${params.search}`;
 }
 
 function getModernProductName(channel: DesktopDownloadChannel): string {
@@ -162,27 +164,30 @@ function getSuggestedName(
 	format: LinuxManualDownloadFormat,
 	channel: DesktopDownloadChannel,
 	arch: LinuxDownloadArch,
-	version: string | null | undefined,
+	versionToken: string,
 ): string {
-	const versionToken = version?.trim() || 'latest';
 	const archToken = LINUX_MANUAL_ARCH_TOKENS[format][arch];
 	const extension = LINUX_MANUAL_FORMAT_EXTENSIONS[format];
 	return `${getModernProductName(channel)}-${versionToken}-linux-${archToken}${extension}`;
 }
 
 export function buildLinuxManualUpdateOptions(input: LinuxManualUpdateOptionsInput): Array<UpdaterDownloadOption> {
-	const parsedUrl = parseLinuxLatestDownloadUrl(input.downloadUrl);
+	const parsedUrl = parseLinuxDownloadUrl(input.downloadUrl);
 	const channel = parsedUrl?.channel ?? normalizeDesktopDownloadChannel(input.channel);
 	const arch = normalizeLinuxDownloadArchOrNull(input.arch) ?? parsedUrl?.arch ?? 'x64';
 	const apiEndpoint = parsedUrl?.apiEndpoint ?? normalizeApiEndpoint(input.apiEndpoint, channel);
 	const search = parsedUrl?.search ?? '';
+	const version = input.version?.trim() ?? '';
+	const hasVersion = /^\d+\.\d+\.\d+$/u.test(version);
+	const versionToken = hasVersion ? version : 'latest';
+	const knownOptions = hasVersion ? (input.knownOptions ?? []) : [];
 	return LINUX_MANUAL_DOWNLOAD_FORMATS.map((format) => {
-		const knownOption = getKnownLinuxManualOption(input.knownOptions ?? [], format, arch);
+		const knownOption = getKnownLinuxManualOption(knownOptions, format, arch);
 		return {
 			format,
 			label: LINUX_MANUAL_FORMAT_LABELS[format],
-			url: buildLinuxLatestDownloadUrl({apiEndpoint, channel, arch, format, search}),
-			suggestedName: knownOption?.suggestedName ?? getSuggestedName(format, channel, arch, input.version),
+			url: buildLinuxDownloadUrl({apiEndpoint, channel, arch, versionToken, format, search}),
+			suggestedName: knownOption?.suggestedName ?? getSuggestedName(format, channel, arch, versionToken),
 			sha256: knownOption?.sha256 ?? null,
 		};
 	});

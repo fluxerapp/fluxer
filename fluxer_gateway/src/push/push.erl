@@ -906,13 +906,15 @@ schedule_eviction() ->
 maybe_warn_vapid_misconfigured(true) ->
     Public = fluxer_gateway_env:get(vapid_public_key),
     Private = fluxer_gateway_env:get(vapid_private_key),
-    case
-        is_binary(Public) andalso is_binary(Private) andalso
-            byte_size(Public) > 0 andalso byte_size(Private) > 0
-    of
-        true ->
-            ok;
-        false ->
+    case {Public, Private} of
+        {Public0, Private0} when
+            is_binary(Public0),
+            is_binary(Private0),
+            byte_size(Public0) > 0,
+            byte_size(Private0) > 0
+        ->
+            warn_unless_vapid_pair_valid(Public0, Private0);
+        _ ->
             logger:error(
                 "Push: push_enabled=true but VAPID keys are missing or empty; "
                 "all web push notifications will be silently dropped"
@@ -921,6 +923,21 @@ maybe_warn_vapid_misconfigured(true) ->
     end;
 maybe_warn_vapid_misconfigured(_) ->
     ok.
+
+-spec warn_unless_vapid_pair_valid(binary(), binary()) -> ok.
+warn_unless_vapid_pair_valid(Public, Private) ->
+    try
+        push_utils:assert_vapid_pair(Public, Private)
+    catch
+        _:Reason ->
+            logger:error(
+                "Push: FLUXER_VAPID_PUBLIC_KEY and FLUXER_VAPID_PRIVATE_KEY are not a "
+                "valid base64url P-256 pair; expected a 65-byte 0x04-prefixed point and "
+                "a 32-byte scalar; all web push notifications will be silently dropped",
+                #{reason => Reason}
+            ),
+            ok
+    end.
 
 -spec env_boolean(atom()) -> boolean().
 env_boolean(Key) ->

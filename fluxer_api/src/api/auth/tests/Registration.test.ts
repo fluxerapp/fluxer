@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {getConfig} from '../../Config';
-import {getInstanceConfigRepository, getUserRepository} from '../../middleware/ServiceSingletons';
-import {torExitListCache} from '../../middleware/TorExitListCache';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createUniqueEmail,
@@ -18,7 +10,15 @@ import {
 	registerUser,
 	titleCaseEmail,
 	type UserMeResponse,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {getConfig} from '@app/api/Config';
+import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {torExitListCache} from '@app/api/middleware/TorExitListCache';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 function bootstrapRegistrationBody(prefix: string): Record<string, unknown> {
 	return {
@@ -128,7 +128,7 @@ describe('Auth registration', () => {
 			await instanceConfigRepository.markAdminBootstrapped();
 			const account = await registerUser(harness, bootstrapRegistrationBody('stalesetupmarker'));
 			await expectUserACLs(account.user_id, []);
-			await createBuilder(harness, account.token).post('/admin/instance-config/get').body({}).execute();
+			await createBuilder(harness, account.token).get('/admin/instance/config').execute();
 		});
 	});
 	it('repairs setup completer admin ACL when bootstrap marker is stale', async () => {
@@ -140,12 +140,12 @@ describe('Auth registration', () => {
 			await expectUserACLs(account.user_id, []);
 
 			await createBuilder(harness, account.token)
-				.post('/admin/instance-config/update')
+				.patch('/admin/instance/config')
 				.body({app_public: {setup: {configured: true}}})
 				.execute();
 
 			await expectUserACLs(account.user_id, [AdminACLs.WILDCARD]);
-			await createBuilder(harness, account.token).post('/admin/instance-config/get').body({}).execute();
+			await createBuilder(harness, account.token).get('/admin/instance/config').execute();
 		});
 	});
 	it('allows emoji global name', async () => {

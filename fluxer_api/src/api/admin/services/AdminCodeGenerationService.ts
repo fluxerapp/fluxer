@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {GiftCodeDurationType, GiftCodeRow} from '../../database/types/PaymentTypes';
-import {mapGiftCodeDurationToMonths} from '../../models/GiftCode';
-import type {IUserRepository} from '../../user/IUserRepository';
-import * as RandomUtils from '../../utils/RandomUtils';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {mapGiftCodeDurationToMonths} from '@app/api/models/GiftCode';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 
 const CODE_LENGTH = 32;
 const MAX_GENERATION_ATTEMPTS = 100;

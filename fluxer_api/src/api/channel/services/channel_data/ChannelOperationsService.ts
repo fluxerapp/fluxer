@@ -1,5 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
+import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {ChannelHelpers} from '@app/api/guild/services/channel/ChannelHelpers';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
+import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
+import {applyProtectedOverwriteBits} from '@app/api/utils/featureUtils';
+import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {VoiceRegionAvailability} from '@app/api/voice/VoiceModel';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
 	ALL_PERMISSIONS,
@@ -7,7 +34,7 @@ import {
 	GUILD_TEXT_BASED_CHANNEL_TYPES,
 	Permissions,
 } from '@fluxer/constants/src/ChannelConstants';
-import {ContentWarningLevel, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {ContentWarningLevel, clampVoiceChannelBitrate, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
@@ -19,33 +46,6 @@ import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPe
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import {ChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {ChannelID, GuildID, RoleID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, createUserID} from '../../../BrandedTypes';
-import type {GuildAuditLogService} from '../../../guild/GuildAuditLogService';
-import {mapGuildToGuildResponse} from '../../../guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import {ChannelHelpers} from '../../../guild/services/channel/ChannelHelpers';
-import {contentModerationService} from '../../../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ILiveKitService} from '../../../infrastructure/ILiveKitService';
-import type {IVoiceRoomStore} from '../../../infrastructure/IVoiceRoomStore';
-import type {IInviteRepository} from '../../../invite/IInviteRepository';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import {ChannelPermissionOverwrite} from '../../../models/ChannelPermissionOverwrite';
-import {deleteChannelMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {serializeChannelForAudit} from '../../../utils/AuditSerializationUtils';
-import {applyProtectedOverwriteBits} from '../../../utils/featureUtils';
-import type {VoiceAvailabilityService} from '../../../voice/VoiceAvailabilityService';
-import type {VoiceRegionAvailability} from '../../../voice/VoiceModel';
-import type {IWebhookRepository} from '../../../webhook/IWebhookRepository';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {ChannelAuthService} from './ChannelAuthService';
-import type {ChannelUtilsService} from './ChannelUtilsService';
 
 export interface ChannelUpdateData {
 	name?: string;
@@ -90,8 +90,20 @@ export class ChannelOperationsService {
 		private rateLimitService: IRateLimitService,
 	) {}
 
-	async getChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<Channel> {
-		const {channel} = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+	async getChannel({
+		userId,
+		channelId,
+		skipNsfwValidation,
+	}: {
+		userId: UserID;
+		channelId: ChannelID;
+		skipNsfwValidation?: boolean;
+	}): Promise<Channel> {
+		const {channel} = await this.channelAuthService.getChannelAuthenticated({
+			userId,
+			channelId,
+			skipNsfwValidation,
+		});
 		return channel;
 	}
 
@@ -127,6 +139,7 @@ export class ChannelOperationsService {
 		const {channel, guild, checkPermission} = await this.channelAuthService.getChannelAuthenticated({
 			userId,
 			channelId,
+			skipNsfwValidation: true,
 		});
 		if (channel.type === ChannelTypes.GROUP_DM) {
 			throw new InvalidChannelTypeError();
@@ -247,13 +260,17 @@ export class ChannelOperationsService {
 				validateCapacity: requestedParentId !== null && requestedParentId !== (channel.parentId ?? null),
 			});
 		}
+		let nextBitrate = channel.bitrate;
+		if (data.bitrate !== undefined && channel.type === ChannelTypes.GUILD_VOICE) {
+			nextBitrate = data.bitrate === null ? null : clampVoiceChannelBitrate(data.bitrate, guild.features ?? []);
+		}
 		const updatedChannelData = {
 			...channel.toRow(),
 			name: channelName,
 			topic: data.topic !== undefined ? data.topic : channel.topic,
 			url: data.url !== undefined && channel.type === ChannelTypes.GUILD_LINK ? data.url : channel.url,
 			parent_id: requestedParentId,
-			bitrate: data.bitrate !== undefined && channel.type === ChannelTypes.GUILD_VOICE ? data.bitrate : channel.bitrate,
+			bitrate: nextBitrate,
 			user_limit:
 				data.user_limit !== undefined && channel.type === ChannelTypes.GUILD_VOICE
 					? data.user_limit
@@ -456,7 +473,11 @@ export class ChannelOperationsService {
 		if (this.voiceAvailabilityService === null) {
 			return [];
 		}
-		const {channel, guild} = await this.channelAuthService.getChannelAuthenticated({userId, channelId});
+		const {channel, guild} = await this.channelAuthService.getChannelAuthenticated({
+			userId,
+			channelId,
+			skipNsfwValidation: true,
+		});
 		if (channel.type !== ChannelTypes.GUILD_VOICE) {
 			throw new InvalidChannelTypeError();
 		}

@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {
+	createFriendship,
+	createGroupDmChannel,
+	type GroupDmChannelResponse,
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createFriendship, createGroupDmChannel, type GroupDmChannelResponse} from './ChannelTestUtils';
 
 const HTTP_TOO_MANY_REQUESTS = 429;
 const TEST_CAPTCHA_TOKEN = 'test-captcha-token';

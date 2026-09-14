@@ -121,6 +121,10 @@ impl UnfurlShard {
     ) -> anyhow::Result<UnfurlResult> {
         let parsed = Url::parse(url_str)?;
 
+        if self.media_proxy.is_own_url(parsed.as_str()) {
+            return Ok(self.resolve_own_media(&parsed, nsfw_mode).await);
+        }
+
         let (fetch_url, matched_resolver_idx) = self.find_transform(&parsed);
 
         let ctx = ResolveContext {
@@ -175,6 +179,25 @@ impl UnfurlShard {
             embeds: Vec::new(),
             cache_ttl_seconds: None,
         })
+    }
+
+    async fn resolve_own_media(&self, url: &Url, nsfw_mode: NsfwMode) -> UnfurlResult {
+        match resolvers::media::build_own_media_embed(&self.media_proxy, url, nsfw_mode).await {
+            Ok(Some(embed)) => self.finalize_result(ResolverResult {
+                embeds: vec![embed],
+            }),
+            Ok(None) => UnfurlResult {
+                embeds: Vec::new(),
+                cache_ttl_seconds: None,
+            },
+            Err(err) => {
+                tracing::warn!(error = %err, url = %url, "own media unfurl failed");
+                UnfurlResult {
+                    embeds: Vec::new(),
+                    cache_ttl_seconds: None,
+                }
+            }
+        }
     }
 
     fn find_transform(&self, url: &Url) -> (Url, Option<usize>) {
@@ -310,7 +333,7 @@ mod tests {
 
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-    const PUBLIC_ENDPOINT_ENV: [&str; 7] = [
+    const PUBLIC_ENDPOINT_ENV: [&str; 8] = [
         "FLUXER_MEDIA_PROXY_ENDPOINT",
         "FLUXER_MEDIA_PROXY_SECRET_KEY",
         "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
@@ -318,6 +341,7 @@ mod tests {
         "FLUXER_STATIC_CDN_ENDPOINT",
         "FLUXER_BASE_DOMAIN",
         "FLUXER_PUBLIC_PORT",
+        "FLUXER_PUBLIC_ORIGIN",
     ];
 
     fn shard_from_env(vars: &[(&str, &str)]) -> UnfurlShard {

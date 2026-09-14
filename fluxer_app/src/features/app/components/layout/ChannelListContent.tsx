@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ChannelItem} from '@app/features/app/components/layout/ChannelItem';
 import channelItemStyles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
@@ -16,12 +17,16 @@ import {NullSpaceDropIndicator} from '@app/features/app/components/layout/NullSp
 import {ScrollIndicatorOverlay} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
 import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {
+	shouldShowCategoryWhenHidingMutedChannels,
 	shouldShowChannelInCollapsedCategory,
 	shouldShowChannelWhenHidingMutedChannels,
 } from '@app/features/app/components/layout/utils/ChannelListVisibility';
 import {createChannelMoveOperation} from '@app/features/app/components/layout/utils/ChannelMoveOperation';
 import {organizeChannels} from '@app/features/app/components/layout/utils/ChannelOrganization';
-import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
+import {
+	type ChannelUnreadState,
+	getChannelUnreadState,
+} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {VoiceParticipantsList} from '@app/features/app/components/layout/VoiceParticipantsList';
 import {
 	type RememberedSkeletonGuildChannelGroup,
@@ -69,7 +74,6 @@ import {observer} from 'mobx-react-lite';
 import type {MotionValue} from 'motion';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useDragLayer} from 'react-dnd';
-import {GenericErrorModal} from '../alerts/GenericErrorModal';
 
 const CATEGORY_FULL_DESCRIPTOR = msg({
 	message: 'Category full',
@@ -333,13 +337,11 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		},
 		[guild],
 	);
-	const hasVisibleUnreadInChannel = (channelId: string): boolean => {
+	const getUnreadStateInChannel = (channelId: string): ChannelUnreadState => {
 		const unreadCount = ReadStates.getUnreadCount(channelId);
 		const hasUnread = ReadStates.hasUnread(channelId);
 		const mentionCount = ReadStates.getMentionCount(channelId);
-		const isMuted =
-			UserGuildSettings.isParentCategoryMuted(guild.id, channelId) ||
-			UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
+		const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, channelId);
 		const channel = Channels.getChannel(channelId);
 		const unreadBadgesLevel = channel
 			? UserGuildSettings.resolvedUnreadBadgesLevel({
@@ -349,7 +351,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 					type: channel.type,
 				})
 			: null;
-		const unreadState = getChannelUnreadState({
+		return getChannelUnreadState({
 			hasUnread,
 			unreadCount,
 			mentionCount,
@@ -357,7 +359,6 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			showFadedUnreadOnMutedChannels,
 			unreadBadgesLevel,
 		});
-		return unreadState.hasVisibleUnread;
 	};
 	const resolvedGroups: Array<ResolvedChannelGroup> = [];
 	for (const group of channelGroups) {
@@ -371,13 +372,15 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		if (hideMutedChannels) {
 			filteredTextChannels = [];
 			for (const ch of group.textChannels) {
-				const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isChannelMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isMuted = isCategoryMuted || isChannelMuted;
 				if (
 					shouldShowChannelWhenHidingMutedChannels({
-						isMuted,
+						isCategoryMuted,
+						isChannelMuted,
 						isSelected: ch.id === selectedChannelInGuildId,
 						isConnected: false,
-						hasVisibleUnread: isMuted && hasVisibleUnreadInChannel(ch.id),
+						hasVisibleUnread: isMuted && getUnreadStateInChannel(ch.id).hasVisibleUnread,
 					})
 				) {
 					filteredTextChannels.push(ch);
@@ -385,13 +388,15 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			}
 			filteredVoiceChannels = [];
 			for (const ch of group.voiceChannels) {
-				const isMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isChannelMuted = UserGuildSettings.isChannelDirectlyMuted(guild.id, ch.id);
+				const isMuted = isCategoryMuted || isChannelMuted;
 				if (
 					shouldShowChannelWhenHidingMutedChannels({
-						isMuted,
+						isCategoryMuted,
+						isChannelMuted,
 						isSelected: ch.id === selectedChannelInGuildId,
 						isConnected: ch.id === connectedChannelId,
-						hasVisibleUnread: isMuted && hasVisibleUnreadInChannel(ch.id),
+						hasVisibleUnread: isMuted && getUnreadStateInChannel(ch.id).hasVisibleUnread,
 					})
 				) {
 					filteredVoiceChannels.push(ch);
@@ -408,11 +413,14 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			const showTextSelected = selectedChannelInGuildId;
 			const showSet = new Set<string>();
 			for (const ch of filteredTextChannels) {
+				const unreadState = getUnreadStateInChannel(ch.id);
 				if (
 					shouldShowChannelInCollapsedCategory({
 						isCategoryMuted,
 						isSelected: ch.id === showTextSelected,
-						hasVisibleUnread: hasVisibleUnreadInChannel(ch.id),
+						isConnected: false,
+						hasVisibleUnread: unreadState.hasVisibleUnread,
+						hasMentions: unreadState.hasMentions,
 					})
 				) {
 					showSet.add(ch.id);
@@ -439,11 +447,14 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 				}
 			}
 			for (const ch of filteredVoiceChannels) {
+				const unreadState = getUnreadStateInChannel(ch.id);
 				if (
 					shouldShowChannelInCollapsedCategory({
 						isCategoryMuted,
 						isSelected: ch.id === selectedChannelInGuildId,
-						hasVisibleUnread: hasVisibleUnreadInChannel(ch.id),
+						isConnected: ch.id === connectedChannelId,
+						hasVisibleUnread: unreadState.hasVisibleUnread,
+						hasMentions: unreadState.hasMentions,
 					})
 				) {
 					voiceSet.add(ch.id);
@@ -471,8 +482,10 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		if (
 			hideMutedChannels &&
 			group.category &&
-			filteredTextChannels.length === 0 &&
-			filteredVoiceChannels.length === 0
+			!shouldShowCategoryWhenHidingMutedChannels({
+				hasChannels: group.textChannels.length > 0 || group.voiceChannels.length > 0,
+				hasVisibleChannels: filteredTextChannels.length > 0 || filteredVoiceChannels.length > 0,
+			})
 		) {
 			continue;
 		}

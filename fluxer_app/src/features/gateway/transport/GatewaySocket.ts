@@ -10,6 +10,15 @@ import {
 } from '@app/features/gateway/transport/GatewayCompression';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import {
+	DISPATCH_FLUSH_DELAY_MS,
+	DISPATCH_IDLE_RETRY_TIMEOUT_MS,
+	DISPATCH_IDLE_TIMEOUT_MS,
+	isCriticalGatewayDispatch,
+	selectGatewayDispatchFlushMode,
+	shouldRetryIdleWait,
+	shouldSkipIdleWait,
+} from '@app/features/gateway/transport/GatewayDispatchScheduling';
+import {
 	formatGatewayReadyTimings,
 	type GatewayTimings,
 	type RpcTimings,
@@ -180,6 +189,8 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	private shouldReconnectImmediately = false;
 	private deferredEmitQueue: Array<() => void> = [];
 	private deferredEmitTimeoutId: number | null = null;
+	private deferredEmitIdleId: number | null = null;
+	private criticalWorkScheduled = false;
 	private payloadDecompressor: GatewayCompression | null = null;
 	private compressionFallbackInProgress = false;
 
@@ -200,15 +211,77 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		this.deferredEmitQueue.push(() => {
 			(this.emit as (event: K, ...args: GatewaySocketEventArgs<K>) => boolean)(event, ...args);
 		});
-		if (this.deferredEmitTimeoutId != null) return;
+		const dispatchType = event === 'dispatch' ? (args[0] as string) : null;
+		this.scheduleDeferredFlush(dispatchType);
+	}
+
+	private scheduleDeferredFlush(dispatchType: string | null): void {
+		if (isCriticalGatewayDispatch(dispatchType)) {
+			this.criticalWorkScheduled = true;
+		}
+		if (selectGatewayDispatchFlushMode(dispatchType) === 'immediate') {
+			this.clearDeferredFlushWork();
+			this.flushDeferredEmits();
+			return;
+		}
+		if (this.hasDeferredFlushWork()) return;
 		this.deferredEmitTimeoutId = window.setTimeout(() => {
 			this.deferredEmitTimeoutId = null;
-			const queue = this.deferredEmitQueue;
-			this.deferredEmitQueue = [];
-			for (const emitFn of queue) {
-				emitFn();
+			if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+				this.flushDeferredEmits();
+				return;
 			}
-		}, 0);
+			this.queueDeferredIdleFlush();
+		}, DISPATCH_FLUSH_DELAY_MS);
+	}
+
+	private queueDeferredIdleFlush(): void {
+		if (shouldSkipIdleWait(this.criticalWorkScheduled, typeof window.requestIdleCallback === 'function')) {
+			this.flushDeferredEmits();
+			return;
+		}
+		this.deferredEmitIdleId = window.requestIdleCallback(
+			(deadline) => {
+				this.deferredEmitIdleId = null;
+				if (!shouldRetryIdleWait(deadline.didTimeout, deadline.timeRemaining())) {
+					this.flushDeferredEmits();
+					return;
+				}
+				this.deferredEmitIdleId = window.requestIdleCallback(
+					() => {
+						this.deferredEmitIdleId = null;
+						this.flushDeferredEmits();
+					},
+					{timeout: DISPATCH_IDLE_RETRY_TIMEOUT_MS},
+				);
+			},
+			{timeout: DISPATCH_IDLE_TIMEOUT_MS},
+		);
+	}
+
+	private hasDeferredFlushWork(): boolean {
+		return this.deferredEmitTimeoutId != null || this.deferredEmitIdleId != null;
+	}
+
+	private clearDeferredFlushWork(): void {
+		if (this.deferredEmitTimeoutId != null) {
+			clearTimeout(this.deferredEmitTimeoutId);
+			this.deferredEmitTimeoutId = null;
+		}
+		if (this.deferredEmitIdleId != null && typeof window.cancelIdleCallback === 'function') {
+			window.cancelIdleCallback(this.deferredEmitIdleId);
+		}
+		this.deferredEmitIdleId = null;
+	}
+
+	private flushDeferredEmits(): void {
+		this.clearDeferredFlushWork();
+		this.criticalWorkScheduled = false;
+		const queue = this.deferredEmitQueue;
+		this.deferredEmitQueue = [];
+		for (const emitFn of queue) {
+			emitFn();
+		}
 	}
 
 	connect(): void {

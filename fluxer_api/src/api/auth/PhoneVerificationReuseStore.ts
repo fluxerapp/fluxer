@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createCipheriv, createHmac, randomBytes, randomUUID} from 'node:crypto';
+import {Logger} from '@app/api/Logger';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
-import {Logger} from '../Logger';
 
 const KEY_STATE_CACHE_KEY = 'phone-verification:reuse-key-state';
 const KEY_ROTATION_LOCK = 'phone-verification-reuse-key-rotation';

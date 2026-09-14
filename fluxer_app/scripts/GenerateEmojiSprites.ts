@@ -2,8 +2,8 @@
 
 import {mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
+import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
 import sharp, {type OverlayOptions} from 'sharp';
-import {convertToCodePoints} from '../src/features/expressions/utils/EmojiCodepointUtils';
 
 const EMOJI_SPRITES = {
 	basePerRow: 42,

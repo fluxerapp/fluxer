@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {HonoApp} from '../../types/HonoEnv';
-import {AdminApiKeyAdminController} from './AdminApiKeyAdminController';
-import {ApplicationAdminController} from './ApplicationAdminController';
-import {ArchiveAdminController} from './ArchiveAdminController';
-import {AssetAdminController} from './AssetAdminController';
-import {AuditLogAdminController} from './AuditLogAdminController';
-import {BanAdminController} from './BanAdminController';
-import {BulkAdminController} from './BulkAdminController';
-import {CodesAdminController} from './CodesAdminController';
-import {DiscoveryAdminController} from './DiscoveryAdminController';
-import {GatewayAdminController} from './GatewayAdminController';
-import {GuildAdminController} from './GuildAdminController';
-import {InstanceConfigAdminController} from './InstanceConfigAdminController';
-import {JobsAdminController} from './JobsAdminController';
-import {LimitConfigAdminController} from './LimitConfigAdminController';
-import {MessageAdminController} from './MessageAdminController';
-import {ReportAdminController} from './ReportAdminController';
-import {SearchAdminController} from './SearchAdminController';
-import {SystemAdminController} from './SystemAdminController';
-import {SystemDmAdminController} from './SystemDmAdminController';
-import {UserAdminController} from './UserAdminController';
-import {VoiceAdminController} from './VoiceAdminController';
+import {AdminApiKeyAdminController} from '@app/api/admin/controllers/AdminApiKeyAdminController';
+import {ApplicationAdminController} from '@app/api/admin/controllers/ApplicationAdminController';
+import {ArchiveAdminController} from '@app/api/admin/controllers/ArchiveAdminController';
+import {AssetAdminController} from '@app/api/admin/controllers/AssetAdminController';
+import {AuditLogAdminController} from '@app/api/admin/controllers/AuditLogAdminController';
+import {BanAdminController} from '@app/api/admin/controllers/BanAdminController';
+import {BulkAdminController} from '@app/api/admin/controllers/BulkAdminController';
+import {CodesAdminController} from '@app/api/admin/controllers/CodesAdminController';
+import {DiscoveryAdminController} from '@app/api/admin/controllers/DiscoveryAdminController';
+import {GatewayAdminController} from '@app/api/admin/controllers/GatewayAdminController';
+import {GuildAdminController} from '@app/api/admin/controllers/GuildAdminController';
+import {InstanceConfigAdminController} from '@app/api/admin/controllers/InstanceConfigAdminController';
+import {JobsAdminController} from '@app/api/admin/controllers/JobsAdminController';
+import {LimitConfigAdminController} from '@app/api/admin/controllers/LimitConfigAdminController';
+import {MessageAdminController} from '@app/api/admin/controllers/MessageAdminController';
+import {ReportAdminController} from '@app/api/admin/controllers/ReportAdminController';
+import {SearchAdminController} from '@app/api/admin/controllers/SearchAdminController';
+import {SystemAdminController} from '@app/api/admin/controllers/SystemAdminController';
+import {SystemDmAdminController} from '@app/api/admin/controllers/SystemDmAdminController';
+import {UserAdminController} from '@app/api/admin/controllers/UserAdminController';
+import {VoiceAdminController} from '@app/api/admin/controllers/VoiceAdminController';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 
 export function registerAdminControllers(app: HonoApp) {
 	AdminApiKeyAdminController(app);

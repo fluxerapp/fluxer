@@ -12,35 +12,14 @@ pub async fn health() -> &'static str {
 }
 
 pub async fn ready(State(state): State<AppState>) -> Response {
-    readiness_report(
-        state.discovery_cache.has_snapshot().await,
-        state.config.invite_meta_enabled,
-        state.invite_meta.get().is_some(),
-    )
-    .into_response()
+    readiness_report(state.discovery_cache.has_snapshot().await).into_response()
 }
 
-fn readiness_report(
-    discovery_cached: bool,
-    invite_meta_configured: bool,
-    invite_meta_connected: bool,
-) -> (StatusCode, String) {
-    let mut degraded = Vec::new();
-    if invite_meta_configured && !invite_meta_connected {
-        degraded.push("invite_meta");
-    }
-    let suffix = if degraded.is_empty() {
-        String::new()
-    } else {
-        format!(" (degraded: {})", degraded.join(", "))
-    };
+fn readiness_report(discovery_cached: bool) -> (StatusCode, &'static str) {
     if discovery_cached {
-        (StatusCode::OK, format!("OK{suffix}"))
+        (StatusCode::OK, "OK")
     } else {
-        (
-            StatusCode::SERVICE_UNAVAILABLE,
-            format!("NOT READY: discovery{suffix}"),
-        )
+        (StatusCode::SERVICE_UNAVAILABLE, "NOT READY: discovery")
     }
 }
 
@@ -55,7 +34,7 @@ mod tests {
     use axum::http::{HeaderValue, Request as HttpRequest, header};
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
-    use std::sync::{Arc, OnceLock};
+    use std::sync::Arc;
     use tower::ServiceExt;
 
     const DISCOVERY_BODY: &str = r#"{"api_code_version":"proxy-test"}"#;
@@ -77,9 +56,8 @@ mod tests {
         format!("http://{addr}/")
     }
 
-    async fn probe_state(invite_meta_enabled: bool) -> AppState {
+    async fn probe_state() -> AppState {
         let mut config = AppProxyConfig::from_env();
-        config.invite_meta_enabled = invite_meta_enabled;
         config.discovery_upstream_url = spawn_discovery_origin().await;
         let csp = Arc::new(
             crate::csp::CompiledCspPolicy::from_config(&config)
@@ -98,7 +76,6 @@ mod tests {
                 trust_client_ip_header: false,
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
-            invite_meta: Arc::new(OnceLock::new()),
             index_html: None,
             budgets: crate::state::AppProxyBudgets::default(),
         }
@@ -131,7 +108,7 @@ mod tests {
 
     #[tokio::test]
     async fn liveness_stays_constant_while_the_proxy_cannot_serve() {
-        let state = probe_state(false).await;
+        let state = probe_state().await;
         assert_eq!(
             probe(state, "/_health").await,
             (StatusCode::OK, "OK".to_owned())
@@ -140,7 +117,7 @@ mod tests {
 
     #[tokio::test]
     async fn readiness_fails_while_the_discovery_cache_is_empty() {
-        let state = probe_state(false).await;
+        let state = probe_state().await;
         let (status, body) = probe(state, "/_ready").await;
         assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
         assert!(body.contains("discovery"), "{body}");
@@ -148,7 +125,7 @@ mod tests {
 
     #[tokio::test]
     async fn readiness_passes_once_a_discovery_snapshot_is_cached() {
-        let state = probe_state(false).await;
+        let state = probe_state().await;
         warm_discovery(&state).await;
         assert_eq!(
             probe(state, "/_ready").await,
@@ -156,48 +133,12 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn readiness_survives_a_configured_invite_resolver_that_never_connects() {
-        let state = probe_state(true).await;
-        warm_discovery(&state).await;
-        let (status, body) = probe(state, "/_ready").await;
-        assert_eq!(status, StatusCode::OK);
-        assert!(body.contains("invite_meta"), "{body}");
-    }
-
-    #[tokio::test]
-    async fn an_empty_discovery_cache_fails_readiness_even_while_invite_metadata_is_degraded() {
-        let state = probe_state(true).await;
-        let (status, body) = probe(state, "/_ready").await;
-        assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
-        assert!(body.contains("discovery"), "{body}");
-        assert!(body.contains("invite_meta"), "{body}");
-    }
-
     #[test]
-    fn invite_metadata_is_reported_as_degraded_instead_of_gating_readiness() {
-        assert_eq!(readiness_report(true, false, false).0, StatusCode::OK);
+    fn readiness_tracks_only_the_discovery_snapshot() {
+        assert_eq!(readiness_report(true), (StatusCode::OK, "OK"));
         assert_eq!(
-            readiness_report(true, true, true),
-            (StatusCode::OK, "OK".to_owned())
-        );
-        assert_eq!(
-            readiness_report(true, true, false),
-            (StatusCode::OK, "OK (degraded: invite_meta)".to_owned())
-        );
-        assert_eq!(
-            readiness_report(false, false, false),
-            (
-                StatusCode::SERVICE_UNAVAILABLE,
-                "NOT READY: discovery".to_owned()
-            )
-        );
-        assert_eq!(
-            readiness_report(false, true, false),
-            (
-                StatusCode::SERVICE_UNAVAILABLE,
-                "NOT READY: discovery (degraded: invite_meta)".to_owned()
-            )
+            readiness_report(false),
+            (StatusCode::SERVICE_UNAVAILABLE, "NOT READY: discovery")
         );
     }
 }

@@ -5,43 +5,13 @@ import {AuditLogActionTypeSchema} from '@fluxer/schema/src/primitives/AuditLogVa
 import {describe, expect, it} from 'vitest';
 
 describe('AuditLogActionTypeSchema', () => {
-	it('accepts valid audit log action types', () => {
-		const result = AuditLogActionTypeSchema.safeParse(AuditLogActionType.GUILD_UPDATE);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(AuditLogActionType.GUILD_UPDATE);
-		}
+	it.each(
+		Object.values(AuditLogActionType).filter((value) => typeof value === 'number'),
+	)('accepts registered action %i', (value) => {
+		expect(AuditLogActionTypeSchema.parse(value)).toBe(value);
 	});
-	it('accepts channel action types', () => {
-		const result = AuditLogActionTypeSchema.safeParse(AuditLogActionType.CHANNEL_CREATE);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(AuditLogActionType.CHANNEL_CREATE);
-		}
-	});
-	it('accepts member action types', () => {
-		const result = AuditLogActionTypeSchema.safeParse(AuditLogActionType.MEMBER_KICK);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(AuditLogActionType.MEMBER_KICK);
-		}
-	});
-	it('accepts role action types', () => {
-		const result = AuditLogActionTypeSchema.safeParse(AuditLogActionType.ROLE_CREATE);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(AuditLogActionType.ROLE_CREATE);
-		}
-	});
-	it('accepts message action types', () => {
-		const result = AuditLogActionTypeSchema.safeParse(AuditLogActionType.MESSAGE_DELETE);
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(AuditLogActionType.MESSAGE_DELETE);
-		}
-	});
-	it('rejects non-numeric values', () => {
-		const result = AuditLogActionTypeSchema.safeParse('invalid');
-		expect(result.success).toBe(false);
+
+	it.each([0, 9, 999, -1, 1.5, '1', 'GUILD_UPDATE', null])('rejects unknown or nonnumeric action %j', (value) => {
+		expect(AuditLogActionTypeSchema.safeParse(value).success).toBe(false);
 	});
 });

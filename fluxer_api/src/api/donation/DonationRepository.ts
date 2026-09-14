@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '../database/CassandraQueryExecution';
-import {Db, type PatchObject} from '../database/CassandraTypes';
-import {executeVersionedUpdate} from '../database/CassandraVersionedUpdate';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type PatchObject} from '@app/api/database/CassandraTypes';
+import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {
 	DonorByStripeCustomerIdRow,
 	DonorByStripeSubscriptionIdRow,
 	DonorMagicLinkTokenByEmailRow,
 	DonorMagicLinkTokenRow,
 	DonorRow,
-} from '../database/types/DonationTypes';
+} from '@app/api/database/types/DonationTypes';
 import {
 	DonorMagicLinkTokens,
 	DonorMagicLinkTokensByEmail,
 	Donors,
 	DonorsByStripeCustomerId,
 	DonorsByStripeSubscriptionId,
-} from './DonationTables';
-import {IDonationRepository} from './IDonationRepository';
-import {Donor} from './models/Donor';
-import {DonorMagicLinkToken} from './models/DonorMagicLinkToken';
+} from '@app/api/donation/DonationTables';
+import {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import {Donor} from '@app/api/donation/models/Donor';
+import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
 
 const FETCH_DONOR_BY_EMAIL_QUERY = Donors.selectCql({
 	where: Donors.where.eq('email'),

@@ -5,12 +5,16 @@ import {
 	transitionVoiceMediaGraph,
 	type VoiceMediaGraphSnapshot,
 } from '@app/features/voice/engine/VoiceMediaGraph';
-import {selectVoiceMediaGraphStreamTileState} from '@app/features/voice/engine/VoiceMediaGraphTileState';
+import {
+	selectVoiceMediaGraphStreamTileState,
+	VOICE_MEDIA_GRAPH_FIRST_FRAME_RECOVERY_VISIBLE_MS,
+} from '@app/features/voice/engine/VoiceMediaGraphTileState';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {describe, expect, it} from 'vitest';
 
 const STREAM_KEY = 'dm:channel-a:connection-a';
 const PARTICIPANT_IDENTITY = 'user_2_connection-a';
+const FAILURE_REPORTED_AT = 300;
 
 const target = {
 	streamKey: STREAM_KEY,
@@ -40,6 +44,24 @@ function attach(graph: VoiceMediaGraphSnapshot): VoiceMediaGraphSnapshot {
 		enabled: true,
 		quality: 'high',
 	});
+}
+
+function reportFailure(graph: VoiceMediaGraphSnapshot, code: number, reason: string): VoiceMediaGraphSnapshot {
+	return transitionVoiceMediaGraph(graph, {
+		type: 'failure.reported',
+		failure: {
+			code,
+			reason,
+			reportedAt: FAILURE_REPORTED_AT,
+			streamKey: STREAM_KEY,
+			participantIdentity: PARTICIPANT_IDENTITY,
+			source: 'screen_share',
+		},
+	});
+}
+
+function watchedWithFailure(code: number, reason: string): VoiceMediaGraphSnapshot {
+	return reportFailure(attach(subscribe(createVoiceMediaGraphSnapshot(), true)), code, reason);
 }
 
 describe('selectVoiceMediaGraphStreamTileState', () => {
@@ -138,6 +160,51 @@ describe('selectVoiceMediaGraphStreamTileState', () => {
 		});
 		graph = attach(graph);
 		expect(selectVoiceMediaGraphStreamTileState(graph, target)).toBe('subscribedAwaitingFrame');
+	});
+
+	it('returns recovering while a first-frame timeout still has recovery attempts left', () => {
+		const graph = watchedWithFailure(-2303, 'first-frame-timeout');
+		expect(
+			selectVoiceMediaGraphStreamTileState(graph, target, {
+				hasRecoveryBudget: true,
+				nowMs: FAILURE_REPORTED_AT + 1000,
+			}),
+		).toBe('recovering');
+	});
+
+	it('returns failed once the first-frame recovery budget is spent', () => {
+		const graph = watchedWithFailure(-2303, 'first-frame-timeout');
+		expect(
+			selectVoiceMediaGraphStreamTileState(graph, target, {
+				hasRecoveryBudget: false,
+				nowMs: FAILURE_REPORTED_AT + 1000,
+			}),
+		).toBe('failed');
+	});
+
+	it('returns failed once a first-frame timeout has been on screen for the visible cap', () => {
+		const graph = watchedWithFailure(-2303, 'first-frame-timeout');
+		expect(
+			selectVoiceMediaGraphStreamTileState(graph, target, {
+				hasRecoveryBudget: true,
+				nowMs: FAILURE_REPORTED_AT + VOICE_MEDIA_GRAPH_FIRST_FRAME_RECOVERY_VISIBLE_MS,
+			}),
+		).toBe('failed');
+	});
+
+	it('returns failed for a first-frame timeout when the caller tracks no recovery', () => {
+		const graph = watchedWithFailure(-2303, 'first-frame-timeout');
+		expect(selectVoiceMediaGraphStreamTileState(graph, target)).toBe('failed');
+	});
+
+	it('keeps every other failure code failed while recovery attempts remain', () => {
+		const graph = watchedWithFailure(-2202, 'remote-track-subscription-failed');
+		expect(
+			selectVoiceMediaGraphStreamTileState(graph, target, {
+				hasRecoveryBudget: true,
+				nowMs: FAILURE_REPORTED_AT + 1000,
+			}),
+		).toBe('failed');
 	});
 
 	it('returns watchDesired for entry-less streams and idle after the watch ends', () => {

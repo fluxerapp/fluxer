@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
 import {RICH_EMBED_DESCRIPTION_MAX_LENGTH} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
 import {describe, expect, it} from 'vitest';
-import {transformInstatusWebhook} from '../transformers/InstatusTransformer';
 
 function createMeta(): InstatusWebhook['meta'] {
 	return {unsubscribe: 'https://fluxerstatus.com/unsubscribe?id=1&token=abc', documentation: ''};
@@ -78,6 +78,31 @@ describe('Instatus transformer', () => {
 		it('returns null when the incident has no name', () => {
 			const payload: InstatusWebhook = {meta: createMeta(), page: createPage(), incident: {status: 'INVESTIGATING'}};
 			expect(transformInstatusWebhook(payload)).toBeNull();
+		});
+
+		it('falls through to the component update when the incident has no name', () => {
+			const payload: InstatusWebhook = {
+				meta: createMeta(),
+				page: createPage(),
+				incident: {id: 'inc_1', status: 'INVESTIGATING'},
+				component_update: {created_at: '2026-07-06T11:00:00.000Z', new_status: 'MAJOROUTAGE', component_id: 'c_1'},
+				component: {id: 'c_1', name: 'API', status: 'MAJOROUTAGE'},
+			};
+			const embed = transformInstatusWebhook(payload);
+			expect(embed?.title).toBe('API - major outage');
+			expect(embed?.color).toBe(0xe23c39);
+		});
+
+		it('falls through to the maintenance when the incident has no name', () => {
+			const payload: InstatusWebhook = {
+				meta: createMeta(),
+				page: createPage(),
+				incident: {id: 'inc_1', status: 'INVESTIGATING'},
+				maintenance: {name: 'Database upgrade', status: 'INPROGRESS'},
+			};
+			const embed = transformInstatusWebhook(payload);
+			expect(embed?.title).toBe('Database upgrade');
+			expect(embed?.color).toBe(0x3b82f6);
 		});
 
 		it('appends "Backfilled" to the footer when the incident is backfilled', () => {

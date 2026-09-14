@@ -15,7 +15,7 @@ import type {
 	SuspiciousIpResult,
 	UserAgentResult,
 	VelocityResult,
-} from './RiskTypes';
+} from '@app/api/risk/RiskTypes';
 
 export interface RiskToolbox {
 	analyzeEmailSyntax(args: {email: string}): Promise<EmailSyntaxResult>;

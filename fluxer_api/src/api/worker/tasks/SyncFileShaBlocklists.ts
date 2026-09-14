@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '../../constants/ContentModeration';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const MALWARE_BAZAAR_SHA256_URL = 'https://bazaar.abuse.ch/export/txt/sha256/recent/';
 const SHA256_RE = /^[0-9a-fA-F]{64}$/;
@@ -15,7 +15,10 @@ const syncFileShaBlocklists: WorkerTaskHandler = async (_payload, helpers) => {
 	let added = 0;
 	try {
 		const res = await fetch(MALWARE_BAZAAR_SHA256_URL, {signal: AbortSignal.timeout(120000)});
-		if (!res.ok) throw new Error(`HTTP ${res.status}`);
+		if (!res.ok) {
+			FetchUtils.discardResponseBody(res.body, res.status);
+			throw new Error(`HTTP ${res.status}`);
+		}
 		const text = await FetchUtils.streamToStringWithLimit(res.body, {
 			maxBytes: EXTERNAL_RESPONSE_LIMITS.fileBlocklistBytes,
 			headers: res.headers,

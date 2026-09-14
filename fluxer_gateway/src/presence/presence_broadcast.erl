@@ -101,12 +101,12 @@ dispatch_initial_presences(Presences, State) ->
         SessionPids
     ).
 
--spec dispatch_to_all_sessions(atom(), map(), state()) -> ok.
+-spec dispatch_to_all_sessions(atom(), map() | list(), state()) -> ok.
 dispatch_to_all_sessions(EventAtom, Data, State) ->
     SessionPids = presence_connect:collect_session_pids(State),
     dispatch_with_backpressure(SessionPids, EventAtom, Data).
 
--spec dispatch_with_backpressure([pid()], atom(), map()) -> ok.
+-spec dispatch_with_backpressure([pid()], atom(), map() | list()) -> ok.
 dispatch_with_backpressure(SessionPids, EventAtom, Data) ->
     Msg = {dispatch, EventAtom, Data},
     lists:foreach(

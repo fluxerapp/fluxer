@@ -1,22 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {User} from '@app/api/models/User';
+import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
+import {setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
+import {
+	createCurrentBehaviorTestAccountPolicyEvaluator,
+	TEST_POLICY_CONTACT_DOMAIN,
+	TEST_POLICY_CONTACT_SUBDOMAIN,
+} from '@app/api/test/AccountPolicyTestEvaluator';
+import {
+	checkIsPremium,
+	getEffectivePremiumUntil,
+	getEffectiveSuspiciousFlags,
+	getRequiredActions,
+} from '@app/api/user/UserHelpers';
 import {
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	imposePhoneRequirements,
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
 	PremiumFlags,
 	SuspiciousActivityFlags,
 	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import type {User} from '../models/User';
-import {setInjectedAccountPolicyEvaluator} from '../risk/AccountPolicyService';
-import {setCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
-import {
-	createCurrentBehaviorTestAccountPolicyEvaluator,
-	TEST_POLICY_CONTACT_DOMAIN,
-	TEST_POLICY_CONTACT_SUBDOMAIN,
-} from '../test/AccountPolicyTestEvaluator';
-import {checkIsPremium, getEffectivePremiumUntil, getEffectiveSuspiciousFlags, getRequiredActions} from './UserHelpers';
 
 function createUser(
 	overrides: Partial<Pick<User, 'email' | 'emailVerified' | 'hasVerifiedPhone' | 'suspiciousActivityFlags'>> = {},
@@ -102,6 +108,41 @@ describe('deferred phone gate marker', () => {
 		const imposed = imposePhoneRequirements(deferred, SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
 		expect(imposed & DEFERRED_PHONE_ON_COMMUNITY_JOIN).not.toBe(0);
 		expect(getRequiredActions(createUser({suspiciousActivityFlags: imposed}))).toEqual(['REQUIRE_VERIFIED_EMAIL']);
+	});
+	it('revokes escape eligibility once another subsystem imposes the phone requirement directly', () => {
+		const promoted = SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | PHONE_GATE_PROMOTED_FROM_DEFERRAL;
+		const imposed = imposePhoneRequirements(promoted, SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE);
+		expect(imposed & PHONE_GATE_PROMOTED_FROM_DEFERRAL).toBe(0);
+		expect(imposed & DEFERRED_PHONE_ON_COMMUNITY_JOIN).toBe(0);
+		expect(getRequiredActions(createUser({suspiciousActivityFlags: imposed}))).toEqual(['REQUIRE_REVERIFIED_PHONE']);
+	});
+	it('keeps escape eligibility when a non-phone requirement is imposed', () => {
+		const promoted = SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | PHONE_GATE_PROMOTED_FROM_DEFERRAL;
+		const imposed = imposePhoneRequirements(promoted, SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
+		expect(imposed & PHONE_GATE_PROMOTED_FROM_DEFERRAL).not.toBe(0);
+		expect(getRequiredActions(createUser({suspiciousActivityFlags: imposed}))).toEqual([
+			'REQUIRE_VERIFIED_EMAIL',
+			'REQUIRE_VERIFIED_PHONE',
+		]);
+	});
+	it('keeps both bookkeeping bits when a non-phone requirement is imposed on a still-deferred account', () => {
+		const deferred =
+			SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
+			DEFERRED_PHONE_ON_COMMUNITY_JOIN |
+			PHONE_GATE_PROMOTED_FROM_DEFERRAL;
+		const imposed = imposePhoneRequirements(deferred, SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
+		expect(imposed & DEFERRED_PHONE_ON_COMMUNITY_JOIN).not.toBe(0);
+		expect(imposed & PHONE_GATE_PROMOTED_FROM_DEFERRAL).not.toBe(0);
+	});
+	it('never turns the promotion bit into a requirement or an enforceable flag of its own', () => {
+		const promotedOnly = createUser({suspiciousActivityFlags: PHONE_GATE_PROMOTED_FROM_DEFERRAL});
+		expect(getRequiredActions(promotedOnly)).toEqual([]);
+		expect(getEffectiveSuspiciousFlags(promotedOnly)).toBe(0);
+		const promoted = createUser({
+			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | PHONE_GATE_PROMOTED_FROM_DEFERRAL,
+		});
+		expect(getRequiredActions(promoted)).toEqual(['REQUIRE_VERIFIED_PHONE']);
+		expect(getEffectiveSuspiciousFlags(promoted)).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE);
 	});
 	it('yields no enforceable requirement for an account without an email, so the gate must not promote it', () => {
 		const user = createUser({

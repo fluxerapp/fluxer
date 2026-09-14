@@ -15,9 +15,9 @@ members = [
 	"fluxer_users",
 	"fluxer_unfurl",
 	"packages/markdown_parser/rust",
+	"fluxer_recon",
 ]
 exclude = [
-	"fluxer_marketing",
 	"packages/markdown_parser/rust/fuzz",
 ]
 resolver = "2"

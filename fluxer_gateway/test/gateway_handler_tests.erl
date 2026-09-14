@@ -13,6 +13,39 @@ websocket_info_session_reconnect_sends_reconnect_then_close_test() ->
         <<"Session drain requested; reconnect to continue">>
     ).
 
+websocket_info_dispatch_list_payload_emits_frame_test() ->
+    Decoded = decode_dispatch_frame(
+        gateway_handler:websocket_info(
+            {dispatch, user_pinned_dms_update, [<<"1">>, <<"2">>], 1}, new_json_state()
+        )
+    ),
+    ?assertEqual(<<"USER_PINNED_DMS_UPDATE">>, maps:get(<<"t">>, Decoded)),
+    ?assertEqual([<<"1">>, <<"2">>], maps:get(<<"d">>, Decoded)),
+    ?assertEqual(1, maps:get(<<"s">>, Decoded)).
+
+websocket_info_sessions_replace_list_payload_emits_frame_test() ->
+    Sessions = [
+        #{<<"session_id">> => <<"abc">>, <<"status">> => <<"online">>},
+        #{<<"session_id">> => <<"def">>, <<"status">> => <<"idle">>}
+    ],
+    Decoded = decode_dispatch_frame(
+        gateway_handler:websocket_info(
+            {dispatch, sessions_replace, Sessions, 7}, new_json_state()
+        )
+    ),
+    ?assertEqual(<<"SESSIONS_REPLACE">>, maps:get(<<"t">>, Decoded)),
+    ?assertEqual(Sessions, maps:get(<<"d">>, Decoded)),
+    ?assertEqual(7, maps:get(<<"s">>, Decoded)).
+
+websocket_info_empty_list_payload_emits_json_array_test() ->
+    Decoded = decode_dispatch_frame(
+        gateway_handler:websocket_info(
+            {dispatch, webauthn_credentials_update, [], 3}, new_json_state()
+        )
+    ),
+    ?assertEqual(<<"WEBAUTHN_CREDENTIALS_UPDATE">>, maps:get(<<"t">>, Decoded)),
+    ?assertEqual([], maps:get(<<"d">>, Decoded)).
+
 start_session_with_drain_guard_holds_during_drain_test() ->
     Request = #{},
     assert_pending_identify(
@@ -82,6 +115,17 @@ handle_session_start_result_server_error_closes_with_unknown_error_test() ->
             {error, {server_error, 500}}, State
         ),
     ?assertEqual(constants:close_code_to_num(unknown_error), CloseCode).
+
+handle_session_start_result_unknown_reason_closes_failed_to_start_test() ->
+    State = (gateway_handler:new_state())#{
+        version => 1, encoding => json, compress_ctx => gateway_compress:new_context(none)
+    },
+    {[{close, CloseCode, Reason}], _NewState} =
+        gateway_handler_identify:handle_session_start_result(
+            {error, something_unmapped}, State
+        ),
+    ?assertEqual(constants:close_code_to_num(unknown_error), CloseCode),
+    ?assertEqual(<<"Failed to start session">>, Reason).
 
 websocket_init_schedules_tokened_heartbeat_timer_test() ->
     {[{text, _Frame}], State} = gateway_handler:websocket_init(new_json_state()),
@@ -407,30 +451,32 @@ validate_identify_data_rejects_invalid_shard_test() ->
     ).
 
 handle_identify_runs_identify_rate_check_at_zero_rollout_test() ->
-    session_abuse_protection:ensure_tables(),
-    OldConfig = gateway_rollout_config:get(),
-    IP = unique_test_peer_ip(<<"zero-rollout-identify">>),
-    try
-        persistent_term:put(gateway_rollout_config, OldConfig#{
-            <<"session_rollout_percentage">> => 0
-        }),
-        lists:foreach(
-            fun(_) ->
-                ?assertEqual(ok, session_abuse_protection:check_identify_rate(IP))
-            end,
-            lists:seq(1, ?TEST_IDENTIFY_MAX_PER_IP - 1)
-        ),
-        {ok, HeldState} = gateway_handler_identify:handle_identify(
-            valid_identify_data(#{}), IP, new_json_state()
-        ),
-        cancel_pending_identify_timer(HeldState),
-        ?assertEqual(
-            {error, identify_rate_limited},
-            session_abuse_protection:check_identify_rate(IP)
-        )
-    after
-        persistent_term:put(gateway_rollout_config, OldConfig)
-    end.
+    with_rate_limits_enabled(fun() ->
+        session_abuse_protection:ensure_tables(),
+        OldConfig = gateway_rollout_config:get(),
+        IP = unique_test_peer_ip(<<"zero-rollout-identify">>),
+        try
+            persistent_term:put(gateway_rollout_config, OldConfig#{
+                <<"session_rollout_percentage">> => 0
+            }),
+            lists:foreach(
+                fun(_) ->
+                    ?assertEqual(ok, session_abuse_protection:check_identify_rate(IP))
+                end,
+                lists:seq(1, ?TEST_IDENTIFY_MAX_PER_IP - 1)
+            ),
+            {ok, HeldState} = gateway_handler_identify:handle_identify(
+                valid_identify_data(#{}), IP, new_json_state()
+            ),
+            cancel_pending_identify_timer(HeldState),
+            ?assertEqual(
+                {error, identify_rate_limited},
+                session_abuse_protection:check_identify_rate(IP)
+            )
+        after
+            persistent_term:put(gateway_rollout_config, OldConfig)
+        end
+    end).
 
 handle_session_start_result_invalid_shard_closes_4010_test() ->
     {[{close, CloseCode, _Reason}], _NewState} =
@@ -485,6 +531,13 @@ valid_identify_data(Extra) ->
         },
         Extra
     ).
+
+decode_dispatch_frame(Result) ->
+    {[Frame], _NewState} = Result,
+    {_FrameType, EncodedFrame} = Frame,
+    {ok, DecodedFrame} = gateway_codec:decode(EncodedFrame, json),
+    ?assertEqual(constants:opcode_to_num(dispatch), maps:get(<<"op">>, DecodedFrame)),
+    DecodedFrame.
 
 assert_reconnect_close(Result, CloseReason) ->
     {[Frame, {close, CloseCode, CloseReason}], _NewState} = Result,

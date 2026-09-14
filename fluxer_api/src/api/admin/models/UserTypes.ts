@@ -1,37 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import dns from 'node:dns';
+import type {User} from '@app/api/models/User';
+import {getIpAddressReverse, lookupGeoip} from '@app/api/utils/IpUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DEFERRED_PHONE_ON_COMMUNITY_JOIN} from '@fluxer/constants/src/UserConstants';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
-import {seconds} from 'itty-time';
-import type {User} from '../../models/User';
-import {lookupGeoip} from '../../utils/IpUtils';
-
-const REVERSE_DNS_CACHE_TTL_SECONDS = seconds('1 day');
-
-async function reverseDnsLookup(ip: string, cacheService?: ICacheService): Promise<string | null> {
-	const cacheKey = `reverse-dns:${ip}`;
-	if (cacheService) {
-		const cached = await cacheService.get<string | null>(cacheKey);
-		if (cached !== null) {
-			return cached === '' ? null : cached;
-		}
-	}
-	let result: string | null = null;
-	try {
-		const hostnames = await dns.promises.reverse(ip);
-		result = hostnames[0] ?? null;
-	} catch {
-		result = null;
-	}
-	if (cacheService) {
-		await cacheService.set(cacheKey, result ?? '', REVERSE_DNS_CACHE_TTL_SECONDS);
-	}
-	return result;
-}
 
 function hasAcl(acls: ReadonlySet<string>, acl: string): boolean {
 	return acls.has(acl) || acls.has(AdminACLs.WILDCARD);
@@ -46,7 +21,7 @@ export async function mapUserToAdminResponse(
 	const canViewDob = !acls || hasAcl(acls, AdminACLs.USER_VIEW_DOB);
 	const canViewIp = !acls || hasAcl(acls, AdminACLs.USER_VIEW_IP);
 	const lastActiveIpReverse =
-		canViewIp && user.lastActiveIp ? await reverseDnsLookup(user.lastActiveIp, cacheService) : null;
+		canViewIp && user.lastActiveIp ? await getIpAddressReverse(user.lastActiveIp, cacheService) : null;
 	let lastActiveLocation: string | null = null;
 	if (canViewIp && user.lastActiveIp) {
 		try {

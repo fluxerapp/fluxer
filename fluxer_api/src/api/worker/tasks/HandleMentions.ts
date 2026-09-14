@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
-import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {z} from 'zod';
 import {
 	type ChannelID,
 	createChannelID,
@@ -14,10 +12,12 @@ import {
 	type MessageID,
 	type RoleID,
 	type UserID,
-} from '../../BrandedTypes';
-import type {GatewayMentionSourceEntry, IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/BrandedTypes';
+import type {GatewayMentionSourceEntry, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {z} from 'zod';
 
 const MENTION_CHUNK_SIZE = 250;
 const MENTION_CHUNK_KEY_DIGEST_LENGTH = 32;

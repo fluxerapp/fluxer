@@ -21,6 +21,7 @@ import {
 	selectVoiceMediaGraphSubscriptionEntry,
 	selectVoiceMediaGraphViewerStreamKeys,
 	selectVoiceMediaGraphWatchGeneration,
+	selectVoiceMediaGraphWatchStopReason,
 	transitionVoiceMediaGraph,
 	transitionVoiceMediaGraphViewerStreamKeys,
 	type VoiceMediaGraphDeadline,
@@ -85,6 +86,7 @@ describe('VoiceMediaGraph watch generations', () => {
 			startedAt: 1000,
 			hasRenderedVideoFrame: false,
 			generation: 0,
+			holders: 1,
 		});
 	});
 
@@ -759,6 +761,131 @@ describe('VoiceMediaGraph deadlines', () => {
 		const recorded = selectVoiceMediaGraphFailure(graph, {streamKey: STREAM_A});
 		expect(recorded?.code).toBe(-2301);
 		expect(recorded?.reason).toBe('publication-missing-timeout');
+	});
+
+	it('records the expired republish grace as the stop reason for the dropped stream', () => {
+		let graph = transitionVoiceMediaGraph(createVoiceMediaGraphSnapshot(), {type: 'watchIntent.add', key: STREAM_A});
+		graph = transitionVoiceMediaGraph(graph, {type: 'watchIntent.deferRemove', key: STREAM_A, at: 1000});
+
+		graph = transitionVoiceMediaGraph(graph, {
+			type: 'time.deadlineFired',
+			key: voiceMediaGraphDeferredStopDeadlineKey(STREAM_A),
+			at: 1000 + PUBLISHER_REPUBLISH_GRACE_MS,
+		});
+
+		expect(selectVoiceMediaGraphViewerStreamKeys(graph)).toEqual([]);
+		expect(selectVoiceMediaGraphWatchStopReason(graph, STREAM_A)).toBe('republish-grace-expired');
+	});
+
+	it('forgets the recorded stop reason once the stream is watched again', () => {
+		let graph = transitionVoiceMediaGraph(createVoiceMediaGraphSnapshot(), {type: 'watchIntent.add', key: STREAM_A});
+		graph = transitionVoiceMediaGraph(graph, {type: 'watchIntent.deferRemove', key: STREAM_A, at: 1000});
+		graph = transitionVoiceMediaGraph(graph, {
+			type: 'time.deadlineFired',
+			key: voiceMediaGraphDeferredStopDeadlineKey(STREAM_A),
+			at: 1000 + PUBLISHER_REPUBLISH_GRACE_MS,
+		});
+
+		graph = transitionVoiceMediaGraph(graph, {type: 'watch.started', streamKey: STREAM_A, at: 6000});
+
+		expect(selectVoiceMediaGraphWatchStopReason(graph, STREAM_A)).toBeNull();
+	});
+
+	it('keeps the recorded stop reason through the watch stop that follows the grace expiry', () => {
+		let graph = transitionVoiceMediaGraph(createVoiceMediaGraphSnapshot(), {type: 'watchIntent.add', key: STREAM_A});
+		graph = transitionVoiceMediaGraph(graph, {type: 'watchIntent.deferRemove', key: STREAM_A, at: 1000});
+		graph = transitionVoiceMediaGraph(graph, {
+			type: 'time.deadlineFired',
+			key: voiceMediaGraphDeferredStopDeadlineKey(STREAM_A),
+			at: 1000 + PUBLISHER_REPUBLISH_GRACE_MS,
+		});
+
+		graph = transitionVoiceMediaGraph(graph, {type: 'watch.stopped', streamKey: STREAM_A});
+
+		expect(selectVoiceMediaGraphWatchStopReason(graph, STREAM_A)).toBe('republish-grace-expired');
+	});
+});
+
+describe('VoiceMediaGraph watch attempt holders', () => {
+	const ATTEMPT_KEY = 'attempt-1';
+
+	function ensureAttempt(graph: VoiceMediaGraphSnapshot, startedAt: number): VoiceMediaGraphSnapshot {
+		return transitionVoiceMediaGraph(graph, {
+			type: 'watch.attemptEnsured',
+			streamKey: STREAM_A,
+			attemptKey: ATTEMPT_KEY,
+			startedAt,
+		});
+	}
+
+	function releaseAttempt(graph: VoiceMediaGraphSnapshot): VoiceMediaGraphSnapshot {
+		return transitionVoiceMediaGraph(graph, {
+			type: 'watch.attemptReleased',
+			streamKey: STREAM_A,
+			attemptKey: ATTEMPT_KEY,
+		});
+	}
+
+	function watchedStream(at: number): VoiceMediaGraphSnapshot {
+		return transitionVoiceMediaGraph(createVoiceMediaGraphSnapshot(), {
+			type: 'watch.started',
+			streamKey: STREAM_A,
+			at,
+		});
+	}
+
+	it('keeps the attempt deadline while a second tile still holds the attempt', () => {
+		let graph = ensureAttempt(watchedStream(1000), 1000);
+		graph = ensureAttempt(graph, 1200);
+
+		graph = releaseAttempt(graph);
+
+		expect(selectVoiceMediaGraphAttempt(graph, STREAM_A)?.holders).toBe(1);
+		expect(selectVoiceMediaGraphDeadline(graph, voiceMediaGraphWatchAttemptDeadlineKey(STREAM_A))?.dueAt).toBe(
+			1000 + WATCH_ATTEMPT_TIMEOUT_MS,
+		);
+	});
+
+	it('drops the attempt deadline once the last tile releases the attempt', () => {
+		let graph = ensureAttempt(watchedStream(1000), 1000);
+		graph = ensureAttempt(graph, 1200);
+
+		graph = releaseAttempt(releaseAttempt(graph));
+
+		expect(selectVoiceMediaGraphAttempt(graph, STREAM_A)?.holders).toBe(0);
+		expect(selectVoiceMediaGraphDeadline(graph, voiceMediaGraphWatchAttemptDeadlineKey(STREAM_A))).toBeNull();
+	});
+
+	it('rearms a released attempt from the time the attempt started', () => {
+		let graph = ensureAttempt(watchedStream(1000), 1000);
+		graph = releaseAttempt(graph);
+
+		graph = ensureAttempt(graph, 9000);
+
+		expect(selectVoiceMediaGraphAttempt(graph, STREAM_A)?.startedAt).toBe(1000);
+		expect(selectVoiceMediaGraphDeadline(graph, voiceMediaGraphWatchAttemptDeadlineKey(STREAM_A))?.dueAt).toBe(
+			1000 + WATCH_ATTEMPT_TIMEOUT_MS,
+		);
+	});
+
+	it('counts one holder per tile when every mount runs its effect twice', () => {
+		let graph = ensureAttempt(watchedStream(1000), 1000);
+		graph = ensureAttempt(releaseAttempt(graph), 1400);
+		graph = ensureAttempt(graph, 1500);
+		graph = ensureAttempt(releaseAttempt(graph), 1600);
+
+		expect(selectVoiceMediaGraphAttempt(graph, STREAM_A)?.holders).toBe(2);
+
+		graph = releaseAttempt(releaseAttempt(graph));
+
+		expect(selectVoiceMediaGraphAttempt(graph, STREAM_A)?.holders).toBe(0);
+		expect(selectVoiceMediaGraphDeadline(graph, voiceMediaGraphWatchAttemptDeadlineKey(STREAM_A))).toBeNull();
+	});
+
+	it('ignores a release for an attempt the graph no longer tracks', () => {
+		const graph = watchedStream(1000);
+
+		expect(releaseAttempt(graph)).toBe(graph);
 	});
 });
 

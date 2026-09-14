@@ -38,23 +38,14 @@ const noopLogger: IKVLogger = {
 };
 
 export function resolveKVClientConfig(config: KVClientConfig | string): ResolvedKVClientConfig {
-	if (typeof config === 'string') {
-		return {
-			url: normalizeUrl(config),
-			mode: 'standalone' as const,
-			clusterNodes: [],
-			clusterNatMap: {},
-			timeoutMs: DEFAULT_KV_TIMEOUT_MS,
-			logger: noopLogger,
-		};
-	}
+	const options: KVClientConfig = typeof config === 'string' ? {url: config} : config;
 	return {
-		url: normalizeUrl(config.url),
-		mode: config.mode ?? 'standalone',
-		clusterNodes: config.clusterNodes ?? [],
-		clusterNatMap: config.clusterNatMap ?? {},
-		timeoutMs: config.timeoutMs ?? DEFAULT_KV_TIMEOUT_MS,
-		logger: config.logger ?? noopLogger,
+		url: normalizeUrl(options.url),
+		mode: options.mode ?? 'standalone',
+		clusterNodes: options.clusterNodes ?? [],
+		clusterNatMap: options.clusterNatMap ?? {},
+		timeoutMs: options.timeoutMs ?? DEFAULT_KV_TIMEOUT_MS,
+		logger: options.logger ?? noopLogger,
 	};
 }
 
@@ -62,6 +53,10 @@ function normalizeUrl(url: string): string {
 	const trimmed = url.trim();
 	if (trimmed.length === 0) {
 		throw new Error('KV client URL must not be empty');
+	}
+	const query = new URLSearchParams(trimmed.match(/^[^?#]*(\?[^#]*)/)?.[1]);
+	if (query.has('stringNumbers')) {
+		throw new Error('KV client URLs do not support stringNumbers; numeric replies are required');
 	}
 	return trimmed;
 }

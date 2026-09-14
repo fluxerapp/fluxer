@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '../BrandedTypes';
-import {channelIdToMessageId} from '../BrandedTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {channelIdToMessageId} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
@@ -9,13 +9,13 @@ import {
 	fetchManyInChunks,
 	fetchOne,
 	upsertOne,
-} from '../database/CassandraQueryExecution';
-import {defineTable} from '../database/CassandraTableDsl';
-import {Db, type DbOp} from '../database/CassandraTypes';
-import type {ReadStateRow} from '../database/types/ChannelTypes';
-import {READ_STATE_COLUMNS} from '../database/types/ChannelTypes';
-import {ReadState} from '../models/ReadState';
-import type {IReadStateRepository} from './IReadStateRepository';
+} from '@app/api/database/CassandraQueryExecution';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
+import {READ_STATE_COLUMNS} from '@app/api/database/types/ChannelTypes';
+import {ReadState} from '@app/api/models/ReadState';
+import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
 
 const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
 	name: 'read_states',

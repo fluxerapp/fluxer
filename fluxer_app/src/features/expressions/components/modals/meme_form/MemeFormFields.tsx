@@ -18,7 +18,7 @@ const NAME_IS_REQUIRED_DESCRIPTOR = msg({
 	comment: 'Form validation error shown when the name field is empty.',
 });
 const NAME_MUST_BE_100_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
-	message: 'Name must be 100 characters or less',
+	message: 'Name must be 100 characters or fewer',
 	comment: 'Form validation error for a name that exceeds 100 characters.',
 });
 const NAME_DESCRIPTOR = msg({
@@ -30,7 +30,7 @@ const MY_AWESOME_MEDIA_DESCRIPTOR = msg({
 	comment: 'Form placeholder example for a media name input.',
 });
 const ALT_TEXT_MUST_BE_500_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
-	message: 'Alt text must be 500 characters or less',
+	message: 'Alt text must be 500 characters or fewer',
 	comment: 'Form validation error for an alt text that is too long.',
 });
 const ALT_TEXT_DESCRIPTOR = msg({

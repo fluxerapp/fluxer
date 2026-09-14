@@ -1,9 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createFakeAuthToken,
@@ -11,7 +7,11 @@ import {
 	loginAccount,
 	type TestAccount,
 	type UserMeResponse,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Auth login and sessions', () => {
 	let harness: ApiTestHarness;
@@ -99,6 +99,18 @@ describe('Auth login and sessions', () => {
 		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
 		account = await loginAccount(harness, account);
 		await createBuilder(harness, account.token).post('/auth/logout').expect(204).execute();
+		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
+	});
+	it('logout requires a live session', async () => {
+		await createBuilderWithoutAuth(harness).post('/auth/logout').expect(401).execute();
+		await createBuilder(harness, createFakeAuthToken()).post('/auth/logout').expect(401).execute();
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token).post('/auth/logout').expect(204).execute();
+		await createBuilder(harness, account.token).post('/auth/logout').expect(401).execute();
+	});
+	it('logout with a Bearer-prefixed session token revokes it', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, `Bearer ${account.token}`).post('/auth/logout').expect(204).execute();
 		await createBuilder(harness, account.token).get('/users/@me').expect(401).execute();
 	});
 	it('treats /auth/sessions/logout as idempotent and removes targeted sessions', async () => {

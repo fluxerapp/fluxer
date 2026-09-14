@@ -12,6 +12,7 @@ import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import Guilds from '@app/features/guild/state/Guilds';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import type {LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -119,7 +120,7 @@ const VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_COMMUNITY_NICKNAME_DESCRIPTOR = msg
 });
 const VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_USERNAME_DISPLAY_DESCRIPTOR = msg({
 	message:
-		'Verify your email before changing your username, display name, avatar, banner, bio, pronouns, timezone, or {premiumProductName} badge privacy.',
+		'Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy.',
 	comment: 'Label in the my profile tab.',
 });
 const COMMUNITY_NICKNAME_DESCRIPTOR = msg({
@@ -448,7 +449,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const handleBioChange = useCallback((display: string, segments: Array<MentionSegment>, wire: string) => {
 		setBioValue(display);
 		setBioSegments(segments);
-		setBioActualValue(wire);
+		setBioActualValue(dropTrailingEmptyBlockquoteLines(wire));
 	}, []);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {

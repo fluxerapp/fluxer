@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2Event} from '../protocol/events';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
@@ -25,7 +25,7 @@ import type {
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2Stats,
 	VoiceEngineV2TimerOptions,
-} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export type VoiceEngineV2HostEventListener = (event: VoiceEngineV2Event) => void;
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {signHarvestDownloadToken, verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 import {describe, expect, test} from 'vitest';
-import {signHarvestDownloadToken, verifyHarvestDownloadToken} from '../HarvestDownloadToken';
 
 const SECRET = 'test-connection-secret';
 

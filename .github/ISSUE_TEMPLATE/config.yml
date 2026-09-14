@@ -1,15 +1,15 @@
 # yaml-language-server: $schema=https://www.schemastore.org/github-issue-config.json
 blank_issues_enabled: false
 contact_links:
+  - name: Mobile client bugs
+    url: https://github.com/fluxerapp/flutter_client#bug-reporting
+    about: Read the reporting instructions for the Fluxer mobile client.
   - name: Account and billing support
     url: https://fluxer.app/help
     about: Find account help and support contact details.
   - name: Feature proposals
     url: https://github.com/orgs/fluxerapp/discussions
     about: Propose a feature in a discussion.
-  - name: Security vulnerabilities
-    url: https://github.com/fluxerapp/fluxer/security/advisories/new
-    about: Submit a private vulnerability report.
   - name: Translations
     url: https://weblate.fluxer.tools
     about: Improve an existing locale or start a new one.

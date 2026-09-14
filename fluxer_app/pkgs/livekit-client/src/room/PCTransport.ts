@@ -11,11 +11,12 @@ import {NegotiationError, UnexpectedConnectionState} from './errors.ts';
 import type {LoggerOptions} from './types.ts';
 import {ddExtensionURI, isFireFox, isSafari, isSVCCodec} from './utils.ts';
 
-interface TrackBitrateInfo {
+export interface TrackBitrateInfo {
 	cid?: string;
 	transceiver?: RTCRtpTransceiver;
 	codec: string;
 	maxbr: number;
+	stereo?: boolean;
 }
 
 const startBitrateFraction = 0.7;
@@ -25,8 +26,6 @@ const requiredOpusFmtpParameters = {
 	minptime: '10',
 	useinbandfec: '1',
 	usedtx: '0',
-	stereo: '1',
-	'sprop-stereo': '1',
 };
 const debounceInterval = 20;
 export const PCEvents = {
@@ -156,20 +155,18 @@ export default class PCTransport extends EventEmitter {
 			sdpParsed.media.forEach((media) => {
 				const mid = getMidString(media.mid!);
 				if (media.type === 'audio') {
-					ensureOpusFmtp(media);
-					this.trackBitrates.some((trackbr): boolean => {
-						if (!trackbr.transceiver || mid !== trackbr.transceiver.mid) {
-							return false;
-						}
-						const codecPayload = getCodecPayload(media, trackbr.codec);
-						if (codecPayload === 0) {
-							return true;
-						}
-						if (trackbr.codec.toLowerCase() === 'opus') {
-							ensureOpusFmtp(media, trackbr.maxbr > 0 ? trackbr.maxbr * 1000 : opusMaxAverageBitrateBps);
-						}
-						return true;
-					});
+					const trackbr = this.trackBitrates.find(
+						(br) => br.transceiver !== undefined && mid === br.transceiver.mid && br.codec.toLowerCase() === 'opus',
+					);
+					if (trackbr && getCodecPayload(media, trackbr.codec) !== 0) {
+						ensureOpusFmtp(
+							media,
+							trackbr.maxbr > 0 ? trackbr.maxbr * 1000 : opusMaxAverageBitrateBps,
+							trackbr.stereo === true,
+						);
+					} else {
+						ensureOpusFmtp(media);
+					}
 				}
 			});
 			mungedSDP = write(sdpParsed);
@@ -240,10 +237,11 @@ export default class PCTransport extends EventEmitter {
 			const offer = await this.pc.createOffer(options);
 			this.log.debug('original offer', {sdp: offer.sdp, ...this.logContext});
 			const sdpParsed = parse(offer.sdp ?? '');
+			const stereoMids = collectStereoMids(this.trackBitrates, sdpParsed.media);
 			sdpParsed.media.forEach((media) => {
 				ensureIPAddrMatchVersion(media);
 				if (media.type === 'audio') {
-					ensureAudioNackAndStereo(media, ['all'], []);
+					ensureAudioNackAndStereo(media, stereoMids, []);
 				} else if (media.type === 'video') {
 					this.trackBitrates.some((trackbr): boolean => {
 						if (!media.msid || !trackbr.cid || !media.msid.includes(trackbr.cid)) {
@@ -587,7 +585,11 @@ function ensureAudioRedFmtp(media: MediaDescription, opusPayload: number): void 
 	}
 }
 
-function ensureOpusFmtp(media: MediaDescription, maxAverageBitrateBps: number = opusMaxAverageBitrateBps): number {
+export function ensureOpusFmtp(
+	media: MediaDescription,
+	maxAverageBitrateBps: number = opusMaxAverageBitrateBps,
+	stereo = false,
+): number {
 	const opusPayload = getCodecPayload(media, 'opus');
 	if (opusPayload <= 0) return 0;
 	media.ptime = opusPacketTimeMs;
@@ -595,6 +597,10 @@ function ensureOpusFmtp(media: MediaDescription, maxAverageBitrateBps: number = 
 	let config = fmtp.config;
 	for (const [key, value] of Object.entries(requiredOpusFmtpParameters)) {
 		config = setFmtpParameter(config, key, value);
+	}
+	if (stereo) {
+		config = setFmtpParameter(config, 'stereo', '1');
+		config = setFmtpParameter(config, 'sprop-stereo', '1');
 	}
 	if (maxAverageBitrateBps > 0) {
 		config = setFmtpParameter(config, 'maxaveragebitrate', String(maxAverageBitrateBps));
@@ -604,18 +610,18 @@ function ensureOpusFmtp(media: MediaDescription, maxAverageBitrateBps: number = 
 	return opusPayload;
 }
 
-function ensureAudioNackAndStereo(
+export function ensureAudioNackAndStereo(
 	media: {
 		type: string;
 		port: number;
 		protocol: string;
 		payloads?: string | undefined;
 	} & MediaDescription,
-	_stereoMids: Array<string>,
+	stereoMids: Array<string>,
 	nackMids: Array<string>,
 ) {
 	const mid = getMidString(media.mid!);
-	const opusPayload = ensureOpusFmtp(media);
+	const opusPayload = ensureOpusFmtp(media, opusMaxAverageBitrateBps, stereoMids.includes(mid));
 	if (opusPayload > 0) {
 		if (!media.rtcpFb) {
 			media.rtcpFb = [];
@@ -627,6 +633,32 @@ function ensureAudioNackAndStereo(
 			});
 		}
 	}
+}
+
+export function collectStereoMids(
+	trackBitrates: Array<TrackBitrateInfo>,
+	media: Array<MediaDescription>,
+): Array<string> {
+	const stereoMids: Array<string> = [];
+	for (const trackbr of trackBitrates) {
+		if (trackbr.stereo !== true || !trackbr.transceiver) {
+			continue;
+		}
+		if (trackbr.transceiver.mid) {
+			stereoMids.push(getMidString(trackbr.transceiver.mid));
+			continue;
+		}
+		const trackId = trackbr.transceiver.sender.track?.id;
+		if (trackId === undefined) {
+			continue;
+		}
+		for (const m of media) {
+			if (m.type === 'audio' && m.mid !== undefined && m.msid?.includes(trackId)) {
+				stereoMids.push(getMidString(m.mid));
+			}
+		}
+	}
+	return stereoMids;
 }
 
 function extractStereoAndNackAudioFromOffer(offer: RTCSessionDescriptionInit): {

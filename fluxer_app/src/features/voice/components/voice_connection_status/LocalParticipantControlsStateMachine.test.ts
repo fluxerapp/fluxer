@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type LocalParticipantControlSignals,
 	selectLocalParticipantControlsViewState,
 	selectLocalParticipantMediaControlState,
-} from './LocalParticipantControlsStateMachine';
+} from '@app/features/voice/components/voice_connection_status/LocalParticipantControlsStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function signals(overrides: Partial<LocalParticipantControlSignals> = {}): LocalParticipantControlSignals {
 	return {

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	selectUserAreaMicrophoneState,
+	type UserAreaMicrophoneSignals,
+} from '@app/features/app/components/layout/UserAreaState';
 import {describe, expect, it} from 'vitest';
-import {selectUserAreaMicrophoneState, type UserAreaMicrophoneSignals} from './UserAreaState';
 
 const baseSignals: UserAreaMicrophoneSignals = {
 	effectiveAudioMuted: false,

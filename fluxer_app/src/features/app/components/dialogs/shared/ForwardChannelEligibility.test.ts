@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isForwardableChannelType} from '@app/features/app/components/dialogs/shared/ForwardChannelEligibility';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {describe, expect, it} from 'vitest';
-import {isForwardableChannelType} from './ForwardChannelEligibility';
 
 describe('forward channel eligibility', () => {
 	it('allows every text-based message destination, including text-in-voice channels', () => {

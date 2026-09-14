@@ -36,14 +36,12 @@ export const ClientAttachmentRequest = ClientAttachmentBase.extend({
 
 export type ClientAttachmentRequest = z.infer<typeof ClientAttachmentRequest>;
 
-export const ClientUploadedAttachmentRequest = ClientAttachmentBase.extend({
-	id: coerceNumberFromString(Int32Type).describe('The client-side identifier for this attachment'),
-	filename: FilenameType.describe('The name of the file being uploaded'),
+export const ClientUploadedAttachmentRequest = ClientAttachmentRequest.extend({
 	upload_filename: createStringType(1, 4096).describe(
 		'Temporary upload key returned by the attachment upload endpoint',
 	),
 	file_size: coerceNumberFromString(NonNegativeSafeIntegerType).describe('Uploaded file size in bytes'),
-	content_type: createStringType(1, 255).describe('MIME type of the uploaded file'),
+	content_type: ClientAttachmentRequest.shape.content_type.unwrap().describe('MIME type of the uploaded file'),
 });
 
 export type ClientUploadedAttachmentRequest = z.infer<typeof ClientUploadedAttachmentRequest>;

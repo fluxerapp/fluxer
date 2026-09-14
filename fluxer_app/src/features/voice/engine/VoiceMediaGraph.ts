@@ -14,12 +14,12 @@ import {
 	voiceMediaGraphPublicationMissingDeadlineKey,
 	voiceMediaGraphWatchAttemptDeadlineKey,
 	WATCH_ATTEMPT_TIMEOUT_MS,
-} from './VoiceMediaGraphDeadlines';
+} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
 import {
 	reconcileVoiceMediaGraphSubscriptionEntry,
 	voiceMediaGraphCommandAlreadyQueued,
-} from './VoiceMediaGraphReconcile';
-import type {VoiceMediaGraphPartialTrackInfo} from './VoiceMediaGraphStats';
+} from '@app/features/voice/engine/VoiceMediaGraphReconcile';
+import type {VoiceMediaGraphPartialTrackInfo} from '@app/features/voice/engine/VoiceMediaGraphStats';
 import {
 	type VoiceMediaGraphStatsEntry,
 	type VoiceMediaGraphStatsPlatform,
@@ -27,7 +27,7 @@ import {
 	type VoiceMediaGraphStatsTrackTarget,
 	voiceMediaGraphStatsObservationMatchesTarget,
 	voiceMediaGraphStatsTrackKey,
-} from './VoiceMediaGraphStatsObservations';
+} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 import type {
 	VoiceMediaGraphPublicationLostEvent,
 	VoiceMediaGraphPublicationObservedEvent,
@@ -51,22 +51,25 @@ import type {
 	VoiceMediaGraphSubscriptionSubscribeEvent,
 	VoiceMediaGraphSubscriptionTarget,
 	VoiceMediaGraphVideoQuality,
-} from './VoiceMediaGraphSubscriptionTypes';
-import type {VoiceTrackSource} from './VoiceTrackSource';
+} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
+import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 
 export function voiceMediaGraphAttemptKeyIsOperation(attemptKey: string): boolean {
 	assert.ok(attemptKey.length > 0, 'attemptKey is required');
 	return attemptKey.includes(':operation:');
 }
 
-export {systemVoiceMediaGraphClock, type VoiceMediaGraphClockPort} from './VoiceMediaGraphClock';
+export {
+	systemVoiceMediaGraphClock,
+	type VoiceMediaGraphClockPort,
+} from '@app/features/voice/engine/VoiceMediaGraphClock';
 export {
 	buildVoiceMediaGraphNativeCameraQualityCommand,
 	buildVoiceMediaGraphNativeCameraSubscriptionCommand,
 	buildVoiceMediaGraphNativeScreenShareEnabledCommand,
 	buildVoiceMediaGraphNativeScreenShareQualityCommand,
 	buildVoiceMediaGraphNativeScreenShareSubscriptionCommands,
-} from './VoiceMediaGraphCommands';
+} from '@app/features/voice/engine/VoiceMediaGraphCommands';
 export {
 	PUBLICATION_MISSING_TIMEOUT_MS,
 	PUBLISHER_REPUBLISH_GRACE_MS,
@@ -77,15 +80,18 @@ export {
 	voiceMediaGraphPublicationMissingDeadlineKey,
 	voiceMediaGraphWatchAttemptDeadlineKey,
 	WATCH_ATTEMPT_TIMEOUT_MS,
-} from './VoiceMediaGraphDeadlines';
-export {reconcileVoiceMediaGraphSubscriptionEntry, voiceMediaGraphCommandsEquivalent} from './VoiceMediaGraphReconcile';
+} from '@app/features/voice/engine/VoiceMediaGraphDeadlines';
+export {
+	reconcileVoiceMediaGraphSubscriptionEntry,
+	voiceMediaGraphCommandsEquivalent,
+} from '@app/features/voice/engine/VoiceMediaGraphReconcile';
 export {
 	mergeVoiceMediaGraphTrackInfo,
 	type VoiceMediaGraphNativeStatsTarget,
 	type VoiceMediaGraphPartialTrackInfo,
 	type VoiceMediaGraphPerTrackStatsTarget,
 	type VoiceMediaGraphTrackInfo,
-} from './VoiceMediaGraphStats';
+} from '@app/features/voice/engine/VoiceMediaGraphStats';
 export type {
 	VoiceMediaGraphStatsDirection,
 	VoiceMediaGraphStatsEntry,
@@ -93,7 +99,7 @@ export type {
 	VoiceMediaGraphStatsPlatform,
 	VoiceMediaGraphStatsTrackObservation,
 	VoiceMediaGraphStatsTrackTarget,
-} from './VoiceMediaGraphStatsObservations';
+} from '@app/features/voice/engine/VoiceMediaGraphStatsObservations';
 export type {
 	VoiceMediaGraphPublicationLostEvent,
 	VoiceMediaGraphPublicationObservedEvent,
@@ -125,7 +131,7 @@ export type {
 	VoiceMediaGraphSubscriptionTarget,
 	VoiceMediaGraphSubscriptionUnsubscribeEvent,
 	VoiceMediaGraphVideoQuality,
-} from './VoiceMediaGraphSubscriptionTypes';
+} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
 
 export const VOICE_MEDIA_GRAPH_ENTRY_LIMIT = 256;
 export const VOICE_MEDIA_GRAPH_SCREEN_SHARE_SOURCE = 'screen_share';
@@ -159,7 +165,10 @@ export interface VoiceMediaGraphWatchAttempt {
 	startedAt: number;
 	hasRenderedVideoFrame: boolean;
 	generation: number;
+	holders: number;
 }
+
+export type VoiceMediaGraphWatchStopReason = 'republish-grace-expired';
 
 export interface VoiceMediaGraphWatchIntent {
 	viewerStreamKeys: ReadonlyArray<string>;
@@ -179,6 +188,7 @@ export interface VoiceMediaGraphSnapshot<TFailure extends VoiceMediaGraphFailure
 	failuresByKey: ReadonlyMap<string, TFailure>;
 	watchGenerationByStreamKey: ReadonlyMap<string, number>;
 	attemptsByStreamKey: ReadonlyMap<string, VoiceMediaGraphWatchAttempt>;
+	watchStopReasonByStreamKey: ReadonlyMap<string, VoiceMediaGraphWatchStopReason>;
 	watchIntent: VoiceMediaGraphWatchIntent;
 	subscriptionsByKey: ReadonlyMap<string, VoiceMediaGraphSubscriptionEntry>;
 	subscriptionCommands: ReadonlyArray<VoiceMediaGraphSubscriptionCommand>;
@@ -218,6 +228,7 @@ export function createVoiceMediaGraphSnapshot<
 		failuresByKey: new Map(),
 		watchGenerationByStreamKey: new Map(),
 		attemptsByStreamKey: new Map(),
+		watchStopReasonByStreamKey: new Map(),
 		watchIntent: {
 			viewerStreamKeys: [],
 			deferredStopKeys: EMPTY_STRING_SET,
@@ -402,6 +413,7 @@ function transitionWatchStarted<TFailure extends VoiceMediaGraphFailure>(
 		),
 		watchGenerationByStreamKey: mapSetBounded(snapshot.watchGenerationByStreamKey, streamKey, generation),
 		attemptsByStreamKey: mapDelete(snapshot.attemptsByStreamKey, streamKey),
+		watchStopReasonByStreamKey: mapDelete(snapshot.watchStopReasonByStreamKey, streamKey),
 		deadlinesByKey,
 	};
 }
@@ -430,6 +442,7 @@ function transitionFailureWatchClearAll<TFailure extends VoiceMediaGraphFailure>
 		failuresByKey: new Map(),
 		watchGenerationByStreamKey: new Map(),
 		attemptsByStreamKey: new Map(),
+		watchStopReasonByStreamKey: new Map(),
 		deadlinesByKey: new Map(),
 	};
 }
@@ -1205,7 +1218,15 @@ function applyDeferredStopDeadline<TFailure extends VoiceMediaGraphFailure>(
 ): VoiceMediaGraphSnapshot<TFailure> {
 	if (!deadline.streamKey) return snapshot;
 	if (!snapshot.watchIntent.deferredStopKeys.has(deadline.streamKey)) return snapshot;
-	return transitionWatchIntentRemoveMany(snapshot, [deadline.streamKey]);
+	const stopped: VoiceMediaGraphSnapshot<TFailure> = {
+		...snapshot,
+		watchStopReasonByStreamKey: mapSetBounded(
+			snapshot.watchStopReasonByStreamKey,
+			deadline.streamKey,
+			'republish-grace-expired',
+		),
+	};
+	return transitionWatchIntentRemoveMany(stopped, [deadline.streamKey]);
 }
 
 function applyPublicationMissingDeadline<TFailure extends VoiceMediaGraphFailure>(
@@ -1415,14 +1436,18 @@ function ensureVoiceMediaGraphWatchAttempt<TFailure extends VoiceMediaGraphFailu
 	const deadlineKey = voiceMediaGraphWatchAttemptDeadlineKey(event.streamKey);
 	const existing = snapshot.attemptsByStreamKey.get(event.streamKey);
 	if (existing?.attemptKey === event.attemptKey) {
-		if (existing.hasRenderedVideoFrame) return snapshot;
-		if (snapshot.deadlinesByKey.has(deadlineKey)) return snapshot;
+		const attemptsByStreamKey = mapSetBounded(snapshot.attemptsByStreamKey, event.streamKey, {
+			...existing,
+			holders: existing.holders + 1,
+		});
+		if (existing.hasRenderedVideoFrame) return {...snapshot, attemptsByStreamKey};
+		if (snapshot.deadlinesByKey.has(deadlineKey)) return {...snapshot, attemptsByStreamKey};
 		const deadlinesByKey = mapSetBounded(
 			snapshot.deadlinesByKey,
 			deadlineKey,
-			voiceMediaGraphWatchAttemptDeadline(event.streamKey, event.attemptKey, existing.generation, event.startedAt),
+			voiceMediaGraphWatchAttemptDeadline(event.streamKey, event.attemptKey, existing.generation, existing.startedAt),
 		);
-		return {...snapshot, deadlinesByKey};
+		return {...snapshot, attemptsByStreamKey, deadlinesByKey};
 	}
 	const generation = event.generation ?? snapshot.watchGenerationByStreamKey.get(event.streamKey) ?? 0;
 	const attempt: VoiceMediaGraphWatchAttempt = {
@@ -1430,6 +1455,7 @@ function ensureVoiceMediaGraphWatchAttempt<TFailure extends VoiceMediaGraphFailu
 		startedAt: event.startedAt,
 		hasRenderedVideoFrame: false,
 		generation,
+		holders: 1,
 	};
 	const deadlinesByKey = mapSetBounded(
 		snapshot.deadlinesByKey,
@@ -1448,10 +1474,15 @@ function releaseVoiceMediaGraphWatchAttempt<TFailure extends VoiceMediaGraphFail
 	event: {streamKey: string; attemptKey: string},
 ): VoiceMediaGraphSnapshot<TFailure> {
 	if (!event.streamKey) return snapshot;
+	const existing = snapshot.attemptsByStreamKey.get(event.streamKey);
+	if (!existing || existing.attemptKey !== event.attemptKey) return snapshot;
+	const holders = Math.max(existing.holders - 1, 0);
+	const attemptsByStreamKey = mapSetBounded(snapshot.attemptsByStreamKey, event.streamKey, {...existing, holders});
+	if (holders > 0) return {...snapshot, attemptsByStreamKey};
 	const deadlineKey = voiceMediaGraphWatchAttemptDeadlineKey(event.streamKey);
 	const deadline = snapshot.deadlinesByKey.get(deadlineKey);
-	if (!deadline || deadline.attemptKey !== event.attemptKey) return snapshot;
-	return {...snapshot, deadlinesByKey: mapDelete(snapshot.deadlinesByKey, deadlineKey)};
+	if (!deadline || deadline.attemptKey !== event.attemptKey) return {...snapshot, attemptsByStreamKey};
+	return {...snapshot, attemptsByStreamKey, deadlinesByKey: mapDelete(snapshot.deadlinesByKey, deadlineKey)};
 }
 
 function markRenderedFrameOnSubscriptionEntry<TFailure extends VoiceMediaGraphFailure>(
@@ -1482,6 +1513,7 @@ function markVoiceMediaGraphRenderedFrame<TFailure extends VoiceMediaGraphFailur
 		startedAt: existing?.startedAt ?? event.renderedAt,
 		hasRenderedVideoFrame: true,
 		generation: existing?.generation ?? snapshot.watchGenerationByStreamKey.get(event.streamKey) ?? 0,
+		holders: existing?.holders ?? 0,
 	};
 	const next: VoiceMediaGraphSnapshot<TFailure> = {
 		...snapshot,
@@ -1558,6 +1590,14 @@ export function selectVoiceMediaGraphAttempt(
 ): VoiceMediaGraphWatchAttempt | null {
 	if (!streamKey) return null;
 	return snapshot.attemptsByStreamKey.get(streamKey) ?? null;
+}
+
+export function selectVoiceMediaGraphWatchStopReason(
+	snapshot: VoiceMediaGraphSnapshot,
+	streamKey: string,
+): VoiceMediaGraphWatchStopReason | null {
+	if (!streamKey) return null;
+	return snapshot.watchStopReasonByStreamKey.get(streamKey) ?? null;
 }
 
 export function selectVoiceMediaGraphViewerStreamKeys(snapshot: VoiceMediaGraphSnapshot): ReadonlyArray<string> {

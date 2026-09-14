@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{AdminApiClient, ApiResultExt},
+    api::{
+        client::{AdminApiClient, ApiResultExt},
+        reports::SearchReportsParams,
+    },
+    config::AdminConfig,
     middleware::{
         auth::AuthContext,
         csrf,
@@ -21,6 +25,8 @@ use axum::{
     routing::get,
 };
 use serde::Deserialize;
+
+const MAX_REPORT_OFFSET: u64 = 10_000;
 
 #[derive(Deserialize)]
 struct ReportsQuery {
@@ -69,7 +75,15 @@ async fn reports_list(
     let config = state.config();
     let page = query.page.unwrap_or(0);
     let limit = query.limit.unwrap_or(25).clamp(1, 200);
-    let offset = page.saturating_mul(limit);
+    let offset = u64::from(page) * u64::from(limit);
+    if offset > MAX_REPORT_OFFSET {
+        return reports_error_page(
+            config,
+            &auth.0,
+            "That page is out of range. The reports search returns at most the first 10000 reports, so narrow the filters and start again.",
+        );
+    }
+    let search_query = query.q.as_deref().and_then(clean_string);
     let (sort_by, sort_order) = decode_sort(query.sort.as_deref());
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let status = query.status.as_deref().and_then(|s| s.parse::<i32>().ok());
@@ -78,22 +92,22 @@ async fn reports_list(
         .as_deref()
         .and_then(|s| s.parse::<i32>().ok());
     let reports = client
-        .search_reports(
-            query.q.as_deref(),
+        .search_reports(&SearchReportsParams {
+            query: search_query.as_deref(),
             status,
             report_type,
-            query.category.as_deref(),
-            query.reporter_id.as_deref(),
-            query.reported_user_id.as_deref(),
-            query.reported_guild_id.as_deref(),
-            query.reported_channel_id.as_deref(),
-            query.guild_context_id.as_deref(),
-            query.resolved_by_admin_id.as_deref(),
-            Some(sort_by),
-            Some(sort_order),
+            category: query.category.as_deref(),
+            reporter_id: query.reporter_id.as_deref(),
+            reported_user_id: query.reported_user_id.as_deref(),
+            reported_guild_id: query.reported_guild_id.as_deref(),
+            reported_channel_id: query.reported_channel_id.as_deref(),
+            guild_context_id: query.guild_context_id.as_deref(),
+            resolved_by_admin_id: query.resolved_by_admin_id.as_deref(),
+            sort_by: Some(sort_by),
+            sort_order: Some(sort_order),
             limit,
             offset,
-        )
+        })
         .await
         .log_error("search reports");
 
@@ -102,7 +116,7 @@ async fn reports_list(
         &auth.0,
         reports.as_ref(),
         &templates::pages::reports_list::ReportFilters {
-            query: query.q.as_deref(),
+            query: search_query.as_deref(),
             status: query.status.as_deref(),
             report_type: query.report_type.as_deref(),
             category: query.category.as_deref(),
@@ -116,6 +130,18 @@ async fn reports_list(
         },
         page,
         limit,
+    );
+    Html(markup.into_string()).into_response()
+}
+
+fn reports_error_page(config: &AdminConfig, auth: &AuthContext, message: &str) -> Response {
+    let markup = templates::layout::admin_layout(
+        config,
+        auth,
+        "Reports",
+        "reports",
+        None,
+        templates::components::error_display::error_alert(message),
     );
     Html(markup.into_string()).into_response()
 }
@@ -195,7 +221,7 @@ async fn report_resolve(
             return flash::redirect_with_flash(
                 &format!("{base}/reports/{report_id}"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -212,7 +238,7 @@ async fn report_resolve(
             flash::redirect_with_flash(
                 &format!("{base}/reports/{report_id}"),
                 FlashData::success("Report resolved"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
         Err(error) => {
@@ -223,7 +249,7 @@ async fn report_resolve(
             flash::redirect_with_flash(
                 &format!("{base}/reports/{report_id}"),
                 FlashData::error("Failed to resolve report"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
     }

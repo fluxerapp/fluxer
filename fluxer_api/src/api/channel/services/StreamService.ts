@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {EmptyStreamThumbnailPayloadError} from '@fluxer/errors/src/domains/channel/EmptyStreamThumbnailPayloadError';
+import {type ChannelID, createChannelID, createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {InvalidStreamKeyFormatError} from '@fluxer/errors/src/domains/channel/InvalidStreamKeyFormatError';
 import {InvalidStreamThumbnailPayloadError} from '@fluxer/errors/src/domains/channel/InvalidStreamThumbnailPayloadError';
 import {StreamKeyChannelMismatchError} from '@fluxer/errors/src/domains/channel/StreamKeyChannelMismatchError';
@@ -9,12 +13,9 @@ import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedErr
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {StreamKeyScopeMismatchError} from '@fluxer/errors/src/domains/oauth/StreamKeyScopeMismatchError';
 import type {StreamPreviewUploadUrlResponseSchema} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
+import {isValidBase64} from '@fluxer/schema/src/primitives/FileValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
-import {type ChannelID, createChannelID, createGuildID, type GuildID, type UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ChannelService} from './ChannelService';
-import type {StreamPreviewService} from './StreamPreviewService';
 
 type ParsedStreamKey = {
 	scope: 'guild' | 'dm';
@@ -90,6 +91,9 @@ export class StreamService {
 			if (params.parsedKey.guildId !== channel.guildId.toString()) {
 				throw new StreamKeyScopeMismatchError();
 			}
+			if (channel.type !== ChannelTypes.GUILD_VOICE) {
+				throw new InvalidChannelTypeError();
+			}
 			const hasConnect = await this.gatewayService.checkPermission({
 				guildId: channel.guildId,
 				channelId: params.channelId,
@@ -99,8 +103,13 @@ export class StreamService {
 			if (!hasConnect) {
 				throw new MissingPermissionsError();
 			}
-		} else if (params.parsedKey.scope !== 'dm') {
-			throw new StreamKeyScopeMismatchError();
+		} else {
+			if (params.parsedKey.scope !== 'dm') {
+				throw new StreamKeyScopeMismatchError();
+			}
+			if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
+				throw new InvalidChannelTypeError();
+			}
 		}
 		if (params.parsedKey.channelId !== params.channelId.toString()) {
 			throw new StreamKeyChannelMismatchError();
@@ -166,10 +175,7 @@ export class StreamService {
 			channelId,
 			parsedKey,
 		});
-		const preview = await this.streamPreviewService.getPreview(params.streamKey);
-		if (preview) {
-		}
-		return preview;
+		return this.streamPreviewService.getPreview(params.streamKey);
 	}
 
 	async uploadPreview(params: {
@@ -185,15 +191,10 @@ export class StreamService {
 			channelId: params.channelId,
 			parsedKey,
 		});
-		let body: Uint8Array;
-		try {
-			body = Uint8Array.from(Buffer.from(params.thumbnail, 'base64'));
-		} catch {
+		if (!isValidBase64(params.thumbnail)) {
 			throw new InvalidStreamThumbnailPayloadError();
 		}
-		if (body.byteLength === 0) {
-			throw new EmptyStreamThumbnailPayloadError();
-		}
+		const body = Uint8Array.from(Buffer.from(params.thumbnail, 'base64'));
 		await this.streamPreviewService.uploadPreview({
 			streamKey: params.streamKey,
 			channelId: params.channelId,

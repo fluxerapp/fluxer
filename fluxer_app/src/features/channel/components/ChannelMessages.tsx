@@ -487,11 +487,11 @@ export const Messages = observer(function Messages({
 		};
 	}, []);
 	useEffect(() => {
-		if (!canAutoAck || !state.isAtBottom || !state.messages?.ready) return;
+		if (!canAutoAck || !state.isAtBottom || !state.messages?.ready || state.messages.loadingMore) return;
 		if (ReadStates.hasUnread(channel.id)) {
 			ReadStateCommands.ackWithStickyUnread(channel.id);
 		}
-	}, [canAutoAck, state.isAtBottom, state.messages?.ready, channel.id]);
+	}, [canAutoAck, state.isAtBottom, state.messages?.ready, state.messages?.loadingMore, channel.id]);
 	useEffect(() => {
 		return () => {
 			const readState = ReadStates.getIfExists(channel.id);

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {readFileSync} from 'node:fs';
-import {describe, expect, it} from 'vitest';
 import {
 	FOCUS_EXPANDED_MAIN_MIN_HEIGHT_PX,
 	FOCUS_EXPANDED_MINI_COLUMN_RULES,
 	FOCUS_EXPANDED_MINI_TILE_ASPECT_RATIO,
 	getFocusExpandedMiniColumnCount,
 	resolveFocusExpandedMainMetrics,
-} from './VoiceFocusLayoutMetrics';
+} from '@app/features/voice/components/VoiceFocusLayoutMetrics';
+import {describe, expect, it} from 'vitest';
 
 function sourceFile(name: string): string {
 	return readFileSync(new URL(name, import.meta.url), 'utf8');

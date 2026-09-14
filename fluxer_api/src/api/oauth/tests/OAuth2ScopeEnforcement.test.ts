@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createAdminApiKey} from '../../admin/tests/AdminTestUtils';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {createGuild, createRole, getRoles} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createAdminApiKey} from '@app/api/admin/tests/AdminTestUtils';
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {createGuild, createRole, getRoles} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	authorizeOAuth2,
 	createOAuth2Application,
 	createOAuth2TestSetup,
 	exchangeOAuth2AuthorizationCode,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {ADMIN_OAUTH2_APPLICATION_ID} from '@fluxer/constants/src/Core';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface OAuth2TokenResponse {
 	token: string;
@@ -411,10 +411,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				ADMIN_OAUTH2_APPLICATION_ID.toString(),
 			);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -423,10 +420,7 @@ describe('OAuth2 Scope Enforcement', () => {
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			const oauth2Token = await createOAuth2Token(harness, admin.userId, ['identify', 'email']);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 		});
@@ -434,10 +428,7 @@ describe('OAuth2 Scope Enforcement', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'user:lookup']);
 			await createBuilder(harness, `${admin.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
@@ -445,13 +436,7 @@ describe('OAuth2 Scope Enforcement', () => {
 			const admin = await createTestAccount(harness);
 			await setUserACLs(harness, admin, ['admin:authenticate', 'admin_api_key:manage', 'user:lookup']);
 			const apiKey = await createAdminApiKey(harness, admin, 'Test Key', ['user:lookup'], null);
-			await createBuilder(harness, apiKey.token)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
+			await createBuilder(harness, apiKey.token).get(`/admin/users/${admin.userId}`).expect(HTTP_STATUS.OK).execute();
 		});
 		test('built-in admin OAuth2 token still requires proper user ACLs', async () => {
 			const admin = await createTestAccount(harness);
@@ -463,10 +448,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				ADMIN_OAUTH2_APPLICATION_ID.toString(),
 			);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [admin.userId],
-				})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 		});
@@ -479,10 +461,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				ADMIN_OAUTH2_APPLICATION_ID.toString(),
 			);
 			await createBuilder(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({
-					user_ids: [user.userId],
-				})
+				.get(`/admin/users/${user.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
 				.execute();
 		});
@@ -509,8 +488,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				code: string;
 				message: string;
 			}>(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'ACCESS_DENIED')
 				.execute();
 			expect(json.code).toBe('ACCESS_DENIED');
@@ -528,8 +506,7 @@ describe('OAuth2 Scope Enforcement', () => {
 				code: string;
 				message: string;
 			}>(harness, `Bearer ${oauth2Token.token}`)
-				.post('/admin/users/lookup')
-				.body({user_ids: [admin.userId]})
+				.get(`/admin/users/${admin.userId}`)
 				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_ACL')
 				.execute();
 			expect(json.code).toBe('MISSING_ACL');
@@ -605,7 +582,7 @@ describe('OAuth2 Scope Enforcement', () => {
 		test('OAuth2 token from real authorization flow respects scope restrictions', async () => {
 			const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
 			await createGuild(harness, endUser.token, 'Test Guild');
-			const {authorizeOAuth2, exchangeOAuth2AuthorizationCode} = await import('./OAuthTestUtils');
+			const {authorizeOAuth2, exchangeOAuth2AuthorizationCode} = await import('@app/api/oauth/tests/OAuthTestUtils');
 			const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
 				client_id: application.id,
 				redirect_uri: redirectURI,
@@ -631,7 +608,7 @@ describe('OAuth2 Scope Enforcement', () => {
 		test('OAuth2 token with guilds scope from real flow can access guilds', async () => {
 			const {endUser, redirectURI, application} = await createOAuth2TestSetup(harness);
 			await createGuild(harness, endUser.token, 'Real Flow Guild');
-			const {authorizeOAuth2, exchangeOAuth2AuthorizationCode} = await import('./OAuthTestUtils');
+			const {authorizeOAuth2, exchangeOAuth2AuthorizationCode} = await import('@app/api/oauth/tests/OAuthTestUtils');
 			const authCodeResponse = await authorizeOAuth2(harness, endUser.token, {
 				client_id: application.id,
 				redirect_uri: redirectURI,

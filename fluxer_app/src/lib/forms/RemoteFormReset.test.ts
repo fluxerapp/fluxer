@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createRemoteFormResetMachineSnapshot,
 	getRemoteFormResetDecision,
@@ -8,7 +7,8 @@ import {
 	type RemoteFormResetMachineEvent,
 	type RemoteFormResetMachineSnapshot,
 	transitionRemoteFormResetSnapshot,
-} from './RemoteFormReset';
+} from '@app/lib/forms/RemoteFormReset';
+import {describe, expect, it} from 'vitest';
 
 function transition(
 	snapshot: RemoteFormResetMachineSnapshot,

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {ConsumerMessages, JsMsg} from 'nats';
-import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
-import type {IJobLedgerRepository} from '../../jobs/IJobLedgerRepository';
-import {setInjectedWorkerService} from '../../middleware/ServiceRegistry';
-import {NoopWorkerService} from '../../test/NoopWorkerService';
-import {CronScheduler} from '../CronScheduler';
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {CronScheduler} from '@app/api/worker/CronScheduler';
 import {
 	WORKER_CRON_STALE_AFTER_MS,
 	WORKER_HEARTBEAT_WRITE_INTERVAL_MS,
 	WORKER_LANE_STALE_AFTER_MS,
 	WorkerHeartbeat,
-} from '../WorkerHeartbeat';
-import {WorkerRunner} from '../WorkerRunner';
-import type {WorkerService} from '../WorkerService';
+} from '@app/api/worker/WorkerHeartbeat';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import type {WorkerService} from '@app/api/worker/WorkerService';
+import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import type {ConsumerMessages, JsMsg} from 'nats';
+import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
 
 const HEARTBEAT_PATH = '/tmp/fluxer-worker-heartbeat-test';
 const TASK_TYPE = 'processInactivityDeletions';
@@ -36,6 +36,10 @@ class FakeConsumerMessages {
 	private closed = false;
 
 	async close(): Promise<void> {
+		this.stop();
+	}
+
+	stop(): void {
 		this.closed = true;
 		const notify = this.notify;
 		this.notify = null;
@@ -59,7 +63,7 @@ function createRunner(messages: FakeConsumerMessages, heartbeat: WorkerHeartbeat
 				getJetStreamClient: () => ({
 					consumers: {
 						get: async () => ({
-							consume: async () => messages as unknown as ConsumerMessages,
+							fetch: async () => messages as unknown as ConsumerMessages,
 						}),
 					},
 				}),

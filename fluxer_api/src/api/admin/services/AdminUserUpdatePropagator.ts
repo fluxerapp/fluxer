@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {mapGuildMemberToResponse} from '../../guild/GuildModel';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {BaseUserUpdatePropagator} from '../../user/services/BaseUserUpdatePropagator';
-import {hasPartialUserFieldsChanged} from '../../user/UserMappers';
+import type {UserID} from '@app/api/BrandedTypes';
+import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
+import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
 
 interface AdminUserUpdatePropagatorDeps {
 	userCacheService: UserCacheService;

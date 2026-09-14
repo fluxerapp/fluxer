@@ -10,11 +10,7 @@ import {
 	JoinSourceTypes,
 } from '@fluxer/constants/src/GuildConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {
-	createInt32EnumType,
-	createNamedLiteralUnion,
-	withOpenApiType,
-} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createInt32EnumType, createNamedLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 
 export const GuildVerificationLevelSchema = createInt32EnumType(
 	[
@@ -80,18 +76,15 @@ export const SplashCardAlignmentSchema = createNamedLiteralUnion(
 	] as const,
 	'Alignment of the guild splash card',
 );
-export const JoinSourceTypeSchema = withOpenApiType(
-	createInt32EnumType(
-		[
-			[JoinSourceTypes.CREATOR, 'CREATOR', 'Member created the guild'],
-			[JoinSourceTypes.INSTANT_INVITE, 'INSTANT_INVITE', 'Member joined via an instant invite'],
-			[JoinSourceTypes.VANITY_URL, 'VANITY_URL', 'Member joined via the vanity URL'],
-			[JoinSourceTypes.BOT_INVITE, 'BOT_INVITE', 'Member was added via a bot invite'],
-			[JoinSourceTypes.ADMIN_FORCE_ADD, 'ADMIN_FORCE_ADD', 'Member was force-added by a platform administrator'],
-			[JoinSourceTypes.DISCOVERY, 'DISCOVERY', 'Member joined via guild discovery'],
-		],
-		'How the member joined the guild',
-		'JoinSourceType',
-	),
+export const JoinSourceTypeSchema = createInt32EnumType(
+	[
+		[JoinSourceTypes.CREATOR, 'CREATOR', 'Member created the guild'],
+		[JoinSourceTypes.INSTANT_INVITE, 'INSTANT_INVITE', 'Member joined via an instant invite'],
+		[JoinSourceTypes.VANITY_URL, 'VANITY_URL', 'Member joined via the vanity URL'],
+		[JoinSourceTypes.BOT_INVITE, 'BOT_INVITE', 'Member was added via a bot invite'],
+		[JoinSourceTypes.ADMIN_FORCE_ADD, 'ADMIN_FORCE_ADD', 'Member was force-added by a platform administrator'],
+		[JoinSourceTypes.DISCOVERY, 'DISCOVERY', 'Member joined via guild discovery'],
+	],
+	'How the member joined the guild',
 	'JoinSourceType',
 );

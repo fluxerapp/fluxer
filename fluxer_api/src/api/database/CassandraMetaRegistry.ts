@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import type {KvQueryMeta, KvTableSpec} from './CassandraTypes';
+import {Config} from '@app/api/Config';
+import type {KvQueryMeta, KvTableSpec} from '@app/api/database/CassandraTypes';
 
 export function getIsDev(): boolean {
 	return Config.nodeEnv === 'development';

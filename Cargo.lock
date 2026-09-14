@@ -1815,6 +1815,7 @@ dependencies = [
  "http 1.4.2",
  "http-body 1.0.1",
  "http-body-util",
+ "hyper",
  "libc",
  "moka",
  "parking_lot",
@@ -1864,6 +1865,25 @@ dependencies = [
  "tokio",
  "tracing",
  "url",
+]
+
+[[package]]
+name = "fluxer-recon"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64",
+ "fluxer-svc",
+ "hmac 0.13.0",
+ "reqwest",
+ "scylla",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "thiserror",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -1940,6 +1960,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "fluxer-svc",
+ "fluxer_common",
  "futures",
  "moka",
  "rmp-serde",
@@ -1990,13 +2011,11 @@ dependencies = [
  "anyhow",
  "axum",
  "base64",
- "fluxer-svc",
  "fluxer_common",
+ "futures-util",
  "hex",
- "moka",
  "rand 0.10.1",
  "reqwest",
- "scylla",
  "serde",
  "serde_json",
  "tokio",
@@ -2022,6 +2041,7 @@ dependencies = [
  "reqwest",
  "serde_json",
  "sha2 0.11.0",
+ "tempfile",
  "thiserror",
  "time",
  "tracing",

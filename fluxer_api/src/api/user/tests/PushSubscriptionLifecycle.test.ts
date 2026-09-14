@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {beforeEach, describe, expect, test} from 'vitest';
 import {
 	createSessionFromLogin,
 	createTestAccount,
 	loginAccount,
 	logoutSpecificSessions,
-} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	deleteMobileDevice,
 	deletePushSubscription,
@@ -19,7 +17,9 @@ import {
 	registerMobileDevice,
 	subscribePush,
 	unregisterMobileDevice,
-} from './UserTestUtils';
+} from '@app/api/user/tests/UserTestUtils';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('Push Subscription Lifecycle', () => {
 	let harness: ApiTestHarness;

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import type {ConsumerMessages, JsMsg} from 'nats';
 import {beforeAll, describe, expect, it, vi} from 'vitest';
-import type {IJobLedgerRepository} from '../../jobs/IJobLedgerRepository';
-import {setInjectedWorkerService} from '../../middleware/ServiceRegistry';
-import {NoopWorkerService} from '../../test/NoopWorkerService';
-import {WorkerRunner} from '../WorkerRunner';
 
 const TASK_TYPE = 'processInactivityDeletions';
 
@@ -13,6 +13,7 @@ class FakeConsumerMessages {
 	private readonly pending: Array<JsMsg> = [];
 	private notify: (() => void) | null = null;
 	private closed = false;
+	private failure: Error | null = null;
 
 	push(msg: JsMsg): void {
 		this.pending.push(msg);
@@ -20,6 +21,13 @@ class FakeConsumerMessages {
 	}
 
 	async close(): Promise<void> {
+		this.stop();
+	}
+
+	stop(error?: Error): void {
+		if (error) {
+			this.failure = error;
+		}
 		this.closed = true;
 		this.wake();
 	}
@@ -28,6 +36,9 @@ class FakeConsumerMessages {
 		while (true) {
 			while (this.pending.length > 0) {
 				yield this.pending.shift()!;
+			}
+			if (this.failure !== null) {
+				throw this.failure;
 			}
 			if (this.closed) {
 				return;
@@ -51,7 +62,7 @@ function createQueueStub(messages: FakeConsumerMessages) {
 			getJetStreamClient: () => ({
 				consumers: {
 					get: async () => ({
-						consume: async () => messages as unknown as ConsumerMessages,
+						fetch: async () => messages as unknown as ConsumerMessages,
 					}),
 				},
 			}),

@@ -37,6 +37,7 @@ import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Plural, Trans} from '@lingui/react/macro';
+import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import type {ReactNode} from 'react';
 
 const SAFE_DESCRIPTOR = msg({
@@ -67,7 +68,8 @@ export type ChangeRenderer = (
 
 const renderInline = (value: unknown, i18nInstance: I18n, guildId?: string): ReactNode =>
 	renderValueInline(value, guildId, i18nInstance);
-const joinLabels = (labels: Array<string>): string => labels.join(', ');
+const joinLabels = (labels: Array<string>, i18nInstance: I18n = i18n): string =>
+	formatListWithConfig(labels, {locale: i18nInstance.locale, style: 'long', type: 'conjunction'});
 const normalizeStringArray = (value: unknown): Array<string> =>
 	Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
 const getRoleNameResolver = (guildId: string): ((roleId: string) => string) => {
@@ -88,10 +90,12 @@ const getRoleDiff = (oldValue: unknown, newValue: unknown): {added: Array<string
 const mapFeatureLabels = (features: Array<string>, i18nInstance: I18n): Array<string> =>
 	features.map((feature) => getFeatureLabel(feature, i18nInstance) ?? feature);
 const formatPermissionList = (flags: Array<bigint>, i18nInstance: I18n = i18n): string =>
-	flags
-		.map((flag) => formatPermissionLabel(i18nInstance, flag, false))
-		.filter((label): label is string => label !== null)
-		.join(', ');
+	joinLabels(
+		flags
+			.map((flag) => formatPermissionLabel(i18nInstance, flag, false))
+			.filter((label): label is string => label !== null),
+		i18nInstance,
+	);
 const whenOldValueMissing =
 	(hasNoOld: ChangeRenderer, hasOld: ChangeRenderer): ChangeRenderer =>
 	(change, ctx) =>
@@ -233,10 +237,10 @@ const GUILD_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 		<Trans>Set the AFK channel to {renderInline(change.newValue, i18n, guildId)}.</Trans>
 	),
 	afk_timeout: (change, {i18n}) => {
-		const raw = safeScalarString(change.newValue, i18n);
-		const minutes = raw != null ? Number(raw) : Number.NaN;
-		if (Number.isNaN(minutes))
-			return <Trans>Set the AFK timeout to {renderInline(change.newValue, i18n)} minutes.</Trans>;
+		const seconds = change.newValue;
+		if (typeof seconds !== 'number' || !Number.isFinite(seconds))
+			return <Trans>Set the AFK timeout to {renderInline(change.newValue, i18n)} seconds.</Trans>;
+		const minutes = seconds / 60;
 		return (
 			<Plural
 				value={minutes}
@@ -658,26 +662,34 @@ const ROLE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	},
 	hoist: (change) =>
 		change.newValue === true ? (
-			<Trans>Display role members separately.</Trans>
+			<Trans>Enabled separate display of members with this role.</Trans>
 		) : (
-			<Trans>Don't display separately.</Trans>
+			<Trans>Disabled separate display of members with this role.</Trans>
 		),
 	mentionable: (change) =>
-		change.newValue === true ? <Trans>Allow @mention.</Trans> : <Trans>Disallow @mention.</Trans>,
+		change.newValue === true ? (
+			<Trans>Allowed everyone to mention this role.</Trans>
+		) : (
+			<Trans>Restricted mentions of this role to members with permission.</Trans>
+		),
 	icon_hash: () => <Trans>Updated the role icon.</Trans>,
 	unicode_emoji: whenNewValueMissing(
-		() => <Trans>Removed the unicode emoji.</Trans>,
-		(change, {i18n}) => <Trans>Set the unicode emoji to {renderInline(change.newValue, i18n)}.</Trans>,
+		() => <Trans>Removed the Unicode emoji.</Trans>,
+		(change, {i18n}) => <Trans>Set the Unicode emoji to {renderInline(change.newValue, i18n)}.</Trans>,
 	),
 };
 const INVITE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	code: (change, {i18n}) => <Trans>Invite code is {renderInline(change.newValue, i18n)}.</Trans>,
-	max_uses: (change, {i18n}) =>
-		change.newValue === 0 ? (
-			<Trans>This invite has unlimited uses.</Trans>
-		) : (
-			<Trans>This invite expires after {renderInline(change.newValue, i18n)} uses.</Trans>
-		),
+	max_uses: (change) => {
+		if (change.newValue === 0) return <Trans>This invite has unlimited uses.</Trans>;
+		if (typeof change.newValue !== 'number') return null;
+		const count = change.newValue;
+		return (
+			<Trans>
+				This invite expires after <Plural value={count} one="# use" other="# uses" />.
+			</Trans>
+		);
+	},
 	max_age: (change) => {
 		if (change.newValue === 0) return <Trans>This invite never expires.</Trans>;
 		if (typeof change.newValue !== 'number') return null;

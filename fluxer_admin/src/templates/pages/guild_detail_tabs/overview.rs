@@ -40,13 +40,13 @@ fn channel_type_label(channel_type: i32) -> &'static str {
 pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &str) -> Markup {
     let base = &config.base_path;
 
-    let mut sorted_channels = guild.channels.clone();
+    let mut sorted_channels: Vec<_> = guild.channels.iter().collect();
     sorted_channels.sort_by_key(|c| c.position);
 
     let channels_by_id: std::collections::HashMap<&str, &crate::api::types::GuildChannelSummary> =
         guild.channels.iter().map(|c| (c.id.as_str(), c)).collect();
 
-    let mut sorted_roles = guild.roles.clone();
+    let mut sorted_roles: Vec<_> = guild.roles.iter().collect();
     sorted_roles.sort_by_key(|role| std::cmp::Reverse(role.position));
 
     let icon_url = guild_icon_url(config, &guild.id, guild.icon.as_deref(), 256, true);
@@ -102,16 +102,10 @@ pub fn overview_tab(config: &AdminConfig, guild: &GuildDetailInfo, csrf_token: &
                             p class="text-sm font-semibold text-neutral-500" {
                                 "Custom warning text"
                             }
-                            @if let Some(ref text) = guild.content_warning_text {
-                                @if !text.trim().is_empty() {
-                                    blockquote class="border-amber-300 border-l-2 bg-amber-50 \
-                                                      px-3 py-2 text-neutral-800 text-sm italic" {
-                                        (text)
-                                    }
-                                } @else {
-                                    p class="text-sm text-neutral-500" {
-                                        "\u{2014} (default fallback shown to users)"
-                                    }
+                            @if let Some(text) = guild.content_warning_text.as_deref().filter(|text| !text.trim().is_empty()) {
+                                blockquote class="border-amber-300 border-l-2 bg-amber-50 \
+                                                  px-3 py-2 text-neutral-800 text-sm italic" {
+                                    (text)
                                 }
                             } @else {
                                 p class="text-sm text-neutral-500" {

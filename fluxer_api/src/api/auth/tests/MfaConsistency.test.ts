@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createTestAccount, createTotpSecret, generateTotpCode, type TestAccount} from './AuthTestUtils';
+import {
+	createTestAccount,
+	createTotpSecret,
+	generateTotpCode,
+	type TestAccount,
+} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createAuthenticationResponse,
 	createRegistrationResponse,
@@ -12,7 +13,13 @@ import {
 	type WebAuthnAuthenticationOptions,
 	type WebAuthnDevice,
 	type WebAuthnRegistrationOptions,
-} from './WebAuthnTestUtils';
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{
@@ -25,6 +32,21 @@ interface LoginMfaResponse {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+}
+
+interface SudoMfaMethodsResponse {
+	totp: boolean;
+	webauthn: boolean;
+	has_mfa: boolean;
+}
+
+interface SudoModeRequiredResponse {
+	code: string;
+	has_mfa?: boolean;
+	methods?: {
+		totp?: boolean;
+		webauthn?: boolean;
+	};
 }
 
 async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secret: string): Promise<TestAccount> {
@@ -289,6 +311,50 @@ describe('MFA Consistency Tests', () => {
 				})
 				.expect(400)
 				.execute();
+		});
+	});
+	describe('Sudo MFA method availability', () => {
+		test('mfa-methods agrees with the SUDO_MODE_REQUIRED body for an orphaned TOTP secret', async () => {
+			const account = await createTestAccount(harness);
+			const userRepository = new UserRepository();
+			const userId = createUserID(BigInt(account.userId));
+			const existing = await userRepository.findUnique(userId);
+			await userRepository.patchUpsert(userId, {totp_secret: createTotpSecret()}, existing!.toRow());
+			const methods = await createBuilder<SudoMfaMethodsResponse>(harness, account.token)
+				.get('/users/@me/sudo/mfa-methods')
+				.execute();
+			expect(methods).toEqual({totp: false, webauthn: false, has_mfa: false});
+			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, account.token)
+				.post('/users/@me/disable')
+				.body({})
+				.expect(403, 'SUDO_MODE_REQUIRED')
+				.execute();
+			expect(errorResp.has_mfa).toBe(methods.has_mfa);
+			expect(errorResp.methods).toEqual({totp: methods.totp, webauthn: methods.webauthn});
+		});
+		test('mfa-methods agrees with the SUDO_MODE_REQUIRED body for an enrolled TOTP user', async () => {
+			const account = await createTestAccount(harness);
+			const secret = createTotpSecret();
+			await createBuilder(harness, account.token)
+				.post('/users/@me/mfa/totp/enable')
+				.body({
+					secret,
+					code: generateTotpCode(secret),
+					password: account.password,
+				})
+				.execute();
+			const loggedIn = await loginWithTotp(harness, account, secret);
+			const methods = await createBuilder<SudoMfaMethodsResponse>(harness, loggedIn.token)
+				.get('/users/@me/sudo/mfa-methods')
+				.execute();
+			expect(methods).toEqual({totp: true, webauthn: false, has_mfa: true});
+			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, loggedIn.token)
+				.post('/users/@me/disable')
+				.body({})
+				.expect(403, 'SUDO_MODE_REQUIRED')
+				.execute();
+			expect(errorResp.has_mfa).toBe(methods.has_mfa);
+			expect(errorResp.methods).toEqual({totp: methods.totp, webauthn: methods.webauthn});
 		});
 	});
 	describe('MFA requirement propagates to sensitive operations', () => {

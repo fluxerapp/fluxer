@@ -59,6 +59,8 @@ execute_rpc_method(Method, PayloadBin) ->
     catch
         error:{gateway_rpc_error, Message} ->
             handle_throw_error(Method, Message);
+        error:{validation, _Reason} ->
+            handle_throw_error(Method, <<"invalid_params">>);
         throw:{error, Message} ->
             handle_throw_error(Method, Message);
         throw:Message ->
@@ -240,6 +242,33 @@ parse_nats_url_test() ->
     ?assertEqual({ok, "localhost", 4222}, parse_nats_url(<<"nats://localhost">>)),
     ?assertEqual({ok, "127.0.0.1", 4222}, parse_nats_url("nats://127.0.0.1:4222")),
     ?assertEqual({error, invalid_nats_url}, parse_nats_url(undefined)).
+
+execute_rpc_method_maps_validation_failure_to_invalid_params_test() ->
+    Payload = iolist_to_binary(
+        json:encode(#{
+            <<"guild_id">> => <<"nope">>,
+            <<"user_id">> => <<"2">>,
+            <<"channel_id">> => <<"0">>
+        })
+    ),
+    ?assertEqual(
+        #{<<"ok">> => false, <<"error">> => <<"invalid_params">>},
+        execute_rpc_method(<<"guild.get_user_permissions">>, Payload)
+    ).
+
+execute_rpc_method_maps_oversized_batch_to_batch_too_large_test() ->
+    GuildIds = [integer_to_binary(N) || N <- lists:seq(1, 101)],
+    Payload = iolist_to_binary(
+        json:encode(#{
+            <<"guild_ids">> => GuildIds,
+            <<"user_id">> => <<"1">>,
+            <<"channel_id">> => <<"0">>
+        })
+    ),
+    ?assertEqual(
+        #{<<"ok">> => false, <<"error">> => <<"batch_too_large">>},
+        execute_rpc_method(<<"guild.get_user_permissions_batch">>, Payload)
+    ).
 
 rpc_subjects_for_role_does_not_route_rpc_to_websocket_test() ->
     ?assertEqual([], rpc_subjects_for_role(websocket)).

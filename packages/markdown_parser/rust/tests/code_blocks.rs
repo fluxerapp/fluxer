@@ -202,3 +202,46 @@ fn unterminated_midline_fence_after_a_line_stays_text() {
         json!([{"type": "Text", "content": "hello\nfoo```bar with no closing fence"}])
     );
 }
+
+#[test]
+fn escaped_fence_stays_text_on_one_line() {
+    assert_eq!(
+        parse("\\```hello```"),
+        json!([{"type": "Text", "content": "```hello```"}])
+    );
+}
+
+#[test]
+fn escaped_fence_stays_text_across_lines() {
+    assert_eq!(
+        parse("\\```rust\nfn main() {}\n```"),
+        json!([{"type": "Text", "content": "```rust\nfn main() {}\n```"}])
+    );
+}
+
+#[test]
+fn escaped_midline_fence_stays_text() {
+    assert_eq!(
+        parse("label\\```rust\nfn main() {}\n```"),
+        json!([{"type": "Text", "content": "label```rust\nfn main() {}\n```"}])
+    );
+}
+
+#[test]
+fn escaped_backslash_before_fence_still_opens_a_code_block() {
+    assert_eq!(
+        parse("\\\\```hello```"),
+        json!([
+            {"type": "Text", "content": "\\"},
+            {"type": "CodeBlock", "content": "hello"}
+        ])
+    );
+}
+
+#[test]
+fn longer_escaped_fence_stays_text() {
+    assert_eq!(
+        parse("\\````hello````"),
+        json!([{"type": "Text", "content": "````hello````"}])
+    );
+}

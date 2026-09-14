@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {getTokenVariableDefinition, TOKEN_GROUPS} from '@app/features/theme_studio/sections/TokenGroups';
+import type {ThemeStudioBaseTheme} from '@app/features/theme_studio/utils/ThemeStudioPinnedVariables';
 import type {CompletionContext, CompletionResult} from '@codemirror/autocomplete';
 import {indentWithTab} from '@codemirror/commands';
 import {css, cssLanguage} from '@codemirror/lang-css';
@@ -12,8 +14,6 @@ import {basicSetup} from 'codemirror';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect, useMemo, useRef} from 'react';
-import type {ThemeStudioBaseTheme} from '../utils/ThemeStudioPinnedVariables';
-import {getTokenVariableDefinition, TOKEN_GROUPS} from './TokenGroups';
 
 const themeTokenCompletions = TOKEN_GROUPS.flatMap((group) =>
 	group.variables.map((variable) => ({

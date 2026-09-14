@@ -7,6 +7,7 @@ import {
 	$selectComposerNodeBoundary,
 	$selectComposerRange,
 } from '@app/features/lexical/composer/composerOffsets';
+import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {$createComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {
 	$createComposerStandardEmojiNode,
@@ -72,7 +73,7 @@ export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiRes
 		return;
 	}
 	const parent = node.getParent();
-	if (parent == null || parent.getType() !== 'paragraph') {
+	if (parent == null || (parent.getType() !== 'paragraph' && !$isComposerBlockquoteLineNode(parent))) {
 		return;
 	}
 	const text = node.getTextContent();

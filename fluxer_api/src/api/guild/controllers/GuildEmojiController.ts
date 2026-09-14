@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiID, createGuildID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {EmojiIdParam, GuildIdEmojiIdParam, GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {PurgeQuery} from '@fluxer/schema/src/domains/common/CommonQuerySchemas';
 import {
@@ -14,13 +21,6 @@ import {
 	GuildEmojiCreateRequest,
 	GuildEmojiUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {createEmojiID, createGuildID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function GuildEmojiController(app: HonoApp) {
 	app.post(
@@ -152,6 +152,7 @@ export function GuildEmojiController(app: HonoApp) {
 	app.delete(
 		'/guilds/:guild_id/emojis/:emoji_id',
 		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_DELETE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_DELETE_DAILY),
 		LoginRequired,
 		Validator('param', GuildIdEmojiIdParam),
 		Validator('query', PurgeQuery),

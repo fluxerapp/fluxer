@@ -99,7 +99,7 @@ handle_rate_limited_resume(Data, State) ->
     end.
 
 -spec handle_dispatch(
-    atom() | binary(), map() | null | {pre_encoded, binary()}, integer(), state()
+    atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
 ) -> ws_result().
 handle_dispatch(Event, Data, Seq, State) ->
     case gateway_event_pause:is_frozen() of
@@ -108,7 +108,7 @@ handle_dispatch(Event, Data, Seq, State) ->
     end.
 
 -spec do_dispatch(
-    atom() | binary(), map() | null | {pre_encoded, binary()}, integer(), state()
+    atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
 ) ->
     ws_result().
 do_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
@@ -143,7 +143,9 @@ dispatch_pre_encoded(Event, EncodedData, Seq, #{compress_ctx := CompressCtx} = S
             {ok, State}
     end.
 
--spec dispatch_standard(atom() | binary(), map() | null, integer(), state()) -> ws_result().
+-spec dispatch_standard(
+    atom() | binary(), map() | list() | null, integer(), state()
+) -> ws_result().
 dispatch_standard(Event, Data, Seq, State) ->
     EventName = gateway_handler_encode:dispatch_event_name(Event),
     Message = #{

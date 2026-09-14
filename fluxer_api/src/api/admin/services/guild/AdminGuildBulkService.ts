@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {BulkCancelledError, type BulkProgressHelpers} from '@app/api/admin/services/BulkProgressHelpers';
+import type {AdminGuildUpdateService} from '@app/api/admin/services/guild/AdminGuildUpdateService';
+import {createGuildID, type UserID} from '@app/api/BrandedTypes';
 import type {BulkUpdateGuildFeaturesRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
-import {createGuildID, type UserID} from '../../../BrandedTypes';
-import type {AdminAuditService} from '../AdminAuditService';
-import {BulkCancelledError, type BulkProgressHelpers} from '../BulkProgressHelpers';
-import type {AdminGuildUpdateService} from './AdminGuildUpdateService';
 
 interface AdminGuildBulkServiceDeps {
 	guildUpdateService: AdminGuildUpdateService;

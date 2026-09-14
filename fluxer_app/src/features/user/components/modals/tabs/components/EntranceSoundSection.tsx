@@ -5,6 +5,8 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import {DIRECT_MESSAGES_DESCRIPTOR, GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {
 	DMS_ENTRANCE_SOUND_SCOPE,
@@ -29,6 +31,7 @@ import {
 	ENTRANCE_SOUND_MAX_DURATION_MS,
 	ENTRANCE_SOUND_MAX_PER_USER,
 } from '@fluxer/constants/src/EntranceSoundConstants';
+import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
@@ -166,12 +169,14 @@ interface LibrarySoundOption extends ComboboxOption<string> {
 
 const NONE_LIBRARY_VALUE = '__none__';
 
-function formatEntranceSoundByteLimit(bytes: number): string {
-	if (bytes >= 1024 * 1024) {
-		const mb = bytes / (1024 * 1024);
-		return `${mb % 1 === 0 ? mb.toFixed(0) : mb.toFixed(1)}MB`;
-	}
-	return `${Math.floor(bytes / 1024)}KB`;
+function formatSoundDuration(durationMs: number, locale: string): string {
+	return getCachedNumberFormat(locale, {
+		style: 'unit',
+		unit: 'second',
+		unitDisplay: 'narrow',
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	}).format(durationMs / MS_PER_SECOND);
 }
 
 interface ScopeArtworkProps {
@@ -271,8 +276,11 @@ export const EntranceSoundSection: React.FC = observer(() => {
 		[],
 	);
 	const {i18n} = useLingui();
-	const maxDurationSeconds = (ENTRANCE_SOUND_MAX_DURATION_MS / 1000).toFixed(1);
-	const maxSizeLabel = formatEntranceSoundByteLimit(ENTRANCE_SOUND_MAX_BYTES);
+	const maxDurationSeconds = getCachedNumberFormat(i18n.locale, {
+		minimumFractionDigits: 1,
+		maximumFractionDigits: 1,
+	}).format(ENTRANCE_SOUND_MAX_DURATION_MS / MS_PER_SECOND);
+	const maxSizeLabel = formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES);
 	const currentGuildId = SelectedGuild.selectedGuildId;
 	const guilds = Guilds.getGuilds();
 	const [selectedScopeId, setSelectedScopeId] = useState(() =>
@@ -406,7 +414,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 			...library.map((entry: EntranceSoundEntry) => ({
 				value: entry.id,
 				label: entry.name,
-				description: `${(entry.durationMs / 1000).toFixed(1)}s`,
+				description: formatSoundDuration(entry.durationMs, i18n.locale),
 			})),
 		],
 		[library, i18n.locale],
@@ -573,7 +581,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 											{resolvedSound.name}
 										</span>
 										<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-											{(resolvedSound.durationMs / 1000).toFixed(1)}s
+											{formatSoundDuration(resolvedSound.durationMs, i18n.locale)}
 										</span>
 									</div>
 								</div>
@@ -653,8 +661,7 @@ export const EntranceSoundSection: React.FC = observer(() => {
 														{entry.name}
 													</span>
 													<span className={styles.soundDuration} data-flx="user.entrance-sound-section.sound-duration">
-														{(entry.durationMs / 1000).toFixed(1)}s
-														{isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}
+														{`${formatSoundDuration(entry.durationMs, i18n.locale)}${isActiveHere ? ` · ${i18n._(ACTIVE_BADGE_DESCRIPTOR)}` : ''}`}
 													</span>
 												</div>
 											</div>

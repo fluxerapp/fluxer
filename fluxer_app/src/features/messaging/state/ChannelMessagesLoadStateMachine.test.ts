@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	type ChannelMessagesLoadInput,
 	type ChannelMessagesWindowInput,
@@ -11,12 +10,14 @@ import {
 	resolveChannelMessagesWindowStatus,
 	selectChannelMessagesFillerVisible,
 	selectChannelMessagesLoadDecision,
+	selectChannelMessagesLoadRestoresTrust,
 	selectChannelMessagesSpacerHeight,
 	selectChannelMessagesWindowBar,
 	selectChannelMessagesWindowStatus,
 	transitionChannelMessagesLoadSnapshot,
 	transitionChannelMessagesWindowSnapshot,
-} from './ChannelMessagesLoadStateMachine';
+} from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
+import {describe, expect, it} from 'vitest';
 
 function input(overrides: Partial<ChannelMessagesLoadInput> = {}): ChannelMessagesLoadInput {
 	return {
@@ -387,5 +388,25 @@ describe('selectChannelMessagesFillerVisible', () => {
 			}
 		}
 		expect(streamCases).toBeGreaterThan(0);
+	});
+});
+
+describe('selectChannelMessagesLoadRestoresTrust', () => {
+	it('trusts a window a replacement load rebuilt from scratch', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'replace', isAfter: false, hasMoreAfter: false})).toBe(true);
+	});
+
+	it('trusts a window whose tail merge caught up to the live edge', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'mergeAfter', isAfter: true, hasMoreAfter: false})).toBe(true);
+	});
+
+	it('keeps distrusting a tail merge that stopped short of the live edge', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'mergeAfter', isAfter: true, hasMoreAfter: true})).toBe(false);
+	});
+
+	it('keeps distrusting a page of older history', () => {
+		expect(selectChannelMessagesLoadRestoresTrust({mode: 'mergeBefore', isAfter: false, hasMoreAfter: false})).toBe(
+			false,
+		);
 	});
 });

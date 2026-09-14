@@ -1,5 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {SudoVerificationBody} from '@app/api/auth/services/SudoVerificationService';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createApplicationID, createChannelID, createGuildID, createRoleID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {ApplicationService} from '@app/api/oauth/ApplicationService';
+import {ApplicationNotOwnedError} from '@app/api/oauth/ApplicationService';
+import type {BotAuthService} from '@app/api/oauth/BotAuthService';
+import {
+	mapApplicationToResponse,
+	mapBotProfileToResponse,
+	mapBotTokenResetResponse,
+	mapBotUserToResponse,
+} from '@app/api/oauth/OAuth2Mappers';
+import {filterOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
+import {ACCESS_TOKEN_TTL_SECONDS, type OAuth2Service} from '@app/api/oauth/OAuth2Service';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
+import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
+import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {canAuthorizeBotInvite, normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
@@ -33,26 +57,6 @@ import type {
 	TokenRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import type {Context} from 'hono';
-import type {z} from 'zod';
-import type {ApiContext} from '../ApiContext';
-import type {SudoVerificationBody} from '../auth/services/SudoVerificationService';
-import {requireSudoMode} from '../auth/services/SudoVerificationService';
-import {createApplicationID, createChannelID, createGuildID, createRoleID, type UserID} from '../BrandedTypes';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildService} from '../guild/services/GuildService';
-import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import {mapUserToOAuthResponse, mapUserToPartialResponse} from '../user/UserMappers';
-import {verifyPassword} from '../utils/PasswordUtils';
-import type {ApplicationService} from './ApplicationService';
-import {ApplicationNotOwnedError} from './ApplicationService';
-import type {BotAuthService} from './BotAuthService';
-import {mapApplicationToResponse, mapBotTokenResetResponse, mapBotUserToResponse} from './OAuth2Mappers';
-import {filterOAuth2Scopes} from './OAuth2ScopeUtils';
-import {ACCESS_TOKEN_TTL_SECONDS, type OAuth2Service} from './OAuth2Service';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from './repositories/IOAuth2TokenRepository';
-import {parseClientCredentials} from './utils/ParseClientCredentials';
 
 const COMPAT_VERIFY_KEY_PLACEHOLDER = '0'.repeat(64);
 
@@ -69,7 +73,7 @@ export class OAuth2RequestService {
 	) {}
 
 	async tokenExchange(params: {
-		form: z.infer<typeof TokenRequest>;
+		form: TokenRequest;
 		authorizationHeader?: string;
 		logPrefix: string;
 	}): Promise<OAuth2TokenResponse> {
@@ -144,7 +148,7 @@ export class OAuth2RequestService {
 		};
 	}
 
-	async revoke(params: {form: z.infer<typeof RevokeRequestForm>; authorizationHeader?: string}): Promise<void> {
+	async revoke(params: {form: RevokeRequestForm; authorizationHeader?: string}): Promise<void> {
 		const {clientId: clientIdStr, clientSecret: secret} = parseClientCredentials(
 			params.authorizationHeader,
 			params.form.client_id,
@@ -160,7 +164,7 @@ export class OAuth2RequestService {
 	}
 
 	async introspect(params: {
-		form: z.infer<typeof IntrospectRequestForm>;
+		form: IntrospectRequestForm;
 		authorizationHeader?: string;
 	}): Promise<OAuth2IntrospectResponse> {
 		const {clientId: clientIdStr, clientSecret: secret} = parseClientCredentials(
@@ -189,7 +193,7 @@ export class OAuth2RequestService {
 	}
 
 	async authorizeConsent(params: {
-		body: z.infer<typeof AuthorizeConsentRequest>;
+		body: AuthorizeConsentRequest;
 		userId: UserID;
 		requestCache: RequestCache;
 	}): Promise<OAuth2ConsentResponse> {
@@ -390,7 +394,7 @@ export class OAuth2RequestService {
 			redirect_uris: Array.from(application.oauth2RedirectUris),
 			scopes,
 			bot_public: application.botIsPublic || isOwner,
-			bot: botUser ? mapBotUserToResponse(botUser) : null,
+			bot: botUser ? mapBotProfileToResponse(botUser) : null,
 			current_user: requestingUser ? mapUserToPartialResponse(requestingUser) : null,
 		};
 	}

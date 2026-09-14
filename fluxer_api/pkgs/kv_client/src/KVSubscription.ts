@@ -2,7 +2,8 @@
 
 import type {IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import type {IKVLogger, KVClientMode, KVClusterNode} from '@pkgs/kv_client/src/KVClientConfig';
-import Redis from 'ioredis';
+import {resolveKVClusterConnection} from '@pkgs/kv_client/src/KVClusterConnection';
+import Redis, {type RedisOptions} from 'ioredis';
 
 interface KVSubscriptionConfig {
 	url: string;
@@ -12,16 +13,23 @@ interface KVSubscriptionConfig {
 	logger: IKVLogger;
 }
 
+interface KVSubscriptionConnect {
+	completion: Promise<void>;
+	controller: AbortController;
+}
+
 export class KVSubscription implements IKVSubscription {
 	private readonly url: string;
 	private readonly mode: KVClientMode;
 	private readonly clusterNodes: Array<KVClusterNode>;
 	private readonly timeoutMs: number;
 	private readonly logger: IKVLogger;
-	private readonly channels: Set<string> = new Set();
+	private readonly desiredChannels = new Set<string>();
 	private readonly messageCallbacks: Set<(channel: string, message: string) => void> = new Set();
 	private readonly errorCallbacks: Set<(error: Error) => void> = new Set();
 	private client: Redis | null = null;
+	private connecting: KVSubscriptionConnect | null = null;
+	private closing: Promise<void> | null = null;
 
 	constructor(config: KVSubscriptionConfig) {
 		this.url = config.url;
@@ -32,31 +40,125 @@ export class KVSubscription implements IKVSubscription {
 	}
 
 	async connect(): Promise<void> {
-		if (this.client !== null) {
+		this.assertNotClosing();
+		if (this.connecting !== null) {
+			return await this.connecting.completion;
+		}
+		if (this.client?.status === 'ready') {
 			return;
 		}
-		const connectionUrl = this.resolveSubscriptionUrl();
-		const client = new Redis(connectionUrl, {
+		if (this.client === null || this.client.status === 'end') {
+			this.client = this.createClient();
+		}
+		const controller = new AbortController();
+		const connecting: KVSubscriptionConnect = {
+			completion: this.connectClient(this.client, controller.signal),
+			controller,
+		};
+		this.connecting = connecting;
+		try {
+			await connecting.completion;
+		} finally {
+			controller.abort();
+			if (this.connecting === connecting) {
+				this.connecting = null;
+			}
+		}
+	}
+
+	private createClient(): Redis {
+		const options: RedisOptions = {
 			autoResubscribe: true,
 			connectTimeout: this.timeoutMs,
 			commandTimeout: this.timeoutMs,
 			maxRetriesPerRequest: 1,
 			retryStrategy: createRetryStrategy(),
-		});
+		};
+		const connection = this.mode === 'cluster' ? resolveKVClusterConnection(this.url, this.clusterNodes) : null;
+		const client = connection
+			? new Redis({...connection.redisOptions, ...connection.nodes[0], db: 0, ...options})
+			: new Redis(this.url, options);
 		client.on('message', (channel: string, message: string) => {
+			if (this.client !== client || this.closing !== null) {
+				return;
+			}
 			for (const callback of this.messageCallbacks) {
 				callback(channel, message);
 			}
 		});
 		client.on('error', (error: Error) => {
+			if (this.client !== client || this.closing !== null) {
+				return;
+			}
 			this.logger.error({error}, 'KV subscription error');
 			for (const callback of this.errorCallbacks) {
 				callback(error);
 			}
 		});
-		this.client = client;
-		if (this.channels.size > 0) {
-			await this.client.subscribe(...Array.from(this.channels));
+		return client;
+	}
+
+	private async connectClient(client: Redis, signal: AbortSignal): Promise<void> {
+		try {
+			const ready = this.waitForReady(client, signal);
+			if (client.status === 'wait') {
+				await Promise.all([ready, client.connect()]);
+			} else {
+				await ready;
+			}
+			this.assertCurrentClient(client);
+			if (this.desiredChannels.size > 0) {
+				await client.subscribe(...this.desiredChannels);
+				this.assertCurrentClient(client);
+			}
+		} catch (error) {
+			if (this.client === client && this.closing === null) {
+				this.client = null;
+				client.disconnect(false);
+			}
+			throw error;
+		}
+	}
+
+	private waitForReady(client: Redis, signal: AbortSignal): Promise<void> {
+		if (signal.aborted) {
+			return Promise.reject(signal.reason);
+		}
+		if (client.status === 'ready') {
+			return Promise.resolve();
+		}
+		return new Promise((resolve, reject) => {
+			const finish = (error?: unknown): void => {
+				clearTimeout(timer);
+				client.off('ready', ready);
+				client.off('end', ended);
+				signal.removeEventListener('abort', aborted);
+				if (error === undefined) {
+					resolve();
+				} else {
+					reject(error);
+				}
+			};
+			const ready = (): void => finish();
+			const ended = (): void => finish(new Error('KV subscription connection was closed'));
+			const aborted = (): void => finish(signal.reason);
+			const timer = setTimeout(() => finish(new Error('KV subscription connection timed out')), this.timeoutMs);
+			timer.unref();
+			client.once('ready', ready);
+			client.once('end', ended);
+			signal.addEventListener('abort', aborted, {once: true});
+		});
+	}
+
+	private assertNotClosing(): void {
+		if (this.closing !== null) {
+			throw new Error('KV subscription is closing');
+		}
+	}
+
+	private assertCurrentClient(client: Redis): void {
+		if (this.client !== client || this.closing !== null) {
+			throw new Error('KV subscription connection was closed');
 		}
 	}
 
@@ -87,39 +189,72 @@ export class KVSubscription implements IKVSubscription {
 	}
 
 	async subscribe(...channels: Array<string>): Promise<void> {
-		const newChannels = channels.filter((channel) => {
-			if (this.channels.has(channel)) {
-				return false;
-			}
-			this.channels.add(channel);
-			return true;
-		});
-		if (newChannels.length === 0 || this.client === null) {
+		this.assertNotClosing();
+		const requestedChannels = [...new Set(channels)];
+		for (const channel of requestedChannels) {
+			this.desiredChannels.add(channel);
+		}
+		const client = this.client;
+		if (requestedChannels.length === 0 || client === null) {
 			return;
 		}
-		await this.client.subscribe(...newChannels);
+		await client.subscribe(...requestedChannels);
+		this.assertCurrentClient(client);
 	}
 
 	async unsubscribe(...channels: Array<string>): Promise<void> {
-		const removedChannels = channels.filter((channel) => this.channels.delete(channel));
-		if (removedChannels.length === 0 || this.client === null) {
+		this.assertNotClosing();
+		const requestedChannels = [...new Set(channels)];
+		for (const channel of requestedChannels) {
+			this.desiredChannels.delete(channel);
+		}
+		const client = this.client;
+		if (requestedChannels.length === 0 || client === null) {
 			return;
 		}
-		await this.client.unsubscribe(...removedChannels);
+		await client.unsubscribe(...requestedChannels);
+		this.assertCurrentClient(client);
 	}
 
 	async quit(): Promise<void> {
+		if (this.closing !== null) {
+			return await this.closing;
+		}
 		const client = this.client;
-		this.client = null;
 		if (client === null) {
 			return;
 		}
-		await client.quit();
+		const closing = Promise.resolve().then(() => this.closeClient(client));
+		this.closing = closing;
+		this.connecting?.controller.abort(new Error('KV subscription connection was closed'));
+		try {
+			await closing;
+		} finally {
+			if (this.client === client) {
+				this.client = null;
+			}
+			this.connecting = null;
+			if (this.closing === closing) {
+				this.closing = null;
+			}
+		}
+	}
+
+	private async closeClient(client: Redis): Promise<void> {
+		try {
+			if (this.client === client && client.status !== 'end') {
+				await client.quit();
+			}
+		} finally {
+			client.disconnect(false);
+		}
 	}
 
 	async disconnect(): Promise<void> {
 		const client = this.client;
 		this.client = null;
+		this.connecting?.controller.abort(new Error('KV subscription connection was closed'));
+		this.connecting = null;
 		if (client === null) {
 			return;
 		}
@@ -134,19 +269,8 @@ export class KVSubscription implements IKVSubscription {
 			this.errorCallbacks.clear();
 		}
 	}
-
-	private resolveSubscriptionUrl(): string {
-		if (this.mode !== 'cluster' || this.clusterNodes.length === 0) {
-			return this.url;
-		}
-		const node = this.clusterNodes[0];
-		return `redis://${node.host}:${node.port}`;
-	}
 }
 
 function createRetryStrategy(): (times: number) => number {
-	return (times: number) => {
-		const backoffMs = Math.min(times * 100, 2000);
-		return backoffMs;
-	};
+	return (times) => Math.min(times * 100, 2000);
 }

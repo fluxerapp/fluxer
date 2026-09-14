@@ -64,14 +64,6 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		stockValue: true,
 	},
 	{
-		id: 'message_scheduling',
-		type: 'boolean',
-		status: 'coming_soon',
-		i18nKey: 'message_scheduling',
-		restrictedValue: false,
-		stockValue: true,
-	},
-	{
 		id: 'profile_badge',
 		type: 'boolean',
 		status: 'available',

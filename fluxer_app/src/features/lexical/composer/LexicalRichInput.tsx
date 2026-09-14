@@ -12,7 +12,6 @@ import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegment
 import {resolveTypedEmojiToken} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import {flxElementClassName} from '@app/lib/react';
 import type {I18n} from '@lingui/core';
-
 import type React from 'react';
 import {useCallback, useId, useImperativeHandle, useRef, useState} from 'react';
 
@@ -128,17 +127,24 @@ export const LexicalRichInput = ({
 		[onChange, previousValueRef, rememberSegmentsForValue, segmentManagerRef],
 	);
 
-	const {autocompleteQuery, autocompleteOptions, autocompleteType, isSlotMenu, onCursorMove, handleSelect} =
-		useLexicalAutocomplete({
-			channel,
-			handleRef,
-			allowedTriggers: allowedTriggers ?? (channel == null ? SAFE_CONTEXT_FREE_TRIGGERS : SAFE_CHANNEL_TRIGGERS),
-			allowSpecialMentions,
-			allowMediaOptions: false,
-			maxActualLength: maxLength,
-			onExceedMaxLength,
-			i18n,
-		});
+	const {
+		autocompleteQuery,
+		autocompleteOptions,
+		autocompleteType,
+		isSlotMenu,
+		onCursorMove,
+		handleSelect,
+		specialMentionsAllowed,
+	} = useLexicalAutocomplete({
+		channel,
+		handleRef,
+		allowedTriggers: allowedTriggers ?? (channel == null ? SAFE_CONTEXT_FREE_TRIGGERS : SAFE_CHANNEL_TRIGGERS),
+		allowSpecialMentions,
+		allowMediaOptions: false,
+		maxActualLength: maxLength,
+		onExceedMaxLength,
+		i18n,
+	});
 
 	const insertEmoji = useCallback(
 		(emoji: FlatEmoji) =>
@@ -224,6 +230,7 @@ export const LexicalRichInput = ({
 				markdown={markdown}
 				markdownParserFlags={markdownParserFlags}
 				emojiShortcodeResolver={emojiShortcodeResolver}
+				specialMentionsAllowed={specialMentionsAllowed}
 				channelId={channel == null ? undefined : channel.id}
 				guildId={channel == null ? undefined : channel.guildId}
 				submitOnEnter={submitOnEnter ?? singleLine}

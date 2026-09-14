@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createLocalVoiceStateSnapshot,
 	getActiveLocalVoiceState,
@@ -8,7 +7,8 @@ import {
 	type LocalVoiceStateEvent,
 	type LocalVoiceStateSnapshot,
 	transitionLocalVoiceStateSnapshot,
-} from './LocalVoiceStateMachine';
+} from '@app/features/voice/state/LocalVoiceStateMachine';
+import {describe, expect, it} from 'vitest';
 
 const CONNECTION_A = 'connection-a';
 const CONNECTION_B = 'connection-b';

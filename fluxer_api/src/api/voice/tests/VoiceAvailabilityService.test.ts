@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {VoiceAccessContext} from '@app/api/voice/VoiceAvailabilityService';
+import {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {describe, expect, it} from 'vitest';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {VoiceAccessContext} from '../VoiceAvailabilityService';
-import {VoiceAvailabilityService} from '../VoiceAvailabilityService';
-import type {VoiceRegionRecord, VoiceServerRecord} from '../VoiceModel';
-import type {VoiceTopology} from '../VoiceTopology';
 
 function createMockRegion(overrides: Partial<VoiceRegionRecord> = {}): VoiceRegionRecord {
 	return {
@@ -38,6 +38,7 @@ function createMockServer(overrides: Partial<VoiceServerRecord> = {}): VoiceServ
 		latitude: null,
 		longitude: null,
 		isActive: true,
+		softConnectionLimit: null,
 		restrictions: {
 			vipOnly: false,
 			requiredGuildFeatures: new Set(),
@@ -383,6 +384,38 @@ describe('VoiceAvailabilityService', () => {
 			const second = service.selectServer('us-default', context);
 			expect(first!.serverId).toBe('server-1');
 			expect(second!.serverId).toBe('server-2');
+		});
+		it('rotates only between servers below their soft connection limit', () => {
+			const region = createMockRegion();
+			const server1 = createMockServer({serverId: 'server-1', softConnectionLimit: 50});
+			const server2 = createMockServer({serverId: 'server-2'});
+			const topology = createMockTopology([region], new Map([['us-default', [server1, server2]]]));
+			service = new VoiceAvailabilityService(topology, {
+				getConnectionCounts: () => new Map([['server-1', 50]]),
+			});
+			const context: VoiceAccessContext = {
+				requestingUserId: 123n as UserID,
+			};
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-2');
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-2');
+		});
+		it('rotates across every server when all of them are at their soft connection limit', () => {
+			const region = createMockRegion();
+			const server1 = createMockServer({serverId: 'server-1', softConnectionLimit: 50});
+			const server2 = createMockServer({serverId: 'server-2', softConnectionLimit: 50});
+			const topology = createMockTopology([region], new Map([['us-default', [server1, server2]]]));
+			service = new VoiceAvailabilityService(topology, {
+				getConnectionCounts: () =>
+					new Map([
+						['server-1', 90],
+						['server-2', 90],
+					]),
+			});
+			const context: VoiceAccessContext = {
+				requestingUserId: 123n as UserID,
+			};
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-1');
+			expect(service.selectServer('us-default', context)!.serverId).toBe('server-2');
 		});
 	});
 });

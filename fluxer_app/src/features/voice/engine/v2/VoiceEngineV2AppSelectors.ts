@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import {
 	selectVoiceEngineV2Model,
 	summarizeVoiceEngineV2Stats,
@@ -24,7 +25,6 @@ import {
 	type VoiceEngineV2TrackSource,
 	type VoiceEngineV2WatchedStream,
 } from '@fluxer/voice_engine_v2';
-import {assertNonNullObject, assertString} from './VoiceEngineV2AppAdapterAssertions';
 
 export type VoiceEngineV2AppProjectionSource = VoiceEngineV2Model | VoiceEngineV2Snapshot;
 

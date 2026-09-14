@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiSearchIndex} from '@app/features/emoji/state/EmojiSearchIndex';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {bench, describe} from 'vitest';
-import {createEmojiSearchIndex} from './EmojiSearchIndex';
 
 const EMOJI_COUNT = 20_000;
 const QUERY_COUNT = 1_000;

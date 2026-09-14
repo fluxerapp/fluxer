@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {Config} from '@app/api/Config';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {stripNonJpegImageMetadata} from '@app/api/infrastructure/StorageObjectHelpers';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
 import {
 	type AssetKind,
 	formatAssetUploadExtensions,
@@ -14,15 +23,6 @@ import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlo
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import sharp from 'sharp';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import {bannedAvatarHashCache} from '../middleware/BannedAvatarHashCache';
-import {contentModerationService} from './ContentModerationService';
-import type {IMediaService, MediaProxyMetadataResponse} from './IMediaService';
-import type {IStorageService} from './IStorageService';
-import {stripNonJpegImageMetadata} from './StorageObjectHelpers';
 
 type ResourceType = 'attachment' | 'avatar' | 'emoji' | 'sticker' | 'banner' | 'other';
 type LimitConfigSnapshotProvider = Pick<LimitConfigService, 'getConfigSnapshot'>;
@@ -64,9 +64,11 @@ export class AvatarService {
 		}
 	}
 
-	private resolveSizeLimit(key: LimitKey, fallback: number): number {
-		const ctx = createLimitMatchContext({user: null});
-		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, key);
+	private resolveSizeLimit(key: LimitKey, fallback: number, guildFeatures: Iterable<string> | null = null): number {
+		const ctx = createLimitMatchContext({user: null, guildFeatures});
+		const resolved = resolveLimit(this.limitConfigService.getConfigSnapshot(), ctx, key, {
+			evaluationContext: guildFeatures ? 'guild' : 'user',
+		});
 		if (!Number.isFinite(resolved) || resolved < 0) {
 			return fallback;
 		}
@@ -93,12 +95,7 @@ export class AvatarService {
 			return null;
 		}
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
 		if (imageBuffer.length > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
@@ -111,7 +108,7 @@ export class AvatarService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'block',
+				nsfw: 'allow',
 			}),
 			kind,
 			errorPath,
@@ -154,12 +151,7 @@ export class AvatarService {
 			return null;
 		}
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
 		const maxAvatarSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
 		if (imageBuffer.length > maxAvatarSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
@@ -171,7 +163,7 @@ export class AvatarService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'block',
+				nsfw: 'allow',
 			}),
 			kind: 'avatar',
 			errorPath,
@@ -199,23 +191,16 @@ export class AvatarService {
 		return storedHash;
 	}
 
-	async processEmoji(params: {errorPath: string; base64Image: string}): Promise<{
+	async processEmoji(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
 		contentType: string;
-		nsfw: boolean;
-		nsfwProbability?: number;
 	}> {
-		const {errorPath, base64Image} = params;
+		const {errorPath, base64Image, guildFeatures} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
-		const maxEmojiSize = this.resolveSizeLimit('emoji_max_size', EMOJI_MAX_SIZE);
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
+		const maxEmojiSize = this.resolveSizeLimit('emoji_max_size', EMOJI_MAX_SIZE, guildFeatures);
 		if (imageBuffer.length > maxEmojiSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxEmojiSize,
@@ -226,7 +211,7 @@ export class AvatarService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'flag',
+				nsfw: 'allow',
 			}),
 			kind: 'emoji',
 			errorPath,
@@ -237,8 +222,6 @@ export class AvatarService {
 			animated,
 			format: metadata.format,
 			contentType: metadata.content_type,
-			nsfw: metadata.nsfw,
-			nsfwProbability: metadata.nsfw_probability,
 		};
 	}
 
@@ -270,23 +253,16 @@ export class AvatarService {
 		});
 	}
 
-	async processSticker(params: {errorPath: string; base64Image: string}): Promise<{
+	async processSticker(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;
 		format: string;
 		contentType: string;
-		nsfw: boolean;
-		nsfwProbability?: number;
 	}> {
-		const {errorPath, base64Image} = params;
+		const {errorPath, base64Image, guildFeatures} = params;
 		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
-		let imageBuffer: Uint8Array;
-		try {
-			imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
-		} catch {
-			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.INVALID_IMAGE_DATA);
-		}
-		const maxStickerSize = this.resolveSizeLimit('sticker_max_size', STICKER_MAX_SIZE);
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
+		const maxStickerSize = this.resolveSizeLimit('sticker_max_size', STICKER_MAX_SIZE, guildFeatures);
 		if (imageBuffer.length > maxStickerSize) {
 			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {
 				maxSize: maxStickerSize,
@@ -297,7 +273,7 @@ export class AvatarService {
 				type: 'base64',
 				base64: base64Data,
 				version: 2,
-				nsfw: 'flag',
+				nsfw: 'allow',
 			}),
 			kind: 'sticker',
 			errorPath,
@@ -308,8 +284,6 @@ export class AvatarService {
 			animated,
 			format: metadata.format,
 			contentType: metadata.content_type,
-			nsfw: metadata.nsfw,
-			nsfwProbability: metadata.nsfw_probability,
 		};
 	}
 
@@ -348,7 +322,7 @@ export class AvatarService {
 				bucket: Config.s3.buckets.cdn,
 				key: `stickers/${stickerId}`,
 				version: 2,
-				nsfw: 'block',
+				nsfw: 'allow',
 			});
 			return metadata?.animated ?? null;
 		} catch (_error) {

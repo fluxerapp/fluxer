@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	applyProtectedOverwriteBits,
+	applyProtectedRolePermissions,
+	parseClientFeaturesHeader,
+} from '@app/api/utils/featureUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {describe, expect, it} from 'vitest';
-import {applyProtectedOverwriteBits, applyProtectedRolePermissions, parseClientFeaturesHeader} from '../featureUtils';
 
 const VCM = Permissions.VIEW_CHANNEL_MEMBERS;
 const FEATURE = 'view_channel_members_permission';

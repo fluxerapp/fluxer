@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {DonationRateLimitConfigs} from '@app/api/rate_limit_configs/DonationRateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	DonationCheckoutRequest,
 	DonationCheckoutResponse,
 	DonationManageQuery,
 	DonationRequestLinkRequest,
 } from '@fluxer/schema/src/domains/donation/DonationSchemas';
-import {Config} from '../Config';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {DonationRateLimitConfigs} from '../rate_limit_configs/DonationRateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function DonationController(app: HonoApp) {
 	app.post(
@@ -29,7 +29,7 @@ export function DonationController(app: HonoApp) {
 		Validator('json', DonationRequestLinkRequest),
 		async (ctx) => {
 			const {email} = ctx.req.valid('json');
-			await ctx.get('donationService').requestMagicLink(email);
+			await ctx.get('donationService').requestMagicLink(email, ctx.get('requestLocale') ?? null);
 			return ctx.body(null, 204);
 		},
 	);
@@ -77,6 +77,7 @@ export function DonationController(app: HonoApp) {
 				currency: body.currency,
 				interval: body.interval,
 				isBusiness: body.is_business,
+				locale: ctx.get('requestLocale') ?? null,
 			});
 			return ctx.json({url});
 		},

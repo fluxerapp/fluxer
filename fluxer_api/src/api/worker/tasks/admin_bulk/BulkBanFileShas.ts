@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createUserID} from '@app/api/BrandedTypes';
+import {ContentBlocklistCategory, ContentBlocklistSeverity} from '@app/api/constants/ContentModeration';
+import {fileShaCache} from '@app/api/middleware/FileShaCache';
+import {getCacheService} from '@app/api/middleware/ServiceSingletons';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {createUserID} from '../../../BrandedTypes';
-import {ContentBlocklistCategory, ContentBlocklistSeverity} from '../../../constants/ContentModeration';
-import {fileShaCache} from '../../../middleware/FileShaCache';
-import {getCacheService} from '../../../middleware/ServiceSingletons';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 const BANNED_FILE_SHAS_REFRESH_CHANNEL = 'banned_file_shas:refresh';
 const SHA256_RE = /^[0-9a-fA-F]{64}$/;

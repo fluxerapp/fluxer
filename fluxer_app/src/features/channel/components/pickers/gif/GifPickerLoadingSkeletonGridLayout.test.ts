@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {buildGifPickerLoadingSkeletonLayout} from '@app/features/channel/components/pickers/gif/GifPickerLoadingSkeletonGridLayout';
 import {describe, expect, it} from 'vitest';
-import {buildGifPickerLoadingSkeletonLayout} from './GifPickerLoadingSkeletonGridLayout';
 
 describe('buildGifPickerLoadingSkeletonLayout', () => {
 	it('lays out GIF-like placeholders with the same masonry constraints as the real grid', () => {

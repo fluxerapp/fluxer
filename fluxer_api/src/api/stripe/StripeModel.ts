@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import type {GiftCodeMetadataResponse, GiftCodeResponse} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {GiftCode} from '../models/GiftCode';
-import {getCachedUserPartialResponse} from '../user/UserCacheHelpers';
 
 interface MapGiftCodeToResponseParams {
 	giftCode: GiftCode;

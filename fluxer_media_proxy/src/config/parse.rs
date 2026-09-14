@@ -3,7 +3,6 @@
 use super::{BucketStyle, DeploymentMode, StorageBackend};
 use crate::secret::SecretBytes;
 use base64::{Engine as _, engine::general_purpose};
-use std::net::IpAddr;
 
 #[derive(Debug, Default)]
 pub(super) struct EnvMap(Vec<(String, String)>);
@@ -211,24 +210,6 @@ where
         "{var_name} must be between {min_value} and {max_value}"
     );
     Ok(parsed)
-}
-
-pub(super) fn parse_ip_list_env(var_name: &str, raw: Option<&str>) -> anyhow::Result<Vec<IpAddr>> {
-    let Some(raw) = raw.map(str::trim).filter(|s| !s.is_empty()) else {
-        return Ok(Vec::new());
-    };
-    let mut out = Vec::new();
-    for entry in raw.split(',') {
-        let entry = entry.trim();
-        if entry.is_empty() {
-            continue;
-        }
-        let ip = entry
-            .parse::<IpAddr>()
-            .map_err(|_| anyhow::anyhow!("{var_name} contains invalid IP: {entry}"))?;
-        out.push(ip);
-    }
-    Ok(out)
 }
 
 pub(super) fn default_native_transform_concurrency() -> usize {

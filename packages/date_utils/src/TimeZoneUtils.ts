@@ -1,18 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getTimeZones, timeZonesNames} from '@vvo/tzdb';
+import {getTimeZones, type TimeZone, timeZonesNames} from '@vvo/tzdb';
 
 const UTC_TIME_ZONE_ID = 'UTC';
-
-interface TimeZoneRecord {
-	readonly name: string;
-	readonly group: ReadonlyArray<string>;
-	readonly alternativeName?: string;
-	readonly countryName?: string;
-	readonly countryCode?: string;
-	readonly mainCities: ReadonlyArray<string>;
-	readonly currentTimeOffsetInMinutes: number;
-}
 
 interface TimeZoneDisplayOption {
 	readonly value: string;
@@ -28,17 +18,15 @@ function cleanTimeZoneId(timeZone: string | null | undefined): string | null {
 	return value ? value : null;
 }
 
-function getDisplayTimeZones(): Array<TimeZoneRecord> {
-	return getTimeZones({includeUtc: true});
+function getDisplayTimeZones(): Array<TimeZone> {
+	return getTimeZones({includeUtc: true}).map((record) =>
+		record.group.includes(UTC_TIME_ZONE_ID) ? {...record, name: UTC_TIME_ZONE_ID} : record,
+	);
 }
 
-function findTimeZone(timeZone: string | null | undefined): TimeZoneRecord | null {
-	const value = cleanTimeZoneId(timeZone);
-	if (!value) {
-		return null;
-	}
+function findTimeZone(timeZone: string): TimeZone | null {
 	for (const record of getDisplayTimeZones()) {
-		if (record.name === value || record.group.includes(value)) {
+		if (record.name === timeZone || record.group.includes(timeZone)) {
 			return record;
 		}
 	}
@@ -81,7 +69,13 @@ export function isSupportedTimeZoneId(timeZone: string | null | undefined): bool
 }
 
 export function getCurrentTimeZoneOffsetMinutes(timeZone: string | null | undefined): number | null {
-	const record = findTimeZone(timeZone);
+	const value = cleanTimeZoneId(timeZone);
+	if (!value) return null;
+	if (supportedTimeZoneIds.has(value)) {
+		const offset = getRuntimeOffsetMinutes(value);
+		if (offset !== null) return offset;
+	}
+	const record = findTimeZone(value);
 	if (!record) {
 		return null;
 	}
@@ -98,7 +92,7 @@ function formatUtcOffset(offsetMinutes: number): string {
 	return `UTC${sign}${hours}:${minutes}`;
 }
 
-function formatTimeZonePlace(record: TimeZoneRecord): string {
+function formatTimeZonePlace(record: TimeZone): string {
 	if (record.name === UTC_TIME_ZONE_ID) {
 		return UTC_TIME_ZONE_ID;
 	}

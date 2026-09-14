@@ -1,31 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export interface HiddenMutedChannelVisibilityInput {
-	isMuted: boolean;
+	isCategoryMuted: boolean;
+	isChannelMuted: boolean;
 	isSelected: boolean;
 	isConnected: boolean;
 	hasVisibleUnread: boolean;
 }
 
 export function shouldShowChannelWhenHidingMutedChannels({
-	isMuted,
+	isCategoryMuted,
+	isChannelMuted,
 	isSelected,
 	isConnected,
 	hasVisibleUnread,
 }: HiddenMutedChannelVisibilityInput): boolean {
-	return isSelected || isConnected || !isMuted || hasVisibleUnread;
+	return isSelected || isConnected || !(isCategoryMuted || isChannelMuted) || hasVisibleUnread;
+}
+
+export interface HiddenMutedCategoryVisibilityInput {
+	hasChannels: boolean;
+	hasVisibleChannels: boolean;
+}
+
+export function shouldShowCategoryWhenHidingMutedChannels({
+	hasChannels,
+	hasVisibleChannels,
+}: HiddenMutedCategoryVisibilityInput): boolean {
+	return !hasChannels || hasVisibleChannels;
 }
 
 export interface CollapsedCategoryChannelVisibilityInput {
 	isCategoryMuted: boolean;
 	isSelected: boolean;
+	isConnected: boolean;
 	hasVisibleUnread: boolean;
+	hasMentions: boolean;
 }
 
 export function shouldShowChannelInCollapsedCategory({
 	isCategoryMuted,
 	isSelected,
+	isConnected,
 	hasVisibleUnread,
+	hasMentions,
 }: CollapsedCategoryChannelVisibilityInput): boolean {
-	return isSelected || (!isCategoryMuted && hasVisibleUnread);
+	return isSelected || isConnected || (isCategoryMuted ? hasMentions : hasVisibleUnread);
 }

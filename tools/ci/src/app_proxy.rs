@@ -6,24 +6,17 @@ use crate::common::{
     remove_dir_if_exists, require_env, resolve_calver, run_command, runner_temp, s3_client,
     trim_option, upload_s3_plan_append_only,
 };
+use crate::functions::sha256_reader;
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::Utc;
 use clap::{Args, ValueEnum};
-use reqwest::Client;
 use serde_json::{Map, Value, json};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, File};
-use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::Semaphore;
-use tokio::task::JoinSet;
-use tokio::time::sleep;
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
 const DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED: &str = "true";
@@ -36,10 +29,6 @@ const CANONICAL_ASSETS_DIR: &str = "/assets";
 const AMD64_PLATFORM: &str = "linux/amd64";
 const ARM64_PLATFORM: &str = "linux/arm64";
 const PARITY_DIFF_LIMIT: usize = 20;
-const ASSET_READ_CONCURRENCY: usize = 16;
-const ASSET_READ_ATTEMPTS: u32 = 3;
-const ASSET_READ_RETRY_DELAY: Duration = Duration::from_secs(2);
-const ASSET_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildAppProxyArgs {
@@ -280,7 +269,6 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
     );
     let mut entries = collect_files(&assets_dir)?
         .into_iter()
-        .filter(|path| !is_source_map_asset(path))
         .map(|path| {
             path.strip_prefix(dist)
                 .with_context(|| format!("Failed to relativize {}", path.display()))
@@ -289,12 +277,6 @@ fn asset_manifest_entries(dist: &Path) -> Result<Vec<String>> {
         .collect::<Result<Vec<_>>>()?;
     entries.sort();
     Ok(entries)
-}
-
-fn is_source_map_asset(path: &Path) -> bool {
-    path.extension()
-        .and_then(|ext| ext.to_str())
-        .is_some_and(|ext| ext.eq_ignore_ascii_case("map"))
 }
 
 async fn upload_assets_step() -> Result<()> {
@@ -373,10 +355,7 @@ async fn verify_published_assets_step() -> Result<()> {
         unproduced.join(", ")
     );
 
-    match env_string("PUBLIC_ASSET_BASE_URL") {
-        Some(base) => verify_remote_assets(&base, &assets).await,
-        None => verify_local_assets(&dist, &assets),
-    }
+    verify_local_assets(&dist, &assets)
 }
 
 fn verify_local_assets(dist: &Path, assets: &[String]) -> Result<()> {
@@ -397,74 +376,6 @@ fn verify_local_assets(dist: &Path, assets: &[String]) -> Result<()> {
         dist.display()
     );
     Ok(())
-}
-
-async fn verify_remote_assets(base: &str, assets: &[String]) -> Result<()> {
-    let client = Client::builder()
-        .timeout(ASSET_READ_TIMEOUT)
-        .build()
-        .context("Failed to build the asset verification HTTP client")?;
-    let semaphore = Arc::new(Semaphore::new(ASSET_READ_CONCURRENCY));
-    let mut tasks = JoinSet::new();
-    for asset in assets {
-        let permit = semaphore
-            .clone()
-            .acquire_owned()
-            .await
-            .context("Asset verification semaphore closed")?;
-        let client = client.clone();
-        let url = asset_url(base, asset);
-        let asset = asset.clone();
-        tasks.spawn(async move {
-            let _permit = permit;
-            read_published_asset(&client, &url)
-                .await
-                .err()
-                .map(|error| format!("{asset}: {error}"))
-        });
-    }
-
-    let mut failures = Vec::new();
-    while let Some(result) = tasks.join_next().await {
-        if let Some(failure) = result.context("Asset verification task failed")? {
-            failures.push(failure);
-        }
-    }
-    failures.sort();
-    ensure!(
-        failures.is_empty(),
-        "{} of {} published assets are not readable at {base}:\n{}",
-        failures.len(),
-        assets.len(),
-        failures.join("\n")
-    );
-
-    println!(
-        "published asset verification passed - {} assets readable at {base}",
-        assets.len()
-    );
-    Ok(())
-}
-
-async fn read_published_asset(client: &Client, url: &str) -> Result<()> {
-    let mut last_error = None;
-    for attempt in 1..=ASSET_READ_ATTEMPTS {
-        match client.get(url).header("range", "bytes=0-0").send().await {
-            Ok(response) if response.status().is_success() => return Ok(()),
-            Ok(response) => {
-                last_error = Some(anyhow!("{url} responded {}", response.status()));
-            }
-            Err(error) => last_error = Some(anyhow!("{url} request failed: {error}")),
-        }
-        if attempt < ASSET_READ_ATTEMPTS {
-            sleep(ASSET_READ_RETRY_DELAY).await;
-        }
-    }
-    Err(last_error.unwrap_or_else(|| anyhow!("{url} could not be read")))
-}
-
-fn asset_url(base: &str, key: &str) -> String {
-    format!("{}/{}", base.trim_end_matches('/'), key)
 }
 
 fn referenced_assets(source: &str) -> Vec<String> {
@@ -593,20 +504,8 @@ fn asset_tree_digests(root: &Path) -> Result<BTreeMap<String, String>> {
 }
 
 fn sha256_file(path: &Path) -> Result<String> {
-    let mut file =
-        File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
-        if read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
+    let file = File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    sha256_reader(file).with_context(|| format!("Failed to read {}", path.display()))
 }
 
 fn tree_differences(
@@ -824,7 +723,12 @@ mod tests {
 
         assert_eq!(
             asset_manifest_entries(&dist).unwrap(),
-            vec!["assets/chunks/a.js", "assets/z.js"]
+            vec![
+                "assets/chunks/a.js",
+                "assets/chunks/a.js.map",
+                "assets/z.js",
+                "assets/z.js.map"
+            ]
         );
     }
 
@@ -1031,18 +935,6 @@ mod tests {
         let changed = asset_tree_digests(&root).unwrap();
         assert_ne!(digests["assets/chunks/a.js"], changed["assets/chunks/a.js"]);
         assert_eq!(digests["index.html"], changed["index.html"]);
-    }
-
-    #[test]
-    fn asset_url_joins_the_base_and_key_once() {
-        assert_eq!(
-            asset_url("https://fluxerstatic.com", "assets/a.js"),
-            "https://fluxerstatic.com/assets/a.js"
-        );
-        assert_eq!(
-            asset_url("https://fluxerstatic.com/", "assets/a.js"),
-            "https://fluxerstatic.com/assets/a.js"
-        );
     }
 
     #[test]

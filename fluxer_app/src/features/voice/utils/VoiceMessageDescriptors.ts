@@ -27,10 +27,6 @@ const BROWSER_DEFAULT_AUDIO_DEVICE_DESCRIPTOR = msg({
 	message: 'Browser default',
 	comment: 'Audio device label prefix for the browser-managed default audio device.',
 });
-const AUDIO_AND_VIDEO_DESCRIPTOR = msg({
-	message: 'Voice & video',
-	comment: 'User settings tab for microphone, speaker, camera, and call stats.',
-});
 const DEFAULT_AUDIO_DEVICE_WITH_ENDPOINT_DESCRIPTOR = msg({
 	message: '{defaultDeviceLabel} ({endpointLabel})',
 	comment:
@@ -93,7 +89,9 @@ export const VOICE_DISCONNECT_DESCRIPTOR = msg({
 });
 export const INCOMING_CALL_ACCEPT_ACTION_DESCRIPTOR = msg({
 	message: 'Accept',
-	comment: 'Button label for accepting an incoming direct call.',
+	context: 'incoming-call-action',
+	comment:
+		'Button label for accepting an incoming direct call. Means answering a ringing call, not approving a request.',
 });
 export const INCOMING_CALL_REJECT_ACTION_DESCRIPTOR = msg({
 	message: 'Reject',
@@ -247,24 +245,20 @@ export const VOICE_USER_VOLUME_DESCRIPTOR = msg({
 	comment: 'Voice menu slider label for the saved volume of a specific user.',
 });
 const VOICE_VIDEO_SETTINGS_MENU_DESCRIPTOR = msg({
-	message: '{settingsMenuName} settings',
-	comment:
-		'Menu item that opens the user settings tab for voice and video. {settingsMenuName} is the shared user settings tab label.',
+	message: 'Voice & video settings',
+	comment: 'Voice menu item that opens the user settings tab for microphone, speaker, camera, and call stats.',
 });
 const OPEN_VOICE_VIDEO_SETTINGS_DESCRIPTOR = msg({
-	message: 'Open {settingsMenuName} settings',
-	comment:
-		'Button label that opens the user settings tab for voice and video. {settingsMenuName} is the shared user settings tab label.',
+	message: 'Open voice & video settings',
+	comment: 'Accessible button label that opens the user settings tab for microphone, speaker, camera, and call stats.',
 });
 
 export function getVoiceVideoSettingsLabel(i18n: I18n): string {
-	const settingsMenuName = i18n._(AUDIO_AND_VIDEO_DESCRIPTOR);
-	return i18n._(VOICE_VIDEO_SETTINGS_MENU_DESCRIPTOR, {settingsMenuName});
+	return i18n._(VOICE_VIDEO_SETTINGS_MENU_DESCRIPTOR);
 }
 
 export function getOpenVoiceVideoSettingsLabel(i18n: I18n): string {
-	const settingsMenuName = i18n._(AUDIO_AND_VIDEO_DESCRIPTOR);
-	return i18n._(OPEN_VOICE_VIDEO_SETTINGS_DESCRIPTOR, {settingsMenuName});
+	return i18n._(OPEN_VOICE_VIDEO_SETTINGS_DESCRIPTOR);
 }
 
 export function getVoiceNoSpeakPermissionLabel(i18n: I18n, isCurrentUser: boolean): string {

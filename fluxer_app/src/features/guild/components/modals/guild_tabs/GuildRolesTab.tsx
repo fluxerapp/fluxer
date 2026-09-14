@@ -78,7 +78,7 @@ const YOU_CANNOT_GRANT_A_PERMISSION_YOU_DON_T_DESCRIPTOR = msg({
 		'Tooltip on a permission toggle in the role editor that the current user cannot grant because they do not hold that permission themselves.',
 });
 const YOU_CANNOT_REMOVE_THIS_PERMISSION_BECAUSE_IT_WOULD_DESCRIPTOR = msg({
-	message: 'You cannot remove this permission because it would remove it from yourself',
+	message: 'You cannot remove this permission because it would remove it from you',
 	comment:
 		'Tooltip on a permission toggle in the role editor when revoking that permission would leave the current user without it.',
 });

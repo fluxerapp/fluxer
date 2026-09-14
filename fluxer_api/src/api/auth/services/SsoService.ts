@@ -1,6 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomBytes} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
+import {
+	parseTokenEndpointResponse,
+	sanitizeSsoRedirectTo,
+	tryDiscoverOidcProviderMetadata,
+} from '@app/api/auth/services/SsoUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {ILogger} from '@app/api/ILogger';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {
+	type InstanceConfigRepository,
+	type InstanceSsoConfig,
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+} from '@app/api/instance/InstanceConfigRepository';
+import {
+	deriveSsoRedirectUri,
+	getSsoRequestUrlPolicy,
+	isTestSsoProvider,
+	validateSsoPublicOutboundUrl,
+} from '@app/api/instance/SsoConfigValidation';
+import {Logger} from '@app/api/Logger';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {User} from '@app/api/models/User';
+import {UserSettings} from '@app/api/models/UserSettings';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
+import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/RegistrationClosedError';
@@ -10,6 +42,7 @@ import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlo
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {ms, seconds} from 'itty-time';
 import {
 	type CryptoKey,
@@ -22,34 +55,6 @@ import {
 	type JWTPayload,
 	jwtVerify,
 } from 'jose';
-import type {ApiContext} from '../../ApiContext';
-import type {UserID} from '../../BrandedTypes';
-import type {ILogger} from '../../ILogger';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {KVActivityTracker} from '../../infrastructure/KVActivityTracker';
-import {
-	type InstanceConfigRepository,
-	type InstanceSsoConfig,
-	REGISTRATION_PENDING_APPROVAL_TRAIT,
-} from '../../instance/InstanceConfigRepository';
-import {
-	deriveSsoRedirectUri,
-	getSsoRequestUrlPolicy,
-	isTestSsoProvider,
-	validateSsoPublicOutboundUrl,
-} from '../../instance/SsoConfigValidation';
-import {Logger} from '../../Logger';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import type {User} from '../../models/User';
-import {UserSettings} from '../../models/UserSettings';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../../utils/JsonBoundaryUtils';
-import {generateRandomUsername} from '../../utils/UsernameGenerator';
-import {deriveUsernameFromDisplayName} from '../../utils/UsernameSuggestionUtils';
-import * as AuthSession from '../AuthSession';
-import {SsoIdentityRepository} from './SsoIdentityRepository';
-import {parseTokenEndpointResponse, sanitizeSsoRedirectTo, tryDiscoverOidcProviderMetadata} from './SsoUtils';
 
 interface SsoStatePayload {
 	codeVerifier: string;
@@ -377,6 +382,9 @@ export class SsoService {
 			throw new RegistrationClosedError();
 		}
 		const pendingApproval = registrationConfig.mode === 'approval';
+		if (pendingApproval) {
+			await this.instanceConfigRepository.getPendingRegistrations();
+		}
 		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval});
 		if (pendingApproval) {
 			await this.instanceConfigRepository.addPendingRegistration({
@@ -675,6 +683,7 @@ export class SsoService {
 				{requestUrlPolicy: getSsoRequestUrlPolicy()},
 			);
 			if (response.status < 200 || response.status >= 300) {
+				FetchUtils.discardResponseBody(response.stream, response.status);
 				throw new Error(`Failed to fetch JWKS: HTTP ${response.status}`);
 			}
 			const rawBody = await FetchUtils.streamToStringWithLimit(response.stream, {
@@ -774,6 +783,7 @@ export class SsoService {
 			{requestUrlPolicy: getSsoRequestUrlPolicy()},
 		);
 		if (resp.status < 200 || resp.status >= 300) {
+			FetchUtils.discardResponseBody(resp.stream, resp.status);
 			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_FETCH_SSO_USER_INFO);
 		}
 		try {
@@ -836,6 +846,7 @@ export class SsoService {
 			{requestUrlPolicy: getSsoRequestUrlPolicy()},
 		);
 		if (resp.status < 200 || resp.status >= 300) {
+			FetchUtils.discardResponseBody(resp.stream, resp.status);
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_SSO_AUTHORIZATION_CODE);
 		}
 		const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
@@ -926,7 +937,10 @@ export class SsoService {
 		try {
 			return await this.assertPublicOutboundUrl(rawUrl, fieldName);
 		} catch (error) {
-			getLogger().warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
+			getLogger().warn(
+				{fieldName, rawUrl: formatUrlForDiagnostics(rawUrl), error},
+				'Ignoring SSO URL that failed outbound policy validation',
+			);
 			return null;
 		}
 	}

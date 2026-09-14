@@ -6,10 +6,12 @@ import {
 	selectVoiceParticipantTileCameraActive,
 	selectVoiceParticipantTileScreenShareState,
 	shouldShowCameraBuffering,
+	shouldShowTileStreamAudioControls,
 	shouldShowWatchFailed,
 	type VoiceParticipantTileCameraActiveSignals,
 	type VoiceParticipantTileCameraBufferingSignals,
 	type VoiceParticipantTileScreenShareSignals,
+	type VoiceParticipantTileStreamAudioSignals,
 } from '@app/features/voice/components/VoiceParticipantTileStateMachine';
 import {
 	getAppliedScreenShareFrameRate,
@@ -28,6 +30,7 @@ const GRAPH_TILE_STATES: ReadonlyArray<VoiceMediaGraphStreamTileState> = [
 	'attaching',
 	'subscribedAwaitingFrame',
 	'rendering',
+	'recovering',
 	'failed',
 ];
 
@@ -37,6 +40,7 @@ const WATCH_INTENT_GRAPH_TILE_STATES: ReadonlyArray<VoiceMediaGraphStreamTileSta
 	'attaching',
 	'subscribedAwaitingFrame',
 	'rendering',
+	'recovering',
 	'failed',
 ];
 
@@ -83,6 +87,50 @@ function cameraActiveSignals(
 		...overrides,
 	};
 }
+
+function streamAudioSignals(
+	overrides: Partial<VoiceParticipantTileStreamAudioSignals> = {},
+): VoiceParticipantTileStreamAudioSignals {
+	return {
+		isScreenShare: true,
+		isOwnScreenShare: false,
+		isWatching: true,
+		hasScreenShareAudio: true,
+		isFocusedPlaceholderTile: false,
+		presentation: 'grid',
+		...overrides,
+	};
+}
+
+describe('VoiceParticipantTileStateMachine stream audio controls', () => {
+	it('keeps the per-stream volume control on the watched stream once it becomes the focused tile', () => {
+		expect(shouldShowTileStreamAudioControls(streamAudioSignals({presentation: 'focus-main'}))).toBe(true);
+	});
+
+	it('shows the per-stream volume control on a watched grid tile', () => {
+		expect(shouldShowTileStreamAudioControls(streamAudioSignals({presentation: 'grid'}))).toBe(true);
+	});
+
+	it('leaves the control off carousel thumbnails, own shares, and placeholder tiles', () => {
+		expect(shouldShowTileStreamAudioControls(streamAudioSignals({presentation: 'focus-secondary'}))).toBe(false);
+		expect(shouldShowTileStreamAudioControls(streamAudioSignals({isOwnScreenShare: true}))).toBe(false);
+		expect(
+			shouldShowTileStreamAudioControls(
+				streamAudioSignals({presentation: 'focus-main', isFocusedPlaceholderTile: true}),
+			),
+		).toBe(false);
+		expect(shouldShowTileStreamAudioControls(streamAudioSignals({isScreenShare: false}))).toBe(false);
+	});
+
+	it('leaves the control off streams that are not watched or carry no audio', () => {
+		expect(shouldShowTileStreamAudioControls(streamAudioSignals({presentation: 'focus-main', isWatching: false}))).toBe(
+			false,
+		);
+		expect(
+			shouldShowTileStreamAudioControls(streamAudioSignals({presentation: 'focus-main', hasScreenShareAudio: false})),
+		).toBe(false);
+	});
+});
 
 describe('VoiceParticipantTileStateMachine camera buffering state', () => {
 	it('shows buffering while an active camera publication has no video', () => {
@@ -169,6 +217,18 @@ describe('VoiceParticipantTileStateMachine graph-derived screen share state', ()
 
 	it('renders without overlays once the graph reports rendering', () => {
 		expect(selectVoiceParticipantTileScreenShareState(signals({graphTileState: 'rendering'}))).toBe('idle');
+	});
+
+	it('shows buffering while screen share recovery is still running', () => {
+		expect(selectVoiceParticipantTileScreenShareState(signals({graphTileState: 'recovering'}))).toBe('buffering');
+		expect(
+			selectVoiceParticipantTileScreenShareState(signals({graphTileState: 'recovering', isTrackReference: false})),
+		).toBe('buffering');
+	});
+
+	it('holds the error code back until recovery has given up', () => {
+		expect(shouldShowWatchFailed(signals({graphTileState: 'recovering'}))).toBe(false);
+		expect(shouldShowWatchFailed(signals({graphTileState: 'failed'}))).toBe(true);
 	});
 
 	it('shows the watch failed overlay when the graph reports a failure', () => {

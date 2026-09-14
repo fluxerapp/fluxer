@@ -4,7 +4,6 @@ use crate::types::{ApiUserPartial, User, UserPartial, UserRequest, UserResponse}
 #[cfg(feature = "scylla")]
 use chrono::{DateTime, NaiveDate, Utc};
 use fluxer_svc::shard::ShardService;
-use fluxer_svc::transport::NatsTransport;
 use fluxer_svc::{postgres, postgres::KeyPart};
 use futures::stream::{self, StreamExt};
 use moka::future::Cache;
@@ -17,8 +16,12 @@ use scylla::statement::prepared::PreparedStatement;
 #[cfg(feature = "scylla")]
 use scylla::value::MaybeEmpty;
 use serde::Deserialize;
+use std::collections::{HashMap, hash_map::DefaultHasher};
+use std::fmt::Write;
 use std::future::Future;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 #[cfg(feature = "scylla")]
@@ -60,6 +63,8 @@ const PARTIAL_USER_COLUMNS: &str = "\
     mention_flags";
 const USER_BATCH_SIZE: usize = 128;
 const USER_BATCH_CONCURRENCY: usize = 8;
+const USER_CACHE_MIN_GENERATION_STRIPES: usize = 4096;
+const USER_CACHE_MAX_GENERATION_STRIPES: usize = 1 << 20;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: i32 = 0;
@@ -68,12 +73,19 @@ const USER_FLAG_STAFF: i64 = 1;
 pub struct UsersShard {
     storage: UsersStorage,
     caches: UserCaches,
-    transport: NatsTransport,
 }
 
 struct UserCaches {
-    full: Cache<i64, Option<User>>,
-    partial: Cache<i64, Option<UserPartial>>,
+    full: Cache<UserCacheKey, Option<User>>,
+    partial: Cache<UserCacheKey, Option<UserPartial>>,
+    generations: Box<[AtomicU64]>,
+    generation_bumps: AtomicU64,
+}
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+struct UserCacheKey {
+    user_id: i64,
+    generation: u64,
 }
 
 #[derive(Clone)]
@@ -159,26 +171,9 @@ struct FullUserDbRow {
     timezone_privacy_flags: Option<i32>,
 }
 
-#[cfg(feature = "scylla")]
-#[derive(Debug, DeserializeRow)]
-struct PartialUserDbRow {
-    user_id: i64,
-    username: String,
-    discriminator: i32,
-    global_name: Option<String>,
-    avatar_hash: Option<String>,
-    bot: Option<bool>,
-    system: Option<bool>,
-    flags: Option<i64>,
-    banner_hash: Option<String>,
-    banner_color: Option<i32>,
-    accent_color: Option<i32>,
-    avatar_color: Option<i32>,
-    mention_flags: Option<i32>,
-}
-
 #[derive(Debug, Deserialize)]
-struct PartialUserKvRow {
+#[cfg_attr(feature = "scylla", derive(DeserializeRow))]
+struct PartialUserDbRow {
     user_id: i64,
     username: String,
     discriminator: i32,
@@ -256,6 +251,16 @@ struct FullUserKvRow {
     timezone_privacy_flags: Option<i32>,
 }
 
+fn generation_stripes(max_entries: u64) -> usize {
+    usize::try_from(max_entries)
+        .unwrap_or(USER_CACHE_MAX_GENERATION_STRIPES)
+        .clamp(
+            USER_CACHE_MIN_GENERATION_STRIPES,
+            USER_CACHE_MAX_GENERATION_STRIPES,
+        )
+        .next_power_of_two()
+}
+
 impl UserCaches {
     fn new(max_entries: u64, ttl: Duration) -> Self {
         Self {
@@ -267,6 +272,23 @@ impl UserCaches {
                 .max_capacity(max_entries)
                 .time_to_live(ttl)
                 .build(),
+            generations: (0..generation_stripes(max_entries))
+                .map(|_| AtomicU64::new(0))
+                .collect(),
+            generation_bumps: AtomicU64::new(0),
+        }
+    }
+
+    fn generation(&self, user_id: i64) -> &AtomicU64 {
+        let mut hasher = DefaultHasher::new();
+        user_id.hash(&mut hasher);
+        &self.generations[hasher.finish() as usize % self.generations.len()]
+    }
+
+    fn key(&self, user_id: i64) -> UserCacheKey {
+        UserCacheKey {
+            user_id,
+            generation: self.generation(user_id).load(Ordering::SeqCst),
         }
     }
 
@@ -274,13 +296,14 @@ impl UserCaches {
     where
         F: Future<Output = anyhow::Result<Option<User>>>,
     {
+        let key = self.key(user_id);
         let user = self
             .full
-            .try_get_with(user_id, fetch)
+            .try_get_with(key, fetch)
             .await
             .map_err(|e: Arc<anyhow::Error>| anyhow::anyhow!("{e}"))?;
         self.partial
-            .insert(user_id, user.as_ref().map(User::to_partial))
+            .insert(key, user.as_ref().map(User::to_partial))
             .await;
         Ok(user)
     }
@@ -294,43 +317,47 @@ impl UserCaches {
         F: Future<Output = anyhow::Result<Option<UserPartial>>>,
     {
         self.partial
-            .try_get_with(user_id, fetch)
+            .try_get_with(self.key(user_id), fetch)
             .await
             .map_err(|e: Arc<anyhow::Error>| anyhow::anyhow!("{e}"))
     }
 
     async fn get_partial(&self, user_id: i64) -> Option<Option<UserPartial>> {
-        self.partial.get(&user_id).await
+        self.partial.get(&self.key(user_id)).await
     }
 
-    async fn insert_partial(&self, user_id: i64, partial: Option<UserPartial>) {
-        self.partial.insert(user_id, partial).await;
+    async fn insert_partial(&self, key: UserCacheKey, partial: Option<UserPartial>) {
+        self.partial.insert(key, partial).await;
     }
 
     async fn invalidate(&self, user_id: i64) {
-        self.full.invalidate(&user_id).await;
-        self.partial.invalidate(&user_id).await;
+        let generation = self
+            .generation(user_id)
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |current| {
+                current.checked_add(1)
+            })
+            .expect("user cache generation exhausted");
+        self.generation_bumps.fetch_add(1, Ordering::Relaxed);
+        let key = UserCacheKey {
+            user_id,
+            generation,
+        };
+        self.full.invalidate(&key).await;
+        self.partial.invalidate(&key).await;
     }
 }
 
 impl UsersShard {
-    pub fn new_postgres(
-        kv: postgres::KvClient,
-        transport: NatsTransport,
-        max_entries: u64,
-        ttl: Duration,
-    ) -> anyhow::Result<Self> {
-        Ok(Self {
+    pub fn new_postgres(kv: postgres::KvClient, max_entries: u64, ttl: Duration) -> Self {
+        Self {
             storage: UsersStorage::Postgres(PostgresUsersStorage { kv }),
             caches: UserCaches::new(max_entries, ttl),
-            transport,
-        })
+        }
     }
 
     #[cfg(feature = "scylla")]
     pub async fn new_scylla(
         db: Arc<Session>,
-        transport: NatsTransport,
         max_entries: u64,
         ttl: Duration,
     ) -> anyhow::Result<Self> {
@@ -358,7 +385,6 @@ impl UsersShard {
                 stmt_partial_batch,
             })),
             caches: UserCaches::new(max_entries, ttl),
-            transport,
         })
     }
 
@@ -366,12 +392,8 @@ impl UsersShard {
         if user_id == FLUXER_SYSTEM_USER_ID {
             return Ok(Some(fluxer_system_user()));
         }
-        let storage = self.storage.clone();
         self.caches
-            .get_or_fetch_full(
-                user_id,
-                async move { storage.fetch_full_user(user_id).await },
-            )
+            .get_or_fetch_full(user_id, self.storage.fetch_full_user(user_id))
             .await
     }
 
@@ -379,17 +401,12 @@ impl UsersShard {
         if user_id == FLUXER_SYSTEM_USER_ID {
             return Ok(Some(fluxer_system_user().to_partial()));
         }
-        let storage = self.storage.clone();
         self.caches
-            .get_or_fetch_partial(
-                user_id,
-                async move { storage.fetch_partial_user(user_id).await },
-            )
+            .get_or_fetch_partial(user_id, self.storage.fetch_partial_user(user_id))
             .await
     }
 
-    async fn get_partial_users(&self, user_ids: Vec<i64>) -> anyhow::Result<Vec<UserPartial>> {
-        let mut user_ids = user_ids;
+    async fn get_partial_users(&self, mut user_ids: Vec<i64>) -> anyhow::Result<Vec<UserPartial>> {
         user_ids.sort_unstable();
         user_ids.dedup();
         let mut partials = Vec::new();
@@ -451,43 +468,40 @@ impl UsersShard {
     }
 
     async fn fetch_partial_batch(&self, user_ids: Vec<i64>) -> anyhow::Result<Vec<UserPartial>> {
-        let mut partials = Vec::new();
-        let user_ids = user_ids
-            .into_iter()
-            .filter(|user_id| {
-                if *user_id == FLUXER_SYSTEM_USER_ID {
-                    partials.push(fluxer_system_user().to_partial());
-                    false
-                } else {
-                    true
-                }
-            })
-            .collect::<Vec<_>>();
-        if user_ids.is_empty() {
-            return Ok(partials);
-        }
+        let mut cache_keys = user_ids
+            .iter()
+            .map(|&user_id| (user_id, self.caches.key(user_id)))
+            .collect::<HashMap<_, _>>();
         let fetched_partials = match self.storage.fetch_partial_batch(user_ids.clone()).await {
-            Ok(partials) => partials,
-            Err(_) => {
-                partials.extend(self.fetch_partial_batch_individually(user_ids).await?);
-                return Ok(partials);
+            Ok(fetched) => fetched,
+            Err(err) => {
+                tracing::warn!(
+                    error = %err,
+                    user_count = user_ids.len(),
+                    "user partial batch read failed, retrying per user"
+                );
+                return self.fetch_partial_batch_individually(user_ids).await;
             }
         };
-        let found_ids = fetched_partials
-            .iter()
-            .map(|partial| partial.user_id)
-            .collect::<std::collections::HashSet<_>>();
-        for partial in &fetched_partials {
-            self.caches
-                .insert_partial(partial.user_id, Some(partial.clone()))
-                .await;
+        let mut unexpected = 0usize;
+        let mut partials = Vec::with_capacity(fetched_partials.len());
+        for partial in fetched_partials {
+            let Some(key) = cache_keys.remove(&partial.user_id) else {
+                unexpected += 1;
+                continue;
+            };
+            self.caches.insert_partial(key, Some(partial.clone())).await;
+            partials.push(partial);
         }
-        for user_id in user_ids {
-            if !found_ids.contains(&user_id) {
-                self.caches.insert_partial(user_id, None).await;
-            }
+        if unexpected > 0 {
+            tracing::warn!(
+                unexpected,
+                "user batch returned duplicate or unrequested users"
+            );
         }
-        partials.extend(fetched_partials);
+        for key in cache_keys.into_values() {
+            self.caches.insert_partial(key, None).await;
+        }
         Ok(partials)
     }
 
@@ -603,7 +617,7 @@ fn decode_postgres_user(row: serde_json::Value) -> anyhow::Result<User> {
 
 fn decode_postgres_user_partial(row: serde_json::Value) -> anyhow::Result<UserPartial> {
     let row = postgres::decode_row_dates_as_millis(row)?;
-    let row: PartialUserKvRow = serde_json::from_value(row)?;
+    let row: PartialUserDbRow = serde_json::from_value(row)?;
     Ok(row.into())
 }
 
@@ -678,34 +692,49 @@ impl ShardService for UsersShard {
         "users"
     }
 
+    fn render_prometheus_metrics(&self, output: &mut String) {
+        let _ = writeln!(
+            output,
+            "# TYPE fluxer_users_shard_cache_generation_bumps_total counter"
+        );
+        let _ = writeln!(
+            output,
+            "fluxer_users_shard_cache_generation_bumps_total {}",
+            self.caches.generation_bumps.load(Ordering::Relaxed)
+        );
+        let _ = writeln!(
+            output,
+            "# TYPE fluxer_users_shard_cache_generation_stripes gauge"
+        );
+        let _ = writeln!(
+            output,
+            "fluxer_users_shard_cache_generation_stripes {}",
+            self.caches.generations.len()
+        );
+    }
+
     async fn handle(&self, request: UserRequest) -> anyhow::Result<UserResponse> {
         match request {
-            UserRequest::GetById { user_id } => match self.get_full_user(user_id).await? {
-                Some(user) => Ok(UserResponse::Found(user)),
-                None => Ok(UserResponse::NotFound),
-            },
-            UserRequest::GetPartialById { user_id } => {
-                match self.get_partial_user(user_id).await? {
-                    Some(partial) => Ok(UserResponse::FoundPartial(partial)),
-                    None => Ok(UserResponse::NotFound),
-                }
-            }
+            UserRequest::GetById { user_id } => Ok(self
+                .get_full_user(user_id)
+                .await?
+                .map_or(UserResponse::NotFound, UserResponse::Found)),
+            UserRequest::GetPartialById { user_id } => Ok(self
+                .get_partial_user(user_id)
+                .await?
+                .map_or(UserResponse::NotFound, UserResponse::FoundPartial)),
             UserRequest::GetPartialsByIds { user_ids } => Ok(UserResponse::FoundPartials(
                 self.get_partial_users(user_ids).await?,
             )),
-            UserRequest::GetApiPartialById { user_id } => {
-                match self.get_api_partial_user(user_id).await? {
-                    Some(partial) => Ok(UserResponse::FoundApiPartial(partial)),
-                    None => Ok(UserResponse::NotFound),
-                }
-            }
+            UserRequest::GetApiPartialById { user_id } => Ok(self
+                .get_api_partial_user(user_id)
+                .await?
+                .map_or(UserResponse::NotFound, UserResponse::FoundApiPartial)),
             UserRequest::GetApiPartialsByIds { user_ids } => Ok(UserResponse::FoundApiPartials(
                 self.get_api_partial_users(user_ids).await?,
             )),
             UserRequest::Invalidate { user_id } => {
                 self.caches.invalidate(user_id).await;
-                let subject = format!("svc.users.invalidate.{user_id}");
-                self.transport.publish(&subject, &[]).await?;
                 Ok(UserResponse::Invalidated)
             }
         }
@@ -734,29 +763,8 @@ fn optional_date_string(value: OptionalDate) -> Option<String> {
     })
 }
 
-#[cfg(feature = "scylla")]
 impl From<PartialUserDbRow> for UserPartial {
     fn from(row: PartialUserDbRow) -> Self {
-        Self {
-            user_id: row.user_id,
-            username: row.username,
-            discriminator: row.discriminator,
-            global_name: row.global_name,
-            avatar_hash: row.avatar_hash,
-            bot: row.bot,
-            system: row.system,
-            flags: row.flags,
-            banner_hash: row.banner_hash,
-            banner_color: row.banner_color,
-            accent_color: row.accent_color,
-            avatar_color: row.avatar_color,
-            mention_flags: row.mention_flags,
-        }
-    }
-}
-
-impl From<PartialUserKvRow> for UserPartial {
-    fn from(row: PartialUserKvRow) -> Self {
         Self {
             user_id: row.user_id,
             username: row.username,
@@ -967,7 +975,7 @@ mod tests {
             caches.get_partial(42).await.unwrap().unwrap().username,
             "Ada"
         );
-        assert!(caches.full.get(&42).await.is_none());
+        assert!(caches.full.get(&caches.key(42)).await.is_none());
     }
 
     #[tokio::test]
@@ -1001,7 +1009,14 @@ mod tests {
 
         assert_eq!(fetched.email.as_deref(), Some("ada@example.com"));
         assert_eq!(
-            caches.full.get(&42).await.unwrap().unwrap().bio.as_deref(),
+            caches
+                .full
+                .get(&caches.key(42))
+                .await
+                .unwrap()
+                .unwrap()
+                .bio
+                .as_deref(),
             Some("analytical engine enjoyer")
         );
         let cached_partial = caches.get_partial(42).await.unwrap().unwrap();
@@ -1019,7 +1034,7 @@ mod tests {
             .unwrap();
 
         assert!(fetched.is_none());
-        assert!(matches!(caches.full.get(&42).await, Some(None)));
+        assert!(matches!(caches.full.get(&caches.key(42)).await, Some(None)));
         assert!(matches!(caches.get_partial(42).await, Some(None)));
     }
 
@@ -1030,12 +1045,12 @@ mod tests {
             .get_or_fetch_full(42, async { Ok(Some(test_user(42))) })
             .await
             .unwrap();
-        assert!(caches.full.get(&42).await.is_some());
+        assert!(caches.full.get(&caches.key(42)).await.is_some());
         assert!(caches.get_partial(42).await.is_some());
 
         caches.invalidate(42).await;
 
-        assert!(caches.full.get(&42).await.is_none());
+        assert!(caches.full.get(&caches.key(42)).await.is_none());
         assert!(caches.get_partial(42).await.is_none());
     }
 
@@ -1050,6 +1065,27 @@ mod tests {
         caches.invalidate(42).await;
 
         assert!(caches.get_partial(42).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn invalidation_counts_generation_bumps() {
+        let caches = caches();
+        assert_eq!(caches.generation_bumps.load(Ordering::Relaxed), 0);
+
+        caches.invalidate(42).await;
+        caches.invalidate(43).await;
+
+        assert_eq!(caches.generation_bumps.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn generation_stripes_follow_the_configured_capacity() {
+        assert_eq!(generation_stripes(16), USER_CACHE_MIN_GENERATION_STRIPES);
+        assert_eq!(generation_stripes(100_000), 131_072);
+        assert_eq!(
+            generation_stripes(u64::MAX),
+            USER_CACHE_MAX_GENERATION_STRIPES
+        );
     }
 
     #[cfg(feature = "scylla")]

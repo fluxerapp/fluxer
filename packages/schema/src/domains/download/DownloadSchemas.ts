@@ -77,50 +77,6 @@ export const DesktopTestBuildQuery = z.object({
 
 export type DesktopTestBuildQuery = z.infer<typeof DesktopTestBuildQuery>;
 
-export const DesktopRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	format: DesktopFormatEnum,
-});
-
-export type DesktopRedirectParam = z.infer<typeof DesktopRedirectParam>;
-
-export const DesktopVersionedRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	version: VersionString,
-	format: DesktopFormatEnum,
-});
-
-export type DesktopVersionedRedirectParam = z.infer<typeof DesktopVersionedRedirectParam>;
-
-const DesktopChecksumFormat = z
-	.string()
-	.regex(/^(setup|dmg|zip|appimage|deb|rpm|tar_gz|portable)\.sha256$/u)
-	.transform((value) => value.slice(0, -'.sha256'.length) as DesktopFormat)
-	.describe('Package format followed by .sha256');
-
-export const DesktopChecksumRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	format: DesktopChecksumFormat,
-});
-
-export type DesktopChecksumRedirectParam = z.infer<typeof DesktopChecksumRedirectParam>;
-
-export const DesktopVersionedChecksumRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	version: VersionString,
-	format: DesktopChecksumFormat,
-});
-
-export type DesktopVersionedChecksumRedirectParam = z.infer<typeof DesktopVersionedChecksumRedirectParam>;
-
 export const DesktopVersionsParam = z.object({
 	channel: DesktopChannelEnum,
 	plat: DesktopPlatformEnum,
@@ -128,6 +84,36 @@ export const DesktopVersionsParam = z.object({
 });
 
 export type DesktopVersionsParam = z.infer<typeof DesktopVersionsParam>;
+
+export const DesktopRedirectParam = DesktopVersionsParam.extend({
+	format: DesktopFormatEnum,
+});
+
+export type DesktopRedirectParam = z.infer<typeof DesktopRedirectParam>;
+
+export const DesktopVersionedRedirectParam = DesktopRedirectParam.extend({
+	version: VersionString,
+});
+
+export type DesktopVersionedRedirectParam = z.infer<typeof DesktopVersionedRedirectParam>;
+
+const DesktopChecksumFormat = z
+	.templateLiteral([DesktopFormatEnum, '.sha256'])
+	.transform((value) => value.slice(0, -'.sha256'.length))
+	.pipe(DesktopFormatEnum)
+	.describe('Package format followed by .sha256');
+
+export const DesktopChecksumRedirectParam = DesktopVersionsParam.extend({
+	format: DesktopChecksumFormat,
+});
+
+export type DesktopChecksumRedirectParam = z.infer<typeof DesktopChecksumRedirectParam>;
+
+export const DesktopVersionedChecksumRedirectParam = DesktopChecksumRedirectParam.extend({
+	version: VersionString,
+});
+
+export type DesktopVersionedChecksumRedirectParam = z.infer<typeof DesktopVersionedChecksumRedirectParam>;
 
 export const DesktopVersionsQuery = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(25).describe('Maximum number of versions to return'),
@@ -153,7 +139,7 @@ export const VersionInfoResponse = z.object({
 		.optional()
 		.describe('Minimum operating system version required by this release, when applicable'),
 	files: z
-		.record(DesktopFormatEnum, VersionFileResponse.optional())
+		.partialRecord(DesktopFormatEnum, VersionFileResponse.optional())
 		.describe('Map of package format to download files'),
 });
 
@@ -165,3 +151,8 @@ export const DesktopVersionsResponse = z.object({
 });
 
 export type DesktopVersionsResponse = z.infer<typeof DesktopVersionsResponse>;
+
+export const DownloadFileResponse = z.file().describe('The downloadable release file');
+export const DownloadChecksumResponse = z
+	.string()
+	.describe('The release file checksum in SHA-256 checksum file format');

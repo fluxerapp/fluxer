@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt, randomUUID} from 'node:crypto';
+import {setTimeout as delay} from 'node:timers/promises';
+import {Logger} from '@app/api/Logger';
+import {streamToStringWithLimit} from '@app/api/utils/FetchUtils';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../Logger';
+import {z} from 'zod';
 
 const ONIONOO_URL =
 	'https://onionoo.torproject.org/details?type=relay&running=true&flag=Exit&fields=exit_addresses,or_addresses';
 const FETCH_TIMEOUT_MS = 30000;
+const MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 const REFRESH_INTERVAL_MS = 30 * 60 * 1000;
 const REFRESH_JITTER_MS = 2 * 60 * 1000;
 const OPPORTUNISTIC_REFRESH_MIN_MS = 60000;
@@ -20,17 +24,19 @@ const HYDRATE_WAIT_MS = 60000;
 const HYDRATE_POLL_MIN_MS = 500;
 const HYDRATE_POLL_MAX_MS = 5000;
 
-type FetchResult =
-	| {
-			kind: 'fetched';
-			payload: string;
-	  }
-	| {
-			kind: 'not_modified';
-	  }
-	| {
-			kind: 'failed';
-	  };
+const OnionooDetailsSchema = z.object({
+	relays: z.array(
+		z.object({
+			or_addresses: z.array(z.string()).optional(),
+			exit_addresses: z.array(z.string()).optional(),
+		}),
+	),
+});
+
+interface TorExitSnapshot {
+	readonly payload: string;
+	readonly lastModified: string | null;
+}
 
 class TorExitListCache {
 	private ipv4Exits: ReadonlySet<string> = new Set();
@@ -38,32 +44,41 @@ class TorExitListCache {
 	private kvClient: IKVProvider | null = null;
 	private refreshTimer: NodeJS.Timeout | null = null;
 	private initPromise: Promise<void> | null = null;
-	private lastModified: string | null = null;
-	private inflightFetch: AbortController | null = null;
+	private refreshPromise: Promise<void> | null = null;
+	private shutdownPromise: Promise<void> | null = null;
+	private lifecycle = new AbortController();
+	private fetchedSnapshot: TorExitSnapshot | null = null;
 
 	setKvClient(kv: IKVProvider | null): void {
 		this.kvClient = kv;
 	}
 
 	initialize(): Promise<void> {
+		if (this.shutdownPromise) return Promise.reject(new Error('Tor exit list cache is shutting down'));
+		if (this.lifecycle.signal.aborted) this.lifecycle = new AbortController();
 		if (!this.initPromise) {
-			this.initPromise = this.doInitialize().catch((err) => {
-				this.initPromise = null;
-				throw err;
-			});
+			this.initPromise = Promise.resolve(this.refreshPromise)
+				.then(() => this.doInitialize())
+				.catch((err) => {
+					this.initPromise = null;
+					throw err;
+				});
 		}
 		return this.initPromise;
 	}
 
-	shutdown(): void {
+	shutdown(): Promise<void> {
+		if (this.shutdownPromise) return this.shutdownPromise;
+		this.lifecycle.abort(new Error('Tor exit list cache is shut down'));
 		if (this.refreshTimer) {
 			clearTimeout(this.refreshTimer);
 			this.refreshTimer = null;
 		}
-		if (this.inflightFetch) {
-			this.inflightFetch.abort();
-			this.inflightFetch = null;
-		}
+		this.shutdownPromise = Promise.allSettled([this.initPromise, this.refreshPromise]).then(() => {
+			this.initPromise = null;
+			this.shutdownPromise = null;
+		});
+		return this.shutdownPromise;
 	}
 
 	isTorExit(ip: string): boolean {
@@ -73,7 +88,7 @@ class TorExitListCache {
 	}
 
 	async forceRefresh(): Promise<void> {
-		await this.tryRefresh();
+		await this.refresh();
 	}
 
 	seedForTesting(ips: Iterable<string>): void {
@@ -83,11 +98,13 @@ class TorExitListCache {
 	clearForTesting(): void {
 		this.ipv4Exits = new Set();
 		this.ipv6Exits = new Set();
+		this.fetchedSnapshot = null;
 	}
 
 	private async doInitialize(): Promise<void> {
+		this.lifecycle.signal.throwIfAborted();
 		const cached = await this.readPayloadFromKv();
-		if (cached) {
+		if (cached !== null) {
 			this.applyPayload(cached);
 			Logger.info({ipv4Count: this.ipv4Exits.size, ipv6Count: this.ipv6Exits.size}, 'Tor exit list hydrated from KV');
 			this.scheduleNextRefresh(this.opportunisticRefreshDelayMs());
@@ -98,6 +115,8 @@ class TorExitListCache {
 	}
 
 	private scheduleNextRefresh(baseDelayMs: number): void {
+		const signal = this.lifecycle.signal;
+		if (signal.aborted) return;
 		if (this.refreshTimer) {
 			clearTimeout(this.refreshTimer);
 			this.refreshTimer = null;
@@ -106,12 +125,14 @@ class TorExitListCache {
 		const delay = Math.max(1000, baseDelayMs + jitter);
 		this.refreshTimer = setTimeout(() => {
 			this.refreshTimer = null;
-			this.tryRefresh()
+			this.refresh()
 				.catch((err) => {
-					Logger.warn({error: err instanceof Error ? err.message : String(err)}, 'Tor exit list refresh failed');
+					if (!signal.aborted) {
+						Logger.warn({error: err instanceof Error ? err.message : String(err)}, 'Tor exit list refresh failed');
+					}
 				})
 				.finally(() => {
-					this.scheduleNextRefresh(REFRESH_INTERVAL_MS);
+					if (!signal.aborted) this.scheduleNextRefresh(REFRESH_INTERVAL_MS);
 				});
 		}, delay);
 		this.refreshTimer.unref?.();
@@ -122,24 +143,35 @@ class TorExitListCache {
 		return OPPORTUNISTIC_REFRESH_MIN_MS + randomInt(range);
 	}
 
+	private async refresh(): Promise<void> {
+		this.lifecycle.signal.throwIfAborted();
+		this.refreshPromise ??= Promise.resolve(this.initPromise)
+			.then(() => this.tryRefresh())
+			.finally(() => {
+				this.refreshPromise = null;
+			});
+		await this.refreshPromise;
+	}
+
 	private async tryRefresh(): Promise<void> {
+		this.lifecycle.signal.throwIfAborted();
 		const kv = this.kvClient;
-		if (!kv) return;
+		if (!kv) {
+			const payload = await this.fetchFromTor();
+			if (payload !== null) this.applyPayload(payload);
+			return;
+		}
 		await this.withKvLock(kv, async (acquired) => {
 			if (!acquired) {
 				const cached = await this.readPayloadFromKv();
-				if (cached) this.applyPayload(cached);
+				if (cached !== null) this.applyPayload(cached);
 				return;
 			}
-			const result = await this.fetchFromTor();
-			if (result.kind !== 'fetched') return;
-			await kv.setex(KV_PAYLOAD_KEY, PAYLOAD_TTL_SECONDS, result.payload).catch((err) => {
-				Logger.warn(
-					{error: err instanceof Error ? err.message : String(err)},
-					'Failed to write Tor exit list payload to KV',
-				);
-			});
-			this.applyPayload(result.payload);
+			const payload = await this.fetchFromTor();
+			this.lifecycle.signal.throwIfAborted();
+			if (payload === null) return;
+			await this.writePayloadToKv(kv, payload);
+			this.applyPayload(payload);
 			Logger.info({ipv4Count: this.ipv4Exits.size, ipv6Count: this.ipv6Exits.size}, 'Tor exit list refreshed');
 		});
 	}
@@ -147,9 +179,9 @@ class TorExitListCache {
 	private async hydrateFromTorOrWait(): Promise<void> {
 		const kv = this.kvClient;
 		if (!kv) {
-			const result = await this.fetchFromTor();
-			if (result.kind === 'fetched') {
-				this.applyPayload(result.payload);
+			const payload = await this.fetchFromTor();
+			if (payload !== null) {
+				this.applyPayload(payload);
 				return;
 			}
 			Logger.warn('Tor exit list bootstrap could not fetch; continuing with empty list');
@@ -157,13 +189,14 @@ class TorExitListCache {
 		}
 		const fetchedAsWinner = await this.withKvLock(kv, async (acquired) => {
 			if (!acquired) return false;
-			const result = await this.fetchFromTor();
-			if (result.kind !== 'fetched') {
+			const payload = await this.fetchFromTor();
+			this.lifecycle.signal.throwIfAborted();
+			if (payload === null) {
 				Logger.warn('Tor exit list bootstrap could not fetch; continuing with empty list');
 				return true;
 			}
-			await kv.setex(KV_PAYLOAD_KEY, PAYLOAD_TTL_SECONDS, result.payload).catch(() => undefined);
-			this.applyPayload(result.payload);
+			await this.writePayloadToKv(kv, payload);
+			this.applyPayload(payload);
 			Logger.info(
 				{ipv4Count: this.ipv4Exits.size, ipv6Count: this.ipv6Exits.size},
 				'Tor exit list fetched and hydrated on startup',
@@ -172,7 +205,7 @@ class TorExitListCache {
 		});
 		if (fetchedAsWinner) return;
 		const cached = await this.pollForPeerPayload();
-		if (cached) {
+		if (cached !== null) {
 			this.applyPayload(cached);
 			Logger.info(
 				{ipv4Count: this.ipv4Exits.size, ipv6Count: this.ipv6Exits.size},
@@ -181,30 +214,32 @@ class TorExitListCache {
 			return;
 		}
 		Logger.warn('Tor exit list not available via KV after wait; fetching directly');
-		const result = await this.fetchFromTor();
-		if (result.kind !== 'fetched') {
+		const payload = await this.fetchFromTor();
+		if (payload === null) {
 			Logger.warn('Tor exit list bootstrap could not fetch; continuing with empty list');
 			return;
 		}
-		this.applyPayload(result.payload);
+		this.applyPayload(payload);
 	}
 
 	private async pollForPeerPayload(): Promise<string | null> {
 		const deadline = Date.now() + HYDRATE_WAIT_MS;
 		let backoff = HYDRATE_POLL_MIN_MS;
 		while (Date.now() < deadline) {
-			await sleep(backoff);
+			await delay(backoff, undefined, {signal: this.lifecycle.signal});
 			const cached = await this.readPayloadFromKv();
-			if (cached) return cached;
+			if (cached !== null) return cached;
 			backoff = Math.min(backoff * 2, HYDRATE_POLL_MAX_MS);
 		}
 		return null;
 	}
 
 	private async withKvLock<T>(kv: IKVProvider, fn: (acquired: boolean) => Promise<T>): Promise<T> {
+		this.lifecycle.signal.throwIfAborted();
 		const lockToken = randomUUID();
 		const acquired = await kv.acquireLock(KV_LOCK_KEY, lockToken, LOCK_TTL_SECONDS).catch(() => false);
 		try {
+			this.lifecycle.signal.throwIfAborted();
 			return await fn(acquired);
 		} finally {
 			if (acquired) {
@@ -219,102 +254,127 @@ class TorExitListCache {
 	}
 
 	private async readPayloadFromKv(): Promise<string | null> {
+		this.lifecycle.signal.throwIfAborted();
 		const kv = this.kvClient;
 		if (!kv) return null;
 		try {
-			return await kv.get(KV_PAYLOAD_KEY);
+			const payload = await kv.get(KV_PAYLOAD_KEY);
+			this.lifecycle.signal.throwIfAborted();
+			return payload;
 		} catch (err) {
+			this.lifecycle.signal.throwIfAborted();
 			Logger.warn({error: err instanceof Error ? err.message : String(err)}, 'Failed reading Tor exit list from KV');
 			return null;
 		}
 	}
 
-	private async fetchFromTor(): Promise<FetchResult> {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-		this.inflightFetch = controller;
+	private async writePayloadToKv(kv: IKVProvider, payload: string): Promise<void> {
+		this.lifecycle.signal.throwIfAborted();
+		try {
+			await kv.setex(KV_PAYLOAD_KEY, PAYLOAD_TTL_SECONDS, payload);
+		} catch (err) {
+			Logger.warn(
+				{error: err instanceof Error ? err.message : String(err)},
+				'Failed to write Tor exit list payload to KV',
+			);
+		}
+	}
+
+	private async fetchFromTor(): Promise<string | null> {
+		const signal = this.lifecycle.signal;
+		signal.throwIfAborted();
+		const requestSignal = AbortSignal.any([AbortSignal.timeout(FETCH_TIMEOUT_MS), signal]);
+		const snapshot = this.fetchedSnapshot;
 		try {
 			const headers: Record<string, string> = {
 				Accept: 'application/json',
 				'Accept-Encoding': 'gzip',
 			};
-			if (this.lastModified) {
-				headers['If-Modified-Since'] = this.lastModified;
+			if (snapshot?.lastModified) {
+				headers['If-Modified-Since'] = snapshot.lastModified;
 			}
 			const res = await fetch(ONIONOO_URL, {
-				signal: controller.signal,
+				signal: requestSignal,
 				headers,
 			});
 			if (res.status === 304) {
-				return {kind: 'not_modified'};
+				if (!snapshot?.lastModified) throw new Error('Onionoo returned 304 without a cached response');
+				return snapshot.payload;
 			}
-			if (!res.ok) {
+			if (res.status !== 200) {
+				await res.body?.cancel();
 				Logger.warn({status: res.status}, 'Onionoo fetch returned non-OK status');
-				return {kind: 'failed'};
+				return null;
 			}
-			const body = (await res.json()) as {
-				relays?: ReadonlyArray<{
-					exit_addresses?: ReadonlyArray<string>;
-					or_addresses?: ReadonlyArray<string>;
-				}>;
-			};
+			const text = await streamToStringWithLimit(res.body, {
+				maxBytes: MAX_RESPONSE_BYTES,
+				headers: res.headers,
+				description: 'Onionoo response',
+				signal: requestSignal,
+			});
+			const parsed = OnionooDetailsSchema.safeParse(JSON.parse(text));
+			if (!parsed.success) throw new Error('Onionoo returned invalid relay data');
+			signal.throwIfAborted();
 			const ips = new Set<string>();
-			for (const relay of body.relays ?? []) {
-				for (const addr of relay.exit_addresses ?? []) {
-					const ip = stripHostPort(addr);
-					if (ip) ips.add(ip);
-				}
-				for (const addr of relay.or_addresses ?? []) {
-					const ip = stripHostPort(addr);
-					if (ip) ips.add(ip);
+			let invalidCount = 0;
+			for (const relay of parsed.data.relays) {
+				for (const address of [...(relay.or_addresses ?? []), ...(relay.exit_addresses ?? [])]) {
+					const ip = parseIpAddress(stripHostPort(address) ?? '');
+					if (!ip) {
+						invalidCount++;
+						continue;
+					}
+					ips.add(ip.normalized);
 				}
 			}
-			const lastModified = res.headers.get('last-modified');
-			if (lastModified) this.lastModified = lastModified;
-			return {kind: 'fetched', payload: Array.from(ips).join('\n')};
+			if (invalidCount > 0) {
+				Logger.warn({invalidCount}, 'Onionoo returned relay addresses that could not be parsed');
+			}
+			if (ips.size === 0 && parsed.data.relays.length > 0) {
+				Logger.error(
+					{relays: parsed.data.relays.length},
+					'Onionoo returned no usable relay addresses, keeping the current Tor exit list',
+				);
+				return null;
+			}
+			const payload = Array.from(ips).join('\n');
+			this.fetchedSnapshot = {payload, lastModified: res.headers.get('last-modified')};
+			return payload;
 		} catch (err) {
-			const name = (
-				err as
-					| {
-							name?: string;
-					  }
-					| undefined
-			)?.name;
-			if (name === 'AbortError') {
-				Logger.warn('Onionoo fetch aborted (timeout or shutdown)');
+			signal.throwIfAborted();
+			if (requestSignal.aborted) {
+				Logger.warn('Onionoo fetch timed out');
 			} else {
 				Logger.warn({error: err instanceof Error ? err.message : String(err)}, 'Onionoo fetch failed');
 			}
-			return {kind: 'failed'};
-		} finally {
-			clearTimeout(timeout);
-			if (this.inflightFetch === controller) {
-				this.inflightFetch = null;
-			}
+			return null;
 		}
 	}
 
 	private applyPayload(payload: string): void {
 		const ipv4 = new Set<string>();
 		const ipv6 = new Set<string>();
+		let invalidCount = 0;
 		for (const rawLine of payload.split('\n')) {
 			const value = rawLine.trim();
 			if (!value) continue;
 			const parsed = parseIpAddress(value);
-			if (!parsed) continue;
+			if (!parsed) {
+				invalidCount++;
+				continue;
+			}
 			if (parsed.family === 'ipv4') {
 				ipv4.add(parsed.normalized);
 			} else {
 				ipv6.add(parsed.normalized);
 			}
 		}
+		if (invalidCount > 0) {
+			Logger.warn({invalidCount}, 'Tor exit list payload contained lines that could not be parsed');
+		}
 		this.ipv4Exits = ipv4;
 		this.ipv6Exits = ipv6;
 	}
-}
-
-function sleep(ms: number): Promise<void> {
-	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function stripHostPort(value: string): string | null {

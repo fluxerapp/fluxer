@@ -25,7 +25,7 @@ export const DefaultShortcutChipList: React.FC<{chips: Array<string>; overridden
 					style={overridden ? OVERRIDDEN_CHIP_STYLE : undefined}
 					data-flx="user.keybinds-tab.default-shortcut-chip-list.default-chip"
 				>
-					{chip === 'ANY KEY' ? <Trans>Any key</Trans> : chip}
+					{chip}
 				</span>
 			))
 		)}

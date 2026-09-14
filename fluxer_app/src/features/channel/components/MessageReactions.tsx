@@ -15,6 +15,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ADD_REACTION_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {ReactionTooltip} from '@app/features/messaging/components/popouts/ReactionTooltip';
 import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
@@ -136,11 +137,7 @@ const MessageReactionItem = observer(
 		};
 		const emojiName = getEmojiName(reaction.emoji);
 		const emojiUrl = useEmojiURL({emoji: reaction.emoji, isHovering: isHovering || tooltipHovering});
-		const isMature = !!emojiRecord?.nsfw;
-		const {shouldBlur: reactionShouldBlur, shouldBlock: reactionShouldBlock} = useMatureMedia(
-			isMature,
-			message.channelId,
-		);
+		const {shouldBlur: reactionShouldBlur, shouldBlock: reactionShouldBlock} = useMatureMedia(false, message.channelId);
 		const variants = {
 			up: {y: -20, opacity: 0},
 			down: {y: 20, opacity: 0},
@@ -206,7 +203,7 @@ const MessageReactionItem = observer(
 									transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
 									data-flx="channel.message-reactions.message-reaction-item.div"
 								>
-									{reaction.count}
+									{getCachedNumberFormat(i18n.locale).format(reaction.count)}
 								</motion.div>
 							</AnimatePresence>
 						</div>
