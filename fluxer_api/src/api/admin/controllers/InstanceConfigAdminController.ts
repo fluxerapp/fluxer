@@ -32,6 +32,7 @@ import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/Gatew
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
@@ -58,6 +59,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		gatewayRollout,
 		voiceNoiseSuppression,
 		experimentDelivery,
+		messageHoverTracking,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -66,6 +68,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getGatewayRolloutConfig(),
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
+		instanceConfigRepository.getMessageHoverTrackingConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -97,6 +100,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		gateway_rollout: gatewayRollout,
 		voice_noise_suppression: voiceNoiseSuppression,
 		experiment_delivery: experimentDelivery,
+		message_hover_tracking: messageHoverTracking,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -238,6 +242,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentNoiseSuppression.config_version + 1,
 					});
 					await instanceConfigRepository.setVoiceNoiseSuppressionConfig(validated);
+				}
+			}
+			if (data.message_hover_tracking) {
+				const patch = omitUndefinedFields(data.message_hover_tracking);
+				if (Object.keys(patch).length > 0) {
+					const currentMessageHoverTracking = await instanceConfigRepository.getMessageHoverTrackingConfig();
+					const validated = MessageHoverTrackingConfigSchema.parse({
+						...currentMessageHoverTracking,
+						...patch,
+						config_version: currentMessageHoverTracking.config_version + 1,
+					});
+					await instanceConfigRepository.setMessageHoverTrackingConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

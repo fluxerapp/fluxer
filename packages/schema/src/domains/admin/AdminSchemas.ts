@@ -23,6 +23,10 @@ import {
 	ExperimentDeliveryConfigResponse,
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {
+	MessageHoverTrackingConfigResponse,
+	MessageHoverTrackingConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {
 	InstanceCaptchaProviderSchema,
@@ -630,6 +634,7 @@ export const InstanceConfigResponse = z.object({
 	gateway_rollout: GatewayRolloutConfigResponse,
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
+	message_hover_tracking: MessageHoverTrackingConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -666,6 +671,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
+	message_hover_tracking: MessageHoverTrackingConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

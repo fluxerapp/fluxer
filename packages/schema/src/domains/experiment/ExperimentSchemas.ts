@@ -4,6 +4,10 @@ import {
 	INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 	VoiceNoiseSuppressionAssignmentResponse,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {
+	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
+	MessageHoverTrackingAssignmentResponse,
+} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -42,6 +46,7 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 
 const ExperimentAssignmentsSchema = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionAssignmentResponse.optional(),
+	message_hover_tracking: MessageHoverTrackingAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -62,4 +67,10 @@ export function readVoiceNoiseSuppressionAssignment(
 	response: ExperimentAssignmentsResponse,
 ): VoiceNoiseSuppressionAssignmentResponse {
 	return response.assignments.voice_noise_suppression ?? INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT;
+}
+
+export function readMessageHoverTrackingAssignment(
+	response: ExperimentAssignmentsResponse,
+): MessageHoverTrackingAssignmentResponse {
+	return response.assignments.message_hover_tracking ?? INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT;
 }

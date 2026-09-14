@@ -15,8 +15,13 @@ import {
 	DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
+	readMessageHoverTrackingAssignment,
 	readVoiceNoiseSuppressionAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {
+	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const NOT_MODIFIED = 304;
@@ -49,7 +54,10 @@ describe('GET /experiments', () => {
 		expect(body).toEqual({
 			poll_interval_seconds: DEFAULT_EXPERIMENT_POLL_INTERVAL_SECONDS,
 			poll_jitter_percent: DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
-			assignments: {voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT},
+			assignments: {
+				voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
+				message_hover_tracking: INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
+			},
 		});
 	});
 
@@ -77,6 +85,66 @@ describe('GET /experiments', () => {
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
 		expect(Object.hasOwn(body.assignments, 'voice_noise_suppression')).toBe(true);
+		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
+	});
+
+	it('populates the message hover tracking key even when the rollout is disabled', async () => {
+		const account = await createTestAccount(harness);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(Object.hasOwn(body.assignments, 'message_hover_tracking')).toBe(true);
+		expect(readMessageHoverTrackingAssignment(body)).toEqual(INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT);
+	});
+
+	it('targets an allowlisted account for message hover tracking', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
+			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+			enabled: true,
+			config_version: 4,
+			included_user_ids: [account.userId],
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readMessageHoverTrackingAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 4,
+			user_targeted: true,
+			source: 'user_rule',
+		});
+	});
+
+	it('leaves an account outside a zero-width message hover tracking rollout', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
+			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+			enabled: true,
+			config_version: 2,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readMessageHoverTrackingAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 2,
+			user_targeted: false,
+			source: null,
+		});
+	});
+
+	it('resolves the two experiments independently', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
+			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readMessageHoverTrackingAssignment(body).user_targeted).toBe(true);
 		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
 	});
 

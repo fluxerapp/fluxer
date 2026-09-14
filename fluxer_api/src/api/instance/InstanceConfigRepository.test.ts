@@ -17,9 +17,14 @@ import {
 	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
 	type ExperimentDeliveryConfig,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {
+	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+	type MessageHoverTrackingConfig,
+} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
+const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
@@ -310,6 +315,51 @@ describe('InstanceConfigRepository', () => {
 		await repository.setVoiceNoiseSuppressionConfig(config);
 
 		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(config);
+	});
+
+	it('returns the default message hover tracking config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getMessageHoverTrackingConfig()).resolves.toEqual(DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
+		{name: 'a target that is not a snowflake', stored: '{"included_user_ids":["nope"]}'},
+	])('falls back to the default message hover tracking config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(MESSAGE_HOVER_TRACKING_CONFIG_KEY, stored);
+
+		await expect(repository.getMessageHoverTrackingConfig()).resolves.toEqual(DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG);
+	});
+
+	it('round-trips a stored message hover tracking config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: MessageHoverTrackingConfig = {
+			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
+			enabled: true,
+			config_version: 5,
+			rollout_basis_points: 2500,
+			rollout_salt: 'message-hover-tracking-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+		};
+		await repository.setMessageHoverTrackingConfig(config);
+
+		await expect(repository.getMessageHoverTrackingConfig()).resolves.toEqual(config);
 	});
 
 	it('fills newly added voice noise suppression fields from the schema defaults', async () => {

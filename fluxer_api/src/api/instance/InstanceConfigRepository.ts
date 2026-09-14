@@ -37,6 +37,10 @@ import {
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
+	type MessageHoverTrackingConfig,
+	MessageHoverTrackingConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
+import {
 	type InstanceAppPublic,
 	InstanceAppPublicSchema,
 	type InstanceBranding,
@@ -55,6 +59,7 @@ import {z} from 'zod';
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
+const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -338,6 +343,7 @@ type StoredConfigSection =
 	| 'gateway rollout'
 	| 'voice noise suppression'
 	| 'experiment delivery'
+	| 'message hover tracking'
 	| 'instance policy'
 	| 'integrations'
 	| 'media'
@@ -477,6 +483,10 @@ function parseStoredVoiceNoiseSuppressionConfig(raw: string | null): VoiceNoiseS
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
 	return parseStoredConfigOrDefault(ExperimentDeliveryConfigSchema, raw, 'experiment delivery');
+}
+
+function parseStoredMessageHoverTrackingConfig(raw: string | null): MessageHoverTrackingConfig {
+	return parseStoredConfigOrDefault(MessageHoverTrackingConfigSchema, raw, 'message hover tracking');
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -998,6 +1008,7 @@ export class InstanceConfigRepository {
 		);
 		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
+		parseStoredMessageHoverTrackingConfig(snapshot.get(MESSAGE_HOVER_TRACKING_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
 			parseStoredRegistrationConfig(snapshot.get(REGISTRATION_CONFIG_KEY) ?? null),
@@ -1081,6 +1092,16 @@ export class InstanceConfigRepository {
 	async getExperimentDeliveryConfig(): Promise<ExperimentDeliveryConfig> {
 		const raw = await this.getConfig(EXPERIMENT_DELIVERY_CONFIG_KEY);
 		return parseStoredExperimentDeliveryConfig(raw);
+	}
+
+	async getMessageHoverTrackingConfig(): Promise<MessageHoverTrackingConfig> {
+		const raw = await this.getConfig(MESSAGE_HOVER_TRACKING_CONFIG_KEY);
+		return parseStoredMessageHoverTrackingConfig(raw);
+	}
+
+	async setMessageHoverTrackingConfig(config: MessageHoverTrackingConfig): Promise<void> {
+		const validated = validateStoredConfig(MessageHoverTrackingConfigSchema, config, 'message hover tracking');
+		await this.setConfig(MESSAGE_HOVER_TRACKING_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async setExperimentDeliveryConfig(config: ExperimentDeliveryConfig): Promise<void> {

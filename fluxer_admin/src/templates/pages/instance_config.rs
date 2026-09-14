@@ -5,9 +5,9 @@ use crate::{
         AppPublicConfigResponse, ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse,
         InstanceConfigResponse, InstanceIntegrationsResponse, InstanceMediaResponse,
         InstancePolicyResponse, InstanceRegistrationResponse, LimitConfigResponse,
-        NoiseSuppressionBackend, PendingRegistrationResponse, RegistrationUrlResponse,
-        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
-        VoiceNoiseSuppressionConfigResponse,
+        MessageHoverTrackingConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
+        RegistrationUrlResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
+        VOICE_NS_MAX_TARGETED_USERS, VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -148,6 +148,7 @@ pub fn instance_config_page(
                     html! {
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
                         (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
+                        (message_hover_tracking_section(base, csrf_token, &instance_config.message_hover_tracking))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1168,6 +1169,110 @@ fn voice_noise_suppression_section(
 
                     (form_actions(html! {
                         (submit_button("Save Voice Noise Suppression Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn message_hover_tracking_section(
+    base: &str,
+    csrf_token: &str,
+    message_hover_tracking: &MessageHoverTrackingConfigResponse,
+) -> Markup {
+    let status = if message_hover_tracking.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = message_hover_tracking.included_user_ids.join("\n");
+    let excluded_user_ids = message_hover_tracking.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Message Hover Tracking",
+        "Picks which message hover implementation targeted clients run in the message list. A \
+         targeted client resolves the hovered message from one shared pointer oracle and drives \
+         the message action bar from that state. While the master switch below is off every \
+         client keeps the per-row implementation it ships with, whatever the rest of these \
+         fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_message_hover_tracking"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (message_hover_tracking.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "message_hover_enabled",
+                        "true",
+                        "Serve message hover tracking assignments to clients",
+                        message_hover_tracking.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         rollout is inert and keeps its current hover behavior, so the rollout \
+                         and targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "message_hover_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &message_hover_tracking.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "message_hover_rollout_salt",
+                            "Rollout Salt",
+                            &message_hover_tracking.rollout_salt,
+                            "message-hover-tracking-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "message_hover_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "message_hover_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Message Hover Tracking Configuration"))
                     }))
                 }
             }

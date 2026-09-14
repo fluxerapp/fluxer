@@ -10,6 +10,7 @@ import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 
 export function ExperimentController(app: HonoApp) {
 	app.get(
@@ -28,15 +29,18 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig] = await Promise.all([
+			const [delivery, voiceConfig, messageHoverTrackingConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
+				instanceConfigRepository.getMessageHoverTrackingConfig(),
 			]);
+			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
-					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, ctx.get('user').id.toString()),
+					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
+					message_hover_tracking: resolveMessageHoverTrackingAssignment(messageHoverTrackingConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;
