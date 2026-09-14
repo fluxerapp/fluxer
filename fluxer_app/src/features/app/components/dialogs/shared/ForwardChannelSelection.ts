@@ -8,6 +8,7 @@ import {
 } from '@app/features/app/components/dialogs/shared/ForwardChannelIndex';
 import {useForwardChannelObservations} from '@app/features/app/components/dialogs/shared/UseForwardChannelObservations';
 import {useShallowStableArray} from '@app/features/app/hooks/useShallowStableArray';
+import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
@@ -24,30 +25,27 @@ interface UseForwardChannelSelectionOptions {
 
 export interface ForwardChannelSelectionState {
 	readonly filteredChannels: ReadonlyArray<ForwardChannelOption>;
-	readonly handleToggleChannel: (channelId: string) => void;
+	readonly handleToggleChannel: (key: string) => void;
 	readonly isChannelSelectionDisabled: (option: ForwardChannelOption) => boolean;
 	readonly maxSelections: number;
-	readonly mostRecentlySelectedChannelId: string | null;
+	readonly mostRecentlySelectedChannel: Channel | null;
 	readonly searchQuery: string;
-	readonly selectedChannelIds: ReadonlySet<string>;
+	readonly selectedChannelOptions: ReadonlyArray<ForwardChannelOption>;
+	readonly selectedKeys: ReadonlySet<string>;
 	readonly setSearchQuery: Dispatch<SetStateAction<string>>;
 	readonly slowmodeActiveSelectedChannelOptions: ReadonlyArray<ForwardChannelOption>;
 	readonly slowmodeEnabledSelectedChannelOptions: ReadonlyArray<ForwardChannelOption>;
 }
 
-function toggleForwardChannelSelection(
-	channelId: string,
-	maxSelections: number,
-	previousChannelIds: Set<string>,
-): Set<string> {
-	const nextChannelIds = new Set(previousChannelIds);
-	if (nextChannelIds.has(channelId)) {
-		nextChannelIds.delete(channelId);
-		return nextChannelIds;
+function toggleForwardChannelSelection(key: string, maxSelections: number, previousKeys: Set<string>): Set<string> {
+	const nextKeys = new Set(previousKeys);
+	if (nextKeys.has(key)) {
+		nextKeys.delete(key);
+		return nextKeys;
 	}
-	if (nextChannelIds.size >= maxSelections) return previousChannelIds;
-	nextChannelIds.add(channelId);
-	return nextChannelIds;
+	if (nextKeys.size >= maxSelections) return previousKeys;
+	nextKeys.add(key);
+	return nextKeys;
 }
 
 export function useForwardChannelSelection({
@@ -79,24 +77,19 @@ export function useForwardChannelSelection({
 		[excludedChannelId, i18n, locale, observations, recentChannelIds, resolvedMediaSelection],
 	);
 	const [searchQuery, setSearchQuery] = useState('');
-	const [selectedChannelIds, setSelectedChannelIds] = useState<Set<string>>(new Set());
+	const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
 	const filteredChannels = useMemo(() => channelIndex.filter(searchQuery), [channelIndex, searchQuery]);
 	const handleToggleChannel = useCallback(
-		(channelId: string) => {
-			setSelectedChannelIds((previousChannelIds) =>
-				toggleForwardChannelSelection(channelId, maxSelections, previousChannelIds),
-			);
+		(key: string) => {
+			setSelectedKeys((previousKeys) => toggleForwardChannelSelection(key, maxSelections, previousKeys));
 		},
 		[maxSelections],
 	);
 	const isChannelSelectionDisabled = useCallback(
-		(option: ForwardChannelOption) => channelIndex.isSelectionDisabled({maxSelections, option, selectedChannelIds}),
-		[maxSelections, channelIndex, selectedChannelIds],
+		(option: ForwardChannelOption) => channelIndex.isSelectionDisabled({maxSelections, option, selectedKeys}),
+		[maxSelections, channelIndex, selectedKeys],
 	);
-	const selectedChannelOptions = useMemo(
-		() => channelIndex.select(selectedChannelIds),
-		[channelIndex, selectedChannelIds],
-	);
+	const selectedChannelOptions = useMemo(() => channelIndex.select(selectedKeys), [channelIndex, selectedKeys]);
 	const slowmodeEnabledSelectedChannelOptions = useMemo(
 		() => selectedChannelOptions.filter((option) => option.slowmodeEnabled),
 		[selectedChannelOptions],
@@ -105,22 +98,23 @@ export function useForwardChannelSelection({
 		() => selectedChannelOptions.filter((option) => option.slowmodeRemainingMs > 0),
 		[selectedChannelOptions],
 	);
-	const mostRecentlySelectedChannelId = useMemo(() => {
-		let mostRecent: string | null = null;
-		for (const channelId of selectedChannelIds) {
-			mostRecent = channelId;
+	const mostRecentlySelectedChannel = useMemo(() => {
+		let mostRecent: Channel | null = null;
+		for (const option of selectedChannelOptions) {
+			mostRecent = option.channel;
 		}
 		return mostRecent;
-	}, [selectedChannelIds]);
+	}, [selectedChannelOptions]);
 
 	return {
 		filteredChannels,
 		handleToggleChannel,
 		isChannelSelectionDisabled,
 		maxSelections,
-		mostRecentlySelectedChannelId,
+		mostRecentlySelectedChannel,
 		searchQuery,
-		selectedChannelIds,
+		selectedChannelOptions,
+		selectedKeys,
 		setSearchQuery,
 		slowmodeActiveSelectedChannelOptions,
 		slowmodeEnabledSelectedChannelOptions,

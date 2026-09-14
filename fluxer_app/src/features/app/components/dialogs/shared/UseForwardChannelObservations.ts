@@ -2,6 +2,7 @@
 
 import type {ForwardChannelObservation} from '@app/features/app/components/dialogs/shared/ForwardChannelIndex';
 import {useShallowStableArray} from '@app/features/app/hooks/useShallowStableArray';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
@@ -12,11 +13,13 @@ import Permission from '@app/features/permissions/state/Permission';
 import Relationships from '@app/features/relationship/state/Relationships';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {useNow} from '@app/features/ui/state/Tick';
+import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
+import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {computed, type IComputedValue} from 'mobx';
@@ -40,11 +43,13 @@ interface ForwardChannelObservationBase {
 	readonly canEmbedLinks: boolean;
 	readonly canSendMessages: boolean;
 	readonly categoryName: string | null;
-	readonly channel: Channel;
+	readonly channel: Channel | null;
 	readonly displayName: string;
 	readonly guildMessagesDisabled: boolean;
 	readonly guildName: string | null;
+	readonly key: string;
 	readonly memberTimedOut: boolean;
+	readonly recipient: User | null;
 	readonly searchAliases: ReadonlyArray<string>;
 	readonly slowmodeEnabled: boolean;
 }
@@ -78,13 +83,28 @@ function resolveChannelDisplayName(channel: Channel, i18n: I18n): string {
 	return i18n._(CHANNEL_DESCRIPTOR, {id: channel.id});
 }
 
-function collectRecipientSearchAliases(channel: Channel): ReadonlyArray<string> {
+function resolveForwardChannelKey(channel: Channel): string {
+	if (channel.type === ChannelTypes.DM && channel.recipientIds.length > 0) {
+		return resolveForwardRecipientKey(channel.recipientIds[0]);
+	}
+	return channel.id;
+}
+
+function resolveForwardRecipientKey(userId: string): string {
+	return `user:${userId}`;
+}
+
+function collectChannelSearchAliases(channel: Channel): ReadonlyArray<string> {
 	if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
 		return EMPTY_SEARCH_ALIASES;
 	}
+	return collectRecipientSearchAliases(channel.recipientIds);
+}
+
+function collectRecipientSearchAliases(recipientIds: ReadonlyArray<string>): ReadonlyArray<string> {
 	const aliases = new Set<string>();
 	const guilds = Guilds.getGuilds();
-	for (const recipientId of channel.recipientIds) {
+	for (const recipientId of recipientIds) {
 		const recipient = Users.getUser(recipientId);
 		if (!recipient) continue;
 		aliases.add(recipient.username);
@@ -128,6 +148,7 @@ function areForwardChannelObservationBasesEqual(
 	right: ForwardChannelObservationBase,
 ): boolean {
 	if (left.channel !== right.channel || left.displayName !== right.displayName) return false;
+	if (left.key !== right.key || left.recipient !== right.recipient) return false;
 	if (left.guildName !== right.guildName || left.categoryName !== right.categoryName) return false;
 	if (left.guildMessagesDisabled !== right.guildMessagesDisabled || left.memberTimedOut !== right.memberTimedOut) {
 		return false;
@@ -195,9 +216,12 @@ class ForwardChannelObservationsOwner {
 	private buildSelection(): ForwardChannelObservationSelection {
 		const bases: Array<ForwardChannelObservationBase> = [];
 		const slowmodeChannels: Array<ForwardSlowmodeChannel> = [];
+		const keys = new Set<string>();
 		for (const channel of this.request.channels) {
 			const index = bases.length;
 			const base = this.buildBase(channel);
+			if (keys.has(base.key)) continue;
+			keys.add(base.key);
 			bases.push(base);
 			if (base.slowmodeEnabled) {
 				slowmodeChannels.push(
@@ -205,7 +229,40 @@ class ForwardChannelObservationsOwner {
 				);
 			}
 		}
+		for (const base of this.buildClosedFriendDMBases()) {
+			if (keys.has(base.key)) continue;
+			keys.add(base.key);
+			bases.push(base);
+		}
 		return Object.freeze({bases: Object.freeze(bases), slowmodeChannels: Object.freeze(slowmodeChannels)});
+	}
+
+	private buildClosedFriendDMBases(): ReadonlyArray<ForwardChannelObservationBase> {
+		if (RuntimeConfig.directMessagesDisabled) return [];
+		const bases: Array<ForwardChannelObservationBase> = [];
+		for (const relationship of Relationships.getRelationships()) {
+			if (relationship.type !== RelationshipTypes.FRIEND) continue;
+			const recipient = Users.getUser(relationship.userId);
+			if (!recipient) continue;
+			bases.push(
+				Object.freeze({
+					canAttachFiles: true,
+					canEmbedLinks: true,
+					canSendMessages: true,
+					categoryName: null,
+					channel: null,
+					displayName: NicknameUtils.getNickname(recipient, null),
+					guildMessagesDisabled: false,
+					guildName: null,
+					key: resolveForwardRecipientKey(recipient.id),
+					memberTimedOut: false,
+					recipient,
+					searchAliases: collectRecipientSearchAliases([recipient.id]),
+					slowmodeEnabled: false,
+				}),
+			);
+		}
+		return bases;
 	}
 
 	private buildBase(channel: Channel): ForwardChannelObservationBase {
@@ -220,8 +277,10 @@ class ForwardChannelObservationsOwner {
 				displayName: resolveChannelDisplayName(channel, this.request.i18n),
 				guildMessagesDisabled: false,
 				guildName: null,
+				key: resolveForwardChannelKey(channel),
 				memberTimedOut: false,
-				searchAliases: collectRecipientSearchAliases(channel),
+				recipient: null,
+				searchAliases: collectChannelSearchAliases(channel),
 				slowmodeEnabled: false,
 			});
 		}
@@ -249,8 +308,10 @@ class ForwardChannelObservationsOwner {
 			displayName: resolveChannelDisplayName(channel, this.request.i18n),
 			guildMessagesDisabled,
 			guildName,
+			key: resolveForwardChannelKey(channel),
 			memberTimedOut: isCurrentMemberTimedOut(channel, this.request.currentUserId),
-			searchAliases: collectRecipientSearchAliases(channel),
+			recipient: null,
+			searchAliases: collectChannelSearchAliases(channel),
 			slowmodeEnabled,
 		});
 	}
@@ -281,8 +342,10 @@ function buildForwardChannelObservations(
 				displayName: base.displayName,
 				guildMessagesDisabled: base.guildMessagesDisabled,
 				guildName: base.guildName,
+				key: base.key,
 				searchAliases: base.searchAliases,
 				memberTimedOut: base.memberTimedOut,
+				recipient: base.recipient,
 				slowmodeEnabled: base.slowmodeEnabled,
 				slowmodeRemainingMs: remainingMs === undefined ? 0 : remainingMs,
 			});

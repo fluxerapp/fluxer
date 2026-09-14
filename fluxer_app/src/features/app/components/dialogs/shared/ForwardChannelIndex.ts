@@ -7,6 +7,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
+import type {User} from '@app/features/user/models/User';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -88,11 +89,13 @@ export interface ForwardChannelObservation {
 	readonly canEmbedLinks: boolean;
 	readonly canSendMessages: boolean;
 	readonly categoryName: string | null;
-	readonly channel: Channel;
+	readonly channel: Channel | null;
 	readonly displayName: string;
 	readonly guildMessagesDisabled: boolean;
 	readonly guildName: string | null;
+	readonly key: string;
 	readonly memberTimedOut: boolean;
+	readonly recipient: User | null;
 	readonly searchAliases: ReadonlyArray<string>;
 	readonly slowmodeEnabled: boolean;
 	readonly slowmodeRemainingMs: number;
@@ -100,10 +103,12 @@ export interface ForwardChannelObservation {
 
 export interface ForwardChannelOption {
 	readonly categoryName: string | null;
-	readonly channel: Channel;
+	readonly channel: Channel | null;
 	readonly disableReason: string | null;
 	readonly displayName: string;
 	readonly guildName: string | null;
+	readonly key: string;
+	readonly recipient: User | null;
 	readonly slowmodeEnabled: boolean;
 	readonly slowmodeRemainingMs: number;
 }
@@ -129,13 +134,18 @@ interface BuildForwardChannelIndexRequest {
 interface ForwardChannelSelectionDisabledRequest {
 	readonly maxSelections: number;
 	readonly option: ForwardChannelOption;
-	readonly selectedChannelIds: ReadonlySet<string>;
+	readonly selectedKeys: ReadonlySet<string>;
+}
+
+function isForwardableObservation(observation: ForwardChannelObservation): boolean {
+	if (observation.channel == null) return observation.recipient != null;
+	return isForwardableChannelType(observation.channel.type);
 }
 
 export class ForwardChannelIndex {
 	private readonly i18n: I18n;
 	private readonly options: ReadonlyArray<IndexedForwardChannelOption>;
-	private readonly optionsByChannelId: ReadonlyMap<string, IndexedForwardChannelOption>;
+	private readonly optionsByKey: ReadonlyMap<string, IndexedForwardChannelOption>;
 
 	constructor({
 		excludedChannelId,
@@ -147,11 +157,11 @@ export class ForwardChannelIndex {
 		this.i18n = i18n;
 		const recentRanks = ForwardChannelIndex.buildRecentRanks(recentChannelIds);
 		const options = observations
-			.filter((observation) => isForwardableChannelType(observation.channel.type))
+			.filter(isForwardableObservation)
 			.map((observation) => this.buildOption({excludedChannelId, mediaSelection, observation, recentRanks}));
 		options.sort((left, right) => this.compareOptions(left, right));
 		this.options = Object.freeze(options);
-		this.optionsByChannelId = new Map(options.map((option) => [option.channel.id, option]));
+		this.optionsByKey = new Map(options.map((option) => [option.key, option]));
 	}
 
 	filter(searchQuery: string): ReadonlyArray<ForwardChannelOption> {
@@ -169,16 +179,16 @@ export class ForwardChannelIndex {
 		return matches;
 	}
 
-	isSelectionDisabled({maxSelections, option, selectedChannelIds}: ForwardChannelSelectionDisabledRequest): boolean {
+	isSelectionDisabled({maxSelections, option, selectedKeys}: ForwardChannelSelectionDisabledRequest): boolean {
 		if (option.disableReason != null) return true;
-		if (selectedChannelIds.has(option.channel.id)) return false;
-		return selectedChannelIds.size >= maxSelections;
+		if (selectedKeys.has(option.key)) return false;
+		return selectedKeys.size >= maxSelections;
 	}
 
-	select(selectedChannelIds: ReadonlySet<string>): ReadonlyArray<ForwardChannelOption> {
+	select(selectedKeys: ReadonlySet<string>): ReadonlyArray<ForwardChannelOption> {
 		const selected: Array<IndexedForwardChannelOption> = [];
-		for (const channelId of selectedChannelIds) {
-			const option = this.optionsByChannelId.get(channelId);
+		for (const key of selectedKeys) {
+			const option = this.optionsByKey.get(key);
 			if (option != null) selected.push(option);
 		}
 		return selected;
@@ -213,25 +223,29 @@ export class ForwardChannelIndex {
 	}): IndexedForwardChannelOption {
 		const permissionIssue = this.resolvePermissionIssue(observation, mediaSelection);
 		const disableReason = this.resolveDisableReason(observation, permissionIssue);
-		const recentRankValue = recentRanks.get(observation.channel.id);
+		let recentRankValue: number | undefined;
+		if (observation.channel != null) recentRankValue = recentRanks.get(observation.channel.id);
 		let recentRank: number | null = null;
 		if (recentRankValue !== undefined) recentRank = recentRankValue;
+		const channel = observation.channel;
 		let channelNameSearchValue = '';
-		if (observation.channel.name) channelNameSearchValue = observation.channel.name.toLowerCase();
+		if (channel?.name) channelNameSearchValue = channel.name.toLowerCase();
 		let guildNameSearchValue = '';
 		if (observation.guildName != null) guildNameSearchValue = observation.guildName.toLowerCase();
 		return Object.freeze({
 			categoryName: observation.categoryName,
-			channel: observation.channel,
+			channel,
 			channelNameSearchValue,
 			disableReason,
 			displayName: observation.displayName,
 			displayNameSearchValue: observation.displayName.toLowerCase(),
 			guildName: observation.guildName,
 			guildNameSearchValue,
-			isPersonalNotes: observation.channel.type === ChannelTypes.DM_PERSONAL_NOTES,
-			isSource: observation.channel.id === excludedChannelId,
+			isPersonalNotes: channel != null && channel.type === ChannelTypes.DM_PERSONAL_NOTES,
+			isSource: channel != null && channel.id === excludedChannelId,
+			key: observation.key,
 			recentRank,
+			recipient: observation.recipient,
 			searchAliasValues: Object.freeze(observation.searchAliases.map((alias) => alias.toLowerCase())),
 			slowmodeEnabled: observation.slowmodeEnabled,
 			slowmodeRemainingMs: observation.slowmodeRemainingMs,

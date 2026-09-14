@@ -6,6 +6,7 @@ import {useForwardChannelSelection} from '@app/features/app/components/dialogs/s
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
 import {Limits} from '@app/features/app/utils/UserLimits';
+import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {MessageCharacterCounter} from '@app/features/channel/components/MessageCharacterCounter';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
@@ -162,6 +163,21 @@ function resolveForwardReferenceGuildId(channel: Channel | null, message: Messag
 	return null;
 }
 
+async function openForwardChannels(options: ReadonlyArray<ForwardChannelOption>): Promise<Array<string>> {
+	const channelIds: Array<string> = [];
+	for (const option of options) {
+		if (option.channel != null) {
+			channelIds.push(option.channel.id);
+			continue;
+		}
+		if (option.recipient == null) {
+			throw new Error(`Forward destination ${option.key} has no channel or recipient`);
+		}
+		channelIds.push(await PrivateChannelCommands.ensureDMChannel(option.recipient.id));
+	}
+	return channelIds;
+}
+
 function focusForwardComment(handle: LexicalRichInputHandle | null): void {
 	if (handle != null) {
 		handle.focus();
@@ -185,9 +201,10 @@ export const ForwardModal = observer(
 			filteredChannels,
 			handleToggleChannel,
 			isChannelSelectionDisabled,
-			mostRecentlySelectedChannelId,
+			mostRecentlySelectedChannel,
 			searchQuery,
-			selectedChannelIds,
+			selectedChannelOptions,
+			selectedKeys,
 			setSearchQuery,
 			maxSelections,
 			slowmodeActiveSelectedChannelOptions,
@@ -218,13 +235,6 @@ export const ForwardModal = observer(
 			});
 		}, [i18n]);
 		const sourceForwardChannel = resolveForwardSourceChannel(sourceChannel, message.channelId);
-		const composerChannel = useMemo(() => {
-			if (mostRecentlySelectedChannelId == null) {
-				return null;
-			}
-			const selectedChannel = Channels.getChannel(mostRecentlySelectedChannelId);
-			return selectedChannel == null ? null : selectedChannel;
-		}, [mostRecentlySelectedChannelId]);
 		const handleCommentChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
 			setActualOptionalMessage(dropTrailingEmptyBlockquoteLines(wire));
 		}, []);
@@ -266,7 +276,7 @@ export const ForwardModal = observer(
 		}
 		const isCommentCounterVisible = actualOptionalMessage.length > user.maxMessageLength * 0.8;
 		const handleForward = async (skipNavigation = false) => {
-			if (selectedChannelIds.size === 0) return;
+			if (selectedChannelOptions.length === 0) return;
 			if (isForwarding) return;
 			if (isSendBlockedBySlowmode) return;
 			if (!isCommentComposerDisabled && isCommentOverLimit) {
@@ -287,7 +297,7 @@ export const ForwardModal = observer(
 					attachmentIds = mediaSelection.attachmentIds;
 					embedIndices = mediaSelection.embedIndices;
 				}
-				const forwardedChannelIds = Array.from(selectedChannelIds);
+				const forwardedChannelIds = await openForwardChannels(selectedChannelOptions);
 				const forwarded = await MessageCommands.forward(
 					forwardedChannelIds,
 					{
@@ -335,21 +345,11 @@ export const ForwardModal = observer(
 				setIsForwarding(false);
 			}
 		};
-		const getChannelIcon = (ch: Channel) => {
+		const getChannelIcon = (option: ForwardChannelOption) => {
 			const iconSize = 32;
-			if (ch.type === ChannelTypes.DM_PERSONAL_NOTES) {
-				return (
-					<NotePencilIcon
-						className={selectorStyles.itemIcon}
-						weight="fill"
-						size={remFromPx(iconSize)}
-						data-flx="messaging.forward-modal.get-channel-icon.note-pencil-icon"
-					/>
-				);
-			}
-			if (ch.type === ChannelTypes.DM) {
-				const recipientId = ch.recipientIds[0];
-				const user = Users.getUser(recipientId);
+			const ch = option.channel;
+			if (ch == null || ch.type === ChannelTypes.DM) {
+				const user = ch == null ? option.recipient : Users.getUser(ch.recipientIds[0]);
 				if (!user) return null;
 				return (
 					<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div">
@@ -359,6 +359,16 @@ export const ForwardModal = observer(
 							data-flx="messaging.forward-modal.get-channel-icon.status-aware-avatar"
 						/>
 					</div>
+				);
+			}
+			if (ch.type === ChannelTypes.DM_PERSONAL_NOTES) {
+				return (
+					<NotePencilIcon
+						className={selectorStyles.itemIcon}
+						weight="fill"
+						size={remFromPx(iconSize)}
+						data-flx="messaging.forward-modal.get-channel-icon.note-pencil-icon"
+					/>
 				);
 			}
 			if (ch.type === ChannelTypes.GROUP_DM) {
@@ -428,21 +438,20 @@ export const ForwardModal = observer(
 							) : (
 								<div className={selectorStyles.itemList} data-flx="messaging.forward-modal.div--4">
 									{filteredChannels.map((option: ForwardChannelOption) => {
-										const ch = option.channel;
-										const isSelected = selectedChannelIds.has(ch.id);
+										const isSelected = selectedKeys.has(option.key);
 										const isDisabledForSelection = isChannelSelectionDisabled(option);
 										const isDisabled = isDisabledForSelection && !isSelected;
 										const {categoryName, disableReason, displayName, guildName} = option;
 										return (
 											<FocusRing
-												key={ch.id}
+												key={option.key}
 												offset={-2}
 												enabled={!isDisabled}
 												data-flx="messaging.forward-modal.focus-ring"
 											>
 												<button
 													type="button"
-													onClick={() => !isDisabled && handleToggleChannel(ch.id)}
+													onClick={() => !isDisabled && handleToggleChannel(option.key)}
 													disabled={isDisabled}
 													aria-pressed={isSelected}
 													className={clsx(
@@ -453,7 +462,7 @@ export const ForwardModal = observer(
 													data-flx="messaging.forward-modal.button"
 												>
 													<div className={selectorStyles.itemContent} data-flx="messaging.forward-modal.div--5">
-														{getChannelIcon(ch)}
+														{getChannelIcon(option)}
 														<div className={selectorStyles.itemInfo} data-flx="messaging.forward-modal.div--6">
 															<span className={selectorStyles.itemName} data-flx="messaging.forward-modal.span">
 																{displayName}
@@ -517,7 +526,7 @@ export const ForwardModal = observer(
 								initialValue=""
 								initialSegments={EMPTY_FORWARD_COMMENT_SEGMENTS}
 								className={modalStyles.richInput}
-								channel={composerChannel}
+								channel={mostRecentlySelectedChannel}
 								disabled={isCommentComposerDisabled}
 								markdown={true}
 								singleLine={false}
@@ -638,7 +647,7 @@ export const ForwardModal = observer(
 					<Button
 						onClick={(event: MouseEvent<HTMLButtonElement>) => handleForward(event.shiftKey)}
 						disabled={
-							selectedChannelIds.size === 0 ||
+							selectedChannelOptions.length === 0 ||
 							isForwarding ||
 							isSendBlockedBySlowmode ||
 							(!isCommentComposerDisabled && isCommentOverLimit)
@@ -646,7 +655,7 @@ export const ForwardModal = observer(
 						data-flx="messaging.forward-modal.button.forward"
 					>
 						{i18n._(SEND_SELECTED_COUNT_DESCRIPTOR, {
-							selectedCount: selectedChannelIds.size,
+							selectedCount: selectedKeys.size,
 							selectionLimit: maxSelections,
 						})}
 					</Button>
