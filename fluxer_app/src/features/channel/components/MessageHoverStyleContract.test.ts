@@ -78,6 +78,21 @@ describe('message hover style contract', () => {
 		}
 	});
 
+	it('paints the row highlight in both arms because the class is driven by React', () => {
+		const highlightRules = parseCssRules(messageCss).filter(
+			(rule) =>
+				rule.selector.includes('.messageHovered') &&
+				!rule.selector.includes(':hover') &&
+				!/\.buttons\b/.test(rule.selector) &&
+				/(background-color|opacity):/.test(rule.body),
+		);
+		expect(highlightRules.length).toBeGreaterThan(0);
+		for (const rule of highlightRules) {
+			expect(rule.selector).not.toContain(CONTROL_GATE);
+			expect(rule.selector).not.toContain(TREATMENT_GATE);
+		}
+	});
+
 	it('derives the row highlight and the action bar from the same hover state', () => {
 		const highlightSource = channelMessageSource.match(/(\w+) && !isPreview && styles\.messageHovered/)?.[1];
 		const actionBarSourceState = channelMessageSource.match(/const isActionBarActive = (\w+) \|\|/)?.[1];

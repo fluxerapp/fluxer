@@ -38,7 +38,8 @@
 	padding-block: var(--message-spacing-y);
 	padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	padding-inline-start: 0;
-	margin-inline: calc(-1 * var(--message-mobile-margin));
+	--message-inline-bleed: var(--message-mobile-margin);
+	margin-inline: calc(-1 * var(--message-inline-bleed));
 }
 
 .messagePreviewSpacing {
@@ -53,6 +54,13 @@
 	--message-hovered: 1;
 }
 
+.focusRingAnchor {
+	position: absolute;
+	inset-block: 0;
+	inset-inline: var(--message-inline-bleed, 0px);
+	pointer-events: none;
+}
+
 .message::selection,
 .messageCompact::selection,
 .message *::selection,
@@ -62,7 +70,8 @@
 
 @media (min-width: 768px) {
 	.message {
-		margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+		--message-inline-bleed: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+		margin-inline: calc(-1 * var(--message-inline-bleed));
 		padding-inline-end: calc(
 			var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) +
 			var(--message-action-bar-offset)
@@ -70,39 +79,24 @@
 	}
 
 	.messagePreview {
+		--message-inline-bleed: 0px;
 		margin-inline: 0;
 		padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	}
 }
 
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight):not(.messagePreview),
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight):not(
 		.messagePreview
 	) {
 	background-color: var(--background-modifier-hover);
 }
 
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.messageMentioned.messageHovered,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact.messageMentioned.messageHovered {
 	background-color: var(--message-mention-bg-hover);
 }
@@ -114,29 +108,13 @@
 	background-color: var(--message-mention-bg);
 }
 
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.messageReplying.messageHovered:not(.messageMentioned),
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.messageHighlight.messageHovered:not(.messageMentioned),
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact.messageReplying.messageHovered:not(.messageMentioned),
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact.messageHighlight.messageHovered:not(.messageMentioned) {
 	background-color: var(--message-reply-bg);
 }
@@ -218,7 +196,8 @@
 	padding-inline-start: 0;
 	padding-inline-end: var(--message-compact-horizontal-padding);
 	text-indent: 0;
-	margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+	--message-inline-bleed: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+	margin-inline: calc(-1 * var(--message-inline-bleed));
 }
 
 @media (min-width: 768px) {
@@ -618,11 +597,7 @@
 	transform: translateX(0.5rem);
 }
 
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.message.messageHovered
 	.messageTimestampHover {
 	opacity: 1;
@@ -698,11 +673,7 @@
 	margin-inline-end: 0;
 }
 
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.messageCompact.messageHovered
 	.messageTimestampCompactHover {
 	opacity: 1;

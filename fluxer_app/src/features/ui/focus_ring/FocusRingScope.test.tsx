@@ -287,4 +287,26 @@ describe('FocusRingScope', () => {
 		expect(requireRingContext('primary').visible).toBe(false);
 		expect(requireRingContext('secondary').visible).toBe(true);
 	});
+
+	test('keeps a positively inset ring inside the scope container the row bleeds out of', () => {
+		act(() => {
+			root.render(<Harness data-flx="ui.focus-ring.focus-ring-scope-test.harness--inset" />);
+		});
+		const scopeContainer = requireScopeContainer();
+		stubBoundingRect(scopeContainer, () => domRect(0, 0, 500, 400));
+		stubBoundingRect(requireTarget(), () => domRect(100, -16, 532, 40));
+		act(() => {
+			requireRingContext().showForElement(requireTarget(), {offset: -2});
+		});
+		const bleeding = requireRing();
+		expect(Number.parseFloat(bleeding.style.left)).toBeLessThan(0);
+		act(() => {
+			requireRingContext().showForElement(requireTarget(), {offset: {top: -2, bottom: -2, left: 18, right: 18}});
+		});
+		const inset = requireRing();
+		const left = Number.parseFloat(inset.style.left);
+		const width = Number.parseFloat(inset.style.width);
+		expect(left).toBeGreaterThan(0);
+		expect(left + width).toBeLessThan(500);
+	});
 });

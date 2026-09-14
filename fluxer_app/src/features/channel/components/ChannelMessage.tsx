@@ -223,6 +223,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	const [isFocusedWithin, setIsFocusedWithin] = useState(false);
 	const [mobileLongPressLinkUrl, setMobileLongPressLinkUrl] = useState<string | undefined>(undefined);
 	const messageRef = useRef<HTMLDivElement | null>(null);
+	const focusRingAnchorRef = useRef<HTMLDivElement | null>(null);
 	const disableContextMenuTracking = behaviorOverrides?.disableContextMenuTracking ?? false;
 	const trackedContextMenuOpen = useContextMenuHoverState(messageRef, !disableContextMenuTracking);
 	const contextMenuOpen = disableContextMenuTracking
@@ -706,6 +707,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 				enabled={keyboardNavigationEnabled ? keyboardModeEnabled : undefined}
 				within={keyboardNavigationEnabled}
 				offset={keyboardNavigationEnabled ? -2 : undefined}
+				ringTarget={keyboardNavigationEnabled ? focusRingAnchorRef : undefined}
 				data-flx="channel.message.focus-ring"
 			>
 				<div
@@ -752,6 +754,14 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					style={articleStyle}
 					data-flx="channel.message.article.alt-click"
 				>
+					{keyboardNavigationEnabled && (
+						<div
+							ref={focusRingAnchorRef}
+							aria-hidden={true}
+							className={styles.focusRingAnchor}
+							data-flx="channel.message.focus-ring-anchor"
+						/>
+					)}
 					{messageComponent}
 					{shouldMountActionBar &&
 						(previewMode ? (
