@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {z} from 'zod';
+import { SsoStatusResponse } from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import { createNamedStringLiteralUnion } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import { z } from 'zod';
 
 const LimitFilterResponse = z.object({
 	traits: z.array(z.string()).optional().describe('Trait filters for this limit rule'),
@@ -32,13 +32,13 @@ export const InstanceBrandingSchema = z
 		logo_url: z.string().nullable().describe('Optional image URL for the application logo'),
 		wordmark_url: z.string().nullable().describe('Optional image URL for the application wordmark'),
 		favicon_url: z.string().nullable().describe('Optional favicon URL for browser metadata'),
-    theme_color: z.string().nullable().describe('Optional browser theme color'),
-    status_page_url: z.string().nullable().describe('Optional public status page URL'),
-    status_page_incident_history_url: z
-        .string()
-        .nullable()
-        .describe('Optional public status page incident history URL'),
-})
+		theme_color: z.string().nullable().describe('Optional browser theme color'),
+		status_page_url: z.string().nullable().describe('Optional public status page URL'),
+		status_page_incident_history_url: z
+			.string()
+			.nullable()
+			.describe('Optional public status page incident history URL'),
+	})
 	.describe('Branding values safe to expose to clients');
 export type InstanceBranding = z.infer<typeof InstanceBrandingSchema>;
 
