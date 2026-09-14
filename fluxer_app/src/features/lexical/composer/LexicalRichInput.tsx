@@ -39,6 +39,7 @@ export interface LexicalRichInputProps {
 	singleLine?: boolean;
 	size?: 'chat' | 'form';
 	maxLength?: number;
+	maxWireLength?: number;
 	onExceedMaxLength?: () => void;
 	autocompleteAnchor?: HTMLElement | null;
 	className?: string;
@@ -75,6 +76,7 @@ export const LexicalRichInput = ({
 	singleLine = false,
 	size = 'chat',
 	maxLength,
+	maxWireLength = maxLength,
 	onExceedMaxLength,
 	autocompleteAnchor,
 	className,
@@ -229,6 +231,7 @@ export const LexicalRichInput = ({
 				initialSegments={initialSegments}
 				markdown={markdown}
 				markdownParserFlags={markdownParserFlags}
+				maxWireLength={maxWireLength}
 				emojiShortcodeResolver={emojiShortcodeResolver}
 				specialMentionsAllowed={specialMentionsAllowed}
 				channelId={channel == null ? undefined : channel.id}

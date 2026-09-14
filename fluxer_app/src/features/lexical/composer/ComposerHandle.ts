@@ -22,6 +22,7 @@ export interface ComposerHandle {
 	getDisplayValue: () => string;
 	getWireValue: () => string;
 	getSegments: () => Array<MentionSegment>;
+	getMarkdownParserFlags: () => number;
 	getTextUpToCursor: () => string;
 	getSelection: () => ComposerSelectionRange | null;
 	replaceRange: (start: number, end: number, payload: ComposerInsertPayload, spacing?: ComposerInsertSpacing) => void;

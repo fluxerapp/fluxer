@@ -157,7 +157,7 @@ export const ChannelOverviewTopicEditor = observer(
 				});
 			}, [actualTopic, form, isTopicInitialized]);
 			const handleTopicChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
-				setActualTopic(dropTrailingEmptyBlockquoteLines(wire));
+				setActualTopic(dropTrailingEmptyBlockquoteLines(wire, TOPIC_MARKDOWN_PARSER_FLAGS));
 			}, []);
 			const handleTopicEmojiSelect = useCallback((emoji: FlatEmoji, shiftKey: boolean) => {
 				const composer = composerRef.current;

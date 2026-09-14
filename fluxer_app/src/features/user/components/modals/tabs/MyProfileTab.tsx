@@ -34,7 +34,7 @@ import styles from '@app/features/user/components/modals/tabs/MyProfileTab.modul
 import {AccentColorPicker} from '@app/features/user/components/modals/tabs/my_profile_tab/AccentColorPicker';
 import {AvatarUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader';
 import {BannerUploader} from '@app/features/user/components/modals/tabs/my_profile_tab/BannerUploader';
-import {BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
+import {BIO_MARKDOWN_PARSER_FLAGS, BioEditor} from '@app/features/user/components/modals/tabs/my_profile_tab/BioEditor';
 import {UsernameSection} from '@app/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection';
 import {PerGuildPremiumUpsell} from '@app/features/user/components/modals/tabs/my_profile_tab/PerGuildPremiumUpsell';
 import {PremiumBadgeSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings';
@@ -449,7 +449,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const handleBioChange = useCallback((display: string, segments: Array<MentionSegment>, wire: string) => {
 		setBioValue(display);
 		setBioSegments(segments);
-		setBioActualValue(dropTrailingEmptyBlockquoteLines(wire));
+		setBioActualValue(dropTrailingEmptyBlockquoteLines(wire, BIO_MARKDOWN_PARSER_FLAGS));
 	}, []);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {

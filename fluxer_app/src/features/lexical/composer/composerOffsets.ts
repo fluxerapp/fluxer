@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {BlockquoteLine} from '@app/features/lexical/composer/blockquoteLines';
+import {type BlockquoteLine, blockquoteContentRange} from '@app/features/lexical/composer/blockquoteLines';
 import {type CodeBlockWrapPlan, planCodeBlockWrap} from '@app/features/lexical/composer/codeBlockWrap';
 import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {$isComposerBlockquoteMarkerNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteMarkerNode';
@@ -33,8 +33,10 @@ import {
 	$isRangeSelection,
 	$setSelection,
 	type ElementNode,
+	type LexicalEditor,
 	type LexicalNode,
 	type NodeKey,
+	type PointType,
 	TextNode,
 } from 'lexical';
 import invariant from 'tiny-invariant';
@@ -181,6 +183,44 @@ function $getComposerDisplayOffsetFromLayout(layout: DisplayLayout): number | nu
 	return pointToDisplayOffset(layout, anchor.getNode(), anchor.offset, anchor.type);
 }
 
+function caretRangeAtPoint(doc: Document, clientX: number, clientY: number): AbstractRange | null {
+	if (typeof doc.caretRangeFromPoint === 'function') {
+		return doc.caretRangeFromPoint(clientX, clientY);
+	}
+	if (typeof doc.caretPositionFromPoint !== 'function') {
+		return null;
+	}
+	const position = doc.caretPositionFromPoint(clientX, clientY);
+	return position == null
+		? null
+		: new StaticRange({
+				startContainer: position.offsetNode,
+				startOffset: position.offset,
+				endContainer: position.offsetNode,
+				endOffset: position.offset,
+			});
+}
+
+function displayOffsetOfPoint(layout: DisplayLayout, point: PointType): number | null {
+	if (point.type === 'text') {
+		const leaf = layout.leaves.find((candidate) => candidate.node.getKey() === point.key);
+		return leaf == null ? null : leaf.start + Math.min(Math.max(0, point.offset), leaf.end - leaf.start);
+	}
+	const boundaries = layout.elementBoundaries.get(point.key);
+	return boundaries == null ? null : boundaries[Math.min(Math.max(0, point.offset), boundaries.length - 1)]!;
+}
+
+export function $getComposerDropOffset(editor: LexicalEditor, clientX: number, clientY: number): number | null {
+	const root = editor.getRootElement();
+	const hit = root == null ? null : caretRangeAtPoint(root.ownerDocument, clientX, clientY);
+	if (root == null || hit == null || !root.contains(hit.startContainer)) {
+		return null;
+	}
+	const selection = $createRangeSelection();
+	selection.applyDOMRange(hit);
+	return displayOffsetOfPoint($buildDisplayLayout(), selection.anchor);
+}
+
 export function $getComposerNodeDisplayStart(node: LexicalNode): number | null {
 	const layout = $buildDisplayLayout();
 	const leaf = layout.leaves.find((candidate) => candidate.node.getKey() === node.getKey());
@@ -206,6 +246,7 @@ export interface ComposerBlockquoteState {
 	scanText: string;
 	selection: ComposerSelectionOffsets | null;
 	lines: Array<BlockquoteLine>;
+	atoms: Array<{start: number; end: number}>;
 }
 
 function blockquoteLinesFromLayout(layout: DisplayLayout): Array<BlockquoteLine> {
@@ -234,7 +275,16 @@ export function $getComposerBlockquoteState(): ComposerBlockquoteState {
 		scanText: scanTextFromLayout(layout),
 		selection: $captureSelectionOffsetsFromLayout(layout),
 		lines: blockquoteLinesFromLayout(layout),
+		atoms: atomRangesFromLayout(layout),
 	};
+}
+
+export function $getComposerContentSelectionRange(): {start: number; end: number} | null {
+	const layout = $buildDisplayLayout();
+	const offsets = $captureSelectionOffsetsFromLayout(layout);
+	return offsets == null
+		? null
+		: blockquoteContentRange(blockquoteLinesFromLayout(layout), offsets.anchor, offsets.focus);
 }
 
 export function $getComposerSelectionRange(): {start: number; end: number} | null {
@@ -258,21 +308,26 @@ export function $getComposerDisplayText(): string {
 	return $buildDisplayLayout().text;
 }
 
-function scanTextFromLayout({text, leaves}: DisplayLayout): string {
+function atomRangesFromLayout({leaves}: DisplayLayout): Array<{start: number; end: number}> {
+	return leaves
+		.filter(
+			({node}) =>
+				$isComposerMentionNode(node) ||
+				$isComposerCustomEmojiNode(node) ||
+				$isComposerStandardEmojiNode(node) ||
+				$isComposerPlainSegmentNode(node),
+		)
+		.map(({start, end}) => ({start, end}));
+}
+
+function scanTextFromLayout(layout: DisplayLayout): string {
 	let scanText = '';
 	let offset = 0;
-	for (const {node, start, end} of leaves) {
-		if (
-			$isComposerMentionNode(node) ||
-			$isComposerCustomEmojiNode(node) ||
-			$isComposerStandardEmojiNode(node) ||
-			$isComposerPlainSegmentNode(node)
-		) {
-			scanText += text.slice(offset, start) + 'x'.repeat(end - start);
-			offset = end;
-		}
+	for (const {start, end} of atomRangesFromLayout(layout)) {
+		scanText += layout.text.slice(offset, start) + 'x'.repeat(end - start);
+		offset = end;
 	}
-	return scanText + text.slice(offset);
+	return scanText + layout.text.slice(offset);
 }
 
 export function $getComposerScanText(): string {
@@ -472,12 +527,13 @@ function classifyWrap(display: string, start: number, end: number, prefix: strin
 
 function codeBlockPlanFor(
 	layout: DisplayLayout,
+	lines: ReadonlyArray<BlockquoteLine>,
 	start: number,
 	end: number,
 	prefix: string,
 	suffix: string,
 ): CodeBlockWrapPlan | null {
-	if (prefix !== '`' || suffix !== '`') {
+	if (prefix !== '`' || suffix !== '`' || lines.some((line) => line.start < end && start < line.end)) {
 		return null;
 	}
 	const plan = planCodeBlockWrap(scanTextFromLayout(layout), start, end);
@@ -500,15 +556,15 @@ export function $queryComposerSelectionWrappers(
 	if (offsets == null) {
 		return {offsets: null, wrapped: queries.map(() => false)};
 	}
-	const start = Math.min(offsets.anchor, offsets.focus);
-	const end = Math.max(offsets.anchor, offsets.focus);
+	const lines = blockquoteLinesFromLayout(layout);
+	const {start, end} = blockquoteContentRange(lines, offsets.anchor, offsets.focus);
 	if (start === end) {
 		return {offsets, wrapped: queries.map(() => false)};
 	}
 	return {
 		offsets,
 		wrapped: queries.map(({prefix, suffix}) => {
-			const plan = codeBlockPlanFor(layout, start, end, prefix, suffix);
+			const plan = codeBlockPlanFor(layout, lines, start, end, prefix, suffix);
 			return plan == null ? classifyWrap(layout.text, start, end, prefix, suffix) !== 'none' : plan.wrapped;
 		}),
 	};
@@ -520,8 +576,8 @@ export function $wrapComposerSelection(prefix: string, suffix: string): void {
 	if (offsets == null) {
 		return;
 	}
-	const start = Math.min(offsets.anchor, offsets.focus);
-	const end = Math.max(offsets.anchor, offsets.focus);
+	const lines = blockquoteLinesFromLayout(layout);
+	const {start, end} = blockquoteContentRange(lines, offsets.anchor, offsets.focus);
 	const backward = offsets.anchor > offsets.focus;
 	const display = layout.text;
 	const selected = display.slice(start, end);
@@ -531,7 +587,7 @@ export function $wrapComposerSelection(prefix: string, suffix: string): void {
 	const restoreSelection = (nextStart: number, nextEnd: number) => {
 		$selectComposerRange(backward ? nextEnd : nextStart, backward ? nextStart : nextEnd);
 	};
-	const plan = codeBlockPlanFor(layout, start, end, prefix, suffix);
+	const plan = codeBlockPlanFor(layout, lines, start, end, prefix, suffix);
 	if (plan != null) {
 		replaceTextRange(plan.closing.start, plan.closing.end, plan.closing.text);
 		replaceTextRange(plan.opening.start, plan.opening.end, plan.opening.text);

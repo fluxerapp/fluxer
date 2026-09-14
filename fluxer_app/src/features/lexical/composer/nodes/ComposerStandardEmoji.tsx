@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
 import {EmojiWithTooltip} from '@app/features/ui/emoji_tooltip_content/EmojiWithTooltip';
@@ -26,17 +27,18 @@ export const ComposerStandardEmoji = ({name, surrogate, url, display}: ComposerS
 			</span>
 		);
 	}
+	const imageUrl = url == null ? EmojiUtils.getEmojiURL(surrogate) : url;
 	const emojiForSubtext: FlatEmoji = {
 		name,
 		uniqueName: name,
 		allNamesString: display,
 		surrogates: surrogate,
 		animated: false,
-		url: url == null ? undefined : url,
+		url: imageUrl == null ? undefined : imageUrl,
 	};
-	const image = url ? (
+	const image = imageUrl ? (
 		<img
-			src={url}
+			src={imageUrl}
 			alt={display}
 			className={styles.customEmoji}
 			draggable={false}
@@ -56,7 +58,7 @@ export const ComposerStandardEmoji = ({name, surrogate, url, display}: ComposerS
 	);
 	return (
 		<EmojiWithTooltip
-			emojiUrl={url}
+			emojiUrl={imageUrl}
 			emojiName={display}
 			emojiForSubtext={emojiForSubtext}
 			data-flx="lexical.composer.nodes.composer-standard-emoji.emoji-with-tooltip"

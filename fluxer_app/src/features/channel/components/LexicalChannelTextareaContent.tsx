@@ -1356,6 +1356,7 @@ export const LexicalChannelTextareaContent = observer(
 										channelId={channel.id}
 										guildId={channel.guildId}
 										submitOnEnter={!mobileLayout.enabled}
+										maxWireLength={maxMessageLength}
 										silentMessagePrefix={!isEditingMessageOnMobile}
 										focusRingTarget={containerRef}
 										focusRingEnabled={!textareaInputDisabled && Accessibility.showTextareaFocusRing}
