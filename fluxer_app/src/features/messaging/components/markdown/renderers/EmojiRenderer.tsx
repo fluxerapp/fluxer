@@ -3,10 +3,14 @@
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {requestDeleteMessage} from '@app/features/channel/components/MessageActionUtils';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
-import {EmojiInfoContent} from '@app/features/emoji/components/emojis/EmojiInfoContent';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
+import {ExpressionHoverTooltipContent} from '@app/features/expressions/components/ExpressionHoverTooltipContent';
+import {ExpressionInfoCard} from '@app/features/expressions/components/ExpressionInfoCard';
+import {ExpressionInfoPopout} from '@app/features/expressions/components/ExpressionInfoPopout';
+import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {EmojiRendererControl} from '@app/features/messaging/components/markdown/renderers/EmojiRendererControl';
 import type {RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {getEmojiRenderData, getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
@@ -15,11 +19,8 @@ import type {EmojiNode} from '@app/features/messaging/utils/markdown/parser/Node
 import {EmojiContextMenuItems, EmojiInlineMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
 import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import {EmojiTooltipContent} from '@app/features/ui/emoji_tooltip_content/EmojiTooltipContent';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {HoverFloatingTooltipSurface} from '@app/features/ui/tooltip/HoverFloatingTooltipSurface';
-import {HoverFloatingTooltipTrigger} from '@app/features/ui/tooltip/HoverFloatingTooltipTrigger';
-import {useHoverFloatingTooltip} from '@app/features/ui/tooltip/useHoverFloatingTooltip';
+import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
@@ -38,51 +39,14 @@ interface EmojiBottomSheetState {
 	emoji: {id?: string; name: string; animated?: boolean} | null;
 }
 
-interface EmojiWithTooltipProps {
-	children: React.ReactElement<Record<string, unknown> & {ref?: React.Ref<HTMLElement>}>;
-	emojiUrl: string | null;
-	emojiName: string;
-	emojiForSubtext: FlatEmoji;
-}
-
-const EmojiWithTooltip = observer(({children, emojiUrl, emojiName, emojiForSubtext}: EmojiWithTooltipProps) => {
-	const tooltip = useHoverFloatingTooltip(500);
-	return (
-		<>
-			<HoverFloatingTooltipTrigger
-				tooltip={tooltip}
-				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-with-tooltip.hover-floating-tooltip-trigger"
-			>
-				{children}
-			</HoverFloatingTooltipTrigger>
-			<HoverFloatingTooltipSurface
-				tooltip={tooltip}
-				portalDataFlx="messaging.markdown.renderers.emoji-renderer.emoji-with-tooltip.floating-portal"
-				presenceDataFlx="messaging.markdown.renderers.emoji-renderer.emoji-with-tooltip.animate-presence"
-				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-with-tooltip.div"
-			>
-				<EmojiTooltipContent
-					emojiUrl={emojiUrl}
-					emojiAlt={emojiName}
-					primaryContent={emojiName}
-					subtext={
-						<EmojiInfoContent
-							emoji={emojiForSubtext}
-							data-flx="messaging.markdown.renderers.emoji-renderer.emoji-with-tooltip.emoji-info-content"
-						/>
-					}
-					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-with-tooltip.emoji-tooltip-content"
-				/>
-			</HoverFloatingTooltipSurface>
-		</>
-	);
-});
-const EmojiRendererInner = observer(function EmojiRendererInner({
+const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 	node,
 	id,
 	options,
 }: RendererProps<EmojiNode>): React.ReactElement {
 	const {shouldJumboEmojis, messageId, channelId, disableAnimatedEmoji} = options;
+	const isPlainEmoji = options.disableInteractions === true || options.disableEmojiInteractions === true;
+	const shouldDisableInfoCard = isPlainEmoji || options.disableEmojiInfoCard === true;
 	const i18n = options.i18n!;
 	const emojiData = getEmojiRenderData(node, disableAnimatedEmoji);
 	const isMobile = MobileLayout.enabled;
@@ -110,10 +74,21 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 			}),
 		[emojiData.id, emojiData.surrogateUrl, emojiData.isAnimatable, animated, shouldJumboEmojis],
 	);
+	const previewUrl = useMemo(
+		() =>
+			getEmojiRenderUrl({
+				id: emojiData.id,
+				surrogateUrl: emojiData.surrogateUrl,
+				isAnimatable: emojiData.isAnimatable,
+				animated,
+				jumbo: false,
+			}),
+		[emojiData.id, emojiData.surrogateUrl, emojiData.isAnimatable, animated],
+	);
 	const isCustomEmoji = node.kind.kind === EmojiKind.Custom;
 	const standardEmojiSurrogate = node.kind.kind === EmojiKind.Standard ? node.kind.raw : undefined;
 	const emojiRecord: FlatEmoji | null = isCustomEmoji ? (emojiData.emoji ?? null) : null;
-	const fallbackEmojiText = standardEmojiSurrogate ?? `:${emojiData.name}:`;
+	const fallbackEmojiText = standardEmojiSurrogate ?? emojiData.name;
 	const fallbackEmojiClassName = standardEmojiSurrogate ? className : undefined;
 	const fallbackGuildId = emojiRecord?.guildId;
 	const fallbackAnimated = emojiRecord?.animated ?? emojiData.isAnimated;
@@ -143,7 +118,7 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 		},
 		[handleOpenBottomSheet],
 	);
-	const buildEmojiForSubtext = useCallback((): FlatEmoji => {
+	const buildEmojiForMenu = useCallback((): FlatEmoji => {
 		if (emojiRecord) {
 			return emojiRecord;
 		}
@@ -166,10 +141,6 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 		node.kind.name,
 		standardEmojiSurrogate,
 	]);
-	const getTooltipData = useCallback(() => {
-		const emojiForSubtext = buildEmojiForSubtext();
-		return {emojiUrl, emojiForSubtext};
-	}, [buildEmojiForSubtext, emojiUrl]);
 	const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
 		setFailedUrl((e.target as HTMLImageElement).getAttribute('src'));
 	}, []);
@@ -178,7 +149,7 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 			if (!isCustomEmoji || !emojiData.id) return;
 			e.preventDefault();
 			e.stopPropagation();
-			const emojiForMenu = emojiRecord ?? buildEmojiForSubtext();
+			const emojiForMenu = emojiRecord ?? buildEmojiForMenu();
 			if (messageId && channelId) {
 				const messageRecord = Messages.getMessage(channelId, messageId);
 				if (messageRecord) {
@@ -208,21 +179,28 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 				/>
 			));
 		},
-		[buildEmojiForSubtext, emojiData.id, emojiRecord, isCustomEmoji, channelId, messageId, i18n],
+		[buildEmojiForMenu, emojiData.id, emojiRecord, isCustomEmoji, channelId, messageId, i18n],
 	);
 	const hasFailed = emojiUrl != null && failedUrl === emojiUrl;
+	const accessibleName = hasFailed
+		? i18n._(EMOJI_FAILED_TO_LOAD_DESCRIPTOR, {emojiName: emojiData.name})
+		: emojiData.name;
+	const emojiIdentityAttributes = {
+		'data-message-id': messageId,
+		'data-message-emoji': 'true',
+		'data-emoji-id': emojiData.id,
+		'data-animated': emojiData.isAnimated,
+	};
 	const renderEmojiElement = (contextMenu: boolean, dataFlx: string) =>
 		emojiUrl ? (
 			<img
 				draggable={false}
 				className={className}
-				alt={hasFailed ? i18n._(EMOJI_FAILED_TO_LOAD_DESCRIPTOR, {emojiName: emojiData.name}) : emojiData.name}
+				alt={accessibleName}
+				aria-label={accessibleName}
 				src={emojiUrl}
 				style={hasFailed ? FAILED_EMOJI_STYLE : undefined}
-				data-message-id={messageId}
-				data-message-emoji="true"
-				data-emoji-id={emojiData.id}
-				data-animated={emojiData.isAnimated}
+				{...emojiIdentityAttributes}
 				onError={handleImageError}
 				onContextMenu={contextMenu ? handleContextMenu : undefined}
 				loading="eager"
@@ -232,17 +210,44 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 			<span
 				className={fallbackEmojiClassName}
 				role="img"
-				aria-label={emojiData.name}
-				data-message-id={messageId}
-				data-message-emoji="true"
-				data-emoji-id={emojiData.id}
-				data-animated={emojiData.isAnimated}
+				aria-label={accessibleName}
+				{...emojiIdentityAttributes}
 				onContextMenu={contextMenu ? handleContextMenu : undefined}
 				data-flx={dataFlx}
 			>
 				{fallbackEmojiText}
 			</span>
 		);
+	const renderHoverTooltip = () => (
+		<ExpressionHoverTooltipContent
+			displayName={emojiData.name}
+			previewUrl={previewUrl}
+			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-hover-tooltip-content"
+		/>
+	);
+	const renderInfoCard = ({onClose}: {onClose: () => void}) =>
+		emojiData.id != null ? (
+			<ExpressionInfoCard
+				kind="emoji"
+				expressionId={emojiData.id}
+				guildId={fallbackGuildId ?? null}
+				displayName={emojiData.name}
+				previewUrl={previewUrl}
+				onClose={onClose}
+				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-card.custom"
+			/>
+		) : (
+			<ExpressionInfoCard
+				kind="default_emoji"
+				displayName={emojiData.name}
+				previewUrl={previewUrl}
+				onClose={onClose}
+				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-card.default"
+			/>
+		);
+	if (isPlainEmoji) {
+		return renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.plain');
+	}
 	if (isMobile) {
 		return (
 			<>
@@ -252,30 +257,64 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 					onKeyDown={handleKeyDown}
 					role="button"
 					tabIndex={0}
-					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.button.open-bottom-sheet--2"
+					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.button.open-bottom-sheet--2"
 				>
-					{renderEmojiElement(false, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji')}
+					{renderEmojiElement(false, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji')}
 				</span>
-				<EmojiInfoBottomSheet
+				<ExpressionInfoBottomSheet
+					kind="emoji"
 					isOpen={bottomSheetState.isOpen}
 					onClose={handleCloseBottomSheet}
 					emoji={bottomSheetState.emoji}
-					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji-info-bottom-sheet--2"
+					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-bottom-sheet--2"
 				/>
 			</>
 		);
 	}
-	const tooltipData = getTooltipData();
+	if (shouldDisableInfoCard) {
+		return (
+			<Tooltip
+				key={id}
+				text={emojiData.name}
+				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.tooltip.plain"
+			>
+				{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.plain')}
+			</Tooltip>
+		);
+	}
 	return (
-		<EmojiWithTooltip
+		<ExpressionInfoPopout
 			key={id}
-			emojiUrl={tooltipData.emojiUrl}
-			emojiName={emojiData.name}
-			emojiForSubtext={tooltipData.emojiForSubtext}
-			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji-with-tooltip--2"
+			renderTooltip={renderHoverTooltip}
+			renderCard={renderInfoCard}
+			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-popout"
 		>
-			{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-inner.emoji.context-menu')}
-		</EmojiWithTooltip>
+			<span
+				role="button"
+				tabIndex={0}
+				aria-label={accessibleName}
+				data-emoji-interactive="true"
+				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.button.open-info-card"
+			>
+				{renderEmojiElement(
+					true,
+					'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.context-menu',
+				)}
+			</span>
+		</ExpressionInfoPopout>
 	);
 });
-export const EmojiRenderer = EmojiRendererInner;
+
+export const EmojiRenderer = observer(function EmojiRenderer(props: RendererProps<EmojiNode>): React.ReactElement {
+	if (!ExpressionInfoCardRollout.enabled) {
+		return (
+			<EmojiRendererControl {...props} data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-control" />
+		);
+	}
+	return (
+		<EmojiRendererTreatment
+			{...props}
+			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment"
+		/>
+	);
+});

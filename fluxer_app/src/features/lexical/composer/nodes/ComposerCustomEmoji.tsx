@@ -3,11 +3,13 @@
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
 import {getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
 import {EmojiWithTooltip} from '@app/features/ui/emoji_tooltip_content/EmojiWithTooltip';
+import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -49,17 +51,6 @@ export const ComposerCustomEmoji = observer(({emojiId, animated, display}: Compo
 			</span>
 		);
 	}
-	const name = display.replace(/^:|:$/g, '');
-	const emojiForSubtext: FlatEmoji =
-		record == null
-			? {
-					id: emojiId,
-					animated,
-					name,
-					uniqueName: name,
-					allNamesString: display,
-				}
-			: record;
 	const guildId = record == null ? null : record.guildId;
 	const guild = guildId ? Guilds.getGuild(guildId) : null;
 	const communityName = guild == null ? null : guild.name;
@@ -74,21 +65,47 @@ export const ComposerCustomEmoji = observer(({emojiId, animated, display}: Compo
 			animated: shouldAnimate,
 			jumbo: false,
 		}) ?? '';
+	if (!ExpressionInfoCardRollout.enabled) {
+		const name = display.replace(/^:|:$/g, '');
+		const emojiForSubtext: FlatEmoji =
+			record == null
+				? {
+						id: emojiId,
+						animated,
+						name,
+						uniqueName: name,
+						allNamesString: display,
+					}
+				: record;
+		return (
+			<EmojiWithTooltip
+				emojiUrl={displayUrl}
+				emojiName={display}
+				emojiForSubtext={emojiForSubtext}
+				data-flx="lexical.composer.nodes.composer-custom-emoji.emoji-with-tooltip"
+			>
+				<img
+					src={displayUrl}
+					alt={accessibleLabel}
+					className={styles.customEmoji}
+					draggable={false}
+					contentEditable={false}
+					data-flx="lexical.composer.nodes.composer-custom-emoji.custom-emoji.control"
+				/>
+			</EmojiWithTooltip>
+		);
+	}
 	return (
-		<EmojiWithTooltip
-			emojiUrl={displayUrl}
-			emojiName={display}
-			emojiForSubtext={emojiForSubtext}
-			data-flx="lexical.composer.nodes.composer-custom-emoji.emoji-with-tooltip"
-		>
+		<Tooltip text={display} data-flx="lexical.composer.nodes.composer-custom-emoji.tooltip">
 			<img
 				src={displayUrl}
 				alt={accessibleLabel}
+				aria-label={accessibleLabel}
 				className={styles.customEmoji}
 				draggable={false}
 				contentEditable={false}
 				data-flx="lexical.composer.nodes.composer-custom-emoji.custom-emoji"
 			/>
-		</EmojiWithTooltip>
+		</Tooltip>
 	);
 });

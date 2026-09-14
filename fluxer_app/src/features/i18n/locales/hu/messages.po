@@ -20,13 +20,13 @@ msgid "... turn dense mode on. Nice!"
 msgstr "... bekapcsold a sűrű módot. Szuper!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
-#: src/features/channel/components/MessageAttachments.tsx:368
-#: src/features/channel/components/UserMessage.tsx:61
+#: src/features/channel/components/MessageAttachments.tsx:378
+#: src/features/channel/components/UserMessage.tsx:62
 msgid "(edited)"
 msgstr "(szerkesztve)"
 
 #: src/features/app/components/pages/YouPage.tsx:189
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:903
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:906
 msgid "(only visible to you)"
 msgstr "(csak te láthatod)"
 
@@ -1092,7 +1092,7 @@ msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {# melléklet} other {# melléklet}}"
 
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:26
+#: src/features/channel/components/BlockedMessageGroups.tsx:31
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# letiltott üzenet} other {# letiltott üzenet}}"
 
@@ -1121,8 +1121,8 @@ msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# elem} other {# elem}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:436
-#: src/features/channel/components/direct_message/DMListItem.tsx:600
+#: src/features/channel/components/direct_message/DMListItem.tsx:438
+#: src/features/channel/components/direct_message/DMListItem.tsx:602
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:118
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -1148,12 +1148,12 @@ msgid "{count, plural, one {# participant in call} other {# participants in call
 msgstr "{count, plural, one {# résztvevő a hívásban} other {# résztvevő a hívásban}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:21
+#: src/features/channel/components/BlockedMessageGroups.tsx:26
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {# potenciális spammertől érkező üzenet} other {# potenciális spammertől érkező üzenet}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:146
+#: src/features/channel/components/MessageReactions.tsx:149
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {# reakció} other {# reakció}}"
 
@@ -1283,7 +1283,7 @@ msgstr "{count, plural, one {A meghívót # alkalommal használták.} other {A m
 msgid "{count, plural, one {Uploading # emoji. This may take a little while.} other {Uploading # emojis. This may take a little while.}}"
 msgstr "{count, plural, one {# emoji feltöltése folyamatban. Ez eltarthat egy ideig.} other {# emoji feltöltése folyamatban. Ez eltarthat egy ideig.}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:710
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:257
 msgid "{count, plural, one {Used # time.} other {Used # times.}}"
 msgstr "{count, plural, one {Felhasználva # alkalommal.} other {Felhasználva # alkalommal.}}"
@@ -1437,7 +1437,9 @@ msgid "{eightHours} hours"
 msgstr "{eightHours} óra"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
+#. Error message in the messaging emoji renderer.
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName} (nem sikerült betölteni)"
 
@@ -1447,12 +1449,12 @@ msgid "{emojiName}, {reactionCountText}"
 msgstr "{emojiName}, {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:50
+#: src/features/channel/components/MessageReactions.tsx:52
 msgid "{emojiName}: {reactionCountText}"
 msgstr "{emojiName}: {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}, {actionText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:55
+#: src/features/channel/components/MessageReactions.tsx:57
 msgid "{emojiName}: {reactionCountText}, {actionText}"
 msgstr "{emojiName}: {reactionCountText}, {actionText}"
 
@@ -1460,6 +1462,16 @@ msgstr "{emojiName}: {reactionCountText}, {actionText}"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:33
 msgid "{everyoneMention} mentions"
 msgstr "{everyoneMention} említések"
+
+#. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:94
+msgid "{expressionName} is a custom emoji from this community. Members can use it here."
+msgstr "A(z) {expressionName} egyedi hangulatjel ebből a közösségből. A tagok itt használhatják."
+
+#. Reason shown in the confirmation before joining a community from a sticker info card. It explains that the sticker the viewer opened belongs to this community. {expressionName} is the sticker name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:99
+msgid "{expressionName} is a custom sticker from this community. Members can use it here."
+msgstr "A(z) {expressionName} egyedi matrica ebből a közösségből. A tagok itt használhatják."
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:10
@@ -1590,7 +1602,7 @@ msgid "{length, plural, one {# app} other {# apps}}"
 msgstr "{length, plural, one {# alkalmazás} other {# alkalmazás}}"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:48
+#: src/features/channel/components/ChannelMessage.tsx:49
 msgid "{length, plural, one {# attachment} other {# attachments}}"
 msgstr "{length, plural, one {# melléklet} other {# melléklet}}"
 
@@ -1600,12 +1612,12 @@ msgid "{length, plural, one {# channel} other {# channels}}"
 msgstr "{length, plural, one {# csatorna} other {# csatorna}}"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:66
+#: src/features/channel/components/ChannelMessage.tsx:67
 msgid "{length, plural, one {# embed} other {# embeds}}"
 msgstr "{length, plural, one {# beágyazott tartalom} other {# beágyazott tartalom}}"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:57
+#: src/features/channel/components/ChannelMessage.tsx:58
 msgid "{length, plural, one {# sticker} other {# stickers}}"
 msgstr "{length, plural, one {# matrica} other {# matrica}}"
 
@@ -1638,7 +1650,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {tag} other {tag}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:800
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, one {# említés} other {# említés}}"
 
@@ -2274,17 +2286,17 @@ msgstr "<0>Engedélyezte</0> a kétlépcsős azonosítás megkövetelését."
 
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:219
-#: src/features/channel/components/MessageAttachments.tsx:275
+#: src/features/channel/components/MessageAttachments.tsx:229
+#: src/features/channel/components/MessageAttachments.tsx:285
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>Továbbítva innen</0>{sourceInfo}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:718
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:280
 msgid "<0>Grants</0> permanent membership."
 msgstr "Végleges tagságot <0>ad</0>."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:713
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:720
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:273
 msgid "<0>Grants</0> temporary membership."
 msgstr "Ideiglenes tagságot <0>ad</0>."
@@ -2613,10 +2625,35 @@ msgstr "A telefonszám ellenőrzése előtt böngészőellenőrzés szükséges.
 msgid "a channel"
 msgstr "egy csatorna"
 
+#. Description of a custom emoji in the emoji info card when the viewer can use it outside the community. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:37
+msgid "A custom emoji from this community. You can use it anywhere on {productName}."
+msgstr "Egy egyéni emoji ebből a közösségből. Bárhol használhatod a(z) {productName} felületén."
+
+#. Description of a custom emoji in the emoji info card when the viewer can only use it inside the community.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:49
+msgid "A custom emoji from this community. You can use it in this community."
+msgstr "Egy egyéni emojit ebből a közösségből. Ebben a közösségben használhatod."
+
+#. Description of a custom sticker in the sticker info card when the viewer can use it outside the community. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:42
+msgid "A custom sticker from this community. You can use it anywhere on {productName}."
+msgstr "Egy egyedi matrica ebből a közösségből. Bárhol használhatod a(z) {productName} felületén."
+
+#. Description of a custom sticker in the sticker info card when the viewer can only use it inside the community.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:54
+msgid "A custom sticker from this community. You can use it in this community."
+msgstr "Egy egyedi matrica ebből a közösségből. Ezen a közösségen belül használhatod."
+
 #. Hint shown beside before:, on:, during:, and after:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "a date or date range"
 msgstr "dátum vagy dátumtartomány"
+
+#. Description of a built-in unicode emoji in the emoji info card. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:32
+msgid "A default emoji. You can use it anywhere on {productName}."
+msgstr "Egy alapértelmezett emoji. Bárhol használhatod a(z) {productName} felületén."
 
 #. Inline validation error on the Discovery application form when the description field is empty.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:114
@@ -2744,7 +2781,7 @@ msgstr "Az alkalmazásról: {appName}"
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:787
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:790
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
@@ -3005,7 +3042,7 @@ msgstr "Aktív havi előfizető (lemondás ütemezve)"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:744
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -4540,7 +4577,7 @@ msgid "App zoom"
 msgstr "Alkalmazás nagyítása"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:776
 msgid "App zoom level"
 msgstr "Alkalmazás nagyítási szintje"
 
@@ -4841,7 +4878,7 @@ msgid "Attach files"
 msgstr "Fájlok csatolása"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:43
+#: src/features/channel/components/ChannelMessage.tsx:44
 msgid "attachment"
 msgstr "melléklet"
 
@@ -6482,7 +6519,7 @@ msgstr "Hívások"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:720
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
@@ -6542,7 +6579,7 @@ msgstr "Kamera kikapcsolva"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:724
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "Kamera bekapcsolva"
@@ -7336,7 +7373,7 @@ msgid "Channel access"
 msgstr "Csatorna-hozzáférés"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
 msgid "Channel access denied"
 msgstr "Csatorna-hozzáférés megtagadva"
 
@@ -7350,7 +7387,7 @@ msgid "Channel actions"
 msgstr "Csatornaműveletek"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:792
 msgid "Channel added to favorites"
 msgstr "A csatorna hozzáadva a kedvencekhez"
 
@@ -7378,7 +7415,7 @@ msgstr "Csatorna hibakeresése"
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:760
 msgid "Channel deleted"
 msgstr "Csatorna törölve"
 
@@ -7401,7 +7438,7 @@ msgstr "Csatornaazonosító a vágólapra másolva"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:80
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:86
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "csatornalink"
@@ -7483,7 +7520,7 @@ msgid "Channel record"
 msgstr "Csatornarekord"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:788
 msgid "Channel removed from favorites"
 msgstr "A csatorna el lett távolítva a kedvencek közül"
 
@@ -8151,7 +8188,7 @@ msgstr "Szimulált mellékletek törlése"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:136
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Parancs törlése"
@@ -8259,7 +8296,7 @@ msgstr "Törölte a névmásokat."
 msgid "Cleared the role color."
 msgstr "A szerepkör színe törölve."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
 msgid "Cleared the sticker description."
 msgstr "Matrica leírása törölve."
 
@@ -8334,6 +8371,11 @@ msgstr "Kattints ide, ha nem szeretnéd értesíteni a felhasználót, akinek v�
 msgid "Click to enable pinging the user you're replying to."
 msgstr "Kattints ide, hogy értesítést küldj annak a felhasználónak, akinek válaszolsz."
 
+#. Muted second line of the emoji hover tooltip, hinting that clicking the emoji opens its info card.
+#: src/features/expressions/components/ExpressionHoverTooltipContent.tsx:32
+msgid "Click to learn more"
+msgstr "Kattints a további információkért"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:338
 msgid "Click to open the color picker and choose a new color."
 msgstr "Kattints a színválasztó megnyitásához és egy új szín kiválasztásához."
@@ -8353,7 +8395,7 @@ msgid "Click to reveal"
 msgstr "Kattints a megjelenítéshez"
 
 #. Label in the messaging formatting elements.
-#: src/features/messaging/components/markdown/renderers/common/FormattingElements.tsx:15
+#: src/features/messaging/components/markdown/renderers/common/FormattingElements.tsx:19
 msgid "Click to reveal spoiler"
 msgstr "Kattints a spoiler felfedéséhez"
 
@@ -8443,7 +8485,7 @@ msgid "Close account"
 msgstr "Fiók bezárása"
 
 #. Accessible label and tooltip for the close-DM button on a DM list row.
-#: src/features/channel/components/direct_message/DMListItem.tsx:83
+#: src/features/channel/components/direct_message/DMListItem.tsx:84
 msgid "Close direct message with {displayName}"
 msgstr "A(z) {displayName} felhasználóval folytatott közvetlen beszélgetés bezárása"
 
@@ -8847,7 +8889,7 @@ msgid "Community debug"
 msgstr "Közösségi hibakeresés"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:764
 msgid "Community default"
 msgstr "Közösségi alapértelmezett"
 
@@ -9414,7 +9456,7 @@ msgstr "Kapcsolat: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:410
-#: src/features/user/components/popouts/UserProfileShared.tsx:610
+#: src/features/user/components/popouts/UserProfileShared.tsx:614
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9518,7 +9560,7 @@ msgstr "A helyi menük bal egérgombbal (gombokon) vagy jobb egérgombbal (egyé
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:712
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
@@ -9731,7 +9773,7 @@ msgid "Copy code"
 msgstr "Kód másolása"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:728
 msgid "Copy community ID"
 msgstr "Közösségi azonosító másolása"
 
@@ -9834,7 +9876,7 @@ msgid "Copy invite URL"
 msgstr "Meghívó URL-jének másolása"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:740
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -9867,7 +9909,7 @@ msgstr "Üzenet másolása"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:732
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "Üzenetazonosító másolása"
@@ -9948,7 +9990,7 @@ msgid "Copy user ID"
 msgstr "Felhasználói azonosító másolása"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:736
 msgid "Copy username"
 msgstr "Felhasználónév másolása"
 
@@ -10390,7 +10432,7 @@ msgid "Couldn't send invite"
 msgstr "Nem sikerült elküldeni a meghívót"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:704
 msgid "Couldn't send invite. Try again."
 msgstr "Nem sikerült elküldeni a meghívót. Próbáld újra."
 
@@ -10781,19 +10823,19 @@ msgid "Created by {creatorDisplayName}. Never expires."
 msgstr "Létrehozta: {creatorDisplayName}. Soha nem jár le."
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:758
 msgid "Created for channel {0}."
 msgstr "Létrehozva a(z) {0} csatornához."
 
 #. placeholder {0}: renderInline(formatted, i18n)
 #. placeholder {0}: renderValueInline(formatted, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:732
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:268
 msgid "Created on {0}."
 msgstr "Létrehozva: {0}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:755
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
 msgid "Created with name {0}."
 msgstr "Létrehozva, neve: {0}."
 
@@ -11004,12 +11046,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "Egyéni számazonosítók nem érhetők el ezen a példányon"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:21
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:23
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "Egyéni emoji: {emojiName} innen: {communityName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:16
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:18
 msgid "Custom emoji {emojiName} from a community"
 msgstr "Egy közösség egyéni emojija: {emojiName}"
 
@@ -11119,7 +11161,7 @@ msgstr "Egyéni hangok"
 msgid "Custom status"
 msgstr "Egyéni állapot"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:526
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:565
 msgid "Custom status: "
 msgstr "Egyéni állapot: "
 
@@ -11175,7 +11217,7 @@ msgid "Custom warning text"
 msgstr "Egyéni figyelmeztető szöveg"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:768
 msgid "Custom…"
 msgstr "Egyéni…"
 
@@ -11721,7 +11763,7 @@ msgid "Delete application"
 msgstr "Alkalmazás törlése"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:748
 msgid "Delete attachment"
 msgstr "Melléklet törlése"
 
@@ -12247,13 +12289,13 @@ msgstr "Fejlesztői állapot"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:123
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Fejlesztői eszközök"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "A fejlesztői eszközök a csatornafejlécben található személyzeti jelvényről érhetők el."
 
@@ -12678,8 +12720,8 @@ msgctxt "voice-connection-status"
 msgid "Disconnected"
 msgstr "Kapcsolat bontva"
 
-#. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:24
+#. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
 msgid "Discoverable community"
 msgstr "Felfedezhető közösség"
 
@@ -12937,6 +12979,11 @@ msgstr "Szeretnéd a meglévő közösségeid botjaitól érkező közvetlen üz
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "Szeretnéd letiltani a közvetlen üzeneteket a meglévő közösségeid tagjaitól is?"
 
+#. Body of the confirmation shown before joining a discoverable community from an expression info card. {communityName} is the community name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:105
+msgid "Do you want to join {communityName}?"
+msgstr "Szeretnél csatlakozni a(z) {communityName} közösséghez?"
+
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
@@ -12972,7 +13019,7 @@ msgstr "Nem tiltja le. Később újra megnyithatod."
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:772
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "Domain"
@@ -13483,7 +13530,7 @@ msgstr "Média szerkesztése"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:708
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "Üzenet szerkesztése"
@@ -13507,7 +13554,7 @@ msgstr "Szerepkörök és tagok egyéni jogosultságainak szerkesztése ebben a 
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:685
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
@@ -13699,7 +13746,7 @@ msgid "Email verified successfully"
 msgstr "E-mail-cím sikeresen megerősítve"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:61
+#: src/features/channel/components/ChannelMessage.tsx:62
 msgid "embed"
 msgstr "beágyazott tartalom"
 
@@ -14050,7 +14097,7 @@ msgstr "Mobilértesítések engedélyezése"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:780
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "Értesítések engedélyezése"
@@ -14288,7 +14335,7 @@ msgid "English (US)"
 msgstr "Angol (USA)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:784
 msgid "Enhanced"
 msgstr "Továbbfejlesztett"
 
@@ -14963,7 +15010,7 @@ msgid "Expression autocomplete"
 msgstr "Kifejezés-automatikus kiegészítés"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:752
 msgid "Expression picker categories"
 msgstr "Kifejezésválasztó kategóriái"
 
@@ -15251,12 +15298,12 @@ msgid "Failed to send code. Try again."
 msgstr "Nem sikerült elküldeni a kódot. Próbáld újra."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:69
+#: src/features/channel/components/UserMessage.tsx:70
 msgid "Failed to send message."
 msgstr "Az üzenet küldése sikertelen."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:65
+#: src/features/channel/components/UserMessage.tsx:66
 msgid "Failed to send message. Hold for options."
 msgstr "Az üzenet küldése sikertelen. Tartsd nyomva a további lehetőségekért."
 
@@ -16044,7 +16091,7 @@ msgstr "Média továbbítása"
 msgid "Forward message"
 msgstr "Üzenet továbbítása"
 
-#: src/features/channel/components/MessageAttachments.tsx:338
+#: src/features/channel/components/MessageAttachments.tsx:348
 msgid "Forwarded"
 msgstr "Továbbítva"
 
@@ -16476,7 +16523,7 @@ msgid "Germany"
 msgstr "Németország"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:796
 msgid "Get {premiumProductName}"
 msgstr "{premiumProductName} beszerzése"
 
@@ -16778,6 +16825,11 @@ msgstr "Vissza"
 #: src/features/moderation/components/pages/ReportPage.tsx:84
 msgid "Go back and enter a valid email."
 msgstr "Menj vissza, és adj meg egy érvényes e-mail-címet."
+
+#. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+msgid "Go to {communityName}"
+msgstr "Ugrás ide: {communityName}"
 
 #. CTA label that opens the premium settings tab from gift inventory.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:95
@@ -17434,7 +17486,7 @@ msgid "Hide expiration footnotes"
 msgstr "Lejárati lábjegyzetek elrejtése"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:696
 msgid "Hide favorites"
 msgstr "Kedvencek elrejtése"
 
@@ -18789,7 +18841,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "A meghívólink megosztás közben rejtve van:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
 msgid "Invite link masked while sharing"
 msgstr "Meghívólink elrejtve megosztás közben"
 
@@ -18890,6 +18942,11 @@ msgstr "Meghívó nem elérhető"
 msgid "Invite updated"
 msgstr "Meghívó frissítve"
 
+#. Subtitle for a community that can only be joined with an invite.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:80
+msgid "Invite-only community"
+msgstr "Meghívóval csatlakozható közösség"
+
 #. placeholder {0}: renderValueInline(value, guildId, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:249
 msgid "Invited by {0}."
@@ -18911,7 +18968,7 @@ msgstr "Meghívó felhasználó:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
 msgid "Invites"
 msgstr "Meghívók"
 
@@ -19075,8 +19132,10 @@ msgstr "Jitter:"
 msgid "Join"
 msgstr "Csatlakozás"
 
+#. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
+#: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Join {communityName}"
 msgstr "Csatlakozás a(z) {communityName} közösséghez"
 
@@ -19222,7 +19281,7 @@ msgid "Jump to {displayName}"
 msgstr "Ugrás ide: {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
 msgid "Jump to {labelText}"
 msgstr "Ugrás ide: {labelText}"
 
@@ -19237,7 +19296,7 @@ msgid "Jump to message"
 msgstr "Ugrás az üzenethez"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:56
+#: src/features/channel/components/UserMessage.tsx:57
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Ugrás {displayName} üzenetéhez, elküldve: {formattedDate}"
 
@@ -19259,7 +19318,7 @@ msgid "Jump to page"
 msgstr "Ugrás az oldalra"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "Jump to present"
 msgstr "Ugrás a jelenlegi üzenetekhez"
 
@@ -19279,12 +19338,12 @@ msgid "Jump to the current call"
 msgstr "Ugrás az aktuális híváshoz"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
 msgid "Jump to the linked channel"
 msgstr "Ugrás a hivatkozott csatornára"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:90
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:96
 msgid "Jump to the linked message"
 msgstr "Ugrás a hivatkozott üzenetre"
 
@@ -19294,7 +19353,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Ugrás a {authorNickname} üzenetéhez"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:85
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:91
 msgid "Jump to the message in {labelText}"
 msgstr "Ugrás az üzenethez itt: {labelText}"
 
@@ -19959,7 +20018,7 @@ msgid "Link styling"
 msgstr "Linkstílus"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:131
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
 msgid "Link unavailable"
 msgstr "A hivatkozás nem érhető el"
 
@@ -20553,11 +20612,11 @@ msgstr "Markdown"
 msgid "Marked as read"
 msgstr "Olvasottként megjelölve"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:731
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
 msgid "Marked emoji as animated."
 msgstr "Az emojit animáltként jelölte meg."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:731
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
 msgid "Marked emoji as static."
 msgstr "Az emojit statikusként jelölte meg."
 
@@ -20984,7 +21043,7 @@ msgid "Member roles updated"
 msgstr "Tag szerepkörei frissítve"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:278
+#: src/features/user/components/popouts/UserProfileShared.tsx:282
 msgid "Member since"
 msgstr "Tag ekkortól"
 
@@ -21172,7 +21231,7 @@ msgid "Menu shortcuts"
 msgstr "Menüparancsok"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:75
+#: src/features/channel/components/ChannelMessage.tsx:76
 msgid "message"
 msgstr "üzenet"
 
@@ -21191,7 +21250,7 @@ msgstr "Üzenet"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:715
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:718
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
 #: src/features/user/components/popouts/UserProfilePopout.tsx:418
@@ -21254,7 +21313,7 @@ msgid "Message composer"
 msgstr "Üzenetírás"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "Az üzenet médiamellékletet tartalmaz"
 
@@ -21351,7 +21410,7 @@ msgid "Message layout"
 msgstr "Üzenetelrendezés"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:75
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:81
 msgid "message link"
 msgstr "üzenet linkje"
 
@@ -21361,12 +21420,12 @@ msgid "Message link"
 msgstr "Üzenet linkje"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list"
 msgstr "Üzenetlista"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:73
 msgid "Message list for {channelName}"
 msgstr "Üzenetlista ehhez: {channelName}"
 
@@ -21474,7 +21533,7 @@ msgid "Messages deleted"
 msgstr "Üzenetek törölve"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:87
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Messages failed to load"
 msgstr "Az üzenetek betöltése sikertelen"
 
@@ -22035,7 +22094,7 @@ msgid "Moved the role up in the role list."
 msgstr "A szerepkört feljebb helyezte a szerepkörlistában."
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:752
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:759
 msgid "Moved to channel {0}."
 msgstr "Áthelyezte a(z) {0} csatornába."
 
@@ -22192,7 +22251,7 @@ msgid "Mute entrance sound"
 msgstr "Belépési hang némítása"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:688
 msgid "Mute favorites"
 msgstr "Kedvencek némítása"
 
@@ -22245,7 +22304,7 @@ msgstr "Stream hangjának némítása"
 #: src/features/app/components/layout/ChannelItem.tsx:112
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
-#: src/features/channel/components/direct_message/DMListItem.tsx:75
+#: src/features/channel/components/direct_message/DMListItem.tsx:76
 msgid "muted"
 msgstr "némítva"
 
@@ -22321,7 +22380,7 @@ msgstr "Közös ismerősök"
 msgid "Mutual friends ({count})"
 msgstr "Közös ismerősök ({count})"
 
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:842
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:845
 msgid "Mutual friends ({mutualFriendsCount})"
 msgstr "Közös ismerősök ({mutualFriendsCount})"
 
@@ -22809,7 +22868,7 @@ msgstr "Legújabb elöl"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:716
 msgid "Next"
 msgstr "Tovább"
 
@@ -22860,7 +22919,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Nincs {sendMessagesPermission} jogosultság"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
 msgid "No access"
 msgstr "Nincs hozzáférés"
 
@@ -23372,7 +23431,7 @@ msgid "No system channel"
 msgstr "Nincs rendszerüzenet-csatorna"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:70
+#: src/features/channel/components/ChannelMessage.tsx:71
 msgid "no text content"
 msgstr "nincs szöveges tartalom"
 
@@ -23605,7 +23664,7 @@ msgstr "Nem igaz vagy hamis"
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:897
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:900
 msgid "Note"
 msgstr "Megjegyzés"
 
@@ -23685,7 +23744,7 @@ msgstr "Értesítési hangerő"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:700
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -24002,7 +24061,7 @@ msgstr "Csak a kiválasztottak"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Csak a Visionary tagok csatlakozhatnak ehhez a közösséghez. A hozzáférési jogosultságaid az oldal megnyitása óta változhattak."
 
-#: src/features/channel/components/UserMessage.tsx:429
+#: src/features/channel/components/UserMessage.tsx:441
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Ezt az üzenetet csak te látod. <0>Elvetés</0>"
 
@@ -24046,7 +24105,7 @@ msgid "Open {displayName}"
 msgstr "{displayName} megnyitása"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Open {labelText} in settings"
 msgstr "A(z) {labelText} megnyitása a beállításokban"
 
@@ -24627,12 +24686,12 @@ msgid "Oregon"
 msgstr "Oregon"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "Az eredeti üzenet betöltése sikertelen"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "Az eredeti üzenet törölve lett"
 
@@ -24853,7 +24912,7 @@ msgid "Participants: {names}"
 msgstr "Résztvevők: {names}"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:16
+#: src/features/guild/components/GuildBadge.tsx:17
 msgid "Partnered community"
 msgstr "Partnerközösség"
 
@@ -25465,7 +25524,7 @@ msgid "Ping: {latency}ms"
 msgstr "Ping: {latency} ms"
 
 #. Screen-reader fragment announcing that the DM list row is pinned. Lowercase fragment.
-#: src/features/channel/components/direct_message/DMListItem.tsx:79
+#: src/features/channel/components/direct_message/DMListItem.tsx:80
 msgid "pinned"
 msgstr "rögzítve"
 
@@ -25839,12 +25898,12 @@ msgid "Press a shortcut…"
 msgstr "Nyomj meg egy billentyűkombinációt…"
 
 #. Label in the channel and chat message reactions.
-#: src/features/channel/components/MessageReactions.tsx:46
+#: src/features/channel/components/MessageReactions.tsx:48
 msgid "press to add reaction"
 msgstr "nyomd meg a reakció hozzáadásához"
 
 #. Label in the channel and chat message reactions. Keep the tone plain and specific.
-#: src/features/channel/components/MessageReactions.tsx:42
+#: src/features/channel/components/MessageReactions.tsx:44
 msgid "press to remove reaction"
 msgstr "nyomd meg a reakció eltávolításához"
 
@@ -27646,13 +27705,13 @@ msgid "Rename emoji"
 msgstr "Emoji átnevezése"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:729
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
 msgid "Renamed emoji to {0}."
 msgstr "Az emoji átnevezve: {0}."
 
 #. placeholder {0}: renderInline(change.oldValue, i18n)
 #. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:757
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:764
 msgid "Renamed from {0} to {1}."
 msgstr "Átnevezve erről: {0} erre: {1}."
 
@@ -27661,7 +27720,7 @@ msgid "Renamed from {oldLabel} to {newLabel}."
 msgstr "Átnevezve erről: {oldLabel} erre: {newLabel}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:734
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
 msgid "Renamed sticker to {0}."
 msgstr "Átnevezte a matricát „{0}” névre."
 
@@ -27739,12 +27798,12 @@ msgid "Reply"
 msgstr "Válasz"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "A válasz elrejtve, mert az eredeti szerző le van tiltva."
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "A válasz elrejtve, mert az eredeti szerző spammerként van megjelölve."
 
@@ -29855,7 +29914,7 @@ msgstr "Kijelölhető szöveg"
 #: src/features/app/components/layout/ChannelItem.tsx:96
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
-#: src/features/channel/components/direct_message/DMListItem.tsx:67
+#: src/features/channel/components/direct_message/DMListItem.tsx:68
 msgid "selected"
 msgstr "kiválasztva"
 
@@ -30007,7 +30066,7 @@ msgstr "Fájlt tartalmazó üzenetek küldése sorrendben"
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:112
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
 msgstr "Ismerősnek jelölés"
@@ -30186,12 +30245,12 @@ msgid "Sensitive media"
 msgstr "Érzékeny média"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:804
 msgid "Sent"
 msgstr "Elküldve"
 
 #. DM list row preview text when the most recent message has only attachments.
-#: src/features/channel/components/direct_message/DMListItem.tsx:63
+#: src/features/channel/components/direct_message/DMListItem.tsx:64
 msgid "Sent an attachment"
 msgstr "Mellékletet küldött"
 
@@ -30252,7 +30311,7 @@ msgid "Set a custom role icon."
 msgstr "Beállított egy egyéni szerepkörikont."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:314
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:353
 msgid "Set a custom status"
 msgstr "Egyéni állapot beállítása"
 
@@ -30586,7 +30645,7 @@ msgid "Set voice region"
 msgstr "Hangrégió beállítása"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:763
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:770
 msgid "Set webhook type to {0}."
 msgstr "A webhook típusát erre állította: {0}."
 
@@ -30622,7 +30681,7 @@ msgid "Settings"
 msgstr "Beállítások"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
 msgid "settings link"
 msgstr "beállítási hivatkozás"
 
@@ -31614,7 +31673,7 @@ msgid "Skip this step"
 msgstr "Lépés kihagyása"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:69
+#: src/app/App.tsx:75
 msgid "Skip to content"
 msgstr "Ugrás a tartalomra"
 
@@ -32100,7 +32159,7 @@ msgstr "Hangerő"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:808
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "Hangok"
@@ -32619,7 +32678,7 @@ msgstr "Sztereó mikrofon"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:120
-#: src/features/channel/components/ChannelMessage.tsx:52
+#: src/features/channel/components/ChannelMessage.tsx:53
 msgid "sticker"
 msgstr "matrica"
 
@@ -34124,11 +34183,11 @@ msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "A képernyőmegosztás forrása nem küldött tovább videót, ezért a képernyőmegosztásod leállt."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:748
 msgid "The sticker was uploaded as animated."
 msgstr "A matrica animáltként lett feltöltve."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
 msgid "The sticker was uploaded as static."
 msgstr "A matrica statikus képként lett feltöltve."
 
@@ -34567,6 +34626,11 @@ msgstr "Ez nem tűnik érvényes sablonválasznak. Ellenőrizd, hogy a teljes JS
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
 msgstr "Az emojit nem sikerült előkészíteni. Próbálj meg egy másik fájlt, vagy próbáld újra később."
 
+#. Label above the community an emoji comes from in the emoji info card.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:71
+msgid "This emoji is from"
+msgstr "Ez az emoji innen származik:"
+
 #. Title of the error modal shown when a custom emoji was already deleted.
 #. Title of the error modal shown when a custom emoji was deleted before the rename was saved.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:61
@@ -34664,7 +34728,7 @@ msgid "This invite expires after {count, plural, one {# use} other {# uses}}."
 msgstr "Ez a meghívó {count, plural, one {# felhasználás} other {# felhasználás}} után lejár."
 
 #. placeholder {0}: formatMaxAge(change.newValue)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:696
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
 msgid "This invite expires in {0}."
 msgstr "Ez a meghívó {0} múlva jár le."
 
@@ -34686,23 +34750,29 @@ msgstr "Ez a meghívólink sosem jár le."
 msgid "This invite may have expired or been deleted."
 msgstr "Lehet, hogy ez a meghívó lejárt vagy törölték."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:694
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:319
 msgid "This invite never expires."
 msgstr "Ez a meghívó sosem jár le."
 
-#. Emoji attribution line under a custom emoji. guildName is the community it comes from.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:115
-msgid "This is a custom emoji from <0>{guildName}</0>."
-msgstr "Ez a(z) <0>{guildName}</0> közösség egyéni emojija."
+#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:114
+msgid "This is a custom emoji from"
+msgstr "Ez egy egyéni emoji innen:"
 
+#. Description of a custom emoji from a community the viewer is not a member of.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:106
+#: src/features/expressions/components/ExpressionInfoCard.tsx:61
 msgid "This is a custom emoji from a community."
 msgstr "Ez egy közösség egyéni emojija."
 
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:97
 msgid "This is a custom emoji from a community. Ask the author for an invite to use this emoji."
 msgstr "Ez egy közösség egyéni emojija. Kérj meghívót a szerzőtől, hogy használhasd."
+
+#. Description of a custom sticker from a community the viewer is not a member of.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:65
+msgid "This is a custom sticker from a community."
+msgstr "Ez egy egyedi matrica egy közösségből."
 
 #. Emoji attribution text for built-in default emoji. productName is the Fluxer product name.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:18
@@ -34789,7 +34859,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Ez a linkcsatorna felnőtt tartalomként van megjelölve, és olyan anyagokat nyithat meg, amelyek egyes felhasználók számára nem megfelelőek."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
 msgid "This link is not available for your account."
 msgstr "Ez a hivatkozás nem érhető el a fiókod számára."
 
@@ -34945,6 +35015,11 @@ msgstr "Ez a visszaállítási link lejárt. A visszaállítási linkek 1 órán
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "Így jelennek meg a hivatkozások: {linkPreviewExampleUrl}"
 
+#. Label above the community a sticker comes from in the sticker info card.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:75
+msgid "This sticker is from"
+msgstr "Ez a matrica innen származik:"
+
 #. Error message in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:85
 msgid "This switch is disabled and cannot be toggled"
@@ -34993,7 +35068,7 @@ msgstr "ez a felhasználó"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Ez a felhasználó korlátozta a profilját. Néhány adat rejtve van azok elől, akik nem az ismerősei."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:390
+#: src/features/user/components/popouts/UserProfileShared.tsx:394
 msgid "This user has no roles in this community."
 msgstr "Ennek a felhasználónak nincsenek szerepkörei ebben a közösségben."
 
@@ -35047,7 +35122,7 @@ msgid "This voice channel is no longer available."
 msgstr "Ez a hangcsatorna már nem elérhető."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:73
+#: src/features/channel/components/UserMessage.tsx:74
 msgid "This was a {silentMention} message."
 msgstr "Ez egy {silentMention} üzenet volt."
 
@@ -36210,7 +36285,7 @@ msgstr "Ismerősjelölés küldéséhez előbb oldd fel a letiltását."
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:107
 #: src/features/user/components/modals/UserProfileModal.tsx:118
 msgid "Unblock user"
 msgstr "Felhasználó letiltásának feloldása"
@@ -36371,7 +36446,7 @@ msgstr "Univerzális tartalék. Legalacsonyabb minőség, de mindenhol működik
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:756
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -36652,7 +36727,7 @@ msgid "Unmute DMs"
 msgstr "DM-ek némításának feloldása"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:692
 msgid "Unmute favorites"
 msgstr "Kedvencek némításának feloldása"
 
@@ -36760,7 +36835,7 @@ msgstr "Rögzítés feloldva (csoportos beszélgetés)"
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
-#: src/features/channel/components/direct_message/DMListItem.tsx:71
+#: src/features/channel/components/direct_message/DMListItem.tsx:72
 msgid "unread"
 msgstr "olvasatlan"
 
@@ -37023,7 +37098,7 @@ msgid "Updated the role icon."
 msgstr "Frissítette a szerepkör ikonját."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:737
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
 msgid "Updated the sticker description to {0}."
 msgstr "Frissítette a matrica leírását erre: {0}."
 
@@ -37032,7 +37107,7 @@ msgstr "Frissítette a matrica leírását erre: {0}."
 msgid "Updated the topic to {0}."
 msgstr "A témát a következőre módosította: {0}."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:769
 msgid "Updated the webhook avatar."
 msgstr "Frissítette a webhook profilképét."
 
@@ -37628,7 +37703,7 @@ msgid "Use your operating system's spellchecker when available. Otherwise, use {
 msgstr "Használd az operációs rendszered helyesírás-ellenőrzőjét, ha elérhető. Ellenkező esetben használd a(z) {productName} beépített szótárait."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:708
 msgid "Used {0} times."
 msgstr "{0} alkalommal használva."
 
@@ -38008,7 +38083,7 @@ msgid "Verification failed"
 msgstr "Sikertelen ellenőrzés"
 
 #. Label in the community badge.
-#: src/features/guild/components/GuildBadge.tsx:12
+#: src/features/guild/components/GuildBadge.tsx:13
 msgid "Verified & partnered community"
 msgstr "Ellenőrzött és partnerközösség"
 
@@ -38016,7 +38091,7 @@ msgstr "Ellenőrzött és partnerközösség"
 #. Badge or label indicating the community is verified.
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
-#: src/features/guild/components/GuildBadge.tsx:20
+#: src/features/guild/components/GuildBadge.tsx:21
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "Ellenőrzött közösség"
@@ -38232,7 +38307,7 @@ msgstr "Videó"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the channel header button that starts a video call in a DM or group DM.
 #: src/features/channel/components/channel_header/shared.ts:43
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:766
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:769
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:33
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:199
 msgid "Video call"
@@ -38449,7 +38524,7 @@ msgstr "Részletek megtekintése"
 msgid "View devices that are signed in to your account"
 msgstr "A fiókodba bejelentkezett eszközök megtekintése"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:194
+#: src/features/user/components/popouts/UserProfileShared.tsx:198
 msgid "View full profile"
 msgstr "Teljes profil megtekintése"
 
@@ -38736,7 +38811,7 @@ msgid "Voice and video shortcuts"
 msgstr "Hang- és videó-billentyűparancsok"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:747
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:35
 msgid "Voice call"
 msgstr "Hanghívás"
@@ -39819,7 +39894,7 @@ msgstr "Tegnap, {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
 #: src/features/app/components/layout/MobileBottomNav.tsx:153
-#: src/features/channel/components/direct_message/DMListItem.tsx:59
+#: src/features/channel/components/direct_message/DMListItem.tsx:60
 msgid "You"
 msgstr "Te"
 
@@ -40161,7 +40236,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "A(z) {PREMIUM_PRODUCT_NAME} használata közben megváltoztattad a címkédet. Ha a(z) {PREMIUM_PRODUCT_NAME} nem újul meg, a lejáratakor véletlenszerű új címkét kapsz."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nincs hozzáférésed ahhoz a csatornához, ahová ezt az üzenetet küldték."
 
@@ -40603,7 +40678,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Ideiglenes korlátozás alatt állsz. A lejártáig nem küldhetsz üzeneteket, nem reagálhatsz és nem csatlakozhatsz hangbeszélgetéshez."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "You're viewing older messages"
 msgstr "Régebbi üzeneteket nézel"
 

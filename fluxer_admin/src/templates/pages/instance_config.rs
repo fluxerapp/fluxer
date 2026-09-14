@@ -3,13 +3,14 @@
 use crate::{
     api::types::{
         AppPublicConfigResponse, BlockedMessageGroupsConfigResponse,
-        ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse,
-        GuildActivityLogPresentationConfigResponse, InstanceConfigResponse,
-        InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
-        InstanceRegistrationResponse, LimitConfigResponse, MessageHoverTrackingConfigResponse,
-        MessageKeyboardFocusConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
-        RegistrationUrlResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
-        VOICE_NS_MAX_TARGETED_USERS, VoiceNoiseSuppressionConfigResponse,
+        ExperimentDeliveryConfigResponse, ExpressionInfoCardConfigResponse,
+        GatewayRolloutConfigResponse, GuildActivityLogPresentationConfigResponse,
+        InstanceConfigResponse, InstanceIntegrationsResponse, InstanceMediaResponse,
+        InstancePolicyResponse, InstanceRegistrationResponse, LimitConfigResponse,
+        MessageHoverTrackingConfigResponse, MessageKeyboardFocusConfigResponse,
+        NoiseSuppressionBackend, PendingRegistrationResponse, RegistrationUrlResponse,
+        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
+        VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -154,6 +155,7 @@ pub fn instance_config_page(
                         (message_keyboard_focus_section(base, csrf_token, &instance_config.message_keyboard_focus))
                         (blocked_message_groups_section(base, csrf_token, &instance_config.blocked_message_groups))
                         (guild_activity_log_presentation_section(base, csrf_token, &instance_config.guild_activity_log_presentation))
+                        (expression_info_card_section(base, csrf_token, &instance_config.expression_info_card))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1589,6 +1591,110 @@ fn guild_activity_log_presentation_section(
 
                     (form_actions(html! {
                         (submit_button("Save Guild Activity Log Presentation Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn expression_info_card_section(
+    base: &str,
+    csrf_token: &str,
+    expression_info_card: &ExpressionInfoCardConfigResponse,
+) -> Markup {
+    let status = if expression_info_card.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = expression_info_card.included_user_ids.join("\n");
+    let excluded_user_ids = expression_info_card.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Expression Info Card",
+        "Picks what a targeted client shows for an emoji or a sticker in a message. A targeted \
+         client opens a click-triggered info card that names the expression, says where it comes \
+         from, and offers a row for the source community the reader can open. While the master \
+         switch below is off every client keeps the hover tooltip it ships with, whatever the \
+         rest of these fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_expression_info_card"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (expression_info_card.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "expression_card_enabled",
+                        "true",
+                        "Serve expression info card assignments to clients",
+                        expression_info_card.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         rollout is inert and keeps its current tooltip, so the rollout \
+                         and targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "expression_card_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &expression_info_card.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "expression_card_rollout_salt",
+                            "Rollout Salt",
+                            &expression_info_card.rollout_salt,
+                            "expression-info-card-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "expression_card_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "expression_card_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Expression Info Card Configuration"))
                     }))
                 }
             }

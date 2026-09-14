@@ -32,6 +32,8 @@ pub struct InstanceConfigResponse {
     pub blocked_message_groups: BlockedMessageGroupsConfigResponse,
     #[serde(default)]
     pub guild_activity_log_presentation: GuildActivityLogPresentationConfigResponse,
+    #[serde(default)]
+    pub expression_info_card: ExpressionInfoCardConfigResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -699,6 +701,44 @@ pub struct GuildActivityLogPresentationConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct ExpressionInfoCardConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for ExpressionInfoCardConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: "expression-info-card-v1".to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ExpressionInfoCardConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -822,6 +862,8 @@ pub struct InstanceConfigUpdateRequest {
     pub blocked_message_groups: Option<BlockedMessageGroupsConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_activity_log_presentation: Option<GuildActivityLogPresentationConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expression_info_card: Option<ExpressionInfoCardConfigUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1165,6 +1207,8 @@ mod tests {
         let activity_log =
             serde_json::from_value::<GuildActivityLogPresentationConfigResponse>(json!({}))
                 .expect("default guild activity log presentation config");
+        let expression = serde_json::from_value::<ExpressionInfoCardConfigResponse>(json!({}))
+            .expect("default expression info card config");
         let noise = serde_json::to_value(noise).expect("serializable noise config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let hover =
@@ -1175,6 +1219,8 @@ mod tests {
             serde_json::to_value(blocked).expect("serializable blocked message groups config");
         let activity_log = serde_json::to_value(activity_log)
             .expect("serializable guild activity log presentation config");
+        let expression =
+            serde_json::to_value(expression).expect("serializable expression info card config");
         let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
             serde_json::from_value(noise.clone()).expect("generated noise config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
@@ -1191,6 +1237,9 @@ mod tests {
         let generated_activity_log: generated_types::GuildActivityLogPresentationConfigResponse =
             serde_json::from_value(activity_log.clone())
                 .expect("generated guild activity log presentation config contract");
+        let generated_expression: generated_types::ExpressionInfoCardConfigResponse =
+            serde_json::from_value(expression.clone())
+                .expect("generated expression info card config contract");
         assert_eq!(
             serde_json::to_value(generated_noise).expect("serializable generated noise config"),
             noise
@@ -1220,6 +1269,11 @@ mod tests {
                 .expect("serializable generated guild activity log presentation config"),
             activity_log
         );
+        assert_eq!(
+            serde_json::to_value(generated_expression)
+                .expect("serializable generated expression info card config"),
+            expression
+        );
         for (name, value) in [
             ("VoiceNoiseSuppressionConfigResponse", noise),
             ("ExperimentDeliveryConfigResponse", delivery),
@@ -1227,6 +1281,7 @@ mod tests {
             ("MessageKeyboardFocusConfigResponse", keyboard),
             ("BlockedMessageGroupsConfigResponse", blocked),
             ("GuildActivityLogPresentationConfigResponse", activity_log),
+            ("ExpressionInfoCardConfigResponse", expression),
         ] {
             for (field, value) in value.as_object().expect("config object") {
                 assert_eq!(
@@ -1235,6 +1290,59 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn generated_client_accepts_unknown_response_fields() {
+        const GENERATED_CLIENT: &str =
+            include_str!(concat!(env!("OUT_DIR"), "/admin_api_generated.rs"));
+        assert!(
+            !GENERATED_CLIENT.contains("deny_unknown_fields"),
+            "fluxer_admin/build.rs must clear additionalProperties so a new API field cannot \
+             blank an admin page"
+        );
+        let mut section = serde_json::to_value(ExpressionInfoCardConfigResponse::default())
+            .expect("serializable expression info card config");
+        section
+            .as_object_mut()
+            .expect("expression info card object")
+            .insert("future_knob".to_owned(), json!(7));
+        serde_json::from_value::<generated_types::ExpressionInfoCardConfigResponse>(section)
+            .expect("generated instance config section tolerates unknown fields");
+    }
+
+    #[test]
+    fn generated_audit_log_change_accepts_scalar_and_object_values() {
+        for value in [json!("old"), json!(7), json!(true), json!(null)] {
+            let change = serde_json::from_value::<generated_types::AuditLogChangeSchema>(
+                json!({"key": "name", "old_value": value, "new_value": {"added": [], "removed": []}}),
+            )
+            .expect("generated audit log change tolerates scalar values");
+            assert_eq!(change.key, "name");
+        }
+    }
+
+    #[test]
+    fn expression_info_card_update_preserves_empty_lists_and_omitted_fields() {
+        let update = ExpressionInfoCardConfigUpdateRequest {
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::ExpressionInfoCardConfigUpdateRequest>(
+            value.clone(),
+        )
+        .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"included_user_ids": [], "excluded_user_ids": []})
+        );
+        assert_eq!(
+            serde_json::to_value(ExpressionInfoCardConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
     }
 
     #[test]

@@ -9,6 +9,10 @@ import {
 	INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {
+	ExpressionInfoCardAssignmentResponse,
+	INERT_EXPRESSION_INFO_CARD_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
+import {
 	GuildActivityLogPresentationAssignmentResponse,
 	INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
@@ -62,6 +66,7 @@ const ExperimentAssignmentsSchema = z.object({
 	message_keyboard_focus: MessageKeyboardFocusAssignmentResponse.optional(),
 	blocked_message_groups: BlockedMessageGroupsAssignmentResponse.optional(),
 	guild_activity_log_presentation: GuildActivityLogPresentationAssignmentResponse.optional(),
+	expression_info_card: ExpressionInfoCardAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -106,4 +111,10 @@ export function readGuildActivityLogPresentationAssignment(
 	response: ExperimentAssignmentsResponse,
 ): GuildActivityLogPresentationAssignmentResponse {
 	return response.assignments.guild_activity_log_presentation ?? INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT;
+}
+
+export function readExpressionInfoCardAssignment(
+	response: ExperimentAssignmentsResponse,
+): ExpressionInfoCardAssignmentResponse {
+	return response.assignments.expression_info_card ?? INERT_EXPRESSION_INFO_CARD_ASSIGNMENT;
 }

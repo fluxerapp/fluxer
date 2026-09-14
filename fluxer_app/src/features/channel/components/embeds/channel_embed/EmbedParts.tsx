@@ -72,7 +72,12 @@ export const EmbedAuthorComponent: FC<{author?: EmbedAuthor}> = observer(({autho
 export const EmbedTitle: FC<{title?: string; url?: string; messageId?: string; channelId?: string}> = observer(
 	({title, url, messageId, channelId}) => {
 		if (title == null || title.length === 0) return null;
-		const options = {context: MarkdownContext.RESTRICTED_INLINE_REPLY, messageId, channelId};
+		const options = {
+			context: MarkdownContext.RESTRICTED_INLINE_REPLY,
+			messageId,
+			channelId,
+			disableEmojiInteractions: Boolean(url),
+		};
 		return (
 			<div className={styles.embedTitle} data-flx="channel.embeds.embed.embed-title.embed-title">
 				{url ? (

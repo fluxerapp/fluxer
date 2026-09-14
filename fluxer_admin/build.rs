@@ -39,6 +39,7 @@ fn generate_admin_api(manifest_dir: &Path, out_dir: &Path) {
         serde_json::from_str(&json_str).expect("failed to parse openapi-admin.json");
     adapt_progenitor_throttled_errors(&mut spec);
     relax_guild_audit_log_schemas(&mut spec);
+    relax_progenitor_schema_strictness(&mut spec);
 
     let mut settings = progenitor::GenerationSettings::new();
     settings.with_interface(progenitor::InterfaceStyle::Positional);
@@ -185,6 +186,260 @@ fn object_schema_mut<'a>(
         panic!("{name} must be an object schema");
     };
     object
+}
+
+const MAX_SCHEMA_REFERENCE_DEPTH: usize = 32;
+
+fn relax_progenitor_schema_strictness(spec: &mut openapiv3::OpenAPI) {
+    let registry = spec.components.clone().unwrap_or_default();
+
+    if let Some(components) = spec.components.as_mut() {
+        for schema in components.schemas.values_mut() {
+            relax_schema_reference(schema, &registry);
+        }
+        for response in components.responses.values_mut() {
+            if let openapiv3::ReferenceOr::Item(response) = response {
+                relax_response(response, &registry);
+            }
+        }
+        for parameter in components.parameters.values_mut() {
+            if let openapiv3::ReferenceOr::Item(parameter) = parameter {
+                relax_parameter(parameter, &registry);
+            }
+        }
+        for request_body in components.request_bodies.values_mut() {
+            if let openapiv3::ReferenceOr::Item(request_body) = request_body {
+                relax_content(&mut request_body.content, &registry);
+            }
+        }
+        for header in components.headers.values_mut() {
+            if let openapiv3::ReferenceOr::Item(header) = header {
+                relax_parameter_format(&mut header.format, &registry);
+            }
+        }
+    }
+
+    for path in spec.paths.paths.values_mut() {
+        let openapiv3::ReferenceOr::Item(path) = path else {
+            continue;
+        };
+        for parameter in &mut path.parameters {
+            if let openapiv3::ReferenceOr::Item(parameter) = parameter {
+                relax_parameter(parameter, &registry);
+            }
+        }
+        for operation in [
+            &mut path.get,
+            &mut path.put,
+            &mut path.post,
+            &mut path.delete,
+            &mut path.options,
+            &mut path.head,
+            &mut path.patch,
+            &mut path.trace,
+        ]
+        .into_iter()
+        .flatten()
+        {
+            for parameter in &mut operation.parameters {
+                if let openapiv3::ReferenceOr::Item(parameter) = parameter {
+                    relax_parameter(parameter, &registry);
+                }
+            }
+            if let Some(openapiv3::ReferenceOr::Item(request_body)) =
+                operation.request_body.as_mut()
+            {
+                relax_content(&mut request_body.content, &registry);
+            }
+            for response in operation
+                .responses
+                .responses
+                .values_mut()
+                .chain(operation.responses.default.iter_mut())
+            {
+                if let openapiv3::ReferenceOr::Item(response) = response {
+                    relax_response(response, &registry);
+                }
+            }
+        }
+    }
+}
+
+fn relax_response(response: &mut openapiv3::Response, registry: &openapiv3::Components) {
+    relax_content(&mut response.content, registry);
+    for header in response.headers.values_mut() {
+        if let openapiv3::ReferenceOr::Item(header) = header {
+            relax_parameter_format(&mut header.format, registry);
+        }
+    }
+}
+
+fn relax_content(content: &mut openapiv3::Content, registry: &openapiv3::Components) {
+    for media_type in content.values_mut() {
+        if let Some(schema) = media_type.schema.as_mut() {
+            relax_schema_reference(schema, registry);
+        }
+    }
+}
+
+fn relax_parameter(parameter: &mut openapiv3::Parameter, registry: &openapiv3::Components) {
+    let format = match parameter {
+        openapiv3::Parameter::Query { parameter_data, .. }
+        | openapiv3::Parameter::Header { parameter_data, .. }
+        | openapiv3::Parameter::Path { parameter_data, .. }
+        | openapiv3::Parameter::Cookie { parameter_data, .. } => &mut parameter_data.format,
+    };
+    relax_parameter_format(format, registry);
+}
+
+fn relax_parameter_format(
+    format: &mut openapiv3::ParameterSchemaOrContent,
+    registry: &openapiv3::Components,
+) {
+    match format {
+        openapiv3::ParameterSchemaOrContent::Schema(schema) => {
+            relax_schema_reference(schema, registry)
+        }
+        openapiv3::ParameterSchemaOrContent::Content(content) => relax_content(content, registry),
+    }
+}
+
+fn relax_schema_reference(
+    schema: &mut openapiv3::ReferenceOr<openapiv3::Schema>,
+    registry: &openapiv3::Components,
+) {
+    if let openapiv3::ReferenceOr::Item(schema) = schema {
+        relax_schema(schema, registry);
+    }
+}
+
+fn relax_boxed_schema_reference(
+    schema: &mut openapiv3::ReferenceOr<Box<openapiv3::Schema>>,
+    registry: &openapiv3::Components,
+) {
+    if let openapiv3::ReferenceOr::Item(schema) = schema {
+        relax_schema(schema, registry);
+    }
+}
+
+fn relax_schema(schema: &mut openapiv3::Schema, registry: &openapiv3::Components) {
+    if flattens_objects_beside_scalars(&schema.schema_kind, registry) {
+        schema.schema_kind = openapiv3::SchemaKind::Any(openapiv3::AnySchema::default());
+        return;
+    }
+    match &mut schema.schema_kind {
+        openapiv3::SchemaKind::Type(openapiv3::Type::Object(object)) => {
+            relax_additional_properties(&mut object.additional_properties, registry);
+            for property in object.properties.values_mut() {
+                relax_boxed_schema_reference(property, registry);
+            }
+        }
+        openapiv3::SchemaKind::Type(openapiv3::Type::Array(array)) => {
+            if let Some(items) = array.items.as_mut() {
+                relax_boxed_schema_reference(items, registry);
+            }
+        }
+        openapiv3::SchemaKind::Type(_) => {}
+        openapiv3::SchemaKind::OneOf { one_of: subschemas }
+        | openapiv3::SchemaKind::AllOf { all_of: subschemas }
+        | openapiv3::SchemaKind::AnyOf { any_of: subschemas } => {
+            for subschema in subschemas {
+                relax_schema_reference(subschema, registry);
+            }
+        }
+        openapiv3::SchemaKind::Not { not } => relax_schema_reference(not, registry),
+        openapiv3::SchemaKind::Any(any) => {
+            relax_additional_properties(&mut any.additional_properties, registry);
+            for property in any.properties.values_mut() {
+                relax_boxed_schema_reference(property, registry);
+            }
+            if let Some(items) = any.items.as_mut() {
+                relax_boxed_schema_reference(items, registry);
+            }
+            for subschema in any
+                .one_of
+                .iter_mut()
+                .chain(any.all_of.iter_mut())
+                .chain(any.any_of.iter_mut())
+            {
+                relax_schema_reference(subschema, registry);
+            }
+            if let Some(not) = any.not.as_mut() {
+                relax_schema_reference(not, registry);
+            }
+        }
+    }
+}
+
+fn relax_additional_properties(
+    additional_properties: &mut Option<openapiv3::AdditionalProperties>,
+    registry: &openapiv3::Components,
+) {
+    match additional_properties {
+        Some(openapiv3::AdditionalProperties::Any(false)) => *additional_properties = None,
+        Some(openapiv3::AdditionalProperties::Schema(schema)) => {
+            relax_schema_reference(schema, registry)
+        }
+        _ => {}
+    }
+}
+
+fn flattens_objects_beside_scalars(
+    schema_kind: &openapiv3::SchemaKind,
+    registry: &openapiv3::Components,
+) -> bool {
+    let subschemas = match schema_kind {
+        openapiv3::SchemaKind::OneOf { one_of } => one_of,
+        openapiv3::SchemaKind::AnyOf { any_of } => any_of,
+        _ => return false,
+    };
+    let mut objects = false;
+    let mut scalars = false;
+    for subschema in subschemas {
+        if resolves_to_object(subschema, registry, MAX_SCHEMA_REFERENCE_DEPTH) {
+            objects = true;
+        } else {
+            scalars = true;
+        }
+    }
+    objects && scalars
+}
+
+fn resolves_to_object(
+    schema: &openapiv3::ReferenceOr<openapiv3::Schema>,
+    registry: &openapiv3::Components,
+    depth: usize,
+) -> bool {
+    let Some(depth) = depth.checked_sub(1) else {
+        return false;
+    };
+    let schema = match schema {
+        openapiv3::ReferenceOr::Reference { reference } => {
+            let Some(target) = reference
+                .strip_prefix("#/components/schemas/")
+                .and_then(|name| registry.schemas.get(name))
+            else {
+                return false;
+            };
+            return resolves_to_object(target, registry, depth);
+        }
+        openapiv3::ReferenceOr::Item(schema) => schema,
+    };
+    match &schema.schema_kind {
+        openapiv3::SchemaKind::Type(openapiv3::Type::Object(_)) => true,
+        openapiv3::SchemaKind::Type(_) => false,
+        openapiv3::SchemaKind::OneOf { one_of: subschemas }
+        | openapiv3::SchemaKind::AllOf { all_of: subschemas }
+        | openapiv3::SchemaKind::AnyOf { any_of: subschemas } => subschemas
+            .iter()
+            .any(|subschema| resolves_to_object(subschema, registry, depth)),
+        openapiv3::SchemaKind::Not { .. } => false,
+        openapiv3::SchemaKind::Any(any) => {
+            any.typ.as_deref() == Some("object")
+                || !any.properties.is_empty()
+                || any.additional_properties.is_some()
+        }
+    }
 }
 
 struct Face {

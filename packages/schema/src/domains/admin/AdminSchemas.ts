@@ -28,6 +28,10 @@ import {
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
+	ExpressionInfoCardConfigResponse,
+	ExpressionInfoCardConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
+import {
 	GuildActivityLogPresentationConfigResponse,
 	GuildActivityLogPresentationConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
@@ -650,6 +654,7 @@ export const InstanceConfigResponse = z.object({
 	message_hover_tracking: MessageHoverTrackingConfigResponse,
 	message_keyboard_focus: MessageKeyboardFocusConfigResponse,
 	blocked_message_groups: BlockedMessageGroupsConfigResponse,
+	expression_info_card: ExpressionInfoCardConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -690,6 +695,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	message_hover_tracking: MessageHoverTrackingConfigUpdateRequest.nullish(),
 	message_keyboard_focus: MessageKeyboardFocusConfigUpdateRequest.nullish(),
 	blocked_message_groups: BlockedMessageGroupsConfigUpdateRequest.nullish(),
+	expression_info_card: ExpressionInfoCardConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

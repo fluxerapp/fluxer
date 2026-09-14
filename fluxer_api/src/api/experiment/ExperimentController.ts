@@ -11,6 +11,7 @@ import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {resolveBlockedMessageGroupsAssignment} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {resolveExpressionInfoCardAssignment} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
 import {resolveGuildActivityLogPresentationAssignment} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
@@ -39,6 +40,7 @@ export function ExperimentController(app: HonoApp) {
 				messageKeyboardFocusConfig,
 				blockedMessageGroupsConfig,
 				guildActivityLogPresentationConfig,
+				expressionInfoCardConfig,
 			] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
@@ -46,6 +48,7 @@ export function ExperimentController(app: HonoApp) {
 				instanceConfigRepository.getMessageKeyboardFocusConfig(),
 				instanceConfigRepository.getBlockedMessageGroupsConfig(),
 				instanceConfigRepository.getGuildActivityLogPresentationConfig(),
+				instanceConfigRepository.getExpressionInfoCardConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -60,6 +63,7 @@ export function ExperimentController(app: HonoApp) {
 						guildActivityLogPresentationConfig,
 						userId,
 					),
+					expression_info_card: resolveExpressionInfoCardAssignment(expressionInfoCardConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

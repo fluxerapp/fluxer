@@ -38,7 +38,7 @@ export interface EmojiAttributionSource {
 
 const getIsVerified = (guild?: EmojiGuild | null): boolean => {
 	if (!guild) return false;
-	const features = (guild as Guild).features ?? (guild as Guild).features;
+	const features = guild.features;
 	if (!features) return false;
 	if (Array.isArray(features)) {
 		return features.includes('VERIFIED');
@@ -108,17 +108,10 @@ export const EmojiAttributionSubtext = observer(function EmojiAttributionSubtext
 			</div>
 		);
 	}
-	const guildName = attribution.guild.name;
 	return (
 		<div className={classes.container} data-flx="emoji.emojis.emoji-attribution-subtext.div--4">
 			<span className={classes.text} data-flx="emoji.emojis.emoji-attribution-subtext.span--4">
-				<Trans comment="Emoji attribution line under a custom emoji. guildName is the community it comes from.">
-					This is a custom emoji from{' '}
-					<span className={classes.guildName} data-flx="emoji.emojis.emoji-attribution-subtext.span--5">
-						{guildName}
-					</span>
-					.
-				</Trans>
+				<Trans>This is a custom emoji from</Trans>
 			</span>
 			<div className={classes.guildRow} data-flx="emoji.emojis.emoji-attribution-subtext.div--5">
 				<div className={classes.guildIcon} data-flx="emoji.emojis.emoji-attribution-subtext.div--6">
@@ -130,6 +123,9 @@ export const EmojiAttributionSubtext = observer(function EmojiAttributionSubtext
 						data-flx="emoji.emojis.emoji-attribution-subtext.guild-icon"
 					/>
 				</div>
+				<span className={classes.guildName} data-flx="emoji.emojis.emoji-attribution-subtext.span--5">
+					{attribution.guild.name}
+				</span>
 				{attribution.isVerified && (
 					<Tooltip
 						text={i18n._(VERIFIED_COMMUNITY_DESCRIPTOR)}

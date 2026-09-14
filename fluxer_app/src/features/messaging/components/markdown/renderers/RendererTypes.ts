@@ -20,6 +20,8 @@ export interface MarkdownParseOptions {
 	context: MarkdownContext;
 	disableAnimatedEmoji?: boolean;
 	disableInteractions?: boolean;
+	disableEmojiInteractions?: boolean;
+	disableEmojiInfoCard?: boolean;
 	channelId?: string;
 	messageId?: string;
 	guildId?: string;
@@ -34,6 +36,6 @@ export interface MarkdownRenderOptions extends MarkdownParseOptions {
 export interface RendererProps<T extends Node = Node> {
 	node: T;
 	id: string;
-	renderChildren: (nodes: Array<Node>) => React.ReactNode;
+	renderChildren: (nodes: Array<Node>, optionOverrides?: Partial<MarkdownRenderOptions>) => React.ReactNode;
 	options: MarkdownRenderOptions;
 }

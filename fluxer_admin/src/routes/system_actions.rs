@@ -8,21 +8,21 @@ use crate::{
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, BlockedMessageGroupsConfigUpdateRequest,
             CreateRegistrationUrlRequest, DeferredPhoneGateUpdateRequest,
-            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
-            GatewayRolloutMode, GuildActivityLogPresentationConfigUpdateRequest,
-            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
-            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceCaptchaIntegrationUpdateRequest,
-            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
-            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
-            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
-            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
-            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
-            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, MessageHoverTrackingConfigUpdateRequest,
-            MessageKeyboardFocusConfigUpdateRequest, NoiseSuppressionBackend, PremiumMode,
-            RegistrationMode, SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES,
-            VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
-            VoiceNoiseSuppressionGuildOverride,
+            ExperimentDeliveryConfigUpdateRequest, ExpressionInfoCardConfigUpdateRequest,
+            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
+            GuildActivityLogPresentationConfigUpdateRequest, InstanceAttachmentDecayUpdateRequest,
+            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
+            InstanceCaptchaIntegrationUpdateRequest, InstanceConfigUpdateRequest,
+            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
+            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
+            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
+            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
+            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
+            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters,
+            MessageHoverTrackingConfigUpdateRequest, MessageKeyboardFocusConfigUpdateRequest,
+            NoiseSuppressionBackend, PremiumMode, RegistrationMode, SsoConfigUpdateRequest,
+            VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope,
+            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -227,6 +227,10 @@ pub async fn instance_config_post(
                 Err(message) => FlashData::error(message),
             }
         }
+        "update_expression_info_card" => match build_expression_info_card_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
         "update_experiment_delivery" => match build_experiment_delivery_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
@@ -764,6 +768,35 @@ fn build_guild_activity_log_presentation_update(
             )?),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("guild_activity_log_presentation_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_expression_info_card_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        expression_info_card: Some(ExpressionInfoCardConfigUpdateRequest {
+            enabled: Some(form.bool_value("expression_card_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "expression_card_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_experiment_rollout_salt(form, "expression_card_rollout_salt")?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("expression_card_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("expression_card_excluded_user_ids")
                     .unwrap_or_default(),
                 "Excluded user IDs",
             )?),

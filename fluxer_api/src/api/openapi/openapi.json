@@ -24858,9 +24858,10 @@
 					"allow_cloning": {
 						"type": "boolean",
 						"description": "Whether the source guild allows non-members to use the in-app clone shortcut"
-					}
+					},
+					"guild": {"$ref": "#/components/schemas/GuildExpressionSourceGuildResponse"}
 				},
-				"required": ["id", "guild_id", "name", "animated", "allow_cloning"],
+				"required": ["id", "guild_id", "name", "animated", "allow_cloning", "guild"],
 				"additionalProperties": false
 			},
 			"GlobalSearchMessagesRequest": {
@@ -28264,7 +28265,8 @@
 							"blocked_message_groups": {"$ref": "#/components/schemas/BlockedMessageGroupsAssignmentResponse"},
 							"guild_activity_log_presentation": {
 								"$ref": "#/components/schemas/GuildActivityLogPresentationAssignmentResponse"
-							}
+							},
+							"expression_info_card": {"$ref": "#/components/schemas/ExpressionInfoCardAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -28288,9 +28290,10 @@
 					"allow_cloning": {
 						"type": "boolean",
 						"description": "Whether the source guild allows non-members to use the in-app clone shortcut"
-					}
+					},
+					"guild": {"$ref": "#/components/schemas/GuildExpressionSourceGuildResponse"}
 				},
-				"required": ["id", "guild_id", "name", "animated", "allow_cloning"],
+				"required": ["id", "guild_id", "name", "animated", "allow_cloning", "guild"],
 				"additionalProperties": false
 			},
 			"DonationRequestLinkRequest": {
@@ -32002,6 +32005,33 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try"]},
+			"GuildExpressionSourceGuildResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the source guild", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"name": {"type": "string", "description": "The name of the source guild"},
+					"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The hash of the source guild icon"},
+					"features": {
+						"type": "array",
+						"items": {"type": "string", "enum": ["VERIFIED", "PARTNERED", "DISCOVERABLE"]},
+						"description": "The badge feature flags of the source guild, limited to VERIFIED, PARTNERED, and DISCOVERABLE"
+					}
+				},
+				"required": ["id", "name", "icon", "features"],
+				"additionalProperties": false,
+				"description": "Public presentation of the source guild of an expression"
+			},
+			"ExpressionInfoCardAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+					"user_targeted": {"type": "boolean"},
+					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
+				},
+				"required": ["enabled", "config_version", "user_targeted", "source"],
+				"additionalProperties": false
+			},
 			"GuildActivityLogPresentationAssignmentResponse": {
 				"type": "object",
 				"properties": {

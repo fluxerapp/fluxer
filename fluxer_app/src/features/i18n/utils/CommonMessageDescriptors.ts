@@ -676,6 +676,11 @@ export const JOIN_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Join community',
 	comment: 'Generic action label that accepts a community invite / joins a community.',
 });
+export const DISCOVERABLE_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Discoverable community',
+	comment:
+		'Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.',
+});
 export const INVITES_DESCRIPTOR = msg({
 	message: 'Invites',
 	comment: 'Generic section / tab label for the invites list.',

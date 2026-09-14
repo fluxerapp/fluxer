@@ -179,7 +179,11 @@ export const UserProfileBio: React.FC<{
 			>
 				<SafeMarkdown
 					content={bioContent}
-					options={{context: MarkdownContext.RESTRICTED_USER_BIO, guildId: profile?.guildId ?? undefined}}
+					options={{
+						context: MarkdownContext.RESTRICTED_USER_BIO,
+						guildId: profile?.guildId ?? undefined,
+						disableEmojiInfoCard: true,
+					}}
 					data-flx="user.user-profile-shared.user-profile-bio.safe-markdown"
 				/>
 			</div>

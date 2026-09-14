@@ -17,6 +17,7 @@ import {EditGroupBottomSheet} from '@app/features/channel/components/modals/Edit
 import {GroupInvitesBottomSheet} from '@app/features/channel/components/modals/GroupInvitesBottomSheet';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
 import Guilds from '@app/features/guild/state/Guilds';
 import {MENTION_COUNT_ARIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -273,6 +274,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 								channelId: channel.id,
 								messageId: lastMessage.id,
 								disableAnimatedEmoji: true,
+								disableInteractions: ExpressionInfoCardRollout.enabled,
 								mentionChannels: lastMessage.mentionChannels,
 							}}
 							data-flx="channel.direct-message.dm-list-item.get-message-preview.safe-markdown"

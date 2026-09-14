@@ -1360,6 +1360,21 @@
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
       },
       {
+        "msgid": "A custom emoji from this community. You can use it anywhere on {productName}."
+      },
+      {
+        "msgid": "A custom emoji from this community. You can use it in this community."
+      },
+      {
+        "msgid": "A custom sticker from this community. You can use it anywhere on {productName}."
+      },
+      {
+        "msgid": "A custom sticker from this community. You can use it in this community."
+      },
+      {
+        "msgid": "A default emoji. You can use it anywhere on {productName}."
+      },
+      {
         "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
       },
       {
@@ -1675,6 +1690,9 @@
         "msgid": "Clearing the text of a message with attachments asks to delete the message unless this is on"
       },
       {
+        "msgid": "Click to learn more"
+      },
+      {
         "msgid": "Clone emoji"
       },
       {
@@ -1792,6 +1810,9 @@
         "msgid": "Displayed members with this role separately."
       },
       {
+        "msgid": "Do you want to join {communityName}?"
+      },
+      {
         "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
       },
       {
@@ -1880,6 +1901,9 @@
       },
       {
         "msgid": "Global shortcut"
+      },
+      {
+        "msgid": "Go to {communityName}"
       },
       {
         "msgid": "Grant"
@@ -2836,10 +2860,22 @@
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
       },
       {
+        "msgid": "This emoji is from"
+      },
+      {
         "msgid": "This instance currently allows screen share up to 720p at 30 FPS."
       },
       {
         "msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
+      },
+      {
+        "msgid": "This is a custom emoji from"
+      },
+      {
+        "msgid": "This is a custom sticker from a community."
+      },
+      {
+        "msgid": "This is a custom sticker from a community. Ask the author for an invite to use this sticker."
       },
       {
         "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
@@ -2858,6 +2894,9 @@
       },
       {
         "msgid": "This reset link has expired. Reset links last 1 hour. Please request a new one."
+      },
+      {
+        "msgid": "This sticker is from"
       },
       {
         "msgid": "Timed out the member until {date}."
@@ -3509,6 +3548,12 @@
       },
       {
         "msgid": "{count, plural, one {The invite was used # time.} other {The invite was used # times.}}"
+      },
+      {
+        "msgid": "{expressionName} is a custom emoji from this community. Members can use it here."
+      },
+      {
+        "msgid": "{expressionName} is a custom sticker from this community. Members can use it here."
       },
       {
         "msgid": "{name} copy"

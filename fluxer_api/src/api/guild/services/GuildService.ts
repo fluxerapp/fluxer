@@ -12,6 +12,7 @@ import {
 	type StoredGuildAuditLogEntryResponse,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import {mapGuildToExpressionSourceGuildResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
 import {GuildContentService} from '@app/api/guild/services/GuildContentService';
@@ -259,6 +260,7 @@ export class GuildService {
 			name: emoji.name,
 			animated: emoji.isAnimated,
 			allow_cloning: guild.features.has(GuildFeatures.CLONE_EMOJI_ENABLED),
+			guild: mapGuildToExpressionSourceGuildResponse(guild),
 		};
 	}
 
@@ -272,6 +274,7 @@ export class GuildService {
 			name: sticker.name,
 			animated: sticker.animated,
 			allow_cloning: guild.features.has(GuildFeatures.CLONE_STICKER_ENABLED),
+			guild: mapGuildToExpressionSourceGuildResponse(guild),
 		};
 	}
 

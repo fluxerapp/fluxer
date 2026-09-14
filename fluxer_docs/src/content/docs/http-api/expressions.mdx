@@ -12,6 +12,7 @@ An expression is a custom emoji or a sticker that one guild owns. The routes her
 | --- | --- | --- |
 | [Emoji metadata](#emoji-metadata-object) | [Get emoji metadata](#get-emoji-metadata) | [Guild emojis](/http-api/guild-emojis/) |
 | [Sticker metadata](#sticker-metadata-object) | [Get sticker metadata](#get-sticker-metadata) | [Guild stickers](/http-api/guild-stickers/) |
+| [Expression source guild](#expression-source-guild-object) | [Get emoji metadata](#get-emoji-metadata), [Get sticker metadata](#get-sticker-metadata) | [Guilds](/http-api/guilds/) |
 
 Both routes are read-only, and neither writes an audit entry or emits a [Gateway Dispatch](/gateway/events/). Each one returns the metadata even when the owning guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features).
 
@@ -34,16 +35,19 @@ One custom emoji, readable from outside its guild. It adds the owning guild to t
 | name<sup>3</sup> | string | The name of the emoji (2-32 characters) |
 | animated<sup>4</sup> | boolean | Whether the stored image is animated |
 | allow_cloning<sup>5</sup> | boolean | Whether the owning guild permits the emoji to be copied |
+| guild<sup>6</sup> | [expression source guild](#expression-source-guild-object) object | The name, icon, and badge features of the guild that owns the emoji |
 
 <sup>1</sup> Unique across every guild, so the emoji is addressable without its guild
 
-<sup>2</sup> This resource has no guild name and no guild icon
+<sup>2</sup> Always equal to `guild.id`
 
 <sup>3</sup> [Create guild emoji](/http-api/guild-emojis/#create-guild-emoji) restricts the value to ASCII letters, digits, and underscore, and cloning copies it unchanged
 
 <sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
 
 <sup>5</sup> True exactly when the owning guild has [CLONE_EMOJI_ENABLED](/http-api/guilds/#guild-features), and false for every other guild
+
+<sup>6</sup> Every caller receives the same object, whether or not it is a member of the owning guild
 
 Every member is always present, and no member is nullable.
 
@@ -55,7 +59,13 @@ Every member is always present, and no member is nullable.
   "guild_id": "1489002177550843904",
   "name": "party_parrot",
   "animated": true,
-  "allow_cloning": true
+  "allow_cloning": true,
+  "guild": {
+    "id": "1489002177550843904",
+    "name": "Ada's Workshop",
+    "icon": "a_9f2c1d4e",
+    "features": ["VERIFIED", "DISCOVERABLE"]
+  }
 }
 ```
 
@@ -72,16 +82,19 @@ One sticker, readable from outside its guild. It adds the owning guild to the [g
 | name<sup>3</sup> | string | The name of the sticker (2-30 characters) |
 | animated<sup>4</sup> | boolean | Whether the stored image is animated |
 | allow_cloning<sup>5</sup> | boolean | Whether the owning guild permits the sticker to be copied |
+| guild<sup>6</sup> | [expression source guild](#expression-source-guild-object) object | The name, icon, and badge features of the guild that owns the sticker |
 
 <sup>1</sup> Unique across every guild, so the sticker is addressable without its guild
 
-<sup>2</sup> This resource has no guild name and no guild icon
+<sup>2</sup> Always equal to `guild.id`
 
 <sup>3</sup> The value accepts any character
 
 <sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
 
 <sup>5</sup> True exactly when the owning guild has [CLONE_STICKER_ENABLED](/http-api/guilds/#guild-features), and false for every other guild
+
+<sup>6</sup> Every caller receives the same object, whether or not it is a member of the owning guild
 
 Every member is always present, and no member is nullable.
 
@@ -93,7 +106,43 @@ Every member is always present, and no member is nullable.
   "guild_id": "1489002177550843904",
   "name": "shipit",
   "animated": false,
-  "allow_cloning": false
+  "allow_cloning": false,
+  "guild": {
+    "id": "1489002177550843904",
+    "name": "Ada's Workshop",
+    "icon": null,
+    "features": []
+  }
+}
+```
+
+## Expression source guild object
+
+The guild that owns an expression, reduced to what is needed to name it and show its badge. It is smaller than the [partial guild object](/http-api/guilds/#partial-guild-object) and has no banner, splash, or embedded splash fields.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name of the guild |
+| icon<sup>1</sup> | ?string | Guild icon hash, or null when the guild stores none |
+| features<sup>2</sup> | array[string] | The badge [guild features](/http-api/guilds/#guild-features) the guild has |
+
+<sup>1</sup> An animated icon hash has the `a_` prefix, and that prefix is removed from the returned value while the guild lacks `ANIMATED_ICON`
+
+<sup>2</sup> Only `VERIFIED`, `PARTNERED`, and `DISCOVERABLE` can appear, each at most once and in that order, and every other feature the guild has is left out
+
+Every member is always present, and only `icon` is nullable.
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "name": "Ada's Workshop",
+  "icon": "a_9f2c1d4e",
+  "features": ["VERIFIED", "DISCOVERABLE"]
 }
 ```
 

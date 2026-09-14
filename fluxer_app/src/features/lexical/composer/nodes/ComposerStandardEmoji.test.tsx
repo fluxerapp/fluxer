@@ -9,6 +9,12 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 vi.mock('@app/features/expressions/utils/EmojiUtils', () => ({getEmojiURL: (surrogate: string) => `url:${surrogate}`}));
 
+vi.mock('@app/features/expressions/state/ExpressionInfoCardRollout', () => ({default: {enabled: false}}));
+
+vi.mock('@app/features/ui/tooltip/Tooltip', () => ({
+	Tooltip: ({children}: {children: React.ReactNode}) => children,
+}));
+
 vi.mock('@app/features/ui/emoji_tooltip_content/EmojiWithTooltip', () => ({
 	EmojiWithTooltip: ({children}: {children: React.ReactNode}) => children,
 }));

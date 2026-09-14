@@ -20,13 +20,13 @@ msgid "... turn dense mode on. Nice!"
 msgstr "... zapnout zhuštěný režim. Super!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
-#: src/features/channel/components/MessageAttachments.tsx:368
-#: src/features/channel/components/UserMessage.tsx:61
+#: src/features/channel/components/MessageAttachments.tsx:378
+#: src/features/channel/components/UserMessage.tsx:62
 msgid "(edited)"
 msgstr "(upraveno)"
 
 #: src/features/app/components/pages/YouPage.tsx:189
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:903
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:906
 msgid "(only visible to you)"
 msgstr "(viditelné jen vám)"
 
@@ -1092,7 +1092,7 @@ msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {# příloha} few {# přílohy} many {# přílohy} other {# příloh}}"
 
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:26
+#: src/features/channel/components/BlockedMessageGroups.tsx:31
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# zablokovaná zpráva} few {# zablokované zprávy} many {# zablokované zprávy} other {# zablokovaných zpráv}}"
 
@@ -1121,8 +1121,8 @@ msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {# položka} few {# položky} many {# položky} other {# položek}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:436
-#: src/features/channel/components/direct_message/DMListItem.tsx:600
+#: src/features/channel/components/direct_message/DMListItem.tsx:438
+#: src/features/channel/components/direct_message/DMListItem.tsx:602
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:118
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -1148,12 +1148,12 @@ msgid "{count, plural, one {# participant in call} other {# participants in call
 msgstr "{count, plural, one {# účastník hovoru} few {# účastníci hovoru} many {# účastníka hovoru} other {# účastníků hovoru}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:21
+#: src/features/channel/components/BlockedMessageGroups.tsx:26
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {# zpráva od možného spammera} few {# zprávy od možného spammera} many {# zprávy od možného spammera} other {# zpráv od možného spammera}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:146
+#: src/features/channel/components/MessageReactions.tsx:149
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {# reakce} few {# reakce} many {# reakce} other {# reakcí}}"
 
@@ -1283,7 +1283,7 @@ msgstr "{count, plural, one {Pozvánka byla použita #krát.} few {Pozvánka byl
 msgid "{count, plural, one {Uploading # emoji. This may take a little while.} other {Uploading # emojis. This may take a little while.}}"
 msgstr "{count, plural, one {Nahráváme # emoji. Může to chvíli trvat.} few {Nahráváme # emoji. Může to chvíli trvat.} many {Nahráváme # emoji. Může to chvíli trvat.} other {Nahráváme # emoji. Může to chvíli trvat.}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:710
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:257
 msgid "{count, plural, one {Used # time.} other {Used # times.}}"
 msgstr "{count, plural, one {Použito #krát.} other {Použito #krát.}}"
@@ -1437,7 +1437,9 @@ msgid "{eightHours} hours"
 msgstr "{eightHours} hodin"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
+#. Error message in the messaging emoji renderer.
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName} (načtení se nezdařilo)"
 
@@ -1447,12 +1449,12 @@ msgid "{emojiName}, {reactionCountText}"
 msgstr "{emojiName}, {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:50
+#: src/features/channel/components/MessageReactions.tsx:52
 msgid "{emojiName}: {reactionCountText}"
 msgstr "{emojiName}: {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}, {actionText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:55
+#: src/features/channel/components/MessageReactions.tsx:57
 msgid "{emojiName}: {reactionCountText}, {actionText}"
 msgstr "{emojiName}: {reactionCountText}, {actionText}"
 
@@ -1460,6 +1462,16 @@ msgstr "{emojiName}: {reactionCountText}, {actionText}"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:33
 msgid "{everyoneMention} mentions"
 msgstr "Zmínky {everyoneMention}"
+
+#. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:94
+msgid "{expressionName} is a custom emoji from this community. Members can use it here."
+msgstr "{expressionName} je vlastní emotikon z této komunity. Členové ho zde mohou používat."
+
+#. Reason shown in the confirmation before joining a community from a sticker info card. It explains that the sticker the viewer opened belongs to this community. {expressionName} is the sticker name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:99
+msgid "{expressionName} is a custom sticker from this community. Members can use it here."
+msgstr "{expressionName} je vlastní samolepka z této komunity. Členové ji zde mohou používat."
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:10
@@ -1590,7 +1602,7 @@ msgid "{length, plural, one {# app} other {# apps}}"
 msgstr "{length, plural, one {# aplikace} few {# aplikace} many {# aplikace} other {# aplikací}}"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:48
+#: src/features/channel/components/ChannelMessage.tsx:49
 msgid "{length, plural, one {# attachment} other {# attachments}}"
 msgstr "{length, plural, one {# příloha} few {# přílohy} many {# přílohy} other {# příloh}}"
 
@@ -1600,12 +1612,12 @@ msgid "{length, plural, one {# channel} other {# channels}}"
 msgstr "{length, plural, one {# kanál} few {# kanály} many {# kanálu} other {# kanálů}}"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:66
+#: src/features/channel/components/ChannelMessage.tsx:67
 msgid "{length, plural, one {# embed} other {# embeds}}"
 msgstr "{length, plural, one {# vložený obsah} few {# vložené obsahy} many {# vloženého obsahu} other {# vložených obsahů}}"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:57
+#: src/features/channel/components/ChannelMessage.tsx:58
 msgid "{length, plural, one {# sticker} other {# stickers}}"
 msgstr "{length, plural, one {# samolepka} few {# samolepky} many {# samolepky} other {# samolepek}}"
 
@@ -1638,7 +1650,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {člen} few {členové} many {člena} other {členů}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:800
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, one {# zmínka} few {# zmínky} many {# zmínky} other {# zmínek}}"
 
@@ -2274,17 +2286,17 @@ msgstr "<0>Zapnul(a)</0> požadavek na dvoufaktorové ověřování."
 
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:219
-#: src/features/channel/components/MessageAttachments.tsx:275
+#: src/features/channel/components/MessageAttachments.tsx:229
+#: src/features/channel/components/MessageAttachments.tsx:285
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>Přeposláno z</0>{sourceInfo}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:718
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:280
 msgid "<0>Grants</0> permanent membership."
 msgstr "<0>Uděluje</0> trvalé členství."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:713
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:720
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:273
 msgid "<0>Grants</0> temporary membership."
 msgstr "<0>Uděluje</0> dočasné členství."
@@ -2613,10 +2625,35 @@ msgstr "Před ověřením telefonu je vyžadována kontrola prohlížeče. Zkust
 msgid "a channel"
 msgstr "kanál"
 
+#. Description of a custom emoji in the emoji info card when the viewer can use it outside the community. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:37
+msgid "A custom emoji from this community. You can use it anywhere on {productName}."
+msgstr "Vlastní emoji z této komunity. Můžete ho použít kdekoli na {productName}."
+
+#. Description of a custom emoji in the emoji info card when the viewer can only use it inside the community.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:49
+msgid "A custom emoji from this community. You can use it in this community."
+msgstr "Vlastní emoji z této komunity. Můžete ho použít v této komunitě."
+
+#. Description of a custom sticker in the sticker info card when the viewer can use it outside the community. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:42
+msgid "A custom sticker from this community. You can use it anywhere on {productName}."
+msgstr "Vlastní nálepka z této komunity. Můžete ji použít kdekoli na {productName}."
+
+#. Description of a custom sticker in the sticker info card when the viewer can only use it inside the community.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:54
+msgid "A custom sticker from this community. You can use it in this community."
+msgstr "Vlastní samolepka z této komunity. Můžete ji použít v této komunitě."
+
 #. Hint shown beside before:, on:, during:, and after:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "a date or date range"
 msgstr "datum nebo rozmezí dat"
+
+#. Description of a built-in unicode emoji in the emoji info card. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:32
+msgid "A default emoji. You can use it anywhere on {productName}."
+msgstr "Výchozí emoji. Můžete ji použít kdekoli na {productName}."
 
 #. Inline validation error on the Discovery application form when the description field is empty.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:114
@@ -2744,7 +2781,7 @@ msgstr "O aplikaci {appName}"
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:787
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:790
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
@@ -3005,7 +3042,7 @@ msgstr "Aktivní měsíční předplatitel (zrušení naplánováno)"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:744
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -4540,7 +4577,7 @@ msgid "App zoom"
 msgstr "Přiblížení aplikace"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:776
 msgid "App zoom level"
 msgstr "Úroveň přiblížení aplikace"
 
@@ -4841,7 +4878,7 @@ msgid "Attach files"
 msgstr "Připojit soubory"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:43
+#: src/features/channel/components/ChannelMessage.tsx:44
 msgid "attachment"
 msgstr "příloha"
 
@@ -6482,7 +6519,7 @@ msgstr "Hovory"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:720
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
@@ -6542,7 +6579,7 @@ msgstr "Kamera vypnuta"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:724
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "Kamera zapnuta"
@@ -7336,7 +7373,7 @@ msgid "Channel access"
 msgstr "Přístup k kanálu"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
 msgid "Channel access denied"
 msgstr "Přístup k tomuto kanálu odepřen"
 
@@ -7350,7 +7387,7 @@ msgid "Channel actions"
 msgstr "Akce kanálu"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:792
 msgid "Channel added to favorites"
 msgstr "Kanál přidán k oblíbeným"
 
@@ -7378,7 +7415,7 @@ msgstr "Ladění kanálu"
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:760
 msgid "Channel deleted"
 msgstr "Kanál smazán"
 
@@ -7401,7 +7438,7 @@ msgstr "ID kanálu zkopírováno do schránky"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:80
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:86
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "odkaz na kanál"
@@ -7483,7 +7520,7 @@ msgid "Channel record"
 msgstr "Záznam kanálu"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:788
 msgid "Channel removed from favorites"
 msgstr "Kanál odebrán z oblíbených"
 
@@ -8151,7 +8188,7 @@ msgstr "Vymazat simulované přílohy"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:136
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Vymazat příkaz"
@@ -8259,7 +8296,7 @@ msgstr "Vymazal(a) zájmena."
 msgid "Cleared the role color."
 msgstr "Barva role byla vymazána."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
 msgid "Cleared the sticker description."
 msgstr "Vymazal(a) popis samolepky."
 
@@ -8334,6 +8371,11 @@ msgstr "Kliknutím vypnete zmínku uživatele, kterému odpovídáte."
 msgid "Click to enable pinging the user you're replying to."
 msgstr "Kliknutím zapnete zmínku uživatele, kterému odpovídáte."
 
+#. Muted second line of the emoji hover tooltip, hinting that clicking the emoji opens its info card.
+#: src/features/expressions/components/ExpressionHoverTooltipContent.tsx:32
+msgid "Click to learn more"
+msgstr "Kliknutím zobrazíte další informace"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:338
 msgid "Click to open the color picker and choose a new color."
 msgstr "Kliknutím otevřete výběr barev a zvolte novou barvu."
@@ -8353,7 +8395,7 @@ msgid "Click to reveal"
 msgstr "Kliknutím odhalíte"
 
 #. Label in the messaging formatting elements.
-#: src/features/messaging/components/markdown/renderers/common/FormattingElements.tsx:15
+#: src/features/messaging/components/markdown/renderers/common/FormattingElements.tsx:19
 msgid "Click to reveal spoiler"
 msgstr "Kliknutím odhalíte spoiler"
 
@@ -8443,7 +8485,7 @@ msgid "Close account"
 msgstr "Zavřít účet"
 
 #. Accessible label and tooltip for the close-DM button on a DM list row.
-#: src/features/channel/components/direct_message/DMListItem.tsx:83
+#: src/features/channel/components/direct_message/DMListItem.tsx:84
 msgid "Close direct message with {displayName}"
 msgstr "Zavřít soukromou konverzaci s uživatelem {displayName}"
 
@@ -8847,7 +8889,7 @@ msgid "Community debug"
 msgstr "Ladění komunity"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:764
 msgid "Community default"
 msgstr "Výchozí pro komunitu"
 
@@ -9414,7 +9456,7 @@ msgstr "Připojení: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:410
-#: src/features/user/components/popouts/UserProfileShared.tsx:610
+#: src/features/user/components/popouts/UserProfileShared.tsx:614
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9518,7 +9560,7 @@ msgstr "Kontextové nabídky lze otevřít levým kliknutím (na tlačítka) neb
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:712
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
@@ -9731,7 +9773,7 @@ msgid "Copy code"
 msgstr "Kopírovat kód"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:728
 msgid "Copy community ID"
 msgstr "Kopírovat ID komunity"
 
@@ -9834,7 +9876,7 @@ msgid "Copy invite URL"
 msgstr "Kopírovat URL pozvánky"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:740
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -9867,7 +9909,7 @@ msgstr "Kopírovat zprávu"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:732
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "Kopírovat ID zprávy"
@@ -9948,7 +9990,7 @@ msgid "Copy user ID"
 msgstr "Kopírovat ID uživatele"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:736
 msgid "Copy username"
 msgstr "Kopírovat uživatelské jméno"
 
@@ -10390,7 +10432,7 @@ msgid "Couldn't send invite"
 msgstr "Nepodařilo se odeslat pozvánku"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:704
 msgid "Couldn't send invite. Try again."
 msgstr "Nepodařilo se odeslat pozvánku. Zkuste to znovu."
 
@@ -10781,19 +10823,19 @@ msgid "Created by {creatorDisplayName}. Never expires."
 msgstr "Autor: {creatorDisplayName}. Platnost nikdy nevyprší."
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:758
 msgid "Created for channel {0}."
 msgstr "Vytvořeno pro kanál {0}."
 
 #. placeholder {0}: renderInline(formatted, i18n)
 #. placeholder {0}: renderValueInline(formatted, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:732
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:268
 msgid "Created on {0}."
 msgstr "Vytvořeno dne {0}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:755
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
 msgid "Created with name {0}."
 msgstr "Vytvořeno s názvem {0}."
 
@@ -11004,12 +11046,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "Vlastní čtyřmístné identifikátory nejsou na této instanci k dispozici"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:21
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:23
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "Vlastní emoji {emojiName} z komunity {communityName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:16
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:18
 msgid "Custom emoji {emojiName} from a community"
 msgstr "Vlastní emoji {emojiName} z komunity"
 
@@ -11119,7 +11161,7 @@ msgstr "Vlastní zvuky"
 msgid "Custom status"
 msgstr "Vlastní stav"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:526
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:565
 msgid "Custom status: "
 msgstr "Vlastní stav: "
 
@@ -11175,7 +11217,7 @@ msgid "Custom warning text"
 msgstr "Vlastní text upozornění"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:768
 msgid "Custom…"
 msgstr "Vlastní…"
 
@@ -11721,7 +11763,7 @@ msgid "Delete application"
 msgstr "Smazat aplikaci"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:748
 msgid "Delete attachment"
 msgstr "Smazat přílohu"
 
@@ -12247,13 +12289,13 @@ msgstr "Stav pro vývojáře"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:123
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Nástroje pro vývojáře"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Nástroje pro vývojáře jsou dostupné z odznaku pro zaměstnance v záhlaví kanálu."
 
@@ -12678,8 +12720,8 @@ msgctxt "voice-connection-status"
 msgid "Disconnected"
 msgstr "Odpojeno"
 
-#. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:24
+#. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
 msgid "Discoverable community"
 msgstr "Komunita v Objevování"
 
@@ -12937,6 +12979,11 @@ msgstr "Chcete zablokovat také přímé zprávy od botů ve svých stávající
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "Chcete také blokovat přímé zprávy od členů vašich stávajících komunit?"
 
+#. Body of the confirmation shown before joining a discoverable community from an expression info card. {communityName} is the community name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:105
+msgid "Do you want to join {communityName}?"
+msgstr "Chceš se připojit do komunity {communityName}?"
+
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
@@ -12972,7 +13019,7 @@ msgstr "Neblokuje. Můžete znovu otevřít později."
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:772
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "Doména"
@@ -13483,7 +13530,7 @@ msgstr "Upravit média"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:708
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "Upravit zprávu"
@@ -13507,7 +13554,7 @@ msgstr "Upravovat vlastní oprávnění rolí a členů v tomto kanálu."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:685
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
@@ -13699,7 +13746,7 @@ msgid "Email verified successfully"
 msgstr "E-mail byl úspěšně ověřen"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:61
+#: src/features/channel/components/ChannelMessage.tsx:62
 msgid "embed"
 msgstr "vložený obsah"
 
@@ -14050,7 +14097,7 @@ msgstr "Zapnout push oznámení na mobilu"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:780
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "Zapnout oznámení"
@@ -14288,7 +14335,7 @@ msgid "English (US)"
 msgstr "Angličtina (USA)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:784
 msgid "Enhanced"
 msgstr "Vylepšené"
 
@@ -14963,7 +15010,7 @@ msgid "Expression autocomplete"
 msgstr "Automatické doplňování výrazů"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:752
 msgid "Expression picker categories"
 msgstr "Kategorie výběru výrazů"
 
@@ -15251,12 +15298,12 @@ msgid "Failed to send code. Try again."
 msgstr "Nepodařilo se odeslat kód. Zkuste to znovu."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:69
+#: src/features/channel/components/UserMessage.tsx:70
 msgid "Failed to send message."
 msgstr "Zprávu se nepodařilo odeslat."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:65
+#: src/features/channel/components/UserMessage.tsx:66
 msgid "Failed to send message. Hold for options."
 msgstr "Zprávu se nepodařilo odeslat. Podržením zobrazíte možnosti."
 
@@ -16044,7 +16091,7 @@ msgstr "Přeposlat médium"
 msgid "Forward message"
 msgstr "Přeposlat zprávu"
 
-#: src/features/channel/components/MessageAttachments.tsx:338
+#: src/features/channel/components/MessageAttachments.tsx:348
 msgid "Forwarded"
 msgstr "Přeposláno"
 
@@ -16476,7 +16523,7 @@ msgid "Germany"
 msgstr "Německo"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:796
 msgid "Get {premiumProductName}"
 msgstr "Získat {premiumProductName}"
 
@@ -16778,6 +16825,11 @@ msgstr "Zpět"
 #: src/features/moderation/components/pages/ReportPage.tsx:84
 msgid "Go back and enter a valid email."
 msgstr "Vraťte se a zadejte platný e-mail."
+
+#. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+msgid "Go to {communityName}"
+msgstr "Přejít do {communityName}"
 
 #. CTA label that opens the premium settings tab from gift inventory.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:95
@@ -17434,7 +17486,7 @@ msgid "Hide expiration footnotes"
 msgstr "Skrýt poznámky k vypršení platnosti"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:696
 msgid "Hide favorites"
 msgstr "Skrýt oblíbené"
 
@@ -18789,7 +18841,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Odkaz na pozvánku je skrytý, když sdílíte:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
 msgid "Invite link masked while sharing"
 msgstr "Odkaz na pozvánku je při sdílení maskován"
 
@@ -18890,6 +18942,11 @@ msgstr "Pozvánka není k dispozici"
 msgid "Invite updated"
 msgstr "Pozvánka aktualizována"
 
+#. Subtitle for a community that can only be joined with an invite.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:80
+msgid "Invite-only community"
+msgstr "Komunita pouze na pozvání"
+
 #. placeholder {0}: renderValueInline(value, guildId, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:249
 msgid "Invited by {0}."
@@ -18911,7 +18968,7 @@ msgstr "Autor pozvánky:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
 msgid "Invites"
 msgstr "Pozvánky"
 
@@ -19075,8 +19132,10 @@ msgstr "Kolísání:"
 msgid "Join"
 msgstr "Připojit se"
 
+#. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
+#: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Join {communityName}"
 msgstr "Připojit se k {communityName}"
 
@@ -19222,7 +19281,7 @@ msgid "Jump to {displayName}"
 msgstr "Přejít na {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
 msgid "Jump to {labelText}"
 msgstr "Přejít na {labelText}"
 
@@ -19237,7 +19296,7 @@ msgid "Jump to message"
 msgstr "Přejít na zprávu"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:56
+#: src/features/channel/components/UserMessage.tsx:57
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Přejít na zprávu od uživatele {displayName} odeslanou {formattedDate}"
 
@@ -19259,7 +19318,7 @@ msgid "Jump to page"
 msgstr "Přejít na stránku"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "Jump to present"
 msgstr "Přejít na aktuální zprávy"
 
@@ -19279,12 +19338,12 @@ msgid "Jump to the current call"
 msgstr "Přejít na aktuální hovor"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
 msgid "Jump to the linked channel"
 msgstr "Přejít na odkazovaný kanál"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:90
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:96
 msgid "Jump to the linked message"
 msgstr "Přejít na odkazovanou zprávu"
 
@@ -19294,7 +19353,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Přejít ke zprávě od {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:85
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:91
 msgid "Jump to the message in {labelText}"
 msgstr "Přejít na zprávu v {labelText}"
 
@@ -19959,7 +20018,7 @@ msgid "Link styling"
 msgstr "Styl odkazů"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:131
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
 msgid "Link unavailable"
 msgstr "Odkaz není k dispozici"
 
@@ -20553,11 +20612,11 @@ msgstr "Markdown"
 msgid "Marked as read"
 msgstr "Označeno jako přečtené"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:731
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
 msgid "Marked emoji as animated."
 msgstr "Označil(a) emoji jako animované."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:731
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
 msgid "Marked emoji as static."
 msgstr "Označil(a) emoji jako statické."
 
@@ -20984,7 +21043,7 @@ msgid "Member roles updated"
 msgstr "Role člena upraveny"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:278
+#: src/features/user/components/popouts/UserProfileShared.tsx:282
 msgid "Member since"
 msgstr "Členem od"
 
@@ -21172,7 +21231,7 @@ msgid "Menu shortcuts"
 msgstr "Zkratky nabídky"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:75
+#: src/features/channel/components/ChannelMessage.tsx:76
 msgid "message"
 msgstr "zpráva"
 
@@ -21191,7 +21250,7 @@ msgstr "Zpráva"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:715
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:718
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
 #: src/features/user/components/popouts/UserProfilePopout.tsx:418
@@ -21254,7 +21313,7 @@ msgid "Message composer"
 msgstr "Pole pro psaní zpráv"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "Zpráva obsahuje přiložená média"
 
@@ -21351,7 +21410,7 @@ msgid "Message layout"
 msgstr "Rozložení zpráv"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:75
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:81
 msgid "message link"
 msgstr "odkaz na zprávu"
 
@@ -21361,12 +21420,12 @@ msgid "Message link"
 msgstr "Odkaz na zprávu"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list"
 msgstr "Seznam zpráv"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:73
 msgid "Message list for {channelName}"
 msgstr "Seznam zpráv pro {channelName}"
 
@@ -21474,7 +21533,7 @@ msgid "Messages deleted"
 msgstr "Zprávy smazány"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:87
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Messages failed to load"
 msgstr "Zprávy se nepodařilo načíst"
 
@@ -22035,7 +22094,7 @@ msgid "Moved the role up in the role list."
 msgstr "Role přesunuta výše v seznamu rolí."
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:752
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:759
 msgid "Moved to channel {0}."
 msgstr "Přesunuto do kanálu {0}."
 
@@ -22192,7 +22251,7 @@ msgid "Mute entrance sound"
 msgstr "Vypnout zvuk při vstupu"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:688
 msgid "Mute favorites"
 msgstr "Ztlumit oblíbené"
 
@@ -22245,7 +22304,7 @@ msgstr "Vypnout zvuk streamu"
 #: src/features/app/components/layout/ChannelItem.tsx:112
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
-#: src/features/channel/components/direct_message/DMListItem.tsx:75
+#: src/features/channel/components/direct_message/DMListItem.tsx:76
 msgid "muted"
 msgstr "ztlumeno"
 
@@ -22321,7 +22380,7 @@ msgstr "Společní přátelé"
 msgid "Mutual friends ({count})"
 msgstr "Společní přátelé ({count})"
 
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:842
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:845
 msgid "Mutual friends ({mutualFriendsCount})"
 msgstr "Společní přátelé ({mutualFriendsCount})"
 
@@ -22809,7 +22868,7 @@ msgstr "Nejnovější nahoře"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:716
 msgid "Next"
 msgstr "Další"
 
@@ -22860,7 +22919,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Chybí oprávnění {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
 msgid "No access"
 msgstr "Bez přístupu"
 
@@ -23372,7 +23431,7 @@ msgid "No system channel"
 msgstr "Žádný systémový kanál"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:70
+#: src/features/channel/components/ChannelMessage.tsx:71
 msgid "no text content"
 msgstr "žádný textový obsah"
 
@@ -23605,7 +23664,7 @@ msgstr "Není to pravda ani nepravda"
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:897
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:900
 msgid "Note"
 msgstr "Poznámka"
 
@@ -23685,7 +23744,7 @@ msgstr "Hlasitost oznámení"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:700
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -24002,7 +24061,7 @@ msgstr "Pouze vybrané"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Do této komunity se mohou připojit pouze členové Visionary. Váš přístup se mohl od otevření této obrazovky změnit."
 
-#: src/features/channel/components/UserMessage.tsx:429
+#: src/features/channel/components/UserMessage.tsx:441
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Tuto zprávu vidíte jen vy. <0>Zavřít</0>"
 
@@ -24046,7 +24105,7 @@ msgid "Open {displayName}"
 msgstr "Otevřít {displayName}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Open {labelText} in settings"
 msgstr "Otevřít {labelText} v nastavení"
 
@@ -24627,12 +24686,12 @@ msgid "Oregon"
 msgstr "Oregon"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "Nepodařilo se načíst původní zprávu"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "Původní zpráva byla smazána"
 
@@ -24853,7 +24912,7 @@ msgid "Participants: {names}"
 msgstr "Účastníci: {names}"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:16
+#: src/features/guild/components/GuildBadge.tsx:17
 msgid "Partnered community"
 msgstr "Partnerská komunita"
 
@@ -25465,7 +25524,7 @@ msgid "Ping: {latency}ms"
 msgstr "Ping: {latency} ms"
 
 #. Screen-reader fragment announcing that the DM list row is pinned. Lowercase fragment.
-#: src/features/channel/components/direct_message/DMListItem.tsx:79
+#: src/features/channel/components/direct_message/DMListItem.tsx:80
 msgid "pinned"
 msgstr "připnuto"
 
@@ -25839,12 +25898,12 @@ msgid "Press a shortcut…"
 msgstr "Stiskněte zkratku…"
 
 #. Label in the channel and chat message reactions.
-#: src/features/channel/components/MessageReactions.tsx:46
+#: src/features/channel/components/MessageReactions.tsx:48
 msgid "press to add reaction"
 msgstr "klepnutím přidáte reakci"
 
 #. Label in the channel and chat message reactions. Keep the tone plain and specific.
-#: src/features/channel/components/MessageReactions.tsx:42
+#: src/features/channel/components/MessageReactions.tsx:44
 msgid "press to remove reaction"
 msgstr "klepnutím odeberete reakci"
 
@@ -27646,13 +27705,13 @@ msgid "Rename emoji"
 msgstr "Přejmenovat emoji"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:729
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
 msgid "Renamed emoji to {0}."
 msgstr "Přejmenoval(a) emoji na \"{0}\"."
 
 #. placeholder {0}: renderInline(change.oldValue, i18n)
 #. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:757
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:764
 msgid "Renamed from {0} to {1}."
 msgstr "Přejmenováno z {0} na {1}."
 
@@ -27661,7 +27720,7 @@ msgid "Renamed from {oldLabel} to {newLabel}."
 msgstr "Přejmenováno z {oldLabel} na {newLabel}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:734
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
 msgid "Renamed sticker to {0}."
 msgstr "Přejmenoval(a) samolepku na „{0}“."
 
@@ -27739,12 +27798,12 @@ msgid "Reply"
 msgstr "Odpovědět"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "Odpověď skryta, protože původní autor je zablokován."
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "Odpověď skryta, protože původní autor je označen jako spammer."
 
@@ -29855,7 +29914,7 @@ msgstr "Text, který lze označit"
 #: src/features/app/components/layout/ChannelItem.tsx:96
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
-#: src/features/channel/components/direct_message/DMListItem.tsx:67
+#: src/features/channel/components/direct_message/DMListItem.tsx:68
 msgid "selected"
 msgstr "vybráno"
 
@@ -30007,7 +30066,7 @@ msgstr "Odesílat zprávy se soubory v pořadí"
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:112
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
 msgstr "Poslat žádost o přátelství"
@@ -30186,12 +30245,12 @@ msgid "Sensitive media"
 msgstr "Citlivá média"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:804
 msgid "Sent"
 msgstr "Odesláno"
 
 #. DM list row preview text when the most recent message has only attachments.
-#: src/features/channel/components/direct_message/DMListItem.tsx:63
+#: src/features/channel/components/direct_message/DMListItem.tsx:64
 msgid "Sent an attachment"
 msgstr "Odeslal(a) přílohu"
 
@@ -30252,7 +30311,7 @@ msgid "Set a custom role icon."
 msgstr "Nastavena vlastní ikona role."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:314
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:353
 msgid "Set a custom status"
 msgstr "Nastavit vlastní stav"
 
@@ -30586,7 +30645,7 @@ msgid "Set voice region"
 msgstr "Nastavit hlasový region"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:763
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:770
 msgid "Set webhook type to {0}."
 msgstr "Nastavil(a) typ webhooku na {0}."
 
@@ -30622,7 +30681,7 @@ msgid "Settings"
 msgstr "Nastavení"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
 msgid "settings link"
 msgstr "odkaz na nastavení"
 
@@ -31614,7 +31673,7 @@ msgid "Skip this step"
 msgstr "Přeskočit tento krok"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:69
+#: src/app/App.tsx:75
 msgid "Skip to content"
 msgstr "Přejít na obsah"
 
@@ -32100,7 +32159,7 @@ msgstr "Hlasitost zvuku"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:808
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "Zvuky"
@@ -32619,7 +32678,7 @@ msgstr "Stereofonní mikrofon"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:120
-#: src/features/channel/components/ChannelMessage.tsx:52
+#: src/features/channel/components/ChannelMessage.tsx:53
 msgid "sticker"
 msgstr "samolepka"
 
@@ -34124,11 +34183,11 @@ msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Zdroj sdílení obrazovky přestal odesílat video, takže bylo ukončeno sdílení obrazovky."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:748
 msgid "The sticker was uploaded as animated."
 msgstr "Samolepka byla nahrána jako animovaná."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
 msgid "The sticker was uploaded as static."
 msgstr "Samolepka byla nahrána jako statická."
 
@@ -34567,6 +34626,11 @@ msgstr "Nevypadá to jako platná odpověď šablony. Zkontrolujte, zda jste zko
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
 msgstr "Toto emoji se nepodařilo připravit. Zkuste jiný soubor nebo to zkuste za chvíli znovu."
 
+#. Label above the community an emoji comes from in the emoji info card.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:71
+msgid "This emoji is from"
+msgstr "Tato emoji pochází z"
+
 #. Title of the error modal shown when a custom emoji was already deleted.
 #. Title of the error modal shown when a custom emoji was deleted before the rename was saved.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:61
@@ -34664,7 +34728,7 @@ msgid "This invite expires after {count, plural, one {# use} other {# uses}}."
 msgstr "Tato pozvánka vyprší po {count, plural, one {# použití} few {# použitích} many {# použití} other {# použitích}}."
 
 #. placeholder {0}: formatMaxAge(change.newValue)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:696
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
 msgid "This invite expires in {0}."
 msgstr "Tato pozvánka vyprší za {0}."
 
@@ -34686,23 +34750,29 @@ msgstr "Tento odkaz na pozvánku nikdy nevyprší."
 msgid "This invite may have expired or been deleted."
 msgstr "Tato pozvánka možná vypršela nebo byla smazána."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:694
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:319
 msgid "This invite never expires."
 msgstr "Tato pozvánka nikdy nevyprší."
 
-#. Emoji attribution line under a custom emoji. guildName is the community it comes from.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:115
-msgid "This is a custom emoji from <0>{guildName}</0>."
-msgstr "Toto je vlastní emoji z komunity <0>{guildName}</0>."
+#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:114
+msgid "This is a custom emoji from"
+msgstr "Toto je vlastní emoji z"
 
+#. Description of a custom emoji from a community the viewer is not a member of.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:106
+#: src/features/expressions/components/ExpressionInfoCard.tsx:61
 msgid "This is a custom emoji from a community."
 msgstr "Toto je vlastní emoji z komunity."
 
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:97
 msgid "This is a custom emoji from a community. Ask the author for an invite to use this emoji."
 msgstr "Toto je vlastní emoji z komunity. Požádejte autora o pozvánku k použití tohoto emoji."
+
+#. Description of a custom sticker from a community the viewer is not a member of.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:65
+msgid "This is a custom sticker from a community."
+msgstr "Toto je vlastní samolepka z komunity."
 
 #. Emoji attribution text for built-in default emoji. productName is the Fluxer product name.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:18
@@ -34789,7 +34859,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Tento kanál s odkazem je označen jako kanál pro dospělé a může otevřít materiál, který nemusí být vhodný pro některé uživatele."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
 msgid "This link is not available for your account."
 msgstr "Tento odkaz není pro váš účet dostupný."
 
@@ -34945,6 +35015,11 @@ msgstr "Platnost tohoto odkazu pro obnovení vypršela. Odkazy pro obnovení pla
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "Takto se zobrazují odkazy: {linkPreviewExampleUrl}"
 
+#. Label above the community a sticker comes from in the sticker info card.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:75
+msgid "This sticker is from"
+msgstr "Tato nálepka je z"
+
 #. Error message in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:85
 msgid "This switch is disabled and cannot be toggled"
@@ -34993,7 +35068,7 @@ msgstr "tento uživatel"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Tento uživatel si omezil svůj profil. Některé detaily jsou skryté před lidmi, kteří nejsou jeho přáteli."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:390
+#: src/features/user/components/popouts/UserProfileShared.tsx:394
 msgid "This user has no roles in this community."
 msgstr "Tento uživatel nemá v této komunitě žádné role."
 
@@ -35047,7 +35122,7 @@ msgid "This voice channel is no longer available."
 msgstr "Tento hlasový kanál již není k dispozici."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:73
+#: src/features/channel/components/UserMessage.tsx:74
 msgid "This was a {silentMention} message."
 msgstr "Tato zpráva byla odeslána s {silentMention}."
 
@@ -36210,7 +36285,7 @@ msgstr "Nejprve tohoto uživatele odblokujte, abyste mu mohli poslat žádost o 
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:107
 #: src/features/user/components/modals/UserProfileModal.tsx:118
 msgid "Unblock user"
 msgstr "Odblokovat uživatele"
@@ -36371,7 +36446,7 @@ msgstr "Univerzální záložní volba. Nejnižší kvalita, ale funguje všude.
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:756
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -36652,7 +36727,7 @@ msgid "Unmute DMs"
 msgstr "Zrušit ztlumení soukromých konverzací"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:692
 msgid "Unmute favorites"
 msgstr "Zrušit ztlumení oblíbených"
 
@@ -36760,7 +36835,7 @@ msgstr "Skupinová konverzace odepnuta"
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
-#: src/features/channel/components/direct_message/DMListItem.tsx:71
+#: src/features/channel/components/direct_message/DMListItem.tsx:72
 msgid "unread"
 msgstr "nepřečteno"
 
@@ -37023,7 +37098,7 @@ msgid "Updated the role icon."
 msgstr "Ikona role byla aktualizována."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:737
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
 msgid "Updated the sticker description to {0}."
 msgstr "Aktualizoval(a) popis samolepky na „{0}“."
 
@@ -37032,7 +37107,7 @@ msgstr "Aktualizoval(a) popis samolepky na „{0}“."
 msgid "Updated the topic to {0}."
 msgstr "Změnil(a) téma na \"{0}\"."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:769
 msgid "Updated the webhook avatar."
 msgstr "Aktualizován avatar webhooku."
 
@@ -37628,7 +37703,7 @@ msgid "Use your operating system's spellchecker when available. Otherwise, use {
 msgstr "Použijte kontrolu pravopisu vašeho operačního systému, pokud je k dispozici. Jinak použijte vestavěné slovníky {productName}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:708
 msgid "Used {0} times."
 msgstr "Použito {0}krát."
 
@@ -38008,7 +38083,7 @@ msgid "Verification failed"
 msgstr "Ověření se nezdařilo"
 
 #. Label in the community badge.
-#: src/features/guild/components/GuildBadge.tsx:12
+#: src/features/guild/components/GuildBadge.tsx:13
 msgid "Verified & partnered community"
 msgstr "Ověřená a partnerská komunita"
 
@@ -38016,7 +38091,7 @@ msgstr "Ověřená a partnerská komunita"
 #. Badge or label indicating the community is verified.
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
-#: src/features/guild/components/GuildBadge.tsx:20
+#: src/features/guild/components/GuildBadge.tsx:21
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "Ověřená komunita"
@@ -38232,7 +38307,7 @@ msgstr "Video"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the channel header button that starts a video call in a DM or group DM.
 #: src/features/channel/components/channel_header/shared.ts:43
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:766
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:769
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:33
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:199
 msgid "Video call"
@@ -38449,7 +38524,7 @@ msgstr "Zobrazit podrobnosti"
 msgid "View devices that are signed in to your account"
 msgstr "Zobrazit zařízení přihlášená k vašemu účtu"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:194
+#: src/features/user/components/popouts/UserProfileShared.tsx:198
 msgid "View full profile"
 msgstr "Zobrazit celý profil"
 
@@ -38736,7 +38811,7 @@ msgid "Voice and video shortcuts"
 msgstr "Zkratky pro hovory a videohovory"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:747
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:35
 msgid "Voice call"
 msgstr "Hlasový hovor"
@@ -39819,7 +39894,7 @@ msgstr "Včera v {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
 #: src/features/app/components/layout/MobileBottomNav.tsx:153
-#: src/features/channel/components/direct_message/DMListItem.tsx:59
+#: src/features/channel/components/direct_message/DMListItem.tsx:60
 msgid "You"
 msgstr "Vy"
 
@@ -40161,7 +40236,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Změnili jste si uživatelskou značku, když jste měli {PREMIUM_PRODUCT_NAME}. Náhodně se změní, až vaše předplatné {PREMIUM_PRODUCT_NAME} vyprší, pokud se neobnoví."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nemáte přístup ke kanálu, ve kterém byla tato zpráva odeslána."
 
@@ -40603,7 +40678,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Máte dočasné omezení. Dokud nevyprší, nemůžete posílat zprávy, přidávat reakce ani používat hlasové kanály."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "You're viewing older messages"
 msgstr "Zobrazujete starší zprávy"
 

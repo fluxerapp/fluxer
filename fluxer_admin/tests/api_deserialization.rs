@@ -360,6 +360,270 @@ fn deserialize_guild_audit_logs_with_unknown_keys() {
 }
 
 #[test]
+fn deserialize_instance_config_response_with_unknown_keys() {
+    let json = r##"{
+        "sso": {
+            "enabled": true,
+            "enforced": false,
+            "display_name": "Fluxer SSO",
+            "issuer": "https://id.example.com",
+            "authorization_url": "https://id.example.com/authorize",
+            "token_url": "https://id.example.com/token",
+            "userinfo_url": "https://id.example.com/userinfo",
+            "jwks_url": "https://id.example.com/jwks.json",
+            "client_id": "fluxer-admin",
+            "client_secret_set": true,
+            "scope": "openid profile email",
+            "allowed_domains": ["fluxer.com"],
+            "auto_provision": true,
+            "redirect_uri": "https://fluxer.com/sso/callback"
+        },
+        "gateway_rollout": {
+            "session_rollout_percentage": 100,
+            "session_rollout_mode": "modulo",
+            "guild_rollout_percentage": 100,
+            "rpc_request_timeout_ms": 10000,
+            "max_concurrent_session_starts": 512,
+            "max_concurrent_guild_starts": 256,
+            "gateway_dispatch_relay_shards": 32,
+            "gateway_dispatch_relay_max_queue": 50000,
+            "voice_e2ee_scope": "guild_feature_only",
+            "future_rollout_knob": 3
+        },
+        "voice_noise_suppression": {
+            "enabled": true,
+            "config_version": 4,
+            "default_backend": "rnnoise",
+            "enabled_backends": ["none", "standard", "rnnoise"],
+            "allow_user_override": true,
+            "rollout_basis_points": 10000,
+            "rollout_salt": "voice-ns-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": [],
+            "guild_overrides": [],
+            "stereo_enabled": false,
+            "suppression_strength": 80
+        },
+        "guild_activity_log_presentation": {
+            "enabled": true,
+            "config_version": 2,
+            "rollout_basis_points": 5000,
+            "rollout_salt": "guild-activity-log-presentation-v1",
+            "included_user_ids": ["1130650140672000000"],
+            "excluded_user_ids": [],
+            "future_presentation_knob": "verbose"
+        },
+        "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
+        "message_hover_tracking": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "message-hover-tracking-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
+        },
+        "message_keyboard_focus": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "message-keyboard-focus-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
+        },
+        "blocked_message_groups": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "blocked-message-groups-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
+        },
+        "expression_info_card": {
+            "enabled": true,
+            "config_version": 3,
+            "rollout_basis_points": 2500,
+            "rollout_salt": "expression-info-card-v1",
+            "included_user_ids": ["1130650140672000000"],
+            "excluded_user_ids": ["1130958221824557056"],
+            "future_knob": 7,
+            "future_object_knob": {"nested": true},
+            "future_list_knob": ["a", "b"]
+        },
+        "registration": {
+            "mode": "open",
+            "admin_registration_urls_enabled": false,
+            "urls": [],
+            "pending_registrations": []
+        },
+        "self_hosted": false,
+        "app_public": {
+            "branding": {
+                "product_name": "Fluxer",
+                "icon_url": "https://cdn.example.com/icon.png",
+                "symbol_url": "https://cdn.example.com/symbol.svg",
+                "logo_url": "https://cdn.example.com/logo.svg",
+                "wordmark_url": "https://cdn.example.com/wordmark.svg",
+                "favicon_url": "https://cdn.example.com/favicon.ico",
+                "theme_color": "#5865f2",
+                "future_asset_url": "https://cdn.example.com/future.png"
+            },
+            "setup": {"configured": true},
+            "legal": {
+                "terms_url": "https://fluxer.com/terms",
+                "privacy_url": "https://fluxer.com/privacy"
+            },
+            "registration": {"collect_date_of_birth": true}
+        },
+        "policy": {
+            "single_community_enabled": false,
+            "single_community_guild_id": null,
+            "direct_messages_disabled": false,
+            "direct_messages_locked": false,
+            "premium_mode": "mirror",
+            "services": {
+                "gif_enabled": true,
+                "youtube_enabled": true,
+                "bluesky_enabled": false,
+                "future_service_enabled": true
+            },
+            "services_resolved": {
+                "gif_enabled": true,
+                "youtube_enabled": true,
+                "bluesky_enabled": false
+            },
+            "services_available": {"gif": true, "youtube": true, "bluesky": false},
+            "deferred_phone_gate": {
+                "enabled": false,
+                "window_hours": 24,
+                "member_threshold": 100
+            }
+        },
+        "integrations": {
+            "gif": {"klipy_api_key_set": true, "effective_available": true},
+            "youtube": {"api_key_set": true, "effective_available": true},
+            "captcha": {
+                "provider": "hcaptcha",
+                "effective_provider": "hcaptcha",
+                "hcaptcha_site_key": "site",
+                "hcaptcha_secret_key_set": true,
+                "turnstile_site_key": "",
+                "turnstile_secret_key_set": false,
+                "effective_enabled": true
+            },
+            "email": {
+                "enabled": true,
+                "effective_enabled": true,
+                "provider": "smtp",
+                "effective_provider": "smtp",
+                "from_email": "noreply@fluxer.com",
+                "from_name": "Fluxer",
+                "smtp": {
+                    "host": "smtp.example.com",
+                    "port": 587,
+                    "username": "fluxer",
+                    "password_set": true,
+                    "secure": true
+                },
+                "disable_new_ip_authorization": false,
+                "effective_disable_new_ip_authorization": false
+            },
+            "bluesky": {
+                "enabled": false,
+                "effective_enabled": false,
+                "client_name": "Fluxer",
+                "client_uri": "https://fluxer.com",
+                "logo_uri": "https://cdn.example.com/logo.svg",
+                "tos_uri": "https://fluxer.com/terms",
+                "policy_uri": "https://fluxer.com/privacy",
+                "key_count": 0
+            }
+        },
+        "media": {
+            "attachment_decay": {
+                "enabled": true,
+                "min_size_mb": 10,
+                "max_size_mb": 500,
+                "max_eligible_size_mb": 500,
+                "min_lifetime_days": 30,
+                "max_lifetime_days": 365,
+                "curve": 2,
+                "renew_threshold_days": 7,
+                "renew_window_days": 14,
+                "effective": {
+                    "enabled": true,
+                    "min_size_mb": 10,
+                    "max_size_mb": 500,
+                    "max_eligible_size_mb": 500,
+                    "min_lifetime_days": 30,
+                    "max_lifetime_days": 365,
+                    "curve": 2,
+                    "renew_threshold_days": 7,
+                    "renew_window_days": 14,
+                    "future_curve": 1.5
+                }
+            }
+        },
+        "future_section": {"enabled": true, "rollout_basis_points": 10000},
+        "future_flag": 3
+    }"##;
+
+    let resp: generated_types::InstanceConfigResponse = serde_json::from_str(json).expect(
+        "the build.rs relaxation must keep unknown response keys from failing the whole response",
+    );
+
+    assert!(!resp.self_hosted);
+    assert!(resp.expression_info_card.enabled);
+    assert_eq!(resp.expression_info_card.config_version, 3);
+    assert_eq!(resp.expression_info_card.rollout_basis_points, 2500);
+    assert_eq!(
+        *resp.expression_info_card.rollout_salt,
+        "expression-info-card-v1"
+    );
+    assert_eq!(resp.expression_info_card.included_user_ids.len(), 1);
+    assert_eq!(
+        *resp.expression_info_card.excluded_user_ids[0],
+        "1130958221824557056"
+    );
+    assert!(resp.guild_activity_log_presentation.enabled);
+    assert_eq!(
+        *resp.guild_activity_log_presentation.rollout_salt,
+        "guild-activity-log-presentation-v1"
+    );
+    assert!(!resp.message_hover_tracking.enabled);
+    assert!(!resp.message_keyboard_focus.enabled);
+    assert!(!resp.blocked_message_groups.enabled);
+    assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
+    assert!(resp.policy.single_community_guild_id.is_none());
+    assert_eq!(resp.policy.services.gif_enabled, Some(true));
+    assert_eq!(resp.app_public.branding.product_name, "Fluxer");
+    assert!(resp.media.attachment_decay.effective.enabled);
+
+    let without_unknown_keys = json
+        .replace("\"future_rollout_knob\": 3,", "")
+        .replace("\"future_presentation_knob\": \"verbose\",", "")
+        .replace("\"future_knob\": 7,", "")
+        .replace("\"future_object_knob\": {\"nested\": true},", "")
+        .replace("\"future_list_knob\": [\"a\", \"b\"],", "")
+        .replace(
+            "\"future_asset_url\": \"https://cdn.example.com/future.png\",",
+            "",
+        )
+        .replace("\"future_service_enabled\": true,", "")
+        .replace("\"future_curve\": 1.5,", "")
+        .replace(
+            "\"future_section\": {\"enabled\": true, \"rollout_basis_points\": 10000},",
+            "",
+        )
+        .replace("\"future_flag\": 3,", "");
+    let baseline: generated_types::InstanceConfigResponse =
+        serde_json::from_str(&without_unknown_keys).expect("known keys alone still deserialize");
+    assert_eq!(
+        serde_json::to_value(&baseline).unwrap(),
+        serde_json::to_value(&resp).unwrap()
+    );
+}
+
+#[test]
 fn deserialize_search_reports_response() {
     let json = r#"{
         "reports": [

@@ -45,7 +45,7 @@ export interface AvailabilityCheck {
 	lockReason?: string;
 }
 
-function hasGlobalExpressionsEnabled(): boolean {
+export function hasGlobalExpressionsEnabled(): boolean {
 	return isLimitToggleEnabled(
 		{
 			feature_global_expressions: LimitResolver.resolve({key: 'feature_global_expressions', fallback: 0}),

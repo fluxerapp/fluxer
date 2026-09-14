@@ -77,8 +77,10 @@ function renderNode(node: Node, id: string, options: MarkdownRenderOptions): Rea
 		logger.warn(`No renderer found for node type: ${node.type}`);
 		return null;
 	}
-	const renderChildrenFn = (children: Array<Node>) =>
-		children.map((child, i) => renderNode(child, `${id}-${i}`, options));
+	const renderChildrenFn = (children: Array<Node>, optionOverrides?: Partial<MarkdownRenderOptions>) => {
+		const childOptions = optionOverrides ? {...options, ...optionOverrides} : options;
+		return children.map((child, i) => renderNode(child, `${id}-${i}`, childOptions));
+	};
 	return React.createElement(renderer, {
 		node,
 		id,

@@ -20,13 +20,13 @@ msgid "... turn dense mode on. Nice!"
 msgstr "…コンパクト表示をオンに。いいね！"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
-#: src/features/channel/components/MessageAttachments.tsx:368
-#: src/features/channel/components/UserMessage.tsx:61
+#: src/features/channel/components/MessageAttachments.tsx:378
+#: src/features/channel/components/UserMessage.tsx:62
 msgid "(edited)"
 msgstr "（編集済み）"
 
 #: src/features/app/components/pages/YouPage.tsx:189
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:903
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:906
 msgid "(only visible to you)"
 msgstr "（あなただけに表示）"
 
@@ -1092,7 +1092,7 @@ msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {#件の添付ファイル} other {#件の添付ファイル}}"
 
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:26
+#: src/features/channel/components/BlockedMessageGroups.tsx:31
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {#件のブロックされたメッセージ} other {#件のブロックされたメッセージ}}"
 
@@ -1121,8 +1121,8 @@ msgid "{count, plural, one {# item} other {# items}}"
 msgstr "{count, plural, one {#件} other {#件}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:436
-#: src/features/channel/components/direct_message/DMListItem.tsx:600
+#: src/features/channel/components/direct_message/DMListItem.tsx:438
+#: src/features/channel/components/direct_message/DMListItem.tsx:602
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:118
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -1148,12 +1148,12 @@ msgid "{count, plural, one {# participant in call} other {# participants in call
 msgstr "{count, plural, one {#人が通話中} other {#人が通話中}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:21
+#: src/features/channel/components/BlockedMessageGroups.tsx:26
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {#件のスパムの可能性があるメッセージ} other {#件のスパムの可能性があるメッセージ}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:146
+#: src/features/channel/components/MessageReactions.tsx:149
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {#件のリアクション} other {#件のリアクション}}"
 
@@ -1283,7 +1283,7 @@ msgstr "{count, plural, one {招待は # 回使用されました。} other {招
 msgid "{count, plural, one {Uploading # emoji. This may take a little while.} other {Uploading # emojis. This may take a little while.}}"
 msgstr "{count, plural, one {#個の絵文字をアップロードしています。少し時間がかかる場合があります。} other {#個の絵文字をアップロードしています。少し時間がかかる場合があります。}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:710
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:257
 msgid "{count, plural, one {Used # time.} other {Used # times.}}"
 msgstr "{count, plural, one {#回使用されました。} other {#回使用されました。}}"
@@ -1437,7 +1437,9 @@ msgid "{eightHours} hours"
 msgstr "{eightHours}時間"
 
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
+#. Error message in the messaging emoji renderer.
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName}（読み込み失敗）"
 
@@ -1447,12 +1449,12 @@ msgid "{emojiName}, {reactionCountText}"
 msgstr "{emojiName}、{reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:50
+#: src/features/channel/components/MessageReactions.tsx:52
 msgid "{emojiName}: {reactionCountText}"
 msgstr "{emojiName}: {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}, {actionText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:55
+#: src/features/channel/components/MessageReactions.tsx:57
 msgid "{emojiName}: {reactionCountText}, {actionText}"
 msgstr "{emojiName}: {reactionCountText}、{actionText}"
 
@@ -1460,6 +1462,16 @@ msgstr "{emojiName}: {reactionCountText}、{actionText}"
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:33
 msgid "{everyoneMention} mentions"
 msgstr "{everyoneMention}へのメンション"
+
+#. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:94
+msgid "{expressionName} is a custom emoji from this community. Members can use it here."
+msgstr "{expressionName} はこのコミュニティのカスタム絵文字です。メンバーはここで使用できます。"
+
+#. Reason shown in the confirmation before joining a community from a sticker info card. It explains that the sticker the viewer opened belongs to this community. {expressionName} is the sticker name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:99
+msgid "{expressionName} is a custom sticker from this community. Members can use it here."
+msgstr "{expressionName} はこのコミュニティのカスタムステッカーです。メンバーはここで使用できます。"
 
 #. Time window preset label shown as a standalone duration in option lists. The number is interpolated.
 #: src/features/app/config/TimeWindowPresets.ts:10
@@ -1590,7 +1602,7 @@ msgid "{length, plural, one {# app} other {# apps}}"
 msgstr "{length, plural, other {#個のアプリ}}"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:48
+#: src/features/channel/components/ChannelMessage.tsx:49
 msgid "{length, plural, one {# attachment} other {# attachments}}"
 msgstr "{length, plural, other {#件の添付ファイル}}"
 
@@ -1600,12 +1612,12 @@ msgid "{length, plural, one {# channel} other {# channels}}"
 msgstr "{length, plural, other {#個のチャンネル}}"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:66
+#: src/features/channel/components/ChannelMessage.tsx:67
 msgid "{length, plural, one {# embed} other {# embeds}}"
 msgstr "{length, plural, other {#個の埋め込み}}"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:57
+#: src/features/channel/components/ChannelMessage.tsx:58
 msgid "{length, plural, one {# sticker} other {# stickers}}"
 msgstr "{length, plural, other {#個のスタンプ}}"
 
@@ -1638,7 +1650,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount}{rawMemberCount, plural, one {人のメンバー} other {人のメンバー}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:795
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:800
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, other {#件のメンション}}"
 
@@ -2274,17 +2286,17 @@ msgstr "2段階認証の必須化を<0>有効にしました</0>。"
 
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:219
-#: src/features/channel/components/MessageAttachments.tsx:275
+#: src/features/channel/components/MessageAttachments.tsx:229
+#: src/features/channel/components/MessageAttachments.tsx:285
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>転送元</0>{sourceInfo}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:718
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:280
 msgid "<0>Grants</0> permanent membership."
 msgstr "永続的なメンバーシップを<0>付与します</0>。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:713
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:720
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:273
 msgid "<0>Grants</0> temporary membership."
 msgstr "一時的なメンバーシップを<0>付与します</0>。"
@@ -2613,10 +2625,35 @@ msgstr "電話番号認証の前にブラウザチェックが必要です。サ
 msgid "a channel"
 msgstr "チャンネル"
 
+#. Description of a custom emoji in the emoji info card when the viewer can use it outside the community. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:37
+msgid "A custom emoji from this community. You can use it anywhere on {productName}."
+msgstr "このコミュニティのカスタム絵文字です。{productName} のどこでも使えます。"
+
+#. Description of a custom emoji in the emoji info card when the viewer can only use it inside the community.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:49
+msgid "A custom emoji from this community. You can use it in this community."
+msgstr "このコミュニティのカスタム絵文字です。このコミュニティ内で使用できます。"
+
+#. Description of a custom sticker in the sticker info card when the viewer can use it outside the community. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:42
+msgid "A custom sticker from this community. You can use it anywhere on {productName}."
+msgstr "このコミュニティのカスタムステッカーです。{productName}のどこでも使えます。"
+
+#. Description of a custom sticker in the sticker info card when the viewer can only use it inside the community.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:54
+msgid "A custom sticker from this community. You can use it in this community."
+msgstr "このコミュニティのカスタムステッカーです。このコミュニティでのみ使用できます。"
+
 #. Hint shown beside before:, on:, during:, and after:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:73
 msgid "a date or date range"
 msgstr "日付または日付の範囲"
+
+#. Description of a built-in unicode emoji in the emoji info card. productName is the Fluxer product name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:32
+msgid "A default emoji. You can use it anywhere on {productName}."
+msgstr "{productName} のどこでも使えるデフォルトの絵文字です。"
 
 #. Inline validation error on the Discovery application form when the description field is empty.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:114
@@ -2744,7 +2781,7 @@ msgstr "{appName}について"
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:787
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:790
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
@@ -3005,7 +3042,7 @@ msgstr "月額プランに加入中（解約予約済み）"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:739
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:744
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -4540,7 +4577,7 @@ msgid "App zoom"
 msgstr "アプリのズーム"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:771
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:776
 msgid "App zoom level"
 msgstr "アプリの表示サイズ"
 
@@ -4841,7 +4878,7 @@ msgid "Attach files"
 msgstr "ファイルを添付"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:43
+#: src/features/channel/components/ChannelMessage.tsx:44
 msgid "attachment"
 msgstr "添付ファイル"
 
@@ -6482,7 +6519,7 @@ msgstr "通話"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:715
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:720
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
@@ -6542,7 +6579,7 @@ msgstr "カメラオフ"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:719
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:724
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "カメラオン"
@@ -7336,7 +7373,7 @@ msgid "Channel access"
 msgstr "チャンネルアクセス"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
 msgid "Channel access denied"
 msgstr "チャンネルへのアクセスが拒否されました"
 
@@ -7350,7 +7387,7 @@ msgid "Channel actions"
 msgstr "チャンネル操作"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:787
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:792
 msgid "Channel added to favorites"
 msgstr "チャンネルをお気に入りに追加しました"
 
@@ -7378,7 +7415,7 @@ msgstr "チャンネルのデバッグ"
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:755
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:760
 msgid "Channel deleted"
 msgstr "チャンネルを削除しました"
 
@@ -7401,7 +7438,7 @@ msgstr "チャンネルIDをクリップボードにコピーしました"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:80
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:86
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "チャンネルリンク"
@@ -7483,7 +7520,7 @@ msgid "Channel record"
 msgstr "チャンネルレコード"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:783
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:788
 msgid "Channel removed from favorites"
 msgstr "お気に入りからチャンネルを削除しました"
 
@@ -8151,7 +8188,7 @@ msgstr "添付ファイルのモックをクリア"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:136
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "コマンドをクリア"
@@ -8259,7 +8296,7 @@ msgstr "代名詞をクリアしました。"
 msgid "Cleared the role color."
 msgstr "ロールの色をクリアしました。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
 msgid "Cleared the sticker description."
 msgstr "スタンプの説明をクリアしました。"
 
@@ -8334,6 +8371,11 @@ msgstr "クリックすると、返信先のユーザーへのメンションを
 msgid "Click to enable pinging the user you're replying to."
 msgstr "クリックすると、返信先のユーザーへのメンションをオンにします。"
 
+#. Muted second line of the emoji hover tooltip, hinting that clicking the emoji opens its info card.
+#: src/features/expressions/components/ExpressionHoverTooltipContent.tsx:32
+msgid "Click to learn more"
+msgstr "クリックして詳細を見る"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:338
 msgid "Click to open the color picker and choose a new color."
 msgstr "クリックしてカラーピッカーを開き、新しい色を選択してください。"
@@ -8353,7 +8395,7 @@ msgid "Click to reveal"
 msgstr "クリックして表示"
 
 #. Label in the messaging formatting elements.
-#: src/features/messaging/components/markdown/renderers/common/FormattingElements.tsx:15
+#: src/features/messaging/components/markdown/renderers/common/FormattingElements.tsx:19
 msgid "Click to reveal spoiler"
 msgstr "クリックしてネタバレを表示"
 
@@ -8443,7 +8485,7 @@ msgid "Close account"
 msgstr "アカウントを削除"
 
 #. Accessible label and tooltip for the close-DM button on a DM list row.
-#: src/features/channel/components/direct_message/DMListItem.tsx:83
+#: src/features/channel/components/direct_message/DMListItem.tsx:84
 msgid "Close direct message with {displayName}"
 msgstr "{displayName}とのダイレクトメッセージを閉じる"
 
@@ -8847,7 +8889,7 @@ msgid "Community debug"
 msgstr "コミュニティデバッグ"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:759
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:764
 msgid "Community default"
 msgstr "コミュニティのデフォルト"
 
@@ -9414,7 +9456,7 @@ msgstr "接続: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:410
-#: src/features/user/components/popouts/UserProfileShared.tsx:610
+#: src/features/user/components/popouts/UserProfileShared.tsx:614
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9518,7 +9560,7 @@ msgstr "左クリック（ボタン上）または右クリック（その他の
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:707
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:712
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
@@ -9731,7 +9773,7 @@ msgid "Copy code"
 msgstr "コードをコピー"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:723
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:728
 msgid "Copy community ID"
 msgstr "コミュニティIDをコピー"
 
@@ -9834,7 +9876,7 @@ msgid "Copy invite URL"
 msgstr "招待URLをコピー"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:735
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:740
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -9867,7 +9909,7 @@ msgstr "メッセージをコピー"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:727
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:732
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "メッセージIDをコピー"
@@ -9948,7 +9990,7 @@ msgid "Copy user ID"
 msgstr "ユーザーIDをコピー"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:731
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:736
 msgid "Copy username"
 msgstr "ユーザー名をコピー"
 
@@ -10390,7 +10432,7 @@ msgid "Couldn't send invite"
 msgstr "招待を送信できませんでした"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:699
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:704
 msgid "Couldn't send invite. Try again."
 msgstr "招待を送信できませんでした。もう一度お試しください。"
 
@@ -10781,19 +10823,19 @@ msgid "Created by {creatorDisplayName}. Never expires."
 msgstr "{creatorDisplayName}が作成。有効期限はありません。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:758
 msgid "Created for channel {0}."
 msgstr "チャンネル「{0}」用に作成されました。"
 
 #. placeholder {0}: renderInline(formatted, i18n)
 #. placeholder {0}: renderValueInline(formatted, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:732
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:268
 msgid "Created on {0}."
 msgstr "{0}に作成されました。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:755
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
 msgid "Created with name {0}."
 msgstr "{0}という名前で作成されました。"
 
@@ -11004,12 +11046,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "カスタム識別子は、このインスタンスでは利用できません"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:21
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:23
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "{communityName}のカスタム絵文字 {emojiName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:16
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:18
 msgid "Custom emoji {emojiName} from a community"
 msgstr "コミュニティのカスタム絵文字 {emojiName}"
 
@@ -11119,7 +11161,7 @@ msgstr "カスタム通知音"
 msgid "Custom status"
 msgstr "カスタムステータス"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:526
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:565
 msgid "Custom status: "
 msgstr "カスタムステータス: "
 
@@ -11175,7 +11217,7 @@ msgid "Custom warning text"
 msgstr "カスタム警告文"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:763
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:768
 msgid "Custom…"
 msgstr "カスタム…"
 
@@ -11721,7 +11763,7 @@ msgid "Delete application"
 msgstr "アプリケーションを削除"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:743
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:748
 msgid "Delete attachment"
 msgstr "添付ファイルを削除"
 
@@ -12247,13 +12289,13 @@ msgstr "開発者向けステータス"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:123
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "開発者ツール"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "開発者ツールは、チャンネルヘッダーのスタッフバッジから利用できます。"
 
@@ -12678,8 +12720,8 @@ msgctxt "voice-connection-status"
 msgid "Disconnected"
 msgstr "切断されました"
 
-#. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:24
+#. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
 msgid "Discoverable community"
 msgstr "「見つける」掲載コミュニティ"
 
@@ -12937,6 +12979,11 @@ msgstr "既存のコミュニティのボットからのダイレクトメッセ
 msgid "Do you also want to block direct messages from members of your existing communities?"
 msgstr "既存のコミュニティのメンバーからのダイレクトメッセージもブロックしますか？"
 
+#. Body of the confirmation shown before joining a discoverable community from an expression info card. {communityName} is the community name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:105
+msgid "Do you want to join {communityName}?"
+msgstr "{communityName} に参加しますか？"
+
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
@@ -12972,7 +13019,7 @@ msgstr "ブロックはしません。後でまた開けます。"
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:767
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:772
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "ドメイン"
@@ -13483,7 +13530,7 @@ msgstr "メディアを編集"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:703
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:708
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "メッセージを編集"
@@ -13507,7 +13554,7 @@ msgstr "このチャンネルでのロールとメンバーの上書き設定を
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:685
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
@@ -13699,7 +13746,7 @@ msgid "Email verified successfully"
 msgstr "メールアドレスの認証が完了しました"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:61
+#: src/features/channel/components/ChannelMessage.tsx:62
 msgid "embed"
 msgstr "埋め込み"
 
@@ -14050,7 +14097,7 @@ msgstr "モバイルプッシュ通知をオンにする"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:775
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:780
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "通知をオンにする"
@@ -14288,7 +14335,7 @@ msgid "English (US)"
 msgstr "英語（米国）"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:779
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:784
 msgid "Enhanced"
 msgstr "強化"
 
@@ -14963,7 +15010,7 @@ msgid "Expression autocomplete"
 msgstr "エクスプレッションの入力候補"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:747
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:752
 msgid "Expression picker categories"
 msgstr "エクスプレッションピッカーのカテゴリ"
 
@@ -15251,12 +15298,12 @@ msgid "Failed to send code. Try again."
 msgstr "コードの送信に失敗しました。もう一度お試しください。"
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:69
+#: src/features/channel/components/UserMessage.tsx:70
 msgid "Failed to send message."
 msgstr "メッセージを送信できませんでした。"
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:65
+#: src/features/channel/components/UserMessage.tsx:66
 msgid "Failed to send message. Hold for options."
 msgstr "メッセージを送信できませんでした。長押しでオプションを表示します。"
 
@@ -16044,7 +16091,7 @@ msgstr "メディアを転送"
 msgid "Forward message"
 msgstr "メッセージを転送"
 
-#: src/features/channel/components/MessageAttachments.tsx:338
+#: src/features/channel/components/MessageAttachments.tsx:348
 msgid "Forwarded"
 msgstr "転送済み"
 
@@ -16476,7 +16523,7 @@ msgid "Germany"
 msgstr "ドイツ"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:791
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:796
 msgid "Get {premiumProductName}"
 msgstr "{premiumProductName}を入手"
 
@@ -16778,6 +16825,11 @@ msgstr "戻る"
 #: src/features/moderation/components/pages/ReportPage.tsx:84
 msgid "Go back and enter a valid email."
 msgstr "戻って有効なメールアドレスを入力してください。"
+
+#. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+msgid "Go to {communityName}"
+msgstr "{communityName} に移動"
 
 #. CTA label that opens the premium settings tab from gift inventory.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:95
@@ -17434,7 +17486,7 @@ msgid "Hide expiration footnotes"
 msgstr "有効期限の注釈を非表示"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:691
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:696
 msgid "Hide favorites"
 msgstr "お気に入りを非表示"
 
@@ -18789,7 +18841,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "共有中は招待リンクが非表示になります:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:139
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
 msgid "Invite link masked while sharing"
 msgstr "共有中は招待リンクがマスクされます"
 
@@ -18890,6 +18942,11 @@ msgstr "招待は利用できません"
 msgid "Invite updated"
 msgstr "招待を更新しました"
 
+#. Subtitle for a community that can only be joined with an invite.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:80
+msgid "Invite-only community"
+msgstr "招待制コミュニティ"
+
 #. placeholder {0}: renderValueInline(value, guildId, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:249
 msgid "Invited by {0}."
@@ -18911,7 +18968,7 @@ msgstr "招待者:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
 msgid "Invites"
 msgstr "招待"
 
@@ -19075,8 +19132,10 @@ msgstr "ジッター:"
 msgid "Join"
 msgstr "参加"
 
+#. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
+#: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Join {communityName}"
 msgstr "{communityName}に参加"
 
@@ -19222,7 +19281,7 @@ msgid "Jump to {displayName}"
 msgstr "{displayName}へ移動"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
 msgid "Jump to {labelText}"
 msgstr "{labelText}へ移動"
 
@@ -19237,7 +19296,7 @@ msgid "Jump to message"
 msgstr "メッセージに移動"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:56
+#: src/features/channel/components/UserMessage.tsx:57
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "{displayName}さんが{formattedDate}に送信したメッセージに移動"
 
@@ -19259,7 +19318,7 @@ msgid "Jump to page"
 msgstr "ページに移動"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:83
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "Jump to present"
 msgstr "最新のメッセージへ"
 
@@ -19279,12 +19338,12 @@ msgid "Jump to the current call"
 msgstr "通話に移動"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:98
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
 msgid "Jump to the linked channel"
 msgstr "リンク先のチャンネルに移動"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:90
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:96
 msgid "Jump to the linked message"
 msgstr "リンクされたメッセージに移動"
 
@@ -19294,7 +19353,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "{authorNickname}からのメッセージに移動"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:85
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:91
 msgid "Jump to the message in {labelText}"
 msgstr "{labelText}のメッセージに移動"
 
@@ -19959,7 +20018,7 @@ msgid "Link styling"
 msgstr "リンクのスタイル"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:131
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
 msgid "Link unavailable"
 msgstr "リンクを利用できません"
 
@@ -20553,11 +20612,11 @@ msgstr "マークダウン"
 msgid "Marked as read"
 msgstr "既読にしました"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:731
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
 msgid "Marked emoji as animated."
 msgstr "絵文字をアニメーションとしてマークしました。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:731
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
 msgid "Marked emoji as static."
 msgstr "絵文字を静止画としてマークしました。"
 
@@ -20984,7 +21043,7 @@ msgid "Member roles updated"
 msgstr "メンバーのロールを更新しました"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:278
+#: src/features/user/components/popouts/UserProfileShared.tsx:282
 msgid "Member since"
 msgstr "参加日"
 
@@ -21172,7 +21231,7 @@ msgid "Menu shortcuts"
 msgstr "メニューショートカット"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:75
+#: src/features/channel/components/ChannelMessage.tsx:76
 msgid "message"
 msgstr "メッセージ"
 
@@ -21191,7 +21250,7 @@ msgstr "メッセージ"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:715
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:718
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
 #: src/features/user/components/popouts/UserProfilePopout.tsx:418
@@ -21254,7 +21313,7 @@ msgid "Message composer"
 msgstr "メッセージ入力欄"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "メディアが添付されています"
 
@@ -21351,7 +21410,7 @@ msgid "Message layout"
 msgstr "メッセージレイアウト"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:75
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:81
 msgid "message link"
 msgstr "メッセージリンク"
 
@@ -21361,12 +21420,12 @@ msgid "Message link"
 msgstr "メッセージリンク"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:75
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list"
 msgstr "メッセージリスト"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:71
+#: src/features/channel/components/ChannelMessages.tsx:73
 msgid "Message list for {channelName}"
 msgstr "{channelName}のメッセージリスト"
 
@@ -21474,7 +21533,7 @@ msgid "Messages deleted"
 msgstr "メッセージを削除しました"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:87
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Messages failed to load"
 msgstr "メッセージの読み込みに失敗しました"
 
@@ -22035,7 +22094,7 @@ msgid "Moved the role up in the role list."
 msgstr "ロールをロールリストの上へ移動しました。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:752
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:759
 msgid "Moved to channel {0}."
 msgstr "チャンネル「{0}」に移動しました。"
 
@@ -22192,7 +22251,7 @@ msgid "Mute entrance sound"
 msgstr "入室サウンドをミュート"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:683
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:688
 msgid "Mute favorites"
 msgstr "お気に入りをミュート"
 
@@ -22245,7 +22304,7 @@ msgstr "ストリーム音声をミュート"
 #: src/features/app/components/layout/ChannelItem.tsx:112
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
-#: src/features/channel/components/direct_message/DMListItem.tsx:75
+#: src/features/channel/components/direct_message/DMListItem.tsx:76
 msgid "muted"
 msgstr "ミュート中"
 
@@ -22321,7 +22380,7 @@ msgstr "共通の友達"
 msgid "Mutual friends ({count})"
 msgstr "共通の友達（{count}）"
 
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:842
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:845
 msgid "Mutual friends ({mutualFriendsCount})"
 msgstr "共通の友達（{mutualFriendsCount}）"
 
@@ -22809,7 +22868,7 @@ msgstr "新しい順"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:711
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:716
 msgid "Next"
 msgstr "次へ"
 
@@ -22860,7 +22919,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "{sendMessagesPermission}の権限がありません"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
 msgid "No access"
 msgstr "アクセス権がありません"
 
@@ -23372,7 +23431,7 @@ msgid "No system channel"
 msgstr "システムチャンネルがありません"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:70
+#: src/features/channel/components/ChannelMessage.tsx:71
 msgid "no text content"
 msgstr "テキストコンテンツなし"
 
@@ -23605,7 +23664,7 @@ msgstr "真偽値ではありません"
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:897
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:900
 msgid "Note"
 msgstr "メモ"
 
@@ -23685,7 +23744,7 @@ msgstr "通知音量"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:695
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:700
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -24002,7 +24061,7 @@ msgstr "選択した項目のみ"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "このコミュニティには、Visionaryメンバーのみが参加できます。この画面が開いた後にアクセス権が変更された可能性があります。"
 
-#: src/features/channel/components/UserMessage.tsx:429
+#: src/features/channel/components/UserMessage.tsx:441
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "このメッセージはあなたにのみ表示されています。<0>閉じる</0>"
 
@@ -24046,7 +24105,7 @@ msgid "Open {displayName}"
 msgstr "{displayName}を開く"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Open {labelText} in settings"
 msgstr "設定で{labelText}を開く"
 
@@ -24627,12 +24686,12 @@ msgid "Oregon"
 msgstr "オレゴン州"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "元のメッセージを読み込めませんでした"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "元のメッセージは削除されました"
 
@@ -24853,7 +24912,7 @@ msgid "Participants: {names}"
 msgstr "参加者: {names}"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:16
+#: src/features/guild/components/GuildBadge.tsx:17
 msgid "Partnered community"
 msgstr "提携コミュニティ"
 
@@ -25465,7 +25524,7 @@ msgid "Ping: {latency}ms"
 msgstr "Ping: {latency}ms"
 
 #. Screen-reader fragment announcing that the DM list row is pinned. Lowercase fragment.
-#: src/features/channel/components/direct_message/DMListItem.tsx:79
+#: src/features/channel/components/direct_message/DMListItem.tsx:80
 msgid "pinned"
 msgstr "ピン留め中"
 
@@ -25839,12 +25898,12 @@ msgid "Press a shortcut…"
 msgstr "ショートカットを入力…"
 
 #. Label in the channel and chat message reactions.
-#: src/features/channel/components/MessageReactions.tsx:46
+#: src/features/channel/components/MessageReactions.tsx:48
 msgid "press to add reaction"
 msgstr "押してリアクションを追加"
 
 #. Label in the channel and chat message reactions. Keep the tone plain and specific.
-#: src/features/channel/components/MessageReactions.tsx:42
+#: src/features/channel/components/MessageReactions.tsx:44
 msgid "press to remove reaction"
 msgstr "押してリアクションを削除"
 
@@ -27646,13 +27705,13 @@ msgid "Rename emoji"
 msgstr "絵文字の名前を変更"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:729
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
 msgid "Renamed emoji to {0}."
 msgstr "絵文字の名前を「{0}」に変更しました。"
 
 #. placeholder {0}: renderInline(change.oldValue, i18n)
 #. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:757
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:764
 msgid "Renamed from {0} to {1}."
 msgstr "「{0}」から「{1}」に名前を変更しました。"
 
@@ -27661,7 +27720,7 @@ msgid "Renamed from {oldLabel} to {newLabel}."
 msgstr "「{oldLabel}」から「{newLabel}」に名前を変更しました。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:734
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
 msgid "Renamed sticker to {0}."
 msgstr "スタンプ名を「{0}」に変更しました。"
 
@@ -27739,12 +27798,12 @@ msgid "Reply"
 msgstr "返信"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "元の投稿者がブロックされているため、返信は非表示です。"
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "元の投稿者がスパムユーザーとしてマークされているため、返信は非表示になっています。"
 
@@ -29855,7 +29914,7 @@ msgstr "テキスト選択"
 #: src/features/app/components/layout/ChannelItem.tsx:96
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
-#: src/features/channel/components/direct_message/DMListItem.tsx:67
+#: src/features/channel/components/direct_message/DMListItem.tsx:68
 msgid "selected"
 msgstr "選択中"
 
@@ -30007,7 +30066,7 @@ msgstr "ファイルを順番に送信"
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:112
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
 msgstr "友達リクエストを送信"
@@ -30186,12 +30245,12 @@ msgid "Sensitive media"
 msgstr "センシティブなメディア"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:799
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:804
 msgid "Sent"
 msgstr "送信済み"
 
 #. DM list row preview text when the most recent message has only attachments.
-#: src/features/channel/components/direct_message/DMListItem.tsx:63
+#: src/features/channel/components/direct_message/DMListItem.tsx:64
 msgid "Sent an attachment"
 msgstr "添付ファイルを送信しました"
 
@@ -30252,7 +30311,7 @@ msgid "Set a custom role icon."
 msgstr "カスタムロールアイコンを設定しました。"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:314
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:353
 msgid "Set a custom status"
 msgstr "カスタムステータスを設定"
 
@@ -30586,7 +30645,7 @@ msgid "Set voice region"
 msgstr "ボイスリージョンを設定"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:763
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:770
 msgid "Set webhook type to {0}."
 msgstr "ウェブフックの種類を「{0}」に設定しました。"
 
@@ -30622,7 +30681,7 @@ msgid "Settings"
 msgstr "設定"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
 msgid "settings link"
 msgstr "設定へのリンク"
 
@@ -31614,7 +31673,7 @@ msgid "Skip this step"
 msgstr "この手順をスキップ"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:69
+#: src/app/App.tsx:75
 msgid "Skip to content"
 msgstr "コンテンツにスキップ"
 
@@ -32100,7 +32159,7 @@ msgstr "音量"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:803
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:808
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "サウンド"
@@ -32619,7 +32678,7 @@ msgstr "ステレオマイク"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:120
-#: src/features/channel/components/ChannelMessage.tsx:52
+#: src/features/channel/components/ChannelMessage.tsx:53
 msgid "sticker"
 msgstr "スタンプ"
 
@@ -34124,11 +34183,11 @@ msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "画面共有のソースがビデオの送信を停止したため、画面共有は停止されました。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:748
 msgid "The sticker was uploaded as animated."
 msgstr "スタンプはアニメーションとしてアップロードされました。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
 msgid "The sticker was uploaded as static."
 msgstr "スタンプは静止画としてアップロードされました。"
 
@@ -34567,6 +34626,11 @@ msgstr "有効なテンプレートの応答ではないようです。JSONド�
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
 msgstr "この絵文字は準備できませんでした。別のファイルをお試しいただくか、しばらくしてからもう一度お試しください。"
 
+#. Label above the community an emoji comes from in the emoji info card.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:71
+msgid "This emoji is from"
+msgstr "この絵文字は〜から来ています"
+
 #. Title of the error modal shown when a custom emoji was already deleted.
 #. Title of the error modal shown when a custom emoji was deleted before the rename was saved.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:61
@@ -34664,7 +34728,7 @@ msgid "This invite expires after {count, plural, one {# use} other {# uses}}."
 msgstr "この招待は{count, plural, other {#回}}使用すると期限切れになります。"
 
 #. placeholder {0}: formatMaxAge(change.newValue)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:696
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
 msgid "This invite expires in {0}."
 msgstr "この招待の有効期限は{0}です。"
 
@@ -34686,23 +34750,29 @@ msgstr "この招待リンクには有効期限がありません。"
 msgid "This invite may have expired or been deleted."
 msgstr "この招待は期限切れか、削除された可能性があります。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:694
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:319
 msgid "This invite never expires."
 msgstr "この招待の有効期限はありません。"
 
-#. Emoji attribution line under a custom emoji. guildName is the community it comes from.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:115
-msgid "This is a custom emoji from <0>{guildName}</0>."
-msgstr "これは<0>{guildName}</0>のカスタム絵文字です。"
+#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:114
+msgid "This is a custom emoji from"
+msgstr "これはカスタム絵文字です"
 
+#. Description of a custom emoji from a community the viewer is not a member of.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:106
+#: src/features/expressions/components/ExpressionInfoCard.tsx:61
 msgid "This is a custom emoji from a community."
 msgstr "これはコミュニティのカスタム絵文字です。"
 
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:97
 msgid "This is a custom emoji from a community. Ask the author for an invite to use this emoji."
 msgstr "これはコミュニティのカスタム絵文字です。この絵文字を使うには、作者に招待をリクエストしてください。"
+
+#. Description of a custom sticker from a community the viewer is not a member of.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:65
+msgid "This is a custom sticker from a community."
+msgstr "これは、コミュニティのカスタムステッカーです。"
 
 #. Emoji attribution text for built-in default emoji. productName is the Fluxer product name.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:18
@@ -34789,7 +34859,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "このリンクチャンネルは成人向けコンテンツとして指定されており、一部のユーザーには不適切と思われる内容が表示される可能性があります。"
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:135
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
 msgid "This link is not available for your account."
 msgstr "このリンクはあなたのアカウントでは利用できません。"
 
@@ -34945,6 +35015,11 @@ msgstr "このリセットリンクは期限切れです。リセットリンク
 msgid "This shows how links appear: {linkPreviewExampleUrl}"
 msgstr "リンクの表示例: {linkPreviewExampleUrl}"
 
+#. Label above the community a sticker comes from in the sticker info card.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:75
+msgid "This sticker is from"
+msgstr "このスタンプは「"
+
 #. Error message in the selections tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:85
 msgid "This switch is disabled and cannot be toggled"
@@ -34993,7 +35068,7 @@ msgstr "このユーザー"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "このユーザーはプロフィールを制限しています。一部の詳細は、友達ではない人には非表示になります。"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:390
+#: src/features/user/components/popouts/UserProfileShared.tsx:394
 msgid "This user has no roles in this community."
 msgstr "このユーザーはこのコミュニティでロールを持っていません。"
 
@@ -35047,7 +35122,7 @@ msgid "This voice channel is no longer available."
 msgstr "このボイスチャンネルは利用できなくなりました。"
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:73
+#: src/features/channel/components/UserMessage.tsx:74
 msgid "This was a {silentMention} message."
 msgstr "これは{silentMention}メッセージでした。"
 
@@ -36210,7 +36285,7 @@ msgstr "友達リクエストを送信するには、まずブロックを解除
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:107
 #: src/features/user/components/modals/UserProfileModal.tsx:118
 msgid "Unblock user"
 msgstr "ブロック解除"
@@ -36371,7 +36446,7 @@ msgstr "汎用フォールバック。品質は最も低いですが、どこで
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:751
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:756
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -36652,7 +36727,7 @@ msgid "Unmute DMs"
 msgstr "DMのミュートを解除"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:687
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:692
 msgid "Unmute favorites"
 msgstr "お気に入りのミュートを解除"
 
@@ -36760,7 +36835,7 @@ msgstr "グループDMのピン留めを解除しました"
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
-#: src/features/channel/components/direct_message/DMListItem.tsx:71
+#: src/features/channel/components/direct_message/DMListItem.tsx:72
 msgid "unread"
 msgstr "未読"
 
@@ -37023,7 +37098,7 @@ msgid "Updated the role icon."
 msgstr "ロールアイコンを更新しました。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:737
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
 msgid "Updated the sticker description to {0}."
 msgstr "スタンプの説明を「{0}」に更新しました。"
 
@@ -37032,7 +37107,7 @@ msgstr "スタンプの説明を「{0}」に更新しました。"
 msgid "Updated the topic to {0}."
 msgstr "トピックを「{0}」に更新しました。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:769
 msgid "Updated the webhook avatar."
 msgstr "ウェブフックのアバターを更新しました。"
 
@@ -37628,7 +37703,7 @@ msgid "Use your operating system's spellchecker when available. Otherwise, use {
 msgstr "OSのスペルチェッカーを使用します。利用できない場合は、{productName}のアプリ内辞書を使用します。"
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:708
 msgid "Used {0} times."
 msgstr "{0}回使用されました。"
 
@@ -38008,7 +38083,7 @@ msgid "Verification failed"
 msgstr "認証に失敗しました"
 
 #. Label in the community badge.
-#: src/features/guild/components/GuildBadge.tsx:12
+#: src/features/guild/components/GuildBadge.tsx:13
 msgid "Verified & partnered community"
 msgstr "認証済みパートナーコミュニティ"
 
@@ -38016,7 +38091,7 @@ msgstr "認証済みパートナーコミュニティ"
 #. Badge or label indicating the community is verified.
 #. Short label in the community badge. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
-#: src/features/guild/components/GuildBadge.tsx:20
+#: src/features/guild/components/GuildBadge.tsx:21
 #: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "認証済みコミュニティ"
@@ -38232,7 +38307,7 @@ msgstr "ビデオ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the channel header button that starts a video call in a DM or group DM.
 #: src/features/channel/components/channel_header/shared.ts:43
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:766
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:769
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:33
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:199
 msgid "Video call"
@@ -38449,7 +38524,7 @@ msgstr "詳細を見る"
 msgid "View devices that are signed in to your account"
 msgstr "アカウントにサインインしているデバイスを表示"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:194
+#: src/features/user/components/popouts/UserProfileShared.tsx:198
 msgid "View full profile"
 msgstr "プロフィール全体を見る"
 
@@ -38736,7 +38811,7 @@ msgid "Voice and video shortcuts"
 msgstr "音声・ビデオショートカット"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:747
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:35
 msgid "Voice call"
 msgstr "音声通話"
@@ -39819,7 +39894,7 @@ msgstr "昨日 {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
 #: src/features/app/components/layout/MobileBottomNav.tsx:153
-#: src/features/channel/components/direct_message/DMListItem.tsx:59
+#: src/features/channel/components/direct_message/DMListItem.tsx:60
 msgid "You"
 msgstr "自分"
 
@@ -40161,7 +40236,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "{PREMIUM_PRODUCT_NAME}の利用中にタグを変更しました。{PREMIUM_PRODUCT_NAME}の有効期限が切れると、更新されない限りタグはランダムに再設定されます。"
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
 msgid "You do not have access to the channel where this message was sent."
 msgstr "このメッセージが送信されたチャンネルにアクセスできません。"
 
@@ -40603,7 +40678,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "タイムアウト中です。タイムアウト期間が終了するまで、メッセージ送信、リアクション、音声が一時停止されます。"
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:79
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "You're viewing older messages"
 msgstr "過去のメッセージを表示しています"
 

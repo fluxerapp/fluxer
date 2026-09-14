@@ -41,6 +41,10 @@ import {
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
+	type ExpressionInfoCardConfig,
+	ExpressionInfoCardConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
+import {
 	type GuildActivityLogPresentationConfig,
 	GuildActivityLogPresentationConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
@@ -75,6 +79,7 @@ const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
 const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
 const BLOCKED_MESSAGE_GROUPS_CONFIG_KEY = 'blocked_message_groups_config';
+const EXPRESSION_INFO_CARD_CONFIG_KEY = 'expression_info_card_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -362,6 +367,7 @@ type StoredConfigSection =
 	| 'message hover tracking'
 	| 'message keyboard focus'
 	| 'blocked message groups'
+	| 'expression info card'
 	| 'instance policy'
 	| 'integrations'
 	| 'media'
@@ -517,6 +523,10 @@ function parseStoredMessageKeyboardFocusConfig(raw: string | null): MessageKeybo
 
 function parseStoredBlockedMessageGroupsConfig(raw: string | null): BlockedMessageGroupsConfig {
 	return parseStoredConfigOrDefault(BlockedMessageGroupsConfigSchema, raw, 'blocked message groups');
+}
+
+function parseStoredExpressionInfoCardConfig(raw: string | null): ExpressionInfoCardConfig {
+	return parseStoredConfigOrDefault(ExpressionInfoCardConfigSchema, raw, 'expression info card');
 }
 
 function validateStoredCollection<T>(schema: z.ZodType<T>, value: unknown, section: StoredConfigSection): Array<T> {
@@ -1042,6 +1052,7 @@ export class InstanceConfigRepository {
 		parseStoredMessageHoverTrackingConfig(snapshot.get(MESSAGE_HOVER_TRACKING_CONFIG_KEY) ?? null);
 		parseStoredMessageKeyboardFocusConfig(snapshot.get(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY) ?? null);
 		parseStoredBlockedMessageGroupsConfig(snapshot.get(BLOCKED_MESSAGE_GROUPS_CONFIG_KEY) ?? null);
+		parseStoredExpressionInfoCardConfig(snapshot.get(EXPRESSION_INFO_CARD_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
 			parseStoredRegistrationConfig(snapshot.get(REGISTRATION_CONFIG_KEY) ?? null),
@@ -1169,6 +1180,16 @@ export class InstanceConfigRepository {
 	async setBlockedMessageGroupsConfig(config: BlockedMessageGroupsConfig): Promise<void> {
 		const validated = validateStoredConfig(BlockedMessageGroupsConfigSchema, config, 'blocked message groups');
 		await this.setConfig(BLOCKED_MESSAGE_GROUPS_CONFIG_KEY, JSON.stringify(validated));
+	}
+
+	async getExpressionInfoCardConfig(): Promise<ExpressionInfoCardConfig> {
+		const raw = await this.getConfig(EXPRESSION_INFO_CARD_CONFIG_KEY);
+		return parseStoredExpressionInfoCardConfig(raw);
+	}
+
+	async setExpressionInfoCardConfig(config: ExpressionInfoCardConfig): Promise<void> {
+		const validated = validateStoredConfig(ExpressionInfoCardConfigSchema, config, 'expression info card');
+		await this.setConfig(EXPRESSION_INFO_CARD_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async setExperimentDeliveryConfig(config: ExperimentDeliveryConfig): Promise<void> {

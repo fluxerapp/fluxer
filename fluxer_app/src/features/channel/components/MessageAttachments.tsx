@@ -16,6 +16,15 @@ import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWi
 import type {Channel} from '@app/features/channel/models/Channel';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
+import {ExpressionHoverTooltipContent} from '@app/features/expressions/components/ExpressionHoverTooltipContent';
+import {ExpressionInfoCard} from '@app/features/expressions/components/ExpressionInfoCard';
+import {ExpressionInfoPopout} from '@app/features/expressions/components/ExpressionInfoPopout';
+import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
+import {
+	EXPRESSION_INFO_SURFACE_OPEN_IS_INTERACTION,
+	STICKER_PREVIEW_SIZE,
+} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import * as GiftCodeUtils from '@app/features/gift/utils/GiftCodeUtils';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -39,6 +48,7 @@ import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMen
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -54,7 +64,7 @@ import {ArrowBendUpRightIcon, CaretRightIcon, HashIcon, NotePencilIcon, SpeakerH
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useMemo} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 
 interface SpoileredCodeLinkMatch {
 	code: string;
@@ -461,7 +471,7 @@ interface StickerItemProps {
 	handleDelete?: (bypassConfirm?: boolean) => void;
 }
 
-const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
+const StickerItemWithTooltip = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
 	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
 	const stickerUrl = AvatarUtils.getStickerURL({
 		id: sticker.id,
@@ -571,6 +581,171 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 			</FocusRing>
 		</Tooltip>
 	);
+});
+
+const StickerItemWithInfoCard = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
+	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
+	const {shouldAnimate: shouldAnimateInfoPreview} = useStickerAnimation({
+		isAnimated: sticker.animated,
+		isInteracting: EXPRESSION_INFO_SURFACE_OPEN_IS_INTERACTION,
+	});
+	const stickerUrl = AvatarUtils.getStickerURL({
+		id: sticker.id,
+		animated: shouldAnimate,
+		isAnimatable: sticker.animated,
+		size: 320,
+	});
+	const previewUrl = AvatarUtils.getStickerURL({
+		id: sticker.id,
+		animated: shouldAnimateInfoPreview,
+		isAnimatable: sticker.animated,
+		size: STICKER_PREVIEW_SIZE,
+	});
+	const stickerRecord = Sticker.getStickerById(sticker.id);
+	const isMobile = MobileLayout.enabled;
+	const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
+	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(false, message.channelId);
+	const handleContextMenu = (e: React.MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		const stickerForMenu = stickerRecord ?? {
+			id: sticker.id,
+			guildId: '',
+			name: sticker.name,
+			description: '',
+			tags: [],
+			url: stickerUrl,
+			animated: sticker.animated,
+			user: undefined,
+		};
+		ContextMenuCommands.openFromEvent(e, ({onClose}) => (
+			<MessageContextMenu
+				message={message}
+				sourceChannel={sourceChannel}
+				onClose={onClose}
+				onDelete={handleDelete!}
+				inlineStickerOrEmojiItems={
+					<StickerInlineMenuItems
+						sticker={stickerForMenu}
+						onClose={onClose}
+						data-flx="channel.message-attachments.handle-context-menu.sticker-inline-menu-items"
+					/>
+				}
+				data-flx="channel.message-attachments.handle-context-menu.message-context-menu"
+			/>
+		));
+	};
+	const handleRevealClick = useCallback(
+		(e: React.MouseEvent) => {
+			if (shouldBlur && canReveal) {
+				e.preventDefault();
+				e.stopPropagation();
+				reveal();
+			}
+		},
+		[shouldBlur, canReveal, reveal],
+	);
+	const handleMobileClick = useCallback(
+		(e: React.MouseEvent) => {
+			if (shouldBlur) {
+				handleRevealClick(e);
+				return;
+			}
+			setIsBottomSheetOpen(true);
+		},
+		[shouldBlur, handleRevealClick],
+	);
+	const handleCloseBottomSheet = useCallback(() => {
+		setIsBottomSheetOpen(false);
+	}, []);
+	if (shouldBlock) {
+		return null;
+	}
+	const stickerImage = (
+		<img
+			src={stickerUrl}
+			alt={stickerRecord?.description || sticker.name}
+			className={clsx(styles.stickerImage, shouldBlur && matureStyles.matureStickerBlurred)}
+			width="160"
+			height="160"
+			data-flx="channel.message-attachments.sticker-item.sticker-image"
+		/>
+	);
+	if (isMobile) {
+		return (
+			<>
+				<FocusRing data-flx="channel.message-attachments.sticker-item.focus-ring.mobile">
+					<button
+						type="button"
+						aria-label={stickerRecord?.description || sticker.name}
+						className={styles.stickerWrapper}
+						data-message-sticker="true"
+						onContextMenu={handleContextMenu}
+						onClick={handleMobileClick}
+						data-flx="channel.message-attachments.sticker-item.sticker-wrapper.open-bottom-sheet"
+						{...interactionHandlers}
+					>
+						{stickerImage}
+					</button>
+				</FocusRing>
+				<ExpressionInfoBottomSheet
+					kind="sticker"
+					isOpen={isBottomSheetOpen}
+					onClose={handleCloseBottomSheet}
+					sticker={{id: sticker.id, name: sticker.name, animated: sticker.animated}}
+					data-flx="channel.message-attachments.sticker-item.expression-info-bottom-sheet"
+				/>
+			</>
+		);
+	}
+	const renderHoverTooltip = () =>
+		shouldBlur ? (
+			sticker.name
+		) : (
+			<ExpressionHoverTooltipContent
+				displayName={sticker.name}
+				previewUrl={previewUrl}
+				data-flx="channel.message-attachments.sticker-item.expression-hover-tooltip-content"
+			/>
+		);
+	const renderInfoCard = ({onClose}: {onClose: () => void}) => (
+		<ExpressionInfoCard
+			kind="sticker"
+			expressionId={sticker.id}
+			guildId={stickerRecord?.guildId ?? null}
+			displayName={sticker.name}
+			previewUrl={previewUrl}
+			onClose={onClose}
+			data-flx="channel.message-attachments.sticker-item.expression-info-card"
+		/>
+	);
+	return (
+		<ExpressionInfoPopout
+			canOpenCard={!shouldBlur}
+			renderTooltip={renderHoverTooltip}
+			renderCard={renderInfoCard}
+			data-flx="channel.message-attachments.sticker-item.expression-info-popout"
+		>
+			<button
+				type="button"
+				aria-label={stickerRecord?.description || sticker.name}
+				className={styles.stickerWrapper}
+				data-message-sticker="true"
+				onContextMenu={handleContextMenu}
+				onClick={handleRevealClick}
+				data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
+				{...interactionHandlers}
+			>
+				{stickerImage}
+			</button>
+		</ExpressionInfoPopout>
+	);
+});
+const StickerItem = observer((props: StickerItemProps) => {
+	if (!ExpressionInfoCardRollout.enabled) {
+		return <StickerItemWithTooltip {...props} data-flx="channel.message-attachments.sticker-item.tooltip-arm" />;
+	}
+	return <StickerItemWithInfoCard {...props} data-flx="channel.message-attachments.sticker-item.info-card-arm" />;
 });
 export const MessageAttachments = observer(() => {
 	const {channel, message, handleDelete, previewContext, onPopoutToggle, suppressMessageActions} =

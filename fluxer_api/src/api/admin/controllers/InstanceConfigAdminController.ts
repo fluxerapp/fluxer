@@ -33,6 +33,7 @@ import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admi
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {BlockedMessageGroupsConfigSchema} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {ExpressionInfoCardConfigSchema} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
 import {GuildActivityLogPresentationConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
@@ -66,6 +67,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		messageHoverTracking,
 		messageKeyboardFocus,
 		blockedMessageGroups,
+		expressionInfoCard,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -78,6 +80,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getMessageHoverTrackingConfig(),
 		instanceConfigRepository.getMessageKeyboardFocusConfig(),
 		instanceConfigRepository.getBlockedMessageGroupsConfig(),
+		instanceConfigRepository.getExpressionInfoCardConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -113,6 +116,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		message_hover_tracking: messageHoverTracking,
 		message_keyboard_focus: messageKeyboardFocus,
 		blocked_message_groups: blockedMessageGroups,
+		expression_info_card: expressionInfoCard,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -303,6 +307,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentBlockedMessageGroups.config_version + 1,
 					});
 					await instanceConfigRepository.setBlockedMessageGroupsConfig(validated);
+				}
+			}
+			if (data.expression_info_card) {
+				const patch = omitUndefinedFields(data.expression_info_card);
+				if (Object.keys(patch).length > 0) {
+					const currentExpressionInfoCard = await instanceConfigRepository.getExpressionInfoCardConfig();
+					const validated = ExpressionInfoCardConfigSchema.parse({
+						...currentExpressionInfoCard,
+						...patch,
+						config_version: currentExpressionInfoCard.config_version + 1,
+					});
+					await instanceConfigRepository.setExpressionInfoCardConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {
+	MarkdownContext,
+	type MarkdownRenderOptions,
+	type RendererProps,
+} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {FormattingNode, Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {normalizeUrl, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
@@ -48,6 +52,8 @@ export function StrikethroughRenderer({node, id, renderChildren}: RendererProps<
 		</s>
 	);
 }
+
+const HIDDEN_SPOILER_OPTION_OVERRIDES: Partial<MarkdownRenderOptions> = {disableEmojiInteractions: true};
 
 interface SpoilerNode extends FormattingNode {
 	type: 'Spoiler';
@@ -123,7 +129,7 @@ export const SpoilerRenderer = observer(function SpoilerRenderer({
 						aria-hidden={!shouldReveal}
 						data-flx="messaging.markdown.renderers.common.formatting-elements.spoiler-renderer.span--3"
 					>
-						{renderChildren(node.children)}
+						{renderChildren(node.children, shouldReveal ? undefined : HIDDEN_SPOILER_OPTION_OVERRIDES)}
 					</span>
 				</span>
 			</FocusRing>
