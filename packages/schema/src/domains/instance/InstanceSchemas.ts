@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { SsoStatusResponse } from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import { createNamedStringLiteralUnion } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import { z } from 'zod';
+import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {z} from 'zod';
 
 const LimitFilterResponse = z.object({
 	traits: z.array(z.string()).optional().describe('Trait filters for this limit rule'),

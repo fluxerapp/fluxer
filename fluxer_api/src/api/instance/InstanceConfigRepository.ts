@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import { Config } from '@app/api/Config';
-import type { APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig } from '@app/api/config/APIConfig';
-import { fetchMany, fetchOne, upsertOne } from '@app/api/database/CassandraQueryExecution';
-import type { InstanceConfigurationRow } from '@app/api/database/types/InstanceConfigTypes';
+import {Config} from '@app/api/Config';
+import type {APIConfig, BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {InstanceConfigurationRow} from '@app/api/database/types/InstanceConfigTypes';
 import {
 	getDefaultDateOfBirthCollection,
 	setCachedDateOfBirthCollection,
 } from '@app/api/instance/DateOfBirthCollectionCache';
-import { InstanceConfigCache } from '@app/api/instance/InstanceConfigCache';
-import { normalizeSsoAllowedEmailDomains } from '@app/api/instance/SsoConfigValidation';
-import { Logger } from '@app/api/Logger';
-import { isLimitConfigSnapshot } from '@app/api/limits/LimitConfigValidation';
-import { resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled } from '@app/api/risk/DeferredPhoneGateCache';
-import { InstanceConfiguration } from '@app/api/Tables';
-import { DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS } from '@app/api/utils/AttachmentDecay';
-import { isJsonRecord } from '@app/api/utils/JsonBoundaryUtils';
-import type { LimitConfigSnapshot } from '@fluxer/limits/src/LimitTypes';
+import {InstanceConfigCache} from '@app/api/instance/InstanceConfigCache';
+import {normalizeSsoAllowedEmailDomains} from '@app/api/instance/SsoConfigValidation';
+import {Logger} from '@app/api/Logger';
+import {isLimitConfigSnapshot} from '@app/api/limits/LimitConfigValidation';
+import {resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
+import {InstanceConfiguration} from '@app/api/Tables';
+import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '@app/api/utils/AttachmentDecay';
+import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {
 	InstanceConfigResponse,
 	InstanceConfigUpdateRequest,
@@ -48,9 +48,9 @@ import {
 	type InstanceServices,
 	type InstanceSetup,
 } from '@fluxer/schema/src/domains/instance/InstanceSchemas';
-import { normalizeString, SnowflakeType } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import type { IKVProvider } from '@pkgs/kv_client/src/IKVProvider';
-import { z } from 'zod';
+import {normalizeString, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import {z} from 'zod';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
@@ -291,7 +291,7 @@ function parseStoredLimitConfig(raw: string | null): LimitConfigSnapshot | null 
 	try {
 		parsed = JSON.parse(raw);
 	} catch (error) {
-		Logger.error({ error }, 'Stored limit configuration is not valid JSON, falling back to default limits');
+		Logger.error({error}, 'Stored limit configuration is not valid JSON, falling back to default limits');
 		return null;
 	}
 	if (!isLimitConfigSnapshot(parsed)) {
@@ -320,9 +320,7 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			favicon_url: normalizeOptionalString(Config.instance.branding.faviconUrl),
 			theme_color: normalizeOptionalString(Config.instance.branding.themeColor),
 			status_page_url: normalizeOptionalString(Config.instance.branding.statusPageUrl),
-			status_page_incident_history_url: normalizeOptionalString(
-				Config.instance.branding.statusPageIncidentHistoryUrl,
-			),
+			status_page_incident_history_url: normalizeOptionalString(Config.instance.branding.statusPageIncidentHistoryUrl),
 		},
 		setup: {
 			configured: !Config.instance.selfHosted || Config.instance.setup.configured,
@@ -360,7 +358,7 @@ function parseStoredConfigValue(raw: string | null, section: StoredConfigSection
 	}
 }
 
-function describeInvalidFields(issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey> }>, index?: number): string {
+function describeInvalidFields(issues: ReadonlyArray<{path: ReadonlyArray<PropertyKey>}>, index?: number): string {
 	const maxReportedIssues = 8;
 	const invalidFields = new Set(
 		issues.slice(0, maxReportedIssues).map((issue) => {
@@ -408,10 +406,10 @@ function salvageStoredConfig<T>(schema: z.ZodType<T>, value: unknown, section: S
 	const strict = schema.safeParse(value);
 	if (strict.success) return strict.data;
 	Logger.error(
-		{ section, invalidFields: describeInvalidFields(strict.error.issues) },
+		{section, invalidFields: describeInvalidFields(strict.error.issues)},
 		'Invalid stored instance configuration, falling back to defaults for the invalid fields',
 	);
-	const signature = (issues: ReadonlyArray<{ path: ReadonlyArray<PropertyKey> }>) =>
+	const signature = (issues: ReadonlyArray<{path: ReadonlyArray<PropertyKey>}>) =>
 		issues.map((issue) => issue.path.join('.')).join('|');
 	const salvaged = structuredClone(value);
 	let issues = strict.error.issues;
@@ -436,7 +434,7 @@ function readStoredConfigOrDefault<T>(section: StoredConfigSection, decode: () =
 	try {
 		return decode();
 	} catch (error) {
-		Logger.error({ error, section }, 'Invalid stored instance configuration, falling back to defaults');
+		Logger.error({error, section}, 'Invalid stored instance configuration, falling back to defaults');
 		return fallback();
 	}
 }
@@ -464,9 +462,9 @@ function checkStoredConfig(section: StoredConfigSection, decode: () => unknown):
 function decodeGatewayRolloutConfig(value: unknown): GatewayRolloutConfig {
 	const input =
 		isJsonRecord(value) &&
-			!Object.hasOwn(value, 'rpc_request_timeout_ms') &&
-			Object.hasOwn(value, 'nats_request_timeout_ms')
-			? { ...value, rpc_request_timeout_ms: value.nats_request_timeout_ms }
+		!Object.hasOwn(value, 'rpc_request_timeout_ms') &&
+		Object.hasOwn(value, 'nats_request_timeout_ms')
+			? {...value, rpc_request_timeout_ms: value.nats_request_timeout_ms}
 			: value;
 	return validateStoredConfig(GatewayRolloutConfigSchema, input, 'gateway rollout');
 }
@@ -496,7 +494,7 @@ function parseStoredCollection<T>(schema: z.ZodType<T>, raw: string | null, sect
 
 const StoredInstanceAppPublicSchema = InstanceAppPublicSchema.extend({
 	branding: InstanceAppPublicSchema.shape.branding.partial().optional(),
-	setup: InstanceAppPublicSchema.shape.setup.pick({ configured: true }).partial().optional(),
+	setup: InstanceAppPublicSchema.shape.setup.pick({configured: true}).partial().optional(),
 	legal: InstanceAppPublicSchema.shape.legal.partial().optional(),
 	registration: InstanceAppPublicSchema.shape.registration.partial().optional(),
 });
@@ -513,7 +511,7 @@ function decodeAppPublicConfig(value: unknown): InstanceAppPublicConfig {
 
 function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSchema>): InstanceAppPublicConfig {
 	const defaults = getDefaultAppPublicConfig();
-	const { branding = {}, setup = {}, legal = {}, registration = {} } = config;
+	const {branding = {}, setup = {}, legal = {}, registration = {}} = config;
 	return {
 		branding: {
 			product_name: normalizeOptionalString(branding.product_name) ?? defaults.branding.product_name,
@@ -585,7 +583,7 @@ const StoredIntegrationStringSchema = z
 	.transform((value) => value || null);
 const StoredNullableBooleanSchema = z.boolean().nullable().default(null);
 const StoredBlueskyKeysSchema = z
-	.array(z.object({ kid: z.string().trim().min(1), private_key: StoredIntegrationStringSchema }))
+	.array(z.object({kid: z.string().trim().min(1), private_key: StoredIntegrationStringSchema}))
 	.default([])
 	.refine((keys) => {
 		const activeIds = new Set<string>();
@@ -597,8 +595,8 @@ const StoredBlueskyKeysSchema = z
 		return true;
 	});
 const StoredInstanceIntegrationsSchema = z.object({
-	gif: z.object({ klipy_api_key: StoredIntegrationStringSchema }).prefault({}),
-	youtube: z.object({ api_key: StoredIntegrationStringSchema }).prefault({}),
+	gif: z.object({klipy_api_key: StoredIntegrationStringSchema}).prefault({}),
+	youtube: z.object({api_key: StoredIntegrationStringSchema}).prefault({}),
 	captcha: z
 		.object({
 			provider: InstanceCaptchaProviderSchema.nullable().default(null),
@@ -679,7 +677,7 @@ const StoredAttachmentDecaySchema = z
 			const maxSizeMb = computeAttachmentDecayMaxSize(minSizeMb, value.max_size_mb ?? DEFAULT_DECAY_CONSTANTS.MAX_MB);
 			return Number.isFinite(maxSizeMb) && maxSizeMb > minSizeMb;
 		},
-		{ path: ['min_size_mb'] },
+		{path: ['min_size_mb']},
 	);
 const StoredInstanceMediaSchema = z.object({
 	attachment_decay: StoredAttachmentDecaySchema.prefault({}),
@@ -728,10 +726,10 @@ function hasCompleteSmtpConfig(config: APIConfig['email']): boolean {
 	if (config.provider !== 'smtp' || !config.smtp) return false;
 	return Boolean(
 		config.fromEmail.trim() &&
-		config.smtp.host.trim() &&
-		config.smtp.port &&
-		config.smtp.username.trim() &&
-		config.smtp.password.trim(),
+			config.smtp.host.trim() &&
+			config.smtp.port &&
+			config.smtp.username.trim() &&
+			config.smtp.password.trim(),
 	);
 }
 
@@ -745,9 +743,9 @@ const StoredRegistrationConfigSchema = InstanceRegistrationSchema.extend({
 function decodeRegistrationConfig(value: unknown): InstanceRegistrationConfig {
 	const input =
 		isJsonRecord(value) &&
-			!Object.hasOwn(value, 'admin_registration_urls_enabled') &&
-			Object.hasOwn(value, 'adminRegistrationUrlsEnabled')
-			? { ...value, admin_registration_urls_enabled: value.adminRegistrationUrlsEnabled }
+		!Object.hasOwn(value, 'admin_registration_urls_enabled') &&
+		Object.hasOwn(value, 'adminRegistrationUrlsEnabled')
+			? {...value, admin_registration_urls_enabled: value.adminRegistrationUrlsEnabled}
 			: value;
 	return validateStoredConfig(StoredRegistrationConfigSchema, input, 'registration');
 }
@@ -759,7 +757,7 @@ function parseStoredRegistrationConfig(raw: string | null): InstanceRegistration
 const RegistrationUrlSchema = InstanceConfigResponse.shape.registration.shape.urls.element;
 const PendingRegistrationSchema = InstanceConfigResponse.shape.registration.shape.pending_registrations.element;
 const StoredRegistrationTimestampSchema = z.iso
-	.datetime({ offset: true })
+	.datetime({offset: true})
 	.refine((value) => value === value.trim() && Number.isFinite(Date.parse(value)))
 	.transform((value): string => new Date(value).toISOString())
 	.pipe(RegistrationUrlSchema.shape.created_at);
@@ -808,7 +806,7 @@ function isRegistrationUrlUsable(registrationUrl: InstanceRegistrationUrl, now: 
 }
 
 function redactRegistrationUrl(registrationUrl: InstanceRegistrationUrl): InstanceRegistrationUrlPublic {
-	const { code_hash: _codeHash, ...redacted } = registrationUrl;
+	const {code_hash: _codeHash, ...redacted} = registrationUrl;
 	return redacted;
 }
 
@@ -839,24 +837,24 @@ function readStoredSsoBoolean(
 	configs: ReadonlyMap<string, string>,
 	key: 'sso_enabled' | 'sso_enforced' | 'sso_auto_provision',
 	fallback: boolean,
-	options?: { invalidFallback?: boolean; log?: boolean },
+	options?: {invalidFallback?: boolean; log?: boolean},
 ): boolean {
 	const value = configs.get(key);
 	if (value === undefined) return fallback;
 	if (value === 'true') return true;
 	if (value === 'false') return false;
 	if (options?.log) {
-		Logger.warn({ key }, 'Invalid stored SSO flag, falling back to its default');
+		Logger.warn({key}, 'Invalid stored SSO flag, falling back to its default');
 	}
 	return options?.invalidFallback ?? fallback;
 }
 
 function readStoredSsoFlags(configs: ReadonlyMap<string, string>, log = false): InstanceSsoFlags {
-	const enabled = readStoredSsoBoolean(configs, 'sso_enabled', false, { log });
+	const enabled = readStoredSsoBoolean(configs, 'sso_enabled', false, {log});
 	return {
 		enabled,
-		enforced: readStoredSsoBoolean(configs, 'sso_enforced', enabled, { invalidFallback: false, log }),
-		autoProvision: readStoredSsoBoolean(configs, 'sso_auto_provision', true, { log }),
+		enforced: readStoredSsoBoolean(configs, 'sso_enforced', enabled, {invalidFallback: false, log}),
+		autoProvision: readStoredSsoBoolean(configs, 'sso_auto_provision', true, {log}),
 	};
 }
 
@@ -884,18 +882,18 @@ function parseStoredSsoAllowedEmailDomains(raw: string | undefined, log = false)
 	if (domains.size === 0 && unusable.size > 0) {
 		if (log) {
 			Logger.error(
-				{ unusable: unusable.size },
+				{unusable: unusable.size},
 				'Every stored SSO allowed email domain is invalid, keeping them so the allowlist still matches nothing',
 			);
 		}
 		return Array.from(unusable).slice(0, MAX_SSO_ALLOWED_DOMAINS);
 	}
 	if (log && unusable.size > 0) {
-		Logger.warn({ dropped: unusable.size }, 'Dropped invalid stored SSO allowed email domains');
+		Logger.warn({dropped: unusable.size}, 'Dropped invalid stored SSO allowed email domains');
 	}
 	if (log && domains.size > MAX_SSO_ALLOWED_DOMAINS) {
 		Logger.warn(
-			{ dropped: domains.size - MAX_SSO_ALLOWED_DOMAINS },
+			{dropped: domains.size - MAX_SSO_ALLOWED_DOMAINS},
 			'Truncated the stored SSO allowed email domain list to its maximum length',
 		);
 	}
@@ -986,7 +984,7 @@ export class InstanceConfigRepository {
 	}
 
 	private async fetchConfigFromDatabase(key: string): Promise<string | null> {
-		const row = await fetchOne<InstanceConfigurationRow>(FETCH_CONFIG_QUERY, { key });
+		const row = await fetchOne<InstanceConfigurationRow>(FETCH_CONFIG_QUERY, {key});
 		return row?.value ?? null;
 	}
 
@@ -1044,7 +1042,7 @@ export class InstanceConfigRepository {
 		}
 		await this.kvClient.publish(
 			INSTANCE_CONFIG_REFRESH_CHANNEL,
-			JSON.stringify({ source_id: sourceId, type: 'refresh' }),
+			JSON.stringify({source_id: sourceId, type: 'refresh'}),
 		);
 	}
 
@@ -1056,7 +1054,7 @@ export class InstanceConfigRepository {
 		const shutdown = this.shutdown();
 		this.configCache = this.createConfigCache(shutdown);
 		void shutdown.catch((error) => {
-			Logger.error({ error }, 'Failed to clear instance config cache');
+			Logger.error({error}, 'Failed to clear instance config cache');
 		});
 	}
 
@@ -1171,7 +1169,7 @@ export class InstanceConfigRepository {
 
 	async setInstancePolicyConfig(config: Partial<InstancePolicyConfig>): Promise<InstancePolicyConfig> {
 		const current = await this.readStoredInstancePolicyConfig();
-		const next = decodeInstancePolicyConfig({ ...current, ...config });
+		const next = decodeInstancePolicyConfig({...current, ...config});
 		await this.setConfig(INSTANCE_POLICY_CONFIG_KEY, JSON.stringify(next));
 		setCachedDeferredPhoneGateEnabled(resolveDeferredPhoneGateEnabled(next));
 		return next;
@@ -1326,12 +1324,12 @@ export class InstanceConfigRepository {
 		const smtp =
 			provider === 'smtp'
 				? {
-					host: integrations.email.smtp.host ?? Config.email.smtp?.host ?? '',
-					port: integrations.email.smtp.port ?? Config.email.smtp?.port ?? 587,
-					username: integrations.email.smtp.username ?? Config.email.smtp?.username ?? '',
-					password: integrations.email.smtp.password ?? Config.email.smtp?.password ?? '',
-					secure: integrations.email.smtp.secure ?? Config.email.smtp?.secure ?? true,
-				}
+						host: integrations.email.smtp.host ?? Config.email.smtp?.host ?? '',
+						port: integrations.email.smtp.port ?? Config.email.smtp?.port ?? 587,
+						username: integrations.email.smtp.username ?? Config.email.smtp?.username ?? '',
+						password: integrations.email.smtp.password ?? Config.email.smtp?.password ?? '',
+						secure: integrations.email.smtp.secure ?? Config.email.smtp?.secure ?? true,
+					}
 				: undefined;
 		const next: APIConfig['email'] = {
 			...Config.email,
@@ -1360,7 +1358,7 @@ export class InstanceConfigRepository {
 		const integrations = parseStoredInstanceIntegrationsConfig(raw);
 		const runtimeKeys = integrations.bluesky.keys.flatMap((key): Array<BlueskyOAuthKeyConfig> => {
 			if (!key.private_key) return [];
-			return [{ kid: key.kid, private_key: key.private_key }];
+			return [{kid: key.kid, private_key: key.private_key}];
 		});
 		const keys = runtimeKeys.length > 0 ? runtimeKeys : Config.auth.bluesky.keys;
 		const enabled = (integrations.bluesky.enabled ?? Config.auth.bluesky.enabled) && keys.length > 0;
@@ -1498,7 +1496,7 @@ export class InstanceConfigRepository {
 		expiresAt: Date | null;
 		maxUses: number | null;
 		approvalRequired: boolean;
-	}): Promise<{ registrationUrl: InstanceRegistrationUrlPublic; code: string }> {
+	}): Promise<{registrationUrl: InstanceRegistrationUrlPublic; code: string}> {
 		const id = crypto.randomUUID();
 		const code = id;
 		const registrationUrl: InstanceRegistrationUrl = {
@@ -1517,7 +1515,7 @@ export class InstanceConfigRepository {
 		};
 		const registrationUrls = await this.getRegistrationUrls();
 		await this.setRegistrationUrls([registrationUrl, ...registrationUrls]);
-		return { registrationUrl: redactRegistrationUrl(registrationUrl), code };
+		return {registrationUrl: redactRegistrationUrl(registrationUrl), code};
 	}
 
 	async revokeRegistrationUrl(id: string): Promise<void> {
@@ -1526,7 +1524,7 @@ export class InstanceConfigRepository {
 		await this.setRegistrationUrls(
 			registrationUrls.map((registrationUrl) =>
 				registrationUrl.id === id && !registrationUrl.revoked_at
-					? { ...registrationUrl, revoked_at: now }
+					? {...registrationUrl, revoked_at: now}
 					: registrationUrl,
 			),
 		);
@@ -1554,11 +1552,11 @@ export class InstanceConfigRepository {
 			registrationUrls.map((registrationUrl) =>
 				registrationUrl.id === id
 					? {
-						...registrationUrl,
-						use_count: registrationUrl.use_count + 1,
-						last_used_at: now,
-						last_used_by_user_id: userId,
-					}
+							...registrationUrl,
+							use_count: registrationUrl.use_count + 1,
+							last_used_at: now,
+							last_used_by_user_id: userId,
+						}
 					: registrationUrl,
 			),
 		);
@@ -1585,7 +1583,7 @@ export class InstanceConfigRepository {
 		await this.setPendingRegistrations(pendingRegistrations.filter((entry) => entry.user_id !== userId));
 	}
 
-	async getSsoConfig(options?: { includeSecret?: boolean }): Promise<InstanceSsoConfig> {
+	async getSsoConfig(options?: {includeSecret?: boolean}): Promise<InstanceSsoConfig> {
 		const configs = await this.getAllConfigs();
 		const flags = readStoredSsoFlags(configs);
 		const read = (key: string): string | null => {
@@ -1614,7 +1612,7 @@ export class InstanceConfigRepository {
 	}
 
 	async setSsoConfig(config: Partial<InstanceSsoConfig>): Promise<InstanceSsoConfig> {
-		const current = await this.getSsoConfig({ includeSecret: true });
+		const current = await this.getSsoConfig({includeSecret: true});
 		const definedConfig = Object.fromEntries(
 			Object.entries(config).filter(([, value]) => value !== undefined),
 		) as Partial<InstanceSsoConfig>;
@@ -1633,7 +1631,7 @@ export class InstanceConfigRepository {
 			if (next.enabled) {
 				throw error;
 			}
-			Logger.warn({ error }, 'Clearing invalid SSO allowed domain config while SSO is disabled');
+			Logger.warn({error}, 'Clearing invalid SSO allowed domain config while SSO is disabled');
 			allowedEmailDomains = [];
 		}
 		const entries: Array<[string, string]> = [
@@ -1655,7 +1653,7 @@ export class InstanceConfigRepository {
 			entries.push(['sso_client_secret', config.clientSecret ?? '']);
 		}
 		await this.setConfigs(entries);
-		return this.getSsoConfig({ includeSecret: true });
+		return this.getSsoConfig({includeSecret: true});
 	}
 
 	private async setRegistrationUrls(registrationUrls: Array<InstanceRegistrationUrl>): Promise<void> {
