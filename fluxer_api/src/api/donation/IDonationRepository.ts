@@ -24,6 +24,7 @@ export abstract class IDonationRepository {
 		subscriptionInterval: string | null;
 		subscriptionCurrentPeriodEnd: Date | null;
 		subscriptionCancelAt?: Date | null;
+		subscriptionStatus?: string | null;
 	}): Promise<Donor>;
 
 	abstract updateDonorSubscription(
@@ -39,10 +40,27 @@ export abstract class IDonationRepository {
 			subscriptionInterval: string | null;
 			subscriptionCurrentPeriodEnd: Date | null;
 			subscriptionCancelAt?: Date | null;
+			subscriptionStatus?: string | null;
 		},
 	): Promise<Donor | null>;
 
+	abstract updateDonorCustomerDetails(
+		email: string,
+		data: {
+			stripeCustomerId: string | null;
+			businessName?: string | null;
+			taxId?: string | null;
+			taxIdType?: string | null;
+		},
+	): Promise<Donor | null>;
+
+	abstract linkDonorStripeCustomer(email: string, stripeCustomerId: string): Promise<void>;
+
+	abstract clearDonorStripeCustomer(stripeCustomerId: string): Promise<void>;
+
 	abstract cancelDonorSubscription(email: string): Promise<void>;
+
+	abstract deleteDonorSubscriptionMapping(stripeSubscriptionId: string, email: string): Promise<void>;
 
 	abstract createMagicLinkToken(token: DonorMagicLinkToken): Promise<void>;
 

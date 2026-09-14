@@ -84,6 +84,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_API_REQUEST_TIMEOUT_MS: {path: ['services', 'api', 'request_timeout_ms'], parse: parseInteger},
 	FLUXER_API_MAX_INFLIGHT_REQUESTS: {path: ['services', 'api', 'max_inflight_requests'], parse: parseInteger},
 	FLUXER_API_IP_BAN_EXEMPT_IPS: {path: ['services', 'api', 'ip_ban_exempt_ips'], parse: parseCsv},
+	FLUXER_API_DONATION_PROXY_KEY: {path: ['services', 'api', 'donation_proxy_key']},
 	FLUXER_API_DESKTOP_GITHUB_REDIRECT_COUNTRIES: {
 		path: ['services', 'api', 'desktop_github_redirect_countries'],
 		parse: parseCsv,

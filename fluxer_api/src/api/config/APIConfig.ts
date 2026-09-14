@@ -134,6 +134,7 @@ export interface APIConfig {
 	internal: {
 		gateway: string;
 		gatewayRpcAuthToken: string;
+		donationProxyKey: string;
 	};
 	hosts: {
 		invite: string;

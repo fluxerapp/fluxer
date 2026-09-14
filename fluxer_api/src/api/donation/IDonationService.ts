@@ -8,6 +8,7 @@ export interface IDonationService {
 		email: string;
 		stripeCustomerId: string | null;
 	}>;
+	redeemMagicLinkToken(token: string): Promise<string | null>;
 	createDonationCheckout(params: {
 		email: string;
 		amountCents: number;
@@ -16,5 +17,4 @@ export interface IDonationService {
 		isBusiness?: boolean;
 		locale?: string | null;
 	}): Promise<string>;
-	createDonorPortalSession(stripeCustomerId: string): Promise<string>;
 }

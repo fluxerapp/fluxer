@@ -147,6 +147,10 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	if (Buffer.from(uploadRelaySecretBase64, 'base64').length < 32) {
 		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes');
 	}
+	const donationProxyKey = (master.services.api.donation_proxy_key ?? '').trim();
+	if (donationProxyKey.length > 0 && donationProxyKey.length < 32) {
+		throw new Error('FLUXER_API_DONATION_PROXY_KEY must be at least 32 characters');
+	}
 	if (!s3Config) {
 		throw new Error('S3 configuration is required for the API');
 	}
@@ -275,6 +279,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		internal: {
 			gateway: resolveGatewayInternalUrl(master),
 			gatewayRpcAuthToken: master.services.gateway.rpc_auth_token ?? '',
+			donationProxyKey,
 		},
 		hosts: {
 			invite: extractHostname(master.endpoints.invite),

@@ -288,7 +288,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/connections.mdx', {'table-cell': 2}],
 	['http-api/deployment-availability.md', {'table-fit': 1}],
 	['http-api/discovery.mdx', {'table-cell': 3}],
-	['http-api/donations.mdx', {'table-cell': 2}],
+	['http-api/donations.mdx', {'table-cell': 1}],
 	['http-api/entrance-sounds.mdx', {'table-cell': 3, 'table-parallel': 1}],
 	['http-api/experiments.mdx', {'table-identifier': 1}],
 	['http-api/gifs.mdx', {'table-cell': 5}],

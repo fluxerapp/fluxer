@@ -13,7 +13,7 @@
 	},
 	"donation_confirmation": {
 		"subject": "תודה על תרומתכם ל-{product_name}",
-		"body": "שלום,\n\nתודה על תרומתכם ל-{product_name}! ה{interval, select,\n  month {תרומה החוזרת}\n  year {תרומה החוזרת}\n  other {תרומה החד-פעמית}\n} שלכם {interval, select,\n  month {הוגדרה}\n  year {הוגדרה}\n  other {בוצעה}\n} בהצלחה.\n\nפרטי התרומה:\nסכום: {amount} {currency} {interval, select,\n  month {לחודש}\n  year {לשנה}\n  other {}\n}\n\nStripe ישלח לכם בקרוב קבלה נפרדת עם קובץ PDF של החשבונית. הקבלה תכלול את כל פרטי התשלום וניתן יהיה להשתמש בה למטרות מס.\n\nאתם יכולים לצפות בהיסטוריית התרומות שלכם, להוריד חשבוניות, {interval, select,\n  month {ולנהל או לבטל את המנוי}\n  year {ולנהל או לבטל את המנוי}\n  other {ולנהל תרומות עתידיות}\n} בכל עת באמצעות קישור זה:\n\n{manageUrl}\n\nהתמיכה שלכם עוזרת לשמור על פעילות {product_name}. תודה!\n\nצוות {product_name}"
+		"body": "שלום,\n\nתודה על תרומתכם ל-{product_name}! ה{interval, select,\n  month {תרומה החוזרת}\n  year {תרומה החוזרת}\n  other {תרומה החד-פעמית}\n} שלכם {interval, select,\n  month {הוגדרה}\n  year {הוגדרה}\n  other {בוצעה}\n} בהצלחה.\n\nפרטי התרומה:\nסכום: {amount} {interval, select,\n  month {לחודש}\n  year {לשנה}\n  other {}\n}\n\nStripe ישלח לכם בקרוב קבלה נפרדת עם קובץ PDF של החשבונית. הקבלה תכלול את כל פרטי התשלום וניתן יהיה להשתמש בה למטרות מס.\n\nאתם יכולים לצפות בהיסטוריית התרומות שלכם, להוריד חשבוניות, {interval, select,\n  month {ולנהל או לבטל את המנוי}\n  year {ולנהל או לבטל את המנוי}\n  other {ולנהל תרומות עתידיות}\n} בכל עת באמצעות קישור זה:\n\n{manageUrl}\n\nהתמיכה שלכם עוזרת לשמור על פעילות {product_name}. תודה!\n\nצוות {product_name}"
 	},
 	"donation_magic_link": {
 		"subject": "ניהול התרומות שלכם ל-{product_name}",

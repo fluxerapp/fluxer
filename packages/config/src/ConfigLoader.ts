@@ -104,6 +104,7 @@ function defaultConfig(): MasterConfig {
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
 				ip_ban_exempt_ips: [],
+				donation_proxy_key: '',
 				desktop_github_redirect_countries: [],
 				presigned_attachment_uploads_enabled: false,
 				presigned_downloads_enabled: false,

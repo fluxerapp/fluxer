@@ -10,7 +10,7 @@ A donation is a one-off or recurring payment, taken on an externally hosted chec
 
 None of the routes here takes a credential, and all are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. When a request presents a valid credential anyway, Fluxer counts the request against that account's rate limit.
 
-Fluxer uses a submitted address exactly as written and matches a donor by exact equality, so `Donor@example.com` and `donor@example.com` address two different donors.
+Fluxer removes the surrounding whitespace from a submitted address and lowercases it before it matches a donor, so `Donor@example.com` and `donor@example.com` address the same donor.
 
 :::note[Donation management requires a completed donation]
 Fluxer stores a donor only when the payment provider confirms a donation checkout. [Request donation management link](#request-donation-management-link) sends a link only to an address stored as a donor.
@@ -22,12 +22,15 @@ Amounts are expressed in the minor unit of the selected currency. Each currency 
 
 | Value | Description |
 | --- | --- |
-| usd | The United States dollar (500-100000 minor units) |
-| eur | The euro (500-100000 minor units) |
-| brl | The Brazilian real (2500-500000 minor units) |
-| inr | The Indian rupee (50000-10000000 minor units) |
-| pln | The Polish zloty (2000-400000 minor units) |
-| try | The Turkish lira (25000-5000000 minor units) |
+| usd | The United States dollar (300-99999999 minor units) |
+| eur | The euro (300-99999999 minor units) |
+| brl | The Brazilian real (1000-99999999 minor units) |
+| inr | The Indian rupee (20000-99999999 minor units) |
+| pln | The Polish zloty (800-99999999 minor units) |
+| try | The Turkish lira (10000-99999999 minor units) |
+| sek | The Swedish krona (3000-99999999 minor units) |
+| dkk | The Danish krone (2000-99999999 minor units) |
+| nok | The Norwegian krone (3000-99999999 minor units) |
 
 ## Donation intervals
 
@@ -83,7 +86,7 @@ An address that resolves to no donor receives no email.
 
 <sup>1</sup> An empty string is reported as a missing address
 
-<sup>2</sup> A padded address fails syntax validation
+<sup>2</sup> A padded address has its surrounding whitespace removed before validation
 
 <sup>3</sup> The domain must publish an MX, A or AAAA record
 
@@ -104,36 +107,63 @@ Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid 
 
 3 requests per hour for each client IP address or authenticated user, on the `donation:request_link` bucket.
 
+10 requests per hour for each address, on the shared `donation:request_link:email` bucket.
+
 ## Manage donation
 
 <RouteHeader method="GET" path="/v1/donations/manage" unauthenticated />
 
-Consumes a donation management token. Answers 302 with `Location` set to the externally hosted billing portal for the matching donor. The token is the credential.
+Checks a donation management token and leaves it unspent. Answers 302 with `Location` set to the donation management confirmation page on the public site. The token is the credential.
 
-An unknown token returns 400 `DONATION_MAGIC_LINK_INVALID`, an expired token returns `DONATION_MAGIC_LINK_EXPIRED`, and a used token returns `DONATION_MAGIC_LINK_USED`. An expired and used token reports `DONATION_MAGIC_LINK_EXPIRED`.
-
-A token whose address no longer resolves to a donor holding a payment provider customer is still consumed, and the redirect goes to the public donation page. For a donor holding a customer, a deployment with no configured payment provider returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` and a provider failure returns 400 `STRIPE_ERROR`, both after the token has already been consumed.
+An unknown token redirects with `link_invalid` in `alert`, an expired token with `link_expired`, and a used token with `link_used`. An expired and used token reports `link_expired`. A token whose address no longer resolves to a donor holding a payment provider customer redirects with `no_customer`.
 
 ### Query parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| token<sup>1</sup> <sup>2</sup> | string | The management token, exactly 64 characters |
+| token<sup>1</sup> | string | The management token, exactly 64 characters |
 
-<sup>1</sup> A token whose case was changed in transit returns 400 `DONATION_MAGIC_LINK_INVALID`
-
-<sup>2</sup> Consumed as soon as it is found valid, so a portal creation failure leaves the token spent
+<sup>1</sup> A token whose case was changed in transit redirects with `link_invalid`
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 302 | empty | The token was consumed, and `Location` is either the billing portal session or the public donation page |
-| 400 | [error response](/http-api/#error-response) | The token is unknown, expired or already consumed, the payment provider is not configured, or the payment provider rejected the portal creation |
+| 302 | empty | `Location` is the confirmation page, or the management page with an `alert` value |
+| 400 | [error response](/http-api/#error-response) | The token is not exactly 64 characters |
 
 ### Side effects
 
-The token is consumed. A resolved donor holding a payment provider customer receives a portal session. Closing that session returns the donor to the public donation page. Where the address resolves to no donor, or to a donor with no customer, Fluxer redirects to the public donation page and creates no portal session.
+None. The token stays spendable, so a mail scanner that opens the link first does not spend it.
+
+### Rate limit
+
+10 requests per minute for each client IP address or authenticated user, on the `donation:manage` bucket.
+
+## Redeem donation management link
+
+<RouteHeader method="POST" path="/v1/donations/manage" unauthenticated />
+
+Creates the billing portal session and then consumes the token. Answers 302 with `Location` set to the externally hosted billing portal. The token is consumed only after the portal session exists, so a payment provider failure leaves it spendable.
+
+Every other outcome redirects to the public donation management page with `alert` set to `link_invalid`, `link_expired`, `link_used`, `no_customer` or `portal_error`. A deployment with no configured payment provider redirects with `portal_error`, and so does a provider that rejects the portal creation.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| token | string | The management token, exactly 64 characters |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 302 | empty | `Location` is the billing portal session, or the management page with an `alert` value |
+| 400 | [error response](/http-api/#error-response) | The token is not exactly 64 characters |
+
+### Side effects
+
+The token is consumed. Closing the portal session returns the donor to the public donation page.
 
 ### Rate limit
 
@@ -148,6 +178,8 @@ Creates a one-off or recurring donation checkout session. Returns a [donation ch
 An amount outside the selected currency's bounds fails validation with 400 `INVALID_FORM_BODY` and an `errors` entry on `amount_cents`. Where the deployment has no configured payment provider, the route returns 400 `STRIPE_PAYMENT_NOT_AVAILABLE` before it resolves the address. A provider failure while creating the session returns 400 `STRIPE_ERROR`.
 
 A recurring donation for an address with an active recurring donation returns the public donation management page, with the percent-encoded address in `email` and `active_subscription` in `alert`. A donation scheduled for cancellation does not block a new checkout.
+
+The session is bound to the address by email alone, never to a payment provider customer the address already has. Addresses are trimmed and lowercased before every lookup and before they are stored.
 
 ### JSON body
 
@@ -181,3 +213,5 @@ When the payment provider confirms the payment, Fluxer stores the address as a d
 ### Rate limit
 
 5 requests per minute for each client IP address or authenticated user, on the `donation:checkout` bucket.
+
+10 requests per hour for each address, on the shared `donation:checkout:email` bucket.

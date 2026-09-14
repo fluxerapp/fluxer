@@ -5310,7 +5310,7 @@
 		"/donations/manage": {
 			"get": {
 				"operationId": "manage_donation",
-				"summary": "Manage donation subscription",
+				"summary": "Open donation management link",
 				"tags": ["Donations"],
 				"responses": {
 					"302": {"description": "Success"},
@@ -5345,7 +5345,60 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Validates the magic link token and redirects to Stripe billing portal.",
+				"description": "Checks the magic link token without consuming it and redirects to the donation management confirmation page.",
+				"parameters": [
+					{
+						"name": "token",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"minLength": 64,
+							"maxLength": 64,
+							"description": "Magic link token for donor authentication"
+						},
+						"description": "Magic link token for donor authentication"
+					}
+				]
+			},
+			"post": {
+				"operationId": "redeem_donation_magic_link",
+				"summary": "Redeem donation management link",
+				"tags": ["Donations"],
+				"responses": {
+					"302": {"description": "Success"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Consumes the magic link token and redirects to the Stripe billing portal.",
 				"parameters": [
 					{
 						"name": "token",
@@ -32004,7 +32057,7 @@
 				"required": ["id", "name"],
 				"additionalProperties": false
 			},
-			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try"]},
+			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
 			"GuildExpressionSourceGuildResponse": {
 				"type": "object",
 				"properties": {

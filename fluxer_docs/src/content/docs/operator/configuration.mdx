@@ -309,6 +309,10 @@ Default empty. Addresses exempt from IP bans. Comma separated. Every entry must 
 
 The API returns 403 for any request whose client-IP header is missing, empty, or not a parsable address, and for every request while `FLUXER_TRUST_CLIENT_IP_HEADER` is `false`. The exceptions are `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so a missing or unparsable header happens only in a layout that puts something other than the edge directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
 
+#### `FLUXER_API_DONATION_PROXY_KEY`
+
+Default empty, which keys donation rate limits on the caller. Set it to let a trusted front end, such as the marketing site, send the donor address the limits apply to. The key must be at least 32 characters or the API fails at boot. The front end sends the same value in `X-Fluxer-Internal-Key` and the donor address in `X-Fluxer-Donor-Ip`. The API ignores the address header unless the key matches, so a browser cannot set it. Self-hosters leave this empty.
+
 ## Images
 
 These pick which container images Compose pulls. All are optional.

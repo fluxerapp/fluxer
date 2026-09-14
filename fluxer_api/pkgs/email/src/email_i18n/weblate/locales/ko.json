@@ -13,7 +13,7 @@
 	},
 	"donation_confirmation": {
 		"subject": "{product_name} 후원에 감사드려요",
-		"body": "안녕하세요,\n\n{product_name}에 후원해 주셔서 감사해요! 회원님의 {interval, select,\n  month {정기 후원}\n  year {정기 후원}\n  other {일회성 후원}\n}이 성공적으로 {interval, select,\n  month {설정되었어요}\n  year {설정되었어요}\n  other {처리되었어요}\n}.\n\n후원 상세 정보:\n금액: {amount} {currency} {interval, select,\n  month {매월}\n  year {매년}\n  other {}\n}\n\nStripe에서 곧 인보이스 PDF가 포함된 별도의 영수증을 이메일로 보내드릴 예정이에요. 이 영수증에는 모든 결제 세부 정보가 포함되어 있으며, 세금 목적으로 활용할 수 있어요.\n\n다음 링크를 통해 언제든지 후원 내역을 확인하고, 인보이스를 다운로드하고, {interval, select,\n  month {구독을 관리하거나 취소할 수 있어요}\n  year {구독을 관리하거나 취소할 수 있어요}\n  other {향후 후원을 관리할 수 있어요}\n}:\n\n{manageUrl}\n\n회원님의 후원은 {product_name}를 계속 운영하는 데 큰 도움이 돼요. 진심으로 감사해요!\n\n– {product_name} 팀"
+		"body": "안녕하세요,\n\n{product_name}에 후원해 주셔서 감사해요! 회원님의 {interval, select,\n  month {정기 후원}\n  year {정기 후원}\n  other {일회성 후원}\n}이 성공적으로 {interval, select,\n  month {설정되었어요}\n  year {설정되었어요}\n  other {처리되었어요}\n}.\n\n후원 상세 정보:\n금액: {amount} {interval, select,\n  month {매월}\n  year {매년}\n  other {}\n}\n\nStripe에서 곧 인보이스 PDF가 포함된 별도의 영수증을 이메일로 보내드릴 예정이에요. 이 영수증에는 모든 결제 세부 정보가 포함되어 있으며, 세금 목적으로 활용할 수 있어요.\n\n다음 링크를 통해 언제든지 후원 내역을 확인하고, 인보이스를 다운로드하고, {interval, select,\n  month {구독을 관리하거나 취소할 수 있어요}\n  year {구독을 관리하거나 취소할 수 있어요}\n  other {향후 후원을 관리할 수 있어요}\n}:\n\n{manageUrl}\n\n회원님의 후원은 {product_name}를 계속 운영하는 데 큰 도움이 돼요. 진심으로 감사해요!\n\n– {product_name} 팀"
 	},
 	"donation_magic_link": {
 		"subject": "{product_name} 후원 내역 관리",

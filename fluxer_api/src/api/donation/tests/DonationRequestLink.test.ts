@@ -112,8 +112,12 @@ describe('POST /donations/request-link', () => {
 			const longEmail = `${longLocalPart}@example.com`;
 			await createDonationRequestLinkBuilder(harness).body({email: longEmail}).expect(400).execute();
 		});
-		test('rejects email with leading/trailing whitespace', async () => {
-			await createDonationRequestLinkBuilder(harness).body({email: '  test@example.com  '}).expect(400).execute();
+		test('normalizes surrounding whitespace and letter case to the stored donor', async () => {
+			await createDonor(TEST_DONOR_EMAIL);
+			await createDonationRequestLinkBuilder(harness)
+				.body({email: `  ${TEST_DONOR_EMAIL.toUpperCase()}  `})
+				.expect(204)
+				.execute();
 		});
 	});
 	describe('idempotency', () => {

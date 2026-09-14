@@ -97,6 +97,7 @@ export interface MasterConfig {
 			request_timeout_ms: number;
 			max_inflight_requests: number;
 			ip_ban_exempt_ips: Array<string>;
+			donation_proxy_key: string;
 			desktop_github_redirect_countries: Array<string>;
 			presigned_attachment_uploads_enabled: boolean;
 			presigned_downloads_enabled: boolean;

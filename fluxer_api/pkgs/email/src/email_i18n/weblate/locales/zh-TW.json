@@ -13,7 +13,7 @@
 	},
 	"donation_confirmation": {
 		"subject": "感謝您對 {product_name} 的捐款",
-		"body": "哈囉，\n\n感謝您對 {product_name} 的捐款！您的{interval, select,\n  month {定期捐款}\n  year {定期捐款}\n  other {一次性捐款}\n}已成功{interval, select,\n  month {設定}\n  year {設定}\n  other {處理}\n}。\n\n捐款詳情：\n金額：{amount} {currency} {interval, select,\n  month {每月}\n  year {每年}\n  other {}\n}\n\nStripe 稍後會另外寄給您一封收據，其中附有發票 PDF。這份收據包含所有付款詳情，可用於報稅。\n\n您可以隨時使用此連結查看您的捐款紀錄、下載發票，{interval, select,\n  month {以及管理或取消您的訂閱}\n  year {以及管理或取消您的訂閱}\n  other {以及管理未來的捐款}\n}：\n\n{manageUrl}\n\n您的支持讓 {product_name} 得以持續運作。謝謝您！\n\n– {product_name} 團隊"
+		"body": "哈囉，\n\n感謝您對 {product_name} 的捐款！您的{interval, select,\n  month {定期捐款}\n  year {定期捐款}\n  other {一次性捐款}\n}已成功{interval, select,\n  month {設定}\n  year {設定}\n  other {處理}\n}。\n\n捐款詳情：\n金額：{amount} {interval, select,\n  month {每月}\n  year {每年}\n  other {}\n}\n\nStripe 稍後會另外寄給您一封收據，其中附有發票 PDF。這份收據包含所有付款詳情，可用於報稅。\n\n您可以隨時使用此連結查看您的捐款紀錄、下載發票，{interval, select,\n  month {以及管理或取消您的訂閱}\n  year {以及管理或取消您的訂閱}\n  other {以及管理未來的捐款}\n}：\n\n{manageUrl}\n\n您的支持讓 {product_name} 得以持續運作。謝謝您！\n\n– {product_name} 團隊"
 	},
 	"donation_magic_link": {
 		"subject": "管理您的 {product_name} 捐款",

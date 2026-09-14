@@ -22,6 +22,19 @@ export class DonationService implements IDonationService {
 		return this.magicLinkService.validateToken(token);
 	}
 
+	async redeemMagicLinkToken(token: string): Promise<string | null> {
+		const {stripeCustomerId} = await this.magicLinkService.validateToken(token);
+		if (!stripeCustomerId) {
+			return null;
+		}
+		const portalUrl = await this.checkoutService.createPortalSession(stripeCustomerId);
+		if (!portalUrl) {
+			return null;
+		}
+		await this.magicLinkService.consumeToken(token);
+		return portalUrl;
+	}
+
 	async createDonationCheckout(params: {
 		email: string;
 		amountCents: number;
@@ -31,9 +44,5 @@ export class DonationService implements IDonationService {
 		locale?: string | null;
 	}): Promise<string> {
 		return this.checkoutService.createCheckout(params);
-	}
-
-	async createDonorPortalSession(stripeCustomerId: string): Promise<string> {
-		return this.checkoutService.createPortalSession(stripeCustomerId);
 	}
 }

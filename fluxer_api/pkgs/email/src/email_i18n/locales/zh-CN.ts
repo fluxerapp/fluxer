@@ -17,7 +17,7 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"donation_confirmation": {
 		"subject": "感谢你的 {product_name} 捐赠",
-		"body": "你好，\n\n感谢你对 {product_name} 的捐赠！你的{interval, select,\n  month {定期捐赠}\n  year {定期捐赠}\n  other {一次性捐赠}\n}{interval, select,\n  month {已成功设置}\n  year {已成功设置}\n  other {已成功处理}\n}。\n\n捐赠详情：\n金额：{amount} {currency} {interval, select,\n  month {每月}\n  year {每年}\n  other {}\n}\n\nStripe 稍后会另外发送一封收据邮件，其中附有发票 PDF。邮件包含所有付款详情，可用于报税。\n\n你可以随时使用此链接查看你的捐赠历史、下载发票，以及{interval, select,\n  month {管理或取消你的订阅}\n  year {管理或取消你的订阅}\n  other {管理你的未来捐赠}\n}：\n\n{manageUrl}\n\n你的支持有助于 {product_name} 的持续运行。谢谢！\n\n– {product_name} 团队"
+		"body": "你好，\n\n感谢你对 {product_name} 的捐赠！你的{interval, select,\n  month {定期捐赠}\n  year {定期捐赠}\n  other {一次性捐赠}\n}{interval, select,\n  month {已成功设置}\n  year {已成功设置}\n  other {已成功处理}\n}。\n\n捐赠详情：\n金额：{amount} {interval, select,\n  month {每月}\n  year {每年}\n  other {}\n}\n\nStripe 稍后会另外发送一封收据邮件，其中附有发票 PDF。邮件包含所有付款详情，可用于报税。\n\n你可以随时使用此链接查看你的捐赠历史、下载发票，以及{interval, select,\n  month {管理或取消你的订阅}\n  year {管理或取消你的订阅}\n  other {管理你的未来捐赠}\n}：\n\n{manageUrl}\n\n你的支持有助于 {product_name} 的持续运行。谢谢！\n\n– {product_name} 团队"
 	},
 	"donation_magic_link": {
 		"subject": "管理你的 {product_name} 捐赠",

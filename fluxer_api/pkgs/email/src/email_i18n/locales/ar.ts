@@ -17,7 +17,7 @@ const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"donation_confirmation": {
 		"subject": "شكرًا لك على تبرعك لـ{product_name}",
-		"body": "مرحبًا،\n\nشكرًا لك على تبرعك لـ{product_name}! لقد تم {interval, select,\n  month {إعداد تبرعك المتكرر}\n  year {إعداد تبرعك المتكرر}\n  other {معالجة تبرعك لمرة واحدة}\n} بنجاح.\n\nتفاصيل التبرع:\nالمبلغ: {amount} {currency} {interval, select,\n  month {شهريًا}\n  year {سنويًا}\n  other {}\n}\n\nسترسل لك Stripe إيصالًا منفصلًا عبر البريد الإلكتروني مع فاتورتك بصيغة PDF قريبًا. يتضمن هذا جميع تفاصيل الدفع ويمكن استخدامه لأغراض ضريبية.\n\nيمكنك عرض سجل تبرعاتك، وتنزيل الفواتير، {interval, select,\n  month {وإدارة أو إلغاء اشتراكك}\n  year {وإدارة أو إلغاء اشتراكك}\n  other {وإدارة التبرعات المستقبلية}\n} في أي وقت باستخدام هذا الرابط:\n\n{manageUrl}\n\nدعمك يساعد على استمرار {product_name}. شكرًا لك!\n\n– فريق {product_name}"
+		"body": "مرحبًا،\n\nشكرًا لك على تبرعك لـ{product_name}! لقد تم {interval, select,\n  month {إعداد تبرعك المتكرر}\n  year {إعداد تبرعك المتكرر}\n  other {معالجة تبرعك لمرة واحدة}\n} بنجاح.\n\nتفاصيل التبرع:\nالمبلغ: {amount} {interval, select,\n  month {شهريًا}\n  year {سنويًا}\n  other {}\n}\n\nسترسل لك Stripe إيصالًا منفصلًا عبر البريد الإلكتروني مع فاتورتك بصيغة PDF قريبًا. يتضمن هذا جميع تفاصيل الدفع ويمكن استخدامه لأغراض ضريبية.\n\nيمكنك عرض سجل تبرعاتك، وتنزيل الفواتير، {interval, select,\n  month {وإدارة أو إلغاء اشتراكك}\n  year {وإدارة أو إلغاء اشتراكك}\n  other {وإدارة التبرعات المستقبلية}\n} في أي وقت باستخدام هذا الرابط:\n\n{manageUrl}\n\nدعمك يساعد على استمرار {product_name}. شكرًا لك!\n\n– فريق {product_name}"
 	},
 	"donation_magic_link": {
 		"subject": "إدارة تبرعاتك لـ{product_name}",

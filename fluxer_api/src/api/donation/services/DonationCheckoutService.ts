@@ -18,8 +18,61 @@ import type Stripe from 'stripe';
 type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
 type CheckoutSessionMode = CheckoutSessionCreateParams['mode'];
 type CheckoutSessionLineItem = NonNullable<CheckoutSessionCreateParams['line_items']>[number];
+type CheckoutSessionLocale = NonNullable<CheckoutSessionCreateParams['locale']>;
 
 const PRODUCT_NAME = 'Fluxer';
+
+const STRIPE_CHECKOUT_LOCALES: Record<string, CheckoutSessionLocale> = {
+	bg: 'bg',
+	cs: 'cs',
+	da: 'da',
+	de: 'de',
+	el: 'el',
+	'en-GB': 'en-GB',
+	'en-US': 'en',
+	'es-419': 'es-419',
+	'es-ES': 'es',
+	fi: 'fi',
+	fr: 'fr',
+	hr: 'hr',
+	hu: 'hu',
+	id: 'id',
+	it: 'it',
+	ja: 'ja',
+	ko: 'ko',
+	lt: 'lt',
+	nl: 'nl',
+	no: 'nb',
+	pl: 'pl',
+	'pt-BR': 'pt-BR',
+	ro: 'ro',
+	ru: 'ru',
+	'sv-SE': 'sv',
+	th: 'th',
+	tr: 'tr',
+	vi: 'vi',
+	'zh-CN': 'zh',
+	'zh-TW': 'zh-TW',
+};
+
+function getStripeCheckoutLocale(locale: string | null): CheckoutSessionLocale {
+	if (!locale) {
+		return 'auto';
+	}
+	const checkoutLocale = STRIPE_CHECKOUT_LOCALES[locale];
+	return checkoutLocale ?? 'auto';
+}
+
+function isMissingCustomerError(error: unknown): boolean {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		error.code === 'resource_missing' &&
+		'param' in error &&
+		error.param === 'customer'
+	);
+}
 
 function getDonationProductData(interval: 'month' | 'year' | null, locale: string | null) {
 	if (interval === 'month') {
@@ -68,8 +121,7 @@ export class DonationCheckoutService {
 		const isRecurring = params.interval !== null;
 		const existingDonor = await this.donationRepository.findDonorByEmail(params.email);
 		if (isRecurring && existingDonor?.hasActiveSubscription()) {
-			const encodedEmail = encodeURIComponent(params.email);
-			return `${Config.endpoints.marketing}/donate/manage?email=${encodedEmail}&alert=active_subscription`;
+			return `${Config.endpoints.marketing}/donate/manage?email=${encodeURIComponent(params.email)}&alert=active_subscription`;
 		}
 		const locale = params.locale ?? null;
 		const donationProductData = getDonationProductData(params.interval, locale);
@@ -96,18 +148,24 @@ export class DonationCheckoutService {
 						quantity: 1,
 					};
 			const isBusiness = params.isBusiness === true;
+			const donationMetadata = {
+				is_donation: 'true',
+				donation_email: params.email,
+			};
+			const reusableCustomerId = isRecurring ? (existingDonor?.stripeCustomerId ?? null) : null;
 			const sessionParams: CheckoutSessionCreateParams = {
 				line_items: [lineItem],
 				mode,
+				locale: getStripeCheckoutLocale(locale),
+				...(reusableCustomerId ? {customer: reusableCustomerId} : {customer_email: params.email}),
 				metadata: {
-					is_donation: 'true',
-					donation_email: params.email,
+					...donationMetadata,
 					donation_type: isRecurring ? 'recurring' : 'one_time',
 					is_business: isBusiness ? 'true' : 'false',
 					...(locale ? {donation_locale: locale} : {}),
 				},
 				success_url: `${Config.endpoints.marketing}/donate/success`,
-				cancel_url: `${Config.endpoints.marketing}/donate`,
+				cancel_url: `${Config.endpoints.marketing}/donate?type=${isBusiness ? 'business' : 'individual'}&currency=${params.currency}`,
 				automatic_tax: {
 					enabled: false,
 				},
@@ -117,22 +175,32 @@ export class DonationCheckoutService {
 				...(isBusiness ? {billing_address_collection: 'required' as const} : {}),
 				...(mode === 'payment'
 					? {
+							customer_creation: 'always' as const,
 							invoice_creation: {
 								enabled: true,
 							},
+							payment_intent_data: {
+								metadata: donationMetadata,
+							},
 						}
-					: {}),
+					: {
+							subscription_data: {
+								metadata: donationMetadata,
+							},
+						}),
 			};
-			if (existingDonor?.stripeCustomerId) {
-				sessionParams.customer = existingDonor.stripeCustomerId;
-				sessionParams.customer_update = {
-					address: 'auto',
-					name: 'auto',
-				};
-			} else {
+			let session: Stripe.Checkout.Session;
+			try {
+				session = await this.stripe.checkout.sessions.create(sessionParams);
+			} catch (createError: unknown) {
+				if (!reusableCustomerId || !isMissingCustomerError(createError)) {
+					throw createError;
+				}
+				await this.clearStaleCustomerId(reusableCustomerId);
+				delete sessionParams.customer;
 				sessionParams.customer_email = params.email;
+				session = await this.stripe.checkout.sessions.create(sessionParams);
 			}
-			const session = await this.stripe.checkout.sessions.create(sessionParams);
 			try {
 				await getBillingRepository().checkoutSessions.upsertFromStripe(session);
 			} catch (mirrorErr) {
@@ -160,12 +228,11 @@ export class DonationCheckoutService {
 				throw error;
 			}
 			Logger.error({error, email: params.email}, 'Failed to create donation checkout session');
-			const message = error instanceof Error ? error.message : 'Failed to create checkout session';
-			throw new StripeError(message);
+			throw new StripeError('Failed to create checkout session');
 		}
 	}
 
-	async createPortalSession(stripeCustomerId: string): Promise<string> {
+	async createPortalSession(stripeCustomerId: string): Promise<string | null> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
@@ -177,9 +244,17 @@ export class DonationCheckoutService {
 			Logger.debug({stripeCustomerId}, 'Donation portal session created');
 			return session.url;
 		} catch (error: unknown) {
+			if (isMissingCustomerError(error)) {
+				await this.clearStaleCustomerId(stripeCustomerId);
+				return null;
+			}
 			Logger.error({error, stripeCustomerId}, 'Failed to create donor portal session');
-			const message = error instanceof Error ? error.message : 'Failed to create portal session';
-			throw new StripeError(message);
+			throw new StripeError('Failed to create portal session');
 		}
+	}
+
+	private async clearStaleCustomerId(stripeCustomerId: string): Promise<void> {
+		await this.donationRepository.clearDonorStripeCustomer(stripeCustomerId);
+		Logger.warn({stripeCustomerId}, 'Cleared deleted Stripe customer from donor');
 	}
 }
