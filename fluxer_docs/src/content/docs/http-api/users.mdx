@@ -62,7 +62,7 @@ A system account never receives the deleted representation. An account only sche
 
 ## Public user flags
 
-`flags` holds the publicly visible subset of the account's stored flags. `STAFF` is also absent from an account with the staff-hidden flag.
+`flags` holds the publicly visible subset of the account's stored flags. `STAFF` is also removed from `flags` while the account has the stored `STAFF_HIDDEN` flag.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -79,7 +79,7 @@ The account-wide preference applied when another account replies to one of this 
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | NO_PREFERENCE | Respect the sender's intent on each reply, with no warning when the mention is toggled |
+| 0 | NO_PREFERENCE | The sender chooses whether each reply mentions this account, with no warning when the mention is toggled |
 | 1 | PREFER_MENTION | Replies mention this account by default, and the sender is warned when they disable the mention |
 | 2 | PREFER_NO_MENTION | Replies omit the mention by default, and the sender is warned when they enable it |
 
@@ -171,15 +171,15 @@ The private representation of the current account, returned by [Get current user
 
 <sup>11</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
 
-<sup>12</sup> While the value is set, premium entitlements remain active until it passes, and it replaces the default grace interval that otherwise follows `premium_until`
+<sup>12</sup> After `premium_until` passes, premium entitlements stay active until this time. While the value is null, they stay active for 3 days after `premium_until`
 
-<sup>13</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and it marks the discriminator for reselection when that premium access ends
+<sup>13</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and after that premium access ends, Fluxer replaces the discriminator with a newly generated one the next time the account starts a Gateway session
 
 <sup>14</sup> The field is declared but never populated, so it is absent from every response
 
 <sup>15</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
 
-<sup>16</sup> The array is empty when the account has no stored suspicious activity flag, when it has no email address, or when its contact is exempt from required actions
+<sup>16</sup> The array is empty when the account has no stored suspicious activity flag, when it has no email address, or when the account policy exempts its email address from required actions
 
 <sup>17</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
 
@@ -192,7 +192,7 @@ The private representation of the current account, returned by [Get current user
 :::
 
 :::caution[An outstanding required action blocks ordinary routes]
-While `required_actions` is non-empty, the ordinary login requirement returns 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The error body's `data` member has `suspicious_activity_flags`, rebuilt from the surviving list.
+While `required_actions` is non-empty, every route that requires a signed-in account, except the recovery routes below, returns 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The error body's `data` member has `suspicious_activity_flags`, with one bit set for each entry in `required_actions`.
 :::
 
 Recovery routes stay open to a restricted account. They are [Get current user](/http-api/users/current-user/#get-current-user), [Modify current user](/http-api/users/current-user/#modify-current-user), [Get current user settings](/http-api/users/settings/#get-current-user-settings), every [email change](/http-api/users/email-and-password/) and [phone verification](/http-api/users/phone-verification/) route, [Resend email verification](/http-api/authentication/#resend-email-verification), session listing and termination, and the OAuth2 routes.
@@ -246,7 +246,7 @@ Each entry is an exact string in the `required_actions` array of the [user objec
 | REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs to verify either its email address or its phone number again |
 | REQUIRE_INBOUND_PHONE_VERIFICATION<sup>1</sup> | The account needs to complete phone verification by sending an SMS to the instance's inbound number |
 
-<sup>1</sup> The entry appears only while a phone requirement is also outstanding. A stored inbound requirement with no other phone clause produces an ordinary verified phone requirement
+<sup>1</sup> The entry appears only while a phone requirement is also outstanding. A stored inbound requirement with no other phone requirement adds `REQUIRE_VERIFIED_PHONE` to the array
 
 ## Profile field privacy flags
 
@@ -262,7 +262,7 @@ A field whose flags value is `0` is visible to nobody, including on the owner's 
 
 The complete account-wide settings record, with one field per setting. `synced_preferences` holds a base64-encoded Protobuf snapshot defined by the [user settings Protobuf reference](/http-api/users/settings-protobuf/). Fluxer stores that snapshot for clients and never interprets it.
 
-Update semantics belong to the [user settings update object](/http-api/users/settings/#user-settings-update-object). Both settings operations return this object, and so do [Ready](/gateway/events/#ready-object) and [User Settings Update](/gateway/events/#user-settings-update). Every field below is always present.
+The [user settings update object](/http-api/users/settings/#user-settings-update-object) lists the fields an update accepts and what each supplied or omitted field does to the stored value. Both settings operations return this object, and so do [Ready](/gateway/events/#ready-object) and [User Settings Update](/gateway/events/#user-settings-update). Every field below is always present.
 
 ### Structure
 
@@ -521,7 +521,7 @@ A guild member profile is the per-guild profile customisation of the target acco
 
 <sup>1</sup> The value is forced to `null` when profile privacy restricts the viewer
 
-<sup>2</sup> The value is `null` while the member's premium-dependent guild customisation is sanitised. An animated banner hash has the `a_` prefix
+<sup>2</sup> Fluxer sets the value to `null` when the account no longer has premium and the membership has a guild avatar, banner, biography, or accent colour. It stays `null` until the account joins the guild again. An animated banner hash has the `a_` prefix
 
 ## Mutual guild object
 
@@ -557,9 +557,9 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>1</sup> The pair requires the `guild_id` query parameter and requires both the caller and the target to be members of that guild
 
-<sup>2</sup> All are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is also omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
+<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge. `premium_since` is also omitted while the target hides the activation time. `premium_lifetime_sequence` is also omitted while the target hides the sequence
 
-<sup>3</sup> The collection is omitted unless its query parameter is true, and always when the target is the caller
+<sup>3</sup> Each array is omitted unless its query parameter, `with_mutual_friends` or `with_mutual_guilds`, is true. Both are always omitted when the target is the caller
 
 <sup>4</sup> The array is empty when the profile is restricted. It otherwise holds only verified connections whose [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
@@ -640,7 +640,7 @@ A read that passes the access check can still be restricted. A restricted read n
 
 ### Side effects
 
-Reading a profile can clear expired premium state after its grace period. That change emits no Gateway Dispatch and does not prevent the profile from being returned.
+When the target's premium access and its grace period have both ended, reading the profile clears the target's stored premium subscription fields. That change emits no Gateway Dispatch and does not prevent the profile from being returned.
 
 ### Rate limit
 

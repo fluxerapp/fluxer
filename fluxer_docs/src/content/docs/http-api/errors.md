@@ -68,7 +68,7 @@ A validation failure whose elements have enumerated codes answers 400 with its e
 
 ### Default schema failure codes
 
-A boundary schema constraint can name its own [validation code](#validation-error-code-registry). When it names none, Fluxer maps the failure to one of the codes below by the kind of constraint that failed.
+A constraint in a route's request schema can name its own [validation code](#validation-error-code-registry). When it names none, Fluxer maps the failure to one of the codes below by the kind of constraint that failed.
 
 | Constraint | Code | Description |
 | --- | --- | --- |
@@ -110,7 +110,7 @@ Fluxer answers an unrecognised failure with 500 `INTERNAL_SERVER_ERROR` and a ge
 
 ## Client errors as an abuse signal
 
-Repeated invalid requests or credentials can trigger a temporary IP ban. A `4xx` answer to a request with no authenticated user adds to that signal, weighted by status. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. One request adds at most one signal, and a request from a private or exempt address adds none. Stop using a rejected credential and respect rate-limit responses instead of retrying unchanged requests.
+Repeated invalid requests or credentials can trigger a temporary IP ban. A `4xx` answer to a request with no authenticated user adds to that signal, weighted by status. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. One request adds at most one signal, and a request from a private or exempt address adds none. Stop using a rejected credential. Change a rejected request before sending it again, and after a 429 wait `retry_after` before the next attempt.
 
 :::caution[An automatic ban answers every request for 24 hours]
 A temporary ban lasts 24 hours by default. Requests from the banned address return 403 `GLOBAL_IP_TEMPORARILY_BANNED`. Use `expires_at` from the response when available.

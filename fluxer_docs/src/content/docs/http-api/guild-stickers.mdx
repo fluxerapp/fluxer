@@ -12,7 +12,7 @@ Every route names a guild in its path. A guild that has [UNAVAILABLE_FOR_EVERYON
 
 Names, descriptions, tags and uploaded images must pass the instance's content policy. Blocked content returns 403 `CONTENT_BLOCKED`.
 
-A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is distinguishable from guild membership. [Modify guild sticker](#modify-guild-sticker) answers 404 `UNKNOWN_STICKER` for such a guild.
+A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`, so guild existence is distinguishable from guild membership. [Modify guild sticker](#modify-guild-sticker) returns 404 `UNKNOWN_STICKER` for a guild that does not exist.
 
 There is no single-sticker read scoped to a guild. [List guild stickers](#list-guild-stickers) returns the whole collection in one response.
 
@@ -132,7 +132,7 @@ One rejected item from a bulk create call, named and explained in display text.
 
 <sup>2</sup> Rendered in the locale of the authenticated account, so its value changes with the caller's locale
 
-There is no machine-readable code, so a client that needs to branch on the reason retries the item on its own.
+There is no machine-readable code, so a client that needs to branch on the reason submits that item again through [Create guild sticker](#create-guild-sticker), which returns an error code.
 
 ## List guild stickers
 

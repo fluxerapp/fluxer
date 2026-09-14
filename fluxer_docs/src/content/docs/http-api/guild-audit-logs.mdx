@@ -10,7 +10,7 @@ An audit log entry records one change made to a guild and the account that made 
 
 ## Audit log reason
 
-An audit-capable route accepts the `X-Audit-Log-Reason` request header, listed with the other [standard request headers](/http-api/#standard-request-headers). Fluxer reads the value verbatim and never percent-decodes it, so a caller that percent-encodes the reason stores and reads back the percent-encoded form.
+A route marked Audit reason accepts the `X-Audit-Log-Reason` request header, listed with the other [standard request headers](/http-api/#standard-request-headers). Fluxer reads the value verbatim and never percent-decodes it, so a caller that percent-encodes the reason stores and reads back the percent-encoded form.
 
 Fluxer trims the value. A value that is blank before trimming, empty after it, or longer than 512 characters after it counts as no reason at all. None of those values fails the request, so a reason that misses the bound is dropped and the operation still succeeds.
 
@@ -197,7 +197,7 @@ Fluxer serialises a permission mask or a snowflake as a decimal string. A bounde
 :::
 
 :::caution[A change list holds only the differing fields]
-An update records one change object per differing field, so an unchanged field is absent. An identity field never appears in an update change list, though it does appear in a creation or deletion list, where only one side of the comparison exists.
+An update records one change object per differing field, so an unchanged field is absent. The field that holds the entity's own ID, such as `channel_id` or `role_id`, never appears in an update change list, though it does appear in a creation or deletion list, where only one side of the comparison exists.
 :::
 
 ### Change fields

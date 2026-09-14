@@ -62,9 +62,9 @@ The path has no signature and no expiry, so anyone holding the URL reads the obj
 
 When a transformation is requested, `Range` selects bytes from the transformed result.
 
-An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only an `mp` endpoint rasterises it, always as lossless WebP. An `upload` endpoint returns the stored SVG bytes.
+An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only a Media Proxy in [`mp` deployment mode](/media-proxy/overview/#deployment-modes) rasterises it, always as lossless WebP. A Media Proxy in `upload` mode returns the stored SVG bytes.
 
-A video source requires an explicit image `format`. Another transformation parameter without `format` returns 400. A source that is neither an image nor a video returns 400 when `format` is present. Without `format`, Fluxer returns it unchanged.
+A video source requires an explicit image `format`. A video request with `width`, `height`, `quality`, or `animated=true` and no `format` returns 400. A source that is neither an image nor a video returns 400 when `format` is present. Without `format`, Fluxer returns it unchanged.
 
 ### Response
 
@@ -131,11 +131,11 @@ A redirect beyond the [five-redirect bound](/media-proxy/responses-and-limits/#r
 
 `effort` is read only on [Get attachment](#get-attachment) and is ignored here.
 
-A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so it still selects 206 or 416.
+A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so a satisfiable range returns 206 and an unsatisfiable range returns 416.
 
 A non-transforming request can forward the range to the origin. Handle both 200 and 206 responses and use their range headers, as described in [Byte ranges](/media-proxy/overview/#byte-ranges).
 
-Insufficient capacity to process the body returns 503. Origin metadata can make `HEAD` representation headers differ from `GET`.
+Fluxer returns 503 when it cannot reserve or allocate a buffer for the origin body. A `HEAD` with no transformation and no forwarded range can build `Content-Type` and `Content-Length` from the origin's own `HEAD` response, so those headers can differ from a `GET` response.
 
 A video target requires an explicit image `format` to produce a thumbnail. Without one, Fluxer returns the original bytes unchanged, and it does the same for a target that is neither an image nor a video.
 
@@ -149,13 +149,13 @@ A video target requires an explicit image `format` to produce a thumbnail. Witho
 | 401 | Unauthorized | The path signature is invalid |
 | 413 | Payload too large | The origin declared or delivered more than 500 MiB |
 | 416 | empty | A local range is unsatisfiable |
-| 502 | Bad gateway | The origin could not be reached, exceeded the redirect bound, or returned a status outside the retained set |
-| 503 | Service unavailable | Insufficient capacity to process the body |
+| 502 | Bad gateway | The origin could not be reached, exceeded the redirect bound, or returned an unsuccessful status that the paragraph below this table does not list |
+| 503 | Service unavailable | Fluxer could not reserve or allocate a buffer for the origin body |
 | 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
 <sup>1</sup> A forwarded range relays the origin `Content-Range` and `Content-Length` unchanged and omits either header the origin did not send, so a chunked origin 206 produces a 206 with no `Content-Length`. A local range over buffered or transformed bytes always has both
 
-An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged as an upstream fetch failure, and the origin body and headers are not returned. Any other unsuccessful origin status becomes 502. [Common responses](#common-responses) also apply.
+An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged with the plain-text body `Upstream fetch failed`, and the origin body and headers are not returned. Any other unsuccessful origin status becomes 502. [Common responses](#common-responses) also apply.
 
 ### Side effects
 
@@ -231,7 +231,7 @@ Fluxer matches an asset path by its shape alone. A path with the wrong number of
 
 Use the hash returned by the API. Do not calculate one from the image yourself.
 
-An owner segment of the literal `.` or `..` parses as an asset path but produces an unsafe storage key and returns 400. So does a hash of the literal `a_` on a path that strips the prefix.
+An owner segment of the literal `.` or `..` parses as an asset path but produces an unsafe storage key and returns 400. So does a hash of the literal `a_` on an avatar, icon, branding, banner, splash, embed splash, or guild member asset path.
 
 ### Query parameters
 
@@ -259,7 +259,7 @@ An owner segment of the literal `.` or `..` parses as an asset path but produces
 | --- | --- | --- |
 | 200 | Complete asset representation | The original or transformed asset is available |
 | 206 | Selected asset bytes | One range is satisfiable |
-| 400 | Bad request | An owner segment of `.` or `..`, or a hash of `a_` on a prefix-stripping path, makes the storage key unsafe |
+| 400 | Bad request | An owner segment of `.` or `..`, or a hash of `a_` on a path other than an emoji or sticker path, makes the storage key unsafe |
 | 404 | Not found | The path is not a valid asset path or the asset does not exist |
 | 416 | empty | The range is unsatisfiable |
 | 500<sup>1</sup> | Transcode failed | A required transcode failed and the source is not directly displayable |
@@ -493,7 +493,7 @@ These paths are not part of the public API surface. They are exempt from the med
 | Path | Method | Description |
 | --- | --- | --- |
 | `/_health` | GET | Returns 200 while the process is running |
-| `/_metrics` | GET | Returns the Prometheus text exposition of the process. Only a loopback address is served, and any other address returns 403 |
+| `/_metrics` | GET | Returns the Prometheus text exposition of the process. A request from a non-loopback address returns 403 |
 | `/_metadata` | POST | Extracts media metadata, a placeholder, and an optional NSFW verdict for the HTTP API |
 | `/_thumbnail` | POST | Produces a WebP thumbnail of a staged upload for the HTTP API |
 | `/_frames` | POST | Extracts one JPEG video frame for the HTTP API |

@@ -14,9 +14,9 @@ Every bucket is also keyed by the caller's identity. An authenticated request is
 
 A request that resolves no account is keyed by the client IP address, exactly for IPv4 and by the `/64` for IPv6, so clients in the same `/64` share an allowance. Where the deployment is configured to read the address from a header the request does not have, Fluxer refuses the request with 403 `FORBIDDEN` before evaluating any bucket.
 
-Fluxer also evaluates a route bucket against the global bucket unless the route declares that bucket exempt. The global bucket is keyed by the same identity, so a request that resolves no account consumes the global allowance of its client IP address.
+A request also counts against the global bucket, unless its route bucket is declared exempt. The global bucket is keyed by the same identity, so a request that resolves no account consumes the global allowance of its client IP address.
 
-These buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each sits on a route that already consumed a non-exempt bucket, so both routes still draw on the global allowance.
+These buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each is a second bucket on a route whose first bucket is not exempt, so both routes still draw on the global allowance.
 
 Every HTTP API and Admin API operation declares a bucket, apart from the [desktop download](/http-api/downloads/) routes, which declare none. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
 
@@ -36,7 +36,7 @@ Every bucket is a leaky bucket. It admits at most the declared limit at once and
 A rate-limited request can return 429 even if its credentials would otherwise be rejected with 401 or 403.
 :::
 
-Some operations have additional allowances, including group direct message creation, adding group recipients, and deleting guild emoji or stickers. Each operation lists its limits. Rejected requests can still consume an allowance.
+Some routes declare a second route bucket, including group direct message creation, adding group recipients, and deleting guild emoji or stickers. Each operation lists its limits. Fluxer counts a request against its route buckets before the handler runs, so a request the handler rejects still uses up allowance.
 
 :::caution[A global denial revokes a user session]
 When the global bucket denies a request authenticated by a non-bot account's user session token, Fluxer revokes that token before writing the 429. The client must authenticate again. A bot token, an OAuth2 access token, and an Admin API key are never revoked this way, and a route bucket denial never revokes a credential.
@@ -131,7 +131,7 @@ An allowance enforced inside a handler is keyed independently of the route bucke
 
 The `disable_rate_limits` deployment switch turns off the login allowances along with both buckets. `relax_registration_rate_limits` turns off the registration allowances. Every other allowance below is enforced on every deployment.
 
-A denial takes one of the shapes below. A send or submission allowance answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. A change allowance answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
+A denial takes one of the shapes below. An allowance in [Allowances answering 429](#allowances-answering-429) answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. An allowance in [Allowances answering 400](#allowances-answering-400) answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
 
 The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Retry-After` header. The remaining delay appears only in the entry's localised `message`.
 
@@ -148,10 +148,10 @@ The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Re
 | [Request password recovery](/http-api/authentication/#request-password-recovery) | 20 per 30 minutes, keyed by the client IP address | `RATE_LIMITED` |
 | [Request password recovery](/http-api/authentication/#request-password-recovery) | 5 per 30 minutes, keyed by the submitted email address | `RATE_LIMITED` |
 | [Start email change](/http-api/users/email-and-password/#start-email-change) and [Resend original email code](/http-api/users/email-and-password/#resend-original-email-code) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
-| [Request new email](/http-api/users/email-and-password/#request-new-email), [Resend new email code](/http-api/users/email-and-password/#resend-new-email-code), and both bounced recovery sends | 5 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
+| [Request new email](/http-api/users/email-and-password/#request-new-email), [Resend new email code](/http-api/users/email-and-password/#resend-new-email-code), and both [bounced email recovery](/http-api/users/email-and-password/#bounced-email-recovery) sends | 5 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
 | [Start password change](/http-api/users/email-and-password/#start-password-change) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
 | [Resend password change code](/http-api/users/email-and-password/#resend-password-change-code) | 3 sends per 15 minutes, keyed by the authenticated account | `RATE_LIMITED` |
-| Every code resend and every new-address request on an email or password change ticket | 1 send per 30 seconds, keyed by the previous send recorded on that ticket | `RATE_LIMITED` |
+| Every code resend and every new-address request on an email or password change ticket | 1 send per 30 seconds, keyed by the ticket and counted from its previous send | `RATE_LIMITED` |
 | [Report message](/http-api/reports/#report-message), [Report user](/http-api/reports/#report-user), [Report guild](/http-api/reports/#report-guild), and [Create DSA report](/http-api/reports/#create-dsa-report) | 5 per hour, keyed by the reporter, an account or a verified email address | `RATE_LIMITED` |
 | [Report message](/http-api/reports/#report-message) | 3 per hour, keyed by the reporter and the channel together | `RATE_LIMITED` |
 | [Report message](/http-api/reports/#report-message) | 20 per hour, keyed by the reported message, across all reporters | `RATE_LIMITED` |
@@ -181,9 +181,9 @@ The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Re
 | [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild pronouns, when the submitted value differs | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
 | [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild accent colour, when the submitted value differs | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
 | [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) | 1 per 24 hours on the sharing default | `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` |
-| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 10 per 15 minutes on one multi-factor attempt | `INVALID_CODE` |
-| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 5 per 5 minutes on one multi-factor attempt against one MFA ticket | `INVALID_CODE` |
-| [Sudo mode](/http-api/users/mfa/#sudo-mode) with the `totp` method | 10 per 15 minutes on one multi-factor attempt | `INVALID_MFA_CODE` |
+| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 10 multi-factor attempts per 15 minutes | `INVALID_CODE` |
+| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 5 multi-factor attempts per 5 minutes on one MFA ticket | `INVALID_CODE` |
+| [Sudo mode](/http-api/users/mfa/#sudo-mode) with the `totp` method | 10 multi-factor attempts per 15 minutes | `INVALID_MFA_CODE` |
 
 Every Modify current user allowance is keyed by the authenticated account, and the bot tag allowance by the bot account, so an owner changing a bot's tag draws on the bot's allowance. The guild member allowances are keyed by the guild and the member together, and one account holds a separate allowance in each guild. The login allowances are keyed by the account and by the MFA ticket respectively, and the sudo allowance by the account.
 
@@ -205,4 +205,4 @@ The allowance is one message for each interval the channel configures in `rate_l
 
 ## Other surfaces
 
-Each protocol surface documents its own rate limit contract. The [main Gateway](/gateway/overview/) states its session, command, replay, backpressure, and admission limits in [Gateway limits and rate limits](/gateway/limits-and-rate-limits/). The [Media Proxy API](/media-proxy/overview/) has no request-count rate limit and bounds work through concurrency, payload, and deadline limits. The [upload relay](/media-proxy/upload-relay/) authorises each transfer with a bounded capability.
+Each protocol surface documents its own rate limit contract. The [main Gateway](/gateway/overview/) states its session, command, replay, backpressure, and admission limits in [Gateway limits and rate limits](/gateway/limits-and-rate-limits/). The [Media Proxy API](/media-proxy/overview/) has no request-count rate limit and bounds work through concurrency, payload, and deadline limits. The [upload relay](/media-proxy/upload-relay/) authorises each transfer with an upload URL that expires and limits the body size.

@@ -19,7 +19,7 @@ When [instance features](/http-api/instance/#instance-features-object) reports `
 
 [Request attachment upload URLs](/http-api/messages/#request-attachment-upload-urls) accepts up to 10 files. Declare each file's ID, name, exact byte count and content type. The endpoint reference defines the fields, permissions and file size limits.
 
-Keep the returned plan, including its `upload_filename`. Use the returned `content_type`, which may differ from the declared value. The `upload_mode` determines the next steps.
+Keep the returned plan, including its `upload_filename`. Use the returned `content_type`, which Fluxer derives from the file name and which can therefore differ from the declared value. The `upload_mode` determines the next steps.
 
 ### Upload modes
 
@@ -40,7 +40,7 @@ Use the `part_size` and `parts` returned in the upload plan. Every part must con
 
 Send `PUT` requests to the returned `upload_url` values without an `Authorization` header. The URLs can target storage or the [upload relay](/media-proxy/upload-relay/). Do not rewrite their paths or query strings.
 
-Send exactly the declared byte count. The relay returns 413 for an oversized body and 401 for a missing, invalid, or expired capability. Its own body limit also applies, with a default of 500 MiB.
+Send exactly the declared byte count. The relay returns 413 for an oversized body and 401 for a missing, invalid, or expired capability. It also returns 413 for a body above its own limit, which is 500 MiB by default.
 
 A singlepart transfer sends the whole file with the entry's `content_type` as its `Content-Type` header. A multipart transfer sends each part separately.
 
@@ -84,7 +84,7 @@ A preview does not prove that its connection is currently publishing a stream.
 
 Use [Upload stream preview](/http-api/streams/#upload-stream-preview) to send the image as base64 in JSON. Canonical base64 uses the standard alphabet, a length divisible by four and at most two trailing `=` characters. Decoding and re-encoding must produce the same string. Invalid encoding returns 400 `INVALID_STREAM_THUMBNAIL_PAYLOAD`.
 
-Alternatively, [request an upload URL](/http-api/streams/#create-stream-preview-upload-url) and send the JPEG with `PUT`. Use the returned `content_type`, respect `max_bytes` and upload before `expires_at`. The URL can be reused until it expires.
+Alternatively, [request an upload URL](/http-api/streams/#create-stream-preview-upload-url) and send the JPEG with `PUT`. Use the returned `content_type`, send at most `max_bytes` bytes and upload before `expires_at`. The URL can be reused until it expires.
 
 Send a valid JPEG of at most 1000000 bytes. [Get stream preview](/http-api/streams/#get-stream-preview) reads it, and [Delete stream preview](/http-api/streams/#delete-stream-preview) removes it.
 

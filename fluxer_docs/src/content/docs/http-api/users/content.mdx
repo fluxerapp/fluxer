@@ -206,7 +206,7 @@ A guild configuring [message_history_cutoff](/http-api/guilds/#guild-object) sti
 
 ### Side effects
 
-The cleanup deletion emits no [Saved Message Delete](/gateway/events/#saved-message-delete).
+When this read deletes an entry whose message no longer exists, Fluxer emits no [Saved Message Delete](/gateway/events/#saved-message-delete).
 
 ### Rate limit
 

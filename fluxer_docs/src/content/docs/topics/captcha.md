@@ -14,7 +14,7 @@ The value `none` means the instance challenges no operation. A gated operation t
 
 ## Gated operations
 
-The following operations verify a CAPTCHA while the instance enforces verification.
+The following operations verify a CAPTCHA while discovery reports a `provider` other than `none`.
 
 | Method | Route | Operation |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ Create private channel is gated only on the group direct message path, where the
 
 ## Exemption
 
-Instance policy can exempt a request. Exemptions are not advertised, so clients must handle a challenge on every gated operation.
+Fluxer skips the check in three cases, and the operation then proceeds with no CAPTCHA header. The instance account policy grants the `captcha_exempt` capability to the authenticated account's email address. The authenticated account holds the [`APP_STORE_REVIEWER`](/admin-api/users/#account-flags) flag. The request body has an `email` that belongs to an account holding that flag. Discovery does not report exemptions, so clients must handle a challenge on every gated operation.
 
 ## Request headers
 
@@ -64,6 +64,6 @@ A rejected solution or unavailable provider returns 400 `INVALID_CAPTCHA`. The r
 | CAPTCHA_REQUIRED<sup>1</sup> | 400 | The operation is gated and the request has no solution |
 | INVALID_CAPTCHA | 400 | The provider rejected the solution, or verification could not be completed |
 
-<sup>1</sup> [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) also answers this code when its phone attempt risk controls return a captcha decision. That operation is not gated and accepts no solution, so retrying it with `X-Captcha-Token` never helps
+<sup>1</sup> [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) also answers this code when Fluxer's risk check on the phone attempt decides that the request needs a CAPTCHA. That operation is not gated and accepts no solution, so retrying it with `X-Captcha-Token` never helps
 
 Both codes are defined in the [API error code registry](/http-api/errors/#api-error-code-registry), and the body of each is the ordinary [error response](/http-api/#error-response) envelope.

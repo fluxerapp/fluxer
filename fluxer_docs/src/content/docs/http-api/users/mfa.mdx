@@ -11,7 +11,7 @@ Multi-factor authentication asks for a second proof of identity after the accoun
 Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the sudo routes.
 
 :::caution[A challenge is one-use and context-bound]
-Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the issuing user and operation context and expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
+Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the user it was issued to and to the operation it was issued for: registration, sudo, MFA login, or discoverable login. It expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
 :::
 
 ## TOTP parameters
@@ -93,7 +93,7 @@ The accepted proof depends on the authenticators the account has configured.
 
 The `totp` method reads `mfa_code` as a current authenticator code or an unconsumed backup code and requires the account to hold a TOTP secret. The `webauthn` method reads `webauthn_response` and `webauthn_challenge` together and requires a registered credential.
 
-A request that has no accepted proof fails with 403 `SUDO_MODE_REQUIRED`. Its body has the [sudo mode methods object](#sudo-mode-methods-object) members, and a client can present the correct challenge. A proof that is present but wrong fails instead with 400 `INVALID_FORM_BODY` and a [validation error](/http-api/#validation-error-object) entry. A mismatched password produces path `password` with code `INVALID_PASSWORD`. A rejected TOTP code, backup code, or WebAuthn assertion produces path `mfa_code` with code `INVALID_MFA_CODE`, so a client cannot tell which of the three was rejected.
+A request that has no accepted proof fails with 403 `SUDO_MODE_REQUIRED`. Its body has the [sudo mode methods object](#sudo-mode-methods-object) members, so a client can tell which proof to ask the user for. A proof that is present but wrong fails instead with 400 `INVALID_FORM_BODY` and a [validation error](/http-api/#validation-error-object) entry. A mismatched password produces path `password` with code `INVALID_PASSWORD`. A rejected TOTP code, backup code, or WebAuthn assertion produces path `mfa_code` with code `INVALID_MFA_CODE`, so a client cannot tell which of the three was rejected.
 
 The `totp` method also consumes a per-account allowance of 10 multi-factor attempts in 15 minutes, shared by every sudo-gated operation on every resource. Fluxer charges the allowance before it checks the code, so a wrong code and a correct code both draw on it. A correct code resets the counter to zero. While it is exhausted, a correct code returns the same `INVALID_MFA_CODE` entry as a wrong one. The `webauthn` method draws on no allowance. The login MFA allowances on [HTTP authentication](/http-api/authentication/) are counted separately.
 
@@ -202,7 +202,7 @@ The backup codes and the proof a verified challenge returns.
 
 An account holds at most 10 WebAuthn credentials. Both [Create WebAuthn registration options](#create-webauthn-registration-options) and [Register WebAuthn credential](#register-webauthn-credential) enforce this limit.
 
-Fluxer verifies every assertion against the relying party identifier and the allowed origins configured for the instance. The credential's signature counter strictly increases, unless both the stored and reported counters are zero, which is how an authenticator without a counter appears.
+Fluxer verifies every assertion against the relying party identifier and the allowed origins configured for the instance. Fluxer rejects an assertion whose reported signature counter is not greater than the stored counter. The exception is a stored and a reported counter of zero, which is how an authenticator without a counter appears.
 
 ### Structure
 
@@ -243,7 +243,7 @@ Fluxer never returns the credential's public key, signature counter, or reported
 
 ## WebAuthn assertion object
 
-The browser WebAuthn `PublicKeyCredential` serialisation. Its field names are camelCase, because the boundary accepts the exact structure the WebAuthn client API produces.
+The browser WebAuthn `PublicKeyCredential` serialisation. Its field names are camelCase, because Fluxer accepts the exact structure the WebAuthn client API produces.
 
 ### Structure
 
@@ -337,7 +337,7 @@ Every operation that issues a WebAuthn authentication challenge returns this obj
 | allowCredentials?<sup>3</sup> | array[[WebAuthn credential descriptor](#webauthn-credential-descriptor-object) object] | Credentials accepted for this operation |
 | userVerification<sup>4</sup> | string | User verification requirement, one of `discouraged`, `preferred`, or `required` |
 
-<sup>1</sup> Expires five minutes after issue and is bound to the exact context that issued it, so a sudo challenge cannot be redeemed as a login assertion
+<sup>1</sup> Expires five minutes after issue and is bound to the operation that issued it, so a sudo challenge cannot be redeemed as a login assertion
 
 <sup>2</sup> Every operation emits the fixed value `60000`, a standard PublicKeyCredential request option
 
@@ -478,7 +478,7 @@ The body extends the [sudo verification object](#sudo-verification-object) with 
 
 ### Side effects
 
-TOTP is enabled and 10 backup codes are issued. Any backup code the account already held stays in place, so the response has only the 10 new codes. The resulting authenticator types are also applied to every bot account owned by the user. [User Update](/gateway/events/#user-update) reaches the user's sessions and each owned bot whose authenticator types changed.
+TOTP is enabled and 10 backup codes are issued. Any backup code the account already held stays in place, so the response has only the 10 new codes. Fluxer also copies the account's authenticator types to every bot account the user owns. [User Update](/gateway/events/#user-update) reaches the user's sessions and each owned bot whose authenticator types changed.
 
 ### Rate limit
 
@@ -516,7 +516,7 @@ Disabling TOTP invalidates every backup code on the account, including the code 
 
 ### Side effects
 
-TOTP is disabled and every backup code stops working. Fluxer removes the TOTP authenticator type, along with the unassigned legacy authenticator value `1` when the account still held it. The resulting authenticator types are also applied to every bot account owned by the user. [User Update](/gateway/events/#user-update) goes to the user's sessions and each owned bot whose authenticator types changed.
+TOTP is disabled and every backup code stops working. Fluxer removes the TOTP authenticator type, along with the unassigned legacy authenticator value `1` when the account still held it. Fluxer also copies the account's authenticator types to every bot account the user owns. [User Update](/gateway/events/#user-update) goes to the user's sessions and each owned bot whose authenticator types changed.
 
 ### Rate limit
 
@@ -775,7 +775,7 @@ Fluxer consumes the registration challenge before it re-checks the credential li
 
 ### Side effects
 
-The credential is added to the account. When it is the account's first WebAuthn credential, the WebAuthn authenticator type is also applied to every bot account owned by the user.
+The credential is added to the account. When it is the account's first WebAuthn credential, Fluxer also copies the account's authenticator types, which now include WebAuthn, to every bot account the user owns.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the complete current credential summaries. When the authenticator types changed, [User Update](/gateway/events/#user-update) also reaches the user and each affected owned bot.
 

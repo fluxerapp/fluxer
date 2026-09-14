@@ -57,9 +57,9 @@ An authenticated user's saved locale takes precedence over `Accept-Language`. Ot
 
 Set the account locale through [user settings](/http-api/users/settings/) to make the choice persistent.
 
-Matching ignores case and accepts underscores in place of hyphens. Exact supported tags and the aliases `en` and `sv` take precedence over regional fallbacks. Header quality weights order candidates within each group, with header order breaking ties.
+Matching ignores case and accepts underscores in place of hyphens. Fluxer first looks for an exact supported tag, or the alias `en` or `sv`, anywhere in the header. It uses a regional fallback only when the header has none. In each of those two passes, Fluxer takes the tag with the highest quality weight, and header order breaks ties.
 
-Unsupported regional tags can fall back to these defaults:
+An unsupported tag such as `fr-CA` or `de-AT` matches no locale. An unsupported tag whose language subtag is in this table selects the locale beside it:
 
 | Language subtag | Selected locale |
 | --- | --- |

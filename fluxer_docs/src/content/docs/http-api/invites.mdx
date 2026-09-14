@@ -69,7 +69,7 @@ A guild invite always has `guild`, `channel`, `member_count`, and `presence_coun
 
 ## Invite metadata object
 
-The metadata object extends the invite with its creation and usage state. Creation and listing operations return it when the caller has management access to the target, and [Get invite](#get-invite) never does.
+The metadata object extends the invite with its creation and usage state. [Create channel invite](#create-channel-invite), [List channel invites](#list-channel-invites), and [List guild invites](#list-guild-invites) return it. [Get invite](#get-invite) never does.
 
 ### Structure
 
@@ -154,7 +154,7 @@ An `Authorization` header that cannot be resolved is ignored, and the route retu
 Codes from [Create channel invite](#create-channel-invite) are case-sensitive. Custom invite codes are case-insensitive.
 
 :::note[Every admission gate runs at accept time]
-Resolving an invite proves that the record exists and that its target is describable. [Accept invite](#accept-invite) evaluates bans, disabled invites, exhausted uses, missing presence, and target capacity.
+A 200 response means the invite code exists and none of the 404 conditions in the response table below applies. [Accept invite](#accept-invite) checks bans, the guild's invites-disabled feature, exhausted uses, the active presence a temporary invite requires, and whether the target is full.
 :::
 
 :::note[Lookup does not guarantee admission]
@@ -223,15 +223,15 @@ Accepting an exhausted invite returns 404 `UNKNOWN_INVITE` and makes the code st
 | 403 | [error response](/http-api/#error-response) | A deferred phone verification requirement becomes due and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 404 | [error response](/http-api/#error-response) | The named guild no longer exists and the request returns `UNKNOWN_GUILD` |
 | 404 | [error response](/http-api/#error-response) | The target channel no longer exists and the request returns `UNKNOWN_CHANNEL` |
-| 404 | [error response](/http-api/#error-response) | The code resolves to no record, the record is exhausted, or the invite names no reachable target, each returning `UNKNOWN_INVITE` |
+| 404 | [error response](/http-api/#error-response) | The code resolves to no record, the record is exhausted, a guild invite names no guild, or a group direct message invite names no channel or a channel that no longer exists, each returning `UNKNOWN_INVITE` |
 
 ### Side effects
 
-An account already in the target receives the invite unchanged without consuming a use or emitting a Dispatch. A new admission consumes one use and removes the invite when its limit is reached. A failed admission consumes no use. If the invite's channel has been deleted, the account can still join and consume a use even though the response is 404 `UNKNOWN_CHANNEL`.
+When the account is already in the target, the route returns 200 with the invite object. It consumes no use and emits no Dispatch. A new admission consumes one use and removes the invite when its limit is reached. A failed admission consumes no use. If the invite's channel has been deleted, the account can still join and consume a use even though the response is 404 `UNKNOWN_CHANNEL`.
 
 A guild admission creates the membership, records whether the join used a custom invite URL or an instant invite, and adds the guild to the caller's settings and folder layout. A temporary invite marks the membership temporary.
 
-The joining account receives [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is guild-wide and reaches every session connected to the guild, subject to the [event filtering](/gateway/event-filtering/) gates, which suppress it for a passive session in a large guild. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join changes its stored settings, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its `default_hide_muted_channels` setting is enabled. Unless join notifications are suppressed or no system channel exists, the operation creates a join system message and delivers [Message Create](/gateway/events/#message-create).
+The joining account receives [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is guild-wide and reaches every session connected to the guild, subject to the [event filtering](/gateway/event-filtering/) gates, which withhold it from a passive user session in a guild with more than 250 members. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join changes its stored settings, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its `default_hide_muted_channels` setting is enabled. Unless the guild's `system_channel_flags` has [SUPPRESS_JOIN_NOTIFICATIONS](/http-api/guilds/#system-channel-flags) or the guild has no system channel, the operation creates a join system message and delivers [Message Create](/gateway/events/#message-create).
 
 A group direct message admission adds the caller as a recipient and creates a recipient addition system message. The joining account receives [Channel Create](/gateway/events/#channel-create), the recipients the group already held receive [Channel Recipient Add](/gateway/events/#channel-recipient-add), and every recipient receives [Message Create](/gateway/events/#message-create).
 
@@ -305,7 +305,7 @@ Creates an invite for a channel, or returns an existing equivalent invite. Retur
 This operation does not require elevated multi-factor authentication.
 
 :::note[Guild affiliation determines the invite type]
-A channel that belongs to a guild creates a guild invite. Any other channel the caller can resolve creates a type `1` invite, including a direct message and the personal notes channel. Only a group direct message admits an account afterwards.
+A channel that belongs to a guild creates a guild invite. Any other channel the caller can resolve creates a type `1` invite, including a direct message and the personal notes channel. Of these type `1` invites, only one whose channel is a group direct message admits an account through [Accept invite](#accept-invite).
 :::
 
 ### Path parameters

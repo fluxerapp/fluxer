@@ -236,7 +236,7 @@ Each successful item consumes one guild emoji slot and records an [`EMOJI_CREATE
 
 Copies an existing emoji into the target guild and returns the new [guild emoji object](#guild-emoji-object) without `user`. Requires membership of the target guild and [CREATE_EXPRESSIONS](/http-api/permissions/) there. Emits a [Guild Emojis Update](/gateway/events/#guild-emojis-update) Gateway event in the target guild.
 
-The name, animation state and image are copied unchanged. Membership of the source guild is not required, but it must have opted in with [CLONE_EMOJI_ENABLED](/http-api/guilds/#guild-features).
+The name, animation state and image are copied unchanged. Membership of the source guild is not required. The source guild must have [CLONE_EMOJI_ENABLED](/http-api/guilds/#guild-features).
 
 [Get emoji metadata](/http-api/expressions/#get-emoji-metadata) reports whether a source permits cloning.
 
@@ -309,7 +309,7 @@ An emoji that does not belong to the guild in the path returns 404 `UNKNOWN_EMOJ
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [guild emoji](#guild-emoji-object) object | Name was processed |
+| 200 | [guild emoji](#guild-emoji-object) object | Name was set, including a name equal to the current one |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Path parameter or name is invalid |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Name is blocked, the guild is unavailable, or the caller is neither the uploader with `CREATE_EXPRESSIONS` nor a member holding `MANAGE_EXPRESSIONS` |
 | 404 | [error response](/http-api/#error-response) | Emoji does not exist in that guild and the request returns `UNKNOWN_EMOJI` |

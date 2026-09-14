@@ -69,7 +69,7 @@ An empty string becomes `null` at any depth, and an empty nested object becomes 
 
 This normalisation applies to JSON and form bodies, query strings, path parameters, request headers, and cookies.
 
-A nested object containing only `null` values also becomes `null`. The root object is preserved. An empty body is treated as `{}` and validated for required fields. Malformed JSON returns 400 `INVALID_FORM_BODY` with a validation error at path `body` and code `INVALID_FORMAT`.
+A nested object containing only `null` values also becomes `null`. The root object never becomes `null`, even when it is empty or has only `null` values. An empty body is treated as `{}` and validated for required fields. Malformed JSON returns 400 `INVALID_FORM_BODY` with a validation error at path `body` and code `INVALID_FORMAT`.
 
 :::caution[Message operations preserve empty values]
 [Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) do not apply this normalisation.
@@ -162,7 +162,7 @@ An operation that sets its own `Cache-Control` keeps that value. A response whos
 
 ## Rate limits
 
-Every route consumes its own rate limit bucket and is also evaluated against one global bucket unless that bucket is exempt. A denial returns 429 `RATE_LIMITED`. [Rate limits](/topics/rate-limits/) defines the bucket scoping rules, the global allowance, the 429 body, the scope registry, and the complete `X-RateLimit-*` header contract.
+Every route consumes its own rate limit bucket. A route that is not exempt from the global bucket also counts against one global bucket. A denial returns 429 `RATE_LIMITED`. [Rate limits](/topics/rate-limits/) defines the bucket scoping rules, the global allowance, the 429 body, the scope registry, and the complete `X-RateLimit-*` header contract.
 
 :::note[These 429 responses have no `X-RateLimit-*` header]
 A 429 `RESOURCE_LOCKED` response has `Retry-After: 1`, and a 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` response has the remaining cooldown in whole seconds. A client that reads the bucket headers branches on `code`.
@@ -180,7 +180,7 @@ The CORS response policy is an allow-list of exactly two origins, the deployment
 
 The paths below are readable from any origin. `/v1/webhooks/{webhook_id}/{token}` and `/v1/webhooks/{webhook_id}/{token}/messages/{message_id}` have a second cross-origin policy that allows any origin. Four of the methods registered on them refuse the first-party web client outright, and that refusal is defined by [Origin refusal](/http-api/webhooks/#origin-refusal).
 
-[Get instance discovery](/http-api/instance/#get-instance-discovery) on `/.well-known/fluxer`, [Get OpenAPI document](/http-api/instance/#get-openapi-document) on `/v1/openapi.json`, and [Get client geolocation](/http-api/instance/#get-client-geolocation) on `/v1/ip` set `Access-Control-Allow-Origin: *` in the operation itself. The wildcard stands for any origin outside the allow-list, and for an allowed origin the policy replaces it with that exact origin and sends `Vary: Origin`.
+[Get instance discovery](/http-api/instance/#get-instance-discovery) on `/.well-known/fluxer`, [Get OpenAPI document](/http-api/instance/#get-openapi-document) on `/v1/openapi.json`, and [Get client geolocation](/http-api/instance/#get-client-geolocation) on `/v1/ip` set `Access-Control-Allow-Origin: *` in the operation itself. A request whose `Origin` is absent or outside the allow-list receives `*`. For an allowed origin, the policy replaces `*` with that exact origin and sends `Vary: Origin`.
 
 `Access-Control-Expose-Headers` is the value `X-Fluxer-Version, ETag`. Every other Fluxer response header, the rate limit headers and `X-Request-ID` included, is hidden from cross-origin script. `Access-Control-Allow-Headers` is `Content-Type, Authorization, X-Requested-With, Accept-Language, X-Request-ID, If-None-Match`, so a cross-origin client revalidates an [ETag](/http-api/experiments/#get-experiment-assignments) it was served.
 
@@ -255,7 +255,7 @@ Each entry identifies one failed input field. A 400 response whose top-level cod
 }
 ```
 
-Fluxer produces at most one entry for each distinct pair of `path` and `code`, so a field that fails several equivalent constraints appears once.
+Fluxer produces at most one entry for each distinct pair of `path` and `code`, so a field that fails several constraints with the same `code` appears once.
 
 ## Resource pages
 

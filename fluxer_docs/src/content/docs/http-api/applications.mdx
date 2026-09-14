@@ -10,9 +10,9 @@ An application is an OAuth2 client owned by one user account, and every bot acco
 
 ## Access rules
 
-Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Fluxer accepts an account with an outstanding required action everywhere here.
+Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Every route on this page accepts an account that has an outstanding [required action](/http-api/users/#required-actions).
 
-The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
+The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid sudo token in that header, issued to the authenticated account, satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) with no body proof. Fluxer returns the same token in the `X-Fluxer-Sudo-Mode-JWT` response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
 
 :::caution[Credentials are shown once]
 A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a [bot token](/authentication/#token-formats) only by [Create application](#create-application) and [Reset bot token](#reset-bot-token).
@@ -20,7 +20,7 @@ A client secret is returned only by [Create application](#create-application) an
 
 ## Rate limits
 
-A bucket name ending in `::client_id` still counts one allowance for the authenticated user across every application that user owns. [List owned applications](#list-owned-applications), [Get current application](#get-current-application), [Get application](#get-application), [Get public application](#get-public-application), and [List OAuth2 authorisations](/http-api/oauth2/#list-oauth2-authorisations) all draw on one `oauth_dev:clients:list` allowance. [Get bot application](#get-bot-application) draws on the same bucket, keyed by the bot account the token names. That allowance is separate from the owner's.
+A bucket whose name ends in `::client_id` gives the authenticated user one allowance. Requests for every application that user owns count against that one allowance. [List owned applications](#list-owned-applications), [Get current application](#get-current-application), [Get application](#get-application), [Get public application](#get-public-application), and [List OAuth2 authorisations](/http-api/oauth2/#list-oauth2-authorisations) all draw on one `oauth_dev:clients:list` allowance. [Get bot application](#get-bot-application) draws on the same bucket, keyed by the bot account the token names. That allowance is separate from the owner's.
 
 ## Application object
 
@@ -42,7 +42,7 @@ The application record as its owner sees it.
 
 <sup>2</sup> Present only in the response to [Create application](#create-application) and [Reset client secret](#reset-client-secret), which are the only operations that issue one
 
-<sup>3</sup> Present only when the operation resolved the bot account, which excludes [Reset client secret](#reset-client-secret), an application that owns no bot account, and an application whose bot account record can no longer be read
+<sup>3</sup> Present in every response except [Reset client secret](#reset-client-secret), and absent for an application that owns no bot account or whose bot account record can no longer be read
 
 ### Example
 
@@ -109,7 +109,7 @@ The application as any caller sees it, including a caller that presents no crede
 | bot<sup>4</sup> | ?[application bot](#application-bot-object) object | The bot account the application owns |
 | current_user?<sup>5</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The requesting account |
 
-<sup>1</sup> Null when the application has no bot account or that account has no avatar, and the stored hash is reported unchanged
+<sup>1</sup> Null when the application has no bot account or that account has no avatar. Otherwise it is the bot account's stored avatar hash, and an animated hash keeps its `a_` prefix
 
 <sup>2</sup> Contains `bot` when the application owns a bot account, and is otherwise empty
 
@@ -121,7 +121,7 @@ The application as any caller sees it, including a caller that presents no crede
 
 ## Current bot application object
 
-The application as the bot token that application issued sees it.
+The application that issued the requesting bot token, as returned to that token.
 
 ### Structure
 
@@ -140,7 +140,7 @@ The application as the bot token that application issued sees it.
 
 <sup>1</sup> Read from the bot account, so it changes with [Update bot profile](#update-bot-profile), and it is null when the application has no bot account
 
-<sup>2</sup> No application signing key is available
+<sup>2</sup> Always 64 `0` characters, because no application signing key is available
 
 <sup>3</sup> The request fails with 401 `INVALID_TOKEN` when the owning account no longer exists
 
@@ -150,7 +150,7 @@ The application as the bot token that application issued sees it.
 
 ## Bot profile object
 
-The bot account's profile fields after an update. [Update bot profile](#update-bot-profile) is the only operation that returns this shape, and it has no bot token.
+The bot account's profile fields after an update. [Update bot profile](#update-bot-profile) is the only operation that returns this shape. The object has no `token` field.
 
 ### Structure
 
@@ -285,7 +285,7 @@ This representation exposes the full registered redirect URI list and the bot pr
 
 Creates an application together with its bot account. Returns the [application](#application-object) object with the initial client secret and bot token.
 
-An unclaimed account cannot create an application. An account is unclaimed while it holds no password credential, is not a bot, and does not have the single sign-on trait.
+An unclaimed account cannot create an application. An account is unclaimed while it holds no password credential, is not a bot, and has not been linked to a single sign-on identity.
 
 ### Request headers
 
@@ -294,7 +294,7 @@ An unclaimed account cannot create an application. An account is unclaimed while
 | X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof for the request |
 | X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider to verify against, either `hcaptcha` or `turnstile` |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Fluxer skips verification when CAPTCHA is disabled for the instance, when the account has the CAPTCHA exemption flag, or when the caller's contact has the CAPTCHA exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Fluxer skips verification when CAPTCHA is disabled for the instance, when the account has the CAPTCHA exemption flag, or when the instance's account policy grants the caller's email address the CAPTCHA exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
 
 <sup>2</sup> Fluxer verifies against the instance's configured provider when the header is absent
 
@@ -405,7 +405,7 @@ Removing a redirect URI takes effect immediately for new authorisation requests.
 
 ### Side effects
 
-The submitted fields replace the matching application configuration. Neither credential is rotated, and no Gateway Dispatch is emitted.
+Each submitted field replaces the stored value of that field. Neither credential is rotated, and no Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -444,7 +444,7 @@ Updates the bot account an application owns and returns the resulting [bot profi
 
 <sup>5</sup> Fluxer reads only the [bot flags](#bot-flags) from the supplied bitfield and sets or clears each to match. It ignores every other bit
 
-Fluxer checks the decoded bytes of `avatar` and `banner` against the instance's avatar byte ceiling, which applies to both fields and defaults to 10 MiB. Each image also passes the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are never checked.
+Fluxer checks the decoded bytes of `avatar` and `banner` against the instance's avatar byte ceiling, which applies to both fields and defaults to 10 MiB. An image in a format the field does not accept, an animated image on a field that accepts no animation, and any animated AVIF return the field code `INVALID_IMAGE_FORMAT`. Pixel dimensions are never checked.
 
 ### Response
 

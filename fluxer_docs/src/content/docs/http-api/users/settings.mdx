@@ -22,7 +22,7 @@ Every route here is user-only and rejects a bot or OAuth2 bearer credential with
 <sup>1</sup> The account stays connected and keeps receiving Gateway traffic while this value is stored
 
 :::note[The settings boundary accepts only a chosen status]
-Gateway presence also uses offline, which describes an account with no active session. The settings boundary rejects offline in both `status` and `status_resets_to`, and invisible is the stored form of appearing offline while connected.
+Gateway presence also uses offline, which describes an account with no active session. [Modify current user settings](#modify-current-user-settings) rejects offline in both `status` and `status_resets_to`, and invisible is the stored form of appearing offline while connected.
 :::
 
 ## Theme values
@@ -193,8 +193,8 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 | Field | Type | Description |
 | --- | --- | --- |
 | status? | string | [Presence status](#presence-status-values) |
-| status_resets_at?<sup>1</sup> | ?ISO8601 timestamp \| integer | The moment at which the scheduled reset applies, or null to clear it |
-| status_resets_to? | ?string | [Presence status](#presence-status-values) applied by the scheduled reset, or null to clear it |
+| status_resets_at?<sup>1</sup> | ?ISO8601 timestamp \| integer | The time at which the first-party client sets `status` to `status_resets_to`, or null to clear it |
+| status_resets_to? | ?string | [Presence status](#presence-status-values) that the first-party client sets at `status_resets_at`, or null to clear it |
 | theme? | string | [Theme value](#theme-values) |
 | locale?<sup>2</sup> | string | Interface [locale](/topics/locales/#supported-locales) |
 | restricted_guilds?<sup>3</sup> | array[snowflake] | The guilds where member direct messages are restricted (max 200) |
@@ -238,9 +238,9 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 
 <sup>4</sup> `flags` is a legacy alias for `friend_source_flags`, which wins when both are supplied. `friend_source_flags` is bounded to 0 through 2147483647 while `flags` accepts any integer
 
-<sup>5</sup> The stored value is collapsed before it is written. `FRIENDS_ONLY` wins over `NOBODY`, and either collapse preserves `SILENT_EVERYONE`
+<sup>5</sup> Fluxer reduces the value before it stores it. A value with `FRIENDS_ONLY` is stored as `FRIENDS_ONLY`, and a value with `NOBODY` and no `FRIENDS_ONLY` is stored as `NOBODY`. Both keep `SILENT_EVERYONE` when it is supplied, and any other value is stored unchanged
 
-<sup>6</sup> `FRIENDS_ONLY`, then `NOBODY`, then `EVERYONE` are tested in that order against the already collapsed value, so `EVERYONE` applies only when neither of the other two is supplied
+<sup>6</sup> A value with `FRIENDS_ONLY`, `NOBODY`, or `EVERYONE` is stored as one of those flags alone. `FRIENDS_ONLY` wins over the other two, and `NOBODY` wins over `EVERYONE`. Any other value is stored unchanged
 
 <sup>7</sup> The array replaces the layout in full
 
@@ -254,19 +254,19 @@ Further members are accepted and ignored. `guild_positions` is an array of at mo
 
 <sup>12</sup> The field is staff-only
 
-<sup>13</sup> The value runs to at most 699052 characters of base64 and decodes to at most 524288 bytes, the 512 KiB ceiling. A longer string fails at the boundary, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
+<sup>13</sup> The value runs to at most 699052 characters of base64 and decodes to at most 524288 bytes, the 512 KiB ceiling. A longer string returns 400 `INVALID_FORM_BODY`, an oversized decode fails with `TOO_LARGE`, and an undecodable value fails with `INVALID_FORMAT`
 
 Fluxer decodes an accepted `synced_preferences` value, re-encodes it canonically, and stores the result, so a snapshot with only zero values is stored as cleared and read back as the empty string.
 
 :::caution[A rebuilt folder layout drops unresolved references]
-The submitted array replaces the layout in full and is retained as sent, so a client that rebuilds it from only the items it can render loses the rest. Send unresolved references back and omit them only from the rendered view.
+The submitted array replaces the stored layout in full, and Fluxer keeps guild IDs it cannot resolve. A client that rebuilds the array from only the guilds it can render deletes every other guild ID from the stored layout. Send those guild IDs back, and hide them only in the rendered view.
 :::
 
 :::note[Fluxer edits the layout on its own]
 Joining a guild prepends it to the uncategorised folder unless some folder already lists it. Leaving or losing a guild removes its ID from every folder and drops any non-uncategorised folder left empty. Each edit emits [User Settings Update](/gateway/events/#user-settings-update).
 :::
 
-Fluxer prepends an empty uncategorised folder to a submitted layout that omits one. A guild ID listed in more than one folder is kept only in the highest-ranked folder. A name is the primary key, so a named folder outranks an unnamed one whatever its identity, and an ordinary folder outranks the uncategorised folder only when both are named or both unnamed. The earliest folder in the submitted order wins a tie.
+Fluxer prepends an empty uncategorised folder to a submitted layout that omits one. A guild ID listed in more than one folder is kept only in the highest-ranked folder. Fluxer ranks the folders in two steps. A folder with a non-blank name outranks a folder without one. Between two folders that are both named or both unnamed, an ordinary folder outranks the uncategorised folder. The earliest folder in the submitted order wins a tie.
 
 ## Guild folder input object
 
@@ -308,7 +308,7 @@ A custom status as submitted with a settings update.
 
 <sup>3</sup> `emoji_name` is ignored without validation when `emoji_id` has a value. An `emoji_id` of null leaves `emoji_name` in place, and it is then exactly one Unicode emoji
 
-A custom emoji ID that does not resolve fails with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. Fluxer drops the resolved emoji for an account without the global expression entitlement, so the request succeeds with text alone.
+A custom emoji ID that does not resolve fails with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. Fluxer drops the resolved emoji for an account whose `feature_global_expressions` [limit](/http-api/instance/#limit-keys) resolves to 0, so the request succeeds with text alone.
 
 :::caution[Hide expired custom statuses]
 An expired status can remain in settings without an expiry Dispatch. Compare `expires_at` with the current time before rendering. A new Gateway session omits the expired status.
@@ -362,7 +362,7 @@ Modifies the account-wide settings and returns the complete [user settings](/htt
 
 An account with no stored settings record returns 404 `UNKNOWN_USER`. A locale change also emits a [User Update](/gateway/events/#user-update) Gateway event.
 
-An unresolvable custom status emoji returns 400 `INVALID_FORM_BODY` with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. The trusted domain, age restriction, and synced preferences decisions return 400 `VALIDATION_ERROR` with their own codes in `errors`.
+An unresolvable custom status emoji returns 400 `INVALID_FORM_BODY` with `CUSTOM_EMOJI_NOT_FOUND` against `custom_status.emoji_id`. Rejections of `trusted_domains`, of an age-restricted filter, and of an oversized or undecodable `synced_preferences` value return 400 `VALIDATION_ERROR` with their own codes in `errors`.
 
 ### JSON body
 
@@ -383,7 +383,7 @@ Fluxer emits [User Settings Update](/gateway/events/#user-settings-update) to th
 
 Every [User Settings Update](/gateway/events/#user-settings-update) republishes the caller's current [Presence Update](/gateway/events/#presence-update) to eligible sessions, so a custom status change becomes visible without a further request.
 
-A status of invisible forces every one of the caller's sessions to invisible. A later status of online, idle, or dnd releases them only when at least one session is currently invisible.
+A status of invisible forces every one of the caller's sessions to invisible. When at least one session is invisible, a later status of online, idle, or dnd sets every one of the caller's sessions to that status.
 
 ### Rate limit
 
@@ -421,7 +421,7 @@ Outside the window the cooldown restarts on every accepted request, including on
 
 ### Side effects
 
-An accepted request writes `default_share_voice_activity` and then walks every friendship. A friendship whose caller-side value already equals the submitted value is skipped, and its stored `version` does not advance. Every friendship, skipped or rewritten, produces one [Relationship Update](/gateway/events/#relationship-update) to the caller and one to the friend, so re-sending the current value still sends the full set out. The friend's Dispatch is emitted only when the reciprocal friendship exists.
+An accepted request writes `default_share_voice_activity` and then walks every friendship. A friendship whose caller-side value already equals the submitted value is skipped, and its stored `version` does not advance. Every friendship, skipped or rewritten, produces one [Relationship Update](/gateway/events/#relationship-update) to the caller and one to the friend, so re-sending the current value still sends those Dispatches for every friendship. The friend's Dispatch is emitted only when the reciprocal friendship exists.
 
 It then records the change time in `last_voice_activity_sharing_change_at` and emits [User Update](/gateway/events/#user-update) to the caller.
 

@@ -18,7 +18,7 @@ Fluxer evaluates the credential in a fixed order.
 2. A credential presented with the `Bot` scheme is refused with 401 `UNAUTHORIZED`.
 3. Any access token issued to an OAuth2 application other than the built-in Admin application is refused with 403 `ACCESS_DENIED`.
 4. An account holding neither `admin:authenticate` nor the wildcard `*` is refused with 403 `MISSING_PERMISSIONS`.
-5. An account that clears both gates but satisfies none of the [ACLs](#acl-evaluation) the operation names is refused with 403 `MISSING_ACL`.
+5. An account that passes every check above but satisfies none of the [ACLs](#acl-evaluation) the operation names is refused with 403 `MISSING_ACL`.
 
 :::caution[A denial names no requirement]
 The `MISSING_ACL` body is a fixed sentence with no ACL name and no requirement list, so a denial never says which requirement failed.
@@ -26,9 +26,9 @@ The `MISSING_ACL` body is a fixed sentence with no ACL name and no requirement l
 
 No Admin operation declares an OAuth2 scope, an MFA requirement, or a sudo requirement, so none consumes the `X-Fluxer-Sudo-Mode-JWT` header. An accepted credential together with the required ACLs is the complete authorisation boundary.
 
-An Admin API key authenticates as the account that created it, and Fluxer reads it only on a path below `/v1/admin`. A request presenting a key on any other path continues with no credential resolved. Fluxer authorises a key-authenticated request twice. The key's own ACL set must satisfy the operation, and unless the owning account holds `*` that account must itself hold one of the ACLs the operation names. Removing an ACL from either side narrows every existing key at once, with no rotation.
+An Admin API key authenticates as the account that created it, and Fluxer reads it only on a path below `/v1/admin`. A request presenting a key on any other path is treated as a request with no credential. Fluxer authorises a key-authenticated request twice. The key's own ACL set must satisfy the operation, and unless the owning account holds `*` that account must itself hold one of the ACLs the operation names. When an ACL is removed from a key, or from the account that owns the key, the key no longer passes a check for that ACL on its next request. The key does not need to be rotated.
 
-Initial setup is the single exception. While the instance reports its setup as unconfigured, a session credential reaches the [instance configuration](/admin-api/instance/) operations without holding any ACL. The session that switches setup to configured is granted `*` immediately. Once setup is configured those operations apply the boundary above.
+Initial setup is the single exception. While `app_public.setup.configured` is false, a session credential reaches the [instance configuration](/admin-api/instance/) operations without holding any ACL. The session that switches setup to configured is granted `*` immediately. After `app_public.setup.configured` becomes true, those operations require an accepted credential and the ACLs they name.
 
 Admin authorisation runs before request validation on every operation except [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job), whose body is validated first because its ACL is selected from that body. An account lacking the required ACL is therefore refused with 403 even when its query string or body is also malformed.
 
@@ -60,12 +60,12 @@ A body with none of those fields resolves to no ACL at all and applies no change
 - `add_guild_members` maps to `bulk:add:guild_members`.
 - `schedule_user_deletion` maps to `bulk:delete:users`.
 
-Fluxer bounds every grant separately. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs also refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it resolves the target before the bound is evaluated, so an unknown ID fails first with 404 `UNKNOWN_USER`.
+Fluxer checks each ACL an Admin grants against the ACLs that Admin holds. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs also refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it looks up the target account before it checks the granted ACLs, so an unknown ID fails first with 404 `UNKNOWN_USER`.
 
 [Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 111 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
 
 :::caution[`*` satisfies every present and future ACL]
-It lifts the per-key owner check and lifts the escalation bound on every grant its holder makes.
+A key whose owning account holds `*` skips the owner check. An Admin holding `*` can grant any ACL.
 :::
 
 The [ACL registry](#acl-registry) below lists every value the instance recognises.
@@ -80,7 +80,7 @@ A request refused by authentication, ACL evaluation, rate limiting, or body vali
 
 Fluxer can record more than one entry for one request. [Update guild](/admin-api/guilds/#update-guild) records one entry for each mapped field group it applies. A queued bulk job records one summary entry when it finishes, with the creating Admin and that request's audit reason. The `update_user_flags`, `update_guild_features`, and `schedule_user_deletion` tasks also record one ordinary entry for each account or guild the worker changes, with `audit_log_reason` null.
 
-An entry stores an acting Admin, a target type, a target ID, an action name, an optional audit reason, and a string metadata map. Fluxer resolves every other member at read time.
+An entry stores an acting Admin, a target type, a target ID, an action name, an optional audit reason, and a string metadata map. Fluxer fills every other field of the entry when the entry is read.
 
 ### Structure
 
@@ -239,7 +239,7 @@ An operation records one of the following actions. The field is a free-form stri
 | ban_file_sha | A file hash was added to the attachment blocklist |
 | ban_ip | An address was added to the IP blocklist |
 | ban_ip_skipped_exempt | An IP blocklist entry was declined by the instance exemption list |
-| ban_ip_skipped_cgnat | An IP blocklist entry was declined by the carrier-grade NAT blast-radius guard |
+| ban_ip_skipped_cgnat | An IP blocklist entry was declined because IP intelligence reports the address as a mobile carrier network |
 | ban_member | An account was banned from a guild |
 | ban_phrase | A phrase was added to the message phrase blocklist |
 | ban_profile_substring | A substring was added to the profile substring blocklist |
@@ -276,7 +276,7 @@ An operation records one of the following actions. The field is a free-form stri
 | mark_suspicious_ip_skipped_invalid | The address could not be parsed, so no marker was written |
 | mark_suspicious_ip_skipped_ipinfo_unavailable | IP intelligence was unavailable, so no marker was written |
 | mark_suspicious_ip_skipped_trusted_commercial_privacy_provider | The address belongs to a trusted commercial privacy provider, so no marker was written |
-| mark_suspicious_ip_skipped_high_blast_radius | The address failed the blast-radius guard, so no marker was written |
+| mark_suspicious_ip_skipped_high_blast_radius | IP intelligence reports the address as a mobile, anycast, satellite, or education network, so no marker was written |
 | purge_asset | A stored media asset was purged |
 | purge_guild_emoji_asset | A guild emoji asset was purged |
 | purge_guild_sticker_asset | A guild sticker asset was purged |
@@ -332,7 +332,7 @@ Send `X-Audit-Log-Reason` on operations that support an audit reason. Values are
 
 Normalisation strips control and format characters and trims surrounding whitespace. An absent header, a blank value, and a value whose normalised length exceeds 512 characters all resolve to null. Fluxer never fails a request during this normalisation, so an over-long reason is dropped silently.
 
-Fluxer writes the resolved value to `audit_log_reason` on every entry the request records. An operation that records no entry accepts the header and does nothing with it. An Admin resource page marks an operation with the audit reason capability only where an entry stores the value.
+Fluxer writes the resolved value to `audit_log_reason` on every entry the request records. An operation that records no entry accepts the header and does nothing with it. An Admin resource page shows the Audit reason label in an operation's route header only where an entry stores the value.
 
 ## Errors and rate limits
 
@@ -352,7 +352,7 @@ An Admin failure uses the same envelope as the [HTTP API error response](/http-a
 
 <sup>2</sup> Present on an `INVALID_FORM_BODY` response, and on any other failure that has field detail
 
-Structured detail sits at the top level of the object. A client MUST treat a member it does not recognise as absent, and MUST NOT assume that two failures with the same `code` have the same extra members.
+A failure with extra detail puts those extra members next to `code` and `message`, at the top level of the object. A client MUST treat a member it does not recognise as absent, and MUST NOT assume that two failures with the same `code` have the same extra members.
 
 ### Standard response statuses
 
@@ -376,7 +376,7 @@ Every Admin operation declares a route bucket, and each Admin resource page name
 
 The global user bucket permits 50 requests per second, rising to 1,200 for an account that has the `HIGH_GLOBAL_RATE_LIMIT` flag. An account with the `RATE_LIMIT_BYPASS` flag is evaluated against no bucket at all. Instance configuration can change route and global limits as described in [rate limits](/topics/rate-limits/).
 
-Fluxer classifies a successful Admin request from an ordinary account as a user request, and the response has no informational rate limit headers.
+A successful Admin request from an account that is not a bot has no informational rate limit headers.
 
 ## List ACLs
 
@@ -491,7 +491,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | system:heap_snapshot | Captures a heap snapshot of a running process |
 | user:cancel:bulk_message_deletion | Cancels the bulk message deletion an account scheduled for itself |
 | user:delete | Schedules or cancels account deletion |
-| user:disable:suspicious | Applies the suspicious account disable operation |
+| user:disable:suspicious | Disables a user for suspicious activity |
 | user:list:dm_channels | Reads a user's direct message and group direct message channels |
 | user:list:guilds | Reads a user's guild memberships |
 | user:list:relationships | Reads a user's relationships |
@@ -572,7 +572,7 @@ Without an index, `q` is ignored, and a filtered page holds only the matches amo
 | logs | array[[Admin audit entry](#admin-audit-entry-object) object] | The entries in this page |
 | total<sup>1</sup> | integer | The number of entries the query matched |
 
-<sup>1</sup> The index reports the full match count. The table fallback reports only the matches inside the rows it scanned
+<sup>1</sup> The index reports the full match count. Without the search index, the operation reports only the matches among the first `limit` plus `offset` entries
 
 ### Response
 

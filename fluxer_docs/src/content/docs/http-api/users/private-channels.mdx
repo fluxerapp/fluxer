@@ -11,7 +11,7 @@ A private channel is a conversation outside any guild. It is either a direct mes
 The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
 :::note[Open state is per participant]
-A direct message channel exists once, and each participant holds its own open state. Closing one side leaves the channel and its messages in place, so reopening the pair resolves the stored channel.
+A direct message channel exists once, and each participant holds its own open state. Closing one side leaves the channel and its messages in place, so a later [Create private channel](#create-private-channel) request for the same pair returns that stored channel.
 :::
 
 ## Preloaded messages object
@@ -82,7 +82,7 @@ One body field selects the channel type. `recipient_id` opens a direct message. 
 
 A request supplying `recipients` also consumes the `user:group_dm:create` bucket and is subject to the CAPTCHA check below, whatever the resulting participant count.
 
-Instance policy can disable private channel creation entirely, in which case every request returns 400 `DIRECT_MESSAGES_DISABLED` after the body has been validated and the group DM bucket and CAPTCHA have been applied.
+When the instance [community policy](/http-api/instance/#community-policy-object) sets `direct_messages_disabled` to true, every request returns 400 `DIRECT_MESSAGES_DISABLED` after the body has been validated and the group DM bucket and CAPTCHA have been applied.
 
 An unclaimed account holds no password and did not arrive through SSO. Fluxer rejects an unclaimed caller with 400 `UNCLAIMED_ACCOUNT_CANNOT_JOIN_GROUP_DMS` when `recipients` is supplied, and with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_DIRECT_MESSAGES` otherwise. An ordinary caller then needs a verified email address, failing which the request returns 403 `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED`. A bot caller is exempt from the email requirement and is never unclaimed.
 
@@ -110,7 +110,7 @@ Every participant, the caller included, holds fewer open group DMs than the inst
 
 Fluxer then evaluates each other recipient independently and collects every failure, using the [unaddable reasons](#group-dm-unaddable-reasons) above. One failing recipient rejects the whole request with 400 `GROUP_DM_RECIPIENTS_NOT_ADDABLE`. The response has the rejected entries in the top-level `unaddable_recipients` member and the accepted user IDs in `addable_recipients`, so the caller can retry with a smaller set.
 
-An ordinary caller never adds a recipient across a block in either direction, because blocking deletes the friendship both ways and a friend request crosses no block.
+An ordinary caller cannot add a recipient it has blocked or a recipient that has blocked it. Blocking deletes the friendship on both accounts, and a friend request between the two accounts creates no new friendship while either block exists.
 
 :::note[Group DM admission reads no block state]
 Fluxer holds a bot caller to no friendship. A recipient that has blocked the bot is added when the two share a guild and the recipient's [group DM add permission flags](/http-api/users/#group-dm-add-permission-flags) admit it.
@@ -220,7 +220,7 @@ A guild channel the caller cannot see fails resolution first and returns 403 `MI
 Fluxer appends a newly pinned channel after every channel already pinned. A channel later closed, left, or deleted stays in the pinned set, and only [Unpin private channel](#unpin-private-channel) or deletion of the caller's account removes an entry.
 
 :::caution[Unpinning needs the channel to resolve]
-Unpinning resolves the channel first, so an entry whose channel the caller can no longer resolve stays in the pinned set.
+Unpinning resolves the channel first, so an entry for a deleted channel, or for a group DM the caller is no longer a recipient of, stays in the pinned set.
 :::
 
 :::note[Pinning is idempotent and the Dispatch is unconditional]

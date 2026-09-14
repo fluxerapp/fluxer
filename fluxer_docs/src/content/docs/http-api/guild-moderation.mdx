@@ -45,12 +45,12 @@ A guild ban object names the banned account, the moderator, the reason, and any 
 ```
 
 :::note[Fluxer never returns the ban address or email]
-A ban can also prevent accounts using the same IP address or email from joining. These values are not exposed in the ban object.
+A ban also stores the email address and the last active IP address of the banned account. Fluxer rejects an invite join by any account that matches either value. These values are not exposed in the ban object.
 :::
 
-An [invite](/http-api/invites/) rejected for an IP match returns 403 `USER_IP_BANNED_FROM_GUILD`. An account or email match returns 403 `USER_BANNED_FROM_GUILD`. Address exemptions can allow a join from a shared network. Ban checks differ for administrator actions, bot installation and automatic guild joins.
+An [invite](/http-api/invites/) rejected for an IP match returns 403 `USER_IP_BANNED_FROM_GUILD`. An account or email match returns 403 `USER_BANNED_FROM_GUILD`. Fluxer skips the IP match when the joining account's address is on the operator's IP ban exemption list, or when IP lookup classifies that address as carrier-grade NAT or shared access. Adding a member through the Admin API, installing a bot through OAuth2, and the automatic join into the visionaries guild after a Stripe purchase skip every ban check. The automatic join into the single community checks the account and IP matches and skips the email match.
 
-[Remove guild ban](#remove-guild-ban) releases both blocks. Permanently deleting the banned account deletes every guild ban it holds, and that releases both blocks in every guild at once.
+[Remove guild ban](#remove-guild-ban) releases the IP address block and the email block. Permanently deleting the banned account deletes every guild ban it holds, which releases both of those blocks in every guild at once.
 
 ## List guild bans
 
@@ -95,7 +95,7 @@ Creates a guild ban, or replaces an existing one, and returns 204 with an empty 
 
 - The caller cannot ban themselves, and Fluxer reports a self-target as 404 `UNKNOWN_MEMBER`.
 - Banning a target who is a member also requires role hierarchy authority over that member. The guild owner holds that authority over everyone, and no other caller holds it over the owner.
-- A target who is not a member can still be banned, and the ban pre-empts a future join.
+- A target who is not a member can still be banned, and Fluxer refuses a later join by that account.
 
 A blocked `reason` returns 403 `CONTENT_BLOCKED`.
 

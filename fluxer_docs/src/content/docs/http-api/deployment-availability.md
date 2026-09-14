@@ -4,7 +4,7 @@ title: Deployment availability
 description: The hosted-only routes and the instance flags that report deployment kind.
 ---
 
-A small set of routes exists only on the deployment Fluxer hosts. An operator runs the same release, and most of the HTTP API is identical on both.
+The routes listed under [Hosted-only routes](#hosted-only-routes) exist only on the deployment Fluxer hosts. A self-hosted deployment runs the same release, and most of the HTTP API is identical on both.
 
 A self-hosted deployment does not register those routes. A request to one returns 404 `NOT_FOUND` with no feature-specific code, so a caller cannot tell an unavailable route from an unrecognised path.
 
@@ -14,13 +14,13 @@ Credentials, permissions, premium state and OAuth2 scopes do not change route av
 
 Every deployment reports its kind in `self_hosted` on the [instance features object](/http-api/instance/#instance-features-object). The unauthenticated [instance discovery document](/http-api/instance/#get-instance-discovery) publishes it before a client holds any credential. `self_hosted` alone decides whether the API registers the routes below.
 
-`stripe_enabled` on the same object reports the payment provider toggle alone. A hosted deployment that reports it false still serves every route in the table below. A deployment reporting `stripe_enabled` true with no provider secret key configured behaves exactly like one reporting it false.
+`stripe_enabled` on the same object reports only the `integrations.stripe.enabled` configuration value. A hosted deployment that reports it false still serves every route in the table below. A deployment reporting `stripe_enabled` true with no provider secret key configured behaves exactly like one reporting it false.
 
 :::caution[Read `self_hosted` for the deployment kind]
 Neither flag promises that a provider-dependent operation succeeds.
 :::
 
-Without a provider client, the answer depends on the operation. An operation that has to reach the provider fails with 400 `STRIPE_PAYMENT_NOT_AVAILABLE`, and [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) fails with 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`. These read operations report the absence in a 200 body instead:
+When `stripe_enabled` is false or no provider secret key is configured, the answer depends on the operation. An operation that has to reach the provider fails with 400 `STRIPE_PAYMENT_NOT_AVAILABLE`, and [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) fails with 400 `STRIPE_WEBHOOK_NOT_AVAILABLE`. These read operations report the absence in a 200 body instead:
 
 - [Get refund eligibility](/http-api/billing/#get-refund-eligibility) reports `eligible` false with the reason `feature_unavailable`.
 - [Get current subscription price](/http-api/premium/#get-current-subscription-price) reports null.
@@ -68,4 +68,4 @@ A route every deployment registers can still produce a different answer on a sel
 
 Premium state is the clearest case. Every deployment registers [Get premium state](/http-api/premium/#get-premium-state) and [Set premium perks disabled](/http-api/premium/#set-premium-perks-disabled). A self-hosted instance still reports premium state and still records the perks-disabled flag. The response repeats the deployment kind in `self_hosted` on the [effective premium state object](/http-api/premium/#effective-premium-state-object). That flag alone does not make `is_premium` true. A self-hosted deployment grants premium to every account only while its instance [premium mode](/admin-api/instance/#premium-modes) is `everyone`. That mode also overrides the perks-disabled flag, so `is_premium` stays true while `premium_perks_disabled` is true.
 
-The other instance feature flags published by [instance discovery](/http-api/instance/#instance-features-object) work the same way. `voice_enabled`, `presigned_attachment_uploads`, and `emails_enabled` each switch off a capability that the surrounding routes still expose, so a client reads the flag.
+The other instance feature flags published by [instance discovery](/http-api/instance/#instance-features-object) work the same way. `voice_enabled`, `presigned_attachment_uploads`, and `emails_enabled` each report whether a capability is switched on. The routes for that capability stay registered when the flag is false, so a client reads the flag before it uses them.

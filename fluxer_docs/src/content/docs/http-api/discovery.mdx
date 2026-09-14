@@ -82,7 +82,7 @@ One page of matching listings, together with the total and the per-category coun
 | total<sup>1</sup> | integer | The total number of guilds matching the query |
 | category_counts<sup>2</sup> | array[[discovery category count](#discovery-category-count-object) object] | The match count for each category under the current filters |
 
-<sup>1</sup> The count describes the complete match set, so it bounds paging through `offset`
+<sup>1</sup> The count covers every match on every page. A client pages with `offset` until `offset` reaches `total`
 
 <sup>2</sup> Computed with the `category` filter removed and every other filter applied, so the counts describe what selecting a different category would return. A category with no match is omitted, and the array is ordered by ascending category
 
@@ -358,7 +358,7 @@ A pending, rejected, removed, or absent application fails with 400 `DISCOVERY_NO
 | 403 | [error response](/http-api/#error-response) | The caller is banned from the guild directly or by address and the request returns `USER_BANNED_FROM_GUILD` or `USER_IP_BANNED_FROM_GUILD` |
 | 404 | [error response](/http-api/#error-response) | The approved application names a guild whose record no longer exists and the request returns `UNKNOWN_GUILD` |
 
-<sup>1</sup> An account whose phone requirement was deferred is re-evaluated against the target guild at join time, so an account that satisfies the standing check can still be refused here
+<sup>1</sup> An account without a verified phone number can have a phone requirement that Fluxer holds back until the account joins a guild. At join time Fluxer checks that requirement against the target guild. An account that passes the account-wide check can therefore still receive `ACCOUNT_SUSPICIOUS_ACTIVITY` here
 
 :::note[A guild that never existed returns 400, not 404]
 A guild with no approved listing returns `DISCOVERY_NOT_DISCOVERABLE`.
@@ -368,9 +368,9 @@ A guild with no approved listing returns `DISCOVERY_NOT_DISCOVERABLE`.
 
 An account that is already a member receives the same 204 response with no Dispatch. Otherwise the operation creates the membership, records discovery as its join source, and adds the guild to the caller's settings and folder layout.
 
-The joining account's sessions receive [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is dispatched guild-wide and reaches whichever sessions [event filtering](/gateway/event-filtering/) selects. A bot session always receives it, and a passive user session in a guild with more than 250 members does not receive it until [Lazy Request](/gateway/commands/#lazy-request) marks that guild active. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join changes its restricted guild set or its folder layout, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its account default hides muted channels.
+The joining account's sessions receive [Guild Create](/gateway/events/#guild-create). [Guild Member Add](/gateway/events/#guild-member-add) is dispatched guild-wide and reaches whichever sessions [event filtering](/gateway/event-filtering/) selects. A bot session always receives it, and a passive user session in a guild with more than 250 members does not receive it until [Lazy Request](/gateway/commands/#lazy-request) marks that guild active. The joining account receives [User Settings Update](/gateway/events/#user-settings-update) when the join adds the guild to `restricted_guilds` in its [user settings](/http-api/users/settings/) or changes its folder layout, and [User Guild Settings Update](/gateway/events/#user-guild-settings-update) when its account default hides muted channels.
 
-Unless join notifications are suppressed or no system channel is configured, the join emits a [USER_JOIN](/http-api/messages/#message-types) system message through [Message Create](/gateway/events/#message-create). No invite use is consumed.
+Unless the guild sets the `SUPPRESS_JOIN_NOTIFICATIONS` [system channel flag](/http-api/guilds/#system-channel-flags) or has no system channel, the join emits a [USER_JOIN](/http-api/messages/#message-types) system message through [Message Create](/gateway/events/#message-create). No invite use is consumed.
 
 ### Rate limit
 
@@ -483,7 +483,7 @@ Every field is optional, and an omitted field preserves the stored value.
 
 ### Side effects
 
-Editing preserves the listing's status and review details. Approved changes appear in [Search discovery guilds](#search-discovery-guilds), while pending listings remain absent. No guild feature changes.
+Editing preserves the listing's status and review details. Changes to an approved listing appear in [Search discovery guilds](#search-discovery-guilds). A pending listing stays absent from search. No guild feature changes.
 
 ### Rate limit
 

@@ -32,8 +32,8 @@ Fluxer reports every entry in the resulting `errors` array against the path `syn
 | --- | --- | --- |
 | Encoded string longer than 699052 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
 | Encoded string outside the base64 alphabet | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
-| Decoded message above 524288 bytes | 400 `INVALID_FORM_BODY` | `TOO_LARGE` |
-| Bytes that do not decode as `SyncedPreferences` | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
+| Decoded message above 524288 bytes | 400 `VALIDATION_ERROR` | `TOO_LARGE` |
+| Bytes that do not decode as `SyncedPreferences` | 400 `VALIDATION_ERROR` | `INVALID_FORMAT` |
 
 An over-length string draws two entries for the one path.
 
@@ -204,7 +204,7 @@ Field numbers 42 and 43 are reserved, together with the names `attachment_media_
 | --- | --- | --- |
 | 0 | HDR_DISPLAY_MODE_UNSPECIFIED | No explicit mode is selected |
 | 1 | HDR_DISPLAY_MODE_FULL | Display HDR media without limiting its range |
-| 2 | HDR_DISPLAY_MODE_STANDARD | Display HDR media using the standard presentation |
+| 2 | HDR_DISPLAY_MODE_STANDARD | Limit HDR media to standard dynamic range |
 
 ## Accessibility overrides object
 
@@ -419,7 +419,7 @@ One entry names one grouping in the favourites view. The client chooses the iden
 
 ## Recent mentions settings object
 
-The `recent_mentions` field controls which mentions appear in the recent mentions view. The filters combine, and `include_guilds` selects by channel.
+The `recent_mentions` field controls which mentions appear in the recent mentions view. Each filter set to false removes its mentions, and a mention appears only when no filter removes it. `include_guilds` tests the channel the mention is in.
 
 ### Structure
 
@@ -609,7 +609,7 @@ The `sound` field controls sound playback, master volume, and per-sound override
 
 ### Sound identifiers
 
-Both maps are keyed by an arbitrary string, and Fluxer stores and returns any key unchanged. The first-party client uses the identifiers below, and a key outside this set has no defined playback effect.
+Both maps are keyed by an arbitrary string, and Fluxer stores and returns any key unchanged. The first-party client uses the identifiers below, and the first-party client ignores a key outside this set.
 
 | Value | Description |
 | --- | --- |

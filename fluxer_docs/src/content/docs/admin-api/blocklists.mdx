@@ -6,7 +6,7 @@ description: The safety blocklists, their value forms, and the operations that m
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Fluxer has nine blocklists for account access and user content. Each defines its accepted values, matching rules and metadata. Values are normalised consistently when added and checked.
+Fluxer has nine blocklists for account access and user content. Each defines its accepted values, matching rules and metadata. Fluxer normalises a value when it adds the value and again when it checks the value.
 
 Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
 
@@ -32,13 +32,13 @@ Fluxer synchronises disposable email domains from external feeds every six hours
 | avatar-hash<sup>8</sup> | Avatar hashes blocked from being set |
 | profile-substring<sup>4</sup> <sup>9</sup> | Substrings blocked from one named profile field |
 
-<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, or when the high blast-radius carrier network check matches, and records both refusals in the Admin audit log
+<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, or when IP lookup data shows that a single address is on a mobile carrier network, and records both refusals in the Admin audit log
 
 <sup>2</sup> Stored lowercased, so a mixed-case value does not create a second row
 
 <sup>3</sup> Fluxer never shows the list to the account holder, who sees only the verified-phone gate. A domain must match `^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$`
 
-<sup>4</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. Match time also normalises inserted whitespace, punctuation, and compatibility characters
+<sup>4</sup> Canonicalised by NFKC normalisation, removal of control, format and variation-selector characters, lowercasing, and trimming. When Fluxer matches a value, it also normalises inserted whitespace, punctuation, and compatibility characters
 
 <sup>5</sup> Canonicalised before storage. A value Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url`
 
@@ -214,7 +214,7 @@ A value can be blocked with no row of its own, as a single address covered by a 
 
 ## Blocklist entry creation object
 
-The body of [Add blocklist entry](#add-blocklist-entry) is a union resolved by the `list_type` path segment. The field that has the value differs per blocklist, and two of the nine take an array, so one request can add up to 1000 avatar hashes or profile substrings.
+The body of [Add blocklist entry](#add-blocklist-entry) has one shape per blocklist, and the `list_type` path segment selects the shape. The field that has the value differs per blocklist, and two of the nine take an array, so one request can add up to 1000 avatar hashes or profile substrings.
 
 ### Value field
 
@@ -365,13 +365,13 @@ Every write is an upsert on the canonical value. An omitted optional field is wr
 
 A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
 
-Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list, and when a single address is classified as a high blast-radius mobile or carrier network. It skips the blast-radius guard for a CIDR range, and a lookup failure counts as no risk, so the address is written.
+Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list, and when a single address is classified as a high blast-radius mobile or carrier network. Fluxer runs that carrier network check only for a single address, so the check never refuses a CIDR range. When the IP lookup for the check fails, Fluxer treats the address as low risk and writes it.
 
 The response has no body, so it does not report the canonical form that was stored. Read it back with [List blocklist entries](#list-blocklist-entries).
 
 ### Side effects
 
-The written rows take effect for subsequent blocklist decisions. For every list except `email` and `email-domain-suspicious`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
+Fluxer checks later requests against the written rows. For every list except `email` and `email-domain-suspicious`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
 
 Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. It records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt` or `ban_ip_skipped_cgnat`, before it returns the 400.
 
@@ -469,7 +469,7 @@ The operation is idempotent and reports no counts. A value with no stored row st
 
 ### Side effects
 
-Removed entries stop affecting subsequent blocklist decisions after changes propagate across the instance. A value can remain blocked by another matching entry. No Gateway Dispatch is emitted.
+After the removal reaches every node, Fluxer no longer checks later requests against the removed entries. A value can remain blocked by another matching entry. No Gateway Dispatch is emitted.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per canonical value processed.
 
@@ -518,7 +518,7 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 
 <sup>4</sup> Two addresses are the same origin when they share a decision key, which is the exact address for IPv4 and the `/64` prefix for IPv6
 
-<sup>5</sup> A domain the account policy exempts from contact-domain reputation reads as not blocked even while a row exists
+<sup>5</sup> A domain that the instance account policy marks as exempt from reputation checks reads as not blocked even while a row exists
 
 <sup>6</sup> This check does not read the `url-domain` list, so a URL that a stored domain blocks reads as not blocked. Check the hostname separately
 
@@ -598,7 +598,7 @@ Changing the `scope` of a `profile-substring` row writes a second row under the 
 
 ### Side effects
 
-The updated fields take effect for subsequent matches after changes propagate across the instance. No Gateway Dispatch is emitted.
+After the change reaches every node, later matches use the updated fields. No Gateway Dispatch is emitted.
 
 The write records one [Admin audit entry](/admin-api/#admin-audit-entry-object) under the same action an add records, with the canonical value but no previous values of the changed fields.
 
@@ -692,7 +692,7 @@ Both fields are optional, so an empty body and `{}` are both valid requests.
 
 The account keeps the blocked avatar until it next sets one. Clearing it is a separate request naming `avatar` in the `fields` array of [Clear user profile fields](/admin-api/users/#clear-user-profile-fields).
 
-Every account using that image shares the same truncated prefix, so blocking the hash blocks the image for every account.
+The avatar hash is the first 8 characters of the MD5 digest of the image, so every account using that image has the same avatar hash, so blocking the hash blocks the image for every account.
 
 ### Side effects
 

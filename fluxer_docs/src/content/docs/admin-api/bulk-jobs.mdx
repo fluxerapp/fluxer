@@ -75,7 +75,7 @@ Body validation runs ahead of authentication and ACL evaluation, so a malformed 
 
 ### JSON body
 
-The `task` discriminator selects one of these structures. Every ID array has an upper bound and no lower bound, so an empty array queues a job that processes nothing and settles as `succeeded`.
+The `task` discriminator selects one of these structures. Every ID array has an upper bound and no lower bound, so an empty array queues a job that processes nothing and finishes with the status `succeeded`.
 
 #### Update user flags structure
 
@@ -86,7 +86,7 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 | add_flags?<sup>1</sup> | array[string] | [Account flag](/admin-api/users/#account-flags) values to add (max 64, default empty) |
 | remove_flags?<sup>1</sup> | array[string] | [Account flag](/admin-api/users/#account-flags) values to remove (max 64, default empty) |
 
-<sup>1</sup> Each entry is one 64-bit flag value written as an unsigned decimal string, such as `1024`. The boundary rejects a symbolic name. Additions are applied before removals, so a value named in both arrays ends up cleared
+<sup>1</sup> Each entry is one 64-bit flag value written as an unsigned decimal string, such as `1024`. Body validation rejects a symbolic name. Additions are applied before removals, so a value named in both arrays ends up cleared
 
 #### Update suspicious activity flags structure
 
@@ -110,7 +110,7 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 | add_features?<sup>1</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to add (max 100, default empty) |
 | remove_features?<sup>1</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to remove (max 100, default empty) |
 
-<sup>1</sup> The boundary accepts any string, so a name outside the registry is written to the guild's feature set. Additions are applied before removals
+<sup>1</sup> Body validation accepts any string, so a name outside the registry is written to the guild's feature set. Additions are applied before removals
 
 #### Add guild members structure
 
@@ -148,7 +148,7 @@ The [job](/admin-api/jobs/) records the acting Admin and audit reason. Queueing 
 
 Entities are processed in the submitted order. [Cancel job](/admin-api/jobs/#cancel-job) stops the run between entities and sets its status to `cancelled`. Completed changes remain in place. A failed or unknown entity counts as failed without stopping the remaining work.
 
-Progress updates arrive before work starts, after every 25 entities, and at completion. `schedule_user_deletion` updates after every 10 accounts instead. The final message includes successful and failed counts.
+Every task updates its progress before work starts and at completion. Every task except `schedule_user_deletion` also updates its progress after every 25 entities, and `schedule_user_deletion` updates its progress after every 10 accounts. The final `progress_message` has the successful and failed counts.
 
 Every task writes one summary Admin audit entry when it finishes, with the action `bulk_update_user_flags`, `bulk_update_suspicious_activity_flags`, `bulk_update_guild_features`, `bulk_add_guild_members`, `bulk_schedule_deletion`, `bulk_ban_file_shas`, or `bulk_delete_user_messages`. The summary has the audit reason, the entity count, the operation-specific parameters, the job identifier, and the processed, successful, and failed counts. Its `target_type` is `bulk_job` and its `target_id` is the job identifier, except for `add_guild_members`, which targets the guild. A failed job writes no summary entry. A cancelled job writes one, marked `cancelled`, covering the entities it processed before it stopped.
 
@@ -158,7 +158,7 @@ Every task writes one summary Admin audit entry when it finishes, with the actio
 
 `update_guild_features` writes one `update_features` entry for each guild, dispatches [Guild Update](/gateway/events/#guild-update), and reindexes the guild for search. Fluxer reconciles a guild that already has a discovery application record against the new feature set, so gaining `DISCOVERABLE` approves the record and losing it marks the record removed. A guild with no discovery record is left alone.
 
-`add_guild_members` bypasses the ban check and the risk gate. The task suppresses the join system message, records the join source as an Admin force add, and dispatches [Guild Member Add](/gateway/events/#guild-member-add) to the guild and [Guild Create](/gateway/events/#guild-create) to the added account's sessions. The task still enforces the per-account guild cap and the guild member cap, so an account at either ceiling is counted as failed. An account that is already a member is left unchanged and counted as successful, with no second membership and no Dispatch. Adding a bot account also records a `BOT_ADD` guild audit log entry attributed to the acting Admin.
+`add_guild_members` bypasses the ban check and the deferred phone verification check that a normal join runs for an account without a verified phone. The task suppresses the join system message, records the join source as an Admin force add, and dispatches [Guild Member Add](/gateway/events/#guild-member-add) to the guild and [Guild Create](/gateway/events/#guild-create) to the added account's sessions. The task still enforces the per-account guild cap and the guild member cap, so an account at either ceiling is counted as failed. An account that is already a member is left unchanged and counted as successful, with no second membership and no Dispatch. Adding a bot account also records a `BOT_ADD` guild audit log entry attributed to the acting Admin.
 
 `delete_user_messages` deletes every message each account wrote, across every channel. It writes one `delete_all_user_messages` entry for each account, with the audit reason, the account, and the deleted message count, and reports progress after every account.
 

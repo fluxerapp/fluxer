@@ -40,7 +40,7 @@ A guild's submitted application, together with the guild details Fluxer resolves
 | custom_tags<sup>6</sup> <sup>8</sup> | array[string] | Normalised [custom tags](/http-api/discovery/#custom-tags) of the listing |
 | applied_at | ISO8601 timestamp | Time at which the guild applied |
 
-<sup>1</sup> Resolved from the guild at request time. A guild that can no longer be resolved yields the literal name `(unknown guild)`, a null icon, the owner ID `0`, a member count of 0, a null NSFW level, an empty feature array, and null for all owner name fields
+<sup>1</sup> Resolved from the guild at request time. A guild Fluxer fails to load yields the literal name `(unknown guild)`, a null icon, the owner ID `0`, a member count of 0, a null NSFW level, an empty feature array, and null for all owner name fields
 
 <sup>2</sup> Read from the owner account, so it is null when the guild resolved but the owner account did not
 
@@ -92,7 +92,7 @@ An approved listing. It has every field of the [Admin pending application object
 
 ## Discovery application object
 
-This is the [discovery application object](/http-api/discovery/#discovery-application-object) of the public Discovery resource. Every write on this page answers with it, so a client re-reads the listing after a write to render the enriched guild fields. No response on this page exposes the Admin that approved, rejected, or removed the application.
+This is the [discovery application object](/http-api/discovery/#discovery-application-object) of the public Discovery resource. Every write on this page answers with it, so a client that needs the guild name, icon, owner, member count, NSFW level, or features re-reads the listing after a write. No response on this page exposes the Admin that approved, rejected, or removed the application.
 
 ### Structure
 
@@ -317,7 +317,7 @@ Files every named guild under one [discovery category](/http-api/discovery/#disc
 Fluxer attempts the guilds one at a time and in order, and a failure does not stop the ones after it. Read `failed_guild_ids` for the guilds that did not move. The operation never returns 404.
 :::
 
-Repeating the request is safe. A pending application moves on the same terms as an approved one, so this operation can refile a guild that is still awaiting review.
+Repeating the request is safe. The operation moves a pending application the same way it moves an approved one, so this operation can refile a guild that is still awaiting review.
 
 ### Side effects
 
@@ -371,7 +371,7 @@ Every member is optional. An omitted member preserves the stored value, and an e
 
 ### Side effects
 
-The supplied members update the application while preserving its status, submission time, review time, review reason, and removal fields. Editing an approved listing does not return it to review. The new copy is visible in the next public search. Editing a pending application changes nothing a public reader can see.
+The supplied members update the application while preserving its status, submission time, review time, review reason, and removal fields. Editing an approved listing does not return it to review. The new description, category, language, and tags appear in the next public search. Editing a pending application changes nothing a public reader can see.
 
 No guild field changes, so no [Guild Update](/gateway/events/#guild-update) fires.
 

@@ -245,7 +245,7 @@ The counts cover voice states in guild channels and in calls. A node that does n
 
 <RouteHeader method="POST" path="/v1/admin/gateway/reloads" />
 
-Rebuilds server-side state for the supplied guilds from the database and returns how many live guild processes were selected. Requires `gateway:reload_all`.
+Fetches the guild data for the supplied guilds from the database again and sends it to each live guild process and returns how many live guild processes were selected. Requires `gateway:reload_all`.
 
 ### JSON body
 
@@ -277,7 +277,7 @@ Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-upd
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Every selected guild process was dispatched |
+| 200 | response body | Fluxer started a reload for every selected guild process |
 
 ### Side effects
 

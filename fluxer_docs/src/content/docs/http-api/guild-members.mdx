@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries live on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
 
-An unknown guild returns 404 `UNKNOWN_GUILD`, a non-member receives 403 `MISSING_PERMISSIONS`, and a guild marked unavailable returns 403 `MISSING_ACCESS`. [Transfer guild ownership](#transfer-guild-ownership) can also return 403 `ACCESS_DENIED` when the guild cannot be accessed.
+An unknown guild returns 404 `UNKNOWN_GUILD`, a non-member receives 403 `MISSING_PERMISSIONS`, and a guild marked unavailable returns 403 `MISSING_ACCESS`. [Transfer guild ownership](#transfer-guild-ownership) also returns 403 `ACCESS_DENIED` when the guild exists in storage but the Gateway reports it as not found.
 
 The modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
 
@@ -49,7 +49,7 @@ Every field except `user` describes state that belongs to the membership.
 
 <sup>6</sup> Omitted while the stored value is 0, so absence means no flag is set and, for `mention_flags`, that the account-level preference applies
 
-Guild avatars and banners can be hidden after the account loses its premium entitlement.
+Fluxer marks a membership premium sanitised after its account loses premium, when the membership has a guild avatar, banner, bio, or accent colour. A premium sanitised membership reports `avatar` and `banner` as null.
 
 A client compares `communication_disabled_until` against the current time, because a non-null value can name a moment that has already passed. A [communication timeout](/http-api/permissions/#communication-timeout) does not reduce the member's computed permission mask.
 
@@ -76,7 +76,7 @@ A client compares `communication_disabled_until` against the current time, becau
 
 ## Guild member profile flags
 
-A guild profile asset has these states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below blocks inheritance and renders the default.
+A guild profile asset has these states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. Each flag below blocks inheritance, so the client shows the default asset.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ The request body shared by [Modify current guild member](#modify-current-guild-m
 
 A `roles` entry that does not resolve to an existing role of the guild is dropped from the replacement, so a request naming only unknown roles clears the member's role set.
 
-An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. Fluxer then checks the decoded bytes against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760. The same limit applies to both fields. The decoded image must also pass the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
+An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. Fluxer then checks the decoded bytes against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760. The same limit applies to both fields. The decoded image must also be in a format the field accepts, and an animated AVIF is rejected. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
 
 Null and any `communication_disabled_until` that is not in the future both clear the timeout. A time more than 365.25 days ahead returns `TIMEOUT_CANNOT_EXCEED_365_DAYS`, and a value that passes the schema but is not a real instant returns `INVALID_TIMEOUT_VALUE`. `timeout_reason` has no effect unless `communication_disabled_until` is also supplied.
 
@@ -318,7 +318,7 @@ A caller addressing their own user ID here follows the self-targeted rules of [M
 :::
 
 :::caution[A blocklisted `bio` or `pronouns` returns 403]
-The request fails with `CONTENT_BLOCKED` even though the field is never written.
+A request that supplies a blocked `bio` or `pronouns` for another member fails with `CONTENT_BLOCKED`, even though Fluxer never writes those fields for another member.
 :::
 
 ### Path parameters
@@ -350,7 +350,7 @@ The body is a [guild member update object](#guild-member-update-object).
 
 ### Side effects
 
-The operation has the same effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty role set also makes a temporary membership permanent.
+The operation has the same effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty role set also makes a temporary membership permanent. A membership is temporary when the member joined through an [invite](/http-api/invites/#invite-object) whose `temporary` field is true.
 
 ### Rate limit
 

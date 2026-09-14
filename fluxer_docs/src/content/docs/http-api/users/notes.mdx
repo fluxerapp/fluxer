@@ -24,7 +24,7 @@ A single note the caller holds for one target account.
 | --- | --- | --- |
 | note<sup>1</sup> | string | The note text the caller stored for the target account |
 
-<sup>1</sup> Never null and never the empty string. A stored note is always 1 to 256 characters after normalisation, and every clearing form deletes the record
+<sup>1</sup> Never null and never the empty string. A stored note is always 1 to 256 characters after normalisation, and an omitted, null, or empty `note` deletes the stored note
 
 ## User notes record
 
@@ -100,7 +100,7 @@ A target with no stored note returns 404 `UNKNOWN_USER`. The same status covers 
 
 Creates, replaces, or deletes the caller's note for one target account. Returns 204 with an empty body. Emits a [User Note Update](/gateway/events/#user-note-update) Gateway event.
 
-The supplied text becomes the complete stored note. An unresolved target ID returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
+The supplied text becomes the complete stored note. A target ID that names no account returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
 
 :::caution[An omitted, null, or empty note deletes it]
 An empty string is [read as `null`](/http-api/#input-normalisation), so the forms are indistinguishable. Any value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.

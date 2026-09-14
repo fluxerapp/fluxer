@@ -53,7 +53,7 @@ A [sudo mode](#sudo-mode) proof supplements the token through the separate `X-Fl
 
 ## Bot tokens
 
-The Gateway accepts a bot token in [Identify](/gateway/commands/#identify). The HTTP operations [`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) and [`GET /v1/applications/@me`](/http-api/applications/#get-bot-application) accept case-insensitive scheme prefixes. `GET /v1/applications/@me` specifically requires `Bot` and returns 401 `INVALID_TOKEN` for anything else. The [Gateway authentication](#gateway-authentication) section covers the other route.
+The Gateway accepts a bot token in [Identify](/gateway/commands/#identify). The HTTP operations [`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) and [`GET /v1/applications/@me`](/http-api/applications/#get-bot-application) accept case-insensitive scheme prefixes. `GET /v1/applications/@me` specifically requires `Bot` and returns 401 `INVALID_TOKEN` for anything else. The [Gateway authentication](#gateway-authentication) section covers `GET /v1/gateway/bot`.
 
 A bot cannot use an operation restricted to ordinary user accounts, and such an operation returns 403 `ACCESS_DENIED`. An operation in [Authentication](/http-api/authentication/) that resolves an account from its request body or token, such as login, password recovery, email verification, email revert, and IP authorisation, returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED` when that account is a bot.
 
@@ -63,7 +63,7 @@ Every OAuth2 access token belongs to an account. Supported grants are authorisat
 
 Only operations that explicitly support OAuth2 accept access tokens. A user operation without that support returns 403 `ACCESS_DENIED` for a valid access token.
 
-Scopes apply only to OAuth2 access tokens, not to user session credentials accepted by the same operation. A bearer-only operation rejects a session token, bot token, or Admin API key with 401 `UNAUTHORIZED`.
+An operation that accepts both a user session token and an OAuth2 access token checks the scope only on the access token. A bearer-only operation rejects a session token, bot token, or Admin API key with 401 `UNAUTHORIZED`.
 
 A missing scope returns 403 `MISSING_OAUTH_SCOPE`. Each operation requires its named scope exactly. The [OAuth2 HTTP API](/http-api/oauth2/) defines the supported [scopes](/http-api/oauth2/#oauth2-scopes), grants, refresh, revocation, and introspection.
 
@@ -98,7 +98,7 @@ A credential can affect even an unauthenticated operation. It selects account-ba
 
 A protected operation returns 401 `UNAUTHORIZED` for a missing, malformed, unknown, expired, or revoked credential. Bot tokens on Admin operations and non-bearer credentials on bearer-only operations also return 401.
 
-A valid identity denied by the operation returns 403 `ACCESS_DENIED`, subject to the credential-specific exceptions above.
+A valid identity denied by the operation returns 403 `ACCESS_DENIED`. An [Authentication](/http-api/authentication/) operation that resolves a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`, as [Bot tokens](#bot-tokens) describes.
 
 Scope and Admin permission failures use the specific codes above. A 401 has no `WWW-Authenticate` header, so clients must inspect `code`.
 
@@ -123,7 +123,7 @@ Enforcement applies at those operations only, and does not gate password change 
 
 ## Account state gates
 
-The ordinary login requirement rejects an account that has effective suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. A requirement disappears from the response as soon as it is met.
+An ordinary authenticated operation rejects an account that has an unmet suspicious activity requirement with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. Each set flag in the response is one requirement the account has not met. A flag no longer appears in the response once the account meets that requirement.
 
 ### Account suspicious activity body
 
@@ -131,7 +131,7 @@ The ordinary login requirement rejects an account that has effective suspicious 
 | --- | --- | --- |
 | data | object | An object whose `suspicious_activity_flags` member is the integer [suspicious activity flag](/admin-api/users/#suspicious-activity-flags) bitfield still outstanding |
 
-A route that explicitly admits restricted accounts still accepts the credential. These stay reachable while a requirement is outstanding:
+A route that explicitly admits an account with an unmet suspicious activity requirement still accepts its credential. These stay reachable while a requirement is outstanding:
 
 - [Get current user](/http-api/users/current-user/#get-current-user) and [Modify current user](/http-api/users/current-user/#modify-current-user).
 - [Get current user settings](/http-api/users/settings/#get-current-user-settings).
@@ -156,7 +156,7 @@ Sudo mode is a short-lived proof that the account holder recently re-verified a 
 
 A sudo proof lasts five minutes. Present it in the `X-Fluxer-Sudo-Mode-JWT` request header. An invalid, expired, or account-mismatched token produces the same response as a missing one.
 
-Fluxer issues a token only for an account holding a multi-factor authenticator, so a password-only account re-verifies for each operation that requires sudo mode. [Create WebAuthn registration options](/http-api/users/mfa/#create-webauthn-registration-options) and [Disable current account](/http-api/users/current-user/#disable-current-account) issue no token and return no header even for a multi-factor account. A bot account satisfies sudo mode immediately. So does an account that has neither a password nor a multi-factor authenticator.
+Fluxer issues a token only for an account holding a multi-factor authenticator, so a password-only account re-verifies for each operation that requires sudo mode. [Create WebAuthn registration options](/http-api/users/mfa/#create-webauthn-registration-options) and [Disable current account](/http-api/users/current-user/#disable-current-account) issue no sudo token and return no `X-Fluxer-Sudo-Mode-JWT` response header, even for a multi-factor account. A bot account satisfies sudo mode immediately. So does an account that has neither a password nor a multi-factor authenticator.
 
 :::note[A sudo proof covers every account session]
 Revoking the session that obtained a proof leaves that proof valid until it expires.

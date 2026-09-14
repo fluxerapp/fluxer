@@ -13,14 +13,14 @@ Each mutable field group has its own route, its own [ACL](/admin-api/#acl-regist
 A read records no audit entry and reads no audit reason. [List user sessions](#list-user-sessions) and [List user WebAuthn credentials](#list-user-webauthn-credentials) are the exceptions. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
 
 :::caution[A missing PII ACL nulls the protected fields]
-The read still succeeds, so a null field is no evidence that the account has none.
+A caller without `user:view:email` receives a null `email`. A caller without `user:view:dob` receives a null `date_of_birth`, and a caller without `user:view:ip` receives null `last_active_ip`, `last_active_ip_reverse`, and `last_active_location`. The read still succeeds, so a null field is no evidence that the account has none.
 :::
 
 ## Admin user object
 
 The complete administrative view of one account. It has every stored flag, the private lifecycle fields, and the contact and network fields that the public [user object](/http-api/users/#user-object) never exposes.
 
-When the caller lacks the matching ACL, Fluxer redacts field groups and still returns every key, so the object shape is identical for every caller.
+When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Fluxer redacts the fields that the missing ACL protects and still returns every key, so the object shape is identical for every caller.
 
 ### Structure
 
@@ -294,7 +294,7 @@ One entry for each authentication session of an account. Terminated sessions rem
 
 ## Admin resolved user object
 
-The account summary the Admin direct message channel and relationship objects embed. It has `avatar` on top of the [Admin user summary](/admin-api/#admin-user-summary-object) that audit entries embed.
+The account summary embedded in the Admin direct message channel object and the Admin relationship object. It is the [Admin user summary](/admin-api/#admin-user-summary-object) that audit entries embed, with `avatar` added.
 
 ### Structure
 
@@ -395,14 +395,14 @@ One entry for each direct message or group direct message channel the account ha
 
 ## Admin user change log object
 
-One recorded change to an identity or contact field. The account holder's own changes appear here, and so do [Change user username](#change-user-username) and [Change user email](#change-user-email).
+One recorded change to the account's email address, phone verification state, or username and discriminator. The account holder's own changes appear here, and so do [Change user username](#change-user-username) and [Change user email](#change-user-email).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | event_id<sup>1</sup> | string | The ID of the change entry as an unsigned 64-bit decimal string |
-| field | string | The name of the identity or contact field that changed |
+| field | string | The field that changed, one of `email`, `has_verified_phone`, or `fluxer_tag` |
 | old_value<sup>2</sup> | ?string | The value before the change, or null when the field was unset |
 | new_value<sup>2</sup> | ?string | The value after the change, or null when the field was cleared |
 | reason<sup>3</sup> | ?string | The recorded reason for the change, or null when unrecorded |
@@ -571,7 +571,7 @@ An account with a pending or completed deletion is still returned, with its life
 
 Replaces the username, allocates or claims a discriminator, and returns the resulting account. Requires `user:update:username`.
 
-A target account may hold a custom discriminator on every self-hosted instance, and on any other instance only when the `feature_custom_discriminator` limit admits it.
+A target account may hold a custom discriminator on every self-hosted instance, and on any other instance only when the `feature_custom_discriminator` limit resolves to a value above zero for that account.
 
 ### Path parameters
 
@@ -694,11 +694,11 @@ The operation accepts no request body and never clears verification, so the one 
 | 200<sup>1</sup> | response body | Email address was marked verified |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> An account that has no stored email address is still accepted, and the verified marker is written against the absent address
+<sup>1</sup> An account that has no stored email address is still accepted, and `email_verified` is set to true while `email` stays null
 
 ### Side effects
 
-`email_verified` becomes true and `email_bounced` becomes false. Every email-clearable [suspicious activity flag](#suspicious-activity-flags) is cleared from the account in the same write.
+`email_verified` becomes true and `email_bounced` becomes false. The same write clears each of these [suspicious activity flag](#suspicious-activity-flags) bits: `REQUIRE_VERIFIED_EMAIL`, `REQUIRE_REVERIFIED_EMAIL`, `REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE`, `REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE`, `REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE`, and `REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE`.
 
 [User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `verify_email`, target type `user`, and a metadata key `email` with the address as it stood before the write, or the literal `null` when the account had none.
 
@@ -713,7 +713,7 @@ The operation accepts no request body and never clears verification, so the one 
 Requests a new verification email for the account. Requires `user:update:email`. Returns an empty 204 response.
 
 :::caution[An already verified account gets no email]
-An already verified account with no email reverification [suspicious activity flag](#suspicious-activity-flags) returns 204 without storing a token or sending anything.
+When the account's email is already verified and none of the [suspicious activity flag](#suspicious-activity-flags) bits `REQUIRE_REVERIFIED_EMAIL`, `REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE`, `REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE`, or `REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE` is set, Fluxer returns 204 without storing a token or sending anything.
 :::
 
 :::note[Delivery is dropped silently]
@@ -775,7 +775,7 @@ Delivery is silently dropped when the instance email transport is disabled and w
 
 <sup>1</sup> A missing address returns `INVALID_FORM_BODY` with the validation code `USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS`
 
-Unlike [Resend verification email](#resend-verification-email), this operation has no per-address control and does not refuse a bot account.
+Unlike [Resend verification email](#resend-verification-email), this operation has no limit of three emails per address in fifteen minutes, and it accepts a bot account.
 
 ### Side effects
 
@@ -869,7 +869,7 @@ Clearing is the only profile change on this resource. No route sets a biography,
 
 Clearing `avatar` or `banner` schedules the previous asset for deletion.
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when a partial user field changed, which covers `avatar` and `global_name`.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the operation changes `avatar` or `global_name`.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `clear_fields`, target type `user`, and a metadata key `fields` with the submitted names joined by commas.
 
@@ -915,7 +915,7 @@ Marks the account as a bot or as an ordinary account, and returns the resulting 
 
 ### Side effects
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when a partial user field changed.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the write changes `bot` or `system`.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_bot_status`, target type `user`, and a metadata key `bot`. Clearing `system` as a side effect records no second entry.
 
@@ -1108,7 +1108,7 @@ Additions are applied before removals, so a flag named in both arrays ends up cl
 
 ### Side effects
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. A change to publicly visible user fields also sends [Guild Member Update](/gateway/events/#guild-member-update) to the account's guilds.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. A change to the account's public flags also sends [Guild Member Update](/gateway/events/#guild-member-update) to the account's guilds.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`. An empty array is omitted from the metadata map.
 
@@ -1168,7 +1168,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Sets whether the account is treated as having completed phone verification, and returns the resulting account. Requires `user:update:phone`.
 
-The user-facing phone verification marker is otherwise irreversible, and this is the one operation that clears it.
+This operation is the one way to set `has_verified_phone` back to false once it is true.
 
 ### Path parameters
 
@@ -1242,7 +1242,7 @@ The operation sets verification requirements without disabling the account. [Dis
 | 200 | response body | Flags were replaced |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-The stored deferral bit `1 << 16` is preserved only when it was already set and the submitted value has the same non-zero deferrable phone bits as the stored value. Any other submitted value clears the deferral, so the requirement takes effect immediately.
+The stored deferral bit `1 << 16` is preserved only when it was already set and the submitted value sets the same `REQUIRE_VERIFIED_PHONE` and `REQUIRE_REVERIFIED_PHONE` bits as the stored value, with at least one of them set. Any other submitted value clears the deferral bit, so any phone requirement in the submitted value stops waiting for a guild join.
 
 [Bulk jobs](/admin-api/bulk-jobs/) applies the same change to up to 1,000 accounts as a queued `update_suspicious_activity_flags` task.
 
@@ -1355,7 +1355,7 @@ Every authentication session of the account is deleted. [Unban user](#unban-user
 
 `DISABLED` is added to the account flags and `temp_banned_until` is set to the resolved expiry. Every authentication session is then deleted, so the account is signed out on every device.
 
-An authentication attempt while the ban stands fails with 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. An attempt after the expiry has passed clears the disabled state and `temp_banned_until` in the same request, so a temporary ban ends without an Admin operation.
+An authentication attempt while the ban stands fails with 403 `ACCOUNT_SUSPENDED_TEMPORARILY`. An attempt after the expiry has passed clears the `DISABLED` flag and `temp_banned_until` in the same request, so a temporary ban ends without an Admin operation.
 
 When the account has an email address and `duration_hours` is greater than zero, the account holder is emailed the duration, the expiry, and the supplied `reason`. A permanent ban sends no email.
 
@@ -1454,19 +1454,19 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 | 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
 
-The permission also allows scheduling deletion of the acting Admin or an account with broader permissions.
+`user:delete` also allows scheduling deletion of the acting Admin or an account with broader permissions.
 
 ### Side effects
 
 The account can no longer authenticate, and its existing authentication sessions are deleted. Erasure is scheduled for the resulting deadline.
 
-Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. A failure in that path is logged, and the deletion still applies.
+Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. When the cancellation or refund fails, Fluxer logs the failure and still keeps the deletion schedule.
 
 The account holder is emailed the deadline and the supplied `public_reason` when the account has an email address.
 
-Reasons other than `USER_REQUESTED` also trigger email and IP blocking and resolution of pending reports. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
+For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. It marks the account's last active IP address, its authorised IP addresses, and the IP addresses of its active and terminated sessions as suspicious, and it resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days` and `reason_code`. The identifier bans record their own blocklist entries, and a non-zero report pass records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
+[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days` and `reason_code`. The identifier bans record their own blocklist entries, and when Fluxer resolves at least one report, it records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
 
 ### Rate limit
 
@@ -1705,7 +1705,7 @@ Removes every relationship of the account in one [relationship category](#relati
 | --- | --- | --- |
 | removed_count<sup>1</sup> | integer | The number of relationships that were removed |
 
-<sup>1</sup> Counted from the target account's perspective, so a mirrored friendship contributes one
+<sup>1</sup> Counted from the target account's perspective, so a friendship, which both accounts store, contributes one
 
 ### Response
 
@@ -1722,7 +1722,7 @@ Removals run one at a time, so a failure partway through leaves the earlier remo
 
 Friendships and friend requests are removed for both accounts. Blocks are removed only for the target account.
 
-Both parties of a mirrored removal receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the target account, and ordinary delivery from the unblocked account resumes.
+When a friendship or friend request is removed, both accounts receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the target account, and ordinary delivery from the unblocked account resumes.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `remove_relationships_by_category`, target type `user`, and the metadata keys `category` and `removed_count`.
 
@@ -1764,7 +1764,7 @@ The operation addresses one category, so an account that is both a former friend
 
 A friendship or friend request is removed for both accounts. A block is removed only for the owning account.
 
-Both parties of a mirrored removal receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the owning account.
+When a friendship or friend request is removed, both accounts receive [Relationship Remove](/gateway/events/#relationship-remove) naming the other account. A `blocked` removal dispatches only to the owning account.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `remove_relationship`, target type `user`, and the metadata keys `target_user_id` and `category`.
 
@@ -1848,7 +1848,7 @@ There is no operation that revokes one session. The account's Admin API keys, bo
 | terminated_count | integer | The number of sessions that were terminated |
 
 :::caution[A terminated session cannot be restored]
-The tombstone stays visible through [List user sessions](#list-user-sessions), but the session itself is gone.
+[List user sessions](#list-user-sessions) still lists the terminated session with `deleted_at` set. The session no longer authenticates any request, and no operation reactivates it.
 :::
 
 ### Side effects
@@ -1922,7 +1922,7 @@ The passkey or security key stops authenticating immediately and cannot be resto
 
 ### Side effects
 
-The credential record is deleted. When it was the account's final WebAuthn credential, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and resyncs the authenticator mirror of every bot the account owns.
+The credential record is deleted. When it was the account's final WebAuthn credential, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted to the target account with its remaining credentials.
 
@@ -1957,7 +1957,7 @@ Clearing the authenticator type set removes `WEBAUTHN` from the advertised authe
 
 ### Side effects
 
-The account's TOTP secret, authenticator type set, and every multi-factor backup code are deleted. Fluxer resyncs the authenticator mirror of every bot the account owns. Sessions and credentials are not revoked.
+The account's TOTP secret, authenticator type set, and every multi-factor backup code are deleted. Fluxer clears the authenticator types of the bot user of every application the account owns. Sessions and credentials are not revoked.
 
 [User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `disable_mfa`, target type `user`, and no metadata.
 

@@ -8,12 +8,12 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A donation is a one-off or recurring payment, taken on an externally hosted checkout page. Fluxer tracks it by email address, and it grants no [premium](/http-api/premium/). [Billing](/http-api/billing/) defines the payment provider webhook that completes one.
 
-None of the routes here takes a credential, and all are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. A valid credential presented anyway keys the rate limit to the account.
+None of the routes here takes a credential, and all are hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. When a request presents a valid credential anyway, Fluxer counts the request against that account's rate limit.
 
 Fluxer uses a submitted address exactly as written and matches a donor by exact equality, so `Donor@example.com` and `donor@example.com` address two different donors.
 
 :::note[Donation management requires a completed donation]
-Donation management becomes available after payment is confirmed.
+Fluxer stores a donor only when the payment provider confirms a donation checkout. [Request donation management link](#request-donation-management-link) sends a link only to an address stored as a donor.
 :::
 
 ## Donation currencies
@@ -96,7 +96,7 @@ An address that resolves to no donor receives no email.
 
 ### Side effects
 
-An eligible donor receives an email. The 204 response does not guarantee delivery.
+An address that resolves to a donor receives an email with the management link. The 204 response does not guarantee delivery.
 
 Fluxer creates a single-use token of 64 lowercase hexadecimal characters, valid for 15 minutes, only when the address resolves to a donor. Issuing a new link deletes every earlier token for the same address, and a replaced link returns 400 `DONATION_MAGIC_LINK_INVALID`.
 
@@ -176,7 +176,7 @@ A recurring donation for an address with an active recurring donation returns th
 
 Checkout opens on the provider's pages for the submitted amount, currency and interval. Completion returns the donor to the public donation success page, while cancellation returns to the public donation page.
 
-Payment confirmation sends an email and enables [Request donation management link](#request-donation-management-link).
+When the payment provider confirms the payment, Fluxer stores the address as a donor and sends a donation confirmation email to it. From then on, [Request donation management link](#request-donation-management-link) sends a link to that address.
 
 ### Rate limit
 

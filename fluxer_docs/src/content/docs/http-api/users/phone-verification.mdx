@@ -69,7 +69,7 @@ Keep phone numbers, verification codes, and challenge codes out of logs, analyti
 
 ## Provider lookup verdicts
 
-Outbound SMS requires the number to pass the following checks. The first matching verdict applies. A number routed directly to an inbound challenge does not need this lookup.
+Outbound SMS requires the number to pass the following checks. Fluxer evaluates the rows in order and uses the verdict of the first row whose condition matches. A number routed directly to an inbound challenge does not need this lookup.
 
 | Order | Condition | Verdict |
 | --- | --- | --- |
@@ -112,7 +112,7 @@ A reason explains why the attempt could not complete over outbound SMS.
 
 ## SMS delivery object
 
-Confirmation that the SMS provider accepted a one-time code for delivery. [Send phone verification](#send-phone-verification) returns it on an outbound result, and [Verify phone code](#verify-phone-code) then takes the number itself.
+Confirmation that the SMS provider accepted a one-time code for delivery. [Send phone verification](#send-phone-verification) returns it on an outbound result. The client then sends the same number and the delivered code to [Verify phone code](#verify-phone-code).
 
 ### Structure
 
@@ -213,7 +213,7 @@ Several independent policies can force the inbound channel, and each one overrid
 
 An attempt that survives that step passes through phone attempt risk controls keyed by account, by client IP address, and by /24 network. A hard block returns 429 `PHONE_RATE_LIMIT_EXCEEDED` with a `Retry-After` of 86400. A captcha decision returns 400 `CAPTCHA_REQUIRED`, and this route reads no [CAPTCHA](/topics/captcha/) solution header, so the attempt cannot be retried with a solution. An inbound decision returns a challenge with the `behavioural_risk` reason.
 
-An earlier attempt against the same account or number can record a provider cooldown, and a later request under that cooldown returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The destination is then resolved through [provider lookup](#provider-lookup-verdicts). A number that has already completed verification twice is refused with 400 `PHONE_ALREADY_USED`.
+When the SMS provider throttles an earlier send or code check for the same account or number, Fluxer records a cooldown. A request during that cooldown returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The destination is then resolved through [provider lookup](#provider-lookup-verdicts). A number that has already completed verification twice is refused with 400 `PHONE_ALREADY_USED`.
 
 Further controls bound outbound delivery to 3 sends per 6 hours for each account and 3 sends per 5 days for each number. Either denial returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The provider can also refuse the send. An invalid destination returns 400 `INVALID_PHONE_NUMBER`, and a throttle returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. Every other refusal, an unreachable provider included, returns 400 `SMS_VERIFICATION_UNAVAILABLE`. On an instance where the inbound flow or its receiving number is unconfigured, an attempt routed inbound returns the same code.
 
@@ -290,7 +290,7 @@ The configured SMS provider checks the number and the code together, so the prov
 <sup>1</sup> Stripped of control and formatting characters and trimmed before the length check, and the normalised value is what the provider checks
 
 :::caution[A third verification consumes the code before refusing]
-A number can complete verification twice, and each success refreshes that record for a further 31 days. A third attempt is refused with 400 `PHONE_ALREADY_USED`, but only after the provider has accepted the code.
+A number can complete verification twice, and each success restarts a 31-day window in which Fluxer counts successes for that number. A third attempt is refused with 400 `PHONE_ALREADY_USED`, but only after the provider has accepted the code.
 :::
 
 ### Response

@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A webhook posts messages into one guild channel under a name and avatar of its own.
 
-Management routes take a user session token or a bot token. Every other webhook operation uses the webhook ID and secret token in its own path as the complete credential and ignores the `Authorization` header.
+Management routes take a user session token or a bot token. Every other webhook operation uses the webhook ID and secret token in its own path as the complete credential. A sent `Authorization` header grants no access there, and Fluxer still resolves it, as [Rate limit keying](#rate-limit-keying) describes..
 
 The [Messages resource](/http-api/messages/) defines the message, rich embed input, and message reference input objects.
 
@@ -26,7 +26,7 @@ Fluxer scans a submitted webhook `name` against the instance phrase and URL bloc
 
 Every route bucket on this page is keyed on the caller identity as well as on the path parameter in its bucket name. The caller identity is the authenticated account when a request resolves one and the client IP address otherwise, so a token-authenticated operation is bounded per address.
 
-Fluxer resolves an `Authorization` credential on a token-authenticated operation for this keying alone. [Rate limits](/topics/rate-limits/) defines the keying in full.
+When a request to a token-authenticated operation sends an `Authorization` header, Fluxer reads that credential only to choose the rate limit key. [Rate limits](/topics/rate-limits/) defines the keying in full.
 
 The [global HTTP limit](/topics/rate-limits/) applies to every management route. [Get webhook with token](#get-webhook-with-token), [Update webhook with token](#update-webhook-with-token), and [Delete webhook with token](#delete-webhook-with-token) consume it under the caller identity. Every other route on this page is exempt and is bounded only by its own route bucket.
 
@@ -36,7 +36,7 @@ Fluxer refuses a call from the official web client on [Execute webhook](#execute
 
 A request that sends no `Origin`, or any other `Origin` value, passes the check. It runs after the route rate limit and before path validation.
 
-Both token paths also have a second CORS policy that answers every origin, which the [cross-origin request contract](/http-api/#cross-origin-requests) states in full.
+`/v1/webhooks/{webhook_id}/{token}` and `/v1/webhooks/{webhook_id}/{token}/messages/{message_id}` also have a second CORS policy that allows every origin, which the [cross-origin request contract](/http-api/#cross-origin-requests) states in full.
 
 ## Webhook object
 
@@ -98,7 +98,7 @@ Every operation returning a [webhook object](#webhook-object) or a token webhook
 
 ## Webhook message body
 
-[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` is a valid body that fails later as an empty message.
+[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` passes schema validation and then returns 400 `CANNOT_SEND_EMPTY_MESSAGE`.
 
 ### Structure
 
@@ -117,11 +117,11 @@ Every operation returning a [webhook object](#webhook-object) or a token webhook
 | username?<sup>8</sup> | ?string | Per-message webhook name override (1-80 characters), or null |
 | avatar_url?<sup>8</sup> | ?string | Absolute `http` or `https` per-message webhook avatar URL override of at most 2,048 characters, or null |
 
-<sup>1</sup> A webhook author always resolves an effective [max_message_length](/http-api/instance/#limit-keys) of at least 4000 characters, and a higher configured value for the guild raises it further. Exceeding it returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`
+<sup>1</sup> Webhook message content is limited to the resolved [max_message_length](/http-api/instance/#limit-keys) value for the guild or 4000 characters, whichever is larger. Exceeding it returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`
 
 <sup>2</sup> Bounded by the resolved [max_embeds_per_message](/http-api/instance/#limit-keys) value for the guild, defaulting to 10. Exceeding it returns 400 `INVALID_FORM_BODY` with `TOO_MANY_EMBEDS`
 
-<sup>3</sup> A JSON body attaches no file. A multipart body uses the ordinary message attachment contract
+<sup>3</sup> A JSON body attaches no file. A multipart body attaches files as described in [Execute webhook](#execute-webhook)
 
 <sup>4</sup> A forward reference requires both `channel_id` and `message_id`, and it must not accompany content, embeds, or attachments. See [message references](#message-references)
 
@@ -295,7 +295,7 @@ These objects define the body [Execute GitHub webhook](#execute-github-webhook) 
 | review? | ?[GitHub review](#github-review-object) object | Pull request review data, or null |
 | sender | [GitHub user](#github-user-object) object | Event sender |
 
-<sup>1</sup> The value gates rendering for most event types, and the exact accepted action for each type is stated in [GitHub event types](#github-event-types)
+<sup>1</sup> An event type that lists one or more required actions in [GitHub event types](#github-event-types) renders a message only when `action` is one of those values
 
 <sup>2</sup> A pull request uses the same representation as an issue, so only the fields listed in the [GitHub issue structure](#github-issue-object) are consumed
 
@@ -522,7 +522,7 @@ The value of the `X-GitHub-Event` request header selects the rendering. An event
 
 <sup>4</sup> A forced push requires `head_commit` and compare, and renders a compare link as its whole description
 
-<sup>5</sup> A conclusion of `skipped` on the relevant suite suppresses the message
+<sup>5</sup> A `check_suite` event whose check suite has the conclusion `skipped` produces no message. A `check_run` event produces no message when its parent check suite has the conclusion `skipped`
 
 An ordinary push requires compare and at least one commit, and renders one line for each commit. The line set is not capped by count, and the description built from them is truncated to the ordinary 350-character ceiling.
 
@@ -642,7 +642,7 @@ A backfilled incident or maintenance item appends `Backfilled` to the footer tex
 
 <sup>3</sup> A true value appends `Backfilled` to the embed footer, separated from the page footer text by a vertical bar. When the page supplies no footer text, `Backfilled` is the whole footer
 
-<sup>4</sup> The embed timestamp is the latest update's `created_at`, then `updated_at`, then `created_at`, and the first value the runtime can parse as a date wins
+<sup>4</sup> The embed timestamp is the first of these values that parses as a date: the `created_at` of the latest update, then this object's `updated_at`, then this object's `created_at`
 
 ### Instatus maintenance update object
 
@@ -840,7 +840,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 
 <sup>1</sup> An avatar failure names the `avatar` path with `BASE64_LENGTH_INVALID`, `INVALID_BASE64_FORMAT`, `IMAGE_SIZE_EXCEEDS_LIMIT`, or `INVALID_IMAGE_FORMAT`
 
-<sup>2</sup> The reached allowance is in a top-level member named after its limit key
+<sup>2</sup> The error response has a top-level `max_webhooks_per_guild` or `max_webhooks_per_channel` field whose value is the allowance that was reached
 
 | Condition | Error |
 | --- | --- |
@@ -1021,7 +1021,7 @@ The operation removes the webhook, frees its guild and channel webhook slot, and
 
 ## Token routes
 
-The routes below take the matching webhook ID and token in their paths as the complete credential. The `Authorization` header is neither required nor read on any of them.
+The routes below take the matching webhook ID and token in their paths as the complete credential. None of them requires the `Authorization` header, and a header sent to one grants no access. Fluxer still resolves it, as [Rate limit keying](#rate-limit-keying) describes.
 
 ## Get webhook with token
 
@@ -1302,7 +1302,7 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 
 ### Side effects
 
-The operation replaces the supplied fields, and a content change marks the message edited. Existing mentions stay unchanged and `allowed_mentions` is ignored. Supplying embeds replaces the complete collection and validates its attachment references. Sessions that can read the channel receive [Message Update](/gateway/events/#message-update).
+The operation replaces the supplied fields, and a content change marks the message edited. Existing mentions stay unchanged and `allowed_mentions` is ignored. Supplying embeds replaces the complete collection. An embed image or thumbnail URL of the form `attachment://{filename}` returns 400 `INVALID_FORM_BODY` unless `{filename}` names an attachment already on the message with a supported image file extension. Sessions that can read the channel receive [Message Update](/gateway/events/#message-update).
 
 ### Rate limit
 
@@ -1403,7 +1403,7 @@ An unrecognised event type, a recognised type whose required fields or action ar
 
 <RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}/slack" />
 
-Accepts a Slack-compatible callback, converts it to the Fluxer message contract, and creates one webhook-authored message.
+Accepts a Slack-compatible callback, converts it to Fluxer message content and embeds, and creates one webhook-authored message.
 
 A successful callback emits a [Message Create](/gateway/events/#message-create).
 
@@ -1441,9 +1441,9 @@ The success body is the literal string `ok` under the `text/html` content type, 
 
 Conversion creates one webhook-authored message with the converted content and embeds, and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
 
-A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the media boundary and stored as the message avatar. The stored webhook name and avatar do not change. When the URL cannot be fetched, the callback still succeeds and the message has no avatar override.
+A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the Media Proxy and stored as the message avatar. The stored webhook name and avatar do not change. When the URL cannot be fetched, the callback still succeeds and the message has no avatar override.
 
-The webhook execution default applies, and every mention in the converted content is suppressed. The callback has no nonce, so a repeated callback creates a second message.
+Fluxer suppresses every mention in the converted content, as [Execute webhook](#execute-webhook) does when `allowed_mentions` is omitted. The callback has no nonce, so a repeated callback creates a second message.
 
 ### Rate limit
 
@@ -1469,7 +1469,7 @@ A rendered callback emits a [Message Create](/gateway/events/#message-create).
 The body is an [Instatus callback](#instatus-callback-object) object. A body the schema rejects returns 400 `INVALID_FORM_BODY`.
 
 :::note[Deduplication is per webhook and callback]
-Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. Fluxer processes every callback that has no such identifier.
+Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. Fluxer processes every callback whose incident or maintenance item has no `id`, whose component update has no `component_id` or `created_at`, or that has no incident, maintenance item, or component update.
 :::
 
 A callback that renders nothing, and one whose message creation fails, both leave the identifier free for a later retry.

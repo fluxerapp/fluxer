@@ -69,7 +69,7 @@ The public single sign-on state. The same object is embedded by the [instance di
 | display_name | ?string | The configured provider display name, or null when none is set |
 | redirect_uri | string | The default OAuth2 redirect URI used for the provider callback |
 
-<sup>1</sup> The value is true only when the operator has enabled SSO and the resolved provider configuration is complete, so a partially configured provider reports false
+<sup>1</sup> The value is true only when the operator has enabled SSO and the provider has an authorisation URL, a token URL, a client ID, and a JWKS URL or user info URL. Each URL is configured or discovered from the issuer. A provider that lacks any of them reports false
 
 <sup>2</sup> The value is true only when `enabled` is also true, and every local authentication operation then returns 403 `SSO_REQUIRED`
 
@@ -85,7 +85,7 @@ The parameters for sending the user to the identity provider, bound to one new S
 | state<sup>1</sup> | string | The one-use CSRF state |
 | redirect_uri | string | The callback URI bound to this state |
 
-<sup>1</sup> The state is consumed by the first [complete SSO](#complete-sso) attempt that resolves it
+<sup>1</sup> The first [complete SSO](#complete-sso) request that presents the unexpired state consumes it, whether or not that request then succeeds
 
 A client MUST return the state unchanged and MUST NOT interpret its contents.
 
@@ -264,8 +264,8 @@ The code that identifies one pending desktop handoff.
 
 <sup>1</sup> The code is 12 characters drawn from the alphabet `ABCDEFGHJKMNPQRSTUVWXYZ23456789`, rendered as two groups of six separated by a hyphen
 
-:::caution[The code alone cancels a handoff]
-Anyone who learns the code reads the pending device metadata and cancels the handoff. The token needs `poll_secret` as well. A client MUST show the code only to the person performing the handoff.
+:::caution[The code alone reads the device metadata]
+Anyone who learns the code reads the pending device metadata. Reading the token and cancelling the handoff both require `poll_secret`. A client MUST show the code only to the person performing the handoff.
 :::
 
 ## Handoff information object
@@ -407,9 +407,9 @@ Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` a
 
 <RouteHeader method="POST" path="/v1/auth/register" unauthenticated />
 
-Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event when an invite or instance community admission takes effect.
+Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event for each guild the new account joins through an invite or through the instance's single community guild.
 
-Registration verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment that relaxes registration rate limits disables them.
+Registration verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment with `dev.relax_registration_rate_limits` set to true disables them.
 
 ### Request headers
 
@@ -478,7 +478,7 @@ There is no retry key. A repeated request with the same values creates a second 
 
 The operation applies the instance's registration, email-domain, breached-password, and regional policies before creating the account, and its risk policy can set suspicious activity flags on the created account. It records the accepted terms and privacy policy, authorises the registering client IP address, and sends an email verification message when the instance sends email. An instance that sends no email marks the address verified at creation instead.
 
-Registration can accept a supplied or instance-configured invite, and the account can join the instance community. Each join emits [Guild Member Add](/gateway/events/#guild-member-add) to the affected guild's sessions. Registration policy can suppress invite admission.
+Registration accepts the `invite_code` from the body, or the instance's configured auto-join invite when the body has none. On an instance with single-community mode enabled, the account also joins the community guild. Each join emits [Guild Member Add](/gateway/events/#guild-member-add) to the affected guild's sessions. Registration policy can suppress invite admission.
 
 Approval mode registration creates no guild membership and no authentication session, and the account cannot sign in until an administrator approves it. Every other successful registration creates one session and returns its token.
 
@@ -533,7 +533,7 @@ Account policy can return 403 `REGISTRATION_PENDING_APPROVAL`, 403 `REGISTRATION
 On an account the user had disabled, a correct password clears the disabled state. It also cancels a self-scheduled deletion if erasure has not started. Both happen before any second factor is requested, without a separate confirmation step. Once erasure starts, login returns `ACCOUNT_SUSPENDED_PERMANENTLY`.
 :::
 
-The login clears an expired temporary suspension the same way, but returns the 403 of a live temporary or permanent administrator suspension without clearing it.
+A correct password also clears an expired temporary suspension before any second factor is requested. A live temporary or permanent administrator suspension stays in place, and the login returns its 403.
 
 ### Response
 
@@ -860,7 +860,7 @@ Password recovery verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both
 <sup>1</sup> An address whose domain has no usable DNS records returns the field code `INVALID_EMAIL_ADDRESS`, while an address that passes DNS validation but belongs to no account returns the ordinary success response
 
 :::note[Account existence is not disclosed]
-An address that resolves to no account produces the same 204 response as an address that resolves to an ordinary account. Only DNS validation failure, the route bucket, the extra allowances, and an address belonging to a bot account can produce a different outcome.
+An address that resolves to no account produces the same 204 response as an address that resolves to an ordinary account. Only a DNS validation failure, the route bucket, the client IP address and email address allowances, and an address belonging to a bot account can produce a different outcome.
 :::
 
 ### Response
@@ -943,7 +943,7 @@ An unknown or already consumed token, and a token bound to a deleted account, re
 Passwords are checked against a breached-password corpus, as they are during [registration](#register-an-account) and [email reversion](#revert-an-email-change).
 
 :::caution[Resetting a password revokes every existing session]
-A successful reset terminates every authentication session on the account, including the one any other device is holding. It then issues one fresh session. An account with a second factor instead receives an MFA ticket, and the session follows the factor.
+A successful reset terminates every authentication session on the account, including the one any other device is holding. It then issues one fresh session. An account with a second factor receives an MFA ticket, and completing MFA with that ticket creates the session.
 :::
 
 ### Response
@@ -971,7 +971,7 @@ An account with no second factor then receives one new session and its token. An
 
 <RouteHeader method="POST" path="/v1/auth/email-revert" unauthenticated />
 
-Consumes the token delivered to the previous email address, restores that address, replaces the password, and rebuilds the account's credential state. Returns an [authentication token response](#authentication-token-response). Emits a [User Update](/gateway/events/#user-update) Gateway event.
+Consumes the token delivered to the previous email address, restores that address, replaces the password, terminates every authentication session, and clears every second factor. The requesting IP address becomes the only authorised IP address. Returns an [authentication token response](#authentication-token-response). Emits a [User Update](/gateway/events/#user-update) Gateway event.
 
 The token is valid for 24 hours after the address change that issued it.
 
@@ -1005,7 +1005,7 @@ Fluxer checks the replacement password against the same breached-password corpus
 
 ### Side effects
 
-The previous email address becomes verified and the replacement password takes effect. All other sessions, second factors and authorised IP addresses are removed. Only the requesting IP address remains authorised.
+The previous email address becomes verified and the replacement password becomes the account password. All other sessions, second factors and authorised IP addresses are removed. Only the requesting IP address remains authorised.
 
 The account receives [User Update](/gateway/events/#user-update). Existing Gateway sessions end as described under [shared behaviour](#shared-behaviour), and the response returns one new authentication session.
 
@@ -1115,7 +1115,7 @@ An unknown, expired, already consumed, or account-mismatched token returns the f
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | The IP address was authorised and the login result was published |
+| 204 | empty | The IP address was authorised and the new session token is readable through poll IP authorisation |
 | 400 | [error response](/http-api/#error-response) | The body or authorisation token is invalid |
 | 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation or the token resolves to a bot account |
 | 404 | [error response](/http-api/#error-response) | The token resolves to an account that no longer exists |
@@ -1147,7 +1147,7 @@ Sends the authorisation message for an outstanding IP authorisation ticket again
 
 <sup>1</sup> The resend reuses the authorisation token already bound to the ticket, so a message delivered by an earlier send remains valid
 
-An unknown or expired ticket returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TICKET`. A resend before the delay elapses returns 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` with a `Retry-After` header and a top-level `resend_available_in` in seconds. A second resend returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`.
+An unknown or expired ticket returns the field code `INVALID_OR_EXPIRED_AUTHORIZATION_TICKET`. A resend less than 30 seconds after the ticket was issued returns 429 `IP_AUTHORIZATION_RESEND_COOLDOWN` with a `Retry-After` header and a top-level `resend_available_in` in seconds. A second resend returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`.
 
 :::caution[A lost response still spends the resend]
 There is no retry key. A client that loses the response cannot tell whether the message was delivered, and a retry returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED` once the first request marked the resend used.
@@ -1414,7 +1414,7 @@ Reports the state of a handoff and delivers the new session token once, to a cal
 | --- | --- | --- |
 | code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
 
-### Request body
+### JSON body
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -1457,18 +1457,24 @@ Discards a handoff and everything stored against its code. Authentication is not
 | --- | --- | --- |
 | code | string | The handoff code, using the same normalisation contract as [get desktop handoff information](#get-desktop-handoff-information) |
 
-An unknown or already expired code is an idempotent success.
+### JSON body
 
-:::caution[Anyone holding the code can cancel]
-The route checks no credential and the code is its only input, so a party that learns the code can cancel a handoff the initiating device is still waiting on. The initiating device observes this as the `expired` status.
+| Field | Type | Description |
+| --- | --- | --- |
+| poll_secret | string | The secret returned by [initiate desktop handoff](#initiate-desktop-handoff) |
+
+An unknown or already expired code has no stored secret, so it returns 400 `INVALID_HANDOFF_CODE`.
+
+:::caution[Cancelling requires the poll secret]
+The route requires the `poll_secret` that [initiate desktop handoff](#initiate-desktop-handoff) returned, sent in the JSON body. A wrong secret returns 400 `INVALID_HANDOFF_CODE`, so a party that knows only the code cannot cancel the handoff. After a cancellation the initiating device reads the `expired` status.
 :::
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | The handoff was discarded, or no handoff existed for that code |
-| 400 | [error response](/http-api/#error-response) | The code is malformed, returning `INVALID_HANDOFF_CODE` |
+| 204 | empty | The handoff was discarded |
+| 400 | [error response](/http-api/#error-response) | The code is malformed, or the secret does not match, returning `INVALID_HANDOFF_CODE` |
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |

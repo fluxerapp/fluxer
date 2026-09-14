@@ -12,7 +12,7 @@ An unsuccessful response body is an English reason phrase under the content type
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 400 | Bad request | An invalid storage key, dimension, format, or external path, an unparsable relay `partNumber`, a failed attachment or external transformation, or a relay upload the endpoint could not take<sup>1</sup> |
+| 400 | Bad request | An invalid storage key, dimension, format, or external path, an unparsable relay `partNumber`, a failed attachment or external transformation, or a relay upload body the endpoint failed to read from the client<sup>1</sup> |
 | 401 | Unauthorized | An invalid signed external path signature, a missing, malformed, or expired relay capability, or a missing or invalid internal bearer token |
 | 403 | Media access denied | The media access allowlist rejected the client address |
 | 403 | Forbidden | A relay capability presented for another bucket, key, method, `uploadId`, or `partNumber`, or `/_metrics` requested from a non-loopback address |
@@ -21,7 +21,7 @@ An unsuccessful response body is an English reason phrase under the content type
 | 413 | Payload too large | A stored object, external body, upload body, or internal request body beyond its bound |
 | 500 | Transcode failed | An image asset transcode failed and the source is not directly displayable |
 | 500 | Internal server error | A relay spool write to the endpoint's own disk failed |
-| 502 | Bad gateway | An object store read or write failed, an external origin could not be used, or an outbound socket deadline or a relay object storage write deadline expired |
+| 502 | Bad gateway | An object store read or write failed, an external origin fetch failed, an external origin redirected in a loop or more than five times, or an external origin returned an unsuccessful status that the Media Proxy does not pass through, or an outbound socket deadline or a relay object storage write deadline expired |
 | 503 | Service unavailable | The upload relay spool budget is exhausted, an external buffer reservation or allocation failed, or an external origin answered `/_metadata` with 429<sup>3</sup> |
 | 504 | Gateway timeout | A transformation admission slot was unavailable or the transformation deadline expired |
 
@@ -31,9 +31,9 @@ An unsuccessful response body is an English reason phrase under the content type
 
 <sup>3</sup> `/_metadata` is the only endpoint that remaps an origin 429. The signed external read route retains 429 as 429
 
-A retained external origin status reaches the client as an upstream fetch failure on the signed external read route and as the canonical reason phrase of its status on `/_metadata`. An object store error that maps to no case above uses the canonical reason phrase of its status.
+When the Media Proxy passes an external origin status through to the client, the body is `Upstream fetch failed` on the signed external read route. On `/_metadata`, the body is the canonical reason phrase of that status. An object store error that maps to no case above uses the canonical reason phrase of its status.
 
-Every error a route produces uses `Cache-Control: no-store` and the standard [security headers](/media-proxy/overview/#representation-headers). The exceptions have the security headers and set no cache policy, and [Cache policies](#cache-policies) names them. No plain-text error has CORS headers unless it came from the [upload relay](/media-proxy/upload-relay/), and no error has `Retry-After` or a request identifier.
+Every error a route produces uses `Cache-Control: no-store` and the standard [security headers](/media-proxy/overview/#representation-headers). A 416 response, a media access allowlist rejection, and the empty-body method rejection of a registered path have the security headers and set no cache policy, and [Cache policies](#cache-policies) names them. No plain-text error has CORS headers unless it came from the [upload relay](/media-proxy/upload-relay/), and no error has `Retry-After` or a request identifier.
 
 ### Handling contract
 
@@ -62,9 +62,9 @@ Every `HEAD` response has an empty body, so the Body column describes `GET`, `PU
 
 <sup>1</sup> The [internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) `/_metadata` and `/_frames` answer 200 with JSON, `/_health` with plain text, and `/_metrics` with the Prometheus text exposition
 
-<sup>2</sup> A path served by the read fallback answers with the [media error response](#media-error-response). Each registered path answers with an empty body, no `Content-Type`, and an `Allow` header
+<sup>2</sup> A read route path, or any other path outside the registered paths, answers with the [media error response](#media-error-response). Each registered path answers with an empty body, no `Content-Type`, and an `Allow` header
 
-<sup>3</sup> A retained external origin status is the only source of these statuses
+<sup>3</sup> These statuses occur only when an external origin returned that status and the Media Proxy passed it through
 
 <sup>4</sup> A locally unsatisfiable range answers with an empty body, `Content-Range: bytes */{size}`, and `Accept-Ranges: bytes`, and has no `Content-Type` and no cache policy
 
@@ -82,7 +82,7 @@ The third-party origin chose the status, and Fluxer passed it through.
 
 Proxied or stored media is limited to 500 MiB, and exceeding that returns 413. The bound applies to a streamed object, a buffered object, an external response body, and any input selected for transformation. When a streamed external body passes the bound only after the response head is committed, the Media Proxy truncates it.
 
-A decoded signed external target URL is limited to 8,192 bytes, and a longer URL returns 400. The route follows at most five redirects. A sixth redirect or a redirect loop returns 502. Every redirect target is subject to the same URL limit and address policy.
+A decoded signed external target URL is limited to 8,192 bytes, and a longer URL returns 400. The route follows at most five redirects. A sixth redirect or a redirect loop returns 502. Every redirect target is subject to the same URL limit and the same public address check, which blocks non-public IP addresses and every port other than 80 and 443.
 
 Decoded images are limited to 16,384 pixels on either edge and 268,435,456 pixels in total. Animated input is limited to 20,000 frames and 1,073,741,824 decoded pixels across all frames. No configuration changes these bounds. [Transformations](/media-proxy/transformations/#transformation-limits) defines the resulting failure statuses.
 

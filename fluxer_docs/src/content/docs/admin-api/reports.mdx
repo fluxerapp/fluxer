@@ -285,7 +285,7 @@ An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on
 
 <sup>1</sup> Matched against `category`, `additional_info`, `reported_guild_name`, and `reported_channel_name` only. Omitting it matches every report satisfying the remaining filters
 
-<sup>2</sup> The route accepts it, and it alone selects the search branch. It narrows nothing
+<sup>2</sup> The route accepts it, and supplying it with no other filter still selects the search branch. The search ignores its value and returns matching reports from every channel
 
 <sup>3</sup> `created_at` orders by the time encoded in the report ID, and `reported_at` by the submission time stored on the report
 

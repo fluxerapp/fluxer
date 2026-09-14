@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A connection links a Fluxer account to a verified domain or Bluesky account. Visible connections appear in `connected_accounts` on the [full user profile object](/http-api/users/#full-user-profile-object).
 
-Connection routes require a user token. Bot tokens and OAuth2 bearers receive 403 `ACCESS_DENIED`, except that [List connections](#list-connections) accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes). Accounts with an outstanding required action receive 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. Connection IDs are not snowflakes.
+Connection routes require a user token. Bot tokens and OAuth2 bearers receive 403 `ACCESS_DENIED`, except that [List connections](#list-connections) accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes). Accounts with an outstanding [required action](/http-api/users/#required-actions) receive 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. Connection IDs are not snowflakes.
 
 [Bluesky client metadata](#get-bluesky-client-metadata) and [JWKS](#get-bluesky-jwks) are public and contain no account data.
 
@@ -37,7 +37,7 @@ The pair of [type](#connection-types) and `id` identifies a connection. Both val
 
 <sup>2</sup> For a `domain` connection the name is the submitted domain. For a `bsky` connection it is the Bluesky handle, refreshed by completing the [authorisation flow](#start-bluesky-authorisation)
 
-<sup>3</sup> Starts true. A failed ownership recheck sets it to false
+<sup>3</sup> Fluxer sets it to true when the proof succeeds and again each time a Bluesky authorisation completes. No later check sets it to false
 
 <sup>4</sup> The stored value is the integer the client supplied and is not masked against the defined bits
 
@@ -116,7 +116,7 @@ Returned by [Start Bluesky authorisation](#start-bluesky-authorisation).
 
 | Field | Type | Description |
 | --- | --- | --- |
-| authorize_url | string | URL to open for authorisation. Its origin depends on the account |
+| authorize_url | string | URL to open for authorisation. Its origin depends on the submitted `handle` |
 
 ## List connections
 
@@ -317,7 +317,7 @@ Assigns the display order of the listed connections from their position in the a
 
 Each named connection receives its zero-based array index as `sort_order`. The complete list is sent to the caller's sessions in [User Connections Update](/gateway/events/#user-connections-update), even if the order did not change.
 
-The reorder is atomic. A rejected write changes no order and emits no event. A later notification failure can return an error after the order has been saved.
+The reorder is atomic. A request that returns 409 `CONFLICT` changes no order and emits no event. When Fluxer saves the order and then fails to send [User Connections Update](/gateway/events/#user-connections-update), the request returns an error and the new order stays saved.
 
 A partial array can leave two connections sharing a `sort_order`, which [List connections](#list-connections) resolves by stored order.
 

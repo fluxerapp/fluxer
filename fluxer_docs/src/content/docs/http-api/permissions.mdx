@@ -34,7 +34,7 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 13 | MANAGE_MESSAGES<sup>4</sup> | Delete another member's message, bulk delete messages, remove another member's reaction, and edit the flags and attachments of another member's message |
 | 1 &lt;&lt; 14 | EMBED_LINKS | Have a link in the caller's own message expanded into an embed |
 | 1 &lt;&lt; 15 | ATTACH_FILES | Attach a file to a message |
-| 1 &lt;&lt; 16 | READ_MESSAGE_HISTORY | Read messages that were sent before the current access began |
+| 1 &lt;&lt; 16 | READ_MESSAGE_HISTORY | Read messages sent before the guild's `message_history_cutoff`, or any message when the guild has no cutoff |
 | 1 &lt;&lt; 17 | MENTION_EVERYONE | Use the everyone and here mentions in a guild channel |
 | 1 &lt;&lt; 18 | USE_EXTERNAL_EMOJIS | Use an emoji owned by another guild in a message or a reaction |
 | 1 &lt;&lt; 20 | CONNECT | Connect to a guild voice channel |
@@ -105,7 +105,7 @@ An operation that asserts an elevated permission the caller holds but cannot use
 [List guild roles](#list-guild-roles) asserts no permission, so it never produces `TWO_FACTOR_REQUIRED`.
 
 :::note[The reported mask keeps every elevated bit]
-Elevation gates the operation. A `permissions` field reports what the caller's roles grant, so a client hiding an action must compare the guild [MFA level](/http-api/guilds/#mfa-levels) and its own enrolment state.
+The MFA requirement blocks the operation and leaves the mask unchanged. A `permissions` field reports what the caller's roles grant, so a client hiding an action must compare the guild [MFA level](/http-api/guilds/#mfa-levels) and its own enrolment state.
 :::
 
 ## Permission computation
@@ -158,7 +158,7 @@ A caller manages a role when the caller's rank is strictly above the role's rank
 Fluxer enforces hierarchy independently of `MANAGE_ROLES`. A caller who holds the permission without outranking the target role receives 403 `MISSING_PERMISSIONS`. A caller whose only `MANAGE_ROLES` comes from the everyone role has no assigned role, so they can manage no role.
 
 :::caution[A non-owner cannot grant a permission they lack]
-A requested bit outside the caller's own effective guild permissions fails the whole request with `MISSING_PERMISSIONS`. Fluxer runs that check after it resolves the unassigned and feature-gated bits.
+A requested bit outside the caller's own effective guild permissions fails the whole request with `MISSING_PERMISSIONS`. Fluxer runs that check after it discards unassigned bits and handles feature-gated bits as [Feature-gated permission bits](#feature-gated-permission-bits) describes.
 :::
 
 ## Guild role object
@@ -213,7 +213,7 @@ Each entry names one role and the rank the caller requests for it.
 | id | snowflake | The ID of the role |
 | position?<sup>1</sup> | integer | The rank the caller requests for the role, where a larger value ranks higher |
 
-<sup>1</sup> Fluxer ranks a role whose entry omits the field by its stored `position` in the same sort, so a role that requested a position above that value still displaces it
+<sup>1</sup> Fluxer sorts a role whose entry omits the field by its stored `position`, in the same sort as the other entries. A role whose entry requests a higher position than that stored value is placed above it
 
 ### Example
 
@@ -304,7 +304,7 @@ Creates a role and returns its [guild role object](#guild-role-object). Requires
 | color? | integer | The colour of the role as a 24-bit RGB integer (0-16777215, default 0) |
 | permissions?<sup>1</sup> | decimal string \| integer | The [permission](#permissions) bitfield the role grants |
 
-<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, resolved against the caller's [feature declaration](#feature-gated-permission-bits), then checked against the caller's own permissions
+<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, Fluxer clears `VIEW_CHANNEL_MEMBERS` unless the caller's [feature declaration](#feature-gated-permission-bits) includes `view_channel_members_permission`, then checks the value against the caller's own permissions
 
 ### Response
 
@@ -363,7 +363,7 @@ Every field is optional, and an omitted field leaves the stored value unchanged.
 
 <sup>1</sup> The field is accepted and then ignored when the target is the everyone role, which cannot be renamed, hoisted, given a member list position, or made mentionable
 
-<sup>2</sup> The supplied value becomes the complete stored mask. Fluxer intersects it with the set of defined bits and resolves it against the caller's [feature declaration](#feature-gated-permission-bits) before checking the caller's authority
+<sup>2</sup> The supplied value becomes the complete stored mask. Before it checks the caller's authority, Fluxer intersects it with the set of defined bits and keeps each feature-gated bit at its stored value unless the caller's [feature declaration](#feature-gated-permission-bits) names the feature for that bit
 
 ### Response
 
@@ -543,7 +543,7 @@ A deleted role cannot be restored, and its permissions, colour, and hoist state 
 
 ### Side effects
 
-The operation removes the role from every member that held it, removes the role record, and frees the guild role slot it occupied. It creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason and emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. Subsequent member reads and [Guild Member Update](/gateway/events/#guild-member-update) payloads reflect the removed role.
+The operation removes the role from every member that held it, removes the role record, and frees the guild role slot it occupied. It creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason and emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. The deleted role no longer appears in `roles` on a later member read or [Guild Member Update](/gateway/events/#guild-member-update) payload.
 
 ### Rate limit
 

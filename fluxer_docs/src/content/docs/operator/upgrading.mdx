@@ -47,9 +47,9 @@ A failed run leaves the instance running on the images it already had.
 
 `docker compose up -d` does not notice a changed `Caddyfile`. The script restarts `edge` by name to pick it up.
 
-An instance older than the `/livekit` routing needs one edit no upgrade can make for it. [Voice signalling moved to /livekit](#voice-signalling-moved-to-livekit) has it, and voice stays silent until it is made.
+An instance set up before the edge served LiveKit at `/livekit` needs one edit that the upgrade does not make. Until you make it, voice does not connect. [Voice signalling moved to /livekit](#voice-signalling-moved-to-livekit) has the edit.
 
-The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one. [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the failure a line naming an absent file produces.
+The refreshed `docker-compose.yml` renames the `caddy` service to `edge`, and the two publish the same host ports. `--remove-orphans` takes the old container down in the same call, so the new one can bind them. Without it the step stops with `Bind for 0.0.0.0:443 failed`. It also removes any container in the project whose service the loaded Compose files no longer define, so keep `COMPOSE_FILE` the same across an upgrade. [Keep a local compose change](#keep-a-local-compose-change) has the file layout that survives one. [When the compose file list names a missing file](#when-the-compose-file-list-names-a-missing-file) has the error Compose prints when `COMPOSE_FILE` names a file that does not exist.
 
 The rename also moves the `caddy-data` and `caddy-config` volumes to `edge-data` and `edge-config`, so the old two are left unused and the edge requests its certificate again on the first start.
 
@@ -112,7 +112,7 @@ curl -fsSL --proto '=https' --tlsv1.2 -o docker-compose.proxy.yml \
 
 `main` is the ref for `FLUXER_IMAGE_TAG=v1` and for `latest`. [Match the images to the stack files](#match-the-images-to-the-stack-files) has the ref a pinned tag needs.
 
-Removing the line from `.env` also gets the run moving and is the wrong fix. Without the overlay the edge publishes `80` and `443` and takes them from the reverse proxy already on the host.
+Removing the line from `.env` also lets the upgrade run, and it is the wrong fix. Without the overlay, the edge publishes host ports `80` and `443`, which the reverse proxy already on the host uses.
 
 ## Run the upgrade
 
@@ -178,7 +178,7 @@ wss://chat.example.com/livekit
 
 Both `https` and `wss` work. Update `FLUXER_LIVEKIT_URL` in `.env` to the new path, or remove it to use the derived address, then run `docker compose up -d api`.
 
-This updates the existing `default-server-1` server in the `default` region. For any other server, change **Endpoint** under **Voice Servers** in the admin dashboard. Correct `.env` first, or a later restart can restore the old address on the default server.
+When `api` starts, it writes the new address to the existing `default-server-1` server in the `default` region. For any other server, change **Endpoint** under **Voice Servers** in the admin dashboard. Correct `.env` first, or a later restart can restore the old address on the default server.
 
 Voice media is unaffected. It never went through the edge, and `7881/tcp` and `7882/udp` still reach the host directly.
 
@@ -292,7 +292,7 @@ docker compose down
 docker volume rm fluxer_postgres-data
 ```
 
-On Windows, take that dump the way [Restore a backup](#restore-a-backup) moves one, with `-f /tmp/pre-major.dump` and `docker compose cp`, and restore it the same way.
+On Windows, run `pg_dump` inside the container with `-f /tmp/pre-major.dump` and copy the file out with `docker compose cp`. Restore it with `docker compose cp` and `pg_restore` as [Restore a backup](#restore-a-backup) shows.
 
 Once that volume is removed, the dump is the only copy of the database.
 

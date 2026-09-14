@@ -6,12 +6,12 @@ description: Checkout, card preapproval, gift purchase, age verification, refund
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-These routes take payment for premium, verify an account holder's age, and refund the most recent purchase. Each finishes on the payment provider's own pages, so a route here creates the provider session and returns its URL for the browser to open. [Receive Stripe webhook](#receive-stripe-webhook) takes the signed events the provider sends back. The [Premium resource](/http-api/premium/) owns entitlement state, mirrored billing data and subscription self-service.
+These routes take payment for premium, verify an account holder's age, and refund the most recent purchase. Checkout, card preapproval and age verification each finish on the payment provider's own pages, so those routes create the provider session and return its URL for the browser to open. [Receive Stripe webhook](#receive-stripe-webhook) takes the signed events the provider sends back. The [Premium resource](/http-api/premium/) owns entitlement state, mirrored billing data and subscription self-service.
 
 Every route here is hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. All of them are user-only except [receive Stripe webhook](#receive-stripe-webhook) and [continue localised card preapproval](#continue-localised-card-preapproval).
 
 :::note[Every response is a Fluxer object]
-The responses are Fluxer redirect, eligibility, refund and acknowledgement objects. The only payment provider values in them are the identifiers on a [refund](#refund-object).
+The responses are Fluxer redirect, eligibility, refund and acknowledgement objects. They copy only a few payment provider values, such as the identifiers on a [refund](#refund-object) and the `invoice_id` of a [refund eligibility](#refund-eligibility-object) object.
 :::
 
 ## Redirect URL object
@@ -36,7 +36,7 @@ One absolute URL that completes a billing operation in a browser. [Create subscr
 
 ## Localised card preapproval result object
 
-The state of one card preapproval flow. A localised recurring price is offered only to a card issued in the matching country. Fluxer creates the paid session only after a separate setup mode session has proven the card country. `status` says which of the variants the object is, and each variant defines its own members.
+The state of one card preapproval flow. A localised recurring price is offered only to a card issued in the matching country. Fluxer creates the paid session only after a separate setup mode session, which takes no payment, has shown that the card was issued in the matching country. `status` says which of the variants the object is, and each variant defines its own members.
 
 ### Structure
 
@@ -67,7 +67,7 @@ The state of one card preapproval flow. A localised recurring price is offered o
 
 | Value | Description |
 | --- | --- |
-| pending | The setup session has not completed, or a concurrent continuation is already resolving the same token |
+| pending | Setup has not completed, or another [continue localised card preapproval](#continue-localised-card-preapproval) call for this token is still running |
 | ready | The card was approved and the paid checkout URL is available |
 | rejected | The card was refused and the paid checkout cannot continue |
 | expired | The token is empty, unknown, or has passed its one-day lifetime |
@@ -85,7 +85,7 @@ The state of one card preapproval flow. A localised recurring price is offered o
 
 ## Refund eligibility object
 
-Whether the account's most recent purchase can still be refunded without operator involvement. When no refundable purchase was resolved, `eligible` is false, every invoice member is null, and `cooldown_expires_at` still reports an active cooldown unless the reason is `feature_unavailable`. A client reads `eligible` and `reason` before rendering any amount or timestamp.
+Whether the account's most recent purchase can still be refunded without operator involvement. When no refundable purchase was resolved, `eligible` and `cancels_subscription` are false. `invoice_id`, `invoice_amount_paid_cents`, `currency`, `paid_at` and `refund_window_expires_at` are null. `cooldown_expires_at` still reports an active cooldown unless the reason is `feature_unavailable`. A client reads `eligible` and `reason` before rendering any amount or timestamp.
 
 ### Structure
 
@@ -158,7 +158,7 @@ The refund that [refund latest purchase](#refund-latest-purchase) created agains
 | subscription_id<sup>3</sup> | ?string | Payment provider subscription that was cancelled along with the refund |
 | status<sup>4</sup> | ?string | Provider status of the refund |
 
-<sup>1</sup> Zero until the provider confirms the refund succeeded. Once confirmed it is the amount the provider accepted, which is one minor unit short of `invoice_amount_paid_cents` in the Pix case
+<sup>1</sup> Zero until the provider confirms the refund succeeded. Once confirmed it is the amount the provider accepted, which is one minor unit short of `invoice_amount_paid_cents` when the charge was paid with Pix and the invoice amount is greater than one minor unit
 
 <sup>2</sup> Reported as `usd` when the resolved invoice has no currency of its own
 
@@ -214,7 +214,7 @@ Creates a recurring premium checkout session and returns a [redirect URL](#redir
 - An unverified email address returns 403 `PURCHASE_EMAIL_VERIFICATION_REQUIRED`.
 - The purchase-disabled premium flag returns 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `purchase_disabled`.
 - A lifetime Visionary account cannot buy a recurring subscription and returns 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `lifetime`.
-- An account whose payment provider customer already holds a subscription in the `active`, `trialing`, `past_due`, `unpaid`, `incomplete` or `paused` state returns the same code with the reason `existing_subscription`, unless the conversion below applies.
+- An account whose payment provider customer already holds a subscription in the `active`, `trialing`, `past_due`, `unpaid`, `incomplete` or `paused` state returns the same code with the reason `existing_subscription`, unless Fluxer converts the purchase into a scheduled billing cycle change, as described below.
 
 `reason` is a top-level member of the error response, and an `existing_subscription` refusal also has the blocking status in the top-level `subscription_status` member.
 
@@ -279,7 +279,7 @@ Creates a setup mode session that captures and verifies a card before a localise
 ### Limitations
 
 - The claimed account, verified email and purchase flag requirements of [create subscription checkout](#create-subscription-checkout) apply unchanged, with the same codes.
-- An unresolvable country, meaning a request Fluxer cannot geolocate that also omits `country_code`, and a resolved price that is not a recurring price in a currency other than USD and EUR each return 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
+- A request that Fluxer cannot geolocate and that omits `country_code` returns 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`. A resolved price that is not a recurring price in a currency other than USD and EUR also returns 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
 - The submitted price is always recurring, so the lifetime block and the existing subscription block both apply and return 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `lifetime` or `existing_subscription`.
 
 ### JSON body
@@ -323,7 +323,7 @@ The flow stays pending until [receive Stripe webhook](#receive-stripe-webhook) p
 
 Reports the current state of a preapproval flow and creates the paid checkout session once the card is approved, returning a [localised card preapproval result](#localised-card-preapproval-result-object) object.
 
-The continuation token is the credential, and no credential supplied on the request selects the flow.
+The continuation token is the credential. Fluxer selects the flow from the token alone, and a credential supplied on the request selects no flow.
 
 An empty token, an unknown token, and a token whose one-day flow has expired are all reported as `expired`, so the operation never discloses whether a flow exists.
 
@@ -333,10 +333,10 @@ An empty token, an unknown token, and a token whose one-day flow has expired are
 - A recorded price that no longer belongs to the recorded country catalogue returns 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`.
 - The claimed account, verified email, purchase flag, lifetime and existing subscription refusals all apply to the account that opened the flow.
 
-Creating the paid session repeats the complete preparation that [create subscription checkout](#create-subscription-checkout) does, against the account, price and country recorded on the flow.
+To create the paid session, Fluxer runs every check of [create subscription checkout](#create-subscription-checkout) and creates a checkout session the same way, using the account, price and country recorded on the flow.
 
 :::caution[Approval is resolved once]
-One continuation at a time can resolve an approved flow. While one call creates the paid session, another call for the same flow is reported as `pending`.
+Only one call at a time creates the paid session for an approved flow. While one call creates the paid session, another call for the same flow is reported as `pending`.
 :::
 
 ### JSON body
@@ -360,7 +360,7 @@ One continuation at a time can resolve an approved flow. While one call creates 
 
 A `pending`, `rejected` or `expired` result changes nothing. For an approved flow, Fluxer attempts to make the approved card the customer's default invoice payment method, then creates the paid checkout even when that update is unavailable.
 
-It applies the checkout preparation described by [create subscription checkout](#create-subscription-checkout) with the approved price and country. The same token then always resolves to the same paid checkout URL. Entitlement changes only after the matching signed event reaches [receive Stripe webhook](#receive-stripe-webhook).
+Fluxer runs the checks of [create subscription checkout](#create-subscription-checkout) and creates the checkout session with the approved price and country. The same token then always resolves to the same paid checkout URL. Entitlement changes only after the matching signed event reaches [receive Stripe webhook](#receive-stripe-webhook).
 
 ### Rate limit
 
@@ -456,7 +456,7 @@ A deployment with no configured payment provider answers with `eligible` false a
 A failed payment-history lookup or an account with no payment history reports no refundable purchase.
 
 :::note[The same object appears inside premium state]
-[Get premium state](/http-api/premium/#get-premium-state) also returns `billing.refund_eligibility`, which can lag behind this endpoint.
+[Get premium state](/http-api/premium/#get-premium-state) also returns `billing.refund_eligibility`, which Fluxer computes from the invoices it has stored. This endpoint reads the invoices from the payment provider, so the premium state value can be older.
 :::
 
 ### Response
@@ -499,7 +499,7 @@ Once the provider confirms the refund succeeded, the subscription that produced 
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | [refund](#refund-object) object | The refund was created, or the idempotency key resolved an earlier identical refund |
+| 200 | [refund](#refund-object) object | The refund was created, or the request repeats an earlier refund of this invoice and returns that refund |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The account has no refundable purchase, or the payment provider cannot refund it |
 | 403 | [error response](/http-api/#error-response) | The purchase is outside the refund window, or the refund cooldown is active |
 | 404 | [error response](/http-api/#error-response) | The authenticated account record no longer exists |

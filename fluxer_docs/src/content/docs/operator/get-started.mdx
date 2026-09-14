@@ -140,7 +140,7 @@ The run prints one line per phase and ends with the URL to open.
 
 ### Serving on another port
 
-The installer writes an `.env` for `https` on `443` and has no flag for another port. The lines below change it, the port of the public address and the publish that answers on it:
+The installer writes an `.env` for `https` on `443` and has no flag for another port. The two lines below in `.env` move the instance to another port. `FLUXER_PUBLIC_PORT` sets the port of the public address, and `FLUXER_HTTPS_PORT` sets the host port the edge publishes HTTPS on:
 
 ```ini
 FLUXER_PUBLIC_PORT=8443
@@ -172,7 +172,7 @@ Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with the publi
 | `--dry-run` | Print the plan. Write nothing and start nothing |
 | `--no-start` | Write everything and skip `docker compose up -d` |
 | `--update` | Upgrade: record, back up, refresh, pull, recreate, verify |
-| `--rollback` | Put back the images and stack files of the newest record |
+| `--rollback` | Restore the images and stack files that the newest `--update` run recorded |
 | `--allow-root` | Permit running as root |
 | `--engine <command>` | Container engine to drive. Default `docker`, or `podman` when `docker` is absent |
 
@@ -222,7 +222,7 @@ Open the hostname in a browser. A fresh instance is unconfigured, so it serves t
 
 Create an account, then choose branding, registration mode, community policy, media expiry, integrations and premium settings. Completing the wizard closes setup access.
 
-Create the owner account with an email address at a domain you control. The first registration that supplies one receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
+Create the owner account with an email address at a domain you control. The first registration that includes an email address receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
 
 Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
 

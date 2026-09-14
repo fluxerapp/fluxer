@@ -74,7 +74,7 @@ An absent field is one this channel type does not own. A field present with `nul
 A category owns no `parent_id`. A client that reads the absent key as `null` sees a channel whose parent was cleared.
 
 :::caution[Age and warning fields report this channel alone]
-The API enforces the resolved state, so a client must apply the inherited category state before it shows an age restriction or a content warning.
+The API enforces the value resolved through this channel, then its parent category, then the guild, as described below. A client must resolve the value in the same order before it shows an age restriction or a content warning.
 :::
 
 An age restriction and a content warning both resolve through this channel first, then the parent category, and finally the guild. A category has no parent category and resolves through itself and then the guild.
@@ -221,7 +221,7 @@ Returns the [channel object](#channel-object) visible to the authenticated user.
 - A private channel requires current recipient access.
 - The personal notes channel requires ownership.
 
-Fluxer enforces age verification only for a guild text, voice, or link channel. A guild category is never gated on it, even when it has the override its children inherit.
+Fluxer enforces age verification only for a guild text, voice, or link channel. Fluxer never requires age verification for a guild category, even when the category has the override its children inherit.
 
 ### Path parameters
 
@@ -453,9 +453,9 @@ Fluxer trims a stored nickname, and a value that is null or empty after trimming
 
 A guild channel change emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to its guild. Replacing a category's permission overwrites also replaces them on each child whose overwrites still exactly match the category's previous values, with one Dispatch per changed child. A child whose overwrites had differed is left unchanged.
 
-Changing `rate_limit_per_user` clears the channel's current slowmode state so the new interval applies immediately. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
+Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel, so each user's next message is checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
 
-A request that changes at least one field creates a channel update audit log entry with no reason. Supplying `permission_overwrites` also creates the overwrite audit log entries the change implies.
+A request that changes at least one field creates a channel update audit log entry with no reason. Supplying `permission_overwrites` also creates one overwrite create, update, or delete audit log entry for each overwrite the array adds, changes, or removes.
 
 A group direct message change emits [Channel Update](/gateway/events/#channel-update) to every current recipient. A name or successful icon change creates a system message delivered with [Message Create](/gateway/events/#message-create), and replacing the icon permanently deletes the previous one. Ownership and nickname changes create no system message and no audit entry.
 
@@ -542,7 +542,7 @@ An account that stores neither a password nor a second factor is verified withou
 
 Deleting a guild category first clears the `parent_id` of every child channel and emits [Channel Update](/gateway/events/#channel-update) for each one. The category itself is then deleted like any other guild channel.
 
-Deleting a guild channel permanently removes its messages, attachments, invites and webhooks. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. A system, rules or AFK channel reference is cleared with [Guild Update](/gateway/events/#guild-update).
+Deleting a guild channel permanently removes its messages, attachments, invites and webhooks. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. When the deleted channel is the guild's system, rules or AFK channel, Fluxer clears that guild setting and emits [Guild Update](/gateway/events/#guild-update).
 
 Closing a direct message marks the channel closed for the caller alone and emits [Channel Delete](/gateway/events/#channel-delete) to that caller. The channel, its messages, and the other recipient's view are untouched.
 
@@ -600,7 +600,7 @@ Fluxer evaluates the target's admission policy in this order.
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Recipient was added, or was already a recipient |
-| 400 | [error response](/http-api/#error-response) | CAPTCHA proof is missing or rejected, the caller and target are not friends and the request returns `NOT_FRIENDS_WITH_USER` |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA proof is missing or rejected, or the caller and target are not friends and the request returns `NOT_FRIENDS_WITH_USER` |
 | 400 | [error response](/http-api/#error-response) | The group is already full and the request returns `MAX_GROUP_DM_RECIPIENTS` |
 | 400 | [error response](/http-api/#error-response) | The channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE` |
 | 403 | [error response](/http-api/#error-response) | Caller is not a recipient, or the target's admission policy rejects the caller, each returning `MISSING_ACCESS` |
@@ -735,7 +735,7 @@ A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_O
 
 ### Side effects
 
-Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the submitted overwrite exactly matches the stored one. When the channel is a category, every child whose overwrites exactly matched the category's previous values receives the same replacement and its own Channel Update.
+Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the submitted overwrite exactly matches the stored one. When the channel is a category, every child whose overwrites exactly matched the category's previous values receives a copy of the category's new overwrites and its own Channel Update.
 
 The operation records an overwrite create or update audit entry with no reason. An unchanged overwrite records no audit entry.
 
@@ -774,7 +774,7 @@ The operation is idempotent, does not require `VIEW_CHANNEL`, and never returns 
 
 ### Side effects
 
-Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the identifier names no existing overwrite. Removing an overwrite that exists also records an overwrite delete audit entry with the previous overwrite state and no reason. An identifier that names no existing overwrite records no audit entry. When the target channel is a category, propagation follows the same exact-match rule as overwrite replacement.
+Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session subscribed to the guild, including when the identifier names no existing overwrite. Removing an overwrite that exists also records an overwrite delete audit entry with the previous overwrite state and no reason. An identifier that names no existing overwrite records no audit entry. When the target channel is a category, each child whose overwrites exactly matched the category's previous overwrites receives a copy of the category's new overwrites and its own Channel Update.
 
 ### Rate limit
 

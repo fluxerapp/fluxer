@@ -92,7 +92,7 @@ Admission and dispatch tuning for the Gateway cluster.
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-Admin requests use `rpc_request_timeout_ms`. The legacy stored name is covered in the [operator configuration reference](/operator/configuration/#stored-instance-policy).
+Admin reads and writes name this field `rpc_request_timeout_ms`. The legacy stored name is covered in the [operator configuration reference](/operator/configuration/#stored-instance-policy).
 
 ## Voice noise suppression configuration object
 
@@ -104,20 +104,20 @@ The instance rollout of client-side noise suppression. [Experiments](/http-api/e
 | --- | --- | --- |
 | enabled | boolean | Whether the rollout runs at all (default false) |
 | config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| default_backend | string | Backend given to a drawn account (default `standard`) |
+| default_backend | string | Backend given to an account the rollout selects (default `standard`) |
 | enabled_backends | array[string] | Backends a client MAY run, up to 7 entries (default every backend) |
 | allow_user_override | boolean | Whether an account's own choice replaces the assigned backend (default true) |
-| rollout_basis_points | integer | Share of accounts drawn, in basis points (0-10000, default 0) |
+| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
 | rollout_salt | string | Salt of the sampling hash (1-64 characters, default `voice-ns-v1`) |
-| included_user_ids | array[snowflake] | Accounts always drawn, up to 1000 entries (default empty) |
-| excluded_user_ids | array[snowflake] | Accounts never drawn, up to 1000 entries (default empty) |
+| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | guild_overrides | array[[guild override](/http-api/experiments/#noise-suppression-guild-override-object) object] | Per-guild replacements, up to 200 entries (default empty) |
-| stereo_enabled | boolean | Whether a drawn client publishes a stereo microphone track (default false) |
+| stereo_enabled | boolean | Whether a client the rollout selects publishes a stereo microphone track (default false) |
 | suppression_strength | integer | Suppression strength (0-100, default 80) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-`excluded_user_ids` is applied before `included_user_ids`, so an account in both is never drawn. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
+`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
 
 How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
 
@@ -130,11 +130,11 @@ How often a client polls [Get experiment assignments](/http-api/experiments/#get
 | Field | Type | Description |
 | --- | --- | --- |
 | poll_interval_seconds | integer | Seconds between client revalidations (60-86400, default 300) |
-| poll_jitter_percent | integer | Spread applied to each revalidation (0-50, default 15) |
+| poll_jitter_percent | integer | Maximum random change to each revalidation interval, as a percentage in either direction (0-50, default 15) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-Both fields are served to every account, whether or not any experiment targets that account, and neither one is versioned by `config_version`. A client that has never reached the experiments route holds the same values as built-in defaults, 300 seconds and 15 percent, so neither field reaches a client that cannot read the route.
+Both fields are served to every account, whether or not any experiment targets that account, and neither one is versioned by `config_version`. A client that has never received a response from the experiments route uses built-in defaults of 300 seconds and 15 percent, which equal the defaults above. A client that cannot read the route never receives either field.
 
 ## Registration configuration object
 
@@ -169,7 +169,7 @@ A valid registration URL is accepted in every mode, including `closed`, and its 
 
 ## Registration URL object
 
-A registration URL is an invitation an Admin can issue while public registration is closed or gated. It has its own expiry, use budget, and approval requirement.
+A registration URL is an invitation an Admin can issue while the registration mode is `closed` or `approval`. It has its own expiry, use budget, and approval requirement.
 
 Fluxer accepts a URL while it has no revocation time, has not passed its expiry, and has a use count below `max_uses`. A URL failing any of those tests is still reported here.
 
@@ -269,7 +269,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 
 <sup>2</sup> Each key is the operator override when one is set, and otherwise the matching `services_available` value
 
-<sup>3</sup> `gif` and `youtube` report whether an API key resolves from the stored configuration or the deployment configuration. `bluesky` reports the integration's resolved enablement
+<sup>3</sup> `gif` and `youtube` report whether an API key resolves from the stored configuration or the deployment configuration. `bluesky` is the value of `integrations.bluesky.effective_enabled`
 
 ## Premium modes
 
@@ -280,7 +280,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 
 ## Deferred phone gate object
 
-A rule that requires phone verification in a configured window of hours after registration.
+A rule for accounts whose phone verification requirement was deferred. When such an account joins a guild within `window_hours` of registration, and the guild has the `DISCOVERABLE` feature or more than `member_threshold` members, Fluxer refuses the join until the account verifies a phone.
 
 ### Structure
 
@@ -373,7 +373,7 @@ Attachment retention overrides the operator has set, and the values in force.
 
 <sup>1</sup> The override keys are `enabled`, `min_size_mb`, `max_size_mb`, `max_eligible_size_mb`, `min_lifetime_days`, `max_lifetime_days`, `curve`, `renew_threshold_days`, and `renew_window_days`. Each is null when the deployment default applies, and `effective` reports the value in force. `enabled` is a boolean, `curve` is a number from 0 to 1, the `_mb` keys are positive numbers, and the `_days` keys are positive safe integers
 
-Conflicting maximum size or lifetime overrides are cleared and resolved from deployment defaults. The effective size range must have a finite maximum above its minimum, and retention must produce a valid expiry date. Check the returned `effective` values after an update.
+Fluxer clears `max_size_mb` when it is not above `min_size_mb`, clears `max_eligible_size_mb` when it is below `max_size_mb`, and clears `max_lifetime_days` when it is below `min_lifetime_days`. A cleared key uses the deployment default. The effective size range must have a finite maximum above its minimum, and retention must produce a valid expiry date. Check the returned `effective` values after an update.
 
 ## Branding asset kinds
 
@@ -472,7 +472,7 @@ One rule in that ordered set, with the filters that scope it and the limits it s
 | limits | map[string, integer] | Non-negative value for each [limit key](/http-api/instance/#limit-keys) the rule sets |
 | modifiedFields?<sup>1</sup> | array[string] | Limit keys whose value differs from the deployment default |
 
-<sup>1</sup> Compared with the deployment default rule of the same identifier, or with the deployment's `default` rule for a custom identifier. A set key absent from that default counts as modified. A rule with no differing key omits the field. Explicit limit values remain unchanged
+<sup>1</sup> Compared with the deployment default rule of the same identifier, or with the deployment's `default` rule for a custom identifier. A set key absent from that default counts as modified. A rule with no differing key omits the field. Computing this field changes no value in `limits`
 
 ## Limit key metadata object
 
@@ -543,7 +543,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 <sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
 
 :::note[Single sign-on URL validation is conditional]
-Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source. `issuer` stands in for the endpoints and the claims source.
+Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source, which is `jwks_url` or `userinfo_url`. A set `issuer` meets the endpoint and claims source requirements, because Fluxer can discover them from the issuer.
 :::
 
 #### Instance policy update structure
@@ -558,11 +558,11 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | services? | object | Nullable `gif_enabled`, `youtube_enabled`, and `bluesky_enabled` overrides |
 | deferred_phone_gate?<sup>3</sup> | object | `enabled`, `window_hours`, and `member_threshold` |
 
-<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists. When none is designated or the designated guild was deleted, it creates a community using `single_community_name` or the configured product name. A malformed designation or other datastore lookup error fails the operation instead of creating a replacement. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
+<sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists. When none is designated or the designated guild was deleted, it creates a community using `single_community_name` or the configured product name. When the stored guild ID is not a valid ID, or the guild lookup fails for a reason other than an unknown guild, the operation fails and Fluxer creates no community. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
 
 <sup>2</sup> The setting can be changed only while `direct_messages_locked` is false, and a change attempted after the lock is set fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` unless the same request sets `direct_messages_locked` to false. Re-enabling direct messages sets the lock again
 
-<sup>3</sup> `window_hours` is a positive number up to 8760 and `member_threshold` is a positive integer up to 1000000. Each key is applied on its own
+<sup>3</sup> `window_hours` is a positive number up to 8760 and `member_threshold` is a positive integer up to 1000000. An omitted key keeps its stored value
 
 `direct_messages_locked` accepts only false, and a body that sets it to true fails with 400 `INVALID_FORM_BODY`.
 
@@ -579,7 +579,7 @@ The order is `gateway_rollout`, `voice_noise_suppression`, `experiment_delivery`
 
 ### Side effects
 
-Gateway rollout changes apply across the cluster. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
+Fluxer publishes a `gateway_rollout` change to the Gateway cluster. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
 
 Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
 
@@ -661,10 +661,10 @@ No configuration is written and the supplied credentials are discarded when the 
 
 <RouteHeader method="POST" path="/v1/admin/instance/registration-urls" />
 
-Issues a registration URL an Admin can hand out while public registration is closed or gated, and returns a [registration URL creation](#registration-url-creation-object) object. Requires `instance:config:update`.
+Issues a registration URL an Admin can hand out while the registration mode is `closed` or `approval`, and returns a [registration URL creation](#registration-url-creation-object) object. Requires `instance:config:update`.
 
 :::caution[The code is the identifier]
-The returned `code` is the same value as `registration_url.id`, and every [Get instance configuration](#get-instance-configuration) response has that identifier. Treat `instance:config:view` as a registration capability on a gated deployment.
+The returned `code` is the same value as `registration_url.id`, and every [Get instance configuration](#get-instance-configuration) response has that identifier. Treat `instance:config:view` as a registration capability on a deployment in `closed` or `approval` mode.
 :::
 
 ### JSON body
@@ -758,7 +758,7 @@ Both decisions remove the pending registration, but the endpoint does not requir
 
 Approval removes both the `registration_pending_approval` trait and the `registration_rejected` trait, and joins the account to the single community when that mode is enabled and a guild is designated. A join that fails is logged and does not fail the request. Rejection removes the `registration_pending_approval` trait and adds the `registration_rejected` trait, which blocks login and every later session creation. A session issued before the decision stays valid. The pending registration is removed either way.
 
-Invalid pending-registration data prevents the decision. A later failure can still leave account changes applied, so check the account and pending list before retrying.
+When the stored pending registration list fails validation, the request fails before Fluxer changes the account. A failure after Fluxer writes the account traits leaves those traits written and can leave the entry in the pending list. Check the account traits and the pending list before retrying.
 
 One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account, records the audit reason, and has no metadata.
 
@@ -793,7 +793,7 @@ The response reflects the configuration in force on the node that serves the req
 Replaces the stored limit configuration with the supplied document and returns the resulting [limit configuration response](#limit-configuration-response-object) object. Requires `instance:limit_config:update`.
 
 :::caution[An absent custom rule is removed]
-A rule whose identifier matches a deployment default rule survives. Fluxer re-merges the write with the current defaults immediately.
+A default rule that the body omits is restored from the deployment defaults. Fluxer re-merges the write with the current defaults immediately.
 :::
 
 :::note[The stored document can differ from the body]

@@ -11,12 +11,12 @@ Admin gift code generation issues [premium](/http-api/premium/) codes in bulk, e
 This resource has that one operation. No Admin operation lists, revokes, or redeems a code, or reports who redeemed one.
 
 :::caution[A self-hosted instance answers 403]
-The error code is `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so a request that also fails validation is refused by that failure.
+The error code is `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so a self-hosted instance answers a body that fails validation with 400 `INVALID_FORM_BODY`.
 :::
 
 ## Gift duration units
 
-The unit and the quantity together define the span a redeemed code grants. Fluxer adds the span to the redeemer's entitlement anchor at redemption time. Lifetime gifts are not supported.
+The unit and the quantity together define the span a redeemed code grants. At redemption, Fluxer adds the span to the entitlement anchor, which is the latest of the current time, the end of the redeemer's premium, and the end of any earlier gift extension. Lifetime gifts are not supported.
 
 | Value | Description |
 | --- | --- |

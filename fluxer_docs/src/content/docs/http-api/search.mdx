@@ -10,7 +10,7 @@ Message search matches indexed messages against a text query and a filter set. O
 
 Fluxer resolves the requested scope to the set of channels the caller may search, then runs the query over that set. A private channel search covers the authenticated account alone, and the set holds a guild channel only while the caller can read its history.
 
-Term matching and typo tolerance can vary by deployment. Filter matching is exact.
+Term matching and typo tolerance depend on the instance's search backend, Elasticsearch or Meilisearch. Filter matching is exact.
 
 ## Message search result object
 
@@ -31,9 +31,9 @@ The body a completed search returns, holding one page of matching messages.
 
 <sup>2</sup> Contains one entry for each distinct channel represented in `messages`, and never contains a channel with no returned message
 
-<sup>3</sup> Counted over the whole resolved scope. A single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/) reports the number returned
+<sup>3</sup> Counted over the whole resolved scope. In a single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/), `total` is the number of messages in `messages`
 
-<sup>4</sup> Present only when the backend produced a cursor. A single channel context, a reconciled offset page, and a Meilisearch instance each return none
+<sup>4</sup> Present only when the backend produced a cursor. A single channel context, a Meilisearch instance, and a page Fluxer rebuilt after it found deleted messages in the backend results each return none
 
 [Search messages](#search-messages) never honours a supplied cursor, so page through a result set with `page` alone.
 
@@ -53,7 +53,7 @@ Deleted messages are omitted. When using `page`, the total counts only existing 
 
 ## Search indexing object
 
-The other 200 body. Fluxer returns it when a channel the search needs has never been indexed, or when that index predates the instance forced reindex point.
+The other 200 body. Fluxer returns it when a channel the search needs has never been indexed, or when that channel was last indexed before 2026-05-23 17:30:00 UTC, a fixed date built into Fluxer.
 
 ### Structure
 
@@ -174,7 +174,7 @@ Every scope that can include a guild channel calls the main Gateway. A Gateway c
 
 ### JSON body
 
-Every field is optional, though the default `current` scope requires a context. An omitted filter is not applied.
+Every field is optional, though the default `current` scope requires `context_guild_id` or `context_channel_id`. An omitted filter is not applied.
 
 | Field | Type | Description |
 | --- | --- | --- |

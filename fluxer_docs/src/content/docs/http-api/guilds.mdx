@@ -10,7 +10,7 @@ A guild is a community with its own channels, roles, members, and configuration.
 
 [List current user guilds](#list-current-user-guilds) and [Get guild](#get-guild) declare the `guilds` [OAuth2 scope](/http-api/oauth2/#oauth2-scopes), and a bearer credential without that scope receives 403 `MISSING_OAUTH_SCOPE`. Every other route rejects a bearer credential with 403 `ACCESS_DENIED`.
 
-A guild that does not exist returns 404 `UNKNOWN_GUILD`. A non-member receives 403 `MISSING_PERMISSIONS`. A guild that exists but cannot be accessed can return 403 `ACCESS_DENIED`.
+A guild that does not exist returns 404 `UNKNOWN_GUILD`. A non-member receives 403 `MISSING_PERMISSIONS`. A guild that exists in storage but that the Gateway reports as not found returns 403 `ACCESS_DENIED`.
 
 An [unavailable guild](#guild-features) can still appear in [List current user guilds](#list-current-user-guilds). Members can still [leave](#leave-guild) or [delete their own messages](#bulk-delete-current-users-guild-messages).
 
@@ -93,7 +93,7 @@ A guild object contains the guild's configuration. The operation that returns it
 
 <sup>14</sup> Only [Get guild](#get-guild) populates these fields
 
-<sup>15</sup> Only [List current user guilds](#list-current-user-guilds) populates these fields, and only when `with_counts` is true. A guild whose counts are not currently held reports 0 for both
+<sup>15</sup> Only [List current user guilds](#list-current-user-guilds) populates these fields, and only when `with_counts` is true. A guild for which the Gateway holds no cached counts reports 0 for both
 
 :::note[An absent field means the operation omitted it]
 `roles`, `emojis`, `stickers`, `channels`, and every count field arrive only from the operations named in the footnotes above. A guild returned without `roles` can still hold roles.
@@ -251,7 +251,7 @@ A creation template describes the roles and channels that [Create guild](#create
 
 <sup>1</sup> A duplicate identifier in the same template rejects creation with 400 `GUILD_TEMPLATE_INVALID`
 
-<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, and 4 a category, and for an import from the other platform 5 creates a text channel and 13 a voice channel. Fluxer skips every other value, so the channel is not created
+<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, and 4 a category. The value 5, the announcement channel type of another platform, creates a text channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value, so the channel is not created
 
 <sup>3</sup> The identifier is applied only when it resolves to a category in the same template, and every other value leaves the channel at the guild root
 
@@ -390,7 +390,7 @@ Each value in the guild's `features` array is a capability or availability flag.
 | INVITE_SPLASH | Guild can use invite splash assets |
 | INVITES_DISABLED<sup>1</sup> | Guild invite use is disabled |
 | RAID_DETECTED | Raid detection is active and invites are restricted |
-| TEXT_CHANNEL_FLEXIBLE_NAMES<sup>1</sup> | Text channel names accept the flexible naming policy |
+| TEXT_CHANNEL_FLEXIBLE_NAMES<sup>1</sup> | Text channel names keep uppercase letters, spaces, and punctuation |
 | HIDE_OWNER_CROWN<sup>1</sup> | Guild owner crown is hidden |
 | MORE_EMOJI<sup>2</sup> | Legacy increased emoji slot allowance |
 | MORE_STICKERS<sup>2</sup> | Legacy increased sticker slot allowance |
@@ -401,11 +401,11 @@ Each value in the guild's `features` array is a capability or availability flag.
 | DISCOVERABLE | Guild is present in public discovery |
 | PARTNERED | Guild has partnered status |
 | VERIFIED | Guild has verified status |
-| VIP_VOICE | Guild has VIP voice capability |
+| VIP_VOICE | Guild can use voice regions that are restricted to VIP guilds |
 | VOICE_E2EE | Guild voice channels support end-to-end encryption |
 | UNAVAILABLE_FOR_EVERYONE<sup>4</sup> | Guild is unavailable to every account |
 | UNAVAILABLE_FOR_EVERYONE_BUT_STAFF<sup>4</sup> | Guild is unavailable to every account without the instance staff flag |
-| UNAVAILABLE_HIDDEN | Guild is hidden while it is forced unavailable |
+| UNAVAILABLE_HIDDEN | While the guild is unavailable, the Gateway sends its unavailable guild entry with `unavailable_hidden: true` |
 | VISIONARY | Guild has visionary status |
 | LARGE_GUILD_OVERRIDE<sup>2</sup> | Guild is marked as a large guild |
 | VERY_LARGE_GUILD<sup>5</sup> | Guild member capacity is raised |
@@ -414,7 +414,7 @@ Each value in the guild's `features` array is a capability or availability flag.
 
 <sup>2</sup> The feature changes no HTTP API behaviour. An instance can name it in a filter of the ordered [limit configuration](/http-api/instance/#limit-keys), and the stock configuration names none of them
 
-<sup>3</sup> The expression operations raise the slot ceiling directly, outside the instance limit configuration
+<sup>3</sup> Emoji and sticker creation use a fixed slot ceiling of 999999 and ignore the instance limit configuration
 
 <sup>4</sup> Guild and channel routes return 403 `MISSING_ACCESS`. `UNAVAILABLE_FOR_EVERYONE` includes the guild owner. `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` exempts accounts with the instance staff flag
 
@@ -494,7 +494,7 @@ Creates a guild owned by the caller. Requires a user session credential. Returns
 - An unclaimed account is rejected with 400 `UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS`.
 - An account without a verified email address is rejected with 403 `GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED`.
 - A caller already at the configured guild limit is rejected with 400 `MAX_GUILDS`.
-- While the instance's single community policy is active, every caller is rejected with 400 `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS`.
+- While `single_community_enabled` is true in the [instance policy](/admin-api/instance/#instance-policy-object), every caller is rejected with 400 `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS`.
 
 ### JSON body
 
@@ -601,7 +601,7 @@ The response has no `permissions` field. Read [List current user guilds](#list-c
 | 403<sup>1</sup> | [error response](/http-api/#error-response) | Guild is unavailable, the bearer credential lacks the `guilds` scope, or the caller is not a member |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
 
-<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `MISSING_OAUTH_SCOPE` for a missing scope, `MISSING_PERMISSIONS` for a non-member, and `ACCESS_DENIED` when the guild otherwise cannot be accessed
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `MISSING_OAUTH_SCOPE` for a missing scope, `MISSING_PERMISSIONS` for a non-member, and `ACCESS_DENIED` when the guild exists in storage but the Gateway reports it as not found
 
 ### Rate limit
 
@@ -715,9 +715,9 @@ Send the current array with the intended changes applied. A feature without the 
 
 Every successful request emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild, and a request that writes no field still emits it.
 
-Only a change to an audited field records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new values. That entry emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
+A request that changes the stored value of at least one body field records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the previous and new values. That entry emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions that can read the audit log.
 
-Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text channel whose stored name does not satisfy the strict naming policy. When at least one channel is renamed, the removal emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
+Removing `TEXT_CHANNEL_FLEXIBLE_NAMES` renames every guild text channel whose stored name changes when Fluxer trims it, lowercases it, replaces each whitespace run with a hyphen, and removes disallowed punctuation. When at least one channel is renamed, the removal emits one [Channel Update Bulk](/gateway/events/#channel-update-bulk) Dispatch with every channel in the guild.
 
 Replacing an image removes the previous asset. A failed replacement leaves the previous image unchanged.
 
@@ -733,7 +733,7 @@ Permanently deletes the guild and returns 204 with an empty body. Requires the g
 
 Fluxer refuses a non-owner with 403 `MISSING_PERMISSIONS`. A bot can never own a guild, so a bot credential never satisfies the requirement.
 
-A guild protected by an active single community policy cannot be deleted and returns 400 `SINGLE_COMMUNITY_CANNOT_DELETE`.
+While `single_community_enabled` is true in the [instance policy](/admin-api/instance/#instance-policy-object), the guild named by `single_community_guild_id` cannot be deleted and returns 400 `SINGLE_COMMUNITY_CANNOT_DELETE`.
 
 ### Path parameters
 
@@ -772,7 +772,7 @@ Deletion removes the guild, memberships, roles, channels, messages, attachments,
 
 ### Side effects
 
-Every member receives [Guild Delete](/gateway/events/#guild-delete). Guild settings are removed. Non-bot members also receive [User Settings Update](/gateway/events/#user-settings-update) with the guild removed from their folder layout.
+Every member receives [Guild Delete](/gateway/events/#guild-delete). Fluxer deletes every member's [user guild settings](/http-api/users/settings/#user-guild-settings-object) for the guild. Non-bot members also receive [User Settings Update](/gateway/events/#user-settings-update) with the guild removed from their folder layout.
 
 No audit log entry is recorded, because the audit log is destroyed with the guild. An `X-Audit-Log-Reason` header on this request is read and discarded.
 
@@ -786,7 +786,7 @@ No audit log entry is recorded, because the audit log is destroyed with the guil
 
 Removes the authenticated account's membership and returns 204 with an empty body. Requires a current membership. Emits a [Guild Member Remove](/gateway/events/#guild-member-remove) Gateway event to the remaining guild sessions and a [Guild Delete](/gateway/events/#guild-delete) Gateway event to the leaving account's own sessions.
 
-A caller with no current membership receives 404 `UNKNOWN_MEMBER` whether or not the guild exists. The guild owner cannot leave and receives 400 `INVALID_FORM_BODY` with the field code `CANNOT_LEAVE_GUILD_AS_OWNER`. A guild protected by an active single community policy cannot be left and returns 400 `SINGLE_COMMUNITY_CANNOT_LEAVE`. Setting `delete_messages` requires sudo mode, which a bot credential satisfies implicitly.
+A caller with no current membership receives 404 `UNKNOWN_MEMBER` whether or not the guild exists. The guild owner cannot leave and receives 400 `INVALID_FORM_BODY` with the field code `CANNOT_LEAVE_GUILD_AS_OWNER`. While `single_community_enabled` is true in the [instance policy](/admin-api/instance/#instance-policy-object), the guild named by `single_community_guild_id` cannot be left and returns 400 `SINGLE_COMMUNITY_CANNOT_LEAVE`. Setting `delete_messages` requires sudo mode, which a bot credential satisfies implicitly.
 
 ### Path parameters
 

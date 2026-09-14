@@ -14,7 +14,7 @@ A text-bearing channel is a [channel type](/http-api/channels/#channel-types) th
 
 Fluxer resolves the channel before it applies any per-route authorisation. A private channel returns 404 `UNKNOWN_CHANNEL` to a caller who is not a recipient. A guild channel returns 403 `MISSING_PERMISSIONS` to a non-member and to a member without [VIEW_CHANNEL](/http-api/permissions/). A guild an operator has marked unavailable returns 403 `MISSING_ACCESS` before the route runs. A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`, or 403 `ACCESS_DENIED` when its stored record survives.
 
-The message read, create, modify, and delete routes, [Bulk delete messages](#bulk-delete-messages), [Bulk delete own messages](#bulk-delete-own-messages), and [List pinned messages](#list-pinned-messages) also enforce age verification on an effectively age restricted guild channel. They return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account satisfies it. The attachment routes, the pin routes, the reaction routes, and [Indicate typing](#indicate-typing) resolve the channel without that check.
+The message read, create, modify, and delete routes, [Bulk delete messages](#bulk-delete-messages), [Bulk delete own messages](#bulk-delete-own-messages), and [List pinned messages](#list-pinned-messages) also enforce age verification on an age restricted guild channel. A guild channel is age restricted when its own setting says so. A channel with no setting of its own uses its parent category's setting, and then the guild's. They return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account satisfies it. The attachment routes, the pin routes, the reaction routes, and [Indicate typing](#indicate-typing) resolve the channel without that check.
 
 [Clear channel read state](#clear-channel-read-state) and [Acknowledge message](#acknowledge-message) resolve no channel. [Acknowledge pins](#acknowledge-pins) reads the channel without checking the caller's access. None of the three checks a permission.
 
@@ -61,7 +61,7 @@ A message object is the full stored form of one post in a channel.
 
 <sup>4</sup> Empty while `SUPPRESS_EMBEDS` is set on the message
 
-<sup>5</sup> An attachment that a resolved embed owns is excluded from this array and is exposed through that embed's media object instead
+<sup>5</sup> An attachment that a [rich embed input](#rich-embed-input-objects) names with an `attachment://` URL in `image` or `thumbnail` is excluded from this array. The attachment's URL is in that embed's media object instead
 
 <sup>6</sup> Echoed only in the create message response and its originating [Message Create](/gateway/events/#message-create) Gateway Dispatch, and never stored on the message
 
@@ -69,7 +69,7 @@ A message object is the full stored form of one post in a channel.
 
 A webhook-authored message has no stored author user. Fluxer builds its author from the webhook, with the webhook ID as `id`, the stored webhook name as `username`, the discriminator `0000`, the stored webhook avatar hash as `avatar`, and `bot` true. A message whose stored author ID no longer resolves to an account is served with a deleted-user placeholder. The placeholder has that ID, the discriminator `0000`, and no avatar.
 
-`mentions`, `mention_roles`, `embeds`, `attachments`, and `stickers` are always present and can be empty. Every optional field above is omitted entirely, and `referenced_message` is the one that can instead be present and null. A message whose author user and webhook are both absent is omitted from every read.
+`mentions`, `mention_roles`, `embeds`, `attachments`, and `stickers` are always present and can be empty. A field marked `?` above is omitted from the object when it has no value. `referenced_message` is the one optional field that can also be present and null. A message whose author user and webhook are both absent is omitted from every read.
 
 :::note[A forward has immutable copies in `message_snapshots`]
 A reply reference resolves into `referenced_message`, and a forward has none. Fluxer captures the snapshots at forward time, and they never follow later edits to the source. [Message reference types](#message-reference-types) tells the two apart.
@@ -131,7 +131,7 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 
 <sup>1</sup> The only flag a guild moderator can change on a message they did not author
 
-<sup>2</sup> Setting this flag binds the message to the voice message contract described under [Create message](#create-message)
+<sup>2</sup> A message with this flag has the voice message restrictions listed under [Create message](#create-message)
 
 These bits are also the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. A bit outside this table is discarded, and the request still succeeds.
 
@@ -462,7 +462,7 @@ Every optional field above is omitted entirely.
 
 ## Embed provider object
 
-Fluxer sets a provider only from resolved embed metadata.
+Only an embed the unfurler builds from a link has a provider. A rich embed input cannot set one.
 
 ### Structure
 
@@ -660,7 +660,7 @@ One declared upload inside a [Request attachment upload URLs](#request-attachmen
 
 <sup>1</sup> A decimal string is converted to the integer
 
-<sup>2</sup> The issued capability and the stored attachment both use the media type derived from `filename`
+<sup>2</sup> The issued upload URL and the stored attachment both use the media type derived from `filename`
 
 ### Singlepart attachment upload object
 
@@ -680,7 +680,7 @@ Returned when the declared `file_size` is at most 10 MiB.
 
 <sup>1</sup> This value is the `upload_filename` of a [pre-uploaded attachment](#pre-uploaded-attachment-object) in a later [Create message](#create-message) or [Modify message](#modify-message) request
 
-<sup>2</sup> The capability is bound to the derived media type and to exactly `file_size` bytes, so a `PUT` of any other length is rejected
+<sup>2</sup> The upload URL accepts only the derived media type and exactly `file_size` bytes, so a `PUT` of any other length is rejected
 
 ### Multipart attachment upload object
 
@@ -698,7 +698,7 @@ Returned when the declared `file_size` exceeds 10 MiB.
 | upload_mode | string | Always `multipart` |
 | upload_id | string | Object storage multipart upload identifier of 1 through 1,024 characters |
 | part_size<sup>1</sup> | integer | Byte size of every part except the last |
-| parts | array[[attachment upload part](#attachment-upload-part-object) object] | Presigned part capabilities in ascending part number (1-10,000 entries) |
+| parts | array[[attachment upload part](#attachment-upload-part-object) object] | Presigned part upload URLs in ascending part number (1-10,000 entries) |
 
 <sup>1</sup> The plan targets 20 parts, so `part_size` is one twentieth of `file_size` rounded up to a whole mebibyte, and it is never smaller than 10 MiB. The last part is the remainder
 
@@ -713,7 +713,7 @@ One presigned part of a multipart upload plan.
 | part_number | integer | One-based part number |
 | upload_url<sup>1</sup> | string | Presigned URL that accepts exactly this part |
 
-<sup>1</sup> Each capability is bound to the exact byte count of its part, so a `PUT` of any other length is rejected
+<sup>1</sup> Each part upload URL accepts only the exact byte count of its part, so a `PUT` of any other length is rejected
 
 ### Multipart upload completion item object
 
@@ -758,7 +758,7 @@ The page has no cursor field. The next request repeats the operation with `befor
 
 | Field | Type | Description |
 | --- | --- | --- |
-| items | array[[partial user](/http-api/users/#partial-user-object) object] | Users in ascending cursor order |
+| items | array[[partial user](/http-api/users/#partial-user-object) object] | Users in ascending user ID order |
 | has_more | boolean | Whether another page exists |
 | next_after<sup>1</sup> | ?snowflake | User ID cursor for the next page |
 
@@ -842,7 +842,7 @@ Returns a bulk message response object holding bounded message windows from seve
 ### Limitations
 
 - This is a user-only operation, and a bot credential is refused with 403 `ACCESS_DENIED`.
-- Fluxer resolves and authorises each requested channel independently, under exactly the same boundary as [List channel messages](#list-channel-messages).
+- Fluxer resolves and authorises each requested channel independently, with exactly the same channel checks as [List channel messages](#list-channel-messages).
 - An inaccessible channel fails the whole request, so the response has no window for any channel.
 
 ### JSON body
@@ -915,7 +915,7 @@ Plans from 1 through 10 attachment uploads. Returns a [singlepart](#singlepart-a
 - The channel must support messages, and one that does not fails with 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`.
 - A guild channel requires [SEND_MESSAGES](/http-api/permissions/) and [ATTACH_FILES](/http-api/permissions/), and a timed-out member is refused with 403 `COMMUNICATION_DISABLED`.
 
-Fluxer checks each declared `file_size` separately against the attachment size limit it resolves for the caller and the guild context. A declaration above that limit returns 400 `FILE_SIZE_TOO_LARGE` with the resolved ceiling. The resolved ceiling defaults to 26214400 bytes, the 25 MiB non-premium allowance, and 524288000 bytes, the 500 MiB premium allowance. A bot credential is clamped to 52428800 bytes, the 50 MiB bot ceiling, even when the resolved limit is higher.
+Fluxer checks each declared `file_size` separately against the attachment size limit it resolves for the caller and the guild context. A declaration above that limit returns 400 `FILE_SIZE_TOO_LARGE` with the resolved ceiling. By default the resolved ceiling is 26214400 bytes (25 MiB) for a caller without premium and 524288000 bytes (500 MiB) for a caller with premium. A bot credential is clamped to 52428800 bytes, the 50 MiB bot ceiling, even when the resolved limit is higher.
 
 ### Path parameters
 
@@ -1028,7 +1028,7 @@ Creates a message from a JSON body or from multipart form data. Returns the crea
 ### Limitations
 
 - The channel must be a text-bearing type.
-- A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/), an untimed-out membership, and any membership verification the guild requires.
+- A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/), an untimed-out membership, and a membership that meets the guild's [verification level](/http-api/guilds/#verification-levels).
 - A timed-out member is refused with 403 `COMMUNICATION_DISABLED`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/), attachments require [ATTACH_FILES](/http-api/permissions/), a favourite meme requires both, and active everyone mentions require [MENTION_EVERYONE](/http-api/permissions/).
 - Slowmode applies to a non-bot caller unless they hold [BYPASS_SLOWMODE](/http-api/permissions/).
@@ -1061,7 +1061,7 @@ The request body is read as a multipart form when `Content-Type` contains `multi
 
 <sup>1</sup> Echoed back on the created message and on its [Message Create](/gateway/events/#message-create) Dispatch so a client can match the result to its optimistic entry. An integer is converted to its decimal string form
 
-<sup>2</sup> The schema sets no length bound. Exceeding the effective one returns 400 `INVALID_FORM_BODY` with `CONTENT_EXCEEDS_MAX_LENGTH` on the path `content`
+<sup>2</sup> The schema sets no length bound. Exceeding the effective `max_message_length` described below returns 400 `INVALID_FORM_BODY` with `CONTENT_EXCEEDS_MAX_LENGTH` on the path `content`
 
 <sup>3</sup> Fluxer keeps only the bits in [message flags](#message-flags) and silently drops every other bit
 
@@ -1091,7 +1091,7 @@ A nonce is remembered for the authenticated identity for five minutes, so a clie
 
 Reusing a nonce in the same channel inside that window returns the message the first request created. Reusing it in a different channel fails with 404 `UNKNOWN_MESSAGE`. The replay check runs after authorisation and body validation, so a retry that is otherwise invalid still fails, and a retry after the window has passed creates a second message.
 
-A reply applies the caller's message history cutoff to its target, and a forward applies none to its source. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
+A reply from a guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) fails with 404 `UNKNOWN_MESSAGE` when its target was created before the guild's message history cutoff, or when the guild has no cutoff. A forward has no cutoff check on its source. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
 
 Every `FORWARD` reference has `channel_id`. One that does not is refused by body validation before the operation runs, with 400 `INVALID_MESSAGE_DATA` on a JSON body and a per-field 400 `INVALID_FORM_BODY` on a multipart body.
 
@@ -1127,7 +1127,7 @@ A body that cannot be parsed as a multipart form fails with the field code `FAIL
 | More than one file under one index | `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED` |
 | More files than the resolved limit | `TOO_MANY_FILES` |
 
-Each is a field code inside a 400 `INVALID_FORM_BODY` body. A `FILE_INDEX_EXCEEDS_MAXIMUM` element reports a `maxIndex` member, 10000 against the absolute bound and the resolved limit minus one otherwise.
+Each is a field code inside a 400 `INVALID_FORM_BODY` body. A `FILE_INDEX_EXCEEDS_MAXIMUM` element has a `maxIndex` member. It is 10000 when the index is below 0 or above 10000, and the resolved limit minus one when the index is at or above that limit.
 
 The `attachments` array inside `payload_json` uses [direct multipart attachment metadata](#direct-multipart-attachment-metadata-object), and an entry with `upload_filename` is instead read as a [pre-uploaded attachment](#pre-uploaded-attachment-object). An entry whose `id` matches a supplied file index supplies that file's metadata, and two entries claiming the same file fail with the field code `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED`.
 
@@ -1346,7 +1346,7 @@ Deletes one attachment from the caller's own message. Returns 204 with an empty 
 
 - Only the message author can use this operation, and a guild moderator must use [Modify message](#modify-message) instead.
 - This route cannot address an attachment that a resolved embed owns.
-- When the attachment was the message's last remaining payload, the [Delete message](#delete-message) effects apply.
+- When the attachment is the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message with the [Delete message](#delete-message) effects.
 
 ### Path parameters
 
@@ -1370,7 +1370,7 @@ The response is 204 whether the message survives or is deleted, so the emitted G
 
 ### Side effects
 
-The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removal leaves the message with no payload, the complete [Delete message](#delete-message) effect set applies instead, including its Dispatches and guild audit log entry.
+The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
 
 ### Rate limit
 
@@ -1539,7 +1539,7 @@ The deletion has no age boundary and no selection. There is no cancellation and 
 
 ### Side effects
 
-Each matching message, with its attachments and reactions, is permanently deleted and removed from search. Deletions emit batched [Message Delete Bulk](/gateway/events/#message-delete-bulk) Dispatches.
+Each matching message, with its attachments and reactions, is permanently deleted and removed from search. Fluxer emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) Dispatch for each batch of at most 100 deleted messages.
 
 The operation emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete), and it writes no guild audit log entry.
 
@@ -1810,7 +1810,7 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 
 ### Limitations
 
-- The caller must be able to view the text-bearing channel, must not be timed out, and must reach the message under the message history cutoff.
+- The caller must be able to view the text-bearing channel, must not be timed out. A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can react only to a message on or after the guild's message history cutoff, and to no message when the guild has no cutoff.
 - A non-bot caller must have a verified email, and one that does not receives 403 `REACTION_EMAIL_VERIFICATION_REQUIRED`.
 - Creating a new emoji reaction group in a guild requires [ADD_REACTIONS](/http-api/permissions/), while adding to an existing group does not.
 - A custom emoji whose source guild is not the channel's guild requires the `feature_global_expressions` entitlement, and a caller without it receives the field code `CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE`.
@@ -1836,7 +1836,7 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 <sup>1</sup> See [reaction session correlation](#reaction-emoji-path-value)
 
 :::note[Permission is checked only for a new group]
-`ADD_REACTIONS`, Unicode emoji validation, custom emoji existence, and the external emoji checks apply only when the request would open a new group. Joining an existing group is authorised by channel access alone.
+`ADD_REACTIONS`, Unicode emoji validation, custom emoji existence, and the external emoji checks apply only when the request would open a new group. Joining an existing group skips them. Every other check in the list above still runs, including the timeout, the message history cutoff, and email verification.
 :::
 
 [Reaction object](#reaction-object) states the group and user ceilings for a message, and reaching either returns 400 `MAX_REACTIONS`.

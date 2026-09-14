@@ -74,11 +74,11 @@ The object-storage secret, reused as `FLUXER_S3_SECRET_ACCESS_KEY`. `seaweedfs-i
 
 #### `FLUXER_SUDO_MODE_SECRET`
 
-Sudo mode JWTs, as a raw HS256 key. Invalidates every elevated session.
+Sudo mode JWTs, as a raw HS256 key. Changing it ends every active sudo mode session.
 
 #### `FLUXER_CONNECTION_INITIATION_SECRET`
 
-Connection initiation tokens and harvest download links. Invalidates in-flight authorisations and issued download links.
+Connection initiation tokens and harvest download links. Changing it invalidates connection initiation tokens not yet verified and harvest download links already issued.
 
 #### `FLUXER_GATEWAY_RPC_AUTH_TOKEN`
 
@@ -94,7 +94,7 @@ Generate with `openssl rand -base64 32`. [Upload relay](/media-proxy/upload-rela
 
 #### `FLUXER_ADMIN_SECRET_KEY_BASE`
 
-Admin sessions, CSRF tokens, and OAuth state. Signs every admin out. The admin service refuses to start when it is empty.
+Admin sessions, CSRF tokens, and OAuth state. Changing it signs every admin out. The admin service refuses to start when it is empty.
 
 #### `FLUXER_ADMIN_OAUTH_CLIENT_SECRET`
 
@@ -213,11 +213,11 @@ Defaults to the derived endpoint. The marketing origin. The second allowed CORS 
 
 #### `FLUXER_INVITE_ENDPOINT`
 
-Defaults to the derived endpoint. The invite base. Hostname is extracted and matched.
+Defaults to the derived endpoint. The invite base. The API reads links on its hostname as invite links and does not unfurl them.
 
 #### `FLUXER_GIFT_ENDPOINT`
 
-Defaults to the derived endpoint. The gift base. Hostname is extracted and matched.
+Defaults to the derived endpoint. The gift base. The API does not unfurl links on its hostname.
 
 Internal endpoints address one container from another and never appear in a browser. `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT` is required by `gifs`. The rest are optional.
 
@@ -247,25 +247,25 @@ Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. 
 
 ## The edge
 
-The `edge` container is the only HTTP entry point. Both layouts below work with the edge left alone.
+The `edge` container is the only HTTP entry point. Neither layout below needs a change to the edge settings.
 
 Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else. The `443` publishes follow `FLUXER_PUBLIC_PORT`, so a non-default public port moves them with it.
 
-Put your own reverse proxy in front by adding `docker-compose.proxy.yml`, a second Compose file that overrides parts of the first. Load it with `-f` twice, or set `COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml` in `.env` once. The edge then serves plain HTTP on one port, and the proxy in front terminates TLS. [Behind your own reverse proxy](/operator/reverse-proxy/) owns the switch, the requirements, and the per-proxy configuration.
+Put your own reverse proxy in front by adding `docker-compose.proxy.yml`, a second Compose file that overrides parts of the first. Load it with `-f` twice, or set `COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml` in `.env` once. The edge then serves plain HTTP on one port, and the proxy in front terminates TLS. [Behind your own reverse proxy](/operator/reverse-proxy/) has the steps to enable the overlay, the requirements, and the per-proxy configuration.
 
 All are optional.
 
 #### `FLUXER_EDGE_SITE_ADDRESS`
 
-Defaults to the address Compose builds from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT`. What the edge listens on, and the default keeps the listener on the address the instance advertises. Honoured in the bundled layout only, because `docker-compose.proxy.yml` sets the literal `:8080` and `tunnel.compose.yml` the literal `:80`, and either discards any `.env` value. Several hostnames therefore need the bundled layout. Write the scheme into any value you set here, because a bare hostname means automatic HTTPS on `443` whatever `FLUXER_PUBLIC_SCHEME` says.
+Defaults to the address Compose builds from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT`. What the edge listens on, and the default keeps the listener on the address the instance advertises. Honoured in the bundled layout only, because `docker-compose.proxy.yml` sets the literal `:8080` and `tunnel.compose.yml` the literal `:80`, and either discards any `.env` value. A site address that lists more than one hostname therefore needs the bundled layout. Write the scheme into any value you set here, because a bare hostname means automatic HTTPS on `443` whatever `FLUXER_PUBLIC_SCHEME` says.
 
 #### `FLUXER_EDGE_TRUSTED_PROXIES`
 
-Default `private_ranges`. Which upstream hops the edge believes about `X-Forwarded-For`. The default is `192.168.0.0/16`, `172.16.0.0/12`, `10.0.0.0/8`, `127.0.0.1/8`, `fd00::/8` and `::1`, which covers every same-host proxy. Narrow it to the proxy's own address when the proxy reaches the instance from a public address, or when clients reach the proxy from a range the default already covers.
+Default `private_ranges`. The peer addresses whose `X-Forwarded-For` header the edge trusts. The default is `192.168.0.0/16`, `172.16.0.0/12`, `10.0.0.0/8`, `127.0.0.1/8`, `fd00::/8` and `::1`, which covers every same-host proxy. Narrow it to the proxy's own address when the proxy reaches the instance from a public address, or when clients reach the proxy from a range the default already covers.
 
 #### `FLUXER_EDGE_BIND`
 
-Default `127.0.0.1:8080`. Where the plain-HTTP port binds. Read only under the overlay. `0.0.0.0:8080` must be firewalled to the proxy host, because a trusted peer's `X-Forwarded-For` is honoured.
+Default `127.0.0.1:8080`. Where the plain-HTTP port binds. Read only under the overlay. `0.0.0.0:8080` must be firewalled to the proxy host, because the edge takes the client address from the `X-Forwarded-For` header of any peer in `FLUXER_EDGE_TRUSTED_PROXIES`.
 
 #### `FLUXER_HTTP_PORT`
 
@@ -273,17 +273,17 @@ Default `80`. The host side of the edge's HTTP publish, which serves the redirec
 
 #### `FLUXER_HTTPS_PORT`
 
-Defaults to `FLUXER_PUBLIC_PORT`. The host side of the edge's HTTPS publish, and the only thing it moves is that host side. Set it when the host already has something on the port the instance advertises. It moves the TCP and the UDP publish together, because HTTP/3 needs both on the same port. Same optional bind address, and it is not read under the overlay either.
+Defaults to `FLUXER_PUBLIC_PORT`. The host side of the edge's HTTPS publish, and the only thing it moves is that host side. Set it when the host already has something on the port the instance advertises. It moves the TCP and the UDP publish together, because HTTP/3 needs both on the same port. It takes the same optional bind address in front of the port. The overlay does not read it.
 
 #### `COMPOSE_FILE`
 
 No default. Which Compose files are loaded. Read by Docker Compose itself. Set it to select the overlay for every command.
 
-`FLUXER_CADDY_SITE_ADDRESS` is the old name for `FLUXER_EDGE_SITE_ADDRESS`. Compose reads it only when `FLUXER_EDGE_SITE_ADDRESS` is unset, so an older `.env` keeps the listener it already had and can be renamed at any time.
+`FLUXER_CADDY_SITE_ADDRESS` is the old name for `FLUXER_EDGE_SITE_ADDRESS`. Compose reads it only when `FLUXER_EDGE_SITE_ADDRESS` is unset, so an older `.env` keeps the listener it already had. Rename `FLUXER_CADDY_SITE_ADDRESS` to `FLUXER_EDGE_SITE_ADDRESS` at any time.
 
 ## Client IP
 
-The edge resolves one client address per request and rewrites `X-Forwarded-For` to it on every upstream hop, so no service reads what a visitor sent. When the peer is outside `FLUXER_EDGE_TRUSTED_PROXIES`, the edge uses the peer address and discards the header. When the peer is inside the list, the edge takes the rightmost header entry that is not itself trusted, so a proxy that appends still delivers the real caller. A client whose own address is inside the list resolves to the proxy, which is why [Trusted proxies](/operator/reverse-proxy/#trusted-proxies) tells a LAN or VPN deployment to narrow it.
+The edge resolves one client address per request and rewrites `X-Forwarded-For` to it on every upstream hop, so no service reads what a visitor sent. When the peer is outside `FLUXER_EDGE_TRUSTED_PROXIES`, the edge uses the peer address and discards the header. When the peer is inside the list, the edge takes the rightmost header entry that is not itself trusted. A proxy that appends to the header therefore still passes on the real client address. A client whose own address is inside the list resolves to the proxy, which is why [Trusted proxies](/operator/reverse-proxy/#trusted-proxies) tells a LAN or VPN deployment to narrow it.
 
 All are optional.
 
@@ -307,7 +307,7 @@ No default. Legacy unprefixed aliases. Accepted only by `admin` and `app-proxy`,
 
 Default empty. Addresses exempt from IP bans. Comma separated. Every entry must parse as an IP or the API fails at boot.
 
-The API rejects any request whose client-IP header is missing, empty, not a parsable address, or not trusted under `FLUXER_TRUST_CLIENT_IP_HEADER` with 403, except on `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so this applies only to a layout that puts something directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
+The API returns 403 for any request whose client-IP header is missing, empty, or not a parsable address, and for every request while `FLUXER_TRUST_CLIENT_IP_HEADER` is `false`. The exceptions are `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so a missing or unparsable header happens only in a layout that puts something other than the edge directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
 
 ## Images
 
@@ -577,7 +577,7 @@ Compose configures the internal services. Change the following settings only whe
 
 #### `FLUXER_SVC_NAME`
 
-Default `default`. The metrics prefix and the concurrency default. Changing it does not rename NATS subjects.
+Default `default`. The metrics prefix. It also selects the built-in default of `FLUXER_SVC_MAX_CONCURRENT_REQUESTS`. Changing it does not rename NATS subjects.
 
 #### `FLUXER_SVC_MODE`
 
@@ -605,7 +605,7 @@ Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight reques
 
 #### `POD_NAME`
 
-No default. The shard ordinal source and node identity. Also read by the Gateway and by API RPC timing.
+No default. The shard ordinal source and node identity. Also read by the Gateway, and by the API as the `pod_name` in its RPC timing records.
 
 For custom service routing, add these settings to the API container environment. The bundled Compose file does not forward them:
 
@@ -668,7 +668,7 @@ Default empty. The server-side LiveKit control API. Compose sets `http://livekit
 
 #### `FLUXER_LIVEKIT_WEBHOOK_URL`
 
-Default empty. Where LiveKit posts webhooks. The route is exempt from user auth and from both client-IP middlewares.
+Default empty. Where LiveKit posts webhooks. The API accepts requests on this route without user authentication and without a client-IP header.
 
 #### `FLUXER_LIVEKIT_DEFAULT_REGION`
 
@@ -694,9 +694,9 @@ Voice reconciliation has moved from `worker` to the separate recon service. The 
 
 ## Email
 
-Email is off by default, and the conditions below turn it on. The switch must be on, and the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
+Email is off by default, and the conditions below turn it on. The email switch must be on. It is the value saved in the admin dashboard, or `FLUXER_EMAIL_ENABLED` when the dashboard has no saved value. Also, the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
 
-The same conditions turn on a DNS check at registration. The check runs when email is on by the rule above. The dashboard switch and the SMTP values decide it along with the variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
+The same conditions turn on a DNS check at registration. The check runs when email is on by the rule above. A switch or SMTP value saved in the admin dashboard wins over the matching variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
 
 #### `FLUXER_EMAIL_ENABLED`
 
@@ -736,7 +736,7 @@ The same conditions turn on a DNS check at registration. The check runs when ema
 
 #### `FLUXER_EMAIL_SMTP_SECURE`
 
-`.env.example` `true`. Implicit TLS. Defaults to `true` whenever the SMTP block exists.
+`.env.example` `true`. Implicit TLS. Defaults to `true` whenever the provider is `smtp`.
 
 The API reads `FLUXER_EMAIL_WEBHOOK_SECRET` for inbound delivery webhooks. Neither `.env.example` nor `docker-compose.yml` has it.
 
@@ -799,7 +799,7 @@ For environment-based configuration, use `FLUXER_AUTH_BLUESKY_ENABLED`, `FLUXER_
 
 The Gateway reads the same names. A malformed pair, or a private key that does not derive the public point, does not stop it. It records the fault in its log at startup and then drops every web push notification.
 
-`FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone, defaults to `true`, and turns that check off when it is `false`.
+`FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone, defaults to `true`, and skips that startup check on the VAPID pair when it is `false`.
 
 ## Mobile push
 
@@ -847,7 +847,7 @@ No default. The service account address. Paired with the project.
 
 #### `FLUXER_PUSH_FCM_PRIVATE_KEY`
 
-No default. The service account key. Use one of the key sources.
+No default. The service account key. Set one of this, `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`, or `FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH`.
 
 #### `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`
 
@@ -883,7 +883,7 @@ Default empty. The webhook signing secret. Not forwarded by the shipped Compose 
 
 #### `FLUXER_STRIPE_PRICES`
 
-Default `{}`. Every price ID at once. JSON object. The individual price variables are declared after it and win.
+Default `{}`. Every price ID at once. JSON object. An individual price variable overrides the matching price in this object.
 
 Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, NOK, PLN, SEK, and TRY, plus `FLUXER_STRIPE_PRICE_VISIONARY_` and `FLUXER_STRIPE_PRICE_GIFT_VISIONARY_` in USD and EUR.
 
@@ -891,7 +891,7 @@ Individual price variables also exist, one per product and currency: `FLUXER_STR
 
 Default `{}`. Retired price IDs, keyed by the same slot names `FLUXER_STRIPE_PRICES` uses, each mapped to a list: `{"monthly_brl": ["price_..."]}`. JSON object. Existing subscriptions on these prices keep renewing. The localised checkout catalogue uses `FLUXER_STRIPE_PRICES` alone.
 
-Repricing a slot is ordered, and the order is not reversible without failed invoices. Create the new price in Stripe, move the ID it replaces into this variable, roll the API, and only then point `FLUXER_STRIPE_PRICES` at the new price. A price ID that neither variable names is unknown to the API: a renewal invoice on it fails the webhook with `Unknown product for invoice renewal`, a checkout completing on it fails with `Unknown price ID for checkout session`, and both keep failing until the ID is registered. The API answers Stripe as soon as the signature verifies and hands the event to `worker`, so the retries are the `processStripeWebhook` job's own: the Stripe dashboard shows the delivery as succeeded and the error is in the `worker` logs. Keep a retired ID listed for as long as any subscription still bills on it, which for a yearly price is at least a year after the switch.
+Repricing a slot has a fixed order. Doing the steps in another order leaves a price ID unknown to the API, and invoices on that price fail. Create the new price in Stripe, move the ID it replaces into this variable, roll the API, and only then point `FLUXER_STRIPE_PRICES` at the new price. A price ID that neither variable names is unknown to the API: a renewal invoice on it fails the webhook with `Unknown product for invoice renewal`, a checkout completing on it fails with `Unknown price ID for checkout session`, and both keep failing until the ID is registered. The API answers Stripe as soon as the signature verifies and hands the event to `worker`, so any retry comes from `worker` rerunning the `processStripeWebhook` job: the Stripe dashboard shows the delivery as succeeded and the error is in the `worker` logs. Keep a retired ID listed for as long as any subscription still bills on it, which for a yearly price is at least a year after the switch.
 
 ## Moderation and abuse
 
@@ -1021,11 +1021,11 @@ Use the [admin dashboard](#runtime-settings-in-the-admin-dashboard) or [Admin in
 
 Invalid saved configuration prevents the API and worker from starting. If a running process cannot apply an update, it logs the error and keeps its previous valid settings. Check the reported section and field paths, repair the saved configuration, then retry. It is not repaired automatically.
 
-Older configurations retain these migration rules:
+The API and worker read configuration saved by older releases under these rules:
 
 - Gateway rollout accepts `nats_request_timeout_ms` only when `rpc_request_timeout_ms` is absent. Both require an integer from 1000 to 60000. Use the current name in Admin requests.
 - Registration accepts `adminRegistrationUrlsEnabled` only when `admin_registration_urls_enabled` is absent. Missing registration settings default to `open` with admin registration URLs enabled.
-- Missing SSO settings default to disabled, with enforcement following enablement and automatic provisioning enabled. Stored flags require `true` or `false`.
+- Missing SSO settings default to disabled. A missing enforcement flag takes the value of the enabled flag, and automatic provisioning defaults to on. Stored flags require `true` or `false`.
 - SSO allowed domains accept a JSON string array or a legacy comma-separated list of at most 100 entries. Domains are trimmed, lowercased, IDNA encoded and deduplicated. An empty list leaves domains unrestricted. Invalid lists must be repaired even while SSO is disabled.
 - Missing registration URL and pending-registration lists mean empty lists. Invalid records are rejected rather than discarded. Timestamps require an explicit UTC marker or offset, and null is accepted only for nullable fields.
 
@@ -1033,7 +1033,7 @@ Explicit `false` values and supported null clears remain valid. Branding and int
 
 ## Limits
 
-No environment variable changes an instance limit. Use the admin dashboard's Limit Config page or the [Admin API](/admin-api/). Effective limits combine saved settings, deployment defaults and premium policy. Changes take effect after a short propagation delay. Clients receive the [limit configuration object](/http-api/instance/#limit-configuration-object).
+No environment variable changes an instance limit. Use the admin dashboard's Limit Config page or the [Admin API](/admin-api/). Effective limits combine saved settings, deployment defaults and premium policy. After a change is saved, every running `api` and `worker` process reloads the limits with no restart. Clients receive the [limit configuration object](/http-api/instance/#limit-configuration-object).
 
 Request concurrency is separate from instance limits, and each process sets its own. All are optional.
 
@@ -1051,7 +1051,7 @@ Default `512`. Gateway NATS handler count.
 
 #### `FLUXER_DISABLE_RATE_LIMITS`
 
-Default `false`. Turns rate limits off. Read by the API and, as a raw presence check, by the Gateway.
+Default `false`. Turns rate limits off. Read by the API and by the Gateway. The Gateway turns rate limits off only for the values `1`, `true` and `TRUE`.
 
 #### `FLUXER_RELAX_REGISTRATION_RATE_LIMITS`
 
@@ -1079,7 +1079,7 @@ Falls back to `FLUXER_GATEWAY_LOGGER_LEVEL`. The Gateway log level at runtime. O
 
 #### `BUILD_VERSION`
 
-Default `dev`. The reported build. Baked into the images. A fallback outside development prints a warning.
+Default `dev`. The reported build. Baked into the images. When `BUILD_VERSION` is unset or empty outside development, the process prints a warning.
 
 #### `RELEASE_CHANNEL`
 
@@ -1193,7 +1193,7 @@ Default `none`. How cached copies of deleted or replaced media are purged. `none
 
 #### `FLUXER_CACHE_PURGE_HTTP_ENDPOINT`
 
-Default empty. Required when the adapter is `http`. Must be an absolute `http` or `https` URL without credentials, or startup fails. While purges are queued, the worker posts JSON `{"exact": [...], "prefix": [...]}` here every 10 seconds. Redirects are not followed. Any 2xx marks the batch done. The endpoint purges every proxy that caches media. A `400` or `422` makes the worker resend each URL alone, and a URL refused alone moves to the `cache_purge:rejected` key. Any other failure is retried on a later run.
+Default empty. Required when the adapter is `http`. Must be an absolute `http` or `https` URL without credentials, or startup fails. While purges are queued, the worker posts JSON `{"exact": [...], "prefix": [...]}` here every 10 seconds. Redirects are not followed. Any 2xx marks the batch done. Your endpoint then purges those URLs from every proxy that caches media. A `400` or `422` makes the worker resend each URL alone, and a URL refused alone moves to the `cache_purge:rejected` key. Any other failure is retried on a later run.
 
 #### `FLUXER_CACHE_PURGE_HTTP_TOKEN`
 
@@ -1237,7 +1237,7 @@ Default empty. The favicon. Its origin is added to the CSP by `app-proxy`.
 
 #### `FLUXER_APP_THEME_COLOR`
 
-Default empty. The theme colour. Its origin is added to the CSP by `app-proxy`.
+Default empty. The theme colour.
 
 #### `FLUXER_INSTANCE_SETUP_CONFIGURED`
 
@@ -1387,7 +1387,7 @@ Default `15000`. Per-transform timeout. Accepts 1000 to 120000.
 
 #### `FLUXER_MEDIA_PROXY_MAX_ENCODE_FRAMES`
 
-Defaults to the animated frame default. Animation frame ceiling. Accepts 1 to 100000.
+Default `20000`. Animation frame ceiling. Accepts 1 to 100000.
 
 #### `FLUXER_MEDIA_PROXY_MAX_ENCODE_DURATION_MS`
 
@@ -1433,7 +1433,7 @@ Default `1048576`. Presence push buffer size.
 
 #### `FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS`
 
-Default `5000`. How long a drain waits. Milliseconds.
+Default `5000`. Milliseconds. The Gateway parses it into its configuration at startup, and nothing reads it after that, so it controls no drain.
 
 #### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 
@@ -1497,7 +1497,7 @@ The clamp bounds reach the Gateway from `.env`. To pin the count, set `FLUXER_ER
 
 The Gateway protocol version is `1`. The Gateway answers any other value in `?v=` with 101, then a close frame reading `Invalid API version`. [Gateway overview](/gateway/overview/) has the close code.
 
-The Gateway reads every `FLUXER_GATEWAY_` name straight from the environment, so all of them work.
+The Gateway reads every `FLUXER_GATEWAY_` name straight from the environment, so any of them works once it is in the `gateway` container environment. The bundled Compose file passes only the names it lists, so add any other name through a Compose override file.
 
 ## App proxy settings
 
@@ -1744,7 +1744,7 @@ The internal services each run a router, which takes requests and holds no state
 
 Every service has a memory limit and four also have a memory reservation, all under `deploy.resources`. Compose reads `gb` as 1024 MiB and `mb` as 1 MiB, so `5gb` is 5368709120 bytes. Plain `docker compose up` applies both keys on a single host, with no Swarm and no `--compatibility` flag. The engine rejects any limit below `6mb`, and rejects a limit lower than the same service's reservation with `Minimum memory limit can not be less than memory reservation limit`.
 
-A limit is a ceiling. The limits below sum to 16.75 GiB and the stack does not need a host that large, because a container costs what it touches.
+A limit is a ceiling. The limits below sum to 16.75 GiB and the stack does not need a host that large, because each container uses only the memory it allocates, up to its limit.
 
 `deploy.resources.reservations.memory` becomes the container's cgroup v2 `memory.low`, which biases kernel reclaim towards other containers under host pressure. It reserves nothing on its own.
 
@@ -1804,7 +1804,7 @@ Default `1gb`. The ceiling for `gateway`. The BEAM has no heap ceiling of its ow
 
 #### `FLUXER_MEDIA_PROXY_MEMORY_LIMIT`
 
-Default `512mb`. The ceiling for `media-proxy`. Image and video transforms decode into this ceiling, so an oversize upload is where it binds.
+Default `512mb`. The ceiling for `media-proxy`. Image and video transforms decode into this ceiling, so a large upload is what reaches this limit.
 
 #### `FLUXER_STATIC_PROXY_MEMORY_LIMIT`
 
@@ -1946,7 +1946,7 @@ FLUXER_SEAWEEDFS_GOMEMLIMIT=768MiB
 FLUXER_GIFS_SHARD_CACHE_MAX_BYTES=134217728
 ```
 
-At 8 GB the api and worker heap ceilings fall to 664 MB each and Postgres caches less of the working set, which shows up as slower search and slower history scrolling under load. Nothing is turned off, though the largest attachments need the 16 GB SeaweedFS ceiling to upload every part at once.
+At 8 GB the api and worker heap ceilings fall to 664 MB each and Postgres caches less of the working set, which shows up as slower search and slower history scrolling under load. Nothing is turned off, though the largest attachments need the default `2gb` SeaweedFS ceiling to upload every part at once.
 
 The 4 GB profile trades more.
 
@@ -1974,7 +1974,7 @@ FLUXER_VALKEY_MAXMEMORY=128mb
 FLUXER_GIFS_SHARD_CACHE_MAX_BYTES=67108864
 ```
 
-At 4 GB the api heap ceiling is 396 MB and the worker heap ceiling is 332 MB. That covers chat. A large attachment and a search reindex at the same time exceed it. Media transforms above roughly 20 MB start failing in `media-proxy`, Meilisearch indexes a backlog more slowly, and a busy voice room is the first thing to drop. Keep `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS` at or above 110.
+At 4 GB the api heap ceiling is 396 MB and the worker heap ceiling is 332 MB. That covers chat. A large attachment and a search reindex at the same time exceed those heap ceilings. Media transforms above roughly 20 MB start failing in `media-proxy`, Meilisearch indexes a backlog more slowly, and a busy voice room is the first thing to drop. Keep `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS` at or above 110.
 
 ## Routing
 
@@ -2000,7 +2000,7 @@ Losing `valkey-data` can delay scheduled account and bulk-message deletions whil
 
 `nats-data` retains pending jobs in `JOBS` for up to 7 days and failed jobs in `JOBS_DLQ` for up to 30 days. A full jobs stream rejects new work. A full dead-letter stream drops its oldest entries, so investigate failures promptly. If dead-letter storage is unavailable, failed jobs remain in `JOBS` only until they expire. Losing this volume loses queued work, which is not automatically recovered from the database.
 
-Startup refuses incompatible queue limits and never rewrites an existing stream. Stop publishers and workers before migrating an incompatible stream.
+Startup refuses an existing `JOBS` or `JOBS_DLQ` stream with the wrong name, subjects, retention or storage type, or with sealing, no-ack, mirroring, sources, republishing or a subject transform set. Startup never recreates a stream. When the `JOBS` limits differ, startup updates them in place, unless tightening them would drop queued jobs. Stop publishers and workers before migrating an incompatible stream.
 
 Volume names are prefixed with the Compose project name, so `postgres-data` is `fluxer_postgres-data` on the host.
 
