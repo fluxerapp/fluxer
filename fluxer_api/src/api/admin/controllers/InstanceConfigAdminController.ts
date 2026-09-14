@@ -35,6 +35,7 @@ import {BlockedMessageGroupsConfigSchema} from '@fluxer/schema/src/domains/exper
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {ExpressionInfoCardConfigSchema} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
 import {GuildActivityLogPresentationConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
+import {GuildHeaderCollapseConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
 import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
@@ -68,6 +69,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		messageKeyboardFocus,
 		blockedMessageGroups,
 		expressionInfoCard,
+		guildHeaderCollapse,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -81,6 +83,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getMessageKeyboardFocusConfig(),
 		instanceConfigRepository.getBlockedMessageGroupsConfig(),
 		instanceConfigRepository.getExpressionInfoCardConfig(),
+		instanceConfigRepository.getGuildHeaderCollapseConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -117,6 +120,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		message_keyboard_focus: messageKeyboardFocus,
 		blocked_message_groups: blockedMessageGroups,
 		expression_info_card: expressionInfoCard,
+		guild_header_collapse: guildHeaderCollapse,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -319,6 +323,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentExpressionInfoCard.config_version + 1,
 					});
 					await instanceConfigRepository.setExpressionInfoCardConfig(validated);
+				}
+			}
+			if (data.guild_header_collapse) {
+				const patch = omitUndefinedFields(data.guild_header_collapse);
+				if (Object.keys(patch).length > 0) {
+					const currentGuildHeaderCollapse = await instanceConfigRepository.getGuildHeaderCollapseConfig();
+					const validated = GuildHeaderCollapseConfigSchema.parse({
+						...currentGuildHeaderCollapse,
+						...patch,
+						config_version: currentGuildHeaderCollapse.config_version + 1,
+					});
+					await instanceConfigRepository.setGuildHeaderCollapseConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

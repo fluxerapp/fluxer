@@ -449,6 +449,14 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "future_object_knob": {"nested": true},
             "future_list_knob": ["a", "b"]
         },
+        "guild_header_collapse": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "guild-header-collapse-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
+        },
         "registration": {
             "mode": "open",
             "admin_registration_urls_enabled": false,
@@ -592,6 +600,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert!(!resp.message_hover_tracking.enabled);
     assert!(!resp.message_keyboard_focus.enabled);
     assert!(!resp.blocked_message_groups.enabled);
+    assert!(!resp.guild_header_collapse.enabled);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

@@ -36,6 +36,10 @@ import {
 	GuildActivityLogPresentationConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {
+	GuildHeaderCollapseConfigResponse,
+	GuildHeaderCollapseConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
+import {
 	MessageHoverTrackingConfigResponse,
 	MessageHoverTrackingConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -655,6 +659,7 @@ export const InstanceConfigResponse = z.object({
 	message_keyboard_focus: MessageKeyboardFocusConfigResponse,
 	blocked_message_groups: BlockedMessageGroupsConfigResponse,
 	expression_info_card: ExpressionInfoCardConfigResponse,
+	guild_header_collapse: GuildHeaderCollapseConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -696,6 +701,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	message_keyboard_focus: MessageKeyboardFocusConfigUpdateRequest.nullish(),
 	blocked_message_groups: BlockedMessageGroupsConfigUpdateRequest.nullish(),
 	expression_info_card: ExpressionInfoCardConfigUpdateRequest.nullish(),
+	guild_header_collapse: GuildHeaderCollapseConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

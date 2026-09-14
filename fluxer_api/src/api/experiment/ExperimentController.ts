@@ -13,6 +13,7 @@ import {resolveBlockedMessageGroupsAssignment} from '@fluxer/schema/src/domains/
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {resolveExpressionInfoCardAssignment} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
 import {resolveGuildActivityLogPresentationAssignment} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
+import {resolveGuildHeaderCollapseAssignment} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
 import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 
@@ -41,6 +42,7 @@ export function ExperimentController(app: HonoApp) {
 				blockedMessageGroupsConfig,
 				guildActivityLogPresentationConfig,
 				expressionInfoCardConfig,
+				guildHeaderCollapseConfig,
 			] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
@@ -49,6 +51,7 @@ export function ExperimentController(app: HonoApp) {
 				instanceConfigRepository.getBlockedMessageGroupsConfig(),
 				instanceConfigRepository.getGuildActivityLogPresentationConfig(),
 				instanceConfigRepository.getExpressionInfoCardConfig(),
+				instanceConfigRepository.getGuildHeaderCollapseConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -64,6 +67,7 @@ export function ExperimentController(app: HonoApp) {
 						userId,
 					),
 					expression_info_card: resolveExpressionInfoCardAssignment(expressionInfoCardConfig, userId),
+					guild_header_collapse: resolveGuildHeaderCollapseAssignment(guildHeaderCollapseConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

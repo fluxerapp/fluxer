@@ -17,6 +17,10 @@ import {
 	INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {
+	GuildHeaderCollapseAssignmentResponse,
+	INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
+import {
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 	MessageHoverTrackingAssignmentResponse,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -67,6 +71,7 @@ const ExperimentAssignmentsSchema = z.object({
 	blocked_message_groups: BlockedMessageGroupsAssignmentResponse.optional(),
 	guild_activity_log_presentation: GuildActivityLogPresentationAssignmentResponse.optional(),
 	expression_info_card: ExpressionInfoCardAssignmentResponse.optional(),
+	guild_header_collapse: GuildHeaderCollapseAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -117,4 +122,10 @@ export function readExpressionInfoCardAssignment(
 	response: ExperimentAssignmentsResponse,
 ): ExpressionInfoCardAssignmentResponse {
 	return response.assignments.expression_info_card ?? INERT_EXPRESSION_INFO_CARD_ASSIGNMENT;
+}
+
+export function readGuildHeaderCollapseAssignment(
+	response: ExperimentAssignmentsResponse,
+): GuildHeaderCollapseAssignmentResponse {
+	return response.assignments.guild_header_collapse ?? INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT;
 }

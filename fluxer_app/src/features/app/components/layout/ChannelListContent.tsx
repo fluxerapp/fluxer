@@ -33,6 +33,7 @@ import {
 	type RememberedSkeletonGuildChannelRow,
 	reportSkeletonGuildChannelList,
 } from '@app/features/app/components/skeleton/SkeletonLayoutMemory';
+import type {GuildBannerPresentation} from '@app/features/app/hooks/useGuildBannerPresentation';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import {
 	measureSkeletonTextWidthPx,
@@ -72,7 +73,7 @@ import {UsersIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type {MotionValue} from 'motion';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {useDragLayer} from 'react-dnd';
 
 const CATEGORY_FULL_DESCRIPTOR = msg({
@@ -164,7 +165,12 @@ function createRememberedChannelGroups(
 		};
 	});
 }
-export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scrollY: MotionValue<number>}) => {
+interface ChannelListContentProps {
+	readonly guild: Guild;
+	readonly scrollY: MotionValue<number>;
+	readonly banner: GuildBannerPresentation;
+}
+export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelListContentProps) => {
 	const {i18n} = useLingui();
 	const channels = Channels.getGuildChannels(guild.id);
 	const location = useLocation();
@@ -180,6 +186,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	});
 	const [activeDragItem, setActiveDragItem] = useState<DragItem | null>(null);
 	const scrollerRef = useRef<ScrollerHandle>(null);
+	const showIntegratedBanner = banner.imageUrl != null && banner.collapseDistance > 0;
 	const channelGroupsContainerRef = useRef<HTMLDivElement | null>(null);
 	const stickToBottomRef = useRef(false);
 	const pendingScrollTopRef = useRef<number | null>(null);
@@ -313,7 +320,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			scrollerRef.current.jumpToEndEdge({animate: false});
 		}
 	}, []);
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const guildDimensions = Dimension.guildDimensionsFor(guild.id);
 		if (guildDimensions.scrollTo) {
 			const element = document.querySelector(`[data-channel-id="${guildDimensions.scrollTo}"]`);
@@ -324,7 +331,8 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		} else if (guildDimensions.scrollTop && guildDimensions.scrollTop > 0 && scrollerRef.current) {
 			scrollerRef.current.scrollTo({to: guildDimensions.scrollTop, animate: false});
 		}
-	}, [guild.id]);
+		scrollY.set(scrollerRef.current?.getViewportElement()?.scrollTop ?? 0);
+	}, [guild.id, scrollY]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
@@ -517,7 +525,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		>
 			<Scroller
 				ref={scrollerRef}
-				className={styles.channelListScroller}
+				className={clsx(styles.channelListScroller, showIntegratedBanner && styles.channelListScrollerOverBanner)}
 				onScroll={handleScroll}
 				onResize={handleResize}
 				key={guild.id}
@@ -531,6 +539,14 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 					ref={channelListNavigationRef}
 					data-flx="app.channel-list-content.navigation-container.context-menu"
 				>
+					{showIntegratedBanner && (
+						<div
+							ref={banner.hoverRef}
+							className={styles.bannerSpacer}
+							style={{height: banner.collapseDistance}}
+							data-flx="app.channel-list-content.banner-spacer"
+						/>
+					)}
 					<GuildDetachedBanner guild={guild} data-flx="app.channel-list-content.guild-detached-banner" />
 					<div className={styles.topDropZone} data-flx="app.channel-list-content.top-drop-zone">
 						<NullSpaceDropIndicator

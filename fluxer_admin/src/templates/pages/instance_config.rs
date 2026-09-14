@@ -5,12 +5,12 @@ use crate::{
         AppPublicConfigResponse, BlockedMessageGroupsConfigResponse,
         ExperimentDeliveryConfigResponse, ExpressionInfoCardConfigResponse,
         GatewayRolloutConfigResponse, GuildActivityLogPresentationConfigResponse,
-        InstanceConfigResponse, InstanceIntegrationsResponse, InstanceMediaResponse,
-        InstancePolicyResponse, InstanceRegistrationResponse, LimitConfigResponse,
-        MessageHoverTrackingConfigResponse, MessageKeyboardFocusConfigResponse,
-        NoiseSuppressionBackend, PendingRegistrationResponse, RegistrationUrlResponse,
-        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
-        VoiceNoiseSuppressionConfigResponse,
+        GuildHeaderCollapseConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
+        InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
+        LimitConfigResponse, MessageHoverTrackingConfigResponse,
+        MessageKeyboardFocusConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
+        RegistrationUrlResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
+        VOICE_NS_MAX_TARGETED_USERS, VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -156,6 +156,7 @@ pub fn instance_config_page(
                         (blocked_message_groups_section(base, csrf_token, &instance_config.blocked_message_groups))
                         (guild_activity_log_presentation_section(base, csrf_token, &instance_config.guild_activity_log_presentation))
                         (expression_info_card_section(base, csrf_token, &instance_config.expression_info_card))
+                        (guild_header_collapse_section(base, csrf_token, &instance_config.guild_header_collapse))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1702,6 +1703,110 @@ fn expression_info_card_section(
     )
 }
 
+fn guild_header_collapse_section(
+    base: &str,
+    csrf_token: &str,
+    guild_header_collapse: &GuildHeaderCollapseConfigResponse,
+) -> Markup {
+    let status = if guild_header_collapse.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = guild_header_collapse.included_user_ids.join("\n");
+    let excluded_user_ids = guild_header_collapse.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Guild Header Collapse",
+        "Picks how a targeted client draws the guild banner above the channel list. A targeted \
+         client reduces that banner to the height of the header as the channel list scrolls down \
+         and returns it to full height as the list scrolls back up. While the master switch below \
+         is off every client keeps the fixed banner height it ships with, whatever the rest of \
+         these fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_guild_header_collapse"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (guild_header_collapse.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "guild_header_collapse_enabled",
+                        "true",
+                        "Serve guild header collapse assignments to clients",
+                        guild_header_collapse.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         rollout is inert and keeps its current banner height, so the rollout \
+                         and targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "guild_header_collapse_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &guild_header_collapse.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "guild_header_collapse_rollout_salt",
+                            "Rollout Salt",
+                            &guild_header_collapse.rollout_salt,
+                            "guild-header-collapse-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "guild_header_collapse_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "guild_header_collapse_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Guild Header Collapse Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
 fn experiment_delivery_section(
     base: &str,
     csrf_token: &str,
@@ -2356,5 +2461,25 @@ mod tests {
         let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
         assert!(markup.contains("1000 of 1000 stored"));
         assert!(markup.contains("at the cap"));
+    }
+
+    #[test]
+    fn guild_header_collapse_section_posts_its_own_action_and_fields() {
+        let guild_header_collapse = GuildHeaderCollapseConfigResponse {
+            included_user_ids: vec!["1500000000000000001".to_owned()],
+            excluded_user_ids: vec!["1500000000000000002".to_owned()],
+            ..GuildHeaderCollapseConfigResponse::default()
+        };
+        let markup =
+            guild_header_collapse_section("/admin", "csrf", &guild_header_collapse).into_string();
+        assert!(markup.contains("/instance-config?action=update_guild_header_collapse"));
+        assert!(markup.contains("Guild Header Collapse"));
+        assert!(markup.contains("guild-header-collapse-v1"));
+        assert!(markup.contains("guild_header_collapse_enabled"));
+        assert!(markup.contains("guild_header_collapse_rollout_basis_points"));
+        assert!(markup.contains("guild_header_collapse_rollout_salt"));
+        assert!(markup.contains("guild_header_collapse_included_user_ids"));
+        assert!(markup.contains("guild_header_collapse_excluded_user_ids"));
+        assert!(!markup.contains("expression_card_"));
     }
 }

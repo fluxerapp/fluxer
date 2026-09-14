@@ -30,6 +30,10 @@ import {
 	type GuildActivityLogPresentationConfig,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {
+	DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+	type GuildHeaderCollapseConfig,
+} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
+import {
 	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
 	type MessageHoverTrackingConfig,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -45,6 +49,7 @@ const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
 const BLOCKED_MESSAGE_GROUPS_CONFIG_KEY = 'blocked_message_groups_config';
 const GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG_KEY = 'guild_activity_log_presentation_config';
 const EXPRESSION_INFO_CARD_CONFIG_KEY = 'expression_info_card_config';
+const GUILD_HEADER_COLLAPSE_CONFIG_KEY = 'guild_header_collapse_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
@@ -564,6 +569,70 @@ describe('InstanceConfigRepository', () => {
 		await repository.setExpressionInfoCardConfig(config);
 
 		await expect(repository.getExpressionInfoCardConfig()).resolves.toEqual(config);
+	});
+
+	it('returns the default guild header collapse config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getGuildHeaderCollapseConfig()).resolves.toEqual(DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
+		{name: 'a target that is not a snowflake', stored: '{"included_user_ids":["nope"]}'},
+	])('falls back to the default guild header collapse config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(GUILD_HEADER_COLLAPSE_CONFIG_KEY, stored);
+
+		await expect(repository.getGuildHeaderCollapseConfig()).resolves.toEqual(DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG);
+	});
+
+	it('round-trips a stored guild header collapse config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: GuildHeaderCollapseConfig = {
+			...DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+			enabled: true,
+			config_version: 5,
+			rollout_basis_points: 1500,
+			rollout_salt: 'guild-header-collapse-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+		};
+		await repository.setGuildHeaderCollapseConfig(config);
+
+		await expect(repository.getGuildHeaderCollapseConfig()).resolves.toEqual(config);
+	});
+
+	it('fills newly added guild header collapse fields from the schema defaults', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			GUILD_HEADER_COLLAPSE_CONFIG_KEY,
+			JSON.stringify({enabled: true, config_version: 2, rollout_basis_points: 1000}),
+		);
+
+		await expect(repository.getGuildHeaderCollapseConfig()).resolves.toEqual({
+			...DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 1000,
+		});
 	});
 
 	it('fills newly added voice noise suppression fields from the schema defaults', async () => {

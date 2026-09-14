@@ -34,6 +34,8 @@ pub struct InstanceConfigResponse {
     pub guild_activity_log_presentation: GuildActivityLogPresentationConfigResponse,
     #[serde(default)]
     pub expression_info_card: ExpressionInfoCardConfigResponse,
+    #[serde(default)]
+    pub guild_header_collapse: GuildHeaderCollapseConfigResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -739,6 +741,44 @@ pub struct ExpressionInfoCardConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct GuildHeaderCollapseConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for GuildHeaderCollapseConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: "guild-header-collapse-v1".to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct GuildHeaderCollapseConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -864,6 +904,8 @@ pub struct InstanceConfigUpdateRequest {
     pub guild_activity_log_presentation: Option<GuildActivityLogPresentationConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub expression_info_card: Option<ExpressionInfoCardConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guild_header_collapse: Option<GuildHeaderCollapseConfigUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1209,6 +1251,8 @@ mod tests {
                 .expect("default guild activity log presentation config");
         let expression = serde_json::from_value::<ExpressionInfoCardConfigResponse>(json!({}))
             .expect("default expression info card config");
+        let collapse = serde_json::from_value::<GuildHeaderCollapseConfigResponse>(json!({}))
+            .expect("default guild header collapse config");
         let noise = serde_json::to_value(noise).expect("serializable noise config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let hover =
@@ -1221,6 +1265,8 @@ mod tests {
             .expect("serializable guild activity log presentation config");
         let expression =
             serde_json::to_value(expression).expect("serializable expression info card config");
+        let collapse =
+            serde_json::to_value(collapse).expect("serializable guild header collapse config");
         let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
             serde_json::from_value(noise.clone()).expect("generated noise config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
@@ -1240,6 +1286,9 @@ mod tests {
         let generated_expression: generated_types::ExpressionInfoCardConfigResponse =
             serde_json::from_value(expression.clone())
                 .expect("generated expression info card config contract");
+        let generated_collapse: generated_types::GuildHeaderCollapseConfigResponse =
+            serde_json::from_value(collapse.clone())
+                .expect("generated guild header collapse config contract");
         assert_eq!(
             serde_json::to_value(generated_noise).expect("serializable generated noise config"),
             noise
@@ -1274,6 +1323,11 @@ mod tests {
                 .expect("serializable generated expression info card config"),
             expression
         );
+        assert_eq!(
+            serde_json::to_value(generated_collapse)
+                .expect("serializable generated guild header collapse config"),
+            collapse
+        );
         for (name, value) in [
             ("VoiceNoiseSuppressionConfigResponse", noise),
             ("ExperimentDeliveryConfigResponse", delivery),
@@ -1282,6 +1336,7 @@ mod tests {
             ("BlockedMessageGroupsConfigResponse", blocked),
             ("GuildActivityLogPresentationConfigResponse", activity_log),
             ("ExpressionInfoCardConfigResponse", expression),
+            ("GuildHeaderCollapseConfigResponse", collapse),
         ] {
             for (field, value) in value.as_object().expect("config object") {
                 assert_eq!(
@@ -1342,6 +1397,46 @@ mod tests {
             serde_json::to_value(ExpressionInfoCardConfigUpdateRequest::default())
                 .expect("serializable update"),
             json!({})
+        );
+    }
+
+    #[test]
+    fn guild_header_collapse_update_preserves_empty_lists_and_omitted_fields() {
+        let update = GuildHeaderCollapseConfigUpdateRequest {
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::GuildHeaderCollapseConfigUpdateRequest>(
+            value.clone(),
+        )
+        .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"included_user_ids": [], "excluded_user_ids": []})
+        );
+        assert_eq!(
+            serde_json::to_value(GuildHeaderCollapseConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
+    }
+
+    #[test]
+    fn guild_header_collapse_response_defaults_to_the_guild_header_collapse_v1_salt() {
+        let config = GuildHeaderCollapseConfigResponse::default();
+        assert!(!config.enabled);
+        assert_eq!(config.config_version, 0);
+        assert_eq!(config.rollout_basis_points, 0);
+        assert_eq!(config.rollout_salt, "guild-header-collapse-v1");
+        assert!(config.included_user_ids.is_empty());
+        assert!(config.excluded_user_ids.is_empty());
+        assert_eq!(
+            serde_json::from_value::<GuildHeaderCollapseConfigResponse>(json!({}))
+                .expect("default guild header collapse config")
+                .rollout_salt,
+            "guild-header-collapse-v1"
         );
     }
 

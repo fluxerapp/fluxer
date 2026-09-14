@@ -22,6 +22,7 @@ import {
 	readBlockedMessageGroupsAssignment,
 	readExpressionInfoCardAssignment,
 	readGuildActivityLogPresentationAssignment,
+	readGuildHeaderCollapseAssignment,
 	readMessageHoverTrackingAssignment,
 	readMessageKeyboardFocusAssignment,
 	readVoiceNoiseSuppressionAssignment,
@@ -34,6 +35,10 @@ import {
 	DEFAULT_GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG,
 	INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
+import {
+	DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+	INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
 import {
 	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
@@ -81,6 +86,7 @@ describe('GET /experiments', () => {
 				blocked_message_groups: INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
 				guild_activity_log_presentation: INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
 				expression_info_card: INERT_EXPRESSION_INFO_CARD_ASSIGNMENT,
+				guild_header_collapse: INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT,
 			},
 		});
 	});
@@ -364,7 +370,53 @@ describe('GET /experiments', () => {
 		});
 	});
 
-	it('resolves all six experiments independently', async () => {
+	it('populates the guild header collapse key even when the rollout is disabled', async () => {
+		const account = await createTestAccount(harness);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(Object.hasOwn(body.assignments, 'guild_header_collapse')).toBe(true);
+		expect(readGuildHeaderCollapseAssignment(body)).toEqual(INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT);
+	});
+
+	it('targets an allowlisted account for guild header collapse', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setGuildHeaderCollapseConfig({
+			...DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+			enabled: true,
+			config_version: 4,
+			included_user_ids: [account.userId],
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readGuildHeaderCollapseAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 4,
+			user_targeted: true,
+			source: 'user_rule',
+		});
+	});
+
+	it('leaves an account outside a zero-width guild header collapse rollout', async () => {
+		const account = await createTestAccount(harness);
+		await getInstanceConfigRepository().setGuildHeaderCollapseConfig({
+			...DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+			enabled: true,
+			config_version: 2,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(readGuildHeaderCollapseAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 2,
+			user_targeted: false,
+			source: null,
+		});
+	});
+
+	it('resolves all seven experiments independently', async () => {
 		const account = await createTestAccount(harness);
 		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
 			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
@@ -391,6 +443,11 @@ describe('GET /experiments', () => {
 			enabled: true,
 			rollout_basis_points: 10000,
 		});
+		await getInstanceConfigRepository().setGuildHeaderCollapseConfig({
+			...DEFAULT_GUILD_HEADER_COLLAPSE_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
@@ -399,6 +456,7 @@ describe('GET /experiments', () => {
 		expect(readBlockedMessageGroupsAssignment(body).user_targeted).toBe(true);
 		expect(readGuildActivityLogPresentationAssignment(body).user_targeted).toBe(true);
 		expect(readExpressionInfoCardAssignment(body).user_targeted).toBe(true);
+		expect(readGuildHeaderCollapseAssignment(body).user_targeted).toBe(true);
 		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
 	});
 

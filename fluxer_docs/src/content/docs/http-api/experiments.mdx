@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `message_hover_tracking`, which selects one of two client implementations of the message hover state, `message_keyboard_focus`, which selects one of two client implementations of keyboard navigation in the message list, `blocked_message_groups`, which selects how a client renders a revealed block of blocked messages, `guild_activity_log_presentation`, which selects one of two client renderings of the community activity log, and `expression_info_card`, which selects what a client shows for an emoji or a sticker in a message.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `message_hover_tracking`, which selects one of two client implementations of the message hover state, `message_keyboard_focus`, which selects one of two client implementations of keyboard navigation in the message list, `blocked_message_groups`, which selects how a client renders a revealed block of blocked messages, `guild_activity_log_presentation`, which selects one of two client renderings of the community activity log, `expression_info_card`, which selects what a client shows for an emoji or a sticker in a message, and `guild_header_collapse`, which selects how a client draws the guild banner above the channel list.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -38,10 +38,11 @@ One entry per experiment. The envelope reports this object even when it is empty
 | blocked_message_groups? | [blocked message groups assignment](#blocked-message-groups-assignment-object) object | The caller's blocked message groups assignment |
 | guild_activity_log_presentation? | [guild activity log presentation assignment](#guild-activity-log-presentation-assignment-object) object | The caller's guild activity log presentation assignment |
 | expression_info_card? | [expression info card assignment](#expression-info-card-assignment-object) object | The caller's expression info card assignment |
+| guild_header_collapse? | [guild header collapse assignment](#guild-header-collapse-assignment-object) object | The caller's guild header collapse assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
-This server version writes `voice_noise_suppression`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `guild_activity_log_presentation`, and `expression_info_card` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
+This server version writes `voice_noise_suppression`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `guild_activity_log_presentation`, `expression_info_card`, and `guild_header_collapse` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
 
 ## Noise suppression backends
 
@@ -231,6 +232,33 @@ The rollout selects what a client shows for an emoji or a sticker in a message. 
 | source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
 
 ### Expression info card resolution outcomes
+
+The outcomes below set `user_targeted` to false, and they differ in what else they report.
+
+1. The rollout is off. `enabled` is false and `source` is null.
+2. The operator has excluded the caller. `enabled` is true and `source` is null.
+3. The caller was not drawn. `enabled` is true and `source` is null.
+
+A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. The blocklist is read before the allowlist, so an account named in both is not drawn.
+
+`config_version` reports the stored revision in all outcomes, the rollout being off included. A client branches on `user_targeted` alone.
+
+## Guild header collapse assignment object
+
+One resolution of the instance guild header collapse rollout against one account. Every field is present whenever the key is written.
+
+The rollout selects how a client draws the guild banner above the channel list. A drawn client reduces that banner to the height of the header as the channel list scrolls down and returns it to full height as the list scrolls back up. A client that is not drawn keeps the fixed banner height it ships with. A guild without a banner has the same header in either arm. Neither arm changes what the API returns, and no route reports which arm a client ran.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout is running on this instance |
+| config_version | integer | The revision of the instance configuration this assignment was resolved from |
+| user_targeted | boolean | Whether the caller is inside the rollout |
+| source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
+
+### Guild header collapse resolution outcomes
 
 The outcomes below set `user_targeted` to false, and they differ in what else they report.
 
