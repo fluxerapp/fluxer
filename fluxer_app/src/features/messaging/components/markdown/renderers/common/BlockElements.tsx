@@ -244,7 +244,7 @@ function renderTableRow(
 export function TableRenderer({node, id, renderChildren, options}: RendererProps<TableNode>): React.ReactElement {
 	const copyText = renderTableNodeToMarkdown(node, {
 		channelId: options.channelId,
-		preserveMarkdown: true,
+		preserveMarkdown: false,
 		includeEmojiNames: true,
 		i18n: options.i18n,
 	});
