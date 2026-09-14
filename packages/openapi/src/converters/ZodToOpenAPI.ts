@@ -5,7 +5,7 @@ import type {OpenAPISchemaTarget} from '@fluxer/openapi/src/OpenAPIGenerationTyp
 import {visitOpenAPISchemaObjects} from '@fluxer/openapi/src/OpenAPISchemaVisitor';
 import type {OpenAPIDocument, OpenAPIRef, OpenAPISchema} from '@fluxer/openapi/src/OpenAPITypes';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
-import {type core, z} from 'zod';
+import {core, z} from 'zod';
 
 export type SchemaIO = 'input' | 'output';
 
@@ -76,6 +76,25 @@ function renameComponentRefs(value: unknown, renames: Map<string, string>): void
 	});
 }
 
+function toPascalCase(value: string): string {
+	return value
+		.split(/[^A-Za-z0-9]+/)
+		.filter((word) => word.length > 0)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join('');
+}
+
+function branchNamePrefix(discriminator: core.JSONSchema._JSONSchema | undefined): string | undefined {
+	if (typeof discriminator !== 'object') return undefined;
+	const enumNames = discriminator['x-enumNames'];
+	const value = Array.isArray(enumNames)
+		? enumNames[0]
+		: discriminator.enum?.length === 1
+			? discriminator.enum[0]
+			: discriminator.const;
+	return typeof value === 'string' ? toPascalCase(value) : undefined;
+}
+
 function removeRedundantReferenceProperties(value: unknown, schemas: Record<string, OpenAPISchema>): void {
 	visitOpenAPISchemaObjects(value, (schema) => {
 		const refs = [schema.$ref, ...(schema.allOf ?? []).map((branch) => branch.$ref)];
@@ -99,7 +118,10 @@ export class ZodOpenAPIConverter {
 	private readonly worklist: Array<PendingSchema> = [];
 	private nextPendingIndex = 0;
 
-	constructor(private readonly target: OpenAPISchemaTarget) {}
+	constructor(
+		private readonly target: OpenAPISchemaTarget,
+		private readonly nameUnionBranches = false,
+	) {}
 
 	register(name: string, schema: core.$ZodType): void {
 		validateOpenAPIComponentName(name);
@@ -164,6 +186,24 @@ export class ZodOpenAPIConverter {
 		removeRedundantReferenceProperties(document, document.components.schemas);
 	}
 
+	private nameDiscriminatedUnionBranches(
+		unionName: string,
+		schema: core.$ZodType,
+		json: OpenAPISchema,
+		io: SchemaIO,
+	): void {
+		if (!(schema instanceof core.$ZodDiscriminatedUnion) || !json.oneOf) return;
+		const {discriminator, options} = schema._zod.def;
+		const usedPrefixes = new Set<string>();
+		json.oneOf = json.oneOf.map((branch, index) => {
+			if (branch.$ref) return branch;
+			const base = branchNamePrefix(branch.properties?.[discriminator]) ?? `Variant${index}`;
+			const prefix = usedPrefixes.has(base) ? `${base}${index}` : base;
+			usedPrefixes.add(prefix);
+			return this.getRef(`${prefix}${unionName}`, options[index], io);
+		});
+	}
+
 	private convertPending(): void {
 		while (this.nextPendingIndex < this.worklist.length) {
 			const pending = this.worklist[this.nextPendingIndex];
@@ -193,6 +233,8 @@ export class ZodOpenAPIConverter {
 								const ref = this.getRef(name, zodSchema, io);
 								replaceSchema(jsonSchema, description ? {...ref, description} : ref);
 							}
+						} else if (this.nameUnionBranches) {
+							this.nameDiscriminatedUnionBranches(pending.name, zodSchema, jsonSchema, io);
 						}
 						if (this.target === 'openapi-3.0' && jsonSchema.$ref && Object.keys(jsonSchema).length > 1) {
 							const ref = {$ref: jsonSchema.$ref};

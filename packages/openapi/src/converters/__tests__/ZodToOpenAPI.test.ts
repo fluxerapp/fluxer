@@ -2,7 +2,7 @@ import {ZodOpenAPIConverter} from '@fluxer/openapi/src/converters/ZodToOpenAPI';
 import type {OpenAPIDocument} from '@fluxer/openapi/src/OpenAPITypes';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {HarvestArchiveResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
-import {SnowflakeType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createNamedLiteral, SnowflakeType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {describe, expect, it} from 'vitest';
 import {z} from 'zod';
 
@@ -120,6 +120,34 @@ describe('native Zod conversion', () => {
 		expect(() => converter.getRef('TextInput', z.number(), 'output')).toThrow(
 			'Conflicting OpenAPI input/output schema names: TextInput',
 		);
+	});
+
+	it('names discriminated union branches after their discriminator value', () => {
+		const union = z.discriminatedUnion('kind', [
+			z.object({kind: createNamedLiteral(0, 'GUILD_TEXT'), name: z.string()}),
+			z.object({kind: z.literal('refresh_token'), token: z.string()}),
+			z.object({kind: z.literal(7), size: z.number()}),
+		]);
+		const converter = new ZodOpenAPIConverter('draft-2020-12', true);
+		converter.getRef('Request', union, 'input');
+		const document = documentFor(converter);
+		converter.normalizeComponents(document);
+		expect(document.components.schemas.Request.oneOf).toEqual([
+			{$ref: '#/components/schemas/GuildTextRequest'},
+			{$ref: '#/components/schemas/RefreshTokenRequest'},
+			{$ref: '#/components/schemas/Variant2Request'},
+		]);
+		expect(document.components.schemas.GuildTextRequest.properties).toHaveProperty('name');
+		expect(document.components.schemas.RefreshTokenRequest.properties).toHaveProperty('token');
+		expect(document.components.schemas.Variant2Request.properties).toHaveProperty('size');
+	});
+
+	it('keeps discriminated union branches inline unless asked to name them', () => {
+		const union = z.discriminatedUnion('kind', [z.object({kind: z.literal('a')}), z.object({kind: z.literal('b')})]);
+		const converter = new ZodOpenAPIConverter('openapi-3.0');
+		const schema = converter.getSchema('Request', union, 'input');
+		expect(schema.oneOf?.map((branch) => branch.$ref)).toEqual([undefined, undefined]);
+		expect(Object.keys(converter.getAllSchemas())).toEqual(['RequestInput']);
 	});
 
 	it('converts newly discovered components after an earlier conversion pass', () => {

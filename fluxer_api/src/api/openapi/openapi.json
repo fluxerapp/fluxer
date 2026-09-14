@@ -24732,71 +24732,10 @@
 			},
 			"LocalizedCardPreapprovalContinueResponse": {
 				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"status": {
-								"type": "string",
-								"const": "pending",
-								"description": "The preapproval result is still being processed"
-							}
-						},
-						"required": ["status"],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"status": {
-								"type": "string",
-								"const": "ready",
-								"description": "The preapproval succeeded and the paid checkout URL is ready"
-							},
-							"url": {"type": "string", "description": "The URL to redirect to"}
-						},
-						"required": ["status", "url"],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"status": {
-								"type": "string",
-								"const": "rejected",
-								"description": "The preapproval failed and the paid checkout should not continue"
-							},
-							"reason": {
-								"type": "string",
-								"enum": [
-									"country_mismatch",
-									"missing_customer",
-									"missing_payment_method",
-									"missing_setup_intent",
-									"payment_method_not_card",
-									"unknown"
-								],
-								"description": "The reason the preapproval was rejected"
-							},
-							"actual_country": {
-								"description": "The detected card issuing country when available",
-								"anyOf": [{"type": "string", "minLength": 2, "maxLength": 2}, {"type": "null"}]
-							}
-						},
-						"required": ["status", "reason"],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"status": {
-								"type": "string",
-								"const": "expired",
-								"description": "The preapproval token has expired or is unknown"
-							}
-						},
-						"required": ["status"],
-						"additionalProperties": false
-					}
+					{"$ref": "#/components/schemas/PendingLocalizedCardPreapprovalContinueResponse"},
+					{"$ref": "#/components/schemas/ReadyLocalizedCardPreapprovalContinueResponse"},
+					{"$ref": "#/components/schemas/RejectedLocalizedCardPreapprovalContinueResponse"},
+					{"$ref": "#/components/schemas/ExpiredLocalizedCardPreapprovalContinueResponse"}
 				]
 			},
 			"CreateCheckoutSessionRequest": {
@@ -25223,378 +25162,9 @@
 			},
 			"DsaReportRequest": {
 				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
-							"additional_info": {"description": "Additional context or details about the report", "type": "string"},
-							"reporter_full_legal_name": {
-								"description": "Full legal name of the person filing the report",
-								"type": "string"
-							},
-							"reporter_country_of_residence": {
-								"description": "EU country code of the reporter residence",
-								"x-enumNames": [
-									"AT",
-									"BE",
-									"BG",
-									"HR",
-									"CY",
-									"CZ",
-									"DK",
-									"EE",
-									"FI",
-									"FR",
-									"DE",
-									"GR",
-									"HU",
-									"IE",
-									"IT",
-									"LV",
-									"LT",
-									"LU",
-									"MT",
-									"NL",
-									"PL",
-									"PT",
-									"RO",
-									"SK",
-									"SI",
-									"ES",
-									"SE"
-								],
-								"x-enumDescriptions": [
-									"Austria",
-									"Belgium",
-									"Bulgaria",
-									"Croatia",
-									"Cyprus",
-									"Czechia",
-									"Denmark",
-									"Estonia",
-									"Finland",
-									"France",
-									"Germany",
-									"Greece",
-									"Hungary",
-									"Ireland",
-									"Italy",
-									"Latvia",
-									"Lithuania",
-									"Luxembourg",
-									"Malta",
-									"Netherlands",
-									"Poland",
-									"Portugal",
-									"Romania",
-									"Slovakia",
-									"Slovenia",
-									"Spain",
-									"Sweden"
-								],
-								"enum": [
-									"AT",
-									"BE",
-									"BG",
-									"HR",
-									"CY",
-									"CZ",
-									"DK",
-									"EE",
-									"FI",
-									"FR",
-									"DE",
-									"GR",
-									"HU",
-									"IE",
-									"IT",
-									"LV",
-									"LT",
-									"LU",
-									"MT",
-									"NL",
-									"PL",
-									"PT",
-									"RO",
-									"SK",
-									"SI",
-									"ES",
-									"SE"
-								],
-								"type": "string"
-							},
-							"reporter_fluxer_tag": {
-								"description": "Fluxer tag of the reporter if they have an account",
-								"type": "string",
-								"minLength": 3,
-								"maxLength": 37
-							},
-							"report_type": {"type": "string", "const": "message", "description": "Type of report"},
-							"category": {"$ref": "#/components/schemas/MessageReportCategory"},
-							"message_link": {"description": "Link to the message being reported", "type": "string"},
-							"reported_user_tag": {
-								"description": "Fluxer tag of the user who sent the message",
-								"type": "string",
-								"minLength": 3,
-								"maxLength": 37
-							}
-						},
-						"required": [
-							"ticket",
-							"reporter_full_legal_name",
-							"reporter_country_of_residence",
-							"report_type",
-							"category",
-							"message_link"
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
-							"additional_info": {"description": "Additional context or details about the report", "type": "string"},
-							"reporter_full_legal_name": {
-								"description": "Full legal name of the person filing the report",
-								"type": "string"
-							},
-							"reporter_country_of_residence": {
-								"description": "EU country code of the reporter residence",
-								"x-enumNames": [
-									"AT",
-									"BE",
-									"BG",
-									"HR",
-									"CY",
-									"CZ",
-									"DK",
-									"EE",
-									"FI",
-									"FR",
-									"DE",
-									"GR",
-									"HU",
-									"IE",
-									"IT",
-									"LV",
-									"LT",
-									"LU",
-									"MT",
-									"NL",
-									"PL",
-									"PT",
-									"RO",
-									"SK",
-									"SI",
-									"ES",
-									"SE"
-								],
-								"x-enumDescriptions": [
-									"Austria",
-									"Belgium",
-									"Bulgaria",
-									"Croatia",
-									"Cyprus",
-									"Czechia",
-									"Denmark",
-									"Estonia",
-									"Finland",
-									"France",
-									"Germany",
-									"Greece",
-									"Hungary",
-									"Ireland",
-									"Italy",
-									"Latvia",
-									"Lithuania",
-									"Luxembourg",
-									"Malta",
-									"Netherlands",
-									"Poland",
-									"Portugal",
-									"Romania",
-									"Slovakia",
-									"Slovenia",
-									"Spain",
-									"Sweden"
-								],
-								"enum": [
-									"AT",
-									"BE",
-									"BG",
-									"HR",
-									"CY",
-									"CZ",
-									"DK",
-									"EE",
-									"FI",
-									"FR",
-									"DE",
-									"GR",
-									"HU",
-									"IE",
-									"IT",
-									"LV",
-									"LT",
-									"LU",
-									"MT",
-									"NL",
-									"PL",
-									"PT",
-									"RO",
-									"SK",
-									"SI",
-									"ES",
-									"SE"
-								],
-								"type": "string"
-							},
-							"reporter_fluxer_tag": {
-								"description": "Fluxer tag of the reporter if they have an account",
-								"type": "string",
-								"minLength": 3,
-								"maxLength": 37
-							},
-							"report_type": {"type": "string", "const": "user", "description": "Type of report"},
-							"category": {"$ref": "#/components/schemas/UserReportCategory"},
-							"user_id": {"description": "ID of the user being reported", "$ref": "#/components/schemas/SnowflakeType"},
-							"user_tag": {
-								"description": "Fluxer tag of the user being reported",
-								"type": "string",
-								"minLength": 3,
-								"maxLength": 37
-							}
-						},
-						"required": [
-							"ticket",
-							"reporter_full_legal_name",
-							"reporter_country_of_residence",
-							"report_type",
-							"category"
-						]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
-							"additional_info": {"description": "Additional context or details about the report", "type": "string"},
-							"reporter_full_legal_name": {
-								"description": "Full legal name of the person filing the report",
-								"type": "string"
-							},
-							"reporter_country_of_residence": {
-								"description": "EU country code of the reporter residence",
-								"x-enumNames": [
-									"AT",
-									"BE",
-									"BG",
-									"HR",
-									"CY",
-									"CZ",
-									"DK",
-									"EE",
-									"FI",
-									"FR",
-									"DE",
-									"GR",
-									"HU",
-									"IE",
-									"IT",
-									"LV",
-									"LT",
-									"LU",
-									"MT",
-									"NL",
-									"PL",
-									"PT",
-									"RO",
-									"SK",
-									"SI",
-									"ES",
-									"SE"
-								],
-								"x-enumDescriptions": [
-									"Austria",
-									"Belgium",
-									"Bulgaria",
-									"Croatia",
-									"Cyprus",
-									"Czechia",
-									"Denmark",
-									"Estonia",
-									"Finland",
-									"France",
-									"Germany",
-									"Greece",
-									"Hungary",
-									"Ireland",
-									"Italy",
-									"Latvia",
-									"Lithuania",
-									"Luxembourg",
-									"Malta",
-									"Netherlands",
-									"Poland",
-									"Portugal",
-									"Romania",
-									"Slovakia",
-									"Slovenia",
-									"Spain",
-									"Sweden"
-								],
-								"enum": [
-									"AT",
-									"BE",
-									"BG",
-									"HR",
-									"CY",
-									"CZ",
-									"DK",
-									"EE",
-									"FI",
-									"FR",
-									"DE",
-									"GR",
-									"HU",
-									"IE",
-									"IT",
-									"LV",
-									"LT",
-									"LU",
-									"MT",
-									"NL",
-									"PL",
-									"PT",
-									"RO",
-									"SK",
-									"SI",
-									"ES",
-									"SE"
-								],
-								"type": "string"
-							},
-							"reporter_fluxer_tag": {
-								"description": "Fluxer tag of the reporter if they have an account",
-								"type": "string",
-								"minLength": 3,
-								"maxLength": 37
-							},
-							"report_type": {"type": "string", "const": "guild", "description": "Type of report"},
-							"category": {"$ref": "#/components/schemas/GuildReportCategory"},
-							"guild_id": {
-								"description": "ID of the guild being reported",
-								"$ref": "#/components/schemas/SnowflakeType"
-							},
-							"invite_code": {"description": "Invite code used to access the guild", "type": "string"}
-						},
-						"required": [
-							"ticket",
-							"reporter_full_legal_name",
-							"reporter_country_of_residence",
-							"report_type",
-							"category",
-							"guild_id"
-						]
-					}
+					{"$ref": "#/components/schemas/MessageDsaReportRequest"},
+					{"$ref": "#/components/schemas/UserDsaReportRequest"},
+					{"$ref": "#/components/schemas/GuildDsaReportRequest"}
 				]
 			},
 			"ReadStateAckBulkRequest": {
@@ -25665,96 +25235,9 @@
 			},
 			"SwitchToListPriceResponse": {
 				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"effective_at": {"type": "string", "description": "ISO timestamp the switch takes effect"},
-							"target_price_id": {
-								"type": "string",
-								"description": "Stripe price ID the subscription will be billed against after the switch"
-							},
-							"target_amount_minor": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991,
-								"description": "Amount billed after the switch, in the currency minor unit"
-							},
-							"current_amount_minor": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991,
-								"description": "Amount billed before the switch, in the currency minor unit"
-							},
-							"currency": {"description": "Currency of both amounts", "$ref": "#/components/schemas/PremiumCurrency"},
-							"status": {
-								"type": "string",
-								"const": "scheduled",
-								"description": "The switch was scheduled for the end of the current billing period"
-							}
-						},
-						"required": [
-							"effective_at",
-							"target_price_id",
-							"target_amount_minor",
-							"current_amount_minor",
-							"currency",
-							"status"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"effective_at": {"type": "string", "description": "ISO timestamp the switch takes effect"},
-							"target_price_id": {
-								"type": "string",
-								"description": "Stripe price ID the subscription will be billed against after the switch"
-							},
-							"target_amount_minor": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991,
-								"description": "Amount billed after the switch, in the currency minor unit"
-							},
-							"current_amount_minor": {
-								"type": "integer",
-								"minimum": -9007199254740991,
-								"maximum": 9007199254740991,
-								"description": "Amount billed before the switch, in the currency minor unit"
-							},
-							"currency": {"description": "Currency of both amounts", "$ref": "#/components/schemas/PremiumCurrency"},
-							"status": {
-								"type": "string",
-								"const": "already_scheduled",
-								"description": "The switch was already scheduled by an earlier request"
-							}
-						},
-						"required": [
-							"effective_at",
-							"target_price_id",
-							"target_amount_minor",
-							"current_amount_minor",
-							"currency",
-							"status"
-						],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"status": {
-								"type": "string",
-								"const": "ineligible",
-								"description": "The subscription cannot be moved to the current list price"
-							},
-							"reason": {
-								"description": "Why the switch was refused",
-								"$ref": "#/components/schemas/ListPriceSwitchIneligibilityReason"
-							}
-						},
-						"required": ["status", "reason"],
-						"additionalProperties": false
-					}
+					{"$ref": "#/components/schemas/ScheduledSwitchToListPriceResponse"},
+					{"$ref": "#/components/schemas/AlreadyScheduledSwitchToListPriceResponse"},
+					{"$ref": "#/components/schemas/IneligibleSwitchToListPriceResponse"}
 				]
 			},
 			"PremiumStateResponse": {
@@ -26178,39 +25661,8 @@
 			},
 			"TokenRequest": {
 				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"grant_type": {
-								"type": "string",
-								"const": "authorization_code",
-								"description": "The grant type for exchanging an authorization code"
-							},
-							"code": {"description": "The authorization code received from the authorize endpoint", "type": "string"},
-							"redirect_uri": {"description": "The redirect URI used in the authorization request", "type": "string"},
-							"client_id": {"description": "The application client ID", "$ref": "#/components/schemas/SnowflakeType"},
-							"client_secret": {"description": "The application client secret", "type": "string"},
-							"code_verifier": {"description": "The PKCE code verifier for the authorization request", "type": "string"}
-						},
-						"required": ["grant_type", "code", "redirect_uri"]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"grant_type": {
-								"type": "string",
-								"const": "refresh_token",
-								"description": "The grant type for refreshing an access token"
-							},
-							"refresh_token": {
-								"description": "The refresh token to exchange for a new access token",
-								"type": "string"
-							},
-							"client_id": {"description": "The application client ID", "$ref": "#/components/schemas/SnowflakeType"},
-							"client_secret": {"description": "The application client secret", "type": "string"}
-						},
-						"required": ["grant_type", "refresh_token"]
-					}
+					{"$ref": "#/components/schemas/AuthorizationCodeTokenRequest"},
+					{"$ref": "#/components/schemas/RefreshTokenTokenRequest"}
 				]
 			},
 			"OAuth2TokenResponse": {
@@ -27656,322 +27108,10 @@
 			},
 			"ChannelCreateRequest": {
 				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"parent_id": {
-								"description": "ID of the parent category for this channel",
-								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
-							},
-							"bitrate": {
-								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
-								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
-							},
-							"user_limit": {
-								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
-							},
-							"voice_connection_limit": {
-								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
-								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
-							},
-							"permission_overwrites": {
-								"description": "Permission overwrites for roles and members",
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"id": {
-											"description": "The ID of the role or user to overwrite permissions for",
-											"$ref": "#/components/schemas/SnowflakeType"
-										},
-										"type": {
-											"description": "The type of overwrite (0 = role, 1 = member)",
-											"x-enumNames": ["ROLE", "MEMBER"],
-											"enum": [0, 1],
-											"type": "integer"
-										},
-										"allow": {
-											"description": "Bitwise value of allowed permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										},
-										"deny": {
-											"description": "Bitwise value of denied permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										}
-									},
-									"required": ["id", "type"]
-								}
-							},
-							"rate_limit_per_user": {
-								"description": "Slowmode delay in seconds (0-21600)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
-							},
-							"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
-							"nsfw_override": {
-								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
-							},
-							"content_warning_level": {
-								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
-								"$ref": "#/components/schemas/ContentWarningLevelInput"
-							},
-							"content_warning_text": {
-								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
-								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
-							},
-							"type": {
-								"type": "integer",
-								"x-enumNames": ["GUILD_TEXT"],
-								"x-enumDescriptions": ["Channel type (text channel)"],
-								"enum": [0]
-							},
-							"name": {"description": "The name of the channel", "type": "string"}
-						},
-						"required": ["type", "name"]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"parent_id": {
-								"description": "ID of the parent category for this channel",
-								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
-							},
-							"bitrate": {
-								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
-								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
-							},
-							"user_limit": {
-								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
-							},
-							"voice_connection_limit": {
-								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
-								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
-							},
-							"permission_overwrites": {
-								"description": "Permission overwrites for roles and members",
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"id": {
-											"description": "The ID of the role or user to overwrite permissions for",
-											"$ref": "#/components/schemas/SnowflakeType"
-										},
-										"type": {
-											"description": "The type of overwrite (0 = role, 1 = member)",
-											"x-enumNames": ["ROLE", "MEMBER"],
-											"enum": [0, 1],
-											"type": "integer"
-										},
-										"allow": {
-											"description": "Bitwise value of allowed permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										},
-										"deny": {
-											"description": "Bitwise value of denied permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										}
-									},
-									"required": ["id", "type"]
-								}
-							},
-							"rate_limit_per_user": {
-								"description": "Slowmode delay in seconds (0-21600)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
-							},
-							"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
-							"nsfw_override": {
-								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
-							},
-							"content_warning_level": {
-								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
-								"$ref": "#/components/schemas/ContentWarningLevelInput"
-							},
-							"content_warning_text": {
-								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
-								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
-							},
-							"type": {
-								"type": "integer",
-								"x-enumNames": ["GUILD_VOICE"],
-								"x-enumDescriptions": ["Channel type (voice channel)"],
-								"enum": [2]
-							},
-							"name": {"description": "The name of the channel", "type": "string"}
-						},
-						"required": ["type", "name"]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"parent_id": {
-								"description": "ID of the parent category for this channel",
-								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
-							},
-							"bitrate": {
-								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
-								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
-							},
-							"user_limit": {
-								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
-							},
-							"voice_connection_limit": {
-								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
-								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
-							},
-							"permission_overwrites": {
-								"description": "Permission overwrites for roles and members",
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"id": {
-											"description": "The ID of the role or user to overwrite permissions for",
-											"$ref": "#/components/schemas/SnowflakeType"
-										},
-										"type": {
-											"description": "The type of overwrite (0 = role, 1 = member)",
-											"x-enumNames": ["ROLE", "MEMBER"],
-											"enum": [0, 1],
-											"type": "integer"
-										},
-										"allow": {
-											"description": "Bitwise value of allowed permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										},
-										"deny": {
-											"description": "Bitwise value of denied permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										}
-									},
-									"required": ["id", "type"]
-								}
-							},
-							"rate_limit_per_user": {
-								"description": "Slowmode delay in seconds (0-21600)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
-							},
-							"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
-							"nsfw_override": {
-								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
-							},
-							"content_warning_level": {
-								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
-								"$ref": "#/components/schemas/ContentWarningLevelInput"
-							},
-							"content_warning_text": {
-								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
-								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
-							},
-							"type": {
-								"type": "integer",
-								"x-enumNames": ["GUILD_CATEGORY"],
-								"x-enumDescriptions": ["Channel type (category)"],
-								"enum": [4]
-							},
-							"name": {"description": "The name of the category", "type": "string"}
-						},
-						"required": ["type", "name"]
-					},
-					{
-						"type": "object",
-						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"parent_id": {
-								"description": "ID of the parent category for this channel",
-								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
-							},
-							"bitrate": {
-								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
-								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
-							},
-							"user_limit": {
-								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
-							},
-							"voice_connection_limit": {
-								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
-								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
-							},
-							"permission_overwrites": {
-								"description": "Permission overwrites for roles and members",
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"id": {
-											"description": "The ID of the role or user to overwrite permissions for",
-											"$ref": "#/components/schemas/SnowflakeType"
-										},
-										"type": {
-											"description": "The type of overwrite (0 = role, 1 = member)",
-											"x-enumNames": ["ROLE", "MEMBER"],
-											"enum": [0, 1],
-											"type": "integer"
-										},
-										"allow": {
-											"description": "Bitwise value of allowed permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										},
-										"deny": {
-											"description": "Bitwise value of denied permissions",
-											"$ref": "#/components/schemas/UnsignedInt64Type"
-										}
-									},
-									"required": ["id", "type"]
-								}
-							},
-							"rate_limit_per_user": {
-								"description": "Slowmode delay in seconds (0-21600)",
-								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
-							},
-							"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
-							"nsfw_override": {
-								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
-							},
-							"content_warning_level": {
-								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
-								"$ref": "#/components/schemas/ContentWarningLevelInput"
-							},
-							"content_warning_text": {
-								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
-								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
-							},
-							"type": {
-								"type": "integer",
-								"x-enumNames": ["GUILD_LINK"],
-								"x-enumDescriptions": ["Channel type (link channel)"],
-								"enum": [998]
-							},
-							"name": {"description": "The name of the channel", "type": "string"}
-						},
-						"required": ["type", "name"]
-					}
+					{"$ref": "#/components/schemas/GuildTextChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildVoiceChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildCategoryChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildLinkChannelCreateRequest"}
 				]
 			},
 			"GuildBanCreateRequest": {
@@ -30516,114 +29656,116 @@
 			},
 			"PresignedAttachmentUploadResponseItem": {
 				"oneOf": [
-					{
-						"type": "object",
-						"properties": {
-							"id": {
-								"description": "The client-side identifier for this attachment",
-								"$ref": "#/components/schemas/Int32Type"
-							},
-							"filename": {"description": "The original filename for this upload", "type": "string"},
-							"file_size": {
-								"description": "Expected file size in bytes",
-								"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
-							},
-							"content_type": {
-								"description": "Expected MIME type for this upload",
-								"type": "string",
-								"minLength": 1,
-								"maxLength": 255
-							},
-							"upload_filename": {
-								"description": "Temporary upload key to reference in message send payloads",
-								"type": "string",
-								"minLength": 1,
-								"maxLength": 4096
-							},
-							"upload_mode": {"type": "string", "const": "singlepart"},
-							"upload_url": {
-								"description": "Presigned URL used to upload this attachment with a single PUT",
-								"type": "string",
-								"minLength": 1,
-								"maxLength": 2048
-							}
-						},
-						"required": ["id", "filename", "file_size", "content_type", "upload_filename", "upload_mode", "upload_url"],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"id": {
-								"description": "The client-side identifier for this attachment",
-								"$ref": "#/components/schemas/Int32Type"
-							},
-							"filename": {"description": "The original filename for this upload", "type": "string"},
-							"file_size": {
-								"description": "Expected file size in bytes",
-								"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
-							},
-							"content_type": {
-								"description": "Expected MIME type for this upload",
-								"type": "string",
-								"minLength": 1,
-								"maxLength": 255
-							},
-							"upload_filename": {
-								"description": "Temporary upload key to reference in message send payloads",
-								"type": "string",
-								"minLength": 1,
-								"maxLength": 4096
-							},
-							"upload_mode": {"type": "string", "const": "multipart"},
-							"upload_id": {
-								"description": "S3 multipart upload identifier; required to complete the upload",
-								"type": "string",
-								"minLength": 1,
-								"maxLength": 1024
-							},
-							"part_size": {
-								"description": "Size in bytes of each part except the last",
-								"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
-							},
-							"parts": {
-								"minItems": 1,
-								"maxItems": 10000,
-								"type": "array",
-								"items": {
-									"type": "object",
-									"properties": {
-										"part_number": {
-											"description": "1-indexed part number; order is required for completion",
-											"$ref": "#/components/schemas/Int32Type"
-										},
-										"upload_url": {
-											"description": "Presigned URL used to upload this part",
-											"type": "string",
-											"minLength": 1,
-											"maxLength": 2048
-										}
-									},
-									"required": ["part_number", "upload_url"],
-									"additionalProperties": false
-								},
-								"description": "Per-part presigned URLs for parallel upload"
-							}
-						},
-						"required": [
-							"id",
-							"filename",
-							"file_size",
-							"content_type",
-							"upload_filename",
-							"upload_mode",
-							"upload_id",
-							"part_size",
-							"parts"
-						],
-						"additionalProperties": false
-					}
+					{"$ref": "#/components/schemas/SinglepartPresignedAttachmentUploadResponseItem"},
+					{"$ref": "#/components/schemas/MultipartPresignedAttachmentUploadResponseItem"}
 				]
+			},
+			"MultipartPresignedAttachmentUploadResponseItem": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The client-side identifier for this attachment",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"filename": {"description": "The original filename for this upload", "type": "string"},
+					"file_size": {
+						"description": "Expected file size in bytes",
+						"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
+					},
+					"content_type": {
+						"description": "Expected MIME type for this upload",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 255
+					},
+					"upload_filename": {
+						"description": "Temporary upload key to reference in message send payloads",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 4096
+					},
+					"upload_mode": {"type": "string", "const": "multipart"},
+					"upload_id": {
+						"description": "S3 multipart upload identifier; required to complete the upload",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 1024
+					},
+					"part_size": {
+						"description": "Size in bytes of each part except the last",
+						"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
+					},
+					"parts": {
+						"minItems": 1,
+						"maxItems": 10000,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"part_number": {
+									"description": "1-indexed part number; order is required for completion",
+									"$ref": "#/components/schemas/Int32Type"
+								},
+								"upload_url": {
+									"description": "Presigned URL used to upload this part",
+									"type": "string",
+									"minLength": 1,
+									"maxLength": 2048
+								}
+							},
+							"required": ["part_number", "upload_url"],
+							"additionalProperties": false
+						},
+						"description": "Per-part presigned URLs for parallel upload"
+					}
+				},
+				"required": [
+					"id",
+					"filename",
+					"file_size",
+					"content_type",
+					"upload_filename",
+					"upload_mode",
+					"upload_id",
+					"part_size",
+					"parts"
+				],
+				"additionalProperties": false
+			},
+			"SinglepartPresignedAttachmentUploadResponseItem": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The client-side identifier for this attachment",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"filename": {"description": "The original filename for this upload", "type": "string"},
+					"file_size": {
+						"description": "Expected file size in bytes",
+						"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
+					},
+					"content_type": {
+						"description": "Expected MIME type for this upload",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 255
+					},
+					"upload_filename": {
+						"description": "Temporary upload key to reference in message send payloads",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 4096
+					},
+					"upload_mode": {"type": "string", "const": "singlepart"},
+					"upload_url": {
+						"description": "Presigned URL used to upload this attachment with a single PUT",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 2048
+					}
+				},
+				"required": ["id", "filename", "file_size", "content_type", "upload_filename", "upload_mode", "upload_url"],
+				"additionalProperties": false
 			},
 			"NonNegativeSafeIntegerType": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
 			"PresignedAttachmentUploadRequestItem": {
@@ -32662,6 +31804,322 @@
 				"required": ["user", "moderator_id", "banned_at"],
 				"additionalProperties": false
 			},
+			"GuildLinkChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {
+						"description": "The channel topic (1-1024 characters)",
+						"anyOf": [{"type": "string"}, {"type": "null"}]
+					},
+					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_LINK"],
+						"x-enumDescriptions": ["Channel type (link channel)"],
+						"enum": [998]
+					},
+					"name": {"description": "The name of the channel", "type": "string"}
+				},
+				"required": ["type", "name"]
+			},
+			"GuildCategoryChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {
+						"description": "The channel topic (1-1024 characters)",
+						"anyOf": [{"type": "string"}, {"type": "null"}]
+					},
+					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_CATEGORY"],
+						"x-enumDescriptions": ["Channel type (category)"],
+						"enum": [4]
+					},
+					"name": {"description": "The name of the category", "type": "string"}
+				},
+				"required": ["type", "name"]
+			},
+			"GuildVoiceChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {
+						"description": "The channel topic (1-1024 characters)",
+						"anyOf": [{"type": "string"}, {"type": "null"}]
+					},
+					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_VOICE"],
+						"x-enumDescriptions": ["Channel type (voice channel)"],
+						"enum": [2]
+					},
+					"name": {"description": "The name of the channel", "type": "string"}
+				},
+				"required": ["type", "name"]
+			},
+			"GuildTextChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {
+						"description": "The channel topic (1-1024 characters)",
+						"anyOf": [{"type": "string"}, {"type": "null"}]
+					},
+					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_TEXT"],
+						"x-enumDescriptions": ["Channel type (text channel)"],
+						"enum": [0]
+					},
+					"name": {"description": "The name of the channel", "type": "string"}
+				},
+				"required": ["type", "name"]
+			},
 			"NSFWLevel": {
 				"description": "The NSFW level of the guild",
 				"type": "integer",
@@ -33091,6 +32549,36 @@
 				"additionalProperties": false,
 				"description": ""
 			},
+			"RefreshTokenTokenRequest": {
+				"type": "object",
+				"properties": {
+					"grant_type": {
+						"type": "string",
+						"const": "refresh_token",
+						"description": "The grant type for refreshing an access token"
+					},
+					"refresh_token": {"description": "The refresh token to exchange for a new access token", "type": "string"},
+					"client_id": {"description": "The application client ID", "$ref": "#/components/schemas/SnowflakeType"},
+					"client_secret": {"description": "The application client secret", "type": "string"}
+				},
+				"required": ["grant_type", "refresh_token"]
+			},
+			"AuthorizationCodeTokenRequest": {
+				"type": "object",
+				"properties": {
+					"grant_type": {
+						"type": "string",
+						"const": "authorization_code",
+						"description": "The grant type for exchanging an authorization code"
+					},
+					"code": {"description": "The authorization code received from the authorize endpoint", "type": "string"},
+					"redirect_uri": {"description": "The redirect URI used in the authorization request", "type": "string"},
+					"client_id": {"description": "The application client ID", "$ref": "#/components/schemas/SnowflakeType"},
+					"client_secret": {"description": "The application client secret", "type": "string"},
+					"code_verifier": {"description": "The PKCE code verifier for the authorization request", "type": "string"}
+				},
+				"required": ["grant_type", "code", "redirect_uri"]
+			},
 			"TokenTypeHint": {
 				"description": "A hint about the type of token being revoked",
 				"x-enumNames": ["ACCESS_TOKEN", "REFRESH_TOKEN"],
@@ -33371,6 +32859,96 @@
 					"switch_in_progress"
 				]
 			},
+			"IneligibleSwitchToListPriceResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"const": "ineligible",
+						"description": "The subscription cannot be moved to the current list price"
+					},
+					"reason": {
+						"description": "Why the switch was refused",
+						"$ref": "#/components/schemas/ListPriceSwitchIneligibilityReason"
+					}
+				},
+				"required": ["status", "reason"],
+				"additionalProperties": false
+			},
+			"AlreadyScheduledSwitchToListPriceResponse": {
+				"type": "object",
+				"properties": {
+					"effective_at": {"type": "string", "description": "ISO timestamp the switch takes effect"},
+					"target_price_id": {
+						"type": "string",
+						"description": "Stripe price ID the subscription will be billed against after the switch"
+					},
+					"target_amount_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Amount billed after the switch, in the currency minor unit"
+					},
+					"current_amount_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Amount billed before the switch, in the currency minor unit"
+					},
+					"currency": {"description": "Currency of both amounts", "$ref": "#/components/schemas/PremiumCurrency"},
+					"status": {
+						"type": "string",
+						"const": "already_scheduled",
+						"description": "The switch was already scheduled by an earlier request"
+					}
+				},
+				"required": [
+					"effective_at",
+					"target_price_id",
+					"target_amount_minor",
+					"current_amount_minor",
+					"currency",
+					"status"
+				],
+				"additionalProperties": false
+			},
+			"ScheduledSwitchToListPriceResponse": {
+				"type": "object",
+				"properties": {
+					"effective_at": {"type": "string", "description": "ISO timestamp the switch takes effect"},
+					"target_price_id": {
+						"type": "string",
+						"description": "Stripe price ID the subscription will be billed against after the switch"
+					},
+					"target_amount_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Amount billed after the switch, in the currency minor unit"
+					},
+					"current_amount_minor": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Amount billed before the switch, in the currency minor unit"
+					},
+					"currency": {"description": "Currency of both amounts", "$ref": "#/components/schemas/PremiumCurrency"},
+					"status": {
+						"type": "string",
+						"const": "scheduled",
+						"description": "The switch was scheduled for the end of the current billing period"
+					}
+				},
+				"required": [
+					"effective_at",
+					"target_price_id",
+					"target_amount_minor",
+					"current_amount_minor",
+					"currency",
+					"status"
+				],
+				"additionalProperties": false
+			},
 			"ReadStateResponse": {
 				"type": "object",
 				"properties": {
@@ -33399,73 +32977,368 @@
 				"additionalProperties": false
 			},
 			"UnsignedInt64StringType": {"type": "string", "pattern": "^\\d+$", "format": "int64"},
-			"GuildReportCategory": {
-				"description": "Category of the guild report",
-				"x-enumNames": [
-					"harassment",
-					"hate_speech",
-					"extremist_community",
-					"illegal_activity",
-					"child_safety",
-					"raid_coordination",
-					"spam",
-					"malware_distribution",
-					"other"
-				],
-				"x-enumDescriptions": [
-					"Guild facilitates harassment, bullying, or intimidation",
-					"Guild promotes hatred against protected groups",
-					"Guild promotes extremist or terrorist ideologies",
-					"Guild promotes or facilitates illegal activities",
-					"Guild endangers minors or hosts child abuse content",
-					"Guild coordinates attacks on other communities",
-					"Guild used for spamming or bulk messaging",
-					"Guild distributes malware or malicious software",
-					"Other violations not covered by specific categories"
-				],
-				"enum": [
-					"harassment",
-					"hate_speech",
-					"extremist_community",
-					"illegal_activity",
-					"child_safety",
-					"raid_coordination",
-					"spam",
-					"malware_distribution",
-					"other"
-				],
-				"type": "string"
+			"GuildDsaReportRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
+					"additional_info": {"description": "Additional context or details about the report", "type": "string"},
+					"reporter_full_legal_name": {
+						"description": "Full legal name of the person filing the report",
+						"type": "string"
+					},
+					"reporter_country_of_residence": {
+						"description": "EU country code of the reporter residence",
+						"x-enumNames": [
+							"AT",
+							"BE",
+							"BG",
+							"HR",
+							"CY",
+							"CZ",
+							"DK",
+							"EE",
+							"FI",
+							"FR",
+							"DE",
+							"GR",
+							"HU",
+							"IE",
+							"IT",
+							"LV",
+							"LT",
+							"LU",
+							"MT",
+							"NL",
+							"PL",
+							"PT",
+							"RO",
+							"SK",
+							"SI",
+							"ES",
+							"SE"
+						],
+						"x-enumDescriptions": [
+							"Austria",
+							"Belgium",
+							"Bulgaria",
+							"Croatia",
+							"Cyprus",
+							"Czechia",
+							"Denmark",
+							"Estonia",
+							"Finland",
+							"France",
+							"Germany",
+							"Greece",
+							"Hungary",
+							"Ireland",
+							"Italy",
+							"Latvia",
+							"Lithuania",
+							"Luxembourg",
+							"Malta",
+							"Netherlands",
+							"Poland",
+							"Portugal",
+							"Romania",
+							"Slovakia",
+							"Slovenia",
+							"Spain",
+							"Sweden"
+						],
+						"enum": [
+							"AT",
+							"BE",
+							"BG",
+							"HR",
+							"CY",
+							"CZ",
+							"DK",
+							"EE",
+							"FI",
+							"FR",
+							"DE",
+							"GR",
+							"HU",
+							"IE",
+							"IT",
+							"LV",
+							"LT",
+							"LU",
+							"MT",
+							"NL",
+							"PL",
+							"PT",
+							"RO",
+							"SK",
+							"SI",
+							"ES",
+							"SE"
+						],
+						"type": "string"
+					},
+					"reporter_fluxer_tag": {
+						"description": "Fluxer tag of the reporter if they have an account",
+						"type": "string",
+						"minLength": 3,
+						"maxLength": 37
+					},
+					"report_type": {"type": "string", "const": "guild", "description": "Type of report"},
+					"category": {"$ref": "#/components/schemas/GuildReportCategory"},
+					"guild_id": {"description": "ID of the guild being reported", "$ref": "#/components/schemas/SnowflakeType"},
+					"invite_code": {"description": "Invite code used to access the guild", "type": "string"}
+				},
+				"required": [
+					"ticket",
+					"reporter_full_legal_name",
+					"reporter_country_of_residence",
+					"report_type",
+					"category",
+					"guild_id"
+				]
 			},
-			"UserReportCategory": {
-				"description": "Category of the user report",
-				"x-enumNames": [
-					"harassment",
-					"hate_speech",
-					"spam_account",
-					"impersonation",
-					"underage_user",
-					"inappropriate_profile",
-					"other"
-				],
-				"x-enumDescriptions": [
-					"User engages in harassment, bullying, or intimidation",
-					"User promotes hatred against protected groups",
-					"Account used for spamming or bulk messaging",
-					"User falsely claims to be another person or entity",
-					"User appears to be under the minimum required age",
-					"Profile contains inappropriate or offensive content",
-					"Other violations not covered by specific categories"
-				],
-				"enum": [
-					"harassment",
-					"hate_speech",
-					"spam_account",
-					"impersonation",
-					"underage_user",
-					"inappropriate_profile",
-					"other"
-				],
-				"type": "string"
+			"UserDsaReportRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
+					"additional_info": {"description": "Additional context or details about the report", "type": "string"},
+					"reporter_full_legal_name": {
+						"description": "Full legal name of the person filing the report",
+						"type": "string"
+					},
+					"reporter_country_of_residence": {
+						"description": "EU country code of the reporter residence",
+						"x-enumNames": [
+							"AT",
+							"BE",
+							"BG",
+							"HR",
+							"CY",
+							"CZ",
+							"DK",
+							"EE",
+							"FI",
+							"FR",
+							"DE",
+							"GR",
+							"HU",
+							"IE",
+							"IT",
+							"LV",
+							"LT",
+							"LU",
+							"MT",
+							"NL",
+							"PL",
+							"PT",
+							"RO",
+							"SK",
+							"SI",
+							"ES",
+							"SE"
+						],
+						"x-enumDescriptions": [
+							"Austria",
+							"Belgium",
+							"Bulgaria",
+							"Croatia",
+							"Cyprus",
+							"Czechia",
+							"Denmark",
+							"Estonia",
+							"Finland",
+							"France",
+							"Germany",
+							"Greece",
+							"Hungary",
+							"Ireland",
+							"Italy",
+							"Latvia",
+							"Lithuania",
+							"Luxembourg",
+							"Malta",
+							"Netherlands",
+							"Poland",
+							"Portugal",
+							"Romania",
+							"Slovakia",
+							"Slovenia",
+							"Spain",
+							"Sweden"
+						],
+						"enum": [
+							"AT",
+							"BE",
+							"BG",
+							"HR",
+							"CY",
+							"CZ",
+							"DK",
+							"EE",
+							"FI",
+							"FR",
+							"DE",
+							"GR",
+							"HU",
+							"IE",
+							"IT",
+							"LV",
+							"LT",
+							"LU",
+							"MT",
+							"NL",
+							"PL",
+							"PT",
+							"RO",
+							"SK",
+							"SI",
+							"ES",
+							"SE"
+						],
+						"type": "string"
+					},
+					"reporter_fluxer_tag": {
+						"description": "Fluxer tag of the reporter if they have an account",
+						"type": "string",
+						"minLength": 3,
+						"maxLength": 37
+					},
+					"report_type": {"type": "string", "const": "user", "description": "Type of report"},
+					"category": {"$ref": "#/components/schemas/UserReportCategory"},
+					"user_id": {"description": "ID of the user being reported", "$ref": "#/components/schemas/SnowflakeType"},
+					"user_tag": {
+						"description": "Fluxer tag of the user being reported",
+						"type": "string",
+						"minLength": 3,
+						"maxLength": 37
+					}
+				},
+				"required": ["ticket", "reporter_full_legal_name", "reporter_country_of_residence", "report_type", "category"]
+			},
+			"MessageDsaReportRequest": {
+				"type": "object",
+				"properties": {
+					"ticket": {"description": "Verification ticket obtained from email verification", "type": "string"},
+					"additional_info": {"description": "Additional context or details about the report", "type": "string"},
+					"reporter_full_legal_name": {
+						"description": "Full legal name of the person filing the report",
+						"type": "string"
+					},
+					"reporter_country_of_residence": {
+						"description": "EU country code of the reporter residence",
+						"x-enumNames": [
+							"AT",
+							"BE",
+							"BG",
+							"HR",
+							"CY",
+							"CZ",
+							"DK",
+							"EE",
+							"FI",
+							"FR",
+							"DE",
+							"GR",
+							"HU",
+							"IE",
+							"IT",
+							"LV",
+							"LT",
+							"LU",
+							"MT",
+							"NL",
+							"PL",
+							"PT",
+							"RO",
+							"SK",
+							"SI",
+							"ES",
+							"SE"
+						],
+						"x-enumDescriptions": [
+							"Austria",
+							"Belgium",
+							"Bulgaria",
+							"Croatia",
+							"Cyprus",
+							"Czechia",
+							"Denmark",
+							"Estonia",
+							"Finland",
+							"France",
+							"Germany",
+							"Greece",
+							"Hungary",
+							"Ireland",
+							"Italy",
+							"Latvia",
+							"Lithuania",
+							"Luxembourg",
+							"Malta",
+							"Netherlands",
+							"Poland",
+							"Portugal",
+							"Romania",
+							"Slovakia",
+							"Slovenia",
+							"Spain",
+							"Sweden"
+						],
+						"enum": [
+							"AT",
+							"BE",
+							"BG",
+							"HR",
+							"CY",
+							"CZ",
+							"DK",
+							"EE",
+							"FI",
+							"FR",
+							"DE",
+							"GR",
+							"HU",
+							"IE",
+							"IT",
+							"LV",
+							"LT",
+							"LU",
+							"MT",
+							"NL",
+							"PL",
+							"PT",
+							"RO",
+							"SK",
+							"SI",
+							"ES",
+							"SE"
+						],
+						"type": "string"
+					},
+					"reporter_fluxer_tag": {
+						"description": "Fluxer tag of the reporter if they have an account",
+						"type": "string",
+						"minLength": 3,
+						"maxLength": 37
+					},
+					"report_type": {"type": "string", "const": "message", "description": "Type of report"},
+					"category": {"$ref": "#/components/schemas/MessageReportCategory"},
+					"message_link": {"description": "Link to the message being reported", "type": "string"},
+					"reported_user_tag": {
+						"description": "Fluxer tag of the user who sent the message",
+						"type": "string",
+						"minLength": 3,
+						"maxLength": 37
+					}
+				},
+				"required": [
+					"ticket",
+					"reporter_full_legal_name",
+					"reporter_country_of_residence",
+					"report_type",
+					"category",
+					"message_link"
+				]
 			},
 			"MessageReportCategory": {
 				"description": "Category of the message report",
@@ -33509,6 +33382,74 @@
 					"child_safety",
 					"malicious_links",
 					"impersonation",
+					"other"
+				],
+				"type": "string"
+			},
+			"UserReportCategory": {
+				"description": "Category of the user report",
+				"x-enumNames": [
+					"harassment",
+					"hate_speech",
+					"spam_account",
+					"impersonation",
+					"underage_user",
+					"inappropriate_profile",
+					"other"
+				],
+				"x-enumDescriptions": [
+					"User engages in harassment, bullying, or intimidation",
+					"User promotes hatred against protected groups",
+					"Account used for spamming or bulk messaging",
+					"User falsely claims to be another person or entity",
+					"User appears to be under the minimum required age",
+					"Profile contains inappropriate or offensive content",
+					"Other violations not covered by specific categories"
+				],
+				"enum": [
+					"harassment",
+					"hate_speech",
+					"spam_account",
+					"impersonation",
+					"underage_user",
+					"inappropriate_profile",
+					"other"
+				],
+				"type": "string"
+			},
+			"GuildReportCategory": {
+				"description": "Category of the guild report",
+				"x-enumNames": [
+					"harassment",
+					"hate_speech",
+					"extremist_community",
+					"illegal_activity",
+					"child_safety",
+					"raid_coordination",
+					"spam",
+					"malware_distribution",
+					"other"
+				],
+				"x-enumDescriptions": [
+					"Guild facilitates harassment, bullying, or intimidation",
+					"Guild promotes hatred against protected groups",
+					"Guild promotes extremist or terrorist ideologies",
+					"Guild promotes or facilitates illegal activities",
+					"Guild endangers minors or hosts child abuse content",
+					"Guild coordinates attacks on other communities",
+					"Guild used for spamming or bulk messaging",
+					"Guild distributes malware or malicious software",
+					"Other violations not covered by specific categories"
+				],
+				"enum": [
+					"harassment",
+					"hate_speech",
+					"extremist_community",
+					"illegal_activity",
+					"child_safety",
+					"raid_coordination",
+					"spam",
+					"malware_distribution",
 					"other"
 				],
 				"type": "string"
@@ -33826,6 +33767,71 @@
 				"type": "string"
 			},
 			"CheckoutPaymentMethodEnum": {"type": "string", "enum": ["card", "pix", "upi"]},
+			"ExpiredLocalizedCardPreapprovalContinueResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"const": "expired",
+						"description": "The preapproval token has expired or is unknown"
+					}
+				},
+				"required": ["status"],
+				"additionalProperties": false
+			},
+			"RejectedLocalizedCardPreapprovalContinueResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"const": "rejected",
+						"description": "The preapproval failed and the paid checkout should not continue"
+					},
+					"reason": {
+						"type": "string",
+						"enum": [
+							"country_mismatch",
+							"missing_customer",
+							"missing_payment_method",
+							"missing_setup_intent",
+							"payment_method_not_card",
+							"unknown"
+						],
+						"description": "The reason the preapproval was rejected"
+					},
+					"actual_country": {
+						"description": "The detected card issuing country when available",
+						"anyOf": [{"type": "string", "minLength": 2, "maxLength": 2}, {"type": "null"}]
+					}
+				},
+				"required": ["status", "reason"],
+				"additionalProperties": false
+			},
+			"ReadyLocalizedCardPreapprovalContinueResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"const": "ready",
+						"description": "The preapproval succeeded and the paid checkout URL is ready"
+					},
+					"url": {"type": "string", "description": "The URL to redirect to"}
+				},
+				"required": ["status", "url"],
+				"additionalProperties": false
+			},
+			"PendingLocalizedCardPreapprovalContinueResponse": {
+				"type": "object",
+				"properties": {
+					"status": {
+						"type": "string",
+						"const": "pending",
+						"description": "The preapproval result is still being processed"
+					}
+				},
+				"required": ["status"],
+				"additionalProperties": false
+			},
 			"GifCategoryTagResponse": {
 				"type": "object",
 				"properties": {
