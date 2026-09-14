@@ -5,6 +5,7 @@ import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/Branded
 import {createWebhookID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {resolveExpressionSourceGuild} from '@app/api/guild/ExpressionSourceGuild';
 import {
 	collectGuildAuditLogUserIds,
 	isNoopGuildAuditLog,
@@ -12,7 +13,6 @@ import {
 	type StoredGuildAuditLogEntryResponse,
 } from '@app/api/guild/GuildAuditLogEntryMapper';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
-import {mapGuildToExpressionSourceGuildResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {GuildChannelService} from '@app/api/guild/services/GuildChannelService';
 import {GuildContentService} from '@app/api/guild/services/GuildContentService';
@@ -52,6 +52,7 @@ import type {
 } from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {
 	GuildEmojiMetadataResponse,
+	GuildExpressionSourceGuildResponse,
 	GuildStickerMetadataResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
@@ -260,7 +261,6 @@ export class GuildService {
 			name: emoji.name,
 			animated: emoji.isAnimated,
 			allow_cloning: guild.features.has(GuildFeatures.CLONE_EMOJI_ENABLED),
-			guild: mapGuildToExpressionSourceGuildResponse(guild),
 		};
 	}
 
@@ -274,8 +274,26 @@ export class GuildService {
 			name: sticker.name,
 			animated: sticker.animated,
 			allow_cloning: guild.features.has(GuildFeatures.CLONE_STICKER_ENABLED),
-			guild: mapGuildToExpressionSourceGuildResponse(guild),
 		};
+	}
+
+	async getEmojiSource(emojiId: EmojiID, userId: UserID): Promise<GuildExpressionSourceGuildResponse> {
+		const emoji = await this.guildRepository.getEmojiById(emojiId);
+		if (!emoji) throw new UnknownGuildEmojiError();
+		return this.resolveExpressionSourceGuild(emoji.guildId, userId);
+	}
+
+	async getStickerSource(stickerId: StickerID, userId: UserID): Promise<GuildExpressionSourceGuildResponse> {
+		const sticker = await this.guildRepository.getStickerById(stickerId);
+		if (!sticker) throw new UnknownGuildStickerError();
+		return this.resolveExpressionSourceGuild(sticker.guildId, userId);
+	}
+
+	private resolveExpressionSourceGuild(guildId: GuildID, userId: UserID): Promise<GuildExpressionSourceGuildResponse> {
+		return resolveExpressionSourceGuild({
+			loadGuild: () => this.gatewayService.getGuildData({guildId, userId, skipMembershipCheck: true}),
+			isMember: async () => (await this.gatewayService.getGuildMember({guildId, userId})).success,
+		});
 	}
 
 	async listGuildAuditLogs(params: {

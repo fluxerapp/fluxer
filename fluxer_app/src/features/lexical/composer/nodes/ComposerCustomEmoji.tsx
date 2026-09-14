@@ -4,6 +4,7 @@ import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
+import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import Guilds from '@app/features/guild/state/Guilds';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
@@ -96,7 +97,11 @@ export const ComposerCustomEmoji = observer(({emojiId, animated, display}: Compo
 		);
 	}
 	return (
-		<Tooltip text={display} data-flx="lexical.composer.nodes.composer-custom-emoji.tooltip">
+		<Tooltip
+			text={display}
+			delay={EXPRESSION_TOOLTIP_DELAY_MS}
+			data-flx="lexical.composer.nodes.composer-custom-emoji.tooltip"
+		>
 			<img
 				src={displayUrl}
 				alt={accessibleLabel}

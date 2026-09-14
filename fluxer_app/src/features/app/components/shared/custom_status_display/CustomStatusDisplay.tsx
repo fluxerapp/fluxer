@@ -10,6 +10,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import {getEmojiURL} from '@app/features/expressions/utils/EmojiUtils';
+import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
 import {usePresenceCustomStatus} from '@app/features/presence/hooks/usePresenceCustomStatus';
@@ -170,6 +171,7 @@ const StatusEmojiNameTooltip = observer(
 		return (
 			<Tooltip
 				text={getStatusEmojiDisplayName(status)}
+				delay={EXPRESSION_TOOLTIP_DELAY_MS}
 				data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.tooltip"
 			>
 				<TriggerComponent

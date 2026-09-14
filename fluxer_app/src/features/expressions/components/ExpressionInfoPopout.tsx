@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	EXPRESSION_TOOLTIP_DELAY_MS,
+	EXPRESSION_TOOLTIP_NUDGE_PX,
+} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import {observer} from 'mobx-react-lite';
@@ -35,11 +39,15 @@ export const ExpressionInfoPopout = observer(function ExpressionInfoPopout({
 	);
 	return (
 		<Popout
-			position="top"
-			animationType="smooth"
-			offsetMainAxis={8}
+			position="right-start"
+			animationType="profile-slide"
+			constrainHeight={false}
+			freezePosition
+			keepOpenOnTargetUnmount
 			tooltip={renderTooltip}
 			tooltipPosition="top"
+			tooltipDelay={EXPRESSION_TOOLTIP_DELAY_MS}
+			tooltipNudge={EXPRESSION_TOOLTIP_NUDGE_PX}
 			render={renderCard}
 			shouldOpenOnClick={shouldOpenOnClick}
 			data-flx="expressions.expression-info-popout.popout"

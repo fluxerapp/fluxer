@@ -9,6 +9,7 @@ import {ExpressionHoverTooltipContent} from '@app/features/expressions/component
 import {ExpressionInfoCard} from '@app/features/expressions/components/ExpressionInfoCard';
 import {ExpressionInfoPopout} from '@app/features/expressions/components/ExpressionInfoPopout';
 import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
+import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {EmojiRendererControl} from '@app/features/messaging/components/markdown/renderers/EmojiRendererControl';
 import type {RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -276,6 +277,7 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 			<Tooltip
 				key={id}
 				text={emojiData.name}
+				delay={EXPRESSION_TOOLTIP_DELAY_MS}
 				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.tooltip.plain"
 			>
 				{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.plain')}

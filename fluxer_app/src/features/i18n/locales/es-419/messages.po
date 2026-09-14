@@ -1453,7 +1453,7 @@ msgstr "{eightHours} horas"
 
 #. Error message in the messaging emoji renderer.
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:31
 #: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName} (no se pudo cargar)"
@@ -1479,12 +1479,12 @@ msgid "{everyoneMention} mentions"
 msgstr "Menciones de {everyoneMention}"
 
 #. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:94
+#: src/features/expressions/components/ExpressionInfoCard.tsx:99
 msgid "{expressionName} is a custom emoji from this community. Members can use it here."
 msgstr "{expressionName} es un emoji personalizado de esta comunidad. Los miembros pueden usarlo aquí."
 
 #. Reason shown in the confirmation before joining a community from a sticker info card. It explains that the sticker the viewer opened belongs to this community. {expressionName} is the sticker name.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:99
+#: src/features/expressions/components/ExpressionInfoCard.tsx:104
 msgid "{expressionName} is a custom sticker from this community. Members can use it here."
 msgstr "{expressionName} es un sticker personalizado de esta comunidad. Los miembros pueden usarlo aquí."
 
@@ -2639,6 +2639,11 @@ msgstr "Se requiere una verificación del navegador antes de la verificación te
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
 msgstr "un canal"
+
+#. Shown under the "This emoji is from" or "This sticker is from" label in the expression info card when the source community is private to the viewer or cannot be reached.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+msgid "A community that is either invite-only or unavailable."
+msgstr "Una comunidad que es solo por invitación o no está disponible."
 
 #. Description of a custom emoji in the emoji info card when the viewer can use it outside the community. productName is the Fluxer product name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:37
@@ -11051,12 +11056,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "Los discriminadores personalizados no están disponibles en esta instancia"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:23
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:24
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "Emoji personalizado {emojiName} de {communityName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:18
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:19
 msgid "Custom emoji {emojiName} from a community"
 msgstr "Emoji personalizado {emojiName} de una comunidad"
 
@@ -11166,7 +11171,7 @@ msgstr "Sonidos personalizados"
 msgid "Custom status"
 msgstr "Estado personalizado"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:565
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:567
 msgid "Custom status: "
 msgstr "Estado personalizado: "
 
@@ -12985,7 +12990,7 @@ msgid "Do you also want to block direct messages from members of your existing c
 msgstr "¿También quieres bloquear los mensajes directos de los miembros de tus comunidades existentes?"
 
 #. Body of the confirmation shown before joining a discoverable community from an expression info card. {communityName} is the community name.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:105
+#: src/features/expressions/components/ExpressionInfoCard.tsx:110
 msgid "Do you want to join {communityName}?"
 msgstr "¿Quieres unirte a {communityName}?"
 
@@ -16832,7 +16837,7 @@ msgid "Go back and enter a valid email."
 msgstr "Vuelve e ingresa un correo electrónico válido."
 
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+#: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Go to {communityName}"
 msgstr "Ir a {communityName}"
 
@@ -19135,7 +19140,7 @@ msgstr "Unirse"
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
-#: src/features/expressions/components/ExpressionInfoCard.tsx:89
+#: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "Unirse a {communityName}"
 
@@ -19318,7 +19323,7 @@ msgid "Jump to page"
 msgstr "Ir a la página"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:85
+#: src/features/channel/components/ChannelMessages.tsx:86
 msgid "Jump to present"
 msgstr "Ir a lo más reciente"
 
@@ -21420,12 +21425,12 @@ msgid "Message link"
 msgstr "Enlace del mensaje"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:77
+#: src/features/channel/components/ChannelMessages.tsx:78
 msgid "Message list"
 msgstr "Lista de mensajes"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:73
+#: src/features/channel/components/ChannelMessages.tsx:74
 msgid "Message list for {channelName}"
 msgstr "Lista de mensajes de {channelName}"
 
@@ -21533,7 +21538,7 @@ msgid "Messages deleted"
 msgstr "Mensajes eliminados"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:89
+#: src/features/channel/components/ChannelMessages.tsx:90
 msgid "Messages failed to load"
 msgstr "No se pudieron cargar los mensajes"
 
@@ -30322,7 +30327,7 @@ msgid "Set a custom role icon"
 msgstr "Se estableció un ícono personalizado para el rol"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:353
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:355
 msgid "Set a custom status"
 msgstr "Establecer un estado personalizado"
 
@@ -40684,7 +40689,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Estás en aislamiento temporal. No puedes enviar mensajes, reaccionar ni conectarte a canales de voz hasta que termine."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:81
+#: src/features/channel/components/ChannelMessages.tsx:82
 msgid "You're viewing older messages"
 msgstr "Estás viendo mensajes antiguos"
 

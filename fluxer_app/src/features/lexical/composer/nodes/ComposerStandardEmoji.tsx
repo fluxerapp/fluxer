@@ -3,6 +3,7 @@
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
+import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import {ComposerMentionContext} from '@app/features/lexical/composer/ComposerMentionContext';
 import styles from '@app/features/lexical/composer/nodes/ComposerInline.module.css';
 import {EmojiWithTooltip} from '@app/features/ui/emoji_tooltip_content/EmojiWithTooltip';
@@ -71,7 +72,11 @@ export const ComposerStandardEmoji = observer(({name, surrogate, url, display}: 
 		);
 	}
 	return (
-		<Tooltip text={display} data-flx="lexical.composer.nodes.composer-standard-emoji.tooltip">
+		<Tooltip
+			text={display}
+			delay={EXPRESSION_TOOLTIP_DELAY_MS}
+			data-flx="lexical.composer.nodes.composer-standard-emoji.tooltip"
+		>
 			{imageUrl ? (
 				<img
 					src={imageUrl}

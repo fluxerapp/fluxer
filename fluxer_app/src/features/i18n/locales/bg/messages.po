@@ -1453,7 +1453,7 @@ msgstr "{eightHours} часа"
 
 #. Error message in the messaging emoji renderer.
 #. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:30
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:31
 #: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName} (неуспешно зареждане)"
@@ -1479,12 +1479,12 @@ msgid "{everyoneMention} mentions"
 msgstr "Споменавания на {everyoneMention}"
 
 #. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:94
+#: src/features/expressions/components/ExpressionInfoCard.tsx:99
 msgid "{expressionName} is a custom emoji from this community. Members can use it here."
 msgstr "{expressionName} е емотикон от тази общност. Членовете могат да го използват тук."
 
 #. Reason shown in the confirmation before joining a community from a sticker info card. It explains that the sticker the viewer opened belongs to this community. {expressionName} is the sticker name.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:99
+#: src/features/expressions/components/ExpressionInfoCard.tsx:104
 msgid "{expressionName} is a custom sticker from this community. Members can use it here."
 msgstr "{expressionName} е персонализиран стикер от тази общност. Членовете могат да го използват тук."
 
@@ -2639,6 +2639,11 @@ msgstr "Необходима е проверка на браузъра, пред
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
 msgstr "канал"
+
+#. Shown under the "This emoji is from" or "This sticker is from" label in the expression info card when the source community is private to the viewer or cannot be reached.
+#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+msgid "A community that is either invite-only or unavailable."
+msgstr "Общност, която е само с покани или недостъпна."
 
 #. Description of a custom emoji in the emoji info card when the viewer can use it outside the community. productName is the Fluxer product name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:37
@@ -11051,12 +11056,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "Персонализираните дискриминатори не са налични в тази инстанция"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:23
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:24
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "Персонализирано емоджи {emojiName} от {communityName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:18
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:19
 msgid "Custom emoji {emojiName} from a community"
 msgstr "Персонализирано емоджи {emojiName} от общност"
 
@@ -11166,7 +11171,7 @@ msgstr "Персонализирани звуци"
 msgid "Custom status"
 msgstr "Персонализиран статус"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:565
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:567
 msgid "Custom status: "
 msgstr "Персонализиран статус: "
 
@@ -12985,7 +12990,7 @@ msgid "Do you also want to block direct messages from members of your existing c
 msgstr "Искаш ли да блокираш и директните съобщения от членове на съществуващите ти общности?"
 
 #. Body of the confirmation shown before joining a discoverable community from an expression info card. {communityName} is the community name.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:105
+#: src/features/expressions/components/ExpressionInfoCard.tsx:110
 msgid "Do you want to join {communityName}?"
 msgstr "Искаш ли да се присъединиш към {communityName}?"
 
@@ -16832,7 +16837,7 @@ msgid "Go back and enter a valid email."
 msgstr "Върни се и въведи валиден имейл."
 
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
-#: src/features/expressions/components/ExpressionInfoCard.tsx:84
+#: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Go to {communityName}"
 msgstr "Отиди в {communityName}"
 
@@ -19135,7 +19140,7 @@ msgstr "Присъединяване"
 #. Accessible label of a button that joins a community. {communityName} is the community name.
 #. Nagbar button label that opens the official product community invite. communityName is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:29
-#: src/features/expressions/components/ExpressionInfoCard.tsx:89
+#: src/features/expressions/components/ExpressionInfoCard.tsx:94
 msgid "Join {communityName}"
 msgstr "Присъединяване към {communityName}"
 
@@ -19318,7 +19323,7 @@ msgid "Jump to page"
 msgstr "Отиване на страница"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:85
+#: src/features/channel/components/ChannelMessages.tsx:86
 msgid "Jump to present"
 msgstr "Към най-новите"
 
@@ -21420,12 +21425,12 @@ msgid "Message link"
 msgstr "Линк към съобщението"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:77
+#: src/features/channel/components/ChannelMessages.tsx:78
 msgid "Message list"
 msgstr "Списък със съобщения"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:73
+#: src/features/channel/components/ChannelMessages.tsx:74
 msgid "Message list for {channelName}"
 msgstr "Списък със съобщения за {channelName}"
 
@@ -21533,7 +21538,7 @@ msgid "Messages deleted"
 msgstr "Съобщенията са изтрити"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:89
+#: src/features/channel/components/ChannelMessages.tsx:90
 msgid "Messages failed to load"
 msgstr "Съобщенията не можаха да се заредят"
 
@@ -30322,7 +30327,7 @@ msgid "Set a custom role icon"
 msgstr "Зададе персонализирана икона за ролята"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:353
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:355
 msgid "Set a custom status"
 msgstr "Задаване на персонализиран статус"
 
@@ -40684,7 +40689,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Наложено ти е време за изчакване. Съобщенията, реакциите и гласовият чат са на пауза, докато то изтече."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:81
+#: src/features/channel/components/ChannelMessages.tsx:82
 msgid "You're viewing older messages"
 msgstr "Преглеждаш по-стари съобщения"
 

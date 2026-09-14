@@ -5522,6 +5522,70 @@
 				]
 			}
 		},
+		"/emojis/{emoji_id}/source": {
+			"get": {
+				"operationId": "get_emoji_source",
+				"summary": "Get emoji source guild",
+				"tags": ["Emojis"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/GuildExpressionSourceGuildResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lookup the public presentation of the guild a custom emoji belongs to. Returned when the guild is discoverable or the caller is a member of it. Returns an unknown guild error when the guild is private and the caller is not a member, or when the guild is unavailable.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "emoji_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the emoji", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the emoji"
+					}
+				]
+			}
+		},
 		"/experiments": {
 			"get": {
 				"operationId": "get_experiments",
@@ -12138,6 +12202,70 @@
 					}
 				},
 				"description": "Lookup minimal metadata for a custom sticker by id, including whether the source guild allows the in-app one-click clone shortcut. Does not require membership in the source guild.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "sticker_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the sticker", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the sticker"
+					}
+				]
+			}
+		},
+		"/stickers/{sticker_id}/source": {
+			"get": {
+				"operationId": "get_sticker_source",
+				"summary": "Get sticker source guild",
+				"tags": ["Stickers"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/GuildExpressionSourceGuildResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lookup the public presentation of the guild a custom sticker belongs to. Returned when the guild is discoverable or the caller is a member of it. Returns an unknown guild error when the guild is private and the caller is not a member, or when the guild is unavailable.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -24834,6 +24962,22 @@
 				"contentEncoding": "binary",
 				"description": "The current stream preview image"
 			},
+			"GuildExpressionSourceGuildResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the source guild", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"name": {"type": "string", "description": "The name of the source guild"},
+					"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The hash of the source guild icon"},
+					"features": {
+						"type": "array",
+						"items": {"type": "string", "enum": ["VERIFIED", "PARTNERED", "DISCOVERABLE"]},
+						"description": "The badge feature flags of the source guild, limited to VERIFIED, PARTNERED, and DISCOVERABLE"
+					}
+				},
+				"required": ["id", "name", "icon", "features"],
+				"additionalProperties": false,
+				"description": "Public presentation of the source guild of an expression"
+			},
 			"GuildStickerMetadataResponse": {
 				"type": "object",
 				"properties": {
@@ -24850,10 +24994,9 @@
 					"allow_cloning": {
 						"type": "boolean",
 						"description": "Whether the source guild allows non-members to use the in-app clone shortcut"
-					},
-					"guild": {"$ref": "#/components/schemas/GuildExpressionSourceGuildResponse"}
+					}
 				},
-				"required": ["id", "guild_id", "name", "animated", "allow_cloning", "guild"],
+				"required": ["id", "guild_id", "name", "animated", "allow_cloning"],
 				"additionalProperties": false
 			},
 			"GlobalSearchMessagesRequest": {
@@ -27485,10 +27628,9 @@
 					"allow_cloning": {
 						"type": "boolean",
 						"description": "Whether the source guild allows non-members to use the in-app clone shortcut"
-					},
-					"guild": {"$ref": "#/components/schemas/GuildExpressionSourceGuildResponse"}
+					}
 				},
-				"required": ["id", "guild_id", "name", "animated", "allow_cloning", "guild"],
+				"required": ["id", "guild_id", "name", "animated", "allow_cloning"],
 				"additionalProperties": false
 			},
 			"DonationRequestLinkRequest": {
@@ -31202,22 +31344,6 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
-			"GuildExpressionSourceGuildResponse": {
-				"type": "object",
-				"properties": {
-					"id": {"description": "The ID of the source guild", "$ref": "#/components/schemas/SnowflakeStringType"},
-					"name": {"type": "string", "description": "The name of the source guild"},
-					"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The hash of the source guild icon"},
-					"features": {
-						"type": "array",
-						"items": {"type": "string", "enum": ["VERIFIED", "PARTNERED", "DISCOVERABLE"]},
-						"description": "The badge feature flags of the source guild, limited to VERIFIED, PARTNERED, and DISCOVERABLE"
-					}
-				},
-				"required": ["id", "name", "icon", "features"],
-				"additionalProperties": false,
-				"description": "Public presentation of the source guild of an expression"
-			},
 			"TypingIndicatorReworkAssignmentResponse": {
 				"type": "object",
 				"properties": {

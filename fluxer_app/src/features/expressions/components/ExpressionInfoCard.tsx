@@ -6,7 +6,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {joinDiscoveryGuild} from '@app/features/discovery/commands/DiscoveryJoinCommands';
 import type {ExpressionKind} from '@app/features/expressions/commands/ExpressionMetadataCommands';
 import styles from '@app/features/expressions/components/ExpressionInfoCard.module.css';
-import ExpressionMetadata from '@app/features/expressions/state/ExpressionMetadata';
+import ExpressionSource from '@app/features/expressions/state/ExpressionSource';
 import {hasGlobalExpressionsEnabled} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
@@ -81,6 +81,11 @@ const INVITE_ONLY_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Invite-only community',
 	comment: 'Subtitle for a community that can only be joined with an invite.',
 });
+const UNAVAILABLE_SOURCE_COMMUNITY_DESCRIPTOR = msg({
+	message: 'A community that is either invite-only or unavailable.',
+	comment:
+		'Shown under the "This emoji is from" or "This sticker is from" label in the expression info card when the source community is private to the viewer or cannot be reached.',
+});
 const GO_TO_NAMED_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Go to {communityName}',
 	comment:
@@ -132,16 +137,10 @@ function toSourceGuild(guild: Guild): ExpressionSourceGuild {
 	return {id: guild.id, name: guild.name, icon: guild.icon, features: [...guild.features]};
 }
 
-function readMetadataState(kind: ExpressionKind, expressionId: string) {
-	return kind === 'emoji'
-		? ExpressionMetadata.getEmojiMetadata(expressionId)
-		: ExpressionMetadata.getStickerMetadata(expressionId);
-}
-
 interface ExpressionSourceGuildState {
 	guild: ExpressionSourceGuild | null;
-	isResolving: boolean;
 	isRemoteSource: boolean;
+	isUnavailable: boolean;
 }
 
 function useExpressionSourceGuild(
@@ -149,41 +148,23 @@ function useExpressionSourceGuild(
 	expressionId: string | null,
 	guildId: string | null,
 ): ExpressionSourceGuildState {
-	const isLocallyKnown = guildId != null && Guilds.getGuild(guildId) != null;
-	const metadataState =
-		kind != null && expressionId != null && !isLocallyKnown ? readMetadataState(kind, expressionId) : null;
-	const isRemoteSource = metadataState != null;
-	const isResolving = metadataState != null && metadataState.data == null && metadataState.error == null;
-	const shouldFetch = isResolving && metadataState?.loading !== true;
+	const localGuild = guildId != null ? Guilds.getGuild(guildId) : null;
+	const sourceState =
+		localGuild == null && kind != null && expressionId != null ? ExpressionSource.getSource(kind, expressionId) : null;
+	const shouldFetch = sourceState?.status === 'idle';
 	useEffect(() => {
 		if (!shouldFetch || kind == null || expressionId == null) {
 			return;
 		}
-		const request =
-			kind === 'emoji'
-				? ExpressionMetadata.fetchEmojiMetadata(expressionId)
-				: ExpressionMetadata.fetchStickerMetadata(expressionId);
-		void request.catch(() => undefined);
+		void ExpressionSource.fetchSource(kind, expressionId);
 	}, [shouldFetch, kind, expressionId]);
-	const metadata = metadataState?.data ?? null;
-	const resolvedGuildId = guildId ?? metadata?.guildId ?? null;
-	const localGuild = resolvedGuildId != null ? Guilds.getGuild(resolvedGuildId) : null;
 	if (localGuild != null) {
-		return {guild: toSourceGuild(localGuild), isResolving: false, isRemoteSource};
+		return {guild: toSourceGuild(localGuild), isRemoteSource: false, isUnavailable: false};
 	}
-	if (metadata?.guild != null) {
-		return {
-			guild: {
-				id: metadata.guild.id,
-				name: metadata.guild.name,
-				icon: metadata.guild.icon,
-				features: metadata.guild.features,
-			},
-			isResolving: false,
-			isRemoteSource,
-		};
+	if (sourceState?.status === 'available') {
+		return {guild: sourceState.guild, isRemoteSource: true, isUnavailable: false};
 	}
-	return {guild: null, isResolving, isRemoteSource};
+	return {guild: null, isRemoteSource: sourceState != null, isUnavailable: sourceState?.status === 'unavailable'};
 }
 
 interface ExpressionJoinConfirmationProps {
@@ -363,6 +344,38 @@ const ExpressionSourceGuildRow = observer(function ExpressionSourceGuildRow({
 	);
 });
 
+const ExpressionSourceGuildUnavailable = observer(function ExpressionSourceGuildUnavailable({
+	kind,
+}: {
+	kind: ExpressionKind;
+}) {
+	const {i18n} = useLingui();
+	return (
+		<div
+			className={styles.guildSection}
+			data-flx="expressions.expression-info-card.source-guild-unavailable.guild-section"
+		>
+			<span
+				className={styles.guildLabel}
+				data-flx="expressions.expression-info-card.source-guild-unavailable.guild-label"
+			>
+				{i18n._(SOURCE_COMMUNITY_LABEL_DESCRIPTORS[kind])}
+			</span>
+			<span
+				className={clsx(styles.guildRow, styles.guildRowUnavailable)}
+				data-flx="expressions.expression-info-card.source-guild-unavailable.guild-row"
+			>
+				<span
+					className={styles.guildUnavailableText}
+					data-flx="expressions.expression-info-card.source-guild-unavailable.guild-unavailable-text"
+				>
+					{i18n._(UNAVAILABLE_SOURCE_COMMUNITY_DESCRIPTOR)}
+				</span>
+			</span>
+		</div>
+	);
+});
+
 const ExpressionSourceGuildPlaceholder = () => (
 	<div
 		className={clsx(styles.guildSection, styles.guildSectionPlaceholder)}
@@ -390,7 +403,7 @@ export const ExpressionInfoCard = observer(function ExpressionInfoCard(props: Ex
 	const kind: ExpressionKind | null = props.kind === 'default_emoji' ? null : props.kind;
 	const expressionId = props.kind === 'default_emoji' ? null : props.expressionId;
 	const guildId = props.kind === 'default_emoji' ? null : props.guildId;
-	const {guild: sourceGuild, isRemoteSource} = useExpressionSourceGuild(kind, expressionId, guildId);
+	const {guild: sourceGuild, isRemoteSource, isUnavailable} = useExpressionSourceGuild(kind, expressionId, guildId);
 	const isMember = sourceGuild != null && GuildList.guilds.some((candidate) => candidate.id === sourceGuild.id);
 	const resolveDescription = (): string => {
 		if (kind == null) {
@@ -434,7 +447,13 @@ export const ExpressionInfoCard = observer(function ExpressionInfoCard(props: Ex
 					data-flx="expressions.expression-info-card.expression-source-guild-row"
 				/>
 			)}
-			{isRemoteSource && sourceGuild == null && (
+			{kind != null && isUnavailable && (
+				<ExpressionSourceGuildUnavailable
+					kind={kind}
+					data-flx="expressions.expression-info-card.expression-source-guild-unavailable"
+				/>
+			)}
+			{isRemoteSource && sourceGuild == null && !isUnavailable && (
 				<ExpressionSourceGuildPlaceholder data-flx="expressions.expression-info-card.expression-source-guild-placeholder" />
 			)}
 		</div>

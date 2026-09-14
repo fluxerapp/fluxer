@@ -40,6 +40,8 @@ interface PopoutProps {
 	tooltip?: string | (() => React.ReactNode);
 	tooltipPosition?: TooltipPosition;
 	tooltipAlign?: 'center' | 'top' | 'bottom' | 'left' | 'right';
+	tooltipDelay?: number;
+	tooltipNudge?: number;
 	zIndexBoost?: number;
 	shouldAutoUpdate?: boolean;
 	freezePosition?: boolean;
@@ -512,6 +514,8 @@ export const Popout = React.forwardRef<HTMLElement, PopoutProps>((props, ref) =>
 			text={props.tooltip}
 			position={props.tooltipPosition}
 			align={props.tooltipAlign}
+			delay={props.tooltipDelay}
+			nudge={props.tooltipNudge}
 			data-flx="ui.popover.popout.tooltip"
 		>
 			{trigger}

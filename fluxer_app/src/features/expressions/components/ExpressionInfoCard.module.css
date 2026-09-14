@@ -103,11 +103,6 @@
 	cursor: pointer;
 }
 
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.guildRowButton:hover {
-	background: var(--expression-info-card-row-hover);
-}
-
 .guildInfo {
 	display: flex;
 	min-width: 0;
@@ -145,6 +140,17 @@
 
 .guildSectionPlaceholder {
 	pointer-events: none;
+}
+
+.guildRowUnavailable {
+	min-height: 2.5rem;
+}
+
+.guildUnavailableText {
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 1.25;
+	color: var(--text-primary-muted);
 }
 
 .guildIconPlaceholder {

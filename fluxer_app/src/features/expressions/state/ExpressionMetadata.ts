@@ -3,20 +3,12 @@
 import * as ExpressionMetadataCommands from '@app/features/expressions/commands/ExpressionMetadataCommands';
 import {action, makeAutoObservable, runInAction} from 'mobx';
 
-export interface ExpressionMetadataGuild {
-	id: string;
-	name: string;
-	icon: string | null;
-	features: Array<string>;
-}
-
 export interface ExpressionMetadata {
 	id: string;
 	guildId: string;
 	name: string;
 	animated: boolean;
 	allowCloning: boolean;
-	guild: ExpressionMetadataGuild | null;
 }
 
 export interface ExpressionMetadataRequestState {

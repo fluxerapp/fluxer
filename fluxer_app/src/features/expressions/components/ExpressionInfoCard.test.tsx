@@ -24,33 +24,17 @@ interface LocalGuild {
 	features: Set<string>;
 }
 
-interface MetadataState {
-	loading: boolean;
-	error: Error | null;
-	data: {
-		id: string;
-		guildId: string;
-		name: string;
-		animated: boolean;
-		allowCloning: boolean;
-		guild: RemoteGuild | null;
-	} | null;
-}
+type SourceState =
+	| {status: 'idle'}
+	| {status: 'loading'}
+	| {status: 'available'; guild: RemoteGuild}
+	| {status: 'unavailable'};
 
 const state = vi.hoisted(() => ({
 	localGuilds: [] as Array<{id: string; name: string; icon: string | null; features: Set<string>}>,
 	memberGuildIds: [] as Array<string>,
 	globalExpressions: false,
-	emoji: {loading: false, error: null, data: null} as {
-		loading: boolean;
-		error: Error | null;
-		data: unknown;
-	},
-	sticker: {loading: false, error: null, data: null} as {
-		loading: boolean;
-		error: Error | null;
-		data: unknown;
-	},
+	source: {status: 'idle'} as {status: string; guild?: unknown},
 	selectGuild: vi.fn(),
 	joinDiscoveryGuild: vi.fn(() => Promise.resolve()),
 	pushWithKey: vi.fn(),
@@ -80,12 +64,10 @@ vi.mock('@app/features/guild/state/GuildList', () => ({
 		},
 	},
 }));
-vi.mock('@app/features/expressions/state/ExpressionMetadata', () => ({
+vi.mock('@app/features/expressions/state/ExpressionSource', () => ({
 	default: {
-		getEmojiMetadata: () => state.emoji,
-		getStickerMetadata: () => state.sticker,
-		fetchEmojiMetadata: vi.fn(() => Promise.resolve()),
-		fetchStickerMetadata: vi.fn(() => Promise.resolve()),
+		getSource: () => state.source,
+		fetchSource: vi.fn(() => Promise.resolve()),
 	},
 }));
 vi.mock('@app/features/expressions/utils/ExpressionPermissionUtils', () => ({
@@ -137,30 +119,12 @@ const GUILD_ID = '20';
 const GUILD_NAME = 'Blob Club';
 const EXPRESSION_ID = '10';
 const DISPLAY_NAMES: Record<ExpressionKind, string> = {emoji: ':blob:', sticker: 'blobsticker'};
-const IDLE_METADATA: MetadataState = {loading: false, error: null, data: null};
-
 function localGuild(features: Array<string>): LocalGuild {
 	return {id: GUILD_ID, name: GUILD_NAME, icon: null, features: new Set(features)};
 }
 
-function remoteMetadata(features: Array<string>): MetadataState {
-	return {
-		loading: false,
-		error: null,
-		data: {
-			id: EXPRESSION_ID,
-			guildId: GUILD_ID,
-			name: 'blob',
-			animated: false,
-			allowCloning: false,
-			guild: {id: GUILD_ID, name: GUILD_NAME, icon: null, features},
-		},
-	};
-}
-
-function setMetadata(metadata: MetadataState): void {
-	state.emoji = metadata;
-	state.sticker = metadata;
+function setSource(source: SourceState): void {
+	state.source = source;
 }
 
 function joinedCommunity(features: Array<string>): void {
@@ -171,7 +135,7 @@ function joinedCommunity(features: Array<string>): void {
 function foreignCommunity(features: Array<string>): void {
 	state.localGuilds = [];
 	state.memberGuildIds = [];
-	setMetadata(remoteMetadata(features));
+	setSource({status: 'available', guild: {id: GUILD_ID, name: GUILD_NAME, icon: null, features}});
 }
 
 function renderCard(kind: ExpressionKind, guildId: string | null): string {
@@ -191,7 +155,7 @@ beforeEach(() => {
 	state.localGuilds = [];
 	state.memberGuildIds = [];
 	state.globalExpressions = false;
-	setMetadata(IDLE_METADATA);
+	setSource({status: 'idle'});
 	state.selectGuild.mockClear();
 	state.joinDiscoveryGuild.mockClear();
 	state.pushWithKey.mockClear();
@@ -241,12 +205,14 @@ describe('ExpressionInfoCard description', () => {
 			expect(markup).toContain('Invite-only community');
 		});
 
-		it(`falls back to the generic description when the ${kind} source community never resolves`, () => {
-			setMetadata({loading: false, error: new Error('lookup failed'), data: null});
+		it(`reports a ${kind} source community that is invite-only or unavailable without naming it`, () => {
+			setSource({status: 'unavailable'});
 			const markup = renderCard(kind, null);
 			expect(markup).toContain(`This is a custom ${kind} from a community.`);
-			expect(markup).not.toContain('This emoji is from');
-			expect(markup).not.toContain('This sticker is from');
+			expect(markup).toContain(kind === 'emoji' ? 'This emoji is from' : 'This sticker is from');
+			expect(markup).toContain('A community that is either invite-only or unavailable.');
+			expect(markup).not.toContain(GUILD_NAME);
+			expect(markup).not.toContain('guild-icon');
 		});
 
 		it(`labels the source community section for a ${kind}`, () => {
@@ -258,7 +224,7 @@ describe('ExpressionInfoCard description', () => {
 
 		it(`keeps the ${kind} description identical while the source community resolves`, () => {
 			const expected = `This is a custom ${kind} from a community.`;
-			setMetadata({loading: true, error: null, data: null});
+			setSource({status: 'loading'});
 			const resolving = renderCard(kind, null);
 			expect(resolving).toContain(DISPLAY_NAMES[kind]);
 			expect(resolving).toContain(expected);

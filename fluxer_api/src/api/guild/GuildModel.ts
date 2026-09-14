@@ -15,13 +15,11 @@ import type {GuildMember} from '@app/api/models/GuildMember';
 import type {GuildRole} from '@app/api/models/GuildRole';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
-import {
-	GUILD_EXPRESSION_SOURCE_BADGE_FEATURES,
-	type GuildEmojiResponse,
-	type GuildEmojiWithUserResponse,
-	type GuildExpressionSourceGuildResponse,
-	type GuildStickerResponse,
-	type GuildStickerWithUserResponse,
+import type {
+	GuildEmojiResponse,
+	GuildEmojiWithUserResponse,
+	GuildStickerResponse,
+	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildPartialResponse, GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -49,15 +47,6 @@ export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 		embed_splash_height: embedSplashHash ? guild.embedSplashHeight : null,
 		splash_card_alignment: guild.splashCardAlignment,
 		features: mapGuildFeatures(guild.features),
-	};
-}
-
-export function mapGuildToExpressionSourceGuildResponse(guild: Guild): GuildExpressionSourceGuildResponse {
-	return {
-		id: guild.id.toString(),
-		name: guild.name,
-		icon: stripGuildIconForFeatures(guild.iconHash, guild.features),
-		features: GUILD_EXPRESSION_SOURCE_BADGE_FEATURES.filter((feature) => guild.features.has(feature)),
 	};
 }
 

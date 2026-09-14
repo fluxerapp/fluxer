@@ -145,6 +145,10 @@ div.urlEmbedSpoiler {
 	width: 10rem;
 }
 
+.stickerWrapperInteractive {
+	cursor: pointer;
+}
+
 .stickerImage {
 	height: 100%;
 	width: 100%;

@@ -729,7 +729,7 @@ const StickerItemWithInfoCard = observer(({sticker, message, sourceChannel, hand
 			<button
 				type="button"
 				aria-label={stickerRecord?.description || sticker.name}
-				className={styles.stickerWrapper}
+				className={clsx(styles.stickerWrapper, styles.stickerWrapperInteractive)}
 				data-message-sticker="true"
 				onContextMenu={handleContextMenu}
 				onClick={handleRevealClick}

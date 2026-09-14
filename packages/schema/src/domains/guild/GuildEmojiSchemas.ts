@@ -97,7 +97,6 @@ export const GuildEmojiMetadataResponse = z.object({
 	name: z.string().describe('The name of the emoji'),
 	animated: z.boolean().describe('Whether this emoji is animated'),
 	allow_cloning: z.boolean().describe('Whether the source guild allows non-members to use the in-app clone shortcut'),
-	guild: GuildExpressionSourceGuildResponse,
 });
 
 export type GuildEmojiMetadataResponse = z.infer<typeof GuildEmojiMetadataResponse>;
@@ -108,7 +107,6 @@ export const GuildStickerMetadataResponse = z.object({
 	name: z.string().describe('The name of the sticker'),
 	animated: z.boolean().describe('Whether this sticker is animated'),
 	allow_cloning: z.boolean().describe('Whether the source guild allows non-members to use the in-app clone shortcut'),
-	guild: GuildExpressionSourceGuildResponse,
 });
 
 export type GuildStickerMetadataResponse = z.infer<typeof GuildStickerMetadataResponse>;
