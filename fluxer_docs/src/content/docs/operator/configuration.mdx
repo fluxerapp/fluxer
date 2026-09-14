@@ -605,7 +605,7 @@ Default `8090`. The health and metrics port. Not published.
 
 #### `FLUXER_SVC_MAX_CONCURRENT_REQUESTS`
 
-Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight request ceiling. The built-in defaults key off `FLUXER_SVC_NAME`. Compose forwards `FLUXER_SVC_MAX_CONCURRENT_REQUESTS` to `users`, `users-shard`, `messages`, and `messages-shard` at a default of 20, which pairs with their 20-connection Postgres pools, and leaves the other containers on the built-in defaults.
+Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight request ceiling. The built-in defaults key off `FLUXER_SVC_NAME`. Compose forwards `FLUXER_SVC_MAX_CONCURRENT_REQUESTS` to `users`, `users-shard`, `messages`, and `messages-shard`, and leaves the other containers on the built-in defaults. Left unset, those four keep their built-in defaults too. Once set, the one value replaces the default on all four, so a value below 192 also lowers the messages ceiling. A router holds a slot for the whole round trip to its shard. A request over the ceiling is rejected at once. The API request behind it fails with a 503, and the API logs `shard rejected the request because it is at its concurrency limit`.
 
 #### `POD_NAME`
 
