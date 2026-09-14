@@ -293,7 +293,7 @@ A guild belongs to `((guild_id >> 22) % shard_count)`, computed on the integer v
 
 The pair selects the session's guild membership. At Identify, Fluxer filters the account's guild list to the guilds the shard owns, and the session connects only to those.
 
-For a user session, the filtered set is also the [Ready](/gateway/events/#ready) `guilds` array. For a bot session, it is the guild burst of [Guild Create](/gateway/events/#guild-create) and [Guild Delete](/gateway/events/#guild-delete) Dispatches after Ready. Ready echoes the accepted pair back as `shard`.
+On every session, the filtered set is also the [Ready](/gateway/events/#ready) `guilds` array. A bot session has each of those guilds as an unavailable guild, and one [Guild Create](/gateway/events/#guild-create) or [Guild Delete](/gateway/events/#guild-delete) per guild follows Ready. Ready echoes the accepted pair back as `shard`.
 
 Fluxer checks only a bot session against the guild ceiling. A bot whose shard owns more than 2,500 guilds closes with `4011` and reason `Sharding required`. A bot that supplies no pair is checked against its whole guild list. A user session is bounded by the 100-session-per-user limit alone, whatever its guild count.
 

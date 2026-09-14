@@ -146,7 +146,7 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 | _timings? | object | HTTP-side timing breakdown, present only for a staff account |
 | _timings_gw? | object | Gateway-side timing breakdown, present only for a staff account |
 
-<sup>1</sup> A bot session always receives an empty array here and the guilds arrive as the [Guild Create](#guild-create) burst described below
+<sup>1</sup> On a bot session every entry is an unavailable guild with `id` and `unavailable: true` alone. The burst described below then sends a [Guild Create](#guild-create) with the full state of each available guild, and a [Guild Delete](#guild-delete) for each unavailable one
 
 <sup>2</sup> Each entry has its `user` field removed and the removed accounts appear in `users` instead, so a client resolves a relationship through the entry's `id`
 
@@ -156,7 +156,7 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 
 Ready is sent outside the replay buffer, so a [Resume](/gateway/commands/#resume) never replays it.
 
-A bot session receives one [Guild Create](#guild-create) per available guild immediately after Ready, and one [Guild Delete](#guild-delete) per unavailable guild. Those Dispatches are also sent outside the replay buffer.
+A bot session receives one [Guild Create](#guild-create) per available guild immediately after Ready, and one [Guild Delete](#guild-delete) per unavailable guild. Together they resolve the entries of the `guilds` array. Those Dispatches are also sent outside the replay buffer.
 
 Shortly after Ready, every session receives one [Call Create](#call-create) for each of its private channels that has an active call.
 
@@ -187,9 +187,9 @@ The same structure appears in Ready, [Guild Create](#guild-create), and [Guild S
 
 <sup>3</sup> Guild presences arrive as separate [Presence Update](#presence-update) and [Presence Update Bulk](#presence-update-bulk) Dispatches
 
-An unavailable guild is reduced to `id` and `unavailable: true`, plus `unavailable_hidden: true` when the guild is hidden. It has none of the other fields.
+An unavailable guild is reduced to `id` and `unavailable: true`, plus `unavailable_hidden: true` when the guild is hidden. It has none of the other fields. Every entry in a bot session's [Ready](#ready) `guilds` array has this form, with `id` and `unavailable: true` alone.
 
-Inside [Ready](#ready), and inside the [Guild Create](#guild-create) burst a bot receives immediately after Ready, each entry in `members` has its `user` replaced by `{"id": "..."}`. On a user session the removed accounts appear in the Ready payload's `users` array. A bot's `users` array is empty, so a bot pulls those accounts with [Request Guild Members](/gateway/commands/#request-guild-members). A [Guild Create](#guild-create) sent later in the session, and every [Guild Sync](#guild-sync), have the members with `user` intact.
+Inside [Ready](#ready), and inside the [Guild Create](#guild-create) burst a bot receives immediately after Ready, each entry in `members` has its `user` replaced by `{"id": "..."}`. A bot session's Ready has no `members` at all, because each of its guilds is an unavailable guild, so a bot sees the reduced form in the burst alone. On a user session the removed accounts appear in the Ready payload's `users` array. A bot's `users` array is empty, so a bot pulls those accounts with [Request Guild Members](/gateway/commands/#request-guild-members). A [Guild Create](#guild-create) sent later in the session, and every [Guild Sync](#guild-sync), have the members with `user` intact.
 
 #### Session presence object
 
@@ -380,7 +380,9 @@ A guild became available to the session. The payload is a [guild ready object](#
 
 `roles`, `channels`, `emojis`, `stickers`, and `voice_states` are always complete. A client that stores any of them for the guild replaces its stored list with the new array. `members` is a partial list. A client adds or updates those members and keeps every other member it already stores.
 
-A user session receives Guild Create when a guild becomes available after Ready, for example after joining one or after an unavailable guild recovers. A bot session receives one for every guild in the burst that follows Ready.
+Every session receives Guild Create when a guild becomes available after Ready, for example after joining one or after an unavailable guild recovers. A bot session also receives one for each available guild in the burst that follows Ready.
+
+A bot session's Guild Create has `unavailable: false` unless it is the first Guild Create for a guild the bot joined during the session and [Ready](#ready) did not list. That Dispatch has no `unavailable` field, even when a [Guild Delete](#guild-delete) with `unavailable: true` for the guild came before it. A user session never receives the field on Guild Create.
 
 ### <span id="guild-sync"></span>GUILD_SYNC
 
