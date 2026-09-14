@@ -106,11 +106,13 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').interactions.pinMessage({
 				userId,
 				channelId,
 				messageId,
 				requestCache,
+				auditLogReason,
 			});
 			return ctx.body(null, 204);
 		},
@@ -136,11 +138,13 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').interactions.unpinMessage({
 				userId,
 				channelId,
 				messageId,
 				requestCache,
+				auditLogReason,
 			});
 			return ctx.body(null, 204);
 		},

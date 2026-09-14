@@ -686,7 +686,14 @@ const INVITE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 		const count = change.newValue;
 		return (
 			<Trans>
-				This invite expires after <Plural value={count} one="# use" other="# uses" />.
+				This invite expires after{' '}
+				<Plural
+					value={count}
+					one="# use"
+					other="# uses"
+					data-flx="guild.guild-tabs.guild-audit-log-tab-renderers.max-uses.plural"
+				/>
+				.
 			</Trans>
 		);
 	},

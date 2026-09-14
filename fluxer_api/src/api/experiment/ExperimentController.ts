@@ -11,6 +11,7 @@ import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {resolveBlockedMessageGroupsAssignment} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {resolveGuildActivityLogPresentationAssignment} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 
@@ -37,12 +38,14 @@ export function ExperimentController(app: HonoApp) {
 				messageHoverTrackingConfig,
 				messageKeyboardFocusConfig,
 				blockedMessageGroupsConfig,
+				guildActivityLogPresentationConfig,
 			] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 				instanceConfigRepository.getMessageHoverTrackingConfig(),
 				instanceConfigRepository.getMessageKeyboardFocusConfig(),
 				instanceConfigRepository.getBlockedMessageGroupsConfig(),
+				instanceConfigRepository.getGuildActivityLogPresentationConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -53,6 +56,10 @@ export function ExperimentController(app: HonoApp) {
 					message_hover_tracking: resolveMessageHoverTrackingAssignment(messageHoverTrackingConfig, userId),
 					message_keyboard_focus: resolveMessageKeyboardFocusAssignment(messageKeyboardFocusConfig, userId),
 					blocked_message_groups: resolveBlockedMessageGroupsAssignment(blockedMessageGroupsConfig, userId),
+					guild_activity_log_presentation: resolveGuildActivityLogPresentationAssignment(
+						guildActivityLogPresentationConfig,
+						userId,
+					),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

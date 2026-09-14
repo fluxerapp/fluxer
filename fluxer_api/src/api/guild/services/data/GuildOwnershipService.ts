@@ -17,6 +17,8 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 
+const OWNERSHIP_AUDIT_KEYS: ReadonlySet<string> = new Set(['owner_id']);
+
 export class GuildOwnershipService {
 	constructor(
 		private readonly guildRepository: IGuildRepositoryAggregate,
@@ -64,8 +66,7 @@ export class GuildOwnershipService {
 			action: AuditLogActionType.GUILD_UPDATE,
 			targetId: guildId,
 			auditLogReason: auditLogReason ?? null,
-			metadata: {new_owner_id: newOwnerId.toString()},
-			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, OWNERSHIP_AUDIT_KEYS),
 		});
 		return mapGuildToGuildResponse(updatedGuild);
 	}

@@ -33,6 +33,7 @@ import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admi
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {BlockedMessageGroupsConfigSchema} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {GuildActivityLogPresentationConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
 import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
@@ -60,6 +61,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		ssoConfig,
 		gatewayRollout,
 		voiceNoiseSuppression,
+		guildActivityLogPresentation,
 		experimentDelivery,
 		messageHoverTracking,
 		messageKeyboardFocus,
@@ -71,6 +73,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getSsoConfig(),
 		instanceConfigRepository.getGatewayRolloutConfig(),
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
+		instanceConfigRepository.getGuildActivityLogPresentationConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getMessageHoverTrackingConfig(),
 		instanceConfigRepository.getMessageKeyboardFocusConfig(),
@@ -105,6 +108,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		},
 		gateway_rollout: gatewayRollout,
 		voice_noise_suppression: voiceNoiseSuppression,
+		guild_activity_log_presentation: guildActivityLogPresentation,
 		experiment_delivery: experimentDelivery,
 		message_hover_tracking: messageHoverTracking,
 		message_keyboard_focus: messageKeyboardFocus,
@@ -250,6 +254,19 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentNoiseSuppression.config_version + 1,
 					});
 					await instanceConfigRepository.setVoiceNoiseSuppressionConfig(validated);
+				}
+			}
+			if (data.guild_activity_log_presentation) {
+				const patch = omitUndefinedFields(data.guild_activity_log_presentation);
+				if (Object.keys(patch).length > 0) {
+					const currentGuildActivityLogPresentation =
+						await instanceConfigRepository.getGuildActivityLogPresentationConfig();
+					const validated = GuildActivityLogPresentationConfigSchema.parse({
+						...currentGuildActivityLogPresentation,
+						...patch,
+						config_version: currentGuildActivityLogPresentation.config_version + 1,
+					});
+					await instanceConfigRepository.setGuildActivityLogPresentationConfig(validated);
 				}
 			}
 			if (data.message_hover_tracking) {

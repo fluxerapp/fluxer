@@ -104,12 +104,14 @@ export class ChannelDataService {
 		data,
 		clientFeatures,
 		requestCache,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		data: Omit<ChannelUpdateRequest, 'type'>;
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
+		auditLogReason: string | null;
 	}): Promise<Channel> {
 		const {channel} = await this.auth.getChannelAuthenticated({userId, channelId, skipNsfwValidation: true});
 		if (channel.type === ChannelTypes.GROUP_DM) {
@@ -182,6 +184,7 @@ export class ChannelDataService {
 			data: channelUpdateData,
 			clientFeatures,
 			requestCache,
+			auditLogReason,
 		});
 	}
 }

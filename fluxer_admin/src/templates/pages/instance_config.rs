@@ -3,7 +3,8 @@
 use crate::{
     api::types::{
         AppPublicConfigResponse, BlockedMessageGroupsConfigResponse,
-        ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
+        ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse,
+        GuildActivityLogPresentationConfigResponse, InstanceConfigResponse,
         InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
         InstanceRegistrationResponse, LimitConfigResponse, MessageHoverTrackingConfigResponse,
         MessageKeyboardFocusConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
@@ -152,6 +153,7 @@ pub fn instance_config_page(
                         (message_hover_tracking_section(base, csrf_token, &instance_config.message_hover_tracking))
                         (message_keyboard_focus_section(base, csrf_token, &instance_config.message_keyboard_focus))
                         (blocked_message_groups_section(base, csrf_token, &instance_config.blocked_message_groups))
+                        (guild_activity_log_presentation_section(base, csrf_token, &instance_config.guild_activity_log_presentation))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1484,6 +1486,109 @@ fn blocked_message_groups_section(
 
                     (form_actions(html! {
                         (submit_button("Save Blocked Message Groups Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn guild_activity_log_presentation_section(
+    base: &str,
+    csrf_token: &str,
+    guild_activity_log_presentation: &GuildActivityLogPresentationConfigResponse,
+) -> Markup {
+    let status = if guild_activity_log_presentation.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = guild_activity_log_presentation.included_user_ids.join("\n");
+    let excluded_user_ids = guild_activity_log_presentation.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Guild Activity Log Presentation",
+        "Picks which activity log rendering targeted clients run in community settings. A \
+         targeted client renders each activity log entry through the rewritten presenters. \
+         While the master switch below is off every client keeps the previous activity log \
+         rendering, whatever the rest of these fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_guild_activity_log_presentation"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (guild_activity_log_presentation.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "guild_activity_log_presentation_enabled",
+                        "true",
+                        "Serve guild activity log presentation assignments to clients",
+                        guild_activity_log_presentation.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         rollout is inert and keeps the previous activity log rendering, so the \
+                         rollout and targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "guild_activity_log_presentation_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &guild_activity_log_presentation.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "guild_activity_log_presentation_rollout_salt",
+                            "Rollout Salt",
+                            &guild_activity_log_presentation.rollout_salt,
+                            "guild-activity-log-presentation-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "guild_activity_log_presentation_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "guild_activity_log_presentation_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Guild Activity Log Presentation Configuration"))
                     }))
                 }
             }

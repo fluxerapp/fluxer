@@ -35,13 +35,27 @@ export type AuditLogChange = z.infer<typeof AuditLogChangeSchema>;
 const AuditLogOptionsSchema = z.object({
 	channel_id: z.string().optional().describe('Channel ID for relevant actions'),
 	count: z.number().optional().describe('Count of items affected'),
-	delete_member_days: z.string().optional().describe('Number of days of messages to delete on member ban'),
+	delete_member_days: z
+		.string()
+		.optional()
+		.describe(
+			'Deprecated. Whole days of messages deleted, written only by bans recorded before delete_message_seconds',
+		),
+	delete_message_seconds: z
+		.number()
+		.optional()
+		.describe("Seconds of the banned user's messages that the ban deleted, present only when positive"),
 	id: z.string().optional().describe('ID of the affected entity'),
 	integration_type: z.number().optional().describe('Type of integration'),
 	message_id: z.string().optional().describe('Message ID for relevant actions'),
 	members_removed: z.number().optional().describe('Number of members removed'),
-	role_name: z.string().optional().describe('Name of the role'),
-	type: z.number().optional().describe('Type identifier'),
+	role_name: z.string().optional().describe('Name of the role when the entry was written'),
+	type: z
+		.number()
+		.optional()
+		.describe(
+			'Channel type for CHANNEL_CREATE, CHANNEL_UPDATE and CHANNEL_DELETE. Overwrite target type (0 role, 1 member) for CHANNEL_OVERWRITE_*',
+		),
 	inviter_id: z.string().optional().describe('ID of the user who created the invite'),
 	max_age: z.number().optional().describe('Maximum age of the invite in seconds'),
 	max_uses: z.number().optional().describe('Maximum number of uses for the invite'),
@@ -56,7 +70,12 @@ export const GuildAuditLogEntryResponse = z.object({
 	action_type: AuditLogActionTypeSchema,
 	user_id: SnowflakeStringType.nullish().describe('The user ID of the user who performed the action'),
 	target_id: z.string().nullish().describe('The ID of the affected entity (user, channel, role, invite code, etc.)'),
-	reason: z.string().optional().describe('The reason provided for the action'),
+	reason: z
+		.string()
+		.optional()
+		.describe(
+			'The audit log reason. For bans and timeouts without an X-Audit-Log-Reason header this is the reason sent in the request body',
+		),
 	options: AuditLogOptionsSchema.optional().describe('Additional options depending on action type'),
 	changes: z.array(AuditLogChangeSchema).optional().describe('Changes made to the target'),
 });

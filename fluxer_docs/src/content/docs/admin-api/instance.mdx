@@ -35,6 +35,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | sso | [SSO configuration](#sso-configuration-object) object | Single sign-on settings |
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
 | voice_noise_suppression | [voice noise suppression configuration](#voice-noise-suppression-configuration-object) object | Client-side noise suppression rollout |
+| guild_activity_log_presentation | [guild activity log presentation configuration](#guild-activity-log-presentation-configuration-object) object | Activity log rendering rollout |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | message_hover_tracking | [message hover tracking configuration](#message-hover-tracking-configuration-object) object | Message hover implementation rollout |
 | message_keyboard_focus | [message keyboard focus configuration](#message-keyboard-focus-configuration-object) object | Message list keyboard navigation rollout |
@@ -123,6 +124,27 @@ Every field is present on read. An absent document or missing field uses the def
 `excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
 
 How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
+
+## Guild activity log presentation configuration object
+
+The instance rollout of the activity log rendering the client runs in community settings. [Experiments](/http-api/experiments/) defines what a client resolves from it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| rollout_basis_points | integer | Share of accounts drawn, in basis points (0-10000, default 0) |
+| rollout_salt | string | Salt of the sampling hash (1-64 characters, default `guild-activity-log-presentation-v1`) |
+| included_user_ids | array[snowflake] | Accounts always drawn, up to 1000 entries (default empty) |
+| excluded_user_ids | array[snowflake] | Accounts never drawn, up to 1000 entries (default empty) |
+
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+`excluded_user_ids` is applied before `included_user_ids`, so an account in both is never drawn. A drawn client renders each activity log entry as a summary sentence followed by its recorded changes, and a client that is not drawn keeps the activity log rendering it ships with. Neither arm changes any response this API produces.
+
+How often a client revalidates this rollout is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
 
 ## Experiment delivery configuration object
 
@@ -591,6 +613,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | sso?<sup>1</sup> | object | Every [SSO configuration](#sso-configuration-object) field except `client_secret_set` and `redirect_uri`, plus `client_secret` |
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
 | voice_noise_suppression? | object | Any subset of the [noise suppression](#voice-noise-suppression-configuration-object) fields |
+| guild_activity_log_presentation? | object | Any subset of the [guild activity log presentation](#guild-activity-log-presentation-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | message_hover_tracking? | object | Any subset of the [message hover tracking](#message-hover-tracking-configuration-object) fields |
 | message_keyboard_focus? | object | Any subset of the [message keyboard focus](#message-keyboard-focus-configuration-object) fields |
@@ -606,6 +629,8 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 <sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. Every string is trimmed before it is stored
 
 `voice_noise_suppression` takes every [voice noise suppression configuration](#voice-noise-suppression-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
+
+`guild_activity_log_presentation` takes every [guild activity log presentation configuration](#guild-activity-log-presentation-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
 `message_hover_tracking` takes every [message hover tracking configuration](#message-hover-tracking-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 `message_keyboard_focus` takes every [message keyboard focus configuration](#message-keyboard-focus-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises that section's own `config_version` by one on each request that supplies at least one of them, independently of the noise suppression revision. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
@@ -647,7 +672,7 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `voice_noise_suppression`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `voice_noise_suppression`, `guild_activity_log_presentation`, `message_hover_tracking`, `message_keyboard_focus`, `blocked_message_groups`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

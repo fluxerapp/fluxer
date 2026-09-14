@@ -8,6 +8,7 @@ import {mapGuildRoleToResponse} from '@app/api/guild/GuildModel';
 import type {IGuildMemberRepository} from '@app/api/guild/repositories/IGuildMemberRepository';
 import type {IGuildRoleRepository} from '@app/api/guild/repositories/IGuildRoleRepository';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import {computeMovedIds, getMemberListRoleOrderIds} from '@app/api/guild/services/role/RoleOrderAuditUtils';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {Logger} from '@app/api/Logger';
@@ -245,6 +246,7 @@ export class GuildRoleService {
 			action: AuditLogActionType.ROLE_UPDATE,
 			targetId: roleId,
 			auditLogReason: auditLogReason ?? null,
+			metadata: {role_name: updatedRole.name},
 			changes,
 		});
 		return mapGuildRoleToResponse(updatedRole);
@@ -403,7 +405,15 @@ export class GuildRoleService {
 			}
 			if (changedRoles.length > 0) {
 				await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
-				await this.recordRolePositionAuditLogs({guildId, userId, roleMap, changedRoles, auditLogReason});
+				await this.recordRolePositionAuditLogs({
+					guildId,
+					userId,
+					roleMap,
+					changedRoles,
+					movedRoleIds: this.computeMovedHoistRoleIds({allRoles, changedRoles, everyoneRoleId}),
+					auditLogReason,
+					key: 'hoist_position',
+				});
 			}
 		} finally {
 			await this.cacheService.releaseLock(lockKey, lockToken);
@@ -443,7 +453,19 @@ export class GuildRoleService {
 			}
 			if (changedRoles.length > 0) {
 				await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
-				await this.recordRolePositionAuditLogs({guildId, userId, roleMap, changedRoles, auditLogReason});
+				await this.recordRolePositionAuditLogs({
+					guildId,
+					userId,
+					roleMap,
+					changedRoles,
+					movedRoleIds: this.computeMovedHoistRoleIds({
+						allRoles,
+						changedRoles,
+						everyoneRoleId: guildIdToRoleId(guildId),
+					}),
+					auditLogReason,
+					key: 'hoist_position',
+				});
 			}
 		} finally {
 			await this.cacheService.releaseLock(lockKey, lockToken);
@@ -629,8 +651,38 @@ export class GuildRoleService {
 		});
 		if (changedRoles.length > 0) {
 			await this.dispatchGuildRoleUpdateBulk({guildId, roles: changedRoles});
-			await this.recordRolePositionAuditLogs({guildId, userId, roleMap, changedRoles, auditLogReason});
+			await this.recordRolePositionAuditLogs({
+				guildId,
+				userId,
+				roleMap,
+				changedRoles,
+				movedRoleIds: computeMovedIds(
+					currentOrder.map((role) => role.id),
+					this.getCurrentRoleOrder(updatedRoles, everyoneRoleId).map((role) => role.id),
+				),
+				auditLogReason,
+				key: 'position',
+			});
 		}
+	}
+
+	private computeMovedHoistRoleIds(params: {
+		allRoles: Array<GuildRole>;
+		changedRoles: Array<GuildRole>;
+		everyoneRoleId: RoleID;
+	}): Set<RoleID> {
+		const {allRoles, changedRoles, everyoneRoleId} = params;
+		const changedRoleMap = new Map(changedRoles.map((role) => [role.id, role]));
+		const updatedRoles = allRoles.map((role) => changedRoleMap.get(role.id) ?? role);
+		const afterOrderIds = getMemberListRoleOrderIds(updatedRoles, everyoneRoleId);
+		const movedRoleIds = computeMovedIds(getMemberListRoleOrderIds(allRoles, everyoneRoleId), afterOrderIds);
+		const memberListRoleIds = new Set(afterOrderIds);
+		for (const role of changedRoles) {
+			if (!memberListRoleIds.has(role.id)) {
+				movedRoleIds.add(role.id);
+			}
+		}
+		return movedRoleIds;
 	}
 
 	private getCurrentRoleOrder(allRoles: Array<GuildRole>, everyoneRoleId: RoleID): Array<GuildRole> {
@@ -709,10 +761,15 @@ export class GuildRoleService {
 		userId: UserID;
 		roleMap: Map<RoleID, GuildRole>;
 		changedRoles: Array<GuildRole>;
+		movedRoleIds: ReadonlySet<RoleID>;
 		auditLogReason?: string | null;
+		key: 'position' | 'hoist_position';
 	}): Promise<void> {
-		const {guildId, userId, roleMap, changedRoles, auditLogReason} = params;
+		const {guildId, userId, roleMap, changedRoles, movedRoleIds, auditLogReason, key} = params;
 		for (const role of changedRoles) {
+			if (!movedRoleIds.has(role.id)) {
+				continue;
+			}
 			const oldRole = roleMap.get(role.id);
 			await this.recordAuditLog({
 				guildId,
@@ -720,10 +777,10 @@ export class GuildRoleService {
 				action: AuditLogActionType.ROLE_UPDATE,
 				targetId: role.id,
 				auditLogReason: auditLogReason ?? null,
-				changes: this.guildAuditLogService.computeChanges(
-					oldRole ? this.serializeRoleForAudit(oldRole) : null,
-					this.serializeRoleForAudit(role),
-				),
+				metadata: {role_name: role.name},
+				changes: this.guildAuditLogService
+					.computeChanges(oldRole ? this.serializeRoleForAudit(oldRole) : null, this.serializeRoleForAudit(role))
+					.filter((change) => change.key === key),
 			});
 		}
 	}

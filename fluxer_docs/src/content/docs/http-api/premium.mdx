@@ -852,7 +852,7 @@ A deployment that configures no Visionary guild or no Visionary role returns 400
 
 A new membership sends [Guild Create](/gateway/events/#guild-create) with complete guild state to the joining account and [Guild Member Add](/gateway/events/#guild-member-add) to the guild. It also creates a join system message and sends [Message Create](/gateway/events/#message-create) unless the guild has no system channel or suppresses join notifications.
 
-A new or existing member then receives the Visionary role, which records a `MEMBER_ROLE_UPDATE` guild audit log entry attributed to the system user and emits [Guild Member Update](/gateway/events/#guild-member-update). An account already holding the role causes no role change. Billing state is unchanged.
+A new or existing member then receives the Visionary role, which records a `MEMBER_ROLE_UPDATE` guild audit log entry attributed to the system user and emits [Guild Member Update](/gateway/events/#guild-member-update). An account already holding the role causes no role change and records no audit entry. Billing state is unchanged.
 
 ### Rate limit
 

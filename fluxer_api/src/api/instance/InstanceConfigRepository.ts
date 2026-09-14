@@ -41,6 +41,10 @@ import {
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
+	type GuildActivityLogPresentationConfig,
+	GuildActivityLogPresentationConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
+import {
 	type MessageHoverTrackingConfig,
 	MessageHoverTrackingConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
@@ -66,6 +70,7 @@ import {z} from 'zod';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
+const GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG_KEY = 'guild_activity_log_presentation_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const MESSAGE_HOVER_TRACKING_CONFIG_KEY = 'message_hover_tracking_config';
 const MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY = 'message_keyboard_focus_config';
@@ -352,6 +357,7 @@ type StoredConfigSection =
 	| 'app public'
 	| 'gateway rollout'
 	| 'voice noise suppression'
+	| 'guild activity log presentation'
 	| 'experiment delivery'
 	| 'message hover tracking'
 	| 'message keyboard focus'
@@ -491,6 +497,10 @@ function parseStoredGatewayRolloutConfig(raw: string | null): GatewayRolloutConf
 
 function parseStoredVoiceNoiseSuppressionConfig(raw: string | null): VoiceNoiseSuppressionConfig {
 	return parseStoredConfigOrDefault(VoiceNoiseSuppressionConfigSchema, raw, 'voice noise suppression');
+}
+
+function parseStoredGuildActivityLogPresentationConfig(raw: string | null): GuildActivityLogPresentationConfig {
+	return parseStoredConfigOrDefault(GuildActivityLogPresentationConfigSchema, raw, 'guild activity log presentation');
 }
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
@@ -1027,6 +1037,7 @@ export class InstanceConfigRepository {
 			parseStoredGatewayRolloutConfig(snapshot.get(GATEWAY_ROLLOUT_CONFIG_KEY) ?? null),
 		);
 		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
+		parseStoredGuildActivityLogPresentationConfig(snapshot.get(GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredMessageHoverTrackingConfig(snapshot.get(MESSAGE_HOVER_TRACKING_CONFIG_KEY) ?? null);
 		parseStoredMessageKeyboardFocusConfig(snapshot.get(MESSAGE_KEYBOARD_FOCUS_CONFIG_KEY) ?? null);
@@ -1109,6 +1120,20 @@ export class InstanceConfigRepository {
 	async setVoiceNoiseSuppressionConfig(config: VoiceNoiseSuppressionConfig): Promise<void> {
 		const validated = validateStoredConfig(VoiceNoiseSuppressionConfigSchema, config, 'voice noise suppression');
 		await this.setConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY, JSON.stringify(validated));
+	}
+
+	async getGuildActivityLogPresentationConfig(): Promise<GuildActivityLogPresentationConfig> {
+		const raw = await this.getConfig(GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG_KEY);
+		return parseStoredGuildActivityLogPresentationConfig(raw);
+	}
+
+	async setGuildActivityLogPresentationConfig(config: GuildActivityLogPresentationConfig): Promise<void> {
+		const validated = validateStoredConfig(
+			GuildActivityLogPresentationConfigSchema,
+			config,
+			'guild activity log presentation',
+		);
+		await this.setConfig(GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async getExperimentDeliveryConfig(): Promise<ExperimentDeliveryConfig> {

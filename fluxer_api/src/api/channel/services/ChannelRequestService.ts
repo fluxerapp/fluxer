@@ -61,6 +61,7 @@ export class ChannelRequestService {
 		data: ChannelUpdateRequest;
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
+		auditLogReason: string | null;
 	}): Promise<ChannelResponse> {
 		const channel = await this.channelService.channelData.editChannel({
 			userId: params.userId,
@@ -68,6 +69,7 @@ export class ChannelRequestService {
 			data: params.data,
 			clientFeatures: params.clientFeatures,
 			requestCache: params.requestCache,
+			auditLogReason: params.auditLogReason,
 		});
 		return mapChannelToResponse({
 			channel,
@@ -82,6 +84,7 @@ export class ChannelRequestService {
 		channelId: ChannelID;
 		requestCache: RequestCache;
 		silent?: boolean;
+		auditLogReason: string | null;
 	}): Promise<void> {
 		const channel = await this.channelService.channelData.operations.getChannel({
 			userId: params.userId,
@@ -101,6 +104,7 @@ export class ChannelRequestService {
 			userId: params.userId,
 			channelId: params.channelId,
 			requestCache: params.requestCache,
+			auditLogReason: params.auditLogReason,
 		});
 	}
 }

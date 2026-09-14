@@ -213,9 +213,10 @@ describe('Guild audit log endpoint', () => {
 	test('includes target users for user-target audit log entries', async () => {
 		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 		const member = members[0];
+		const banReason = 'Audit log user list check';
 		await createBuilder(harness, owner.token)
 			.put(`/guilds/${guild.id}/bans/${member.userId}`)
-			.body({reason: 'Audit log user list check'})
+			.body({reason: banReason})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
 		const response = await createBuilder<AuditLogResponse>(harness, owner.token)
@@ -224,6 +225,8 @@ describe('Guild audit log endpoint', () => {
 		const userIds = response.users.map((user) => user.id);
 		expect(userIds).toContain(owner.userId);
 		expect(userIds).toContain(member.userId);
+		const entry = response.audit_log_entries.find((log) => log.target_id === member.userId);
+		expect(entry?.reason).toBe(banReason);
 	});
 	test('fills a page from behind a long run of batched message deletes', async () => {
 		const {owner, guild, channels} = await setupTestGuildWithMembers(harness, 0);

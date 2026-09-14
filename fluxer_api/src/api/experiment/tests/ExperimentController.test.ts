@@ -20,10 +20,15 @@ import {
 	type ExperimentAssignmentsResponse,
 	type ExperimentDeliveryConfigResponse,
 	readBlockedMessageGroupsAssignment,
+	readGuildActivityLogPresentationAssignment,
 	readMessageHoverTrackingAssignment,
 	readMessageKeyboardFocusAssignment,
 	readVoiceNoiseSuppressionAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {
+	DEFAULT_GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG,
+	INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
 import {
 	DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
 	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
@@ -69,6 +74,7 @@ describe('GET /experiments', () => {
 				message_hover_tracking: INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
 				message_keyboard_focus: INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
 				blocked_message_groups: INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
+				guild_activity_log_presentation: INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
 			},
 		});
 	});
@@ -238,7 +244,75 @@ describe('GET /experiments', () => {
 		});
 	});
 
-	it('resolves all four experiments independently', async () => {
+	it('populates the guild activity log presentation key even when the rollout is disabled', async () => {
+		const account = await createTestAccount(harness);
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
+
+		expect(Object.hasOwn(body.assignments, 'guild_activity_log_presentation')).toBe(true);
+		expect(readGuildActivityLogPresentationAssignment(body)).toEqual(INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT);
+	});
+
+	it('targets an allowlisted account for guild activity log presentation', async () => {
+		const targeted = await createTestAccount(harness);
+		const untargeted = await createTestAccount(harness);
+		await getInstanceConfigRepository().setGuildActivityLogPresentationConfig({
+			...DEFAULT_GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG,
+			enabled: true,
+			config_version: 6,
+			included_user_ids: [targeted.userId],
+		});
+
+		const targetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, targeted.token)
+			.get(ENDPOINT)
+			.execute();
+		expect(readGuildActivityLogPresentationAssignment(targetedBody)).toEqual({
+			enabled: true,
+			config_version: 6,
+			user_targeted: true,
+			source: 'user_rule',
+		});
+
+		const untargetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, untargeted.token)
+			.get(ENDPOINT)
+			.execute();
+		expect(readGuildActivityLogPresentationAssignment(untargetedBody)).toEqual({
+			enabled: true,
+			config_version: 6,
+			user_targeted: false,
+			source: null,
+		});
+	});
+
+	it('bumps the guild activity log presentation config version on every admin update', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.INSTANCE_CONFIG_VIEW,
+			AdminACLs.INSTANCE_CONFIG_UPDATE,
+		]);
+
+		const updated = await createBuilder<{
+			guild_activity_log_presentation: {config_version: number; enabled: boolean; rollout_basis_points: number};
+		}>(harness, admin.token)
+			.patch('/admin/instance/config')
+			.body({guild_activity_log_presentation: {enabled: true, rollout_basis_points: 10000}})
+			.execute();
+		expect(updated.guild_activity_log_presentation).toMatchObject({
+			config_version: 1,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
+		expect(readGuildActivityLogPresentationAssignment(body)).toEqual({
+			enabled: true,
+			config_version: 1,
+			user_targeted: true,
+			source: 'canary',
+		});
+	});
+
+	it('resolves all five experiments independently', async () => {
 		const account = await createTestAccount(harness);
 		await getInstanceConfigRepository().setMessageHoverTrackingConfig({
 			...DEFAULT_MESSAGE_HOVER_TRACKING_CONFIG,
@@ -255,12 +329,18 @@ describe('GET /experiments', () => {
 			enabled: true,
 			rollout_basis_points: 10000,
 		});
+		await getInstanceConfigRepository().setGuildActivityLogPresentationConfig({
+			...DEFAULT_GUILD_ACTIVITY_LOG_PRESENTATION_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+		});
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
 
 		expect(readMessageHoverTrackingAssignment(body).user_targeted).toBe(true);
 		expect(readMessageKeyboardFocusAssignment(body).user_targeted).toBe(true);
 		expect(readBlockedMessageGroupsAssignment(body).user_targeted).toBe(true);
+		expect(readGuildActivityLogPresentationAssignment(body).user_targeted).toBe(true);
 		expect(readVoiceNoiseSuppressionAssignment(body).enabled).toBe(false);
 	});
 

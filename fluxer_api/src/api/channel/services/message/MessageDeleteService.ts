@@ -53,12 +53,14 @@ export class MessageDeleteService {
 		channelId,
 		messageId,
 		skipGuildAuditLog,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
 		skipGuildAuditLog?: boolean;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		const {channel, guild, hasPermission} = await this.deps.channelAuthService.getChannelAuthenticated({
 			userId,
@@ -97,7 +99,7 @@ export class MessageDeleteService {
 				.createBuilder(channel.guildId, userId)
 				.withAction(AuditLogActionType.MESSAGE_DELETE, message.id.toString())
 				.withMetadata({channel_id: channel.id.toString()})
-				.withReason(null)
+				.withReason(auditLogReason ?? null)
 				.commit();
 		}
 		await this.deps.searchService.deleteMessageIndex(messageId);
@@ -149,10 +151,12 @@ export class MessageDeleteService {
 		userId,
 		channelId,
 		messageIds,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageIds: Array<MessageID>;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		if (messageIds.length === 0) {
 			throw InputValidationError.fromCode('message_ids', ValidationErrorCodes.MESSAGE_IDS_CANNOT_BE_EMPTY);
@@ -186,7 +190,7 @@ export class MessageDeleteService {
 					channel_id: channel.id.toString(),
 					count: existingMessages.length.toString(),
 				})
-				.withReason(null)
+				.withReason(auditLogReason ?? null)
 				.commit();
 		}
 		await this.deps.searchService.deleteMessagesIndex(messageIds);

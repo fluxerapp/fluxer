@@ -38,6 +38,7 @@ fn generate_admin_api(manifest_dir: &Path, out_dir: &Path) {
     let mut spec: openapiv3::OpenAPI =
         serde_json::from_str(&json_str).expect("failed to parse openapi-admin.json");
     adapt_progenitor_throttled_errors(&mut spec);
+    relax_guild_audit_log_schemas(&mut spec);
 
     let mut settings = progenitor::GenerationSettings::new();
     settings.with_interface(progenitor::InterfaceStyle::Positional);
@@ -139,6 +140,51 @@ fn adapt_progenitor_throttled_errors(spec: &mut openapiv3::OpenAPI) {
             *schema = Some(openapiv3::ReferenceOr::ref_("#/components/schemas/Error"));
         }
     }
+}
+
+fn relax_guild_audit_log_schemas(spec: &mut openapiv3::OpenAPI) {
+    let components = spec.components.as_mut().expect("missing API components");
+
+    let entry = object_schema_mut(components, "GuildAuditLogEntryResponse");
+    entry.additional_properties = None;
+    let openapiv3::ReferenceOr::Item(options) = entry
+        .properties
+        .get_mut("options")
+        .expect("GuildAuditLogEntryResponse has no options property")
+    else {
+        panic!("GuildAuditLogEntryResponse options must be an inline schema");
+    };
+    let openapiv3::SchemaKind::Type(openapiv3::Type::Object(options)) = &mut options.schema_kind
+    else {
+        panic!("GuildAuditLogEntryResponse options must be an object schema");
+    };
+    options.additional_properties = None;
+
+    let change = object_schema_mut(components, "AuditLogChangeSchema");
+    change.additional_properties = None;
+    for property in ["old_value", "new_value"] {
+        change.properties.insert(
+            property.to_string(),
+            openapiv3::ReferenceOr::Item(Box::new(openapiv3::Schema {
+                schema_data: openapiv3::SchemaData::default(),
+                schema_kind: openapiv3::SchemaKind::Any(openapiv3::AnySchema::default()),
+            })),
+        );
+    }
+}
+
+fn object_schema_mut<'a>(
+    components: &'a mut openapiv3::Components,
+    name: &str,
+) -> &'a mut openapiv3::ObjectType {
+    let Some(openapiv3::ReferenceOr::Item(schema)) = components.schemas.get_mut(name) else {
+        panic!("missing inline {name} schema");
+    };
+    let openapiv3::SchemaKind::Type(openapiv3::Type::Object(object)) = &mut schema.schema_kind
+    else {
+        panic!("{name} must be an object schema");
+    };
+    object
 }
 
 struct Face {

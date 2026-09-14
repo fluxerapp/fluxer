@@ -21,6 +21,21 @@ const CHANNEL_DELETED_DESCRIPTOR = msg({
 	message: 'Channel deleted',
 	comment: 'Audit log entry label. Past-tense action describing that a channel was deleted.',
 });
+const PERMISSION_OVERRIDE_ADDED_DESCRIPTOR = msg({
+	message: 'Permission override added',
+	comment:
+		'Option in the activity log "Filter by action" dropdown. It shows only entries where a new permission override was added. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. It can be for a role, a member or @everyone. Use the same word for override as the channel permissions settings, such as Add override. Keep the word override so it does not read as a permission being granted. Word it as a short label like "Channel created", and keep it parallel with "Permission override updated" and "Permission override removed".',
+});
+const PERMISSION_OVERRIDE_UPDATED_DESCRIPTOR = msg({
+	message: 'Permission override updated',
+	comment:
+		'Option in the activity log "Filter by action" dropdown. It shows only entries where an existing permission override was changed. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. It can be for a role, a member or @everyone. Use the same word for override as the channel permissions settings, such as Add override. Keep the word override so it does not read as a permission being changed. Word it as a short label like "Channel updated", and keep it parallel with "Permission override added" and "Permission override removed".',
+});
+const PERMISSION_OVERRIDE_REMOVED_DESCRIPTOR = msg({
+	message: 'Permission override removed',
+	comment:
+		'Option in the activity log "Filter by action" dropdown. It shows only entries where a permission override was removed from a channel or category. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. It can be for a role, a member or @everyone. Use the same word for override as the channel permissions settings, such as Add override. Keep the word override so it does not read as a permission being taken away. Word it as a short label like "Channel deleted", and keep it parallel with "Permission override added" and "Permission override updated".',
+});
 const CHANNEL_OVERWRITE_ADDED_DESCRIPTOR = msg({
 	message: 'Channel overwrite added',
 	comment: 'Audit log entry label. A channel permission override was added for a role or member.',
@@ -235,6 +250,174 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 	},
 	{
 		value: AuditLogActionType.CHANNEL_OVERWRITE_CREATE,
+		label: PERMISSION_OVERRIDE_ADDED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.CHANNEL_OVERWRITE_UPDATE,
+		label: PERMISSION_OVERRIDE_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.CHANNEL_OVERWRITE_DELETE,
+		label: PERMISSION_OVERRIDE_REMOVED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.MEMBER_KICK,
+		label: MEMBER_KICKED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.MEMBER_BAN_ADD,
+		label: MEMBER_BANNED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.MEMBER_BAN_REMOVE,
+		label: MEMBER_UNBANNED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.MEMBER_UPDATE,
+		label: MEMBER_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.MEMBER_ROLE_UPDATE,
+		label: MEMBER_ROLES_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.MEMBER_MOVE,
+		label: MEMBER_MOVED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.MEMBER_DISCONNECT,
+		label: MEMBER_DISCONNECTED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.BOT_ADD,
+		label: BOT_ADDED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
+	},
+	{
+		value: AuditLogActionType.ROLE_CREATE,
+		label: ROLE_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.ROLE,
+	},
+	{
+		value: AuditLogActionType.ROLE_UPDATE,
+		label: ROLE_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.ROLE,
+	},
+	{
+		value: AuditLogActionType.ROLE_DELETE,
+		label: ROLE_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.ROLE,
+	},
+	{
+		value: AuditLogActionType.INVITE_CREATE,
+		label: INVITE_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.INVITE,
+	},
+	{
+		value: AuditLogActionType.INVITE_DELETE,
+		label: INVITE_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.INVITE,
+	},
+	{
+		value: AuditLogActionType.WEBHOOK_CREATE,
+		label: WEBHOOK_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.WEBHOOK,
+	},
+	{
+		value: AuditLogActionType.WEBHOOK_UPDATE,
+		label: WEBHOOK_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.WEBHOOK,
+	},
+	{
+		value: AuditLogActionType.WEBHOOK_DELETE,
+		label: WEBHOOK_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.WEBHOOK,
+	},
+	{
+		value: AuditLogActionType.EMOJI_CREATE,
+		label: EMOJI_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.EMOJI,
+	},
+	{
+		value: AuditLogActionType.EMOJI_UPDATE,
+		label: EMOJI_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.EMOJI,
+	},
+	{
+		value: AuditLogActionType.EMOJI_DELETE,
+		label: EMOJI_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.EMOJI,
+	},
+	{
+		value: AuditLogActionType.STICKER_CREATE,
+		label: STICKER_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.STICKER,
+	},
+	{
+		value: AuditLogActionType.STICKER_UPDATE,
+		label: STICKER_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.STICKER,
+	},
+	{
+		value: AuditLogActionType.STICKER_DELETE,
+		label: STICKER_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.STICKER,
+	},
+	{
+		value: AuditLogActionType.MESSAGE_DELETE,
+		label: MESSAGE_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
+	},
+	{
+		value: AuditLogActionType.MESSAGE_BULK_DELETE,
+		label: MESSAGES_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
+	},
+	{
+		value: AuditLogActionType.MESSAGE_PIN,
+		label: MESSAGE_PINNED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
+	},
+	{
+		value: AuditLogActionType.MESSAGE_UNPIN,
+		label: MESSAGE_UNPINNED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
+	},
+];
+
+export const LEGACY_AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
+	{
+		value: AuditLogActionType.GUILD_UPDATE,
+		label: COMMUNITY_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.GUILD,
+	},
+	{
+		value: AuditLogActionType.CHANNEL_CREATE,
+		label: CHANNEL_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.CHANNEL_UPDATE,
+		label: CHANNEL_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.CHANNEL_DELETE,
+		label: CHANNEL_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+	},
+	{
+		value: AuditLogActionType.CHANNEL_OVERWRITE_CREATE,
 		label: CHANNEL_OVERWRITE_ADDED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
 	},
@@ -390,15 +573,33 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 	},
 ];
 
+const translateAuditLogActions = (
+	i18n: I18n,
+	actions: ReadonlyArray<AuditLogActionDefinition>,
+): Array<{
+	value: AuditLogActionType;
+	label: string;
+	targetType: AuditLogTargetType;
+}> =>
+	actions.map((action) => ({
+		...action,
+		label: i18n._(action.label),
+	}));
+
 export function getTranslatedAuditLogActions(i18n: I18n): Array<{
 	value: AuditLogActionType;
 	label: string;
 	targetType: AuditLogTargetType;
 }> {
-	return AUDIT_LOG_ACTIONS.map((action) => ({
-		...action,
-		label: i18n._(action.label),
-	}));
+	return translateAuditLogActions(i18n, AUDIT_LOG_ACTIONS);
+}
+
+export function getLegacyTranslatedAuditLogActions(i18n: I18n): Array<{
+	value: AuditLogActionType;
+	label: string;
+	targetType: AuditLogTargetType;
+}> {
+	return translateAuditLogActions(i18n, LEGACY_AUDIT_LOG_ACTIONS);
 }
 
 export const AUDIT_LOG_TARGET_LABELS: Record<AuditLogTargetType, MessageDescriptor> = {

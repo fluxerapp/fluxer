@@ -121,7 +121,7 @@ The request body shared by [Modify current guild member](#modify-current-guild-m
 
 <sup>6</sup> An ISO 8601 date and time. A blank string is normalised to null
 
-<sup>7</sup> Trimmed, and never published in the audit log response
+<sup>7</sup> Trimmed, and used as the [audit log reason](/http-api/guild-audit-logs/#audit-log-reason) of the member update entry when the request sends no `X-Audit-Log-Reason` header
 
 <sup>8</sup> `channel_id` moves or disconnects, and `connection_id` selects one of the member's voice connections
 
@@ -277,9 +277,9 @@ The body is a [guild member update object](#guild-member-update-object) without 
 
 The operation updates the membership, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Member Update](/gateway/events/#guild-member-update).
 
-The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The audit entry and Dispatch are produced even when the resulting membership is unchanged, and an entry whose change list is empty is published without a `changes` member.
+The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The Dispatch is produced even when the resulting membership is unchanged, and an update that changes nothing records no audit entry.
 
-Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, however many connections it touched. It emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
+Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, however many connections it touched. A move into the channel the member already occupies records no entry. It emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
 
 Fluxer emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) for every audit entry. A request that fails after uploading a new avatar or banner leaves the previous asset in place.
 
@@ -449,7 +449,7 @@ The operation requires the [sudo verification fields](/http-api/guilds/#sudo-ver
 
 The operation changes only the guild's `owner_id`. The outgoing owner keeps every role, permission overwrite, and membership they held.
 
-It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry naming the previous and new owner in its change list, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. The audit log response has no `options` member for this entry.
+It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry naming the previous and new owner in its change list, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. A request naming the current owner changes nothing and records no audit entry. The audit log response has no `options` member for this entry.
 
 An account with an enrolled second factor also receives a reissued sudo proof. A bot credential and an account whose only proof was a password receive `X-Fluxer-Sudo-Mode-JWT` only when the request itself has one.
 
@@ -495,9 +495,9 @@ The guild owner receives 404 `UNKNOWN_ROLE` for a role that does not exist in th
 
 ### Side effects
 
-Adding a new role makes a temporary membership permanent. The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update), even if the member already holds the role. An unchanged role set produces an audit entry without `changes`.
+Adding a new role makes a temporary membership permanent. The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update). An unchanged role set still emits [Guild Member Update](/gateway/events/#guild-member-update) and records no audit entry.
 
-The audit log response names the role only through the change list.
+The audit log response names the role with the [`role_name`](/http-api/guild-audit-logs/#audit-log-options-object) option and through the change list.
 
 ### Rate limit
 
@@ -539,7 +539,7 @@ Removes one role from a member and returns 204 with an empty body. Requires memb
 
 ### Side effects
 
-The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update), even if the member did not hold the role. Removing a role does not change whether the membership is temporary.
+The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update). A role the member did not hold still emits [Guild Member Update](/gateway/events/#guild-member-update) and records no audit entry. Removing a role does not change whether the membership is temporary.
 
 ### Rate limit
 

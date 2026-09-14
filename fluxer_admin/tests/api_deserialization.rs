@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_admin::api::generated::types as generated_types;
 use fluxer_admin::api::types;
 
 #[test]
@@ -245,6 +246,117 @@ fn deserialize_audit_logs_response() {
     assert_eq!(resp.logs[0].target_type, "user");
     assert!(resp.logs[0].audit_log_reason.is_none());
     assert_eq!(resp.logs[0].metadata.get("session_count").unwrap(), "3");
+}
+
+#[test]
+fn deserialize_guild_audit_logs_with_unknown_keys() {
+    let json = r#"{
+        "audit_log_entries": [
+            {
+                "id": "1508822460457747581",
+                "action_type": 22,
+                "user_id": "1130650140672000000",
+                "target_id": "1130958221824557056",
+                "reason": "spam",
+                "options": {
+                    "delete_message_seconds": 3600,
+                    "future_option": {"nested": true}
+                },
+                "changes": [
+                    {"key": "future_change", "future_field": 1}
+                ],
+                "future_entry_field": "ignored"
+            },
+            {
+                "id": "1508822460457747580",
+                "action_type": 31,
+                "user_id": "1130650140672000000",
+                "target_id": "1130958221824557057",
+                "options": {
+                    "id": "1130958221824557057",
+                    "type": 0,
+                    "channel_id": "1130958221824557058",
+                    "role_name": "Moderators"
+                },
+                "changes": [
+                    {"key": "permissions_diff", "new_value": {"added": ["SEND_MESSAGES"], "removed": []}}
+                ]
+            },
+            {
+                "id": "1508822460457747579",
+                "action_type": 11,
+                "user_id": "1130650140672000000",
+                "target_id": "1130958221824557059",
+                "options": {"type": 998},
+                "changes": [
+                    {"key": "name", "old_value": "old-name", "new_value": "new-name"},
+                    {"key": "position", "old_value": 3, "new_value": 4},
+                    {"key": "nsfw", "new_value": true},
+                    {"key": "roles", "new_value": ["1130958221824557060", "1130958221824557061"]}
+                ]
+            }
+        ],
+        "users": [],
+        "webhooks": []
+    }"#;
+
+    let resp: generated_types::ListGuildAuditLogsResponse = serde_json::from_str(json).unwrap();
+    assert_eq!(resp.audit_log_entries.len(), 3);
+
+    let ban = &resp.audit_log_entries[0];
+    assert_eq!(*ban.action_type, 22);
+    assert_eq!(ban.reason.as_deref(), Some("spam"));
+    assert!(ban.options.is_some());
+    assert_eq!(ban.changes.len(), 1);
+    assert_eq!(ban.changes[0].key, "future_change");
+    assert!(ban.changes[0].new_value.is_none());
+
+    let role_update = &resp.audit_log_entries[1];
+    let options = role_update.options.as_ref().unwrap();
+    assert_eq!(options.role_name.as_deref(), Some("Moderators"));
+    assert_eq!(options.channel_id.as_deref(), Some("1130958221824557058"));
+    assert_eq!(options.type_, Some(0.0));
+    assert_eq!(role_update.changes[0].key, "permissions_diff");
+    assert!(role_update.changes[0].new_value.is_some());
+
+    let channel_update = &resp.audit_log_entries[2];
+    assert_eq!(channel_update.changes.len(), 4);
+    assert_eq!(
+        channel_update.changes[0]
+            .old_value
+            .as_ref()
+            .and_then(|value| value.as_str()),
+        Some("old-name")
+    );
+    assert_eq!(
+        channel_update.changes[0]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_str()),
+        Some("new-name")
+    );
+    assert_eq!(
+        channel_update.changes[1]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_i64()),
+        Some(4)
+    );
+    assert_eq!(
+        channel_update.changes[2]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_bool()),
+        Some(true)
+    );
+    assert_eq!(
+        channel_update.changes[3]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_array())
+            .map(|value| value.len()),
+        Some(2)
+    );
 }
 
 #[test]

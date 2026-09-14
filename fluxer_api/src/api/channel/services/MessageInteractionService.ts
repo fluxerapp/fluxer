@@ -97,17 +97,19 @@ export class MessageInteractionService {
 		channelId,
 		messageId,
 		requestCache,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
 		if (!authChannel.guild && authChannel.channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
 			await this.authService.validateDMSendPermissions({channel: authChannel.channel, userId});
 		}
-		await this.pinService.pinMessage({authChannel, messageId, userId, requestCache});
+		await this.pinService.pinMessage({authChannel, messageId, userId, requestCache, auditLogReason});
 	}
 
 	async unpinMessage({
@@ -115,17 +117,19 @@ export class MessageInteractionService {
 		channelId,
 		messageId,
 		requestCache,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
 		if (!authChannel.guild && authChannel.channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
 			await this.authService.validateDMSendPermissions({channel: authChannel.channel, userId});
 		}
-		await this.pinService.unpinMessage({authChannel, messageId, userId, requestCache});
+		await this.pinService.unpinMessage({authChannel, messageId, userId, requestCache, auditLogReason});
 	}
 
 	async getUsersForReaction({

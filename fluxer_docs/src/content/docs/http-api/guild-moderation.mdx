@@ -125,9 +125,9 @@ The body is optional, and so is every field in it. Fluxer reads an omitted or wh
 
 <sup>4</sup> Zero and an omitted field both create a permanent ban. Any value outside 60 through 63072000, which is two years, fails with `INVALID_FORMAT`
 
-`delete_message_days` defaults to 0, so a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) entry always records `options.delete_member_days`. That option is `0` for a ban that supplied only `delete_message_seconds`.
+A [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) entry records `options.delete_message_seconds` when the effective interval is positive, whichever field set it. A ban that deletes nothing records no option, and the deprecated `delete_member_days` option is present only on an entry written before this field.
 
-An omitted or null `reason` falls back to the `X-Audit-Log-Reason` value, while a supplied value that normalises to the empty string is stored as null without falling back. The header remains the audit entry reason in every case.
+An omitted or null `reason` falls back to the `X-Audit-Log-Reason` value, while a supplied value that normalises to the empty string is stored as null without falling back. The audit entry reason is the header when the request sends one, and the stored ban reason otherwise.
 
 :::caution[Banning an already banned account succeeds]
 The second ban replaces the previous ban's details. Re-issuing can turn a permanent ban into a temporary one or extend a temporary ban. There is no conditional form.

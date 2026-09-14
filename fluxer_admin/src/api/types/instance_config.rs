@@ -30,6 +30,8 @@ pub struct InstanceConfigResponse {
     pub message_keyboard_focus: MessageKeyboardFocusConfigResponse,
     #[serde(default)]
     pub blocked_message_groups: BlockedMessageGroupsConfigResponse,
+    #[serde(default)]
+    pub guild_activity_log_presentation: GuildActivityLogPresentationConfigResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -659,6 +661,44 @@ pub struct BlockedMessageGroupsConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct GuildActivityLogPresentationConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for GuildActivityLogPresentationConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: "guild-activity-log-presentation-v1".to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct GuildActivityLogPresentationConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -780,6 +820,8 @@ pub struct InstanceConfigUpdateRequest {
     pub message_keyboard_focus: Option<MessageKeyboardFocusConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub blocked_message_groups: Option<BlockedMessageGroupsConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub guild_activity_log_presentation: Option<GuildActivityLogPresentationConfigUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1120,6 +1162,9 @@ mod tests {
             .expect("default message keyboard focus config");
         let blocked = serde_json::from_value::<BlockedMessageGroupsConfigResponse>(json!({}))
             .expect("default blocked message groups config");
+        let activity_log =
+            serde_json::from_value::<GuildActivityLogPresentationConfigResponse>(json!({}))
+                .expect("default guild activity log presentation config");
         let noise = serde_json::to_value(noise).expect("serializable noise config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let hover =
@@ -1128,6 +1173,8 @@ mod tests {
             serde_json::to_value(keyboard).expect("serializable message keyboard focus config");
         let blocked =
             serde_json::to_value(blocked).expect("serializable blocked message groups config");
+        let activity_log = serde_json::to_value(activity_log)
+            .expect("serializable guild activity log presentation config");
         let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
             serde_json::from_value(noise.clone()).expect("generated noise config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
@@ -1141,6 +1188,9 @@ mod tests {
         let generated_blocked: generated_types::BlockedMessageGroupsConfigResponse =
             serde_json::from_value(blocked.clone())
                 .expect("generated blocked message groups config contract");
+        let generated_activity_log: generated_types::GuildActivityLogPresentationConfigResponse =
+            serde_json::from_value(activity_log.clone())
+                .expect("generated guild activity log presentation config contract");
         assert_eq!(
             serde_json::to_value(generated_noise).expect("serializable generated noise config"),
             noise
@@ -1165,12 +1215,18 @@ mod tests {
                 .expect("serializable generated blocked message groups config"),
             blocked
         );
+        assert_eq!(
+            serde_json::to_value(generated_activity_log)
+                .expect("serializable generated guild activity log presentation config"),
+            activity_log
+        );
         for (name, value) in [
             ("VoiceNoiseSuppressionConfigResponse", noise),
             ("ExperimentDeliveryConfigResponse", delivery),
             ("MessageHoverTrackingConfigResponse", hover),
             ("MessageKeyboardFocusConfigResponse", keyboard),
             ("BlockedMessageGroupsConfigResponse", blocked),
+            ("GuildActivityLogPresentationConfigResponse", activity_log),
         ] {
             for (field, value) in value.as_object().expect("config object") {
                 assert_eq!(
@@ -1245,6 +1301,29 @@ mod tests {
         );
         assert_eq!(
             serde_json::to_value(BlockedMessageGroupsConfigUpdateRequest::default())
+                .expect("serializable update"),
+            json!({})
+        );
+    }
+
+    #[test]
+    fn guild_activity_log_presentation_update_preserves_empty_lists_and_omitted_fields() {
+        let update = GuildActivityLogPresentationConfigUpdateRequest {
+            included_user_ids: Some(Vec::new()),
+            excluded_user_ids: Some(Vec::new()),
+            ..Default::default()
+        };
+        let value = serde_json::to_value(update).expect("serializable update");
+        serde_json::from_value::<generated_types::GuildActivityLogPresentationConfigUpdateRequest>(
+            value.clone(),
+        )
+        .expect("generated update contract");
+        assert_eq!(
+            value,
+            json!({"included_user_ids": [], "excluded_user_ids": []})
+        );
+        assert_eq!(
+            serde_json::to_value(GuildActivityLogPresentationConfigUpdateRequest::default())
                 .expect("serializable update"),
             json!({})
         );

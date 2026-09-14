@@ -320,7 +320,7 @@ An emoji that does not belong to the guild in the path returns 404 `UNKNOWN_EMOJ
 
 ### Side effects
 
-The operation sets the requested name, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection, and then writes an [`EMOJI_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. Both are produced even when the submitted name equals the current name, and the audit entry then records an empty change list.
+The operation sets the requested name, emits [Guild Emojis Update](/gateway/events/#guild-emojis-update) with the guild's complete emoji collection, and then writes an [`EMOJI_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. A submitted name that equals the current name still emits the Dispatch and records no audit entry.
 
 ### Rate limit
 
