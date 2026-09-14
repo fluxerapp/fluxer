@@ -86,7 +86,7 @@ describe('presentEmojiCreate', () => {
 			target_id: EMOJI_ID,
 			changes: emojiSnapshot('new_value', 'blobcat'),
 		};
-		expect(present(fixture)).toEqual(summaryOnly('Hampus added the emoji :blobcat:.'));
+		expect(present(fixture)).toEqual(summaryOnly('Hampus added the emoji :blobcat:'));
 		expect(presentAuditLogEntry(makeEntry(fixture), fakeContext()).summary.values.emoji).toEqual({
 			kind: 'emoji',
 			id: EMOJI_ID,
@@ -102,10 +102,10 @@ describe('presentEmojiCreate', () => {
 					target_id: EMOJI_ID,
 					changes: emojiSnapshot('new_value', name),
 				}),
-			).toEqual(summaryOnly('Hampus added an emoji.'));
+			).toEqual(summaryOnly('Hampus added an emoji'));
 		}
 		expect(present({action_type: AuditLogActionType.EMOJI_CREATE, target_id: EMOJI_ID})).toEqual(
-			summaryOnly('Hampus added an emoji.'),
+			summaryOnly('Hampus added an emoji'),
 		);
 	});
 
@@ -130,7 +130,7 @@ describe('presentEmojiCreate', () => {
 				changes: emojiSnapshot('new_value', 'blobcat'),
 			}),
 		).toEqual({
-			summary: 'Hampus added the emoji :blobcat:.',
+			summary: 'Hampus added the emoji :blobcat:',
 			rows: [],
 			blocks: [{kind: 'reason', text: 'Event emoji'}],
 			expandable: true,
@@ -146,7 +146,7 @@ describe('presentEmojiUpdate', () => {
 			changes: [{key: 'name', old_value: 'blob', new_value: 'blobcat'}],
 		};
 		expect(present(fixture, fakeContext({emojis: {[EMOJI_ID]: 'ignored'}}))).toEqual(
-			summaryOnly('Hampus renamed the emoji :blob: to :blobcat:.'),
+			summaryOnly('Hampus renamed the emoji :blob: to :blobcat:'),
 		);
 		const {values} = presentAuditLogEntry(makeEntry(fixture), fakeContext()).summary;
 		expect(values.oldEmoji).toEqual({kind: 'emoji', id: null, name: 'blob'});
@@ -159,19 +159,19 @@ describe('presentEmojiUpdate', () => {
 				{action_type: AuditLogActionType.EMOJI_UPDATE, target_id: EMOJI_ID},
 				fakeContext({emojis: {[EMOJI_ID]: 'blobcat'}}),
 			),
-		).toEqual(summaryOnly('Hampus updated the emoji :blobcat:.'));
+		).toEqual(summaryOnly('Hampus updated the emoji :blobcat:'));
 	});
 
 	it('uses the unnamed summary for a legacy no-op the emoji store does not know', () => {
 		expect(present({action_type: AuditLogActionType.EMOJI_UPDATE, target_id: EMOJI_ID})).toEqual(
-			summaryOnly('Hampus updated an emoji.'),
+			summaryOnly('Hampus updated an emoji'),
 		);
 		expect(
 			present(
 				{action_type: AuditLogActionType.EMOJI_UPDATE, target_id: null},
 				fakeContext({emojis: {[EMOJI_ID]: 'blobcat'}}),
 			),
-		).toEqual(summaryOnly('Hampus updated an emoji.'));
+		).toEqual(summaryOnly('Hampus updated an emoji'));
 	});
 
 	it('treats names that are equal after trimming as no rename', () => {
@@ -181,7 +181,7 @@ describe('presentEmojiUpdate', () => {
 				target_id: EMOJI_ID,
 				changes: [{key: 'name', old_value: 'blobcat ', new_value: 'blobcat'}],
 			}),
-		).toEqual(summaryOnly('Hampus updated the emoji :blobcat:.'));
+		).toEqual(summaryOnly('Hampus updated the emoji :blobcat:'));
 	});
 
 	it('names the emoji from the recorded new name when the old name is unreadable', () => {
@@ -194,7 +194,7 @@ describe('presentEmojiUpdate', () => {
 				},
 				fakeContext({emojis: {[EMOJI_ID]: 'stale'}}),
 			),
-		).toEqual(summaryOnly('Hampus updated the emoji :blobcat:.'));
+		).toEqual(summaryOnly('Hampus updated the emoji :blobcat:'));
 	});
 });
 
@@ -205,7 +205,7 @@ describe('presentEmojiDelete', () => {
 			target_id: EMOJI_ID,
 			changes: emojiSnapshot('old_value', 'blobcat'),
 		};
-		expect(present(fixture)).toEqual(summaryOnly('Hampus deleted the emoji :blobcat:.'));
+		expect(present(fixture)).toEqual(summaryOnly('Hampus deleted the emoji :blobcat:'));
 		expect(presentAuditLogEntry(makeEntry(fixture), fakeContext()).summary.values.emoji).toEqual({
 			kind: 'emoji',
 			id: null,
@@ -221,8 +221,8 @@ describe('presentEmojiDelete', () => {
 				changes: emojiSnapshot('old_value', 'blobcat', OTHER_USER_ID),
 			}),
 		).toEqual({
-			summary: 'Hampus deleted the emoji :blobcat:.',
-			rows: ['~ The emoji was uploaded by ender.'],
+			summary: 'Hampus deleted the emoji :blobcat:',
+			rows: ['~ The emoji was uploaded by ender'],
 			blocks: [],
 			expandable: true,
 		});
@@ -237,8 +237,8 @@ describe('presentEmojiDelete', () => {
 				changes: emojiSnapshot('old_value', 'blobcat', TEST_ACTOR_ID),
 			}),
 		).toEqual({
-			summary: 'System deleted the emoji :blobcat:.',
-			rows: ['~ The emoji was uploaded by Hampus.'],
+			summary: 'System deleted the emoji :blobcat:',
+			rows: ['~ The emoji was uploaded by Hampus'],
 			blocks: [],
 			expandable: true,
 		});
@@ -252,7 +252,7 @@ describe('presentEmojiDelete', () => {
 					target_id: EMOJI_ID,
 					changes: emojiSnapshot('old_value', undefined, creatorId),
 				}),
-			).toEqual(summaryOnly('Hampus deleted an emoji.'));
+			).toEqual(summaryOnly('Hampus deleted an emoji'));
 		}
 	});
 });
@@ -266,8 +266,8 @@ describe('presentStickerCreate', () => {
 				changes: stickerSnapshot('new_value', 'Wave', 'hello there'),
 			}),
 		).toEqual({
-			summary: 'Hampus added the sticker Wave.',
-			rows: ['~ Set the description to hello there.'],
+			summary: 'Hampus added the sticker Wave',
+			rows: ['~ Set the description to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -281,7 +281,7 @@ describe('presentStickerCreate', () => {
 					target_id: STICKER_ID,
 					changes: stickerSnapshot('new_value', 'Wave', description),
 				}),
-			).toEqual(summaryOnly('Hampus added the sticker Wave.'));
+			).toEqual(summaryOnly('Hampus added the sticker Wave'));
 		}
 	});
 
@@ -293,8 +293,8 @@ describe('presentStickerCreate', () => {
 				changes: stickerSnapshot('new_value', null, 'hello there'),
 			}),
 		).toEqual({
-			summary: 'Hampus added a sticker.',
-			rows: ['~ Set the description to hello there.'],
+			summary: 'Hampus added a sticker',
+			rows: ['~ Set the description to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -314,7 +314,7 @@ describe('presentStickerUpdate', () => {
 				},
 				context,
 			),
-		).toEqual(summaryOnly('Hampus renamed the sticker Wave to Hello.'));
+		).toEqual(summaryOnly('Hampus renamed the sticker Wave to Hello'));
 	});
 
 	it('adds a description', () => {
@@ -328,8 +328,8 @@ describe('presentStickerUpdate', () => {
 				context,
 			),
 		).toEqual({
-			summary: 'Hampus updated the sticker Wave.',
-			rows: ['+ Set the description to hello there.'],
+			summary: 'Hampus updated the sticker Wave',
+			rows: ['+ Set the description to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -346,8 +346,8 @@ describe('presentStickerUpdate', () => {
 				context,
 			),
 		).toEqual({
-			summary: 'Hampus updated the sticker Wave.',
-			rows: ['~ Changed the description from hi to hello there.'],
+			summary: 'Hampus updated the sticker Wave',
+			rows: ['~ Changed the description from hi to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -365,8 +365,8 @@ describe('presentStickerUpdate', () => {
 					context,
 				),
 			).toEqual({
-				summary: 'Hampus updated the sticker Wave.',
-				rows: ['- Removed the description hello there.'],
+				summary: 'Hampus updated the sticker Wave',
+				rows: ['- Removed the description hello there'],
 				blocks: [],
 				expandable: true,
 			});
@@ -387,8 +387,8 @@ describe('presentStickerUpdate', () => {
 				context,
 			),
 		).toEqual({
-			summary: 'Hampus updated the sticker Hello.',
-			rows: ['~ Changed the name from Wave to Hello.', '~ Changed the description from hi to hello there.'],
+			summary: 'Hampus updated the sticker Hello',
+			rows: ['~ Changed the name from Wave to Hello', '~ Changed the description from hi to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -405,8 +405,8 @@ describe('presentStickerUpdate', () => {
 				fakeContext({stickers: {[STICKER_ID]: 'Stored name'}}),
 			),
 		).toEqual({
-			summary: 'Hampus updated the sticker Stored name.',
-			rows: ['~ Changed the description from hi to hello there.'],
+			summary: 'Hampus updated the sticker Stored name',
+			rows: ['~ Changed the description from hi to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -420,8 +420,8 @@ describe('presentStickerUpdate', () => {
 				changes: [{key: 'description', old_value: null, new_value: 'hello there'}],
 			}),
 		).toEqual({
-			summary: 'Hampus updated a sticker.',
-			rows: ['+ Set the description to hello there.'],
+			summary: 'Hampus updated a sticker',
+			rows: ['+ Set the description to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -429,7 +429,7 @@ describe('presentStickerUpdate', () => {
 
 	it('shows the summary alone for a legacy no-op or unchanged values', () => {
 		expect(present({action_type: AuditLogActionType.STICKER_UPDATE, target_id: STICKER_ID})).toEqual(
-			summaryOnly('Hampus updated a sticker.'),
+			summaryOnly('Hampus updated a sticker'),
 		);
 		expect(
 			present(
@@ -444,7 +444,7 @@ describe('presentStickerUpdate', () => {
 				},
 				context,
 			),
-		).toEqual(summaryOnly('Hampus updated the sticker Wave.'));
+		).toEqual(summaryOnly('Hampus updated the sticker Wave'));
 	});
 
 	it('omits the name row when either name is unreadable', () => {
@@ -461,8 +461,8 @@ describe('presentStickerUpdate', () => {
 				context,
 			),
 		).toEqual({
-			summary: 'Hampus updated the sticker Hello.',
-			rows: ['~ Changed the description from hi to hello there.'],
+			summary: 'Hampus updated the sticker Hello',
+			rows: ['~ Changed the description from hi to hello there'],
 			blocks: [],
 			expandable: true,
 		});
@@ -477,7 +477,7 @@ describe('presentStickerDelete', () => {
 				target_id: STICKER_ID,
 				changes: stickerSnapshot('old_value', 'Wave', 'hello there'),
 			}),
-		).toEqual(summaryOnly('Hampus deleted the sticker Wave.'));
+		).toEqual(summaryOnly('Hampus deleted the sticker Wave'));
 	});
 
 	it('names the uploader when someone else uploaded the sticker', () => {
@@ -488,8 +488,8 @@ describe('presentStickerDelete', () => {
 				changes: stickerSnapshot('old_value', 'Wave', null, OTHER_USER_ID),
 			}),
 		).toEqual({
-			summary: 'Hampus deleted the sticker Wave.',
-			rows: ['~ The sticker was uploaded by ender.'],
+			summary: 'Hampus deleted the sticker Wave',
+			rows: ['~ The sticker was uploaded by ender'],
 			blocks: [],
 			expandable: true,
 		});
@@ -497,7 +497,7 @@ describe('presentStickerDelete', () => {
 
 	it('uses the unnamed summary when the name is missing', () => {
 		expect(present({action_type: AuditLogActionType.STICKER_DELETE, target_id: STICKER_ID})).toEqual(
-			summaryOnly('Hampus deleted a sticker.'),
+			summaryOnly('Hampus deleted a sticker'),
 		);
 	});
 });
@@ -506,18 +506,18 @@ describe('presentMessageDelete, presentMessagePin and presentMessageUnpin', () =
 	const cases = [
 		{
 			actionType: AuditLogActionType.MESSAGE_DELETE,
-			inChannel: `Hampus deleted a message in #${CHANNEL_ID}.`,
-			withoutChannel: 'Hampus deleted a message.',
+			inChannel: `Hampus deleted a message in #${CHANNEL_ID}`,
+			withoutChannel: 'Hampus deleted a message',
 		},
 		{
 			actionType: AuditLogActionType.MESSAGE_PIN,
-			inChannel: `Hampus pinned a message in #${CHANNEL_ID}.`,
-			withoutChannel: 'Hampus pinned a message.',
+			inChannel: `Hampus pinned a message in #${CHANNEL_ID}`,
+			withoutChannel: 'Hampus pinned a message',
 		},
 		{
 			actionType: AuditLogActionType.MESSAGE_UNPIN,
-			inChannel: `Hampus unpinned a message in #${CHANNEL_ID}.`,
-			withoutChannel: 'Hampus unpinned a message.',
+			inChannel: `Hampus unpinned a message in #${CHANNEL_ID}`,
+			withoutChannel: 'Hampus unpinned a message',
 		},
 	];
 
@@ -564,14 +564,14 @@ describe('presentMessageBulkDelete', () => {
 	it('counts one message in a channel', () => {
 		expect(
 			present({action_type: AuditLogActionType.MESSAGE_BULK_DELETE, options: {channel_id: CHANNEL_ID, count: 1}}),
-		).toEqual(summaryOnly(`Hampus deleted 1 message in #${CHANNEL_ID}.`));
+		).toEqual(summaryOnly(`Hampus deleted 1 message in #${CHANNEL_ID}`));
 	});
 
 	it('counts five messages in a channel, from a REST number or a dispatch string', () => {
 		for (const count of [5, '5']) {
 			expect(
 				present({action_type: AuditLogActionType.MESSAGE_BULK_DELETE, options: {channel_id: CHANNEL_ID, count}}),
-			).toEqual(summaryOnly(`Hampus deleted 5 messages in #${CHANNEL_ID}.`));
+			).toEqual(summaryOnly(`Hampus deleted 5 messages in #${CHANNEL_ID}`));
 		}
 	});
 
@@ -579,19 +579,19 @@ describe('presentMessageBulkDelete', () => {
 		for (const count of [undefined, null, 0, -3, 2.5, 'many', '']) {
 			expect(
 				present({action_type: AuditLogActionType.MESSAGE_BULK_DELETE, options: {channel_id: CHANNEL_ID, count}}),
-			).toEqual(summaryOnly(`Hampus deleted some messages in #${CHANNEL_ID}.`));
+			).toEqual(summaryOnly(`Hampus deleted some messages in #${CHANNEL_ID}`));
 		}
 	});
 
 	it('leaves the channel out when it is missing', () => {
 		expect(present({action_type: AuditLogActionType.MESSAGE_BULK_DELETE, options: {count: 5}})).toEqual(
-			summaryOnly('Hampus deleted 5 messages.'),
+			summaryOnly('Hampus deleted 5 messages'),
 		);
 		expect(present({action_type: AuditLogActionType.MESSAGE_BULK_DELETE, options: {count: 1}})).toEqual(
-			summaryOnly('Hampus deleted 1 message.'),
+			summaryOnly('Hampus deleted 1 message'),
 		);
 		expect(present({action_type: AuditLogActionType.MESSAGE_BULK_DELETE})).toEqual(
-			summaryOnly('Hampus deleted some messages.'),
+			summaryOnly('Hampus deleted some messages'),
 		);
 	});
 
@@ -611,7 +611,7 @@ describe('presentMessageBulkDelete', () => {
 				options: {channel_id: CHANNEL_ID, count: 40},
 			}),
 		).toEqual({
-			summary: `Hampus deleted 40 messages in #${CHANNEL_ID}.`,
+			summary: `Hampus deleted 40 messages in #${CHANNEL_ID}`,
 			rows: [],
 			blocks: [{kind: 'reason', text: 'Spam wave'}],
 			expandable: true,

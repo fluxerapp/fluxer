@@ -54,7 +54,7 @@ function sentence(message: string, values: AuditLogSentence['values']): AuditLog
 }
 
 function domainResult(overrides: Partial<AuditLogDomainResult>): AuditLogDomainResult {
-	return {summary: sentence('{actor} did a test action.', {actor: ACTOR}), rows: [], blocks: [], ...overrides};
+	return {summary: sentence('{actor} did a test action', {actor: ACTOR}), rows: [], blocks: [], ...overrides};
 }
 
 describe('presentAuditLogEntry', () => {
@@ -78,7 +78,7 @@ describe('presentAuditLogEntry', () => {
 		const presentation = presentAuditLogEntry(makeEntry({action_type: UNKNOWN_ACTION_TYPE}), fakeContext());
 		expect(presentation.summary.descriptor).toBe(UNKNOWN_ACTION_SUMMARY);
 		expect({...resultToText(presentation), expandable: presentation.expandable}).toEqual({
-			summary: `@${TEST_ACTOR_ID} made a change that this version of the app cannot show.`,
+			summary: `@${TEST_ACTOR_ID} made a change that this version of the app cannot show`,
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -90,7 +90,7 @@ describe('presentAuditLogEntry', () => {
 			makeEntry({action_type: UNKNOWN_ACTION_TYPE, user_id: '0'}),
 			fakeContext(),
 		);
-		expect(resultToText(presentation).summary).toBe('System made a change that this version of the app cannot show.');
+		expect(resultToText(presentation).summary).toBe('System made a change that this version of the app cannot show');
 	});
 
 	it('passes the entry and context to the presenter for its action type', () => {
@@ -127,7 +127,7 @@ describe('presentAuditLogEntry', () => {
 	it('is expandable when the domain returns rows and no blocks', () => {
 		vi.mocked(presentMemberBanAdd).mockReturnValueOnce(
 			domainResult({
-				rows: [{id: 'row', tone: 'remove', sentence: sentence('Deleted a test row.', {})}],
+				rows: [{id: 'row', tone: 'remove', sentence: sentence('Deleted a test row', {})}],
 			}),
 		);
 		const presentation = presentAuditLogEntry(
@@ -135,8 +135,8 @@ describe('presentAuditLogEntry', () => {
 			fakeContext(),
 		);
 		expect({...resultToText(presentation), expandable: presentation.expandable}).toEqual({
-			summary: `@${TEST_ACTOR_ID} did a test action.`,
-			rows: ['- Deleted a test row.'],
+			summary: `@${TEST_ACTOR_ID} did a test action`,
+			rows: ['- Deleted a test row'],
 			blocks: [],
 			expandable: true,
 		});
@@ -176,9 +176,9 @@ describe('fakeContext', () => {
 
 describe('toText', () => {
 	it('renders users by id or by the given names, and the system by its label', () => {
-		const text = sentence('{actor} kicked {target}.', {actor: {kind: 'system'}, target: {kind: 'user', id: '42'}});
-		expect(toText(text)).toBe('System kicked @42.');
-		expect(toText(text, {'42': 'ender'})).toBe('System kicked ender.');
+		const text = sentence('{actor} kicked {target}', {actor: {kind: 'system'}, target: {kind: 'user', id: '42'}});
+		expect(toText(text)).toBe('System kicked @42');
+		expect(toText(text, {'42': 'ender'})).toBe('System kicked ender');
 	});
 
 	it('renders channels and roles from the recorded name, else the id, and @everyone for the guild id', () => {
@@ -216,35 +216,35 @@ describe('toText', () => {
 
 	it('renders permission titles as a list and caps lists longer than eight', () => {
 		const text = (flags: Array<bigint>) =>
-			toText(sentence('Allowed {permissions}.', {permissions: {kind: 'permissions', flags}}));
-		expect(text([Permissions.VIEW_CHANNEL])).toBe('Allowed View channel.');
-		expect(text([Permissions.VIEW_CHANNEL, Permissions.SEND_MESSAGES])).toBe('Allowed View channel and Send messages.');
+			toText(sentence('Allowed {permissions}', {permissions: {kind: 'permissions', flags}}));
+		expect(text([Permissions.VIEW_CHANNEL])).toBe('Allowed View channel');
+		expect(text([Permissions.VIEW_CHANNEL, Permissions.SEND_MESSAGES])).toBe('Allowed View channel and Send messages');
 		const flags = Object.values(Permissions);
 		expect(text(flags.slice(0, 8))).toBe(
-			'Allowed Create invite links, Kick members, Ban members, Administrator, Manage channels, Manage community, Add reactions, and View activity log.',
+			'Allowed Create invite links, Kick members, Ban members, Administrator, Manage channels, Manage community, Add reactions, and View activity log',
 		);
 		expect(text(flags.slice(0, 9))).toBe(
-			'Allowed Create invite links, Kick members, Ban members, Administrator, Manage channels, Manage community, Add reactions, and 2 more permissions.',
+			'Allowed Create invite links, Kick members, Ban members, Administrator, Manage channels, Manage community, Add reactions, and 2 more permissions',
 		);
 	});
 
 	it('passes numbers through to ICU plurals', () => {
 		const text = (count: number) =>
-			toText(sentence('{actor} deleted {count, plural, one {# message} other {# messages}}.', {actor: ACTOR, count}));
-		expect(text(1)).toBe(`@${TEST_ACTOR_ID} deleted 1 message.`);
-		expect(text(5)).toBe(`@${TEST_ACTOR_ID} deleted 5 messages.`);
+			toText(sentence('{actor} deleted {count, plural, one {# message} other {# messages}}', {actor: ACTOR, count}));
+		expect(text(1)).toBe(`@${TEST_ACTOR_ID} deleted 1 message`);
+		expect(text(5)).toBe(`@${TEST_ACTOR_ID} deleted 5 messages`);
 	});
 
 	it('throws when the passed placeholders do not match the message', () => {
 		expect(() =>
 			toText(
-				sentence('{actor} pinned a message.', {
+				sentence('{actor} pinned a message', {
 					actor: ACTOR,
 					channel: {kind: 'channel', id: '1', recordedName: null, fallback: 'channel'},
 				}),
 			),
 		).toThrow(/Not in the message: \[channel\]/);
-		expect(() => toText(sentence('{actor} pinned a message in {channel}.', {actor: ACTOR}))).toThrow(
+		expect(() => toText(sentence('{actor} pinned a message in {channel}', {actor: ACTOR}))).toThrow(
 			/Not passed: \[channel\]/,
 		);
 	});
@@ -256,17 +256,17 @@ describe('resultToText', () => {
 			resultToText(
 				domainResult({
 					rows: [
-						{id: 'add', tone: 'add', sentence: sentence('Added {name}.', {name: {kind: 'name', value: 'a'}})},
-						{id: 'remove', tone: 'remove', sentence: sentence('Removed {name}.', {name: {kind: 'name', value: 'b'}})},
-						{id: 'neutral', tone: 'neutral', sentence: sentence('Changed {name}.', {name: {kind: 'name', value: 'c'}})},
+						{id: 'add', tone: 'add', sentence: sentence('Added {name}', {name: {kind: 'name', value: 'a'}})},
+						{id: 'remove', tone: 'remove', sentence: sentence('Removed {name}', {name: {kind: 'name', value: 'b'}})},
+						{id: 'neutral', tone: 'neutral', sentence: sentence('Changed {name}', {name: {kind: 'name', value: 'c'}})},
 					],
 					blocks: [{kind: 'reason', text: 'Cleanup'}],
 				}),
 				{[TEST_ACTOR_ID]: 'Hampus'},
 			),
 		).toEqual({
-			summary: 'Hampus did a test action.',
-			rows: ['+ Added a.', '- Removed b.', '~ Changed c.'],
+			summary: 'Hampus did a test action',
+			rows: ['+ Added a', '- Removed b', '~ Changed c'],
 			blocks: [{kind: 'reason', text: 'Cleanup'}],
 		});
 	});

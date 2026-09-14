@@ -33,7 +33,7 @@ export const MORE_PERMISSIONS_DESCRIPTOR = msg({
 		'Activity log item that stands in for the permission names left out of a long list. It is the last item of a list joined with "and", for example "Send messages, Manage roles, and 3 more permissions". The app joins the list and adds the commas and the word for "and" in your language, so do not add them here. It counts the other permissions in the same list. It never means that permissions were added. {count} is an ICU plural with the number of permissions left out, and # shows that number.',
 });
 export const UNKNOWN_ACTION_SUMMARY = msg({
-	message: '{actor} made a change that this version of the app cannot show.',
+	message: '{actor} made a change that this version of the app cannot show',
 	comment:
 		'Activity log summary for a kind of change this app version cannot describe, usually because the server is newer than the app. {actor} is the member who made the change, shown as a clickable user chip, or the word System.',
 });

@@ -119,8 +119,8 @@ const WEBHOOK_NAMES = fakeContext({webhooks: {[WEBHOOK_ID]: 'Captain Hook'}});
 describe('presentInviteCreate', () => {
 	it('describes an invite created with the app defaults', () => {
 		expect(present(inviteCreate({max_age: 604800, max_uses: 0, temporary: false}))).toEqual({
-			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}.`,
-			rows: ['~ The invite was set to expire after 7 days.', '~ The invite was set to allow unlimited uses.'],
+			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}`,
+			rows: ['~ The invite was set to expire after 7 days', '~ The invite was set to allow unlimited uses'],
 			blocks: [],
 			expandable: true,
 		});
@@ -128,11 +128,11 @@ describe('presentInviteCreate', () => {
 
 	it('describes a 30 minute single use invite that grants temporary membership', () => {
 		expect(present(inviteCreate({max_age: 1800, max_uses: 1, temporary: true}))).toEqual({
-			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was set to expire after 30 minutes.',
-				'~ The invite was limited to 1 use.',
-				'~ The invite was set to grant temporary membership.',
+				'~ The invite was set to expire after 30 minutes',
+				'~ The invite was limited to 1 use',
+				'~ The invite was set to grant temporary membership',
 			],
 			blocks: [],
 			expandable: true,
@@ -141,8 +141,8 @@ describe('presentInviteCreate', () => {
 
 	it('renders a 5400 second expiry as 90 minutes and pluralizes the use limit', () => {
 		expect(present(inviteCreate({max_age: 5400, max_uses: 25, temporary: false})).rows).toEqual([
-			'~ The invite was set to expire after 90 minutes.',
-			'~ The invite was limited to 25 uses.',
+			'~ The invite was set to expire after 90 minutes',
+			'~ The invite was limited to 25 uses',
 		]);
 	});
 
@@ -160,11 +160,11 @@ describe('presentInviteCreate', () => {
 				},
 			}),
 		).toEqual({
-			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was set to never expire.',
-				'~ The invite was limited to 10 uses.',
-				'~ The invite was set to grant temporary membership.',
+				'~ The invite was set to never expire',
+				'~ The invite was limited to 10 uses',
+				'~ The invite was set to grant temporary membership',
 			],
 			blocks: [],
 			expandable: true,
@@ -181,8 +181,8 @@ describe('presentInviteCreate', () => {
 				changes: changes?.filter((change) => change.key !== 'channel_id'),
 			}),
 		).toEqual({
-			summary: 'Hampus created the invite aB3dE9xZ.',
-			rows: ['~ The invite was set to expire after 7 days.', '~ The invite was set to allow unlimited uses.'],
+			summary: 'Hampus created the invite aB3dE9xZ',
+			rows: ['~ The invite was set to expire after 7 days', '~ The invite was set to allow unlimited uses'],
 			blocks: [],
 			expandable: true,
 		});
@@ -191,11 +191,11 @@ describe('presentInviteCreate', () => {
 	it('falls back to the changes for the code, channel and settings when options are missing', () => {
 		const {options: _options, ...fixture} = inviteCreate({max_age: 3600, max_uses: 5, temporary: true});
 		expect(present({...fixture, target_id: null})).toEqual({
-			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus created the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was set to expire after 1 hour.',
-				'~ The invite was limited to 5 uses.',
-				'~ The invite was set to grant temporary membership.',
+				'~ The invite was set to expire after 1 hour',
+				'~ The invite was limited to 5 uses',
+				'~ The invite was set to grant temporary membership',
 			],
 			blocks: [],
 			expandable: true,
@@ -217,7 +217,7 @@ describe('presentInviteCreate', () => {
 				],
 			}),
 		).toEqual({
-			summary: 'System created the invite aB3dE9xZ.',
+			summary: 'System created the invite aB3dE9xZ',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -234,7 +234,7 @@ describe('presentInviteUpdate', () => {
 				options: {max_age: 0, max_uses: 3, channel_id: CHANNEL_ID},
 			}),
 		).toEqual({
-			summary: 'Hampus updated the invite aB3dE9xZ.',
+			summary: 'Hampus updated the invite aB3dE9xZ',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -256,12 +256,12 @@ describe('presentInviteDelete', () => {
 				}),
 			),
 		).toEqual({
-			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was created on 2026-08-30T12:00:00.000Z.',
-				'~ The invite was used 3 times.',
-				'~ The invite was scheduled to expire on 2026-09-06T12:00:00.000Z.',
-				'~ The invite was set to allow unlimited uses.',
+				'~ The invite was created on 2026-08-30T12:00:00.000Z',
+				'~ The invite was used 3 times',
+				'~ The invite was scheduled to expire on 2026-09-06T12:00:00.000Z',
+				'~ The invite was set to allow unlimited uses',
 			],
 			blocks: [],
 			expandable: true,
@@ -281,13 +281,13 @@ describe('presentInviteDelete', () => {
 				}),
 			),
 		).toEqual({
-			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was created by Alice on 2026-08-31T08:30:00.000Z.',
-				'~ The invite was used 1 time.',
-				'~ The invite was set to never expire.',
-				'~ The invite was limited to 5 uses.',
-				'~ The invite was set to grant temporary membership.',
+				'~ The invite was created by Alice on 2026-08-31T08:30:00.000Z',
+				'~ The invite was used 1 time',
+				'~ The invite was set to never expire',
+				'~ The invite was limited to 5 uses',
+				'~ The invite was set to grant temporary membership',
 			],
 			blocks: [],
 			expandable: true,
@@ -298,12 +298,12 @@ describe('presentInviteDelete', () => {
 		expect(
 			present(inviteDelete({inviter_id: ALICE_ID, uses: 0, max_uses: 1, max_age: 86400, temporary: false})),
 		).toEqual({
-			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was created by Alice.',
-				'~ The invite was never used.',
-				'~ The invite was set to expire after 1 day.',
-				'~ The invite was limited to 1 use.',
+				'~ The invite was created by Alice',
+				'~ The invite was never used',
+				'~ The invite was set to expire after 1 day',
+				'~ The invite was limited to 1 use',
 			],
 			blocks: [],
 			expandable: true,
@@ -314,9 +314,9 @@ describe('presentInviteDelete', () => {
 		expect(
 			present(inviteDelete({inviter_id: TEST_ACTOR_ID, uses: 0, max_uses: 0, max_age: 0, temporary: false})).rows,
 		).toEqual([
-			'~ The invite was never used.',
-			'~ The invite was set to never expire.',
-			'~ The invite was set to allow unlimited uses.',
+			'~ The invite was never used',
+			'~ The invite was set to never expire',
+			'~ The invite was set to allow unlimited uses',
 		]);
 	});
 
@@ -338,10 +338,10 @@ describe('presentInviteDelete', () => {
 				],
 			}).rows,
 		).toEqual([
-			'~ The invite was created by Alice on 2026-09-01T10:00:00.000Z.',
-			'~ The invite was used 2 times.',
-			'~ The invite was scheduled to expire on 2026-09-01T11:00:00.000Z.',
-			'~ The invite was limited to 2 uses.',
+			'~ The invite was created by Alice on 2026-09-01T10:00:00.000Z',
+			'~ The invite was used 2 times',
+			'~ The invite was scheduled to expire on 2026-09-01T11:00:00.000Z',
+			'~ The invite was limited to 2 uses',
 		]);
 	});
 
@@ -355,13 +355,13 @@ describe('presentInviteDelete', () => {
 			created_at: '2026-09-01T11:00:00.000Z',
 		});
 		expect(present({...fixture, target_id: null})).toEqual({
-			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}.`,
+			summary: `Hampus deleted the invite aB3dE9xZ for #${CHANNEL_ID}`,
 			rows: [
-				'~ The invite was created by Alice on 2026-09-01T11:00:00.000Z.',
-				'~ The invite was used 4 times.',
-				'~ The invite was scheduled to expire on 2026-09-01T11:30:00.000Z.',
-				'~ The invite was limited to 10 uses.',
-				'~ The invite was set to grant temporary membership.',
+				'~ The invite was created by Alice on 2026-09-01T11:00:00.000Z',
+				'~ The invite was used 4 times',
+				'~ The invite was scheduled to expire on 2026-09-01T11:30:00.000Z',
+				'~ The invite was limited to 10 uses',
+				'~ The invite was set to grant temporary membership',
 			],
 			blocks: [],
 			expandable: true,
@@ -383,7 +383,7 @@ describe('presentInviteDelete', () => {
 				],
 			}),
 		).toEqual({
-			summary: 'Hampus deleted the invite aB3dE9xZ.',
+			summary: 'Hampus deleted the invite aB3dE9xZ',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -401,7 +401,7 @@ describe('presentWebhookCreate', () => {
 				changes: webhookSnapshot('new_value', TEST_ACTOR_ID),
 			}),
 		).toEqual({
-			summary: `Hampus created the webhook Captain Hook in #${CHANNEL_ID}.`,
+			summary: `Hampus created the webhook Captain Hook in #${CHANNEL_ID}`,
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -415,7 +415,7 @@ describe('presentWebhookCreate', () => {
 				target_id: WEBHOOK_ID,
 				changes: webhookSnapshot('new_value', TEST_ACTOR_ID).filter((change) => change.key !== 'channel_id'),
 			}).summary,
-		).toBe('Hampus created the webhook Captain Hook.');
+		).toBe('Hampus created the webhook Captain Hook');
 	});
 
 	it('says a webhook was created when no name was recorded', () => {
@@ -425,7 +425,7 @@ describe('presentWebhookCreate', () => {
 				target_id: WEBHOOK_ID,
 				options: {channel_id: CHANNEL_ID},
 			}),
-		).toEqual({summary: 'Hampus created a webhook.', rows: [], blocks: [], expandable: false});
+		).toEqual({summary: 'Hampus created a webhook', rows: [], blocks: [], expandable: false});
 	});
 
 	it('takes the channel from the changes when the option is missing', () => {
@@ -435,7 +435,7 @@ describe('presentWebhookCreate', () => {
 				target_id: WEBHOOK_ID,
 				changes: webhookSnapshot('new_value', TEST_ACTOR_ID),
 			}).summary,
-		).toBe(`Hampus created the webhook Captain Hook in #${CHANNEL_ID}.`);
+		).toBe(`Hampus created the webhook Captain Hook in #${CHANNEL_ID}`);
 	});
 
 	it('is expandable only for the decoded Reason block', () => {
@@ -448,7 +448,7 @@ describe('presentWebhookCreate', () => {
 				changes: webhookSnapshot('new_value', TEST_ACTOR_ID),
 			}),
 		).toEqual({
-			summary: `Hampus created the webhook Captain Hook in #${CHANNEL_ID}.`,
+			summary: `Hampus created the webhook Captain Hook in #${CHANNEL_ID}`,
 			rows: [],
 			blocks: [{kind: 'reason', text: 'Release notes'}],
 			expandable: true,
@@ -459,7 +459,7 @@ describe('presentWebhookCreate', () => {
 describe('presentWebhookUpdate', () => {
 	it('summarizes a rename alone without rows', () => {
 		expect(present(webhookUpdate([{key: 'name', old_value: 'Hook A', new_value: 'Hook B'}]), WEBHOOK_NAMES)).toEqual({
-			summary: 'Hampus renamed the webhook Hook A to Hook B.',
+			summary: 'Hampus renamed the webhook Hook A to Hook B',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -470,8 +470,8 @@ describe('presentWebhookUpdate', () => {
 		expect(
 			present(webhookUpdate([{key: 'avatar_hash', old_value: null, new_value: 'a1b2c3d4'}]), WEBHOOK_NAMES),
 		).toEqual({
-			summary: 'Hampus updated the webhook Captain Hook.',
-			rows: ['+ Added an avatar.'],
+			summary: 'Hampus updated the webhook Captain Hook',
+			rows: ['+ Added an avatar'],
 			blocks: [],
 			expandable: true,
 		});
@@ -481,21 +481,21 @@ describe('presentWebhookUpdate', () => {
 		expect(
 			present(webhookUpdate([{key: 'avatar_hash', old_value: 'a1b2c3d4', new_value: 'a_9f8e7d6c'}]), WEBHOOK_NAMES)
 				.rows,
-		).toEqual(['~ Changed the avatar.']);
+		).toEqual(['~ Changed the avatar']);
 	});
 
 	it('marks a removed avatar', () => {
 		expect(
 			present(webhookUpdate([{key: 'avatar_hash', old_value: 'a1b2c3d4', new_value: null}]), WEBHOOK_NAMES).rows,
-		).toEqual(['- Removed the avatar.']);
+		).toEqual(['- Removed the avatar']);
 	});
 
 	it('describes a move between channels', () => {
 		expect(
 			present(webhookUpdate([{key: 'channel_id', old_value: CHANNEL_ID, new_value: OTHER_CHANNEL_ID}]), WEBHOOK_NAMES),
 		).toEqual({
-			summary: 'Hampus updated the webhook Captain Hook.',
-			rows: [`~ Moved from #${CHANNEL_ID} to #${OTHER_CHANNEL_ID}.`],
+			summary: 'Hampus updated the webhook Captain Hook',
+			rows: [`~ Moved from #${CHANNEL_ID} to #${OTHER_CHANNEL_ID}`],
 			blocks: [],
 			expandable: true,
 		});
@@ -512,11 +512,11 @@ describe('presentWebhookUpdate', () => {
 				WEBHOOK_NAMES,
 			),
 		).toEqual({
-			summary: 'Hampus updated the webhook Hook B.',
+			summary: 'Hampus updated the webhook Hook B',
 			rows: [
-				'~ Changed the name from Hook A to Hook B.',
-				`~ Moved from #${CHANNEL_ID} to #${OTHER_CHANNEL_ID}.`,
-				'- Removed the avatar.',
+				'~ Changed the name from Hook A to Hook B',
+				`~ Moved from #${CHANNEL_ID} to #${OTHER_CHANNEL_ID}`,
+				'- Removed the avatar',
 			],
 			blocks: [],
 			expandable: true,
@@ -525,7 +525,7 @@ describe('presentWebhookUpdate', () => {
 
 	it('takes the name from the context when the name did not change', () => {
 		expect(present(webhookUpdate(undefined), WEBHOOK_NAMES)).toEqual({
-			summary: 'Hampus updated the webhook Captain Hook.',
+			summary: 'Hampus updated the webhook Captain Hook',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -534,8 +534,8 @@ describe('presentWebhookUpdate', () => {
 
 	it('says a webhook was updated when the name is unknown', () => {
 		expect(present(webhookUpdate([{key: 'avatar_hash', old_value: null, new_value: 'a1b2c3d4'}]))).toEqual({
-			summary: 'Hampus updated a webhook.',
-			rows: ['+ Added an avatar.'],
+			summary: 'Hampus updated a webhook',
+			rows: ['+ Added an avatar'],
 			blocks: [],
 			expandable: true,
 		});
@@ -550,7 +550,7 @@ describe('presentWebhookUpdate', () => {
 					{key: 'avatar_hash', old_value: 12345, new_value: null},
 				]),
 			),
-		).toEqual({summary: 'Hampus updated the webhook Hook.', rows: [], blocks: [], expandable: false});
+		).toEqual({summary: 'Hampus updated the webhook Hook', rows: [], blocks: [], expandable: false});
 		expect(
 			present(
 				webhookUpdate([
@@ -558,12 +558,12 @@ describe('presentWebhookUpdate', () => {
 					{key: 'avatar_hash', old_value: '', new_value: null},
 				]),
 			),
-		).toEqual({summary: 'Hampus updated a webhook.', rows: [], blocks: [], expandable: false});
+		).toEqual({summary: 'Hampus updated a webhook', rows: [], blocks: [], expandable: false});
 	});
 
 	it('does not use the rename summary when the previous name cannot be read', () => {
 		expect(present(webhookUpdate([{key: 'name', old_value: '   ', new_value: 'Hook B'}]), WEBHOOK_NAMES)).toEqual({
-			summary: 'Hampus updated the webhook Hook B.',
+			summary: 'Hampus updated the webhook Hook B',
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -581,7 +581,7 @@ describe('presentWebhookDelete', () => {
 				changes: webhookSnapshot('old_value', TEST_ACTOR_ID),
 			}),
 		).toEqual({
-			summary: `Hampus deleted the webhook Captain Hook from #${CHANNEL_ID}.`,
+			summary: `Hampus deleted the webhook Captain Hook from #${CHANNEL_ID}`,
 			rows: [],
 			blocks: [],
 			expandable: false,
@@ -597,8 +597,8 @@ describe('presentWebhookDelete', () => {
 				changes: webhookSnapshot('old_value', ALICE_ID),
 			}),
 		).toEqual({
-			summary: `Hampus deleted the webhook Captain Hook from #${CHANNEL_ID}.`,
-			rows: ['~ The webhook was created by Alice.'],
+			summary: `Hampus deleted the webhook Captain Hook from #${CHANNEL_ID}`,
+			rows: ['~ The webhook was created by Alice'],
 			blocks: [],
 			expandable: true,
 		});
@@ -612,8 +612,8 @@ describe('presentWebhookDelete', () => {
 				changes: webhookSnapshot('old_value', ALICE_ID).filter((change) => change.key !== 'channel_id'),
 			}),
 		).toEqual({
-			summary: 'Hampus deleted the webhook Captain Hook.',
-			rows: ['~ The webhook was created by Alice.'],
+			summary: 'Hampus deleted the webhook Captain Hook',
+			rows: ['~ The webhook was created by Alice'],
 			blocks: [],
 			expandable: true,
 		});
@@ -627,7 +627,7 @@ describe('presentWebhookDelete', () => {
 				options: {channel_id: CHANNEL_ID},
 				changes: [{key: 'creator_id', old_value: 1400}],
 			}),
-		).toEqual({summary: 'Hampus deleted a webhook.', rows: [], blocks: [], expandable: false});
+		).toEqual({summary: 'Hampus deleted a webhook', rows: [], blocks: [], expandable: false});
 	});
 
 	it('ignores a name from the context for a deleted webhook', () => {
@@ -636,6 +636,6 @@ describe('presentWebhookDelete', () => {
 				{action_type: AuditLogActionType.WEBHOOK_DELETE, target_id: WEBHOOK_ID, options: {channel_id: CHANNEL_ID}},
 				WEBHOOK_NAMES,
 			).summary,
-		).toBe('Hampus deleted a webhook.');
+		).toBe('Hampus deleted a webhook');
 	});
 });

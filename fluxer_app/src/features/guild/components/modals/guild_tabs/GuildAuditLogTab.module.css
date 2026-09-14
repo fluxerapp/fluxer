@@ -267,7 +267,7 @@
 	font-weight: 500;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	color: var(--text-primary);
+	color: var(--text-primary-muted);
 	overflow-wrap: anywhere;
 }
 

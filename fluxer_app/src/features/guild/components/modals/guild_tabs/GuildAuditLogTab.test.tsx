@@ -164,7 +164,7 @@ const GuildActivityLogTab = (await import('@app/features/guild/components/modals
 
 const LEGACY_ONLY_FILTER_LABEL = 'Members pruned';
 const LEGACY_SUMMARY_TEXT = 'updated the community settings.';
-const NEW_SUMMARY_TEXT = 'renamed the community from Old name to New name.';
+const NEW_SUMMARY_TEXT = 'renamed the community from Old name to New name';
 
 function setPresentationEnabled(enabled: boolean): void {
 	runInAction(() => {
