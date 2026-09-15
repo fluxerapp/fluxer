@@ -6,6 +6,7 @@
 -export([
     handle_session_connect/3,
     handle_presence_update/2,
+    has_session/3,
     dispatch_sessions_replace/1,
     notify_sessions_guild_join/2,
     notify_sessions_guild_leave/2,
@@ -30,6 +31,13 @@
 -type connect_request() :: map().
 -type update_request() :: map().
 -type session_ref_map() :: #{session_id() => map()}.
+
+-spec has_session(session_id(), pid(), state()) -> boolean().
+has_session(SessionId, Pid, State) when is_binary(SessionId), is_pid(Pid) ->
+    case maps:get(SessionId, maps:get(sessions, State, #{}), undefined) of
+        #{pid := Pid} -> true;
+        _ -> false
+    end.
 
 -spec handle_session_connect(connect_request(), pid(), state()) ->
     {reply, {ok, [map()]}, state()}.
